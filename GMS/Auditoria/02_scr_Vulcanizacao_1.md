@@ -1,4 +1,4 @@
-# Auditoria GMS — 02 · `scr_Vulcanizacao_1` (v0.3.0 → v0.3.1)
+# Auditoria GMS — 02 · `scr_Vulcanizacao_1` (v0.3.0 → v0.3.2)
 
 Lida por inteiro (1.857 linhas, 104 controles). Dados conferidos em `ficha_producao.csv` (2.648 linhas, export de 02/10/2026).
 QA do projeto: sem nenhum achado novo (`gms_qa_yaml.py`, idêntico ao baseline). Nenhum X/Y/Width/Height mudou; mesma lista de controles.
@@ -20,15 +20,22 @@ QA do projeto: sem nenhum achado novo (`gms_qa_yaml.py`, idêntico ao baseline).
 
 `Formulas.txt` v3.0.7 só **acrescenta** `fx_MetrosUn` e `fx_AutoclaveMax`. **Colar o Formulas no Studio antes da tela.**
 
+## Decisões do William (05/10) e aplicado na v0.3.2
+- **Metragem herdada vazia:** a Vulcanização não declara quantidade; o tratamento é na **Bandagem** (pendência na auditoria dela). Vulcanização fica como está.
+- **Mangueira vira lista** (`cmb_MangueiraEditarVulca`, `colMangueiras`) com a saída **"OUTRA (amostra ou nova)"**, que abre um campo de código gravado
+  em maiúsculas. A OP cuja mangueira não está na lista abre já em OUTRA com o código atual. Mesmo X/Y/Width/Height do campo antigo.
+- **Autoclave na ficha:** descartado (só existe uma).
+- **Atualização da fila:** aguardando o William entender e decidir (ver conversa).
+
 ## Não aplicado — precisa de decisão ou de teste no app real
 
-1. **[DADO] Metragem herdada vazia ou zero.** `Coalesce(quantidade_bandagem, 0)` é *gravado* em `metros_entrada`, `quantidade_vulcanizacao` e nos eventos.
+1. ~~**[DADO] Metragem herdada vazia ou zero.**~~ (decidido: tratar na Bandagem) `Coalesce(quantidade_bandagem, 0)` é *gravado* em `metros_entrada`, `quantidade_vulcanizacao` e nos eventos.
    Histórico: 222 de 2.606 OPs que concluíram a Vulcanização (8,5%) têm `quantidade_bandagem` em branco ou 0, e 205 saíram com
    `quantidade_vulcanizacao` 0/branco (parte é de antes da herança automática). Travar o início quando a metragem é 0 evitaria o zero calado,
    mas **deixa a OP presa em Aguardando** até alguém corrigir a Bandagem. William decide: travar, só avisar, ou deixar.
-2. **[DADO] `Mangueira` editável em texto livre** (`inp_MangueiraEditarVulca`): erro de digitação cria uma mangueira que não existe em
+2. ~~**[DADO] `Mangueira` editável em texto livre**~~ (feito na v0.3.2) (`inp_MangueiraEditarVulca`): erro de digitação cria uma mangueira que não existe em
    `colMangueiras`. Trocar por combo da `colMangueiras` muda o layout do modal, então fica para você ver.
-3. **[DADO] `recurso` dos eventos = `_r.Trançadeira`.** O recurso físico da Vulcanização é a autoclave, não a trançadeira de origem; o
+3. ~~**[DADO] `recurso` dos eventos = `_r.Trançadeira`.**~~ (descartado: só há uma autoclave) O recurso físico da Vulcanização é a autoclave, não a trançadeira de origem; o
    ranking de recurso do BI mistura os dois. Pergunta: existe (ou vai existir) campo de autoclave na ficha?
 4. **[PERF/UX] A fila só atualiza no ícone de refresh.** O timer de 30 s só move o relógio; uma OP que chega da Bandagem não aparece até
    alguém tocar em refresh. Um `Refresh(ficha_producao)` no `OnTimerEnd` é leitura (permitido, B §3.4), mas multiplica leituras por tablet;

@@ -953,7 +953,12 @@ Screens:
             Height: =62
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =UpdateContext({ctxEditarPlanoVulca: true})
+              =ClearCollect(colMangEditVulca, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
+              Reset(cmb_MangueiraEditarVulca);
+              Reset(inp_OutraMangVulca);
+              Reset(inp_CarretelEntradaEditarVulca);
+              Reset(inp_CarretelSaidaEditarVulca);
+              UpdateContext({ctxEditarPlanoVulca: true})
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_Raio
             RadiusBottomRight: =fx_Raio
@@ -986,7 +991,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.1"
+            Text: ="Versão 0.3.2"
             Width: =183
             X: =1168
             Y: =710
@@ -1667,20 +1672,36 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =245
-            - inp_MangueiraEditarVulca:
-                Control: Classic/TextInput@2.3.2
+            - cmb_MangueiraEditarVulca:
+                Control: Classic/ComboBox@2.4.0
                 Properties:
+                  AccessibleLabel: ="Mangueira da OP"
                   BorderColor: =fx_CorBorda
-                  Default: =gal_FilaVulca.Selected.Mangueira
-                  DelayOutput: =true
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  DefaultSelectedItems: |-
+                    =Filter(
+                        colMangEditVulca,
+                        NomeMangueira = If(
+                            IsBlank(LookUp(colMangEditVulca, NomeMangueira = gal_FilaVulca.Selected.Mangueira)),
+                            fx_MangueiraOutra,
+                            gal_FilaVulca.Selected.Mangueira
+                        )
+                    )
+                  DisplayFields: =["NomeMangueira"]
                   Font: =fx_FonteFamilia
                   Height: =42
                   HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
+                  InputTextPlaceholder: ="Buscar mangueira..."
+                  Items: =colMangEditVulca
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["NomeMangueira"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
                   Size: =fx_FonteCorpo
                   Width: =456
                   X: =455
@@ -1755,6 +1776,45 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =401
+            - lbl_RotOutraMangVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DA MANGUEIRA *"
+                  Visible: =cmb_MangueiraEditarVulca.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =433
+            - inp_OutraMangVulca:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da amostra ou mangueira nova"
+                  BorderColor: =fx_CorBorda
+                  Default: |-
+                    =If(
+                        IsBlank(LookUp(colMangEditVulca, NomeMangueira = gal_FilaVulca.Selected.Mangueira)),
+                        gal_FilaVulca.Selected.Mangueira,
+                        ""
+                    )
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HintText: ="Código da amostra ou da mangueira nova"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Visible: =cmb_MangueiraEditarVulca.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =455
             - btn_CancelarEditarVulca:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -1784,7 +1844,14 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID) || IsBlank(Trim(inp_MangueiraEditarVulca.Text)) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(gal_FilaVulca.Selected.ID) || varProcessando ||
+                        IsBlank(cmb_MangueiraEditarVulca.Selected.NomeMangueira) ||
+                        (cmb_MangueiraEditarVulca.Selected.NomeMangueira = fx_MangueiraOutra && IsBlank(Trim(inp_OutraMangVulca.Text))),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -1803,7 +1870,11 @@ Screens:
                                 ficha_producao,
                                 _r,
                                 {
-                                    Mangueira: Trim(inp_MangueiraEditarVulca.Text),
+                                    Mangueira: If(
+                                        cmb_MangueiraEditarVulca.Selected.NomeMangueira = fx_MangueiraOutra,
+                                        Upper(Trim(inp_OutraMangVulca.Text)),
+                                        cmb_MangueiraEditarVulca.Selected.NomeMangueira
+                                    ),
                                     'Carretel Entrada': Trim(inp_CarretelEntradaEditarVulca.Text),
                                     'Carretel Saida': Trim(inp_CarretelSaidaEditarVulca.Text)
                                 }
