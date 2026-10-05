@@ -53,12 +53,31 @@ em `RegistrosInspeção` provavelmente já têm índice; **`TiposErros` cruzou 5
 5. Validar no Power Apps Studio → **Monitor**: abrir a Finalização, selecionar uma OP e conferir que as chamadas a
    `RegistrosInspeção` e `TiposErros` voltam sem erro de limite.
 
-## 4. Depois do índice: arquivar (decisão do William, ainda não feito)
+## 4. Retenção: a cabine precisa de no máximo 1 semana (William, 05/10/2026)
 
-Crescimento previsto: +20 mil linhas/ano na inspeção. Índice resolve a consulta, mas lista gigante deixa o BI e a edição pelo
-SharePoint lentos. Proposta: fluxo agendado do Power Automate que move linhas com mais de **N meses** para listas
-`RegistrosInspeção_Arquivo` / `TiposErros_Arquivo` (o BI lê as duas). O app só precisa de dados por OP e do dia corrente.
-Pergunta que define o desenho: **por quantos meses a cabine precisa consultar lance/refugo de uma OP já finalizada?**
+Com 7 dias de retenção as listas vivas ficam com ~390 linhas (`RegistrosInspeção`, 55/dia) e ~150 (`TiposErros`, 22/dia): voltam para
+muito abaixo do limite de 5.000 e deixam de depender de índice para funcionar. O histórico sai das listas vivas e vai para arquivo.
+O índice em `OP_ID` e `Criado` continua valendo como seguro, e é o que permite a carga inicial abaixo.
+
+### Regra do fluxo (Power Automate agendado, 1x por dia, de madrugada)
+1. Para cada lista, pegar as linhas com `Criado` **anterior a 7 dias**.
+2. **Exceto** linhas de OP ainda aberta (`ficha_producao.processo <> "Finalizado"`): OP parada há mais de 7 dias continua na fila da
+   Finalização, e o operador não pode perder o lance/refugo dela (a OP zumbi da auditoria tinha 4.162 h).
+3. Copiar as linhas para `RegistrosInspeção_Arquivo` / `TiposErros_Arquivo` (mesmas colunas) e **só depois** apagar da lista viva.
+4. O BI passa a ler a lista viva + a de arquivo (união), senão o histórico some dos relatórios.
+
+### Carga inicial (destrutiva — fazer em etapas, com conferência)
+1. Criar as duas listas de arquivo com as mesmas colunas e índice em `OP_ID` e `Criado`.
+2. **Copiar** (não mover) as ~16,5 mil + ~5,4 mil linhas antigas para o arquivo.
+3. Conferir contagem: arquivo + vivo = total do export (16.542 e 5.434 em 02/10).
+4. Atualizar o BI para ler as duas.
+5. Só então apagar da lista viva o que já está no arquivo.
+Não executei nada disso: precisa de acesso ao SharePoint e ao Power Automate, e apaga dados.
+
+### Efeito colateral que precisa de decisão
+A `scr_ConsultaOP_1` mostra lances e refugo de **qualquer OP** (`Filter(RegistrosInspeção, OP_ID = ...)`). Depois do arquivamento, uma OP
+com mais de 7 dias fecha com "0 REGISTROS" nessa tela, embora o dado exista no arquivo. Opções: aceitar (a consulta serve só à
+semana corrente) ou a ConsultaOP ler o arquivo quando a lista viva vier vazia. Fica para a auditoria da `scr_ConsultaOP_1`.
 
 ## 5. O que já foi feito no código (esta rodada)
 

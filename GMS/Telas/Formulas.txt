@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.5 · 2026-10-05
+//  GMS · App.Formulas · v3.0.6 · 2026-10-05
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1070,6 +1070,25 @@ fx_BitolasMandril =
     Table(
         {Bitola: 4}, {Bitola: 6}, {Bitola: 8},
         {Bitola: 10}, {Bitola: 12}, {Bitola: 16}
+    );
+
+// [v3.0.6 · MEL-200] Part Number do mandril por bitola — UMA fonte. Antes a tabela estava escrita
+// 3 vezes (OnStart, scr_mandril_1, scr_ExtrusoraMandril_1) e as cópias divergiram: "FM0480" (4
+// dígitos) na scr_mandril_1 fazia o LookUp falhar para bitola 8 e a tela caía em First() = bitola 3.
+// A bitola 8 tem DOIS PNs de propósito (FM00480 e FM00500). Telas copiam com
+// ClearCollect(<col>, fx_PNMandril). PN novo = uma linha aqui.
+fx_PNMandril =
+    Table(
+        {Bitola: 3,  PartNumber: "FM00195"},
+        {Bitola: 4,  PartNumber: "FM00248"},
+        {Bitola: 5,  PartNumber: "FM00315"},
+        {Bitola: 6,  PartNumber: "FM00370"},
+        {Bitola: 7,  PartNumber: "FM00425"},
+        {Bitola: 8,  PartNumber: "FM00480"},
+        {Bitola: 8,  PartNumber: "FM00500"},
+        {Bitola: 10, PartNumber: "FM00610"},
+        {Bitola: 12, PartNumber: "FM00730"},
+        {Bitola: 16, PartNumber: "FM00980"}
     );
 
 // As 4 etapas do bloco de acabamento do painel, na ordem do fluxo físico.
