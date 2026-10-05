@@ -14,8 +14,10 @@ Screens:
             ctxUsouTudoCob: true
         });
         Set(varProcessando, false);
-        If(IsEmpty(colSpecCob), ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA));
-        ClearCollect(colCarreteisCob, lista_carreteis)
+        Concurrent(
+            If(IsEmpty(colSpecCob), ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA)),
+            ClearCollect(colCarreteisCob, lista_carreteis)
+        )
     Children:
       - tmr_RelogioCob:
           Control: Timer@2.1.0
@@ -41,6 +43,21 @@ Screens:
             Start: =varProcessando
             Visible: =false
             X: =1206
+      - tmr_AutoRefreshCob:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalIniciarCob && !ctxModalEnviarCob && !ctxModalEditarCob && !ctxModalDelinCob,
+                  Select(ico_RefreshCob)
+              )
+            Repeat: =true
+            Visible: =false
+            X: =1206
       - rct_HeaderFilaCob:
           Control: Rectangle@2.3.0
           Properties:
@@ -51,7 +68,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =65
             PaddingBottom: =0
@@ -75,11 +92,11 @@ Screens:
             PaddingLeft: =0
             PaddingRight: =0
             PaddingTop: =0
-            RadiusBottomLeft: =5
-            RadiusBottomRight: =5
-            RadiusTopLeft: =5
-            RadiusTopRight: =5
-            Size: =14
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
             Text: |-
               ="Total: " & CountRows(gal_FilaCob.AllItems)
             Width: =83
@@ -169,7 +186,7 @@ Screens:
                   Height: =22
                   OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
-                  Text: ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & Coalesce(ThisItem.quantidade_trancagem, 0) & " m"
+                  Text: ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & fx_MetrosUn(ThisItem.quantidade_trancagem)
                   Width: =200
                   X: =20
                   Y: =64
@@ -263,7 +280,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -434,7 +451,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaCob.Selected.quantidade_trancagem)
             Width: =190
             X: =918
             Y: =151
@@ -655,15 +672,24 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: ="DIÂMETRO (mm)"
+            Text: ="DIÂMETRO (pol.)"
             Width: =148
             X: =369
             Y: =409
       - inp_DiametroCob:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Diâmetro em milímetros"
-            BorderColor: =fx_CorBorda
+            AccessibleLabel: ="Diâmetro em polegadas"
+            BorderColor: |-
+              =With(
+                  { _s: LookUp(colSpecCob, Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(gal_FilaCob.Selected.Mangueira, "")))) },
+                  If(
+                      fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" &&
+                      fx_ForaDaFaixa(fx_DiametroPol(Self.Text), fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD))),
+                      fx_CorAlerta,
+                      fx_CorBorda
+                  )
+              )
             Default: =gal_FilaCob.Selected.diametro_cobertura
             DelayOutput: =true
             DisplayMode: |-
@@ -703,7 +729,7 @@ Screens:
             AccessibleLabel: ="Metragem produzida em metros"
             BorderColor: |-
               =If(
-                  fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" && (IsBlank(Self.Text) || Value(Self.Text) <= 0),
+                  fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" && !fx_MetragemOk(fx_Num(Self.Text)),
                   fx_CorErro,
                   fx_CorBorda
               )
@@ -862,10 +888,60 @@ Screens:
             Height: =24
             Size: =fx_FonteCorpo
             Text: ="⚠ Composto com validade vencida — chame a supervisão antes de aplicar."
-            Visible: =!IsBlank(dte_ValidadeCob.SelectedDate) && dte_ValidadeCob.SelectedDate < ctxAgora
+            Visible: =!IsBlank(dte_ValidadeCob.SelectedDate) && dte_ValidadeCob.SelectedDate < DateValue(ctxAgora)
             Width: =472
             X: =369
             Y: =617
+      - lbl_AlertaSpecCob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  {
+                      _s: LookUp(colSpecCob, Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(gal_FilaCob.Selected.Mangueira, "")))),
+                      _d: fx_DiametroPol(inp_DiametroCob.Text),
+                      _q: fx_Num(inp_QtdCob.Text),
+                      _rec: Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 1)
+                  },
+                  "⚠ " & Concat(
+                      Filter(
+                          Table(
+                              {
+                                  t: "Ø " & fx_MedidaBR(_d) & " pol fora do delineamento (" & fx_MedidaBR(fx_NumSpec(Text(_s.MIN_OD))) & " a " & fx_MedidaBR(fx_NumSpec(Text(_s.MAX_OD))) & ")",
+                                  ativo: fx_ForaDaFaixa(_d, fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD)))
+                              },
+                              {
+                                  t: "metragem " & Text(Round((_q / _rec - 1) * 100, 0), "[$-en-US]0") & "% acima da recebida (margem " & fx_MargemMetragemPct & "%)",
+                                  ativo: fx_MetragemSubiu(_q, gal_FilaCob.Selected.quantidade_trancagem)
+                              }
+                          ),
+                          ativo
+                      ),
+                      t,
+                      "   ·   "
+                  )
+              )
+            Visible: |-
+              =With(
+                  {
+                      _s: LookUp(colSpecCob, Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(gal_FilaCob.Selected.Mangueira, "")))),
+                      _d: fx_DiametroPol(inp_DiametroCob.Text),
+                      _q: fx_Num(inp_QtdCob.Text)
+                  },
+                  fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" &&
+                  (
+                      fx_ForaDaFaixa(_d, fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD))) ||
+                      fx_MetragemSubiu(_q, gal_FilaCob.Selected.quantidade_trancagem)
+                  )
+              )
+            Width: =472
+            X: =369
+            Y: =643
       - lbl_AvisoInicieCob:
           Control: Label@2.5.1
           Properties:
@@ -937,7 +1013,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaCob.Selected.Qtd_Turno1_Cobertura, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaCob.Selected.Qtd_Turno1_Cobertura)
             Width: =95
             X: =1000
             Y: =331
@@ -962,7 +1038,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaCob.Selected.Qtd_Turno2_Cobertura, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaCob.Selected.Qtd_Turno2_Cobertura)
             Width: =95
             X: =1000
             Y: =371
@@ -987,7 +1063,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaCob.Selected.Qtd_Turno3_Cobertura, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaCob.Selected.Qtd_Turno3_Cobertura)
             Width: =95
             X: =1000
             Y: =411
@@ -1157,28 +1233,30 @@ Screens:
                       _r.Modified <> gal_FilaCob.Selected.Modified,
                       Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                       Set(varProcessando, false),
+                      !fx_MetragemOk(fx_Num(inp_QtdCob.Text)),
+                      Notify("A metragem produzida precisa ser maior que zero.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
                       With(
                           {
                               _agora: Now(),
-                              _min: Hour(Now()) * 60 + Minute(Now()),
-                              _delta: Coalesce(Value(inp_QtdCob.Text), 0) - Coalesce(_r.Qtd_Turno1_Cobertura, 0) - Coalesce(_r.Qtd_Turno2_Cobertura, 0) - Coalesce(_r.Qtd_Turno3_Cobertura, 0)
+                              _delta: Coalesce(fx_Num(inp_QtdCob.Text), 0) - Coalesce(_r.Qtd_Turno1_Cobertura, 0) - Coalesce(_r.Qtd_Turno2_Cobertura, 0) - Coalesce(_r.Qtd_Turno3_Cobertura, 0)
                           },
                           Patch(
                               ficha_producao,
                               _r,
                               {
-                                  'Cod.Cobertura': inp_CodCob.Text,
+                                  'Cod.Cobertura': Trim(inp_CodCob.Text),
                                   'Data de Validade  do composto cobertura': dte_ValidadeCob.SelectedDate,
-                                  diametro_cobertura: Value(inp_DiametroCob.Text),
-                                  quantidade_cobertura: Value(inp_QtdCob.Text),
-                                  defeito_cobertura: Value(inp_RefugoCob.Text),
-                                  Lote_cobertura: inp_LoteCob.Text,
+                                  diametro_cobertura: fx_DiametroPol(inp_DiametroCob.Text),
+                                  quantidade_cobertura: fx_Num(inp_QtdCob.Text),
+                                  defeito_cobertura: Coalesce(fx_Num(inp_RefugoCob.Text), 0),
+                                  Lote_cobertura: Trim(inp_LoteCob.Text),
                                   operador_cobertura: cmb_OperadorCob.Selected.Nome,
                                   Observação_Cobertura: inp_ObsCob.Text,
-                                  Turno_Cobertura: Text(fx_Turno(_min)),
-                                  Qtd_Turno1_Cobertura: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Cobertura, 0) + _delta, _r.Qtd_Turno1_Cobertura),
-                                  Qtd_Turno2_Cobertura: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Cobertura, 0) + _delta, _r.Qtd_Turno2_Cobertura),
-                                  Qtd_Turno3_Cobertura: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Cobertura, 0) + _delta, _r.Qtd_Turno3_Cobertura)
+                                  Turno_Cobertura: Text(fx_TurnoEm(_agora)),
+                                  Qtd_Turno1_Cobertura: If(fx_TurnoEm(_agora) = 1, Coalesce(_r.Qtd_Turno1_Cobertura, 0) + _delta, _r.Qtd_Turno1_Cobertura),
+                                  Qtd_Turno2_Cobertura: If(fx_TurnoEm(_agora) = 2, Coalesce(_r.Qtd_Turno2_Cobertura, 0) + _delta, _r.Qtd_Turno2_Cobertura),
+                                  Qtd_Turno3_Cobertura: If(fx_TurnoEm(_agora) = 3, Coalesce(_r.Qtd_Turno3_Cobertura, 0) + _delta, _r.Qtd_Turno3_Cobertura)
                               }
                           )
                       );
@@ -1217,7 +1295,7 @@ Screens:
                   !varProcessando &&
                   !IsBlank(cmb_OperadorCob.Selected.Nome) &&
                   !IsBlank(inp_LoteCob.Text) &&
-                  Coalesce(Value(inp_QtdCob.Text), 0) > 0,
+                  fx_MetragemOk(fx_Num(inp_QtdCob.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1284,7 +1362,9 @@ Screens:
             Height: =62
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =Reset(inp_MangueiraEditarCob);
+              =ClearCollect(colMangEditCob, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
+              Reset(cmb_MangueiraEditarCob);
+              Reset(inp_OutraMangCob);
               Reset(inp_CarretelEntradaEditarCob);
               Reset(inp_CarretelSaidaEditarCob);
               UpdateContext({ctxModalEditarCob: true})
@@ -1350,7 +1430,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.3.1"
             Width: =183
             X: =1168
             Y: =710
@@ -1387,7 +1467,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1591,30 +1671,19 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaCob.Selected.ID),
                             _carretel: LookUp(lista_carreteis, Title = cmb_CarretelSaidaCob.Selected.Title),
-                            _agora: Now(),
-                            _min: Hour(Now()) * 60 + Minute(Now())
+                            _agora: Now()
                         },
                         If(
                             _r.Modified <> gal_FilaCob.Selected.Modified,
                             Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                             Set(varProcessando, false),
+                            !fx_MetragemOk(_r.quantidade_trancagem),
+                            Notify("OP sem metragem recebida da Trançagem. Chame a Supervisão para corrigir na Trançagem antes de cobrir.", NotificationType.Warning, 8000);
+                            Set(varProcessando, false),
                             !IsBlank(_carretel.op),
                             Notify("Este carretel acabou de ser alocado em outra OP. Escolha outro.", NotificationType.Error, 8000);
                             ClearCollect(colCarreteisCob, lista_carreteis);
                             Set(varProcessando, false),
-                            If(
-                                !IsBlank(cmb_SobraCob.Selected.Title),
-                                Patch(
-                                    lista_carreteis,
-                                    LookUp(lista_carreteis, Title = cmb_SobraCob.Selected.Title),
-                                    {
-                                        metros_restantes: 0,
-                                        op: Blank(),
-                                        etapa_processo: Blank(),
-                                        mangueira_atual: Blank()
-                                    }
-                                )
-                            );
                             Patch(
                                 ficha_producao,
                                 _r,
@@ -1622,7 +1691,7 @@ Screens:
                                     status_processo: "Em processo",
                                     data_hora_inicio_cobertura: _agora,
                                     InicioEmProcesso_Cobertura: _agora,
-                                    Turno_Cobertura: Text(fx_Turno(_min)),
+                                    Turno_Cobertura: Text(fx_TurnoEm(_agora)),
                                     'Carretel Saida': _carretel.Title
                                 }
                             );
@@ -1630,6 +1699,19 @@ Screens:
                                 !IsEmpty(Errors(ficha_producao)),
                                 Notify("Falha ao iniciar a Cobertura: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
                                 Set(varProcessando, false),
+                                If(
+                                    !IsBlank(cmb_SobraCob.Selected.Title),
+                                    Patch(
+                                        lista_carreteis,
+                                        LookUp(lista_carreteis, Title = cmb_SobraCob.Selected.Title),
+                                        {
+                                            metros_restantes: 0,
+                                            op: Blank(),
+                                            etapa_processo: Blank(),
+                                            mangueira_atual: Blank()
+                                        }
+                                    )
+                                );
                                 Patch(
                                     lista_carreteis,
                                     _carretel,
@@ -1637,6 +1719,10 @@ Screens:
                                         op: _r.ID,
                                         etapa_processo: "Cobertura"
                                     }
+                                );
+                                If(
+                                    !IsEmpty(Errors(lista_carreteis)),
+                                    Notify("OP iniciada, mas o carretel NÃO ficou reservado: " & First(Errors(lista_carreteis)).Message & " Confira em Carretéis.", NotificationType.Error, 12000)
                                 );
                                 Patch(
                                     Historico_Carretel,
@@ -1664,8 +1750,8 @@ Screens:
                                         etapa: {Value: "Cobertura"},
                                         tipo: {Value: "Início"},
                                         data_hora: _agora,
-                                        data_ref: DateAdd(DateValue(_agora), If(_min < 320, -1, 0), TimeUnit.Days),
-                                        turno: fx_Turno(_min),
+                                        data_ref: fx_DataRefEm(_agora),
+                                        turno: fx_TurnoEm(_agora),
                                         bitola: _r.Bitola,
                                         metros: Coalesce(_r.quantidade_trancagem, 0),
                                         recurso: _r.Trançadeira
@@ -1737,7 +1823,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1773,7 +1859,7 @@ Screens:
                   RadiusTopLeft: =fx_RaioS
                   RadiusTopRight: =fx_RaioS
                   Size: =fx_FonteCorpo
-                  Text: ="Produzido " & Coalesce(Value(inp_QtdCob.Text), 0) & " m   ·   refugo " & Coalesce(Value(inp_RefugoCob.Text), 0) & " m   ·   " & cmb_OperadorCob.Selected.Nome
+                  Text: ="Produzido " & Coalesce(fx_Num(inp_QtdCob.Text), 0) & " m   ·   refugo " & Coalesce(fx_Num(inp_RefugoCob.Text), 0) & " m   ·   " & cmb_OperadorCob.Selected.Nome
                   Width: =560
                   X: =403
                   Y: =236
@@ -1855,7 +1941,7 @@ Screens:
                   AccessibleLabel: ="Metros que sobraram no carretel de entrada"
                   BorderColor: |-
                     =If(
-                        IsBlank(Self.Text) || Value(Self.Text) <= 0,
+                        !fx_MetragemOk(fx_Num(Self.Text)),
                         fx_CorErro,
                         fx_CorBorda
                     )
@@ -1886,7 +1972,7 @@ Screens:
                   Size: =fx_FonteApoio
                   Text: |-
                     ="Pelo balanço da ficha sobraram cerca de " &
-                    Max(0, Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 0) - Coalesce(Value(inp_QtdCob.Text), 0) - Coalesce(Value(inp_RefugoCob.Text), 0)) &
+                    Max(0, Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 0) - Coalesce(fx_Num(inp_QtdCob.Text), 0) - Coalesce(fx_Num(inp_RefugoCob.Text), 0)) &
                     " m. O carretel volta para a fila com essa metragem."
                   Visible: =!ctxUsouTudoCob
                   Width: =320
@@ -1927,8 +2013,8 @@ Screens:
                         !varProcessando &&
                         !IsBlank(cmb_OperadorCob.Selected.Nome) &&
                         !IsBlank(inp_LoteCob.Text) &&
-                        Coalesce(Value(inp_QtdCob.Text), 0) > 0 &&
-                        (ctxUsouTudoCob || Coalesce(Value(inp_SobraCob.Text), 0) > 0),
+                        fx_MetragemOk(fx_Num(inp_QtdCob.Text)) &&
+                        (ctxUsouTudoCob || fx_MetragemOk(fx_Num(inp_SobraCob.Text))),
                         DisplayMode.Edit,
                         DisplayMode.Disabled
                     )
@@ -1944,16 +2030,15 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaCob.Selected.ID),
                             _agora: Now(),
-                            _min: Hour(Now()) * 60 + Minute(Now()),
-                            _qtd: Coalesce(Value(inp_QtdCob.Text), 0),
-                            _refugo: Coalesce(Value(inp_RefugoCob.Text), 0),
+                            _qtd: Coalesce(fx_Num(inp_QtdCob.Text), 0),
+                            _refugo: Coalesce(fx_Num(inp_RefugoCob.Text), 0),
                             _operador: cmb_OperadorCob.Selected.Nome
                         },
                         If(
-                            IsBlank(_operador) || IsBlank(inp_LoteCob.Text) || _qtd <= 0,
+                            IsBlank(_operador) || IsBlank(inp_LoteCob.Text) || !fx_MetragemOk(_qtd),
                             Notify("Preencha operador, lote e metragem antes de enviar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
-                            !ctxUsouTudoCob && Coalesce(Value(inp_SobraCob.Text), 0) <= 0,
+                            !ctxUsouTudoCob && !fx_MetragemOk(fx_Num(inp_SobraCob.Text)),
                             Notify("Informe quantos metros sobraram no carretel de entrada.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
                             _r.Modified <> gal_FilaCob.Selected.Modified,
@@ -1967,12 +2052,12 @@ Screens:
                                     ficha_producao,
                                     _r,
                                     {
-                                        'Cod.Cobertura': inp_CodCob.Text,
+                                        'Cod.Cobertura': Trim(inp_CodCob.Text),
                                         'Data de Validade  do composto cobertura': dte_ValidadeCob.SelectedDate,
-                                        diametro_cobertura: Value(inp_DiametroCob.Text),
+                                        diametro_cobertura: fx_DiametroPol(inp_DiametroCob.Text),
                                         quantidade_cobertura: _qtd,
                                         defeito_cobertura: _refugo,
-                                        Lote_cobertura: inp_LoteCob.Text,
+                                        Lote_cobertura: Trim(inp_LoteCob.Text),
                                         operador_cobertura: _operador,
                                         Observação_Cobertura: inp_ObsCob.Text,
                                         'Carretel Entrada': _r.'Carretel Saida',
@@ -1981,10 +2066,10 @@ Screens:
                                         status_processo: "Aguardando",
                                         data_hora_final_cobertura: _agora,
                                         InicioAguardando_bandagem: _agora,
-                                        Turno_Cobertura: Text(fx_Turno(_min)),
-                                        Qtd_Turno1_Cobertura: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Cobertura, 0) + _delta, _r.Qtd_Turno1_Cobertura),
-                                        Qtd_Turno2_Cobertura: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Cobertura, 0) + _delta, _r.Qtd_Turno2_Cobertura),
-                                        Qtd_Turno3_Cobertura: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Cobertura, 0) + _delta, _r.Qtd_Turno3_Cobertura)
+                                        Turno_Cobertura: Text(fx_TurnoEm(_agora)),
+                                        Qtd_Turno1_Cobertura: If(fx_TurnoEm(_agora) = 1, Coalesce(_r.Qtd_Turno1_Cobertura, 0) + _delta, _r.Qtd_Turno1_Cobertura),
+                                        Qtd_Turno2_Cobertura: If(fx_TurnoEm(_agora) = 2, Coalesce(_r.Qtd_Turno2_Cobertura, 0) + _delta, _r.Qtd_Turno2_Cobertura),
+                                        Qtd_Turno3_Cobertura: If(fx_TurnoEm(_agora) = 3, Coalesce(_r.Qtd_Turno3_Cobertura, 0) + _delta, _r.Qtd_Turno3_Cobertura)
                                     }
                                 )
                             );
@@ -2024,8 +2109,8 @@ Screens:
                                         etapa: {Value: "Cobertura"},
                                         tipo: {Value: "Fim"},
                                         data_hora: _agora,
-                                        data_ref: DateAdd(DateValue(_agora), If(_min < 320, -1, 0), TimeUnit.Days),
-                                        turno: fx_Turno(_min),
+                                        data_ref: fx_DataRefEm(_agora),
+                                        turno: fx_TurnoEm(_agora),
                                         bitola: _r.Bitola,
                                         metros: _qtd,
                                         refugo: _refugo,
@@ -2046,10 +2131,14 @@ Screens:
                                             op: Blank(),
                                             etapa_processo: Blank(),
                                             lote: Blank(),
-                                            metros_restantes: If(ctxUsouTudoCob, 0, Coalesce(Value(inp_SobraCob.Text), 0)),
+                                            metros_restantes: If(ctxUsouTudoCob, 0, Coalesce(fx_Num(inp_SobraCob.Text), 0)),
                                             mangueira_atual: If(ctxUsouTudoCob, Blank(), _r.Bitola)
                                         }
                                     )
+                                );
+                                If(
+                                    !IsEmpty(Errors(lista_carreteis)),
+                                    Notify("Apontamento salvo, mas o carretel de entrada NÃO foi liberado: " & First(Errors(lista_carreteis)).Message & " Confira em Carretéis.", NotificationType.Error, 12000)
                                 );
                                 Refresh(ficha_producao);
                                 Refresh(lista_carreteis);
@@ -2113,7 +2202,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -2651,7 +2740,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -2671,21 +2760,36 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =245
-            - inp_MangueiraEditarCob:
-                Control: Classic/TextInput@2.3.2
+            - cmb_MangueiraEditarCob:
+                Control: Classic/ComboBox@2.4.0
                 Properties:
                   AccessibleLabel: ="Mangueira da ordem"
                   BorderColor: =fx_CorBorda
-                  Default: =gal_FilaCob.Selected.Mangueira
-                  DelayOutput: =true
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  DefaultSelectedItems: |-
+                    =Filter(
+                        colMangEditCob,
+                        NomeMangueira = If(
+                            IsBlank(LookUp(colMangEditCob, NomeMangueira = gal_FilaCob.Selected.Mangueira)),
+                            fx_MangueiraOutra,
+                            gal_FilaCob.Selected.Mangueira
+                        )
+                    )
+                  DisplayFields: =["NomeMangueira"]
                   Font: =fx_FonteFamilia
                   Height: =42
                   HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
+                  InputTextPlaceholder: ="Buscar mangueira..."
+                  Items: =colMangEditCob
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["NomeMangueira"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
                   Size: =fx_FonteCorpo
                   Width: =456
                   X: =455
@@ -2762,6 +2866,45 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =401
+            - lbl_RotOutraMangCob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DA MANGUEIRA *"
+                  Visible: =cmb_MangueiraEditarCob.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =433
+            - inp_OutraMangCob:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da amostra ou mangueira nova"
+                  BorderColor: =fx_CorBorda
+                  Default: |-
+                    =If(
+                        IsBlank(LookUp(colMangEditCob, NomeMangueira = gal_FilaCob.Selected.Mangueira)),
+                        gal_FilaCob.Selected.Mangueira,
+                        ""
+                    )
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HintText: ="Código da amostra ou da mangueira nova"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Visible: =cmb_MangueiraEditarCob.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =455
             - btn_CancelarEditarCob:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -2773,7 +2916,8 @@ Screens:
                   Height: =48
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =Reset(inp_MangueiraEditarCob);
+                    =Reset(cmb_MangueiraEditarCob);
+                    Reset(inp_OutraMangCob);
                     Reset(inp_CarretelEntradaEditarCob);
                     Reset(inp_CarretelSaidaEditarCob);
                     UpdateContext({ctxModalEditarCob: false})
@@ -2794,7 +2938,14 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaCob.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(gal_FilaCob.Selected.ID) || varProcessando ||
+                        IsBlank(cmb_MangueiraEditarCob.Selected.NomeMangueira) ||
+                        (cmb_MangueiraEditarCob.Selected.NomeMangueira = fx_MangueiraOutra && IsBlank(Trim(inp_OutraMangCob.Text))),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -2813,9 +2964,13 @@ Screens:
                                 ficha_producao,
                                 _r,
                                 {
-                                    Mangueira: inp_MangueiraEditarCob.Text,
-                                    'Carretel Entrada': inp_CarretelEntradaEditarCob.Text,
-                                    'Carretel Saida': inp_CarretelSaidaEditarCob.Text
+                                    Mangueira: If(
+                                        cmb_MangueiraEditarCob.Selected.NomeMangueira = fx_MangueiraOutra,
+                                        Upper(Trim(inp_OutraMangCob.Text)),
+                                        cmb_MangueiraEditarCob.Selected.NomeMangueira
+                                    ),
+                                    'Carretel Entrada': Trim(inp_CarretelEntradaEditarCob.Text),
+                                    'Carretel Saida': Trim(inp_CarretelSaidaEditarCob.Text)
                                 }
                             );
                             If(
