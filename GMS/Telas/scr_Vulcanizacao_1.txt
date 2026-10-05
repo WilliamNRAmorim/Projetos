@@ -35,7 +35,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =65
             PaddingBottom: =0
@@ -59,11 +59,11 @@ Screens:
             PaddingLeft: =0
             PaddingRight: =0
             PaddingTop: =0
-            RadiusBottomLeft: =5
-            RadiusBottomRight: =5
-            RadiusTopLeft: =5
-            RadiusTopRight: =5
-            Size: =14
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
             Text: |-
               ="Total: " & CountRows(gal_FilaVulca.AllItems)
             Width: =83
@@ -144,7 +144,7 @@ Screens:
                   Height: =22
                   OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
-                  Text: ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & Coalesce(ThisItem.quantidade_bandagem, 0) & " m"
+                  Text: ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & fx_MetrosUn(ThisItem.quantidade_bandagem)
                   Width: =200
                   X: =20
                   Y: =64
@@ -241,7 +241,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -412,7 +412,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaVulca.Selected.quantidade_bandagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaVulca.Selected.quantidade_bandagem)
             Width: =180
             X: =918
             Y: =151
@@ -716,7 +716,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno1_Vulcanizacao, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaVulca.Selected.Qtd_Turno1_Vulcanizacao)
             Width: =95
             X: =1000
             Y: =285
@@ -741,7 +741,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno2_Vulcanizacao, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaVulca.Selected.Qtd_Turno2_Vulcanizacao)
             Width: =95
             X: =1000
             Y: =325
@@ -766,7 +766,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno3_Vulcanizacao, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaVulca.Selected.Qtd_Turno3_Vulcanizacao)
             Width: =95
             X: =1000
             Y: =365
@@ -840,7 +840,7 @@ Screens:
             BorderThickness: =0
             Color: =fx_CorSuperficie
             DisabledFill: =fx_CorBorda
-            DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+            DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
             Fill: |-
               =Switch(
                   fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
@@ -986,7 +986,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.3.1"
             Width: =183
             X: =1168
             Y: =710
@@ -1023,7 +1023,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1175,7 +1175,7 @@ Screens:
                   DisabledFill: =fx_CorBorda
                   DisplayMode: |-
                     =If(
-                        gal_FilaVulca.Selected.status_processo = "Aguardando",
+                        fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora) = "AGUARDANDO" && !varProcessando,
                         DisplayMode.Edit,
                         DisplayMode.Disabled
                     )
@@ -1190,7 +1190,6 @@ Screens:
                       With(
                           {
                               _r: LookUp(ficha_producao, ID = gal_FilaVulca.Selected.ID),
-                              _min: Hour(Now()) * 60 + Minute(Now()),
                               _agora: Now()
                           },
                           If(
@@ -1202,8 +1201,8 @@ Screens:
                                       Filter(ficha_producao, processo = "Vulcanização" && status_processo = "Em processo"),
                                       IsBlank(InicioResfriamento_Vulcanizacao)
                                   )
-                              ) >= 5,
-                              Notify("Autoclave cheia: já há 5 carretéis vulcanizando. Inicie o resfriamento de um deles antes.", NotificationType.Warning, 6000);
+                              ) >= fx_AutoclaveMax,
+                              Notify("Autoclave cheia: já há " & fx_AutoclaveMax & " carretéis vulcanizando. Inicie o resfriamento de um deles antes.", NotificationType.Warning, 6000);
                               Set(varProcessando, false),
 
                               Patch(
@@ -1213,7 +1212,7 @@ Screens:
                                       status_processo: "Em processo",
                                       data_hora_inicio_vulcanizacao: _agora,
                                       InicioEmProcesso_Vulcanização: _agora,
-                                      Turno_Vulcanização: Text(fx_Turno(_min))
+                                      Turno_Vulcanização: Text(fx_TurnoEm(_agora))
                                   }
                               );
                               If(
@@ -1248,8 +1247,8 @@ Screens:
                                           etapa: {Value: "Vulcanização"},
                                           tipo: {Value: "Início"},
                                           data_hora: _agora,
-                                          data_ref: DateAdd(DateValue(_agora), If(_min < 320, -1, 0), TimeUnit.Days),
-                                          turno: fx_Turno(_min),
+                                          data_ref: fx_DataRefEm(_agora),
+                                          turno: fx_TurnoEm(_agora),
                                           bitola: _r.Bitola,
                                           metros: Coalesce(_r.quantidade_bandagem, 0),
                                           recurso: _r.Trançadeira
@@ -1310,7 +1309,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -1325,7 +1324,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =22
                   Size: =fx_FonteCorpo
-                  Text: ="Só aparecem OPs com resfriamento acionado — " & CountRows(colLoteVulca) & "/5 selecionadas"
+                  Text: ="Só aparecem OPs com resfriamento acionado — " & CountRows(colLoteVulca) & "/" & fx_AutoclaveMax & " selecionadas"
                   Width: =560
                   X: =403
                   Y: =162
@@ -1364,7 +1363,7 @@ Screens:
                         Color: =fx_CorTexto
                         DisplayMode: |-
                           =If(
-                              !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)) || CountRows(colLoteVulca) < 5,
+                              !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)) || CountRows(colLoteVulca) < fx_AutoclaveMax,
                               DisplayMode.Edit,
                               DisplayMode.Disabled
                           )
@@ -1377,9 +1376,9 @@ Screens:
                               !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)),
                               Remove(colLoteVulca, LookUp(colLoteVulca, ID = ThisItem.ID)),
                               If(
-                                  CountRows(colLoteVulca) < 5,
+                                  CountRows(colLoteVulca) < fx_AutoclaveMax,
                                   Collect(colLoteVulca, ThisItem),
-                                  Notify("Máximo de 5 carretéis por batelada.", NotificationType.Warning, 3000)
+                                  Notify("Máximo de " & fx_AutoclaveMax & " carretéis por batelada.", NotificationType.Warning, 3000)
                               )
                           )
                         PressedFill: =Self.Fill
@@ -1411,7 +1410,7 @@ Screens:
                         OnSelect: =Select(btn_LinhaLoteVulca)
                         Size: =fx_FonteApoio
                         Text: |-
-                          ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & Coalesce(ThisItem.quantidade_bandagem, 0) & " m  •  resfriando há " &
+                          ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & fx_MetrosUn(ThisItem.quantidade_bandagem) & "  •  resfriando há " &
                           fx_Crono(ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora)
                         Width: =440
                         X: =16
@@ -1505,12 +1504,11 @@ Screens:
                   HoverFill: =ColorFade(fx_CorOK, -20%)
                   OnSelect: |-
                     =Set(varProcessando, true);
-                    Set(varQtdLote, CountRows(colLoteVulca));
                     With(
                         {
-                            min: Hour(Now()) * 60 + Minute(Now()),
                             agora: Now(),
-                            OperadorLote: cmb_OperadorLoteVulca.Selected.Nome
+                            OperadorLote: cmb_OperadorLoteVulca.Selected.Nome,
+                            QtdLote: CountRows(colLoteVulca)
                         },
                         ForAll(
                             colLoteVulca As _op,
@@ -1545,19 +1543,19 @@ Screens:
                                         InicioAguardando_Debandagem: agora,
                                         operador_vulcanizacao: OperadorLote,
                                         quantidade_vulcanizacao: _qtd,
-                                        Turno_Vulcanização: Text(fx_Turno(min)),
+                                        Turno_Vulcanização: Text(fx_TurnoEm(agora)),
                                         Qtd_Turno1_Vulcanizacao: If(
-                                            fx_Turno(min) = 1,
+                                            fx_TurnoEm(agora) = 1,
                                             Coalesce(_op.Qtd_Turno1_Vulcanizacao, 0) + _qtd,
                                             _op.Qtd_Turno1_Vulcanizacao
                                         ),
                                         Qtd_Turno2_Vulcanizacao: If(
-                                            fx_Turno(min) = 2,
+                                            fx_TurnoEm(agora) = 2,
                                             Coalesce(_op.Qtd_Turno2_Vulcanizacao, 0) + _qtd,
                                             _op.Qtd_Turno2_Vulcanizacao
                                         ),
                                         Qtd_Turno3_Vulcanizacao: If(
-                                            fx_Turno(min) = 3,
+                                            fx_TurnoEm(agora) = 3,
                                             Coalesce(_op.Qtd_Turno3_Vulcanizacao, 0) + _qtd,
                                             _op.Qtd_Turno3_Vulcanizacao
                                         )
@@ -1574,8 +1572,8 @@ Screens:
                                         etapa: {Value: "Vulcanização"},
                                         tipo: {Value: "Fim"},
                                         data_hora: agora,
-                                        data_ref: DateAdd(DateValue(agora), If(min < 320, -1, 0), TimeUnit.Days),
-                                        turno: fx_Turno(min),
+                                        data_ref: fx_DataRefEm(agora),
+                                        turno: fx_TurnoEm(agora),
                                         bitola: _op.Bitola,
                                         metros: _qtd,
                                         recurso: _op.Trançadeira,
@@ -1585,16 +1583,25 @@ Screens:
                             )
                         );
                         If(
-                            !IsEmpty(Errors(ficha_producao)) || !IsEmpty(Errors(Eventos_Producao)),
-                            Notify("Falha ao lançar uma ou mais OPs. Verifique a conexão.", NotificationType.Error, 10000);
-                            Set(varProcessando, false),
+                            !IsEmpty(Errors(ficha_producao)) || !IsEmpty(Errors(Eventos_Producao)) || !IsEmpty(Errors(Historico_Carretel)),
+                            Refresh(ficha_producao);
+                            Clear(colLoteVulca);
+                            ClearCollect(
+                                colProntasVulca,
+                                Filter(
+                                    Filter(ficha_producao, processo = "Vulcanização" && status_processo = "Em processo"),
+                                    !IsBlank(InicioResfriamento_Vulcanizacao)
+                                )
+                            );
+                            Set(varProcessando, false);
+                            Notify("Falha ao lançar uma ou mais OPs. As que já foram lançadas saíram da lista; selecione de novo só as que faltam e confira a conexão.", NotificationType.Error, 12000),
 
                             Refresh(ficha_producao);
                             Clear(colLoteVulca);
                             Clear(colProntasVulca);
                             UpdateContext({ctxModalLoteVulca: false});
                             Set(varProcessando, false);
-                            Notify(varQtdLote & " OP(s) lançada(s) para a Debandagem!", NotificationType.Success, 6000)
+                            Notify(QtdLote & " OP(s) lançada(s) para a Debandagem!", NotificationType.Success, 6000)
                         )
                     )
                   PressedFill: =ColorFade(fx_CorOK, -30%)
@@ -1640,7 +1647,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -1777,7 +1784,7 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID) || IsBlank(Trim(inp_MangueiraEditarVulca.Text)) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -1796,9 +1803,9 @@ Screens:
                                 ficha_producao,
                                 _r,
                                 {
-                                    Mangueira: inp_MangueiraEditarVulca.Text,
-                                    'Carretel Entrada': inp_CarretelEntradaEditarVulca.Text,
-                                    'Carretel Saida': inp_CarretelSaidaEditarVulca.Text
+                                    Mangueira: Trim(inp_MangueiraEditarVulca.Text),
+                                    'Carretel Entrada': Trim(inp_CarretelEntradaEditarVulca.Text),
+                                    'Carretel Saida': Trim(inp_CarretelSaidaEditarVulca.Text)
                                 }
                             );
                             If(

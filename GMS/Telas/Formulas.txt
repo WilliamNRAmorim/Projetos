@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.6 · 2026-10-05
+//  GMS · App.Formulas · v3.0.7 · 2026-10-05
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16) e fx_AutoclaveMax (§10).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -551,6 +551,10 @@ fx_SemaforoKanban(qtd: Number): Color =
         qtd >= fx_KanbanMinimo, fx_CorAlerta,
         fx_CorErro
     );
+
+// [v3.0.7 · MEL-201] Capacidade da autoclave: carretéis vulcanizando ao mesmo tempo (também o
+// máximo por lote enviado para a Debandagem). Estava escrito 5 vezes dentro da scr_Vulcanizacao_1.
+fx_AutoclaveMax = 5;
 
 fx_TrancKanbanMinimo = 1;     // carretéis exigidos atrás de cada trançadeira rodando
 
@@ -1230,6 +1234,11 @@ fx_MetrosBR(valor: Number): Text =
             Substitute(Substitute(Substitute(_t, ",", "#"), ".", ","), "#", ".")
         )
     );
+
+// [v3.0.7 · MEL-201] Metros com unidade para exibição em card/label: vazio mostra "—", nunca "0 m".
+// Substitui Coalesce(campo, 0) & " m", que mostrava metragem inexistente como zero (regra 6 do CLAUDE.md).
+fx_MetrosUn(valor: Number): Text =
+    If(IsBlank(valor), "—", fx_MetrosBR(valor) & " m");
 
 // Filtro da tela: em que bloco a pendência cai.
 fx_GrupoConf(prioridade: Number): Text =
