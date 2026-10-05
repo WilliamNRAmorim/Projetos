@@ -40,6 +40,21 @@ Screens:
             Start: =varProcessando
             Visible: =false
             X: =1206
+      - tmr_AutoRefreshDeband:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalSetupDeband && !ctxModalEnviarDeband && !ctxModalEditarDeband,
+                  Select(ico_RefreshDeband)
+              )
+            Repeat: =true
+            Visible: =false
+            X: =1206
       - rct_HeaderFilaDeband:
           Control: Rectangle@2.3.0
           Properties:
@@ -50,7 +65,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =65
             PaddingBottom: =0
@@ -74,11 +89,11 @@ Screens:
             PaddingLeft: =0
             PaddingRight: =0
             PaddingTop: =0
-            RadiusBottomLeft: =5
-            RadiusBottomRight: =5
-            RadiusTopLeft: =5
-            RadiusTopRight: =5
-            Size: =14
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
             Text: |-
               ="Total: " & CountRows(gal_FilaDeband.AllItems)
             Width: =83
@@ -163,7 +178,7 @@ Screens:
                   Height: =22
                   OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
-                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & Coalesce(ThisItem.quantidade_vulcanizacao, 0) & " m"
+                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & fx_MetrosUn(ThisItem.quantidade_vulcanizacao)
                   Width: =200
                   X: =20
                   Y: =64
@@ -257,7 +272,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -428,7 +443,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaDeband.Selected.quantidade_vulcanizacao)
             Width: =200
             X: =918
             Y: =151
@@ -576,7 +591,7 @@ Screens:
             BorderColor: |-
               =If(
                   fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" &&
-                  (IsBlank(Self.Text) || !fx_EhNum(Self.Text) || fx_Num(Self.Text) <= 0),
+                  !fx_MetragemOk(fx_Num(Self.Text)),
                   fx_CorErro,
                   fx_CorBorda
               )
@@ -707,7 +722,7 @@ Screens:
           Properties:
             Color: |-
               =If(
-                  Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0),
+                  fx_MetragemSubiu(fx_Num(inp_QtdDeband.Text), gal_FilaDeband.Selected.quantidade_vulcanizacao),
                   fx_CorErro,
                   fx_CorTextoSuave
               )
@@ -726,14 +741,17 @@ Screens:
       - lbl_AlertaBalancoDeband:
           Control: Label@2.5.1
           Properties:
-            Color: =fx_CorErro
+            Color: =fx_CorAlerta
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Size: =fx_FonteCorpo
-            Text: ="⚠ Debandado maior que o recebido da Vulcanização — confira a digitação."
+            Text: |-
+              ="⚠ Debandado passa " &
+              Text(Round(("""+Q+""" / Coalesce("""+REC+""", 1) - 1) * 100, 0), "[$-en-US]0") &
+              "% do recebido da Vulcanização (margem aceita: " & fx_MargemMetragemPct & "%). Confira a digitação."
             Visible: |-
               =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" &&
-              Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0)
+              fx_MetragemSubiu(fx_Num(inp_QtdDeband.Text), gal_FilaDeband.Selected.quantidade_vulcanizacao)
             Width: =472
             X: =369
             Y: =577
@@ -808,7 +826,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem)
             Width: =95
             X: =1000
             Y: =331
@@ -833,7 +851,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem)
             Width: =95
             X: =1000
             Y: =371
@@ -858,7 +876,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem)
             Width: =95
             X: =1000
             Y: =411
@@ -923,10 +941,12 @@ Screens:
           Properties:
             Color: |-
               =If(
-                  Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) -
-                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) -
-                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) -
-                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0) < 0,
+                  fx_MetragemSubiu(
+                      Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) +
+                      Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) +
+                      Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0),
+                      gal_FilaDeband.Selected.quantidade_vulcanizacao
+                  ),
                   fx_CorErro,
                   fx_CorTexto
               )
@@ -1031,12 +1051,12 @@ Screens:
                       _r.Modified <> gal_FilaDeband.Selected.Modified,
                       Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                       Set(varProcessando, false),
-                      Coalesce(fx_Num(inp_QtdDeband.Text), 0) <= 0,
+                      !fx_MetragemOk(fx_Num(inp_QtdDeband.Text)),
                       Notify("A metragem debandada precisa ser maior que zero.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
                       With(
                           {
-                              _min: fx_MinutosDoDia(Now()),
+                              _agora: Now(),
                               _delta: Coalesce(fx_Num(inp_QtdDeband.Text), 0)
                                   - Coalesce(_r.Qtd_Turno1_Debandagem, 0)
                                   - Coalesce(_r.Qtd_Turno2_Debandagem, 0)
@@ -1046,13 +1066,13 @@ Screens:
                               ficha_producao,
                               _r,
                               {
-                                  quantidade_debandagem: Coalesce(fx_Num(inp_QtdDeband.Text), 0),
+                                  quantidade_debandagem: fx_Num(inp_QtdDeband.Text),
                                   operador_debandagem: cmb_OperadorDeband.Selected.Nome,
                                   Observação_Debandagem: inp_ObsDeband.Text,
-                                  Turno_Debandagem: Text(fx_Turno(_min)),
-                                  Qtd_Turno1_Debandagem: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
-                                  Qtd_Turno2_Debandagem: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
-                                  Qtd_Turno3_Debandagem: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
+                                  Turno_Debandagem: Text(fx_TurnoEm(_agora)),
+                                  Qtd_Turno1_Debandagem: If(fx_TurnoEm(_agora) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
+                                  Qtd_Turno2_Debandagem: If(fx_TurnoEm(_agora) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
+                                  Qtd_Turno3_Debandagem: If(fx_TurnoEm(_agora) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
                               }
                           )
                       );
@@ -1090,7 +1110,7 @@ Screens:
                   !IsBlank(gal_FilaDeband.Selected.ID) &&
                   !varProcessando &&
                   !IsBlank(cmb_OperadorDeband.Selected.Nome) &&
-                  Coalesce(fx_Num(inp_QtdDeband.Text), 0) > 0,
+                  fx_MetragemOk(fx_Num(inp_QtdDeband.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1156,7 +1176,9 @@ Screens:
             Height: =62
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =Reset(inp_MangueiraEditarDeband);
+              =ClearCollect(colMangEditDeband, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
+              Reset(cmb_MangueiraEditarDeband);
+              Reset(inp_OutraMangDeband);
               Reset(inp_CarretelEntradaEditarDeband);
               Reset(inp_CarretelSaidaEditarDeband);
               UpdateContext({ctxModalEditarDeband: true})
@@ -1208,13 +1230,12 @@ Screens:
             Width: =183
             X: =1168
             Y: =187
-      - ico_SetupLateralDeband:
-          Control: Classic/Icon@2.5.0
+      - img_SetupLateralDeband:
+          Control: Image@2.2.3
           Properties:
-            Color: =fx_CorInfo
             DisplayMode: =btn_SetupLateralDeband.DisplayMode
             Height: =24
-            Icon: =Icon.View
+            Image: ='drafting-compass'
             OnSelect: =Select(btn_SetupLateralDeband)
             Width: =24
             X: =1186
@@ -1232,7 +1253,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.3.1"
             Width: =183
             X: =1168
             Y: =710
@@ -1269,7 +1290,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1644,8 +1665,7 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID),
                             _carretel: cmb_CarretelSaidaDeband.Selected.Title,
-                            _agora: Now(),
-                            _min: fx_MinutosDoDia(Now())
+                            _agora: Now()
                         },
                         If(
                             _r.Modified <> gal_FilaDeband.Selected.Modified,
@@ -1653,6 +1673,9 @@ Screens:
                             Set(varProcessando, false),
                             _r.status_processo = "Em processo",
                             Notify("Esta OP já está em processo na Debandagem.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            !fx_MetragemOk(_r.quantidade_vulcanizacao),
+                            Notify("OP sem metragem recebida da Vulcanização. Chame a Supervisão para corrigir na Bandagem antes de debandar.", NotificationType.Warning, 8000);
                             Set(varProcessando, false),
                             IsBlank(_carretel),
                             Notify("Escolha o carretel de saída antes de iniciar.", NotificationType.Warning, 6000);
@@ -1668,7 +1691,7 @@ Screens:
                                     status_processo: "Em processo",
                                     data_hora_inicio_debandagem: _agora,
                                     InicioEmProcesso_Debandagem: _agora,
-                                    Turno_Debandagem: Text(fx_Turno(_min)),
+                                    Turno_Debandagem: Text(fx_TurnoEm(_agora)),
                                     'Carretel Saida': _carretel
                                 }
                             );
@@ -1716,7 +1739,7 @@ Screens:
                                         tipo: {Value: "Início"},
                                         data_hora: _agora,
                                         data_ref: fx_DataRefEm(_agora),
-                                        turno: fx_Turno(_min),
+                                        turno: fx_TurnoEm(_agora),
                                         bitola: _r.Bitola,
                                         metros: Coalesce(_r.quantidade_vulcanizacao, 0),
                                         recurso: _r.Trançadeira
@@ -1781,7 +1804,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1826,7 +1849,7 @@ Screens:
                 Properties:
                   Color: |-
                     =If(
-                        Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0),
+                        fx_MetragemSubiu(fx_Num(inp_QtdDeband.Text), gal_FilaDeband.Selected.quantidade_vulcanizacao),
                         fx_CorErro,
                         fx_CorTextoSuave
                     )
@@ -1835,8 +1858,13 @@ Screens:
                   Height: =24
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Recebido da Vulcanização " & Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) & " m   ·   saldo " &
-                    (Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) - Coalesce(fx_Num(inp_QtdDeband.Text), 0)) & " m"
+                    ="Recebido da Vulcanização " & fx_MetrosUn(gal_FilaDeband.Selected.quantidade_vulcanizacao) & "   ·   saldo " &
+                    (Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) - Coalesce(fx_Num(inp_QtdDeband.Text), 0)) & " m" &
+                    If(
+                        fx_MetragemSubiu(fx_Num(inp_QtdDeband.Text), gal_FilaDeband.Selected.quantidade_vulcanizacao),
+                        "   ⚠ acima da margem de " & fx_MargemMetragemPct & "%",
+                        ""
+                    )
                   Width: =560
                   X: =403
                   Y: =327
@@ -1896,7 +1924,7 @@ Screens:
                     =If(
                         !varProcessando &&
                         !IsBlank(cmb_OperadorDeband.Selected.Nome) &&
-                        Coalesce(fx_Num(inp_QtdDeband.Text), 0) > 0,
+                        fx_MetragemOk(fx_Num(inp_QtdDeband.Text)),
                         DisplayMode.Edit,
                         DisplayMode.Disabled
                     )
@@ -1912,13 +1940,12 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID),
                             _agora: Now(),
-                            _min: fx_MinutosDoDia(Now()),
                             _qtd: Coalesce(fx_Num(inp_QtdDeband.Text), 0),
                             _obs: inp_ObsDeband.Text,
                             _operador: cmb_OperadorDeband.Selected.Nome
                         },
                         If(
-                            IsBlank(_operador) || _qtd <= 0,
+                            IsBlank(_operador) || !fx_MetragemOk(_qtd),
                             Notify("Preencha operador e metragem antes de enviar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
                             _r.Modified <> gal_FilaDeband.Selected.Modified,
@@ -1949,10 +1976,10 @@ Screens:
                                         'InicioAguardando_Extr./Teste': _agora,
                                         'Carretel Entrada': _saida,
                                         'Carretel Saida': Blank(),
-                                        Turno_Debandagem: Text(fx_Turno(_min)),
-                                        Qtd_Turno1_Debandagem: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
-                                        Qtd_Turno2_Debandagem: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
-                                        Qtd_Turno3_Debandagem: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
+                                        Turno_Debandagem: Text(fx_TurnoEm(_agora)),
+                                        Qtd_Turno1_Debandagem: If(fx_TurnoEm(_agora) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
+                                        Qtd_Turno2_Debandagem: If(fx_TurnoEm(_agora) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
+                                        Qtd_Turno3_Debandagem: If(fx_TurnoEm(_agora) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
                                     }
                                 );
                                 If(
@@ -1992,7 +2019,7 @@ Screens:
                                             tipo: {Value: "Fim"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: fx_Turno(_min),
+                                            turno: fx_TurnoEm(_agora),
                                             bitola: _r.Bitola,
                                             metros: _qtd,
                                             recurso: _r.Trançadeira,
@@ -2087,7 +2114,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -2107,21 +2134,36 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =245
-            - inp_MangueiraEditarDeband:
-                Control: Classic/TextInput@2.3.2
+            - cmb_MangueiraEditarDeband:
+                Control: Classic/ComboBox@2.4.0
                 Properties:
                   AccessibleLabel: ="Mangueira da ordem"
                   BorderColor: =fx_CorBorda
-                  Default: =gal_FilaDeband.Selected.Mangueira
-                  DelayOutput: =true
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  DefaultSelectedItems: |-
+                    =Filter(
+                        colMangEditDeband,
+                        NomeMangueira = If(
+                            IsBlank(LookUp(colMangEditDeband, NomeMangueira = gal_FilaDeband.Selected.Mangueira)),
+                            fx_MangueiraOutra,
+                            gal_FilaDeband.Selected.Mangueira
+                        )
+                    )
+                  DisplayFields: =["NomeMangueira"]
                   Font: =fx_FonteFamilia
                   Height: =fx_AlturaCampo
                   HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
+                  InputTextPlaceholder: ="Buscar mangueira..."
+                  Items: =colMangEditDeband
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["NomeMangueira"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
                   Size: =fx_FonteCorpo
                   Width: =456
                   X: =455
@@ -2198,6 +2240,45 @@ Screens:
                   Width: =456
                   X: =455
                   Y: =401
+            - lbl_RotOutraMangDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DA MANGUEIRA *"
+                  Visible: =cmb_MangueiraEditarDeband.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =433
+            - inp_OutraMangDeband:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da amostra ou mangueira nova"
+                  BorderColor: =fx_CorBorda
+                  Default: |-
+                    =If(
+                        IsBlank(LookUp(colMangEditDeband, NomeMangueira = gal_FilaDeband.Selected.Mangueira)),
+                        gal_FilaDeband.Selected.Mangueira,
+                        ""
+                    )
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Código da amostra ou da mangueira nova"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Visible: =cmb_MangueiraEditarDeband.Selected.NomeMangueira = fx_MangueiraOutra
+                  Width: =456
+                  X: =455
+                  Y: =455
             - btn_CancelarEditarDeband:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -2209,7 +2290,8 @@ Screens:
                   Height: =fx_AlturaAcaoS
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =Reset(inp_MangueiraEditarDeband);
+                    =Reset(cmb_MangueiraEditarDeband);
+                    Reset(inp_OutraMangDeband);
                     Reset(inp_CarretelEntradaEditarDeband);
                     Reset(inp_CarretelSaidaEditarDeband);
                     UpdateContext({ctxModalEditarDeband: false})
@@ -2230,7 +2312,14 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaDeband.Selected.ID) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(gal_FilaDeband.Selected.ID) || varProcessando ||
+                        IsBlank(cmb_MangueiraEditarDeband.Selected.NomeMangueira) ||
+                        (cmb_MangueiraEditarDeband.Selected.NomeMangueira = fx_MangueiraOutra && IsBlank(Trim(inp_OutraMangDeband.Text))),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -2249,9 +2338,13 @@ Screens:
                                 ficha_producao,
                                 _r,
                                 {
-                                    Mangueira: inp_MangueiraEditarDeband.Text,
-                                    'Carretel Entrada': inp_CarretelEntradaEditarDeband.Text,
-                                    'Carretel Saida': inp_CarretelSaidaEditarDeband.Text
+                                    Mangueira: If(
+                                        cmb_MangueiraEditarDeband.Selected.NomeMangueira = fx_MangueiraOutra,
+                                        Upper(Trim(inp_OutraMangDeband.Text)),
+                                        cmb_MangueiraEditarDeband.Selected.NomeMangueira
+                                    ),
+                                    'Carretel Entrada': Trim(inp_CarretelEntradaEditarDeband.Text),
+                                    'Carretel Saida': Trim(inp_CarretelSaidaEditarDeband.Text)
                                 }
                             );
                             If(
