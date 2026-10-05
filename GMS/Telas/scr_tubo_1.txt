@@ -11,10 +11,18 @@ Screens:
             ctxModalEditarTubo: false,
             ctxModalDelinTubo: false,
             ctxDelinModoInicio: false,
-            ctxUsouTudoTubo: true
+            ctxUsouTudoTubo: true,
+            ctxModalOutraMangTubo: false
         });
         Set(varProcessando, false);
-        If(IsEmpty(colSpecTubo), ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION));
+        ClearCollect(colMangEscTubo, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
+        If(
+            IsEmpty(colSpecTubo),
+            IfError(
+                ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION),
+                Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Toque em atualizar.", NotificationType.Error, 8000)
+            )
+        );
         Set(varMangueiraEscolhidaTubo, Blank());
         Select(ico_RefreshTubo_1)
     Children:
@@ -40,7 +48,8 @@ Screens:
             OnTimerEnd: |-
               =If(
                   !varProcessando && !ctxModalIniciarTubo &&
-                  !ctxModalEnviarTubo && !ctxModalEditarTubo,
+                  !ctxModalEnviarTubo && !ctxModalEditarTubo &&
+                  !ctxModalDelinTubo && !ctxModalOutraMangTubo,
                   Select(ico_RefreshTubo_1)
               )
             Repeat: =true
@@ -68,7 +77,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =65
             PaddingBottom: =0
@@ -92,11 +101,11 @@ Screens:
             PaddingLeft: =0
             PaddingRight: =0
             PaddingTop: =0
-            RadiusBottomLeft: =5
-            RadiusBottomRight: =5
-            RadiusTopLeft: =5
-            RadiusTopRight: =5
-            Size: =14
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
             Text: |-
               ="Total: " & CountRows(gal_FilaTubo_1.AllItems)
             Width: =83
@@ -229,7 +238,7 @@ Screens:
                   Height: =22
                   OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
-                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & Coalesce(ThisItem.quantidade_mandril, 0) & " m"
+                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & fx_MetrosUn(ThisItem.quantidade_mandril)
                   Width: =190
                   X: =20
                   Y: =64
@@ -287,7 +296,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -458,7 +467,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaTubo_1.Selected.quantidade_mandril)
             Width: =190
             X: =918
             Y: =151
@@ -561,7 +570,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =36
             Size: =fx_FonteApoio
-            Text: ="CÓDIGO DO COMPOSTO"
+            Text: ="CÓDIGO DO COMPOSTO *"
             Width: =148
             X: =369
             Y: =303
@@ -569,7 +578,12 @@ Screens:
           Control: Classic/TextInput@2.3.2
           Properties:
             AccessibleLabel: ="Código do composto do tubo"
-            BorderColor: =fx_CorBorda
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !fx_CompostoValido(Self.Text),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
             Default: =gal_FilaTubo_1.Selected.'Cod.CompostoTubo'
             DelayOutput: =true
             DisplayMode: |-
@@ -686,15 +700,28 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: ="DIÂMETRO (mm)"
+            Text: ="DIÂMETRO (pol.) *"
             Width: =148
             X: =369
             Y: =397
       - inp_DiametroTubo_1:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Diâmetro do tubo em milímetros"
-            BorderColor: =fx_CorBorda
+            AccessibleLabel: ="Diâmetro do tubo em polegadas"
+            BorderColor: |-
+              =With(
+                  { _s: LookUp(
+                  colSpecTubo,
+                  Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+              ), _v: fx_DiametroPol(Self.Text) },
+                  If(
+                      fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && (!fx_EhNum(Self.Text) || Coalesce(_v, 0) <= 0),
+                      fx_CorErro,
+                      fx_ForaDaFaixa(_v, fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD))),
+                      fx_CorAlerta,
+                      fx_CorBorda
+                  )
+              )
             Default: =gal_FilaTubo_1.Selected.diametro_tubo
             DelayOutput: =true
             DisplayMode: |-
@@ -733,7 +760,7 @@ Screens:
             AccessibleLabel: ="Metragem de tubo produzida em metros"
             BorderColor: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && (IsBlank(Self.Text) || Value(Self.Text) <= 0),
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !fx_MetragemOk(fx_Num(Self.Text)),
                   fx_CorErro,
                   fx_CorBorda
               )
@@ -874,7 +901,14 @@ Screens:
             ChevronHoverFill: =fx_CorSuperficie
             DefaultSelectedItems: |-
               =Filter(
-                  colMangueiras,
+                  With(
+                      { _atual: Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "") },
+                      If(
+                          IsBlank(_atual) || !IsBlank(LookUp(colMangEscTubo, NomeMangueira = _atual)),
+                          colMangEscTubo,
+                          Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), "t")
+                      )
+                  ),
                   NomeMangueira = Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira)
               )
             DisplayFields: =["NomeMangueira"]
@@ -889,8 +923,22 @@ Screens:
             HoverFill: =fx_CorInfoSuave
             InputTextPlaceholder: ="Selecione na lista"
             IsSearchable: =false
-            Items: =colMangueiras
-            OnChange: =Set(varMangueiraEscolhidaTubo, Self.Selected.NomeMangueira)
+            Items: |-
+              =With(
+                  { _atual: Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "") },
+                  If(
+                      IsBlank(_atual) || !IsBlank(LookUp(colMangEscTubo, NomeMangueira = _atual)),
+                      colMangEscTubo,
+                      Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), "t")
+                  )
+              )
+            OnChange: |-
+              =If(
+                  Self.Selected.NomeMangueira = fx_MangueiraOutra,
+                  Reset(inp_OutraMangTubo);
+                  UpdateContext({ctxModalOutraMangTubo: true}),
+                  Set(varMangueiraEscolhidaTubo, Self.Selected.NomeMangueira)
+              )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
             SearchFields: =["NomeMangueira"]
@@ -1081,28 +1129,61 @@ Screens:
       - lbl_AlertaBalancoTubo_1:
           Control: Label@2.5.1
           Properties:
-            Color: =fx_CorErro
+            Color: =fx_CorAlerta
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             Size: =fx_FonteCorpo
-            Text: ="⚠ Produzido + refugo passou do que entrou — confira a digitação."
+            Text: |-
+              ="⚠ Produzido + refugo passa " &
+              Text(
+                  Round(
+                      ((Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) + Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)) / gal_FilaTubo_1.Selected.quantidade_mandril - 1) * 100,
+                      0
+                  ),
+                  "[$-en-US]0"
+              ) & "% do que entrou (margem " & fx_MargemMetragemPct & "%). Confira a digitação."
             Visible: |-
               =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" &&
-              Coalesce(Value(inp_QtdTubo_1.Text), 0) + Coalesce(Value(inp_RefugoTubo_1.Text), 0) > Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0)
+              fx_MetragemSubiu(
+                  Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) + Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0),
+                  gal_FilaTubo_1.Selected.quantidade_mandril
+              )
             Width: =472
             X: =369
             Y: =625
       - lbl_AlertaValidadeTubo_1:
           Control: Label@2.5.1
           Properties:
-            Color: =fx_CorErro
+            Color: =fx_CorAlerta
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             Size: =fx_FonteCorpo
-            Text: ="⚠ Composto com validade vencida — chame a supervisão antes de aplicar."
-            Visible: =!IsBlank(dte_ValidadeTubo_1.SelectedDate) && dte_ValidadeTubo_1.SelectedDate < ctxAgora
+            Text: |-
+              =With(
+                  { _s: LookUp(
+                  colSpecTubo,
+                  Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+              ) },
+                  With(
+                      { _v: fx_DiametroPol(inp_DiametroTubo_1.Text) },
+                      If(
+                          !IsBlank(dte_ValidadeTubo_1.SelectedDate) &&
+                          dte_ValidadeTubo_1.SelectedDate < Date(Year(ctxAgora), Month(ctxAgora), Day(ctxAgora)),
+                          "⚠ Composto com validade vencida. Avise a supervisão.",
+                          !IsBlank(Trim(inp_CodTubo_1.Text)) && !fx_CompostoValido(inp_CodTubo_1.Text),
+                          "⚠ Código do composto inválido. Confira a etiqueta.",
+                          !IsBlank(Trim(inp_CodTubo_1.Text)) && !IsBlank(Trim(Text(_s.TUBE_PN))) &&
+                          fx_NormCodigo(inp_CodTubo_1.Text) <> fx_NormCodigo(Text(_s.TUBE_PN)),
+                          "⚠ Composto diferente do delineamento (spec " & Text(_s.TUBE_PN) & ").",
+                          fx_ForaDaFaixa(_v, fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD))),
+                          "⚠ Diâmetro fora da faixa do delineamento (" & fx_MedidaBR(fx_NumSpec(Text(_s.MIN_OD))) & " a " & fx_MedidaBR(fx_NumSpec(Text(_s.MAX_OD))) & " pol.).",
+                          ""
+                      )
+                  )
+              )
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !IsBlank(Self.Text)
             Width: =472
             X: =369
             Y: =651
@@ -1176,7 +1257,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =36
             Size: =fx_FonteNumero
-            Text: =Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaTubo_1.Selected.quantidade_mandril)
             Width: =185
             X: =909
             Y: =329
@@ -1200,7 +1281,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =36
             Size: =fx_FonteNumero
-            Text: =Coalesce(Value(inp_QtdTubo_1.Text), 0) & " m"
+            Text: =fx_MetrosUn(fx_Num(inp_QtdTubo_1.Text))
             Width: =185
             X: =909
             Y: =389
@@ -1221,7 +1302,7 @@ Screens:
           Properties:
             Color: |-
               =If(
-                  Coalesce(Value(inp_RefugoTubo_1.Text), 0) > 0,
+                  Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0) > 0,
                   fx_CorErro,
                   fx_CorTexto
               )
@@ -1229,7 +1310,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =36
             Size: =fx_FonteNumero
-            Text: =Coalesce(Value(inp_RefugoTubo_1.Text), 0) & " m"
+            Text: =fx_MetrosUn(Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0))
             Width: =185
             X: =909
             Y: =449
@@ -1258,7 +1339,10 @@ Screens:
           Properties:
             Color: |-
               =If(
-                  Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0) < 0,
+                  fx_MetragemSubiu(
+                      Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) + Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0),
+                      gal_FilaTubo_1.Selected.quantidade_mandril
+                  ),
                   fx_CorErro,
                   fx_CorTexto
               )
@@ -1266,7 +1350,16 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =36
             Size: =fx_FonteNumero
-            Text: =(Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0)) & " m"
+            Text: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.quantidade_mandril),
+                  "—",
+                  fx_MetrosUn(
+                      gal_FilaTubo_1.Selected.quantidade_mandril -
+                      Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) -
+                      Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)
+                  )
+              )
             Width: =185
             X: =909
             Y: =521
@@ -1334,17 +1427,24 @@ Screens:
             Height: =60
             Icon: =Icon.Reload
             OnSelect: |-
-              =Refresh(ficha_producao);
-              Refresh(lista_carreteis);
-              Refresh('Hora-Hora');
-              ClearCollect(colCarreteisTubo, lista_carreteis);
-              ClearCollect(
-                  colFilaTrancTubo,
-                  Filter(ficha_producao, processo = "Trançadeira")
+              =IfError(
+                  Concurrent(
+                      Refresh(ficha_producao),
+                      Refresh(lista_carreteis),
+                      Refresh('Hora-Hora')
+                  ),
+                  Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
               );
-              ClearCollect(
-                  colHHDiaTubo,
-                  Filter('Hora-Hora', Data = fx_DataRefEm(Now()))
+              Concurrent(
+                  ClearCollect(colCarreteisTubo, lista_carreteis),
+                  ClearCollect(
+                      colFilaTrancTubo,
+                      Filter(ficha_producao, processo = "Trançadeira")
+                  ),
+                  ClearCollect(
+                      colHHDiaTubo,
+                      Filter('Hora-Hora', Data = fx_DataRefEm(Now()))
+                  )
               );
               ClearCollect(
                   colKanbanTrancTubo,
@@ -1470,25 +1570,22 @@ Screens:
                       _r.Modified <> gal_FilaTubo_1.Selected.Modified,
                       Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                       Set(varProcessando, false),
-                      With(
-                          { _min: fx_MinutosDoDia(Now()) },
-                          Patch(
-                              ficha_producao,
-                              _r,
-                              {
-                                  'Cod.CompostoTubo': inp_CodTubo_1.Text,
-                                  'Lote Composto Tubo': inp_LoteTubo_1.Text,
-                                  'Data de Validade do Composto Tubo': dte_ValidadeTubo_1.SelectedDate,
-                                  diametro_tubo: Value(inp_DiametroTubo_1.Text),
-                                  quantidade_tubo: Value(inp_QtdTubo_1.Text),
-                                  defeito_tubo: Value(inp_RefugoTubo_1.Text),
-                                  operador_tubo: cmb_OperadorTubo_1.Selected.Nome,
-                                  Mangueira: cmb_MangueiraTubo_1.Selected.NomeMangueira,
-                                  Trançadeira: drp_TrancadeiraTubo_1.Selected.Value,
-                                  Observação_tubo: inp_ObsTubo_1.Text,
-                                  Turno_Tubo: Text(fx_Turno(_min))
-                              }
-                          )
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              'Cod.CompostoTubo': Trim(inp_CodTubo_1.Text),
+                              'Lote Composto Tubo': Trim(inp_LoteTubo_1.Text),
+                              'Data de Validade do Composto Tubo': dte_ValidadeTubo_1.SelectedDate,
+                              diametro_tubo: fx_DiametroPol(inp_DiametroTubo_1.Text),
+                              quantidade_tubo: fx_Num(inp_QtdTubo_1.Text),
+                              defeito_tubo: Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0),
+                              operador_tubo: Coalesce(cmb_OperadorTubo_1.Selected.Nome, _r.operador_tubo),
+                              Mangueira: Coalesce(cmb_MangueiraTubo_1.Selected.NomeMangueira, _r.Mangueira),
+                              Trançadeira: Coalesce(drp_TrancadeiraTubo_1.Selected.Value, _r.Trançadeira),
+                              Observação_tubo: inp_ObsTubo_1.Text,
+                              Turno_Tubo: Text(fx_TurnoEm(Now()))
+                          }
                       );
                       If(
                           !IsEmpty(Errors(ficha_producao)),
@@ -1526,11 +1623,13 @@ Screens:
                   !IsBlank(cmb_OperadorTubo_1.Selected.Nome) &&
                   !IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) &&
                   !IsBlank(drp_TrancadeiraTubo_1.Selected.Value) &&
-                  !IsBlank(inp_LoteTubo_1.Text) &&
+                  !IsBlank(Trim(inp_LoteTubo_1.Text)) &&
                   !IsBlank(dte_ValidadeTubo_1.SelectedDate) &&
+                  fx_CompostoValido(inp_CodTubo_1.Text) &&
+                  Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) > 0 &&
                   Len(Trim(inp_OpTubo_1.Text)) = 8 &&
                   Coalesce(Value(inp_OpTubo_1.Text), 0) > 0 &&
-                  Coalesce(Value(inp_QtdTubo_1.Text), 0) > 0,
+                  fx_MetragemOk(fx_Num(inp_QtdTubo_1.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1676,7 +1775,7 @@ Screens:
           Control: Image@2.2.3
           Properties:
             Height: =24
-            Image: =send
+            Image: ='clipboard-list'
             OnSelect: =Select(btn_HistoricoTurnoTubo_1)
             Width: =24
             X: =1186
@@ -1815,7 +1914,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.4.0"
+            Text: ="Versão 0.5.0"
             Width: =183
             X: =1168
             Y: =738
@@ -1852,7 +1951,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -1867,7 +1966,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =22
                   Size: =fx_FonteCorpo
-                  Text: ="Tubo  ·  Bitola " & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola), "—") & "  ·  " & Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m recebidos do Mandril"
+                  Text: ="Tubo  ·  Bitola " & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola), "—") & "  ·  " & fx_MetrosUn(gal_FilaTubo_1.Selected.quantidade_mandril) & " recebidos do Mandril"
                   Width: =560
                   X: =403
                   Y: =212
@@ -2058,7 +2157,7 @@ Screens:
                             _carretel: LookUp(lista_carreteis, Title = cmb_CarretelSaidaTubo_1.Selected.Title),
                             _sobra: LookUp(lista_carreteis, Title = cmb_SobraTubo_1.Selected.Title),
                             _agora: Now(),
-                            _min: fx_MinutosDoDia(Now())
+                            _turno: fx_TurnoEm(Now())
                         },
                         If(
                             _r.Modified <> gal_FilaTubo_1.Selected.Modified,
@@ -2067,6 +2166,9 @@ Screens:
                             !IsBlank(_carretel.op),
                             Notify("Este carretel acabou de ser alocado em outra OP. Escolha outro.", NotificationType.Error, 8000);
                             ClearCollect(colCarreteisTubo, lista_carreteis);
+                            Set(varProcessando, false),
+                            !fx_MetragemOk(_r.quantidade_mandril),
+                            Notify("OP sem metragem recebida do Mandril. Chame a Supervisão para corrigir antes de produzir.", NotificationType.Warning, 8000);
                             Set(varProcessando, false),
                             With(
                                 {
@@ -2097,7 +2199,7 @@ Screens:
                                         status_processo: "Em processo",
                                         data_hora_inicio_tubo: _agora,
                                         InicioEmProcesso_Tubo: _agora,
-                                        Turno_Tubo: Text(fx_Turno(_min)),
+                                        Turno_Tubo: Text(_turno),
                                         'Carretel Saida': _carretel.Title
                                     }
                                 );
@@ -2112,6 +2214,10 @@ Screens:
                                             op: Text(_r.ID),
                                             etapa_processo: "Tubo"
                                         }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(lista_carreteis)),
+                                        Notify("OP iniciada, mas o carretel NÃO foi marcado como ocupado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
                                     );
                                     With(
                                         { _cust: LookUp(Historico_Carretel, etapa = "Tubo" && Title = _carretel.Title && OP_ID = _r.OP) },
@@ -2144,7 +2250,7 @@ Screens:
                                             tipo: {Value: "Início"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: fx_Turno(_min),
+                                            turno: _turno,
                                             bitola: _r.Bitola,
                                             metros: _entrada,
                                             sobra: 0,
@@ -2222,7 +2328,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -2300,7 +2406,7 @@ Screens:
                   RadiusTopLeft: =fx_RaioS
                   RadiusTopRight: =fx_RaioS
                   Size: =fx_FonteCorpo
-                  Text: ="Produzido " & Coalesce(Value(inp_QtdTubo_1.Text), 0) & " m   ·   refugo " & Coalesce(Value(inp_RefugoTubo_1.Text), 0) & " m   ·   " & Coalesce(cmb_OperadorTubo_1.Selected.Nome, "—")
+                  Text: ="Produzido " & fx_MetrosUn(fx_Num(inp_QtdTubo_1.Text)) & "   ·   refugo " & fx_MetrosUn(Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)) & "   ·   " & Coalesce(cmb_OperadorTubo_1.Selected.Nome, "—")
                   Width: =560
                   X: =403
                   Y: =240
@@ -2382,7 +2488,7 @@ Screens:
                   AccessibleLabel: ="Metros que sobraram no carretel de entrada"
                   BorderColor: |-
                     =If(
-                        IsBlank(Self.Text) || Value(Self.Text) <= 0,
+                        !fx_MetragemOk(fx_Num(Self.Text)),
                         fx_CorErro,
                         fx_CorBorda
                     )
@@ -2413,7 +2519,7 @@ Screens:
                   Size: =fx_FonteApoio
                   Text: |-
                     ="Pelo balanço da ficha sobraram cerca de " &
-                    Max(0, Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0)) &
+                    Max(0, Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) - Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)) &
                     " m. A sobra volta para a fila do Tubo como uma nova OP, no carretel de entrada."
                   Visible: =!ctxUsouTudoTubo
                   Width: =320
@@ -2455,10 +2561,12 @@ Screens:
                         !IsBlank(cmb_OperadorTubo_1.Selected.Nome) &&
                         !IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) &&
                         !IsBlank(drp_TrancadeiraTubo_1.Selected.Value) &&
-                        !IsBlank(inp_LoteTubo_1.Text) &&
+                        !IsBlank(Trim(inp_LoteTubo_1.Text)) &&
+                        fx_CompostoValido(inp_CodTubo_1.Text) &&
+                        Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) > 0 &&
                         Len(Trim(inp_OpTubo_1.Text)) = 8 &&
-                        Coalesce(Value(inp_QtdTubo_1.Text), 0) > 0 &&
-                        (ctxUsouTudoTubo || Coalesce(Value(inp_SobraTubo_1.Text), 0) > 0),
+                        fx_MetragemOk(fx_Num(inp_QtdTubo_1.Text)) &&
+                        (ctxUsouTudoTubo || fx_MetragemOk(fx_Num(inp_SobraTubo_1.Text))),
                         DisplayMode.Edit,
                         DisplayMode.Disabled
                     )
@@ -2474,21 +2582,22 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID),
                             _agora: Now(),
-                            _min: fx_MinutosDoDia(Now()),
+                            _turno: fx_TurnoEm(Now()),
                             _op: Value(Trim(inp_OpTubo_1.Text)),
-                            _qtd: Coalesce(Value(inp_QtdTubo_1.Text), 0),
-                            _refugo: Coalesce(Value(inp_RefugoTubo_1.Text), 0),
+                            _qtd: fx_Num(inp_QtdTubo_1.Text),
+                            _refugo: Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0),
                             _operador: cmb_OperadorTubo_1.Selected.Nome,
                             _mangueira: cmb_MangueiraTubo_1.Selected.NomeMangueira,
                             _trancadeira: drp_TrancadeiraTubo_1.Selected.Value,
-                            _sobra: If(ctxUsouTudoTubo, 0, Coalesce(Value(inp_SobraTubo_1.Text), 0))
+                            _sobra: If(ctxUsouTudoTubo, 0, Coalesce(fx_Num(inp_SobraTubo_1.Text), 0))
                         },
                         If(
                             Len(Trim(inp_OpTubo_1.Text)) <> 8 || _op <= 0,
                             Notify("A OP deve ter exatamente 8 dígitos e não pode ser zero.", NotificationType.Warning, 8000);
                             Set(varProcessando, false),
-                            IsBlank(_operador) || IsBlank(_mangueira) || IsBlank(_trancadeira) || IsBlank(inp_LoteTubo_1.Text) || _qtd <= 0,
-                            Notify("Preencha operador, mangueira, trançadeira, lote e metragem antes de enviar.", NotificationType.Warning, 6000);
+                            IsBlank(_operador) || IsBlank(_mangueira) || IsBlank(_trancadeira) || IsBlank(Trim(inp_LoteTubo_1.Text)) || !fx_MetragemOk(_qtd) ||
+                            !fx_CompostoValido(inp_CodTubo_1.Text) || Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) <= 0,
+                            Notify("Preencha operador, mangueira, trançadeira, lote, código do composto, diâmetro e metragem antes de enviar.", NotificationType.Warning, 8000);
                             Set(varProcessando, false),
                             !ctxUsouTudoTubo && _sobra <= 0,
                             Notify("Informe quantos metros sobraram no carretel de entrada.", NotificationType.Warning, 6000);
@@ -2514,10 +2623,10 @@ Screens:
                                                 _r,
                                                 {
                                                     OP: _op,
-                                                    'Cod.CompostoTubo': inp_CodTubo_1.Text,
-                                                    'Lote Composto Tubo': inp_LoteTubo_1.Text,
+                                                    'Cod.CompostoTubo': Trim(inp_CodTubo_1.Text),
+                                                    'Lote Composto Tubo': Trim(inp_LoteTubo_1.Text),
                                                     'Data de Validade do Composto Tubo': dte_ValidadeTubo_1.SelectedDate,
-                                                    diametro_tubo: Value(inp_DiametroTubo_1.Text),
+                                                    diametro_tubo: fx_DiametroPol(inp_DiametroTubo_1.Text),
                                                     quantidade_tubo: _qtd,
                                                     defeito_tubo: _refugo,
                                                     operador_tubo: _operador,
@@ -2531,7 +2640,7 @@ Screens:
                                                     'Carretel Entrada': _r.'Carretel Saida',
                                                     'Carretel Saida': Blank(),
                                                     quantidade_mandril: _qtdEntrada - _sobra,
-                                                    Turno_Tubo: Text(fx_Turno(_min))
+                                                    Turno_Tubo: Text(_turno)
                                                 }
                                             )
                                         );
@@ -2572,7 +2681,7 @@ Screens:
                                                     tipo: {Value: "Fim"},
                                                     data_hora: _agora,
                                                     data_ref: fx_DataRefEm(_agora),
-                                                    turno: fx_Turno(_min),
+                                                    turno: _turno,
                                                     bitola: _r.Bitola,
                                                     metros: _qtd,
                                                     refugo: _refugo,
@@ -2590,16 +2699,27 @@ Screens:
                                                 ctxUsouTudoTubo,
                                                 If(
                                                     !IsBlank(_r.'Carretel Entrada'),
-                                                    Patch(
-                                                        lista_carreteis,
-                                                        LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
-                                                        {
-                                                            op: Blank(),
-                                                            etapa_processo: Blank(),
-                                                            lote: Blank(),
-                                                            metros_restantes: 0,
-                                                            mangueira_atual: Blank()
-                                                        }
+                                                    With(
+                                                        { _c: LookUp(lista_carreteis, Title = _r.'Carretel Entrada') },
+                                                        If(
+                                                            IsBlank(_c.Title),
+                                                            Notify("Enviado, mas o carretel de entrada " & _r.'Carretel Entrada' & " não foi encontrado para liberar. Avise a supervisão.", NotificationType.Warning, 10000),
+                                                            Patch(
+                                                                lista_carreteis,
+                                                                _c,
+                                                                {
+                                                                    op: Blank(),
+                                                                    etapa_processo: Blank(),
+                                                                    lote: Blank(),
+                                                                    metros_restantes: 0,
+                                                                    mangueira_atual: Blank()
+                                                                }
+                                                            );
+                                                            If(
+                                                                !IsEmpty(Errors(lista_carreteis)),
+                                                                Notify("Enviado, mas o carretel de entrada NÃO foi liberado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                                                            )
+                                                        )
                                                     )
                                                 ),
                                                 Set(
@@ -2633,15 +2753,26 @@ Screens:
                                                     Notify("ATENÇÃO: a sobra NÃO voltou para a fila do Tubo. Avise a supervisão.", NotificationType.Error, 15000),
                                                     If(
                                                         !IsBlank(_r.'Carretel Entrada'),
-                                                        Patch(
-                                                            lista_carreteis,
-                                                            LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
-                                                            {
-                                                                op: Text(gvarFilhoTubo.ID),
-                                                                etapa_processo: "Tubo",
-                                                                metros_restantes: _sobra,
-                                                                mangueira_atual: Text(_r.Bitola)
-                                                            }
+                                                        With(
+                                                            { _c2: LookUp(lista_carreteis, Title = _r.'Carretel Entrada') },
+                                                            If(
+                                                                IsBlank(_c2.Title),
+                                                                Notify("Sobra devolvida à fila, mas o carretel " & _r.'Carretel Entrada' & " não foi encontrado para marcar. Avise a supervisão.", NotificationType.Warning, 10000),
+                                                                Patch(
+                                                                    lista_carreteis,
+                                                                    _c2,
+                                                                    {
+                                                                        op: Text(gvarFilhoTubo.ID),
+                                                                        etapa_processo: "Tubo",
+                                                                        metros_restantes: _sobra,
+                                                                        mangueira_atual: Text(_r.Bitola)
+                                                                    }
+                                                                );
+                                                                If(
+                                                                    !IsEmpty(Errors(lista_carreteis)),
+                                                                    Notify("Sobra devolvida à fila, mas o carretel NÃO foi marcado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                                                                )
+                                                            )
                                                         )
                                                     );
                                                     Notify(
@@ -2720,7 +2851,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -2854,7 +2985,13 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaTubo_1.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(gal_FilaTubo_1.Selected.ID) || varProcessando ||
+                        Coalesce(Value(inp_BitolaEditarTubo_1.Text), 0) <= 0,
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -2874,8 +3011,8 @@ Screens:
                                 _r,
                                 {
                                     Bitola: Value(inp_BitolaEditarTubo_1.Text),
-                                    'Carretel Entrada': inp_CarretelEntradaEditarTubo_1.Text,
-                                    'Carretel Saida': inp_CarretelSaidaEditarTubo_1.Text
+                                    'Carretel Entrada': Trim(inp_CarretelEntradaEditarTubo_1.Text),
+                                    'Carretel Saida': Trim(inp_CarretelSaidaEditarTubo_1.Text)
                                 }
                             );
                             If(
@@ -2932,7 +3069,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -3048,7 +3185,7 @@ Screens:
                   FontWeight: =FontWeight.Bold
                   Height: =53
                   Size: =fx_FonteDestaque
-                  Text: ="Sem delineamento cadastrado para esta mangueira em DM_TUBE_EXTRUSION. Confira o código da mangueira ou chame a Engenharia."
+                  Text: ="Sem delineamento cadastrado para esta mangueira em DM_TUBE_EXTRUSION. Se for amostra ou mangueira nova, pode continuar sem faixa para conferir."
                   Visible: |-
                     =IsBlank(
                         LookUp(
@@ -3489,12 +3626,7 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: |-
-                    =If(
-                        ctxDelinModoInicio && IsBlank(cmb_MangueiraDelinTubo.Selected.PARTNUMBER),
-                        DisplayMode.Disabled,
-                        DisplayMode.Edit
-                    )
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =If(ctxDelinModoInicio, fx_CorOK, fx_CorInfo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -3547,6 +3679,153 @@ Screens:
             Width: =184
             X: =1168
             Y: =315
+      - cntr_OutraMangTubo:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalOutraMangTubo
+            Width: =1366
+          Children:
+            - btn_BgOutraMangTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardOutraMangTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =320
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =560
+                  X: =403
+                  Y: =210
+            - lbl_TituloOutraMangTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Mangueira fora do cadastro"
+                  Width: =500
+                  X: =433
+                  Y: =234
+            - lbl_SubOutraMangTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: ="Amostra ou mangueira nova. Digite o código como está na ordem; a OP segue normalmente."
+                  Width: =500
+                  X: =433
+                  Y: =274
+            - lbl_RotOutraMangTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DA MANGUEIRA *"
+                  Width: =500
+                  X: =433
+                  Y: =334
+            - inp_OutraMangTubo:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da amostra ou mangueira nova"
+                  BorderColor: =If(IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+                  Default: =""
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Código da amostra ou da mangueira nova"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =500
+                  X: =433
+                  Y: =358
+            - btn_CancelarOutraMangTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Set(varMangueiraEscolhidaTubo, Blank());
+                    Reset(cmb_MangueiraTubo_1);
+                    Reset(inp_OutraMangTubo);
+                    UpdateContext({ctxModalOutraMangTubo: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =433
+                  Y: =450
+            - btn_ConfirmarOutraMangTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(IsBlank(Trim(inp_OutraMangTubo.Text)), DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varMangueiraEscolhidaTubo, Upper(Trim(inp_OutraMangTubo.Text)));
+                    Reset(cmb_MangueiraTubo_1);
+                    UpdateContext({ctxModalOutraMangTubo: false})
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Usar este código"
+                  Width: =220
+                  X: =713
+                  Y: =450
       - rct_OverlayTubo_1:
           Control: Rectangle@2.3.0
           Properties:
@@ -3586,7 +3865,13 @@ Screens:
             Fill: =Color.Transparent
             Font: =fx_FonteFamilia
             OnSelect: |-
-              =If(IsEmpty(colSpecTubo), ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION));
+              =If(
+                  IsEmpty(colSpecTubo),
+                  IfError(
+                      ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION),
+                      Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Tente de novo.", NotificationType.Error, 8000)
+                  )
+              );
               UpdateContext({ctxModalDelinTubo: true})
             Text: =""
             Visible: =false
