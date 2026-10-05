@@ -548,7 +548,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: ="CÓDIGO DA FITA MATCH-MATE *"
+            Text: ="CÓDIGO DA FITA MATCH-MATE" & If(fx_FitaDispensada(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate')), " (não leva)", " *")
             Width: =240
             X: =369
             Y: =333
@@ -559,13 +559,7 @@ Screens:
             BorderColor: |-
               =If(
                   fx_EstadoBand(gal_FilaBand.Selected.status_processo) = "PRODUZINDO" &&
-                  (
-                      IsBlank(Self.Text) ||
-                      (
-                          !IsBlank(fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))) &&
-                          fx_NormCodigo(Self.Text) <> fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))
-                      )
-                  ),
+                  !fx_FitaOk(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'), Self.Text),
                   fx_CorErro,
                   fx_CorBorda
               )
@@ -744,9 +738,10 @@ Screens:
             Size: =fx_FonteApoio
             Text: |-
               ="Fita especificada no Delineamento: " &
-              Coalesce(
-                  LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'),
-                  "não cadastrada"
+              If(
+                  fx_FitaDispensada(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate')),
+                  "não leva fita",
+                  Coalesce(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'), "não cadastrada")
               )
             Visible: =fx_EstadoBand(gal_FilaBand.Selected.status_processo) = "PRODUZINDO"
             Width: =472
@@ -778,6 +773,7 @@ Screens:
                       _spec: fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))
                   },
                   fx_EstadoBand(gal_FilaBand.Selected.status_processo) = "PRODUZINDO" &&
+                  !fx_FitaDispensada(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate')) &&
                   !IsBlank(_lido) &&
                   (IsBlank(_spec) || _lido <> _spec)
               )
@@ -1202,21 +1198,14 @@ Screens:
             Color: =fx_CorSuperficie
             DisabledFill: =fx_CorBorda
             DisplayMode: |-
-              =With(
-                  {
-                      _lido: fx_NormCodigo(inp_FitaBand.Text),
-                      _spec: fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))
-                  },
-                  If(
-                      !IsBlank(gal_FilaBand.Selected.ID) &&
-                      !varProcessando &&
-                      !IsBlank(cmb_OperadorBand.Selected.Nome) &&
-                      fx_MetragemOk(fx_Num(inp_QtdBand.Text)) &&
-                      !IsBlank(_lido) &&
-                      (IsBlank(_spec) || _lido = _spec),
-                      DisplayMode.Edit,
-                      DisplayMode.Disabled
-                  )
+              =If(
+                  !IsBlank(gal_FilaBand.Selected.ID) &&
+                  !varProcessando &&
+                  !IsBlank(cmb_OperadorBand.Selected.Nome) &&
+                  fx_MetragemOk(fx_Num(inp_QtdBand.Text)) &&
+                  fx_FitaOk(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'), inp_FitaBand.Text),
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
               )
             Fill: =fx_CorOK
             Font: =fx_FonteFamilia
@@ -2316,7 +2305,7 @@ Screens:
                   RadiusTopLeft: =fx_RaioS
                   RadiusTopRight: =fx_RaioS
                   Size: =fx_FonteCorpo
-                  Text: ="Bandado " & Coalesce(fx_Num(inp_QtdBand.Text), 0) & " m   ·   fita " & inp_FitaBand.Text & "   ·   " & cmb_OperadorBand.Selected.Nome
+                  Text: ="Bandado " & Coalesce(fx_Num(inp_QtdBand.Text), 0) & " m   ·   fita " & If(IsBlank(Trim(inp_FitaBand.Text)), "—", inp_FitaBand.Text) & "   ·   " & cmb_OperadorBand.Selected.Nome
                   Width: =560
                   X: =403
                   Y: =261
@@ -2386,20 +2375,13 @@ Screens:
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
                   DisplayMode: |-
-                    =With(
-                        {
-                            _lido: fx_NormCodigo(inp_FitaBand.Text),
-                            _spec: fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))
-                        },
-                        If(
-                            !varProcessando &&
-                            !IsBlank(cmb_OperadorBand.Selected.Nome) &&
-                            fx_MetragemOk(fx_Num(inp_QtdBand.Text)) &&
-                            !IsBlank(_lido) &&
-                            (IsBlank(_spec) || _lido = _spec),
-                            DisplayMode.Edit,
-                            DisplayMode.Disabled
-                        )
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_OperadorBand.Selected.Nome) &&
+                        fx_MetragemOk(fx_Num(inp_QtdBand.Text)) &&
+                        fx_FitaOk(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'), inp_FitaBand.Text),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
                     )
                   Fill: =fx_CorOK
                   Font: =fx_FonteFamilia
@@ -2415,17 +2397,16 @@ Screens:
                             _agora: Now(),
                             _qtd: Coalesce(fx_Num(inp_QtdBand.Text), 0),
                             _operador: cmb_OperadorBand.Selected.Nome,
-                            _lido: fx_NormCodigo(inp_FitaBand.Text),
-                            _spec: fx_NormCodigo(LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate'))
+                            _fitaSpec: LookUp(colDM_BANDAGEM, Trim(PARTNUMBER) = Trim(gal_FilaBand.Selected.Mangueira), 'Código fita match-mate')
                         },
                         If(
                             IsBlank(_operador) || !fx_MetragemOk(_qtd),
                             Notify("Preencha operador e metragem antes de enviar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
-                            IsBlank(_lido),
+                            !fx_FitaDispensada(_fitaSpec) && IsBlank(fx_NormCodigo(inp_FitaBand.Text)),
                             Notify("Informe o código da fita match-mate aplicada.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
-                            !IsBlank(_spec) && _lido <> _spec,
+                            !fx_FitaOk(_fitaSpec, inp_FitaBand.Text),
                             Notify("Código da fita diferente da especificação do Delineamento. Corrija antes de enviar.", NotificationType.Error, 8000);
                             Set(varProcessando, false),
                             _r.Modified <> gal_FilaBand.Selected.Modified,

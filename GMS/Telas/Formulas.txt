@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu e fx_DiametroPol (§5).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada e fx_FitaOk (§5).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -264,6 +264,23 @@ fx_ForaDaFaixa(lido: Number, minimo: Number, maximo: Number): Boolean =
 // Coalesce(x, 0) na gravação transformava dado ausente em zero calado.
 fx_MetragemOk(metros: Number): Boolean =
     !IsBlank(metros) && metros > 0;
+
+// [v3.0.8 · MEL-206] Fita match-mate da Bandagem. Decisão William 05/10/2026: a fita CONTINUA bloqueando quando a mangueira
+// leva fita e o código digitado não bate com o Delineamento; mas "-" no Delineamento quer dizer "não leva fita" e o operador
+// NÃO precisa digitar nada. Três estados da spec: "-" dispensa · em branco = não cadastrada (exige algo digitado e avisa a
+// supervisão) · código = tem que bater (fx_NormCodigo dos dois lados).
+fx_FitaDispensada(spec: Text): Boolean =
+    Trim(spec) = "-";
+
+fx_FitaOk(spec: Text, lido: Text): Boolean =
+    With(
+        { _s: fx_NormCodigo(spec), _l: fx_NormCodigo(lido) },
+        If(
+            fx_FitaDispensada(spec), true,
+            IsBlank(_s),             !IsBlank(_l),
+            _l = _s
+        )
+    );
 
 // [v3.0.8 · MEL-202] Margem aceitável para a metragem SUBIR de uma etapa para a seguinte (William, 05/10/2026:
 // "pode subir, mas com margem para não virar várzea"). Provisória em 10%: nos últimos 60 dias, só 2% a 8% das OPs
