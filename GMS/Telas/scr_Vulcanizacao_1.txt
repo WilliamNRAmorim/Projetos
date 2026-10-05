@@ -25,6 +25,21 @@ Screens:
             Repeat: =true
             Visible: =false
             X: =1206
+      - tmr_AutoRefreshVulca:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalSetupVulca && !ctxModalLoteVulca && !ctxEditarPlanoVulca,
+                  Select(ico_RefreshVulca)
+              )
+            Repeat: =true
+            Visible: =false
+            X: =1206
       - rct_HeaderFilaVulca:
           Control: Rectangle@2.3.0
           Properties:
@@ -991,7 +1006,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.2"
+            Text: ="Versão 0.3.3"
             Width: =183
             X: =1168
             Y: =710
@@ -1201,6 +1216,9 @@ Screens:
                               _r.Modified <> gal_FilaVulca.Selected.Modified,
                               Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                               Set(varProcessando, false),
+                              !fx_MetragemOk(_r.quantidade_bandagem),
+                              Notify("OP sem metragem recebida da Bandagem. Chame a Supervisão para corrigir na Bandagem antes de vulcanizar.", NotificationType.Warning, 8000);
+                              Set(varProcessando, false),
                               CountRows(
                                   Filter(
                                       Filter(ficha_producao, processo = "Vulcanização" && status_processo = "Em processo"),
@@ -1381,6 +1399,8 @@ Screens:
                               !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)),
                               Remove(colLoteVulca, LookUp(colLoteVulca, ID = ThisItem.ID)),
                               If(
+                                  !fx_MetragemOk(ThisItem.quantidade_bandagem),
+                                  Notify("OP sem metragem recebida da Bandagem. Chame a Supervisão.", NotificationType.Warning, 5000),
                                   CountRows(colLoteVulca) < fx_AutoclaveMax,
                                   Collect(colLoteVulca, ThisItem),
                                   Notify("Máximo de " & fx_AutoclaveMax & " carretéis por batelada.", NotificationType.Warning, 3000)

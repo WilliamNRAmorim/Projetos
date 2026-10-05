@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -258,6 +258,12 @@ fx_NumVelocidade(txt: Text): Number =
 // Faixa de especificação. Spec ausente (0) nunca acusa: poka-yoke não grita sem base.
 fx_ForaDaFaixa(lido: Number, minimo: Number, maximo: Number): Boolean =
     lido > 0 && minimo > 0 && maximo > 0 && (lido < minimo || lido > maximo);
+
+// [v3.0.7 · MEL-202] NORMA William 05/10/2026: nenhuma etapa envia OP adiante com metragem em branco ou 0,
+// do Mandril em diante. Toda ação "Enviar" confere com esta UDF ANTES de gravar. Em branco também reprova:
+// Coalesce(x, 0) na gravação transformava dado ausente em zero calado.
+fx_MetragemOk(metros: Number): Boolean =
+    !IsBlank(metros) && metros > 0;
 
 // Conferência do fio da bobina contra os fios do delineamento (1ª e 2ª trama).
 // "SEM_FIO" quando não há o que comparar — bobina sem código ou mangueira sem spec.
