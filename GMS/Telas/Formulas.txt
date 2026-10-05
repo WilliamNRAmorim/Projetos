@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada e fx_FitaOk (§5).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -281,6 +281,12 @@ fx_FitaOk(spec: Text, lido: Text): Boolean =
             _l = _s
         )
     );
+
+// [v3.0.8 · MEL-207] Código do composto da Cobertura: obrigatório e nunca só zeros ("0", "00", "0-0"). William 05/10/2026:
+// "composto 0" é erro de digitação, não código. A comparação com o Delineamento (COVER_PN) entra quando ele mostrar a tabela;
+// o código correto, pelo William, é no formato 500-01 (hoje digitam também 500.01 e 50001).
+fx_CompostoValido(cod: Text): Boolean =
+    !IsBlank(Trim(cod)) && !IsMatch(Trim(cod), "[0.\-_ ]*");
 
 // [v3.0.8 · MEL-202] Margem aceitável para a metragem SUBIR de uma etapa para a seguinte (William, 05/10/2026:
 // "pode subir, mas com margem para não virar várzea"). Provisória em 10%: nos últimos 60 dias, só 2% a 8% das OPs

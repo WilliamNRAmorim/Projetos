@@ -552,7 +552,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =36
             Size: =fx_FonteApoio
-            Text: ="CÓDIGO DO COMPOSTO"
+            Text: ="CÓDIGO DO COMPOSTO *"
             Width: =148
             X: =369
             Y: =315
@@ -560,8 +560,15 @@ Screens:
           Control: Classic/TextInput@2.3.2
           Properties:
             AccessibleLabel: ="Código do composto da cobertura"
-            BorderColor: =fx_CorBorda
+            BorderColor: |-
+              =If(
+                  fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" && !fx_CompostoValido(Self.Text),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
             Default: =gal_FilaCob.Selected.'Cod.Cobertura'
+            HintText: |-
+              ="Ex.: 500-01"
             DelayOutput: =true
             DisplayMode: |-
               =If(
@@ -631,7 +638,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =36
             Size: =fx_FonteApoio
-            Text: ="VALIDADE DO COMPOSTO"
+            Text: ="VALIDADE DO COMPOSTO *"
             Width: =148
             X: =693
             Y: =315
@@ -639,7 +646,12 @@ Screens:
           Control: Classic/DatePicker@2.6.0
           Properties:
             AccessibleLabel: ="Validade do composto da cobertura"
-            BorderColor: =fx_CorBorda
+            BorderColor: |-
+              =If(
+                  fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.SelectedDate),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
             DefaultDate: |-
               =If(
                   Year(gal_FilaCob.Selected.'Data de Validade  do composto cobertura') < 2015,
@@ -672,7 +684,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: ="DIÂMETRO (pol.)"
+            Text: ="DIÂMETRO (pol.) *"
             Width: =148
             X: =369
             Y: =409
@@ -684,6 +696,8 @@ Screens:
               =With(
                   { _s: LookUp(colSpecCob, Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(gal_FilaCob.Selected.Mangueira, "")))) },
                   If(
+                      fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" && IsBlank(fx_DiametroPol(Self.Text)),
+                      fx_CorErro,
                       fx_EstadoCob(gal_FilaCob.Selected.status_processo) = "PRODUZINDO" &&
                       fx_ForaDaFaixa(fx_DiametroPol(Self.Text), fx_NumSpec(Text(_s.MIN_OD)), fx_NumSpec(Text(_s.MAX_OD))),
                       fx_CorAlerta,
@@ -1295,6 +1309,9 @@ Screens:
                   !varProcessando &&
                   !IsBlank(cmb_OperadorCob.Selected.Nome) &&
                   !IsBlank(inp_LoteCob.Text) &&
+                  fx_CompostoValido(inp_CodCob.Text) &&
+                  !IsBlank(dte_ValidadeCob.SelectedDate) &&
+                  !IsBlank(fx_DiametroPol(inp_DiametroCob.Text)) &&
                   fx_MetragemOk(fx_Num(inp_QtdCob.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
@@ -1430,7 +1447,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.1"
+            Text: ="Versão 0.3.2"
             Width: =183
             X: =1168
             Y: =710
@@ -2013,6 +2030,9 @@ Screens:
                         !varProcessando &&
                         !IsBlank(cmb_OperadorCob.Selected.Nome) &&
                         !IsBlank(inp_LoteCob.Text) &&
+                        fx_CompostoValido(inp_CodCob.Text) &&
+                        !IsBlank(dte_ValidadeCob.SelectedDate) &&
+                        !IsBlank(fx_DiametroPol(inp_DiametroCob.Text)) &&
                         fx_MetragemOk(fx_Num(inp_QtdCob.Text)) &&
                         (ctxUsouTudoCob || fx_MetragemOk(fx_Num(inp_SobraCob.Text))),
                         DisplayMode.Edit,
@@ -2035,8 +2055,9 @@ Screens:
                             _operador: cmb_OperadorCob.Selected.Nome
                         },
                         If(
-                            IsBlank(_operador) || IsBlank(inp_LoteCob.Text) || !fx_MetragemOk(_qtd),
-                            Notify("Preencha operador, lote e metragem antes de enviar.", NotificationType.Warning, 6000);
+                            IsBlank(_operador) || IsBlank(inp_LoteCob.Text) || !fx_MetragemOk(_qtd) ||
+                            !fx_CompostoValido(inp_CodCob.Text) || IsBlank(dte_ValidadeCob.SelectedDate) || IsBlank(fx_DiametroPol(inp_DiametroCob.Text)),
+                            Notify("Preencha operador, lote, composto (código válido, não 0), validade, diâmetro e metragem antes de enviar.", NotificationType.Warning, 8000);
                             Set(varProcessando, false),
                             !ctxUsouTudoCob && !fx_MetragemOk(fx_Num(inp_SobraCob.Text)),
                             Notify("Informe quantos metros sobraram no carretel de entrada.", NotificationType.Warning, 6000);
