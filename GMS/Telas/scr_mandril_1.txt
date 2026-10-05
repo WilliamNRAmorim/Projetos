@@ -22,7 +22,13 @@ Screens:
                 { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
             )
         );
-        If(IsEmpty(colDM_MANDREL), ClearCollect(colDM_MANDREL, DM_MANDREL));
+        If(
+            IsEmpty(colDM_MANDREL),
+            IfError(
+                ClearCollect(colDM_MANDREL, DM_MANDREL),
+                Notify("Não consegui ler o set-up (DM_MANDREL). Toque em atualizar.", NotificationType.Error, 8000)
+            )
+        );
         Set(varPostoAtivo, If(IsBlank(varPostoAtivo), First(colMaquinasMandril).Posto, varPostoAtivo));
         Set(varModoMandril, "Velho");
         Select(btn_CarregarPostoMand_2)
@@ -46,11 +52,16 @@ Screens:
           Control: Timer@2.1.0
           Properties:
             AutoStart: =true
-            Duration: =180000
+            Duration: =120000
             Fill: =fx_CorInfo
             Font: =fx_FonteFamilia
             Height: =1
-            OnTimerEnd: =Select(btn_KanbanMand_2)
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalSetupMand && !ctxModalCarretelMand &&
+                  !ctxModalTurnoMand && !ctxModalCorrigirMand,
+                  Select(btn_KanbanMand_2)
+              )
             Repeat: =true
             Visible: =false
             Width: =1
@@ -81,14 +92,21 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =Refresh(ficha_producao);
-              Refresh(lista_carreteis);
-              Refresh(CarreteisMandril);
-              ClearCollect(colCarreteisMand, lista_carreteis);
-              ClearCollect(colCarreteisMpMand, CarreteisMandril);
-              ClearCollect(
-                  colMandrilAbertos,
-                  Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+              =IfError(
+                  Concurrent(
+                      Refresh(ficha_producao),
+                      Refresh(lista_carreteis),
+                      Refresh(CarreteisMandril)
+                  ),
+                  Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
+              );
+              Concurrent(
+                  ClearCollect(colCarreteisMand, lista_carreteis),
+                  ClearCollect(colCarreteisMpMand, CarreteisMandril),
+                  ClearCollect(
+                      colMandrilAbertos,
+                      Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+                  )
               );
               ClearCollect(
                   colPostosMandril,
@@ -164,7 +182,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =40
             PaddingBottom: =0
@@ -224,7 +242,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =29
             PaddingLeft: =0
-            Size: =15
+            Size: =fx_FonteSecao
             Text: =Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "—")
             Width: =187
             X: =12
@@ -355,7 +373,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -455,7 +473,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             PaddingLeft: =0
-            Size: =15
+            Size: =fx_FonteSecao
             Text: =Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "—")
             X: =365
             Y: =144
@@ -636,13 +654,7 @@ Screens:
                   IsBlank(varCarretelMpMand),
                   "— mandril velho —",
                   varCarretelMpMand & "  ·  " &
-                  Text(
-                      Coalesce(
-                          LookUp(colCarreteisMpMand, Title = varCarretelMpMand).quantidade_metros,
-                          0
-                      ),
-                      "[$-pt-BR]#.##0"
-                  ) & " m"
+                  fx_MetrosUn(LookUp(colCarreteisMpMand, Title = varCarretelMpMand).quantidade_metros)
               )
             Width: =214
             X: =531
@@ -762,11 +774,12 @@ Screens:
             AccessibleLabel: ="Quantidade soldada em metros"
             BorderColor: |-
               =If(
-                  varProduzindo && Coalesce(fx_Num(Self.Text), 0) <= 0,
+                  varProduzindo && !fx_MetragemOk(fx_Num(Self.Text)),
                   fx_CorErro,
                   fx_CorBorda
               )
-            Default: =Text(varFichaAtiva.quantidade_mandril)
+            Default: |-
+              =If(varFichaAtiva.quantidade_mandril > 0, Text(varFichaAtiva.quantidade_mandril), "")
             DelayOutput: =true
             DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
             Font: =fx_FonteFamilia
@@ -1203,6 +1216,14 @@ Screens:
                       varKanbanTuboMand < fx_KanbanMinimo,
                       "⛔ Kanban do Tubo CRÍTICO: " & Text(varKanbanTuboMand) &
                       " carretel(éis) aguardando, mínimo " & Text(fx_KanbanMinimo) & ". Priorize a solda.",
+                      !IsBlank(varCarretelMpMand) &&
+                      fx_MetragemSubiu(
+                          fx_Num(inp_QtdMand_2.Text),
+                          LookUp(colCarreteisMpMand, Title = varCarretelMpMand).quantidade_metros
+                      ),
+                      "⚠ Quantidade soldada passa do saldo do mandril novo " & varCarretelMpMand & " (" &
+                      fx_MetrosUn(LookUp(colCarreteisMpMand, Title = varCarretelMpMand).quantidade_metros) &
+                      ", margem " & fx_MargemMetragemPct & "%). Confira a digitação.",
                       _semSpec,
                       "⚠ Este PN não tem set-up em DM_MANDREL. Confira com a engenharia antes de soldar.",
                       varKanbanTuboMand >= fx_KanbanAlvo,
@@ -1300,7 +1321,7 @@ Screens:
               With(
                   {
                       _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
-                      _q: Coalesce(fx_Num(inp_QtdMand_2.Text), 0),
+                      _q: fx_Num(inp_QtdMand_2.Text),
                       _turno: fx_TurnoEm(Now())
                   },
                   If(
@@ -1312,8 +1333,11 @@ Screens:
                       Notify("Registro desatualizado. A tela foi recarregada, tente de novo.", NotificationType.Error, 8000);
                       Select(btn_CarregarPostoMand_2);
                       Set(varProcessando, false),
-                      _r.status_processo <> "Em processo",
+                      fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
                       Notify("Esta OP não está em processo. Inicie antes de salvar.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      !fx_MetragemOk(_q),
+                      Notify("Informe a quantidade (maior que zero) antes de salvar o parcial.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
                       With(
                           {
@@ -1328,11 +1352,12 @@ Screens:
                                   desmoldante_mandril: ctxDesmoldanteMand,
                                   quantidade_mandril: _q,
                                   operador_mandril: cmb_OperadorMand_2.Selected.Nome,
-                                  lote_mandril: inp_LoteMand_2.Text,
+                                  lote_mandril: Trim(inp_LoteMand_2.Text),
                                   Observação_mandril: inp_ObsMand_2.Text,
-                                  Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
-                                  Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
-                                  Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3)
+                                  Qtd_Turno1: If(_turno = 1, Max(0, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja)), _r.Qtd_Turno1),
+                                  Qtd_Turno2: If(_turno = 2, Max(0, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja)), _r.Qtd_Turno2),
+                                  Qtd_Turno3: If(_turno = 3, Max(0, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja)), _r.Qtd_Turno3),
+                                  Turno_mandril: Text(_turno)
                               }
                           )
                       );
@@ -1340,7 +1365,7 @@ Screens:
                           !IsEmpty(Errors(ficha_producao)),
                           Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
                           Set(varProcessando, false),
-                          Set(varUltimoLote3, inp_LoteMand_2.Text);
+                          Set(varUltimoLote3, Trim(inp_LoteMand_2.Text));
                           Select(btn_CarregarPostoMand_2);
                           Set(varProcessando, false);
                           Notify("Parcial do mandril salvo.", NotificationType.Success, 4000)
@@ -1408,7 +1433,7 @@ Screens:
                   !IsBlank(ctxDesmoldanteMand) &&
                   !IsBlank(cmb_OperadorMand_2.Selected.Nome) &&
                   !IsBlank(Trim(inp_LoteMand_2.Text)) &&
-                  Coalesce(fx_Num(inp_QtdMand_2.Text), 0) > 0,
+                  fx_MetragemOk(fx_Num(inp_QtdMand_2.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1424,7 +1449,7 @@ Screens:
                   {
                       _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
                       _agora: Now(),
-                      _consumo: Coalesce(fx_Num(inp_QtdMand_2.Text), 0),
+                      _consumo: fx_Num(inp_QtdMand_2.Text),
                       _cod: Coalesce(varMandrilSelecionado.PartNumber, varFichaAtiva.cod_mandril)
                   },
                   With(
@@ -1460,9 +1485,12 @@ Screens:
                               Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
                               Select(btn_CarregarPostoMand_2);
                               Set(varProcessando, false),
-                              _r.status_processo <> "Em processo",
+                              fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
                               Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
                               Select(btn_CarregarPostoMand_2);
+                              Set(varProcessando, false),
+                              !fx_MetragemOk(_consumo),
+                              Notify("Informe a quantidade soldada (maior que zero) antes de enviar para o Tubo.", NotificationType.Warning, 8000);
                               Set(varProcessando, false),
                               Patch(
                                   ficha_producao,
@@ -1471,7 +1499,7 @@ Screens:
                                       desmoldante_mandril: ctxDesmoldanteMand,
                                       quantidade_mandril: _consumo,
                                       operador_mandril: cmb_OperadorMand_2.Selected.Nome,
-                                      lote_mandril: inp_LoteMand_2.Text,
+                                      lote_mandril: Trim(inp_LoteMand_2.Text),
                                       Observação_mandril: inp_ObsMand_2.Text,
                                       'Carretel Entrada': _carretelSaida,
                                       'Carretel Saida': Blank(),
@@ -1483,9 +1511,9 @@ Screens:
                                       InicioAguardando_Tubo: _agora,
                                       cod_mandril: _cod,
                                       Bitola: _bitola,
-                                      Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_consumo - _ja), _r.Qtd_Turno1),
-                                      Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_consumo - _ja), _r.Qtd_Turno2),
-                                      Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_consumo - _ja), _r.Qtd_Turno3)
+                                      Qtd_Turno1: If(_turno = 1, Max(0, Coalesce(_r.Qtd_Turno1, 0) + (_consumo - _ja)), _r.Qtd_Turno1),
+                                      Qtd_Turno2: If(_turno = 2, Max(0, Coalesce(_r.Qtd_Turno2, 0) + (_consumo - _ja)), _r.Qtd_Turno2),
+                                      Qtd_Turno3: If(_turno = 3, Max(0, Coalesce(_r.Qtd_Turno3, 0) + (_consumo - _ja)), _r.Qtd_Turno3)
                                   }
                               );
                               If(
@@ -1502,6 +1530,15 @@ Screens:
                                           lista_carreteis,
                                           LookUp(lista_carreteis, op = _idFicha),
                                           {etapa_processo: "Tubo"}
+                                      );
+                                      If(
+                                          !IsEmpty(Errors(lista_carreteis)),
+                                          Notify(
+                                              "Enviado, mas o carretel NÃO foi marcado como Tubo: " &
+                                              First(Errors(lista_carreteis)).Message,
+                                              NotificationType.Error,
+                                              10000
+                                          )
                                       )
                                   );
                                   Patch(
@@ -1583,7 +1620,7 @@ Screens:
                                           Produzindo: false
                                       }
                                   );
-                                  Set(varUltimoLote3, inp_LoteMand_2.Text);
+                                  Set(varUltimoLote3, Trim(inp_LoteMand_2.Text));
                                   Set(varCarretelMpMand, "");
                                   Set(varProduzindo, false);
                                   Set(varFichaAtiva, Blank());
@@ -1967,7 +2004,7 @@ Screens:
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
-            Size: =12
+            Size: =fx_FonteCorpo
             Text: ="ㅤㅤHistórico do turno"
             Width: =183
             X: =1168
@@ -2050,7 +2087,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.5.4"
+            Text: ="Versão 0.5.5"
             Width: =183
             X: =1168
             Y: =710
@@ -2283,7 +2320,7 @@ Screens:
                             Bitola = varMandrilSelecionado.Bitola
                         ),
                         Rotulo,
-                        Title & "   " & Text(Coalesce(quantidade_metros, 0), "[$-pt-BR]#.##0") & " m"
+                        Title & "   " & fx_MetrosUn(quantidade_metros)
                     )
                   Items.Value: =Rotulo
                   PressedColor: =fx_CorSuperficie
@@ -2309,7 +2346,7 @@ Screens:
                         IsBlank(cmb_EntradaMpMand_2.Selected.Title),
                         "Selecione um carretel cheio desta bitola.",
                         "Saldo neste carretel: " &
-                        Text(Coalesce(cmb_EntradaMpMand_2.Selected.quantidade_metros, 0), "[$-pt-BR]#.##0") & " m"
+                        fx_MetrosUn(cmb_EntradaMpMand_2.Selected.quantidade_metros)
                     )
                   Visible: =varModoMandril = "Novo"
                   Width: =300
@@ -2646,6 +2683,7 @@ Screens:
                     =Set(varProcessando, true);
                     Refresh(ficha_producao);
                     Refresh(lista_carreteis);
+                    Refresh(CarreteisMandril);
                     With(
                         {
                             _ocupado: LookUp(
@@ -2658,7 +2696,7 @@ Screens:
                         },
                         With(
                             {
-                                _min: fx_MinutosDoDia(_agora),
+                                _turno: fx_TurnoEm(_agora),
                                 _entrada: If(
                                     varModoMandril = "Novo",
                                     Coalesce(_mp.quantidade_metros, 0),
@@ -2755,7 +2793,7 @@ Screens:
                                             tipo: {Value: "Início"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: fx_Turno(_min),
+                                            turno: _turno,
                                             bitola: varMandrilSelecionado.Bitola,
                                             metros: _entrada,
                                             sobra: 0,
@@ -3030,7 +3068,7 @@ Screens:
                                 Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
-                                _r.status_processo <> "Em processo",
+                                fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
                                 Notify("Esta OP não está em processo. Atualize a tela.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
@@ -3355,7 +3393,7 @@ Screens:
                                 Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
-                                _r.status_processo <> "Em processo",
+                                fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
                                 Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
@@ -3670,7 +3708,7 @@ Screens:
                                 Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
-                                _r.status_processo <> "Em processo",
+                                fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
                                 Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
                                 Select(btn_CarregarPostoMand_2);
                                 Set(varProcessando, false),
