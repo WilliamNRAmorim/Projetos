@@ -116,6 +116,9 @@ Screens:
                               OP:         Coalesce(_f.OP, 0),
                               Mangueira:  Coalesce(Text(_f.Mangueira), ""),
                               Produzindo: !IsBlank(_f.ID),
+                              Ativas: CountRows(
+                                  Filter(colAtivasMenu As _a2, _a2.processo = _e.Processo)
+                              ),
                               Fila: CountRows(
                                   Filter(colAguardMenu As _g, _g.processo = _e.Processo)
                               )
@@ -498,7 +501,11 @@ Screens:
                                     "—"
                                 )
                             ),
-                            If(_e.Produzindo, "OP " & Text(_e.OP, "[$-en-US]0"), "—")
+                            If(
+                                _e.Ativas > 1, Text(_e.Ativas, "[$-en-US]0") & " OPs em processo",
+                                _e.Produzindo, "OP " & Text(_e.OP, "[$-en-US]0"),
+                                "—"
+                            )
                         )
                     )
                   Visible: =!ThisItem.Multi
@@ -570,7 +577,11 @@ Screens:
                                 If(_x.Cheios = 1, " cheio · ", " cheios · ") &
                                 Text(_x.Metros, "[$-pt-BR]#.##0") & " m"
                             ),
-                            If(_e.Produzindo, fx_Ou(_e.Mangueira), "")
+                            If(
+                                _e.Ativas > 1, "Toque para ver as OPs",
+                                _e.Produzindo, fx_Ou(_e.Mangueira),
+                                ""
+                            )
                         )
                     )
                   Visible: =!ThisItem.Multi
