@@ -1,0 +1,508 @@
+Screens:
+  Menu_1:
+    Properties:
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =Set(
+                    varAreaUsuario,
+                    Coalesce(
+                        LookUp(
+                            MapeamentoSetor,
+                            Lower(EmailComputador) = Lower(User().Email)
+                        ).Area,
+                        "Gestao"
+                    )
+                );
+                Set(varSomenteMontagem, varAreaUsuario = "Montagem");
+                Set(varAmbasAreas, varAreaUsuario = "Ambos");
+                Set(varSomenteGestao, varAreaUsuario = "Gestao")
+    Children:
+      - Image6:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =768
+            Image: ='Screenshot 2026-02-25 112141'
+            ImagePosition: =ImagePosition.Fill
+            Width: =1366
+      - Rectangle11:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(15, 23, 42, 0.85)
+            Height: =768
+            Width: =1366
+      - HtmlText3:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            AutoHeight: =true
+            Font: =Font.'Open Sans'
+            Height: =768
+            HtmlText: "=\"<div style='\n    width: 1366px;\n    height: 768px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    font-family: \"\"Segoe UI\"\", sans-serif;\n    margin: 0; padding: 0;\n'>\n\n    <div style='text-align: center; margin-bottom: 60px; margin-top: -40px;'>\n        <h1 style='\n            font-size: 56px;\n            font-weight: 800; \n            color: white; \n            margin: 0; \n            letter-spacing: -1px;\n            text-shadow: 0 4px 30px rgba(0,0,0,0.8);\n        '>Bem-vindo ao GMS</h1>\n        <p style='\n            font-size: 20px; \n            color: #CBD5E1; \n            margin-top: 10px; \n            font-weight: 400;\n            text-shadow: 0 2px 10px rgba(0,0,0,0.8);\n        '>Selecione o módulo que deseja acessar para iniciar suas operações de produção.</p>\n    </div>\n\n    <div style='display: flex; gap: 40px;'>\n        \n        <!-- CARTÃO: Painel de Gestão -->\n        <div style='\n            width: 400px; height: 160px; padding: 0 30px;\n            background: rgba(30, 41, 59, 0.6); \n            border: 1px solid rgba(255, 255, 255, 0.15);\n            border-radius: 24px;\n            display: flex; align-items: center; gap: 25px;\n            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);\n        '>\n            <div style='\n                width: 70px; height: 70px; min-width: 70px;\n                background: rgba(59, 130, 246, 0.15); \n                border: 1px solid rgba(59, 130, 246, 0.3);\n                border-radius: 18px;\n                display: flex; align-items: center; justify-content: center;\n            '>\n                <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#60A5FA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\n                    <rect x='3' y='3' width='7' height='9' rx='1'></rect>\n                    <rect x='14' y='3' width='7' height='5' rx='1'></rect>\n                    <rect x='14' y='12' width='7' height='9' rx='1'></rect>\n                    <rect x='3' y='16' width='7' height='5' rx='1'></rect>\n                </svg>\n            </div>\n            <div>\n                <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Painel de Gestão</h3>\n                <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>KPIs, Relatórios e Visão Geral\n</p>\n            </div>\n        </div>\n\n        <!-- CARTÃO: Setores Mangueira -->\n        <div style='\n            width: 400px; height: 160px; padding: 0 30px;\n            background: rgba(30, 41, 59, 0.6); \n            border: 1px solid rgba(255, 255, 255, 0.15);\n            border-radius: 24px;\n            display: flex; align-items: center; gap: 25px;\n            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);\n        '>\n            <div style='\n                width: 70px; height: 70px; min-width: 70px;\n                background: rgba(239, 68, 68, 0.15); \n                border: 1px solid rgba(239, 68, 68, 0.3);\n                border-radius: 18px;\n                display: flex; align-items: center; justify-content: center;\n            '>\n                <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#F87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\n                    <path d='M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z'></path>\n                    <path d='M17 18h1'></path>\n                    <path d='M12 18h1'></path>\n                    <path d='M7 18h1'></path>\n                </svg>\n            </div>\n            <div>\n                <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Setores Produtivos</h3>\n                <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>Mandril, Tubo, Trançagem e mais\n</p>\n            </div>\n        </div>\n\n    </div>\n</div>\""
+            Visible: =!varSomenteMontagem && !varAmbasAreas && !varSomenteGestao
+            Width: =1366
+      - HtmlText3_Montagem:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            AutoHeight: =true
+            Font: =Font.'Open Sans'
+            Height: =768
+            HtmlText: |-
+              ="<div style='
+                  width: 1366px;
+                  height: 768px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  font-family: ""Segoe UI"", sans-serif;
+                  margin: 0; padding: 0;
+              '>
+
+                  <div style='text-align: center; margin-bottom: 60px; margin-top: -40px;'>
+                      <h1 style='
+                          font-size: 56px;
+                          font-weight: 800; 
+                          color: white; 
+                          margin: 0; 
+                          letter-spacing: -1px;
+                          text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+                      '>Bem-vindo ao GMS</h1>
+                      <p style='
+                          font-size: 20px; 
+                          color: #CBD5E1; 
+                          margin-top: 10px; 
+                          font-weight: 400;
+                          text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+                      '>Selecione o módulo que deseja acessar para iniciar suas operações de produção.</p>
+                  </div>
+
+                  <div style='display: flex;'>
+                      <div style='
+                          width: 400px; height: 160px; padding: 0 30px;
+                          background: rgba(30, 41, 59, 0.6); 
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          border-radius: 24px;
+                          display: flex; align-items: center; gap: 25px;
+                          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+                      '>
+                          <div style='
+                              width: 70px; height: 70px; min-width: 70px;
+                              background: rgba(245, 158, 11, 0.15); 
+                              border: 1px solid rgba(245, 158, 11, 0.3);
+                              border-radius: 18px;
+                              display: flex; align-items: center; justify-content: center;
+                          '>
+                              <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#FBBF24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                  <path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'></path>
+                              </svg>
+                          </div>
+                          <div>
+                              <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Setores Montagem</h3>
+                              <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>AUW, FF1, FF2, FF3, HIGH e mais
+              </p>
+                          </div>
+                      </div>
+                  </div>
+              </div>"
+            Visible: =varSomenteMontagem
+            Width: =1366
+      - html_MenuSomenteGestao:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            AutoHeight: =true
+            Font: =Font.'Open Sans'
+            Height: =768
+            HtmlText: |-
+              ="<div style='
+                  width: 1366px;
+                  height: 768px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  font-family: ""Segoe UI"", sans-serif;
+                  margin: 0; padding: 0;
+              '>
+
+                  <div style='text-align: center; margin-bottom: 60px; margin-top: -40px;'>
+                      <h1 style='
+                          font-size: 56px;
+                          font-weight: 800; 
+                          color: white; 
+                          margin: 0; 
+                          letter-spacing: -1px;
+                          text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+                      '>Bem-vindo ao GMS</h1>
+                      <p style='
+                          font-size: 20px; 
+                          color: #CBD5E1; 
+                          margin-top: 10px; 
+                          font-weight: 400;
+                          text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+                      '>Selecione o módulo que deseja acessar.</p>
+                  </div>
+
+                  <div style='display: flex;'>
+                      <div style='
+                          width: 400px; height: 160px; padding: 0 30px;
+                          background: rgba(30, 41, 59, 0.6); 
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          border-radius: 24px;
+                          display: flex; align-items: center; gap: 25px;
+                          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+                      '>
+                          <div style='
+                              width: 70px; height: 70px; min-width: 70px;
+                              background: rgba(59, 130, 246, 0.15); 
+                              border: 1px solid rgba(59, 130, 246, 0.3);
+                              border-radius: 18px;
+                              display: flex; align-items: center; justify-content: center;
+                          '>
+                          </div>
+                          <div>
+                              <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Painel de Gestão</h3>
+                              <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>KPIs, Relatórios e Visão Geral</p>
+                          </div>
+                      </div>
+                  </div>
+              </div>"
+            Visible: =varSomenteGestao
+            Width: =1366
+      - HtmlText3_Ambos:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            AutoHeight: =true
+            Font: =Font.'Open Sans'
+            Height: =768
+            HtmlText: |-
+              ="<div style='
+                  width: 1366px;
+                  height: 768px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  font-family: ""Segoe UI"", sans-serif;
+                  margin: 0; padding: 0;
+              '>
+
+                  <div style='text-align: center; margin-bottom: 60px; margin-top: -40px;'>
+                      <h1 style='
+                          font-size: 56px;
+                          font-weight: 800; 
+                          color: white; 
+                          margin: 0; 
+                          letter-spacing: -1px;
+                          text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+                      '>Bem-vindo ao GMS</h1>
+                      <p style='
+                          font-size: 20px; 
+                          color: #CBD5E1; 
+                          margin-top: 10px; 
+                          font-weight: 400;
+                          text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+                      '>Selecione o módulo que deseja acessar para iniciar suas operações de produção.</p>
+                  </div>
+
+                  <div style='display: flex; gap: 30px;'>
+
+                      <!-- CARTÃO 1: Painel de Gestão -->
+                      <div style='
+                          width: 330px; height: 160px; padding: 0 25px;
+                          background: rgba(30, 41, 59, 0.6); 
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          border-radius: 24px;
+                          display: flex; align-items: center; gap: 18px;
+                          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+                      '>
+                          <div style='
+                              width: 64px; height: 64px; min-width: 64px;
+                              background: rgba(59, 130, 246, 0.15); 
+                              border: 1px solid rgba(59, 130, 246, 0.3);
+                              border-radius: 16px;
+                              display: flex; align-items: center; justify-content: center;
+                          '>
+                              <svg width='30' height='30' viewBox='0 0 24 24' fill='none' stroke='#60A5FA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                  <rect x='3' y='3' width='7' height='9' rx='1'></rect>
+                                  <rect x='14' y='3' width='7' height='5' rx='1'></rect>
+                                  <rect x='14' y='12' width='7' height='9' rx='1'></rect>
+                                  <rect x='3' y='16' width='7' height='5' rx='1'></rect>
+                              </svg>
+                          </div>
+                          <div>
+                              <h3 style='margin: 0; font-size: 21px; font-weight: 700; color: white;'>Painel de Gestão</h3>
+                              <p style='margin: 5px 0 0 0; font-size: 13px; color: #94A3B8;'>KPIs, Relatórios e Visão Geral
+              </p>
+                          </div>
+                      </div>
+
+                      <!-- CARTÃO 2: Setores Mangueira -->
+                      <div style='
+                          width: 330px; height: 160px; padding: 0 25px;
+                          background: rgba(30, 41, 59, 0.6); 
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          border-radius: 24px;
+                          display: flex; align-items: center; gap: 18px;
+                          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+                      '>
+                          <div style='
+                              width: 64px; height: 64px; min-width: 64px;
+                              background: rgba(239, 68, 68, 0.15); 
+                              border: 1px solid rgba(239, 68, 68, 0.3);
+                              border-radius: 16px;
+                              display: flex; align-items: center; justify-content: center;
+                          '>
+                              <svg width='30' height='30' viewBox='0 0 24 24' fill='none' stroke='#F87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                  <path d='M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z'></path>
+                                  <path d='M17 18h1'></path>
+                                  <path d='M12 18h1'></path>
+                                  <path d='M7 18h1'></path>
+                              </svg>
+                          </div>
+                          <div>
+                              <h3 style='margin: 0; font-size: 21px; font-weight: 700; color: white;'>Setores Mangueira</h3>
+                              <p style='margin: 5px 0 0 0; font-size: 13px; color: #94A3B8;'>Mandril, Tubo, Trançagem e mais
+              </p>
+                          </div>
+                      </div>
+
+                      <!-- CARTÃO 3: Setores Montagem -->
+                      <div style='
+                          width: 330px; height: 160px; padding: 0 25px;
+                          background: rgba(30, 41, 59, 0.6); 
+                          border: 1px solid rgba(255, 255, 255, 0.15);
+                          border-radius: 24px;
+                          display: flex; align-items: center; gap: 18px;
+                          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);
+                      '>
+                          <div style='
+                              width: 64px; height: 64px; min-width: 64px;
+                              background: rgba(245, 158, 11, 0.15); 
+                              border: 1px solid rgba(245, 158, 11, 0.3);
+                              border-radius: 16px;
+                              display: flex; align-items: center; justify-content: center;
+                          '>
+                              <svg width='30' height='30' viewBox='0 0 24 24' fill='none' stroke='#FBBF24' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                                  <path d='M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z'></path>
+                              </svg>
+                          </div>
+                          <div>
+                              <h3 style='margin: 0; font-size: 21px; font-weight: 700; color: white;'>Setores Montagem</h3>
+                              <p style='margin: 5px 0 0 0; font-size: 13px; color: #94A3B8;'>AUW, FF1, FF2, FF3 e mais
+              </p>
+                          </div>
+                      </div>
+
+                  </div>
+              </div>"
+            Visible: =varAmbasAreas
+            Width: =1366
+      - btnPainelGestao:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =Color.Transparent
+            Font: =Font.'Open Sans'
+            Height: =161
+            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255, 255, 255, 0.1)
+            OnSelect: =Navigate(scr_SelecaoGestao_1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(0, 0, 0, 0.2)
+            RadiusBottomLeft: =24
+            RadiusBottomRight: =24
+            RadiusTopLeft: =24
+            RadiusTopRight: =24
+            Text: =
+            Visible: =!varSomenteMontagem
+            Width: =If(varAmbasAreas, 380, 460)
+            X: =If(varAmbasAreas, 83, varSomenteGestao, 453, 208)
+            Y: =384
+      - btnSetoresMangueira:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =Color.Transparent
+            Font: =Font.'Open Sans'
+            Height: =161
+            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255, 255, 255, 0.1)
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(0, 0, 0, 0.2)
+            RadiusBottomLeft: =24
+            RadiusBottomRight: =24
+            RadiusTopLeft: =24
+            RadiusTopRight: =24
+            Text: =
+            Visible: =!varSomenteMontagem && !varSomenteGestao
+            Width: =If(varAmbasAreas, 380, 460)
+            X: =If(varAmbasAreas, 500, 709)
+            Y: =384
+      - btnSetoresMontagem:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =Color.Transparent
+            Font: =Font.'Open Sans'
+            Height: =161
+            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255, 255, 255, 0.1)
+            OnSelect: =Navigate(scr_selecaosetor_Montagem)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(0, 0, 0, 0.2)
+            RadiusBottomLeft: =24
+            RadiusBottomRight: =24
+            RadiusTopLeft: =24
+            RadiusTopRight: =24
+            Text: =
+            Visible: =varSomenteMontagem || varAmbasAreas
+            Width: =If(varAmbasAreas, 380, 460)
+            X: =If(varAmbasAreas, 910, 453)
+            Y: =384
+      - Image8_1:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =48
+            Image: ='layout-dashboard'
+            Visible: =!varSomenteMontagem
+            Width: =48
+            X: =If(varAmbasAreas, 119, varSomenteGestao, 498, 250)
+            Y: =440
+      - Image8:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =48
+            Image: ='factory (1)'
+            Visible: =!varSomenteMontagem && !varSomenteGestao
+            Width: =48
+            X: =If(varAmbasAreas, 530, 750)
+            Y: =440
+      - Image1_1:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =48
+            Image: ='git-pull-request-draft (1)'
+            Visible: =varSomenteMontagem || varAmbasAreas
+            Width: =48
+            X: =If(varAmbasAreas, 945, 498)
+            Y: =440
+      - HtmlText5:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            AutoHeight: =true
+            Font: =Font.'Open Sans'
+            Height: =90
+            HtmlText: "=\"<div style='\r\n    width: 100%;\r\n    height: 100%;\r\n    display: flex;\r\n    justify-content: space-between;\r\n    align-items: center;\r\n    padding: 0 50px;\r\n    border-bottom: 1px solid rgba(255, 255, 255, 0.15);\r\n    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.0));\r\n    font-family: \"\"Segoe UI\"\", sans-serif;\r\n    color: white;\r\n    box-sizing: border-box;\r\n'>\r\n    <div style='display: flex; align-items: center; gap: 16px;'>\r\n        <div style='width: 6px; height: 38px; background-color: #D6001C; border-radius: 3px;'></div>\r\n        <span style='font-size: 32px; font-weight: 800; letter-spacing: 0.5px;'>Danfoss</span>\r\n    </div>\r\n\r\n    <div style='\r\n        font-size: 16px;\r\n        font-weight: 500; \r\n        color: #E2E8F0;\r\n        display: flex; \r\n        align-items: center; \r\n        gap: 25px;\r\n    '>\r\n        <span style='letter-spacing: 0.5px;'>Guaratinguetá Manufacturing System</span>\r\n        \r\n        <span style='height: 20px; border-left: 2px solid rgba(255,255,255,0.2);'></span>\r\n        \r\n        <span style='font-weight: 600; color: white;'>\" & Text(Today(), \"dd/mm/yyyy\") & \"</span>\r\n    </div>\r\n</div>\""
+            Width: =1366
+      - btnSetoresMontagem_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =Color.Transparent
+            Font: =Font.'Open Sans'
+            Height: =161
+            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255, 255, 255, 0.1)
+            OnSelect: =Navigate(scr_selecaosetor_Montagem)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(0, 0, 0, 0.2)
+            RadiusBottomLeft: =24
+            RadiusBottomRight: =24
+            RadiusTopLeft: =24
+            RadiusTopRight: =24
+            Text: =
+            Visible: =varSomenteMontagem || varAmbasAreas
+            Width: =If(varAmbasAreas, 380, 460)
+            X: =If(varAmbasAreas, 910, 453)
+            Y: =383
+      - html_FichaTecnicaMenu:
+          Control: HtmlViewer@2.1.0
+          Properties:
+            Font: =Font.'Open Sans'
+            Height: =74
+            HtmlText: |-
+              ="<div style='
+                  width: 100%; height: 100%; box-sizing: border-box;
+                  display: flex; align-items: center; gap: 16px;
+                  padding: 0 22px;
+                  background: rgba(30, 41, 59, 0.6);
+                  border: 1px solid rgba(255, 255, 255, 0.15);
+                  border-radius: 18px;
+                  box-shadow: 0 14px 28px -10px rgba(0,0,0,0.6);
+                  font-family: ""Segoe UI"", sans-serif;
+              '>
+                  <div style='
+                      width: 44px; height: 44px; min-width: 44px;
+                      background: rgba(34, 211, 238, 0.15);
+                      border: 1px solid rgba(34, 211, 238, 0.3);
+                      border-radius: 12px;
+                      display: flex; align-items: center; justify-content: center;
+                  '>
+                      <svg width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='#22D3EE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                          <circle cx='12' cy='5' r='3'></circle>
+                          <path d='M12 8v3'></path>
+                          <path d='M6.4 20.4 12 11l5.6 9.4'></path>
+                          <path d='M3.5 20.5h17'></path>
+                      </svg>
+                  </div>
+                  <div>
+                      <h3 style='margin: 0; font-size: 17px; font-weight: 700; color: white;'>Delineamento</h3>
+                  </div>
+              </div>"
+            Width: =520
+            X: =423
+            Y: =596
+      - img_FichaTecnicaMenu:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =36
+            Image: ='drafting-compass'
+            Width: =30
+            X: =458
+            Y: =607
+      - btn_FichaTecnicaMenu:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =Color.Transparent
+            Font: =Font.'Open Sans'
+            Height: =42
+            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =RGBA(255, 255, 255, 0.1)
+            OnSelect: =Navigate(scr_FichaTecnica_1, ScreenTransition.Fade)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =RGBA(0, 0, 0, 0.2)
+            RadiusBottomLeft: =18
+            RadiusBottomRight: =18
+            RadiusTopLeft: =18
+            RadiusTopRight: =18
+            Text: =""
+            Width: =507
+            X: =429
+            Y: =603

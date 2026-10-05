@@ -1,0 +1,2308 @@
+Screens:
+  scr_Debandagem_2:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxModalSetupDeband: false,
+            ctxModalEnviarDeband: false,
+            ctxModalEditarDeband: false
+        });
+        Set(varProcessando, false);
+        Concurrent(
+            ClearCollect(colDM_LAYLINE, DM_LAYLINE),
+            ClearCollect(colCarreteisDeband, lista_carreteis)
+        )
+    Children:
+      - tmr_RelogioDeband:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_GuardaDeband:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =45000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =Set(varProcessando, false);
+              Notify("Tempo limite excedido. O servidor não respondeu — confira a fila antes de repetir.", NotificationType.Error, 10000)
+            Start: =varProcessando
+            Visible: =false
+            X: =1206
+      - rct_HeaderFilaDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =Font.Arial
+            FontWeight: =FontWeight.Bold
+            Height: =65
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Fila de Produção"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =180
+            X: =25
+            Y: =20
+      - lbl_TotalFilaDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =5
+            RadiusBottomRight: =5
+            RadiusTopLeft: =5
+            RadiusTopRight: =5
+            Size: =14
+            Text: |-
+              ="Total: " & CountRows(gal_FilaDeband.AllItems)
+            Width: =83
+            X: =215
+            Y: =20
+      - rct_DivisorFilaDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =314
+      - gal_FilaDeband:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =700
+            Items: =Filter(ficha_producao, processo = "Debandagem")
+            OnSelect: |-
+              =Reset(inp_QtdDeband);
+              Reset(inp_ObsDeband);
+              Reset(cmb_OperadorDeband)
+            TemplateFill: =Color.Transparent
+            TemplateSize: =112
+            Width: =315
+            Y: =68
+          Children:
+            - btn_CardFilaDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HoverFill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =297
+                  X: =8
+                  Y: =4
+            - lbl_OpFilaDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    ="OP: " & ThisItem.OP
+                  Width: =200
+                  X: =20
+                  Y: =12
+            - lbl_MangueiraFilaDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Mangueira: " & ThisItem.Mangueira
+                  Width: =235
+                  X: =20
+                  Y: =40
+            - lbl_CarretelFilaDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & Coalesce(ThisItem.quantidade_vulcanizacao, 0) & " m"
+                  Width: =200
+                  X: =20
+                  Y: =64
+            - btn_BadgeFilaDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        fx_CorOK,
+                        fx_CorAlerta
+                    )
+                  Fill: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        fx_CorOKSuave,
+                        fx_CorAlertaSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =26
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        "Debandando",
+                        "Aguardando"
+                    )
+                  Width: =111
+                  X: =182
+                  Y: =12
+            - lbl_CronoFilaDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =fx_Crono(
+                        fx_InicioCronoContinuo(
+                            fx_EstadoContinuo(ThisItem.status_processo),
+                            ThisItem.InicioAguardando_Debandagem,
+                            ThisItem.data_hora_inicio_debandagem,
+                            ThisItem.data_hora_final_vulcanizacao
+                        ),
+                        ctxAgora
+                    )
+                  Width: =80
+                  X: =214
+                  Y: =62
+      - rct_HeaderDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarDeband:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloDeband:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Debandagem"
+            Width: =572
+            X: =447
+            Y: =4
+      - btn_CardOrdemDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =166
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaOrdemDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoOrdemDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DADOS DA ORDEM"
+            Width: =220
+            X: =365
+            Y: =85
+      - lbl_IdOrdemDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              ="ID: " & gal_FilaDeband.Selected.ID
+            Width: =200
+            X: =898
+            Y: =85
+      - lbl_RotOpDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="ORDEM DE PRODUÇÃO"
+            Width: =180
+            X: =365
+            Y: =131
+      - lbl_ValOpDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Text(gal_FilaDeband.Selected.OP, "0")
+            Width: =180
+            X: =365
+            Y: =151
+      - lbl_RotMangueiraDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =180
+            X: =555
+            Y: =131
+      - lbl_ValMangueiraDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaDeband.Selected.Mangueira
+            Width: =180
+            X: =555
+            Y: =151
+      - lbl_RotTrancadeiraDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TRANÇADEIRA"
+            Width: =160
+            X: =745
+            Y: =131
+      - lbl_ValTrancadeiraDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaDeband.Selected.Trançadeira
+            Width: =160
+            X: =745
+            Y: =151
+      - lbl_RotRecebidoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            Size: =fx_FonteApoio
+            Text: ="RECEBIDO DA VULCANIZAÇÃO"
+            Width: =200
+            X: =918
+            Y: =120
+      - lbl_ValRecebidoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) & " m"
+            Width: =200
+            X: =918
+            Y: =151
+      - lbl_RotCarretelDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="CARRETEL  ENTRADA → SAÍDA"
+            Width: =230
+            X: =365
+            Y: =191
+      - lbl_ValCarretelDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaDeband.Selected.'Carretel Entrada', "—") & "   →   " & Coalesce(gal_FilaDeband.Selected.'Carretel Saida', "—")
+            Width: =230
+            X: =365
+            Y: =211
+      - lbl_RotTempoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TEMPO NESTA ETAPA"
+            Width: =180
+            X: =620
+            Y: =191
+      - lbl_ValTempoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =fx_Crono(
+                  fx_InicioCronoContinuo(
+                      fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo),
+                      gal_FilaDeband.Selected.InicioAguardando_Debandagem,
+                      gal_FilaDeband.Selected.data_hora_inicio_debandagem,
+                      gal_FilaDeband.Selected.data_hora_final_vulcanizacao
+                  ),
+                  ctxAgora
+              )
+            Width: =180
+            X: =620
+            Y: =211
+      - lbl_RotTurnoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TURNO ATUAL"
+            Width: =180
+            X: =840
+            Y: =191
+      - lbl_ValTurnoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =fx_TurnoLabelEm(ctxAgora)
+            Width: =180
+            X: =840
+            Y: =211
+      - btn_CardEntradaDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =404
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =267
+      - lbl_SecaoEntradaDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENTRADA DE DADOS"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =240
+            X: =369
+            Y: =287
+      - rct_DivisorEntradaDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =472
+            X: =369
+            Y: =317
+      - lbl_RotQtdDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="METRAGEM DEBANDADA (m) *"
+            Width: =226
+            X: =369
+            Y: =333
+      - inp_QtdDeband:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Metragem debandada em metros"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" &&
+                  (IsBlank(Self.Text) || !fx_EhNum(Self.Text) || fx_Num(Self.Text) <= 0),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =gal_FilaDeband.Selected.quantidade_debandagem
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =226
+            X: =369
+            Y: =353
+      - lbl_RotOperadorDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR *"
+            Width: =226
+            X: =615
+            Y: =333
+      - cmb_OperadorDeband:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador responsável pela debandagem"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Selected.Nome),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: =Filter(Colaboradores, Nome = gal_FilaDeband.Selected.operador_debandagem)
+            DisplayFields: =["field_1"]
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Busque pelo nome"
+            Items: =Colaboradores.Nome
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["field_1"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Width: =237
+            X: =615
+            Y: =353
+      - lbl_RotObsDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO DA DEBANDAGEM"
+            Width: =472
+            X: =369
+            Y: =409
+      - inp_ObsDeband:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação da debandagem"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaDeband.Selected.Observação_Debandagem
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =88
+            HintText: ="Emenda, parada, aspecto da mangueira, divergência de carretel"
+            HoverFill: =fx_CorInfoSuave
+            Mode: =TextMode.MultiLine
+            PaddingLeft: =10
+            PaddingTop: =8
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =472
+            X: =369
+            Y: =429
+      - lbl_AjudaObsDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="A observação viaja com a OP e aparece na Extração/Teste."
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO"
+            Width: =472
+            X: =369
+            Y: =521
+      - lbl_BalancoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0),
+                  fx_CorErro,
+                  fx_CorTextoSuave
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Balanço:  " & Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) & " recebidos  −  " &
+              Coalesce(fx_Num(inp_QtdDeband.Text), 0) & " debandados  =  " &
+              (Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) - Coalesce(fx_Num(inp_QtdDeband.Text), 0)) & " m"
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO"
+            Width: =472
+            X: =369
+            Y: =549
+      - lbl_AlertaBalancoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Size: =fx_FonteCorpo
+            Text: ="⚠ Debandado maior que o recebido da Vulcanização — confira a digitação."
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO" &&
+              Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0)
+            Width: =472
+            X: =369
+            Y: =577
+      - lbl_AvisoInicieDeband:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =80
+            Size: =fx_FonteCorpo
+            Text: ="Selecione a OP na fila e toque em Iniciar Produção."
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO"
+            Width: =472
+            X: =370
+            Y: =548
+      - btn_CardResumoDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =404
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =267
+      - lbl_SecaoResumoDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DEBANDADO NA OP"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =909
+            Y: =287
+      - lbl_RotT1Deband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="1º Turno"
+            Width: =100
+            X: =909
+            Y: =331
+      - lbl_ValT1Deband:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =331
+      - lbl_RotT2Deband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="2º Turno"
+            Width: =100
+            X: =909
+            Y: =371
+      - lbl_ValT2Deband:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =371
+      - lbl_RotT3Deband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="3º Turno"
+            Width: =100
+            X: =909
+            Y: =411
+      - lbl_ValT3Deband:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =411
+      - rct_DivisorResumoDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =185
+            X: =909
+            Y: =456
+      - lbl_RotTotalDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="TOTAL DEBANDADO"
+            Width: =185
+            X: =909
+            Y: =474
+      - lbl_ValTotalDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Size: =fx_FonteNumero
+            Text: |-
+              =(
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) +
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) +
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0)
+              ) & " m"
+            Width: =185
+            X: =909
+            Y: =496
+      - rct_DivisorSaldoDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =185
+            X: =909
+            Y: =548
+      - lbl_RotSaldoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            Size: =fx_FonteApoio
+            Text: ="SALDO A DEBANDAR NESTA OP"
+            Width: =185
+            X: =909
+            Y: =566
+      - lbl_ValSaldoDeband:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0) < 0,
+                  fx_CorErro,
+                  fx_CorTexto
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Size: =fx_FonteNumero
+            Text: |-
+              =(
+                  Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno1_Debandagem, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno2_Debandagem, 0) -
+                  Coalesce(gal_FilaDeband.Selected.Qtd_Turno3_Debandagem, 0)
+              ) & " m"
+            Width: =185
+            X: =909
+            Y: =606
+      - rct_RodapeDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshDeband:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =Refresh(ficha_producao);
+              ClearCollect(colCarreteisDeband, lista_carreteis);
+              UpdateContext({ctxAgora: Now()})
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_IniciarDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaDeband.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =ClearCollect(colCarreteisDeband, lista_carreteis);
+              Reset(cmb_CarretelSaidaDeband);
+              UpdateContext({ctxModalSetupDeband: true})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Iniciar Produção"
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO"
+            Width: =360
+            X: =549
+            Y: =700
+      - btn_SalvarDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaDeband.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  { _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID) },
+                  If(
+                      _r.Modified <> gal_FilaDeband.Selected.Modified,
+                      Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                      Set(varProcessando, false),
+                      Coalesce(fx_Num(inp_QtdDeband.Text), 0) <= 0,
+                      Notify("A metragem debandada precisa ser maior que zero.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      With(
+                          {
+                              _min: fx_MinutosDoDia(Now()),
+                              _delta: Coalesce(fx_Num(inp_QtdDeband.Text), 0)
+                                  - Coalesce(_r.Qtd_Turno1_Debandagem, 0)
+                                  - Coalesce(_r.Qtd_Turno2_Debandagem, 0)
+                                  - Coalesce(_r.Qtd_Turno3_Debandagem, 0)
+                          },
+                          Patch(
+                              ficha_producao,
+                              _r,
+                              {
+                                  quantidade_debandagem: Coalesce(fx_Num(inp_QtdDeband.Text), 0),
+                                  operador_debandagem: cmb_OperadorDeband.Selected.Nome,
+                                  Observação_Debandagem: inp_ObsDeband.Text,
+                                  Turno_Debandagem: Text(fx_Turno(_min)),
+                                  Qtd_Turno1_Debandagem: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
+                                  Qtd_Turno2_Debandagem: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
+                                  Qtd_Turno3_Debandagem: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
+                              }
+                          )
+                      );
+                      If(
+                          !IsEmpty(Errors(ficha_producao)),
+                          Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                          Set(varProcessando, false),
+                          Refresh(ficha_producao);
+                          UpdateContext({ctxAgora: Now()});
+                          Set(varProcessando, false);
+                          Notify("Parcial da Debandagem salvo.", NotificationType.Success, 4000)
+                      )
+                  )
+              )
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar Parcial"
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO"
+            Width: =220
+            X: =440
+            Y: =700
+      - btn_EnviarDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(gal_FilaDeband.Selected.ID) &&
+                  !varProcessando &&
+                  !IsBlank(cmb_OperadorDeband.Selected.Nome) &&
+                  Coalesce(fx_Num(inp_QtdDeband.Text), 0) > 0,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxModalEnviarDeband: true})
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Enviar para Extração/Teste"
+            Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "PRODUZINDO"
+            Width: =340
+            X: =676
+            Y: =700
+      - rct_DivisorLateralDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcaoS
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="MENU LATERAL"
+            X: =1157
+      - btn_EditarPlanoDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaDeband.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(inp_MangueiraEditarDeband);
+              Reset(inp_CarretelEntradaEditarDeband);
+              Reset(inp_CarretelSaidaEditarDeband);
+              UpdateContext({ctxModalEditarDeband: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤEditar Plano"
+            Width: =183
+            X: =1168
+            Y: =113
+      - img_EditarPlanoDeband:
+          Control: Image@2.2.3
+          Properties:
+            DisplayMode: =btn_EditarPlanoDeband.DisplayMode
+            Height: =24
+            Image: ='pen-line'
+            OnSelect: =Select(btn_EditarPlanoDeband)
+            Width: =24
+            X: =1186
+            Y: =132
+      - btn_SetupLateralDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaDeband.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =UpdateContext({ctxModalSetupDeband: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤSet-up da Peça"
+            Width: =183
+            X: =1168
+            Y: =187
+      - ico_SetupLateralDeband:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            DisplayMode: =btn_SetupLateralDeband.DisplayMode
+            Height: =24
+            Icon: =Icon.View
+            OnSelect: =Select(btn_SetupLateralDeband)
+            Width: =24
+            X: =1186
+            Y: =206
+      - lbl_VersaoDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="Versão 0.3.0"
+            Width: =183
+            X: =1168
+            Y: =710
+      - cntr_SetupDeband:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalSetupDeband
+            Width: =1366
+          Children:
+            - btn_BgSetupDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =560
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =900
+                  X: =233
+                  Y: =104
+            - lbl_TituloSetupDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: |-
+                    =If(
+                        fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO",
+                        "Set-up de Debandagem",
+                        "Especificação da Mangueira"
+                    )
+                  Width: =600
+                  X: =265
+                  Y: =128
+            - lbl_SubSetupDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="OP " & Text(gal_FilaDeband.Selected.OP, "0") & "  ·  " & gal_FilaDeband.Selected.Mangueira & "  ·  carretel de entrada " & Coalesce(gal_FilaDeband.Selected.'Carretel Entrada', "—")
+                  Width: =700
+                  X: =265
+                  Y: =164
+            - btn_CardInkjetDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =300
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =540
+                  X: =265
+                  Y: =204
+            - lbl_TituloInkjetDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MARCAÇÃO INKJET"
+                  Width: =300
+                  X: =285
+                  Y: =218
+            - btn_BadgeInkjetDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =If(
+                        Upper(Trim(Coalesce(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), INKJ_DESC), ""))) <> "",
+                        fx_CorOK,
+                        fx_CorRotulo
+                    )
+                  DisplayMode: =DisplayMode.View
+                  Fill: |-
+                    =If(
+                        Upper(Trim(Coalesce(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), INKJ_DESC), ""))) <> "",
+                        fx_CorOKSuave,
+                        fx_CorFundo
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =30
+                  HoverFill: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        Upper(Trim(Coalesce(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), INKJ_DESC), ""))) <> "",
+                        "Leva inkjet: SIM",
+                        "Leva inkjet: não cadastrado"
+                    )
+                  Width: =210
+                  X: =285
+                  Y: =244
+            - lbl_RotInkjetDescDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="TEXTO A SER IMPRESSO"
+                  Width: =500
+                  X: =285
+                  Y: =288
+            - btn_FundoInkjetDescDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =176
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =500
+                  X: =285
+                  Y: =310
+            - lbl_ValInkjetDescDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        IsBlank(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), INKJ_DESC)),
+                        fx_CorTextoSuave,
+                        fx_CorTexto
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =160
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), INKJ_DESC),
+                        "Sem marcação inkjet cadastrada para esta mangueira."
+                    )
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =476
+                  X: =297
+                  Y: =318
+            - btn_CardTensaoDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =150
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =280
+                  X: =825
+                  Y: =204
+            - lbl_TituloTensaoDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="TENSÃO DE DEBANDAGEM"
+                  Width: =240
+                  X: =845
+                  Y: =218
+            - lbl_ValTensaoDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =With(
+                        { _t: Trim(Coalesce(Text(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), TensaodeDebandagem)), "")) },
+                        If(IsBlank(_t) || _t = "-", fx_CorTextoSuave, fx_CorTexto)
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =64
+                  Size: =fx_FonteReceita
+                  Text: |-
+                    =With(
+                        { _t: Trim(Coalesce(Text(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), TensaodeDebandagem)), "")) },
+                        If(IsBlank(_t) || _t = "-", "--", _t)
+                    )
+                  Width: =240
+                  X: =845
+                  Y: =240
+            - lbl_RotTensaoDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="Valor de referência do delineamento"
+                  Width: =240
+                  X: =845
+                  Y: =302
+            - lbl_AvisoTensaoDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =48
+                  Size: =fx_FonteApoio
+                  Text: ="Sem spec cadastrada. Confirme com o processo."
+                  Visible: |-
+                    =With(
+                        { _t: Trim(Coalesce(Text(LookUp(colDM_LAYLINE, Trim(PARTNUMBER) = Trim(gal_FilaDeband.Selected.Mangueira), TensaodeDebandagem)), "")) },
+                        IsBlank(_t) || _t = "-"
+                    )
+                  Width: =240
+                  X: =845
+                  Y: =151
+            - btn_CardCarretelDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =130
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO"
+                  Width: =280
+                  X: =825
+                  Y: =374
+            - lbl_RotCarretelSaidaDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE SAÍDA *"
+                  Visible: =btn_CardCarretelDeband.Visible
+                  Width: =240
+                  X: =845
+                  Y: =388
+            - cmb_CarretelSaidaDeband:
+                Control: Classic/ComboBox@2.4.0
+                Properties:
+                  AccessibleLabel: ="Carretel de saída da debandagem"
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Selected.Title),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  ChevronBackground: =fx_CorInfo
+                  ChevronFill: =fx_CorSuperficie
+                  ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+                  ChevronHoverFill: =fx_CorSuperficie
+                  DisplayFields: =["Title"]
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  InputTextPlaceholder: ="Selecione o carretel"
+                  Items: =Filter(colCarreteisDeband, IsBlank(op))
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["Title"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorSuperficie
+                  SelectionFill: =fx_CorInfo
+                  Visible: =btn_CardCarretelDeband.Visible
+                  Width: =240
+                  X: =845
+                  Y: =410
+            - lbl_StatusCarretelDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =If(
+                        IsBlank(cmb_CarretelSaidaDeband.Selected.Title),
+                        fx_CorRotulo,
+                        fx_CorOK
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsBlank(cmb_CarretelSaidaDeband.Selected.Title),
+                        "Escolha o carretel vazio que vai receber a mangueira.",
+                        "Carretel " & cmb_CarretelSaidaDeband.Selected.Title & " livre e pronto para receber."
+                    )
+                  Visible: =btn_CardCarretelDeband.Visible
+                  Width: =240
+                  X: =845
+                  Y: =460
+            - btn_FecharSetupDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalSetupDeband: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO",
+                        "Cancelar",
+                        "Fechar"
+                    )
+                  Width: =150
+                  X: =735
+                  Y: =584
+            - btn_ConfirmarIniciarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !IsBlank(gal_FilaDeband.Selected.ID) &&
+                        !varProcessando &&
+                        !IsBlank(cmb_CarretelSaidaDeband.Selected.Title) &&
+                        fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO",
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID),
+                            _carretel: cmb_CarretelSaidaDeband.Selected.Title,
+                            _agora: Now(),
+                            _min: fx_MinutosDoDia(Now())
+                        },
+                        If(
+                            _r.Modified <> gal_FilaDeband.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            _r.status_processo = "Em processo",
+                            Notify("Esta OP já está em processo na Debandagem.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            IsBlank(_carretel),
+                            Notify("Escolha o carretel de saída antes de iniciar.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            !IsBlank(LookUp(lista_carreteis, Title = _carretel).op),
+                            Notify("Carretel " & _carretel & " já está ocupado por outra OP. Escolha outro.", NotificationType.Error, 8000);
+                            ClearCollect(colCarreteisDeband, lista_carreteis);
+                            Set(varProcessando, false),
+                            Patch(
+                                ficha_producao,
+                                _r,
+                                {
+                                    status_processo: "Em processo",
+                                    data_hora_inicio_debandagem: _agora,
+                                    InicioEmProcesso_Debandagem: _agora,
+                                    Turno_Debandagem: Text(fx_Turno(_min)),
+                                    'Carretel Saida': _carretel
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(ficha_producao)),
+                                Notify("Falha ao iniciar a Debandagem: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                Patch(
+                                    lista_carreteis,
+                                    LookUp(lista_carreteis, Title = _carretel),
+                                    {
+                                        op: Text(_r.ID),
+                                        etapa_processo: "Debandagem",
+                                        mangueira_atual: _r.Mangueira
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(lista_carreteis)),
+                                    Notify("OP iniciada, mas o carretel NÃO foi reservado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                                );
+                                Patch(
+                                    Historico_Carretel,
+                                    Defaults(Historico_Carretel),
+                                    {
+                                        Title: _carretel,
+                                        OP_ID: _r.OP,
+                                        etapa: "Debandagem",
+                                        mangueira: Text(_r.Bitola),
+                                        metros_entrada: Coalesce(_r.quantidade_vulcanizacao, 0),
+                                        data_hora_entrada: _agora
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(Historico_Carretel)),
+                                    Notify("OP iniciada, mas a custódia do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                                );
+                                Patch(
+                                    Eventos_Producao,
+                                    Defaults(Eventos_Producao),
+                                    {
+                                        Title: Text(_r.ID) & "-Debandagem-Inicio",
+                                        origem: {Value: "ficha_producao"},
+                                        origem_ID: _r.ID,
+                                        etapa: {Value: "Debandagem"},
+                                        tipo: {Value: "Início"},
+                                        data_hora: _agora,
+                                        data_ref: fx_DataRefEm(_agora),
+                                        turno: fx_Turno(_min),
+                                        bitola: _r.Bitola,
+                                        metros: Coalesce(_r.quantidade_vulcanizacao, 0),
+                                        recurso: _r.Trançadeira
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(Eventos_Producao)),
+                                    Notify("Evento de início não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                );
+                                Refresh(ficha_producao);
+                                ClearCollect(colCarreteisDeband, lista_carreteis);
+                                Reset(inp_QtdDeband);
+                                Reset(inp_ObsDeband);
+                                Reset(cmb_OperadorDeband);
+                                UpdateContext({ctxModalSetupDeband: false, ctxAgora: Now()});
+                                Set(varProcessando, false);
+                                Notify("Debandagem iniciada na OP " & Text(_r.OP, "0") & " no carretel " & _carretel & ".", NotificationType.Success, 4000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Visible: =fx_EstadoContinuo(gal_FilaDeband.Selected.status_processo) = "AGUARDANDO"
+                  Width: =200
+                  X: =901
+                  Y: =584
+      - cntr_EnviarDeband:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalEnviarDeband
+            Width: =1366
+          Children:
+            - btn_BgEnviarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =390
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =169
+            - lbl_TituloEnviarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Enviar para Extração/Teste"
+                  Width: =460
+                  X: =403
+                  Y: =193
+            - lbl_SubEnviarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="OP " & Text(gal_FilaDeband.Selected.OP, "0") & "  ·  " & gal_FilaDeband.Selected.Mangueira & "  ·  carretel " & Coalesce(gal_FilaDeband.Selected.'Carretel Saida', "—")
+                  Width: =560
+                  X: =403
+                  Y: =227
+            - btn_ResumoEnviarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =52
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Debandado " & Coalesce(fx_Num(inp_QtdDeband.Text), 0) & " m   ·   " & cmb_OperadorDeband.Selected.Nome
+                  Width: =560
+                  X: =403
+                  Y: =261
+            - lbl_BalancoEnviarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        Coalesce(fx_Num(inp_QtdDeband.Text), 0) > Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0),
+                        fx_CorErro,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Recebido da Vulcanização " & Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) & " m   ·   saldo " &
+                    (Coalesce(gal_FilaDeband.Selected.quantidade_vulcanizacao, 0) - Coalesce(fx_Num(inp_QtdDeband.Text), 0)) & " m"
+                  Width: =560
+                  X: =403
+                  Y: =327
+            - lbl_ObsEnviarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Observação: " & fx_Ou(inp_ObsDeband.Text)
+                  Width: =560
+                  X: =403
+                  Y: =355
+            - lbl_AvisoEnviarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =60
+                  Size: =fx_FonteApoio
+                  Text: ="Ao confirmar, a OP sai da fila da Debandagem e entra na fila da Extração/Teste no carretel de saída. O carretel de entrada é liberado para outra OP."
+                  Width: =560
+                  X: =403
+                  Y: =395
+            - btn_CancelarEnviarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalEnviarDeband: false});
+                    Set(varProcessando, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =403
+                  Y: =480
+            - btn_ConfirmarEnviarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_OperadorDeband.Selected.Nome) &&
+                        Coalesce(fx_Num(inp_QtdDeband.Text), 0) > 0,
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID),
+                            _agora: Now(),
+                            _min: fx_MinutosDoDia(Now()),
+                            _qtd: Coalesce(fx_Num(inp_QtdDeband.Text), 0),
+                            _obs: inp_ObsDeband.Text,
+                            _operador: cmb_OperadorDeband.Selected.Nome
+                        },
+                        If(
+                            IsBlank(_operador) || _qtd <= 0,
+                            Notify("Preencha operador e metragem antes de enviar.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            _r.Modified <> gal_FilaDeband.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            IsBlank(_r.'Carretel Saida'),
+                            Notify("Esta OP não tem carretel de saída. Reinicie o set-up antes de enviar.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            With(
+                                {
+                                    _saida: _r.'Carretel Saida',
+                                    _entrada: _r.'Carretel Entrada',
+                                    _delta: _qtd
+                                        - Coalesce(_r.Qtd_Turno1_Debandagem, 0)
+                                        - Coalesce(_r.Qtd_Turno2_Debandagem, 0)
+                                        - Coalesce(_r.Qtd_Turno3_Debandagem, 0)
+                                },
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        quantidade_debandagem: _qtd,
+                                        operador_debandagem: _operador,
+                                        Observação_Debandagem: _obs,
+                                        processo: "Extr./Teste",
+                                        status_processo: "Aguardando",
+                                        data_hora_final_debandagem: _agora,
+                                        'InicioAguardando_Extr./Teste': _agora,
+                                        'Carretel Entrada': _saida,
+                                        'Carretel Saida': Blank(),
+                                        Turno_Debandagem: Text(fx_Turno(_min)),
+                                        Qtd_Turno1_Debandagem: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1_Debandagem, 0) + _delta, _r.Qtd_Turno1_Debandagem),
+                                        Qtd_Turno2_Debandagem: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2_Debandagem, 0) + _delta, _r.Qtd_Turno2_Debandagem),
+                                        Qtd_Turno3_Debandagem: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3_Debandagem, 0) + _delta, _r.Qtd_Turno3_Debandagem)
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Falha ao gravar o apontamento. Confira a conexão e tente de novo.", NotificationType.Error, 12000);
+                                    Set(varProcessando, false),
+                                    With(
+                                        { _cust: LookUp(Historico_Carretel, etapa = "Debandagem" && Title = _saida && OP_ID = _r.OP) },
+                                        Patch(
+                                            Historico_Carretel,
+                                            Coalesce(_cust, Defaults(Historico_Carretel)),
+                                            {
+                                                Title: _saida,
+                                                OP_ID: _r.OP,
+                                                etapa: "Debandagem",
+                                                mangueira: Text(_r.Bitola),
+                                                metros_entrada: Coalesce(_r.quantidade_vulcanizacao, 0),
+                                                metros_saida: _qtd,
+                                                data_hora_entrada: Coalesce(_cust.data_hora_entrada, _r.data_hora_inicio_debandagem),
+                                                data_hora_saida: _agora,
+                                                operador: _operador
+                                            }
+                                        )
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Historico_Carretel)),
+                                        Notify("Apontamento salvo, mas a custódia do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(_r.ID) & "-Debandagem-Fim",
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: _r.ID,
+                                            etapa: {Value: "Debandagem"},
+                                            tipo: {Value: "Fim"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: fx_Turno(_min),
+                                            bitola: _r.Bitola,
+                                            metros: _qtd,
+                                            recurso: _r.Trançadeira,
+                                            operador: _operador
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify("Evento de fim não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Patch(
+                                        lista_carreteis,
+                                        LookUp(lista_carreteis, Title = _saida),
+                                        {
+                                            op: Text(_r.ID),
+                                            etapa_processo: "Extr./Teste",
+                                            mangueira_atual: _r.Mangueira,
+                                            metros_restantes: _qtd
+                                        }
+                                    );
+                                    If(
+                                        !IsBlank(_entrada),
+                                        Patch(
+                                            lista_carreteis,
+                                            LookUp(lista_carreteis, Title = _entrada),
+                                            {
+                                                op: Blank(),
+                                                etapa_processo: Blank(),
+                                                lote: Blank(),
+                                                metros_restantes: 0,
+                                                mangueira_atual: Blank()
+                                            }
+                                        )
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(lista_carreteis)),
+                                        Notify("Apontamento salvo, mas o kanban de carretéis NÃO atualizou: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Refresh(ficha_producao);
+                                    ClearCollect(colCarreteisDeband, lista_carreteis);
+                                    Reset(inp_QtdDeband);
+                                    Reset(inp_ObsDeband);
+                                    Reset(cmb_OperadorDeband);
+                                    Reset(gal_FilaDeband);
+                                    UpdateContext({ctxModalEnviarDeband: false, ctxAgora: Now()});
+                                    Set(varProcessando, false);
+                                    Notify("Debandagem registrada. Carretel " & _saida & " enviado para a Extração/Teste.", NotificationType.Success, 6000)
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Envio"
+                  Width: =220
+                  X: =743
+                  Y: =480
+      - cntr_EditarPlanoDeband:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalEditarDeband
+            Width: =1366
+          Children:
+            - btn_BgEditarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =430
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =169
+            - lbl_TituloEditarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Editar dados da OP"
+                  Width: =400
+                  X: =455
+                  Y: =197
+            - lbl_RotMangueiraEditarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MANGUEIRA"
+                  Width: =456
+                  X: =455
+                  Y: =245
+            - inp_MangueiraEditarDeband:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Mangueira da ordem"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaDeband.Selected.Mangueira
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =456
+                  X: =455
+                  Y: =267
+            - lbl_RotCarretelEntradaEditarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE ENTRADA"
+                  Width: =218
+                  X: =455
+                  Y: =325
+            - inp_CarretelEntradaEditarDeband:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Carretel de entrada"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaDeband.Selected.'Carretel Entrada'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =347
+            - lbl_RotCarretelSaidaEditarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE SAÍDA"
+                  Width: =218
+                  X: =693
+                  Y: =325
+            - inp_CarretelSaidaEditarDeband:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Carretel de saída"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaDeband.Selected.'Carretel Saida'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =347
+            - lbl_AvisoEditarDeband:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Size: =fx_FonteApoio
+                  Text: ="Use só para corrigir erro de digitação."
+                  Width: =456
+                  X: =455
+                  Y: =401
+            - btn_CancelarEditarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(inp_MangueiraEditarDeband);
+                    Reset(inp_CarretelEntradaEditarDeband);
+                    Reset(inp_CarretelSaidaEditarDeband);
+                    UpdateContext({ctxModalEditarDeband: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =520
+            - btn_SalvarEditarDeband:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(IsBlank(gal_FilaDeband.Selected.ID) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        { _r: LookUp(ficha_producao, ID = gal_FilaDeband.Selected.ID) },
+                        If(
+                            _r.Modified <> gal_FilaDeband.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            Patch(
+                                ficha_producao,
+                                _r,
+                                {
+                                    Mangueira: inp_MangueiraEditarDeband.Text,
+                                    'Carretel Entrada': inp_CarretelEntradaEditarDeband.Text,
+                                    'Carretel Saida': inp_CarretelSaidaEditarDeband.Text
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(ficha_producao)),
+                                Notify("Falha ao salvar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                Refresh(ficha_producao);
+                                UpdateContext({ctxModalEditarDeband: false});
+                                Set(varProcessando, false);
+                                Notify("Dados da OP atualizados.", NotificationType.Success, 4000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Salvar"
+                  Width: =200
+                  X: =711
+                  Y: =520
+      - rct_OverlayDeband:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_ProcessandoDeband:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =60
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Salvando... Aguarde"
+            Visible: =varProcessando
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoDeband:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366

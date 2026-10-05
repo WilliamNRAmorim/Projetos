@@ -1,0 +1,593 @@
+Screens:
+  scr_selecaosetor_Montagem:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: =Select(btn_RecarregarSelM)
+    Children:
+      - btn_RecarregarSelM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =With(
+                  { _agora: Now() },
+                  With(
+                      {
+                          _data:  fx_DataRefEm(_agora),
+                          _turno: fx_TurnoLabelEm(_agora)
+                      },
+                      Refresh(Producao_Montagem);
+                      Refresh(Paradas_Montagem);
+                      Concurrent(
+                          ClearCollect(
+                              colAbertasSelM,
+                              ForAll(
+                                  Filter(Producao_Montagem, Status = "EmAndamento") As _r,
+                                  {
+                                      ID:       _r.ID,
+                                      CelulaK:  Upper(Trim(_r.Celula)),
+                                      PN:       _r.PN,
+                                      OT:       _r.OT,
+                                      QtdOT:    _r.QtdOT,
+                                      InicioEm: _r.InicioEm
+                                  }
+                              )
+                          ),
+                          ClearCollect(
+                              colTurnoSelM,
+                              ForAll(
+                                  Filter(Producao_Montagem, Data >= _data) As _r,
+                                  {
+                                      CelulaK:      Upper(Trim(_r.Celula)),
+                                      Data:         _r.Data,
+                                      Turno:        Trim(_r.Turno),
+                                      Status:       _r.Status,
+                                      QtdProduzida: _r.QtdProduzida
+                                  }
+                              )
+                          ),
+                          ClearCollect(
+                              colParadasSelM,
+                              ForAll(
+                                  Filter(Paradas_Montagem, Data >= DateAdd(_data, -2, TimeUnit.Days)) As _p,
+                                  {
+                                      CelulaK:        Upper(Trim(_p.Celula)),
+                                      Data:           _p.Data,
+                                      Turno:          Trim(_p.Turno),
+                                      Motivo:         _p.Motivo,
+                                      TempoParadoMin: _p.TempoParadoMin,
+                                      OPVinculada:    _p.OPVinculada
+                                  }
+                              )
+                          )
+                      );
+                      ClearCollect(
+                          colEstadoCelSelM,
+                          ForAll(
+                              fx_CelulasMontagem As _c,
+                              With(
+                                  {
+                                      _ab: Sort(
+                                          Filter(colAbertasSelM As _a, _a.CelulaK = Upper(_c.Celula)),
+                                          InicioEm,
+                                          SortOrder.Ascending
+                                      ),
+                                      _tu: Filter(
+                                          colTurnoSelM As _t,
+                                          _t.CelulaK = Upper(_c.Celula) && _t.Data = _data && _t.Turno = _turno
+                                      ),
+                                      _pa: Filter(
+                                          colParadasSelM As _p,
+                                          _p.CelulaK = Upper(_c.Celula) && _p.Data = _data && _p.Turno = _turno &&
+                                          _p.Motivo <> fx_MotivoTempoExcedido
+                                      )
+                                  },
+                                  With(
+                                      { _f: First(_ab) },
+                                      With(
+                                          {
+                                              _t: If(
+                                                  IsBlank(_f.ID),
+                                                  0,
+                                                  Coalesce(LookUp(Tempos, Material = Upper(Trim(_f.PN))).TempoMinPc, 0)
+                                              ),
+                                              _chave: _f.PN & " (OT " & Text(_f.OT, "[$-en-US]0") & ")"
+                                          },
+                                          {
+                                              Celula:     _c.Celula,
+                                              Abertas:    CountRows(_ab),
+                                              OT:         _f.OT,
+                                              PN:         _f.PN,
+                                              QtdOT:      _f.QtdOT,
+                                              Inicio:     _f.InicioEm,
+                                              MetaMin:    If(_t <= 0, -1, RoundDown(_f.QtdOT * _t, 0)),
+                                              DescMin:    If(
+                                                              IsBlank(_f.ID),
+                                                              0,
+                                                              Sum(
+                                                                  Filter(
+                                                                      colParadasSelM As _d,
+                                                                      _d.CelulaK = Upper(_c.Celula) &&
+                                                                      _d.OPVinculada = _chave &&
+                                                                      _d.Motivo <> fx_MotivoTempoExcedido
+                                                                  ),
+                                                                  TempoParadoMin
+                                                              )
+                                                          ),
+                                              Fechadas:   CountRows(Filter(_tu As _x, _x.Status = "Finalizado")),
+                                              Pecas:      Sum(Filter(_tu As _x, _x.Status = "Finalizado"), QtdProduzida),
+                                              ParadoMin:  Sum(_pa, TempoParadoMin),
+                                              AtivaTurno: !IsEmpty(_tu) || !IsEmpty(_pa)
+                                          }
+                                      )
+                                  )
+                              )
+                          )
+                      );
+                      UpdateContext({ ctxAgora: _agora, ctxDataSelM: _data, ctxTurnoSelM: _turno })
+                  )
+              )
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+            X: =1360
+            Y: =756
+      - tmr_DadosSelM:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: =Select(btn_RecarregarSelM)
+            Repeat: =true
+            Text: =""
+            Width: =1
+            X: =1200
+            Y: =756
+      - tmr_RelogioSelM:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ ctxAgora: Now() })
+            Repeat: =true
+            Text: =""
+            Width: =1
+            X: =1200
+            Y: =756
+      - btn_VoltarSelM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =50
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(Menu_1)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =100
+            RadiusBottomRight: =100
+            RadiusTopLeft: =100
+            RadiusTopRight: =100
+            Text: =""
+            Width: =50
+            X: =40
+            Y: =24
+      - ico_VoltarSelM:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para o menu principal"
+            Color: =fx_CorInfo
+            Height: =26
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Select(btn_VoltarSelM)
+            Width: =26
+            X: =52
+            Y: =36
+      - lbl_TituloSelM:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            PaddingLeft: =0
+            Size: =fx_FonteTitulo
+            Text: ="Selecione a Célula — Montagem"
+            Width: =520
+            X: =104
+            Y: =20
+      - lbl_SubtituloSelM:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Estado das células ao vivo · atualiza sozinho a cada 2 minutos"
+            Width: =560
+            X: =104
+            Y: =52
+      - lbl_TurnoSelM:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =If(
+                  IsBlank(ctxTurnoSelM),
+                  "",
+                  ctxTurnoSelM & "  ·  " & Text(ctxDataSelM, "dd/mm/yyyy")
+              )
+            Width: =400
+            X: =946
+            Y: =22
+      - lbl_ResumoSelM:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorBorda
+            Color: |-
+              =If(
+                  CountRows(
+                      Filter(
+                          colEstadoCelSelM As _e,
+                          fx_ExcedeuMeta(fx_RealMontagemMin(_e.Inicio, _e.DescMin, ctxAgora), _e.MetaMin)
+                      )
+                  ) > 0,
+                  ColorFade(fx_CorAlerta, -30%),
+                  fx_CorTextoSuave
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  {
+                      _prod: CountRows(Filter(colEstadoCelSelM As _e, _e.Abertas > 0)),
+                      _exc:  CountRows(
+                                 Filter(
+                                     colEstadoCelSelM As _e,
+                                     fx_ExcedeuMeta(fx_RealMontagemMin(_e.Inicio, _e.DescMin, ctxAgora), _e.MetaMin)
+                                 )
+                             )
+                  },
+                  Text(_prod, "[$-en-US]0") & " de " & Text(CountRows(fx_CelulasMontagem), "[$-en-US]0") & " produzindo" &
+                  If(_exc > 0, "  ·  " & Text(_exc, "[$-en-US]0") & " acima da meta", "")
+              )
+            Width: =500
+            X: =846
+            Y: =44
+      - gal_CelulasSelM:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =672
+            Items: =fx_CelulasMontagem
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =12
+            TemplateSize: =212
+            Width: =1245
+            WrapCount: =4
+            X: =101
+            Y: =84
+          Children:
+            - btn_FundoCelSelM:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            fx_ExcedeuMeta(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), _s.MetaMin),
+                            fx_CorAlerta,
+                            fx_CorBorda
+                        )
+                    )
+                  BorderThickness: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(fx_ExcedeuMeta(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), _s.MetaMin), 2, 1)
+                    )
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =204
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =296
+                  Y: =2
+            - btn_TopoCelSelM:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ThisItem.Cor
+                  Font: =fx_FonteFamilia
+                  Height: =6
+                  HoverFill: =ThisItem.Cor
+                  PressedFill: =ThisItem.Cor
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =296
+                  Y: =2
+            - btn_IconeCelSelM:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ColorFade(ThisItem.Cor, 85%)
+                  Font: =fx_FonteFamilia
+                  Height: =48
+                  HoverFill: =ColorFade(ThisItem.Cor, 85%)
+                  PressedFill: =ColorFade(ThisItem.Cor, 85%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =48
+                  X: =22
+                  Y: =26
+            - lbl_SiglaCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =fx_CorBorda
+                  Color: =ThisItem.Cor
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =48
+                  PaddingLeft: =0
+                  Size: =If(Len(ThisItem.Sigla) > 3, fx_FonteApoio, fx_FonteCorpo)
+                  Text: =ThisItem.Sigla
+                  Width: =48
+                  X: =22
+                  Y: =26
+            - lbl_NomeCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: =ThisItem.Celula
+                  Width: =206
+                  X: =82
+                  Y: =26
+            - lbl_EstadoCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            fx_ExcedeuMeta(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), _s.MetaMin), ColorFade(fx_CorAlerta, -30%),
+                            _s.Abertas > 0,                                                                  fx_CorOK,
+                            _s.AtivaTurno,                                                                   fx_CorAlerta,
+                            fx_CorTextoSuave
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            fx_ExcedeuMeta(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), _s.MetaMin), "Em produção · acima da meta",
+                            _s.Abertas > 0,                                                                  "Em produção",
+                            _s.AtivaTurno,                                                                   "Sem OT aberta",
+                            "Sem apontamento no turno"
+                        )
+                    )
+                  Width: =206
+                  X: =82
+                  Y: =52
+            - rct_DivisorCelSelM:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =256
+                  X: =22
+                  Y: =88
+            - lbl_OTCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =Font.'Courier New'
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            _s.Abertas > 0,
+                            "OT " & Text(_s.OT, "[$-en-US]0") &
+                            If(_s.Abertas > 1, "  +" & Text(_s.Abertas - 1, "[$-en-US]0"), ""),
+                            "—"
+                        )
+                    )
+                  Width: =180
+                  X: =22
+                  Y: =98
+            - lbl_CronoCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(_s.Abertas > 0, fx_Crono(_s.Inicio, ctxAgora), "")
+                    )
+                  Width: =76
+                  X: =202
+                  Y: =98
+            - lbl_PNCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            _s.Abertas > 0,
+                            fx_Ou(_s.PN) & "  ·  " & Text(_s.QtdOT, "[$-pt-BR]#.##0") & " pç",
+                            ""
+                        )
+                    )
+                  Width: =277
+                  X: =10
+                  Y: =124
+            - lbl_RealCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            fx_ExcedeuMeta(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), _s.MetaMin),
+                            ColorFade(fx_CorAlerta, -30%),
+                            fx_CorTexto
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =37
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            _s.Abertas = 0,
+                            "",
+                            "Real " & Text(fx_RealMontagemMin(_s.Inicio, _s.DescMin, ctxAgora), "[$-en-US]0") & " min" &
+                            If(_s.DescMin > 0, "*", "") &
+                            If(
+                                _s.MetaMin > 0,
+                                "  ·  meta " & Text(_s.MetaMin, "[$-en-US]0") & " min",
+                                "  ·  sem tempo padrão"
+                            )
+                        )
+                    )
+                  Tooltip: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            _s.DescMin > 0,
+                            "* já descontados " & Text(_s.DescMin, "[$-en-US]0") & " min de paradas vinculadas à OT",
+                            ""
+                        )
+                    )
+                  Width: =296
+                  Y: =144
+            - lbl_TurnoCelSelM:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =31
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstadoCelSelM As _e, _e.Celula = ThisItem.Celula) },
+                        If(
+                            _s.Fechadas = 0 && _s.ParadoMin = 0,
+                            "",
+                            "No turno  " & Text(_s.Fechadas, "[$-en-US]0") &
+                            If(_s.Fechadas = 1, " OT fechada · ", " OT fechadas · ") &
+                            Text(_s.Pecas, "[$-pt-BR]#.##0") & " pç" &
+                            If(_s.ParadoMin > 0, " · parada " & Text(_s.ParadoMin, "[$-en-US]0") & " min", "")
+                        )
+                    )
+                  Width: =296
+                  Y: =181
+            - btn_AcaoCelSelM:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =Color.Transparent
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =204
+                  HoverFill: =fx_CorHoverSutil
+                  OnSelect: |-
+                    =Set(varCelulaMontagem, ThisItem.Celula);
+                    Navigate(scr_Montagem_HoraHora)
+                  PressedFill: =fx_CorHoverForte
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =296
+                  Y: =2

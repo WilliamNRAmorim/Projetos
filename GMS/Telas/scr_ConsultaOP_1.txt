@@ -1,0 +1,1320 @@
+Screens:
+  scr_ConsultaOP_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({ctxAbaCOP: 1});
+        ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas)
+    Children:
+      - rct_HeaderCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =1366
+      - rct_LinhaHeaderCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =1366
+            Y: =68
+      - ico_VoltarCOP:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar ao painel de supervisão"
+            Color: =fx_CorInfo
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_SelecaoGestao_1, ScreenTransition.UnCover)
+            Tooltip: ="Voltar ao painel de supervisão"
+            Width: =49
+            X: =20
+            Y: =4
+      - lbl_TituloCOP:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Consulta de OP"
+            Width: =700
+            X: =333
+            Y: =4
+      - lbl_VersaoCOP:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.3.0"
+            Width: =180
+            X: =1090
+            Y: =21
+      - ico_RefreshCOP:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Recarregar a lista de OPs"
+            Color: =fx_CorRotulo
+            Height: =56
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =If(
+                  IsBlank(Trim(txt_BuscaCOP.Text)),
+                  ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                  IsNumeric(Trim(txt_BuscaCOP.Text)),
+                  ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(Trim(txt_BuscaCOP.Text)))),
+                  ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, Trim(txt_BuscaCOP.Text))))
+              )
+            Tooltip: ="Recarregar"
+            Width: =56
+            X: =1290
+            Y: =6
+      - rct_PainelBuscaCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =699
+            Width: =320
+            Y: =69
+      - rct_DivisorBuscaCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =699
+            Width: =1
+            X: =320
+            Y: =69
+      - lbl_RotBuscaCOP:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="BUSCAR"
+            Width: =288
+            X: =16
+            Y: =84
+      - txt_BuscaCOP:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Número da OP ou início do código da mangueira"
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            Default: =""
+            DelayOutput: =true
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HintText: ="Nº da OP ou início da mangueira"
+            HoverFill: =fx_CorInfoSuave
+            OnChange: |-
+              =If(
+                  IsBlank(Trim(Self.Text)),
+                  ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                  IsNumeric(Trim(Self.Text)),
+                  ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(Trim(Self.Text)))),
+                  ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, Trim(Self.Text))))
+              )
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =240
+            X: =16
+            Y: =106
+      - ico_LimparBuscaCOP:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Limpar a busca"
+            Color: =fx_CorRotulo
+            Height: =fx_AlturaCampo
+            Icon: =Icon.Cancel
+            OnSelect: |-
+              =Reset(txt_BuscaCOP);
+              ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas)
+            Tooltip: ="Limpar busca"
+            Width: =44
+            X: =260
+            Y: =106
+      - lbl_ContagemCOP:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: |-
+              =If(
+                  IsBlank(Trim(txt_BuscaCOP.Text)),
+                  CountRows(colConsultaOP) & " OPs em andamento",
+                  CountRows(colConsultaOP) & " OPs encontradas"
+              )
+            Width: =288
+            X: =16
+            Y: =158
+      - lbl_VazioBuscaCOP:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =80
+            Size: =fx_FonteCorpo
+            Text: ="Nenhuma OP encontrada. Confira o número ou digite o início do código da mangueira."
+            Visible: =IsEmpty(colConsultaOP)
+            Width: =288
+            X: =16
+            Y: =220
+      - gal_FilaCOP:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Fill: =Color.Transparent
+            Height: =584
+            Items: =Sort(colConsultaOP, OP, SortOrder.Descending)
+            TemplateSize: =76
+            Width: =320
+            Y: =184
+          Children:
+            - rct_ItemCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =If(ThisItem.IsSelected, fx_CorInfo, fx_CorBorda)
+                  BorderThickness: =If(ThisItem.IsSelected, 2, 1)
+                  Fill: =If(ThisItem.IsSelected, fx_CorInfoSuave, fx_CorSuperficie)
+                  Height: =72
+                  Width: =296
+                  X: =12
+                  Y: =2
+            - lbl_ItemOPCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteDestaque
+                  Text: ="OP " & Text(ThisItem.OP)
+                  Width: =170
+                  X: =26
+                  Y: =10
+            - lbl_ItemStatusCOP:
+                Control: ModernText@1.0.0
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =Switch(
+                        ThisItem.status_processo,
+                        "Finalizado", fx_CorOK,
+                        "Em processo", fx_CorInfo,
+                        "Aguardando", fx_CorAlerta,
+                        fx_CorTextoSuave
+                    )
+                  Fill: |-
+                    =Switch(
+                        ThisItem.status_processo,
+                        "Finalizado", fx_CorOKSuave,
+                        "Em processo", fx_CorInfoSuave,
+                        "Aguardando", fx_CorAlertaSuave,
+                        fx_CorFundo
+                    )
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: =fx_Ou(Text(ThisItem.status_processo))
+                  Width: =100
+                  X: =200
+                  Y: =10
+            - lbl_ItemMangueiraCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: =fx_Ou(Text(ThisItem.Mangueira))
+                  Width: =274
+                  X: =26
+                  Y: =36
+            - lbl_ItemCarretelCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Etapa: " & fx_Ou(Text(ThisItem.processo)) &
+                    "   ·   Carretel: " & fx_Ou(Text(ThisItem.'Carretel Saida'))
+                  Width: =274
+                  X: =26
+                  Y: =54
+      - lbl_SemSelecaoCOP:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Size: =fx_FonteSecao
+            Text: ="Selecione uma OP na lista para ver a ficha completa."
+            Visible: =IsBlank(gal_FilaCOP.Selected.OP)
+            Width: =1045
+            X: =321
+            Y: =340
+      - ctn_ResumoCOP:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =76
+            Visible: =!IsBlank(gal_FilaCOP.Selected.OP)
+            Width: =1045
+            X: =321
+            Y: =69
+          Children:
+            - lbl_OPDetalheCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorPrimaria
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="OP " & Text(gal_FilaCOP.Selected.OP)
+                  Width: =260
+                  X: =24
+                  Y: =8
+            - lbl_MangueiraDetalheCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: =fx_Ou(Text(gal_FilaCOP.Selected.Mangueira))
+                  Width: =420
+                  X: =24
+                  Y: =44
+            - lbl_StatusDetalheCOP:
+                Control: ModernText@1.0.0
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =Switch(
+                        gal_FilaCOP.Selected.status_processo,
+                        "Finalizado", fx_CorOK,
+                        "Em processo", fx_CorInfo,
+                        "Aguardando", fx_CorAlerta,
+                        fx_CorTextoSuave
+                    )
+                  Fill: |-
+                    =Switch(
+                        gal_FilaCOP.Selected.status_processo,
+                        "Finalizado", fx_CorOKSuave,
+                        "Em processo", fx_CorInfoSuave,
+                        "Aguardando", fx_CorAlertaSuave,
+                        fx_CorFundo
+                    )
+                  FontWeight: =FontWeight.Bold
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: =fx_Ou(Text(gal_FilaCOP.Selected.status_processo))
+                  X: =369
+                  Y: =22
+            - lbl_EtapaDetalheCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =32
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Etapa atual: " & fx_Ou(Text(gal_FilaCOP.Selected.processo))
+                  Width: =240
+                  X: =535
+                  Y: =22
+            - btn_FichaImpressaoCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(gSelectedOP, gal_FilaCOP.Selected);
+                    Navigate(scr_FichaImpressao, ScreenTransition.None)
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="ㅤㅤFicha para impressão"
+                  Width: =240
+                  X: =780
+                  Y: =14
+            - ico_FichaImpressaoCOP:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Height: =24
+                  Icon: =Icon.Print
+                  OnSelect: =Select(btn_FichaImpressaoCOP)
+                  Width: =24
+                  X: =800
+                  Y: =26
+      - ctn_AbasCOP:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =44
+            Visible: =!IsBlank(gal_FilaCOP.Selected.OP)
+            Width: =1045
+            X: =321
+            Y: =145
+          Children:
+            - btn_AbaFichaCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =If(ctxAbaCOP = 1, fx_CorInfo, fx_CorTextoSuave)
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(ctxAbaCOP = 1, FontWeight.Bold, FontWeight.Normal)
+                  Height: =44
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxAbaCOP: 1})
+                  PressedFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Text: ="Ficha de Produção"
+                  Width: =200
+            - rct_LinhaAbaFichaCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =If(ctxAbaCOP = 1, fx_CorInfo, Color.Transparent)
+                  Height: =3
+                  Width: =200
+                  Y: =41
+            - btn_AbaInspecaoCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =If(ctxAbaCOP = 2, fx_CorInfo, fx_CorTextoSuave)
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(ctxAbaCOP = 2, FontWeight.Bold, FontWeight.Normal)
+                  Height: =44
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxAbaCOP: 2})
+                  PressedFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Text: ="Inspeção"
+                  Width: =180
+                  X: =200
+            - rct_LinhaAbaInspecaoCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =If(ctxAbaCOP = 2, fx_CorInfo, Color.Transparent)
+                  Height: =3
+                  Width: =180
+                  X: =200
+                  Y: =41
+            - btn_AbaErrosCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =If(ctxAbaCOP = 3, fx_CorErro, fx_CorTextoSuave)
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(ctxAbaCOP = 3, FontWeight.Bold, FontWeight.Normal)
+                  Height: =44
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxAbaCOP: 3})
+                  PressedFill: =fx_CorErroSuave
+                  Size: =fx_FonteCorpo
+                  Text: ="Erros / Refugo"
+                  Width: =200
+                  X: =380
+            - rct_LinhaAbaErrosCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =If(ctxAbaCOP = 3, fx_CorErro, Color.Transparent)
+                  Height: =3
+                  Width: =200
+                  X: =380
+                  Y: =41
+            - rct_BordaAbasCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1045
+                  Y: =43
+      - ctn_FichaCOP:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorFundo
+            Height: =579
+            Visible: =!IsBlank(gal_FilaCOP.Selected.OP) && ctxAbaCOP = 1
+            Width: =1045
+            X: =321
+            Y: =189
+          Children:
+            - rct_CardMandrilCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =150
+                  Width: =498
+                  X: =16
+                  Y: =12
+            - lbl_TituloMandrilCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="1 · MANDRIL"
+                  Width: =300
+                  X: =30
+                  Y: =22
+            - lbl_MandrilEquipeCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_mandril)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_mandril))
+                  Width: =470
+                  X: =30
+                  Y: =48
+            - lbl_MandrilInicioCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Início: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_inicio_mandril)) &
+                    "   ·   Fim: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_final_mandril))
+                  Width: =470
+                  X: =30
+                  Y: =70
+            - lbl_MandrilQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_mandril)) &
+                    "   ·   Código " & fx_Ou(Text(gal_FilaCOP.Selected.cod_mandril))
+                  Width: =470
+                  X: =30
+                  Y: =96
+            - lbl_MandrilLoteCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Lote " & fx_Ou(Text(gal_FilaCOP.Selected.lote_mandril)) &
+                    "   ·   Desmoldante " & fx_Ou(Text(gal_FilaCOP.Selected.desmoldante_mandril))
+                  Width: =470
+                  X: =30
+                  Y: =122
+            - rct_CardTuboCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =150
+                  Width: =498
+                  X: =530
+                  Y: =12
+            - lbl_TituloTuboCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="2 · TUBO"
+                  Width: =300
+                  X: =544
+                  Y: =22
+            - lbl_TuboEquipeCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Tubo)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_tubo))
+                  Width: =470
+                  X: =544
+                  Y: =48
+            - lbl_TuboCompostoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Composto " & fx_Ou(Text(gal_FilaCOP.Selected.'Cod.CompostoTubo')) &
+                    "   ·   Lote " & fx_Ou(Text(gal_FilaCOP.Selected.'Lote Composto Tubo'))
+                  Width: =470
+                  X: =544
+                  Y: =70
+            - lbl_TuboTemposCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Início: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_inicio_tubo)) &
+                    "   ·   Fim: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_final_tubo))
+                  Width: =470
+                  X: =544
+                  Y: =96
+            - lbl_TuboQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_tubo)) &
+                    "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_tubo))
+                  Width: =470
+                  X: =544
+                  Y: =122
+            - rct_CardTrancagemCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =150
+                  Width: =498
+                  X: =16
+                  Y: =174
+            - lbl_TituloTrancagemCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="3 · TRANÇAGEM"
+                  Width: =300
+                  X: =30
+                  Y: =184
+            - lbl_TrancagemEquipeCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Trançagem)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_trancagem))
+                  Width: =470
+                  X: =30
+                  Y: =210
+            - lbl_TrancagemMaquinaCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Máquina " & fx_Ou(Text(gal_FilaCOP.Selected.Trançadeira)) &
+                    "   ·   Picks " & fx_Ou(Text(gal_FilaCOP.Selected.'N°Picks')) &
+                    "   ·   Lote " & fx_Ou(Text(gal_FilaCOP.Selected.Lote_Trançagem))
+                  Width: =470
+                  X: =30
+                  Y: =232
+            - lbl_TrancagemTemposCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Início: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_inicio_trancadeira)) &
+                    "   ·   Fim: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_final_trancadeira))
+                  Width: =470
+                  X: =30
+                  Y: =258
+            - lbl_TrancagemQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_trancagem)) &
+                    "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_trancagem))
+                  Width: =470
+                  X: =30
+                  Y: =284
+            - rct_CardCoberturaCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =150
+                  Width: =498
+                  X: =530
+                  Y: =174
+            - lbl_TituloCoberturaCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="4 · COBERTURA"
+                  Width: =300
+                  X: =544
+                  Y: =184
+            - lbl_CoberturaEquipeCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Cobertura)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_cobertura))
+                  Width: =470
+                  X: =544
+                  Y: =210
+            - lbl_CoberturaLoteCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Composto " & fx_Ou(Text(gal_FilaCOP.Selected.'Cod.Cobertura')) &
+                    "   ·   Lote " & fx_Ou(Text(gal_FilaCOP.Selected.Lote_cobertura))
+                  Width: =470
+                  X: =544
+                  Y: =232
+            - lbl_CoberturaTemposCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Início: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_inicio_cobertura)) &
+                    "   ·   Fim: " & fx_DataHoraBR(Text(gal_FilaCOP.Selected.data_hora_final_cobertura))
+                  Width: =470
+                  X: =544
+                  Y: =258
+            - lbl_CoberturaQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_cobertura)) &
+                    "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_cobertura))
+                  Width: =470
+                  X: =544
+                  Y: =284
+            - rct_CardFinalizacaoCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =150
+                  Width: =1012
+                  X: =16
+                  Y: =336
+            - lbl_TituloFinalizacaoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="5 · BANDAGEM   6 · VULCANIZAÇÃO   7 · DEBANDAGEM   8 · EXTRAÇÃO"
+                  Width: =980
+                  X: =30
+                  Y: =346
+            - lbl_BandagemCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Bandagem — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Bandagem)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_bandagem)) &
+                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_bandagem))
+                  Width: =980
+                  X: =30
+                  Y: =372
+            - lbl_VulcanizacaoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Vulcanização — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Vulcanização)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_vulcanizacao)) &
+                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_vulcanizacao))
+                  Width: =980
+                  X: =30
+                  Y: =394
+            - lbl_DebandagemCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Debandagem — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Debandagem)) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_debandagem)) &
+                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_debandagem))
+                  Width: =980
+                  X: =30
+                  Y: =416
+            - lbl_ExtracaoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Extração / Teste — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.'Turno_Extr/Teste')) &
+                    "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_extracao)) &
+                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_extracao))
+                  Width: =980
+                  X: =30
+                  Y: =442
+            - rct_CardEncerramentoCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorOK
+                  BorderThickness: =1
+                  Fill: =fx_CorOKSuave
+                  Height: =60
+                  Width: =1012
+                  X: =16
+                  Y: =498
+            - lbl_EncerramentoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Finalização: " & fx_DataFinalizacaoBR(Text(gal_FilaCOP.Selected.DataFinalizacao)) &
+                    "   ·   Carretel de saída: " & fx_Ou(Text(gal_FilaCOP.Selected.'Carretel Saida')) &
+                    "   ·   Situação: " & fx_Ou(Text(gal_FilaCOP.Selected.status_processo))
+                  Width: =980
+                  X: =30
+                  Y: =516
+      - ctn_InspecaoCOP:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorFundo
+            Height: =579
+            Visible: =!IsBlank(gal_FilaCOP.Selected.OP) && ctxAbaCOP = 2
+            Width: =1045
+            X: =321
+            Y: =189
+          Children:
+            - lbl_KpiInspecaoCOP:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorInfo
+                  FontWeight: =FontWeight.Bold
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: =CountRows(Filter(RegistrosInspeção, OP_ID = gal_FilaCOP.Selected.OP)) & " REGISTROS DE INSPEÇÃO"
+                  Width: =600
+                  X: =16
+                  Y: =8
+            - rct_HeaderInspecaoCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorHeader
+                  Height: =36
+                  Width: =1012
+                  X: =16
+                  Y: =44
+            - lbl_ThInspDataCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="DATA / HORA"
+                  Width: =132
+                  X: =24
+                  Y: =44
+            - lbl_ThInspTurnoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="TURNO"
+                  Width: =62
+                  X: =164
+                  Y: =44
+            - lbl_ThInspQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="QTD."
+                  Width: =62
+                  X: =234
+                  Y: =44
+            - lbl_ThInspDiCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="DIÂM. INTERNO"
+                  Width: =110
+                  X: =304
+                  Y: =44
+            - lbl_ThInspDeCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="DIÂM. EXTERNO"
+                  Width: =110
+                  X: =422
+                  Y: =44
+            - lbl_ThInspConcCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="CONCENTRICIDADE"
+                  Width: =130
+                  X: =540
+                  Y: =44
+            - lbl_ThInspDefeitoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="DEFEITO"
+                  Width: =180
+                  X: =678
+                  Y: =44
+            - lbl_ThInspTrancCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="TRANÇADEIRA"
+                  X: =866
+                  Y: =44
+            - gal_InspecaoCOP:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  Fill: =Color.Transparent
+                  Height: =460
+                  Items: |-
+                    =Sort(
+                        Filter(RegistrosInspeção, OP_ID = gal_FilaCOP.Selected.OP),
+                        ID,
+                        SortOrder.Descending
+                    )
+                  TemplateFill: =If(Mod(ThisItem.ID, 2) = 0, fx_CorFundo, fx_CorSuperficie)
+                  TemplateSize: =40
+                  Width: =1012
+                  X: =16
+                  Y: =80
+                Children:
+                  - lbl_RowInspDataCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_DataHoraBR(Text(ThisItem.DataHoraInspecao))
+                        Width: =132
+                        X: =8
+                  - lbl_RowInspTurnoCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.TurnoTeste))
+                        Width: =62
+                        X: =148
+                  - lbl_RowInspQtdCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Quantidade))
+                        Width: =62
+                        X: =218
+                  - lbl_RowInspDiCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Diametro_Interno))
+                        Width: =110
+                        X: =288
+                  - lbl_RowInspDeCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Diametro_Externo))
+                        Width: =110
+                        X: =406
+                  - lbl_RowInspConcCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Concentricidade))
+                        Width: =130
+                        X: =524
+                  - lbl_RowInspDefeitoCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(IsBlank(ThisItem.CodigoDefeito), fx_CorRotulo, fx_CorErro)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =If(IsBlank(ThisItem.CodigoDefeito), FontWeight.Normal, FontWeight.Bold)
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.CodigoDefeito.Value))
+                        Width: =180
+                        X: =662
+                  - lbl_RowInspTrancCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Trançadeira))
+                        X: =850
+            - lbl_VazioInspecaoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: ="Esta OP não tem registro de inspeção."
+                  Visible: =IsEmpty(Filter(RegistrosInspeção, OP_ID = gal_FilaCOP.Selected.OP))
+                  Width: =1012
+                  X: =16
+                  Y: =120
+      - ctn_ErrosCOP:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorFundo
+            Height: =579
+            Visible: =!IsBlank(gal_FilaCOP.Selected.OP) && ctxAbaCOP = 3
+            Width: =1045
+            X: =321
+            Y: =189
+          Children:
+            - rct_KpiRefugoCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorErro
+                  BorderThickness: =1
+                  Fill: =fx_CorErroSuave
+                  Height: =60
+                  Width: =1012
+                  X: =16
+                  Y: =8
+            - lbl_KpiRefugoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    ="Refugo total: " &
+                    Text(Sum(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP), Quantidade), "#.##0,##") &
+                    "   ·   " &
+                    CountRows(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP)) &
+                    " ocorrências"
+                  Width: =980
+                  X: =30
+                  Y: =24
+            - rct_HeaderErrosCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorHeader
+                  Height: =36
+                  Width: =1012
+                  X: =16
+                  Y: =84
+            - lbl_ThErroDataCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="DATA / HORA"
+                  X: =24
+                  Y: =84
+            - lbl_ThErroCodigoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DO ERRO"
+                  Width: =300
+                  X: =182
+                  Y: =84
+            - lbl_ThErroQtdCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="QUANTIDADE"
+                  Width: =110
+                  X: =490
+                  Y: =84
+            - lbl_ThErroTurnoCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="TURNO"
+                  Width: =80
+                  X: =608
+                  Y: =84
+            - lbl_ThErroTrancCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  Size: =fx_FonteApoio
+                  Text: ="TRANÇADEIRA"
+                  X: =696
+                  Y: =84
+            - gal_ErrosCOP:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  Fill: =Color.Transparent
+                  Height: =422
+                  Items: |-
+                    =Sort(
+                        Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP),
+                        ID,
+                        SortOrder.Descending
+                    )
+                  TemplateFill: =If(Mod(ThisItem.ID, 2) = 0, fx_CorFundo, fx_CorSuperficie)
+                  TemplateSize: =40
+                  Width: =1012
+                  X: =16
+                  Y: =120
+                Children:
+                  - lbl_RowErroDataCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_DataHoraBR(Text(ThisItem.DataHoraRefugo))
+                        X: =8
+                  - lbl_RowErroCodigoCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.CodigoErro))
+                        Width: =300
+                        X: =166
+                  - lbl_RowErroQtdCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Quantidade))
+                        Width: =110
+                        X: =474
+                  - lbl_RowErroTurnoCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.'Turno Erro'))
+                        Width: =80
+                        X: =592
+                  - lbl_RowErroTrancCOP:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        Size: =fx_FonteApoio
+                        Text: =fx_Ou(Text(ThisItem.Trançadeira))
+                        X: =680
+            - lbl_VazioErrosCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: ="Nenhum refugo registrado para esta OP."
+                  Visible: =IsEmpty(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP))
+                  Width: =1012
+                  X: =16
+                  Y: =160

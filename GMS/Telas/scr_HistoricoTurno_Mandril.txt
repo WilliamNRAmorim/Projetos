@@ -1,0 +1,599 @@
+Screens:
+  scr_HistoricoTurno_Mandril:
+    Properties:
+      Fill: =fx_CorFundo
+      OnVisible: |-
+        =UpdateContext({ctxHistData: fx_DataRefEm(ctxAgora), ctxHistTurno: fx_TurnoEm(ctxAgora)});
+        Select(btn_hist_recarregar_mandril)
+    Children:
+      - rct_hist_fundo_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorFundo
+            Height: =768
+            Width: =1366
+      - rct_hist_header_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorPrimaria
+            Height: =64
+            Width: =1366
+      - tmr_hist_relogio_mandril:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            OnTimerEnd: |-
+              =UpdateContext({ctxHistAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+            Y: =4
+      - ico_hist_voltar_mandril:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =Color.White
+            Height: =32
+            Icon: =Icon.ChevronLeft
+            OnSelect: =Back()
+            Width: =32
+            X: =16
+            Y: =16
+      - lbl_hist_titulo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =36
+            Size: =fx_FonteTitulo
+            Text: ="Histórico do Turno · Mandril"
+            Width: =520
+            X: =60
+            Y: =14
+      - lbl_hist_relogio_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =Color.White
+            Height: =36
+            Size: =fx_FonteCorpo
+            Text: =Text(Coalesce(ctxHistAgora, Now()), "dd/mm/yyyy HH:mm")
+            Width: =220
+            X: =1130
+            Y: =14
+      - rct_hist_filtros_fundo_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =60
+            Width: =1334
+            X: =16
+            Y: =80
+      - btn_hist_dia_anterior_mandril:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorTextoSuave
+            Color: =fx_CorTexto
+            Fill: =fx_CorFundo
+            Height: =44
+            OnSelect: |-
+              =UpdateContext({ctxHistData: DateAdd(ctxHistData, -1, TimeUnit.Days)});
+              Select(btn_hist_recarregar_mandril)
+            Size: =fx_FonteSecao
+            Text: ="◀"
+            Width: =48
+            X: =32
+            Y: =88
+      - lbl_hist_data_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Height: =44
+            Size: =fx_FonteSecao
+            Text: =Text(ctxHistData, "dd/mm/yyyy")
+            Width: =160
+            X: =88
+            Y: =88
+      - btn_hist_dia_proximo_mandril:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorTextoSuave
+            Color: =fx_CorTexto
+            DisplayMode: =If(ctxHistData >= fx_DataRefEm(ctxAgora), DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorFundo
+            Height: =44
+            OnSelect: |-
+              =UpdateContext({ctxHistData: DateAdd(ctxHistData, 1, TimeUnit.Days)});
+              Select(btn_hist_recarregar_mandril)
+            Size: =fx_FonteSecao
+            Text: ="▶"
+            Width: =48
+            X: =256
+            Y: =88
+      - btn_hist_hoje_mandril:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorTextoSuave
+            Color: =fx_CorTexto
+            Fill: =fx_CorFundo
+            Height: =44
+            OnSelect: |-
+              =UpdateContext({ctxHistData: fx_DataRefEm(ctxAgora)});
+              Select(btn_hist_recarregar_mandril)
+            Size: =fx_FonteCorpo
+            Text: ="Hoje"
+            Width: =88
+            X: =316
+            Y: =88
+      - cmb_hist_turno_mandril:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            Color: =fx_CorTexto
+            Default: =Switch(ctxHistTurno, 1, "Turno 1", 2, "Turno 2", 3, "Turno 3", "Dia inteiro")
+            Fill: =fx_CorFundo
+            Height: =44
+            Items: =["Turno 1", "Turno 2", "Turno 3", "Dia inteiro"]
+            Items.Value: =Value
+            OnChange: =Select(btn_hist_recarregar_mandril)
+            Size: =fx_FonteCorpo
+            Width: =200
+            X: =420
+            Y: =88
+      - btn_hist_recarregar_mandril:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Color: =Color.White
+            Fill: =fx_CorInfo
+            Height: =44
+            OnSelect: |-
+              =UpdateContext({ctxHistCarregando: true});
+
+              ClearCollect(colHistDiaMandril, Filter(Eventos_Producao, data_ref = ctxHistData));
+              ClearCollect(colHistMandrilDia, Filter(colHistDiaMandril, etapa.Value = "Mandril"));
+
+              With(
+                  {_turno: Switch(cmb_hist_turno_mandril.Selected.Value, "Turno 1", 1, "Turno 2", 2, "Turno 3", 3, 0)},
+                  ClearCollect(
+                      colHistEvMandril,
+                      Filter(colHistMandrilDia, _turno = 0 || turno = _turno)
+                  )
+              );
+
+              ClearCollect(
+                  colHistFichasMandril,
+                  ForAll(
+                      Distinct(colHistEvMandril, origem_ID) As d,
+                      With(
+                          {f: LookUp(ficha_producao, ID = d.Value)},
+                          {fID: d.Value, fOP: f.OP, fCod: f.cod_mandril, fLote: f.lote_mandril}
+                      )
+                  )
+              );
+
+              ClearCollect(
+                  colHistMandril,
+                  AddColumns(
+                      colHistEvMandril As ev,
+                      hMomento, ev.data_hora,
+                      hTipo, ev.tipo.Value,
+                      hMetros, ev.metros,
+                      hSobra, Coalesce(ev.sobra, 0),
+                      hCarreteis, ev.carretel,
+                      hBitola, ev.bitola,
+                      hOperador, ev.operador,
+                      hRecurso, ev.recurso,
+                      hOP, LookUp(colHistFichasMandril, fID = ev.origem_ID).fOP,
+                      hCod, LookUp(colHistFichasMandril, fID = ev.origem_ID).fCod,
+                      hLote, LookUp(colHistFichasMandril, fID = ev.origem_ID).fLote,
+                      hDelta, If(
+                          ev.tipo.Value <> "Fim",
+                          Blank(),
+                          With(
+                              {_ini: LookUp(colHistMandrilDia, origem_ID = ev.origem_ID && tipo.Value = "Início").metros},
+                              If(
+                                  IsBlank(_ini),
+                                  Blank(),
+                                  Coalesce(ev.metros, 0) + Coalesce(ev.sobra, 0) - _ini
+                              )
+                          )
+                      )
+                  )
+              );
+
+              UpdateContext({ctxHistCarregando: false})
+            Size: =fx_FonteCorpo
+            Text: ="Atualizar"
+            Width: =140
+            X: =636
+            Y: =88
+      - lbl_hist_janela_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTextoSuave
+            Height: =44
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Janela: " & Switch(cmb_hist_turno_mandril.Selected.Value, "Turno 1", "05:20 às 13:48", "Turno 2", "13:48 às 22:41", "Turno 3", "22:41 às 05:20", "05:20 às 05:20") & "  ·  " & CountRows(colHistMandril) & " movimentos"
+            Width: =538
+            X: =796
+            Y: =88
+      - rct_hist_kpi1_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =84
+            Width: =326
+            X: =16
+            Y: =152
+      - rct_hist_kpi2_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =84
+            Width: =326
+            X: =354
+            Y: =152
+      - rct_hist_kpi3_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =84
+            Width: =326
+            X: =692
+            Y: =152
+      - rct_hist_kpi4_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =84
+            Width: =320
+            X: =1030
+            Y: =152
+      - lbl_hist_kpi1_titulo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Height: =22
+            Size: =fx_FonteApoio
+            Text: ="Metros produzidos"
+            Width: =167
+            X: =32
+            Y: =160
+      - lbl_hist_kpi1_valor_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Height: =46
+            Size: =fx_FonteTitulo
+            Text: =Text(Coalesce(Sum(Filter(colHistMandril, hTipo = "Fim"), hMetros), 0), "#,##0", "pt-BR") & " m"
+            Width: =141
+            X: =45
+            Y: =182
+      - lbl_hist_kpi2_titulo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Height: =22
+            Size: =fx_FonteApoio
+            Text: ="Mandris concluídos"
+            Width: =294
+            X: =370
+            Y: =160
+      - lbl_hist_kpi2_valor_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorOK
+            Height: =46
+            Size: =fx_FonteTitulo
+            Text: =CountRows(Filter(colHistMandril, hTipo = "Fim"))
+            Width: =294
+            X: =370
+            Y: =182
+      - lbl_hist_kpi3_titulo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Height: =22
+            Size: =fx_FonteApoio
+            Text: ="OPs iniciadas"
+            Width: =294
+            X: =708
+            Y: =160
+      - lbl_hist_kpi3_valor_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Height: =46
+            Size: =fx_FonteTitulo
+            Text: =CountRows(Filter(colHistMandril, hTipo = "Início"))
+            Width: =294
+            X: =708
+            Y: =182
+      - lbl_hist_kpi4_titulo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Height: =22
+            Size: =fx_FonteApoio
+            Text: ="Bitolas trabalhadas"
+            Width: =288
+            X: =1046
+            Y: =160
+      - lbl_hist_kpi4_valor_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Height: =46
+            Size: =fx_FonteSecao
+            Text: =Concat(Distinct(Filter(colHistMandril, !IsBlank(hBitola)), Text(hBitola)), Value, " · ")
+            Width: =288
+            X: =1046
+            Y: =182
+      - rct_hist_cabecalho_tabela_mandril:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorTexto
+            Height: =38
+            Width: =1334
+            X: =16
+            Y: =252
+      - lbl_hist_col_hora_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Hora"
+            Width: =70
+            X: =28
+            Y: =252
+      - lbl_hist_col_tipo_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Evento"
+            Width: =90
+            X: =98
+            Y: =252
+      - lbl_hist_col_op_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="OP"
+            Width: =110
+            X: =188
+            Y: =252
+      - lbl_hist_col_cod_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Cód. Mandril"
+            Width: =180
+            X: =298
+            Y: =252
+      - lbl_hist_col_bitola_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Bitola"
+            Width: =90
+            X: =478
+            Y: =252
+      - lbl_hist_col_metros_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Metros"
+            Width: =90
+            X: =568
+            Y: =252
+      - lbl_hist_col_balanco_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Balanço"
+            Width: =100
+            X: =672
+            Y: =252
+      - lbl_hist_col_carreteis_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Carretel"
+            Width: =180
+            X: =772
+            Y: =252
+      - lbl_hist_col_maquina_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Máquina"
+            Width: =110
+            X: =952
+            Y: =252
+      - lbl_hist_col_operador_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Color: =Color.White
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="Operador"
+            Width: =276
+            X: =1062
+            Y: =252
+      - gal_hist_movimentos_mandril:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Height: =454
+            Items: =SortByColumns(colHistMandril, "hMomento", SortOrder.Descending)
+            TemplateSize: =46
+            Width: =1334
+            X: =16
+            Y: =290
+          Children:
+            - rct_hist_linha_fundo_mandril:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =If(ThisItem.hTipo = "Início", ColorFade(fx_CorInfo, 0.92), fx_CorSuperficie)
+                  Height: =45
+                  Width: =1324
+            - rct_hist_linha_tag_mandril:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =If(ThisItem.hTipo = "Fim", fx_CorOK, fx_CorInfo)
+                  Height: =45
+                  Width: =4
+            - lbl_hist_linha_hora_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: =Text(ThisItem.hMomento, "HH:mm")
+                  Width: =70
+                  X: =12
+            - lbl_hist_linha_tipo_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.hTipo = "Fim", fx_CorOK, fx_CorInfo)
+                  Height: =45
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.hTipo
+                  Width: =90
+                  X: =82
+            - lbl_hist_linha_op_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: =Coalesce(Text(ThisItem.hOP), "—")
+                  Width: =110
+                  X: =172
+            - lbl_hist_linha_cod_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: =Coalesce(ThisItem.hCod, "—")
+                  Width: =180
+                  X: =282
+            - lbl_hist_linha_bitola_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: =Text(ThisItem.hBitola)
+                  Width: =90
+                  X: =462
+            - lbl_hist_linha_metros_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(ThisItem.hMetros),
+                        "—",
+                        Text(ThisItem.hMetros, "#,##0", "pt-BR") & " m"
+                    )
+                  Width: =90
+                  X: =552
+            - lbl_hist_linha_balanco_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        IsBlank(ThisItem.hDelta),
+                        fx_CorTextoSuave,
+                        ThisItem.hDelta < 0,
+                        fx_CorErro,
+                        ThisItem.hDelta > 0,
+                        fx_CorAlerta,
+                        fx_CorOK
+                    )
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(ThisItem.hDelta),
+                        "—",
+                        If(ThisItem.hDelta > 0, "+", "") & Text(ThisItem.hDelta, "#,##0", "pt-BR") & " m"
+                    )
+                  Width: =100
+                  X: =656
+            - lbl_hist_linha_carreteis_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Height: =45
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsBlank(ThisItem.hCarreteis),
+                        "—",
+                        ThisItem.hCarreteis & If(ThisItem.hSobra > 0, "  ·  sobra " & Text(ThisItem.hSobra, "#,##0", "pt-BR") & " m", "")
+                    )
+                  Width: =180
+                  X: =756
+            - lbl_hist_linha_maquina_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Height: =45
+                  Size: =fx_FonteApoio
+                  Text: =Coalesce(ThisItem.hRecurso, "—")
+                  Width: =110
+                  X: =936
+            - lbl_hist_linha_operador_mandril:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Height: =45
+                  Size: =fx_FonteCorpo
+                  Text: =Coalesce(ThisItem.hOperador, "—")
+                  Width: =276
+                  X: =1046
+      - lbl_hist_vazio_mandril:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Height: =60
+            Size: =fx_FonteSecao
+            Text: ="Nenhuma movimentação registrada nesta data e turno."
+            Visible: =And(Not(ctxHistCarregando), CountRows(colHistMandril) = 0)
+            Width: =1334
+            X: =16
+            Y: =420
+      - spr_hist_carregando_mandril:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =48
+            Visible: =ctxHistCarregando
+            Width: =48
+            X: =659
+            Y: =470

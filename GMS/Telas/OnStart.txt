@@ -1,0 +1,174 @@
+Set(varMapa, LookUp(MapeamentoSetor, EmailComputador = User().Email));
+Set(varAcessoRestrito, Coalesce(varMapa.AcessoRestrito, false));
+Set(varCelulaMontagem, varMapa.Celula);
+Set(varConteudoHTML, "");
+Set(varQrMangueira, "");
+Set(varQrTotal, "");
+Set(varBarcodeSVG, "");
+Concurrent(
+    ClearCollect(
+        colTrancadeiras,
+        [
+            "Spiral", "TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07",
+            "TM04", "TO04", "TM01"
+        ]
+    ),
+    ClearCollect(
+    colMangueiras,
+    ForAll(
+        [
+            "2583-12", "2556-10", "2556-12", "2556-16", "2556-3", "2556-4", "2807-10", "2807-12",
+            "2556-5", "2556-6", "2556-8","EC115-04L", "EC115-06L","EC115-08L", "EC115-10L", "EC115-12L",
+            "EC115-16L", "EC118-04L", "EC118-06L", "EC118-08L", "EC118-10L", "EC600-16", "EC118-12L",
+            "EC118-16L", "EC215-06L", "EC215-08L","EC215-04", "EC215-08LRL", "EC215-10L",
+            "EC215-12L", "EC215-16L", "EC415-12", "EC415-16", "FC598-08", "FC598-10",
+            "FC598-12", "FC735-04", "FC735-06", "FC735-08", "FC735-10", "FC735-12",
+            "FC839B-04", "FC839B-06", "FC839B-08", "FC849-08", "GH493-10", "GH493-12",
+            "GH493-16", "GH493-6", "GH493-8", "GH681-12", "GH681-16", "GH681-4",
+            "GH681-6", "GH681-8", "GH681-10", "GH781-10", "GH781-12", "GH781-16", "GH781-4",
+            "GH781-6", "GH781-8", "H28004-250R", "H28006-250R", "H28008-250R",
+            "HC101-4", "HC101-6", "HC101-8", "HC139-7", "HC139-7_S-GX"
+        ],
+        { NomeMangueira: Value }
+    )
+);
+    ClearCollect(
+        Turno,
+        ["1", "2", "3"]
+    )
+);
+ClearCollect(
+    ColTabelaBitolas,
+    { Bitola: 3, PartNumber: "FM00195" },
+    { Bitola: 4, PartNumber: "FM00248" },
+    { Bitola: 5, PartNumber: "FM00315" },
+    { Bitola: 6, PartNumber: "FM00365" },
+    { Bitola: 7, PartNumber: "FM00425" },
+    {Bitola: 8, PartNumber: "FM0480"   },
+    { Bitola: 8, PartNumber: "FM00500" },
+    { Bitola: 10, PartNumber: "FM00610" },
+    { Bitola: 12, PartNumber: "FM00730" },
+    { Bitola: 16, PartNumber: "FM00980" }
+);
+ClearCollect(
+    colMangueiraTrancadeira,
+    Table(
+        { Mangueira: "12055040 (2583-12)", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-3", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-4", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-5", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-6", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-8", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-10", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-12", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2556-16", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "2583-12", TrancadeirasPermitidas: "TH05 / TM04 / TH02 / TH03 / TH07 / TM01"},
+        { Mangueira: "EC115-04L", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "EC115-06L", TrancadeirasPermitidas: "TH01" },
+         { Mangueira: "EC115-08L", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "EC115-10L", TrancadeirasPermitidas: "TH03 / TH02" },
+        { Mangueira: "EC115-12L", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "EC115-16L", TrancadeirasPermitidas: "OMA04" },
+        { Mangueira: "EC118-04L", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "EC118-06L", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "EC118-08L", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "EC118-10L", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "EC118-16L", TrancadeirasPermitidas: "OMA04" },
+        { Mangueira: "EC215-06L", TrancadeirasPermitidas: "TH06 / TM01 / TH03" },
+        { Mangueira: "EC215-08L", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "EC215-08LRL", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "EC215-10L", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "EC215-12L", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "EC215-16L", TrancadeirasPermitidas: "OMA04" },
+        { Mangueira: "EC415-12", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "EC415-16", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "FC598-08", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "FC598-10", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "FC598-12", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "FC735-04", TrancadeirasPermitidas: "TH06 / TH01" },
+        { Mangueira: "FC735-06", TrancadeirasPermitidas: "TH06 / TM01 / TH03" },
+        { Mangueira: "FC735-08", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "FC735-10", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "FC735-12", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "FC839B-04", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "FC839B-06", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "FC839B-08", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "FC849-08", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "GH493-6", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "GH493-8", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "GH493-10", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "GH493-12", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "GH493-16", TrancadeirasPermitidas: "Spiral" },
+        { Mangueira: "GH681-4", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "GH681-6", TrancadeirasPermitidas: "TH01" },
+        { Mangueira: "GH681-8", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "GH681-12", TrancadeirasPermitidas: "TH02" },
+        { Mangueira: "GH681-16", TrancadeirasPermitidas: "OMA04" },
+        { Mangueira: "GH781-4", TrancadeirasPermitidas: "TH06 / TH01" },
+        { Mangueira: "GH781-6", TrancadeirasPermitidas: "TH06 / TM01 / TH03" },
+        { Mangueira: "GH781-8", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "GH781-10", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "GH781-12", TrancadeirasPermitidas: "TH03 / TH04" },
+        { Mangueira: "GH781-16", TrancadeirasPermitidas: "OMA04" },
+        { Mangueira: "H28004-250R", TrancadeirasPermitidas: "TH06 / TH01" },
+        { Mangueira: "H28006-250R", TrancadeirasPermitidas: "TH06 / TM01 / TH03" },
+        { Mangueira: "H28008-250R", TrancadeirasPermitidas: "TH02 / TH03 / TH07 / TM01" },
+        { Mangueira: "HC101-4", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "HC101-6", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "HC101-8", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "HC139-7", TrancadeirasPermitidas: "TH05 / TM04" },
+        { Mangueira: "HC139-7_S-GX", TrancadeirasPermitidas: "TH05 / TM04" }
+    )
+);
+ClearCollect(
+    colDefeitos,
+    {Cod:"A", Descricao:"Quebra de fio de aço ou têxtil"},
+    {Cod:"B", Descricao:"Set-up / Alimentação de fio"},
+    {Cod:"C", Descricao:"Caroço / Ondulação"},
+    {Cod:"D", Descricao:"Marcação errada"},
+    {Cod:"E", Descricao:"Trança aparente"},
+    {Cod:"F", Descricao:"Bolhas"},
+    {Cod:"G", Descricao:"Falha na bandagem"},
+    {Cod:"H", Descricao:"Eject - test"},
+    {Cod:"I", Descricao:"Diâmetro ext. maior"},
+    {Cod:"J", Descricao:"Diâmetro ext. menor"},
+    {Cod:"K", Descricao:"Diâmetro int. maior"},
+    {Cod:"L", Descricao:"Diâmetro int. menor"},
+    {Cod:"M", Descricao:"Excentricidade"},
+    {Cod:"N", Descricao:"Torção na autoclave"},
+    {Cod:"O", Descricao:"Pontas"},
+    {Cod:"P", Descricao:"Defeito não identificado"}
+);
+
+Set(gblTurno1_Inicio, Today() + Time(5, 20, 0));
+Set(gblTurno1_Fim, Today() + Time(13, 47, 0));
+Set(gblTurno2_Inicio, Today() + Time(13, 48, 0));
+Set(gblTurno2_Fim, Today() + Time(22, 40, 0));
+Set(gblTurno3_Inicio, Today() + Time(22, 41, 0));
+
+ClearCollect(colMachines,
+    { id: "MAN-01", type: "Mandril", x: 80, y: 200, status: "running", op: "289010", defects: 0, waitTime: 0 },
+    { id: "MAN-02", type: "Mandril", x: 80, y: 340, status: "running", op: "289012", defects: 0, waitTime: 0 },
+    { id: "EXT-01", type: "Extrusora", x: 400, y: 200, status: "running", op: "289010", defects: 0, waitTime: 0 },
+    { id: "EXT-02", type: "Extrusora", x: 400, y: 450, status: "waiting", op: "289012", defects: 0, waitTime: 12 },
+    { id: "TR-01", type: "Trançadeira", x: 800, y: 150, status: "running", op: "288900", defects: 0, waitTime: 0 },
+    { id: "TR-02", type: "Trançadeira", x: 800, y: 300, status: "waiting", op: "288901", defects: 0, waitTime: 55 },
+    { id: "TR-03", type: "Trançadeira", x: 800, y: 450, status: "idle", op: "", defects: 0, waitTime: 0 },
+    { id: "TR-04", type: "Trançadeira", x: 800, y: 600, status: "running", op: "288905", defects: 1, waitTime: 0 },
+    { id: "COB-01", type: "Cobertura", x: 1200, y: 220, status: "running", op: "288850", defects: 0, waitTime: 0 },
+    { id: "COB-02", type: "Cobertura", x: 1200, y: 500, status: "waiting", op: "288851", defects: 0, waitTime: 5 },
+    { id: "VULC-01", type: "Vulcanizadora", x: 1550, y: 180, status: "running", op: "BATCH-99", defects: 0, waitTime: 0 },
+    { id: "TEST-01", type: "Bancada Teste", x: 1550, y: 450, status: "finished", op: "288000", defects: 0, waitTime: 0 }
+);
+
+Set(varConteudoHTML, "");
+
+Concurrent(
+    ClearCollect(colDM_MANDREL, DM_MANDREL),
+    ClearCollect(colDM_BANDAGEM, DM_BANDAGEM),
+    ClearCollect(colDM_LAYLINE, DM_LAYLINE)
+);
+
+ClearCollect(colSup_OPs, Filter(ficha_producao, status_processo <> "Finalizado"));
+ClearCollect(colSup_Refugo, Filter(TiposErros, DateValue(Created, "en-US") >= Today()));
+ClearCollect(colSup_HoraHora, Filter('Hora-Hora', DateValue(Data, "en-US") = Today()))

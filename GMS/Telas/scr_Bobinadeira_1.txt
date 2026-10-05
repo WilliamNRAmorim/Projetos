@@ -1,0 +1,3312 @@
+Screens:
+  scr_Bobinadeira_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxModalDelinBob: false,
+            ctxModalEnviarBob: false,
+            ctxModalCancelarBob: false,
+            ctxConsultaBob: false,
+            ctxVersaoBob: "",
+            ctxBaseBob: ""
+        });
+        Set(varProcessando, false);
+        Concurrent(
+            ClearCollect(colDM_LIST_BOBINAGEM, DM_LIST_BOBINAGEM),
+            ClearCollect(colDM_WIREWINDING, DM_WIREWINDING),
+            ClearCollect(colDM_FIOS, DM_FIOS)
+        )
+    Children:
+      - tmr_RelogioBob_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_GuardaBob_1:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =45000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =Set(varProcessando, false);
+              Notify("Tempo limite excedido. O servidor não respondeu — confira a fila antes de repetir.", NotificationType.Error, 10000)
+            Start: =varProcessando
+            Visible: =false
+            X: =1206
+      - rct_HeaderFilaBob:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =Font.Arial
+            FontWeight: =FontWeight.Bold
+            Height: =65
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Fila de Produção"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =180
+            X: =25
+            Y: =20
+      - lbl_TotalFilaBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =5
+            RadiusBottomRight: =5
+            RadiusTopLeft: =5
+            RadiusTopRight: =5
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Total: " & CountRows(gal_FilaBob.AllItems)
+            Width: =83
+            X: =215
+            Y: =20
+      - rct_DivisorFilaBob:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =314
+      - gal_FilaBob:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =700
+            Items: |-
+              =Sort(
+                  Filter(FifoBobinadeira, Status = "AB" || Status = "EP"),
+                  Linha,
+                  SortOrder.Ascending
+              )
+            OnSelect: |-
+              =Reset(inp_BobinasBob);
+              Reset(inp_MetragemBob);
+              Reset(inp_NFiosBob);
+              Reset(inp_RtBob);
+              Reset(inp_LiBob);
+              Reset(cmb_MaquinaBob_1);
+              Reset(inp_OperadorBob);
+              Reset(inp_ObsBob_1)
+            TemplateFill: =Color.Transparent
+            TemplateSize: =112
+            Width: =315
+            Y: =68
+          Children:
+            - btn_CardFilaBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HoverFill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =297
+                  X: =8
+                  Y: =4
+            - lbl_MangueiraFilaBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: =ThisItem.Mangueira
+                  Width: =180
+                  X: =20
+                  Y: =12
+            - lbl_TrancFilaBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: ="Trançadeira " & ThisItem.Trancadeira & "  •  linha " & ThisItem.Linha
+                  Width: =273
+                  X: =20
+                  Y: =40
+            - lbl_QtdFilaBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Plano: " & Coalesce(ThisItem.Quantidade, "—") &
+                    If(!IsBlank(ThisItem.Carrinho), "  •  Carrinho " & ThisItem.Carrinho)
+                  Width: =180
+                  X: =20
+                  Y: =64
+            - btn_BadgeFilaBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =If(
+                        fx_EstadoBob(ThisItem.Status) = "BOBINANDO",
+                        fx_CorOK,
+                        fx_CorAlerta
+                    )
+                  Fill: |-
+                    =If(
+                        fx_EstadoBob(ThisItem.Status) = "BOBINANDO",
+                        fx_CorOKSuave,
+                        fx_CorAlertaSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =26
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        fx_EstadoBob(ThisItem.Status) = "BOBINANDO",
+                        "Bobinando",
+                        "Aguardando"
+                    )
+                  Width: =111
+                  X: =182
+                  Y: =12
+            - lbl_CronoFilaBob:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =fx_Crono(
+                        fx_InicioCronoBob(
+                            fx_EstadoBob(ThisItem.Status),
+                            ThisItem.Created,
+                            ThisItem.DataHoraInicio
+                        ),
+                        ctxAgora
+                    )
+                  Width: =90
+                  X: =203
+                  Y: =62
+      - rct_HeaderBob_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderBob_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarBob_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_Trancagem_3)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloBob_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Bobinadeira"
+            Width: =572
+            X: =447
+            Y: =4
+      - btn_CardOrdemBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =166
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaOrdemBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoOrdemBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DADOS DA ENTRADA"
+            Width: =240
+            X: =365
+            Y: =85
+      - lbl_IdOrdemBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              ="ID: " & gal_FilaBob.Selected.ID
+            Width: =200
+            X: =898
+            Y: =85
+      - lbl_RotLinhaBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="LINHA"
+            Width: =90
+            X: =365
+            Y: =131
+      - lbl_ValLinhaBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Text(gal_FilaBob.Selected.Linha)
+            Width: =90
+            X: =365
+            Y: =151
+      - lbl_RotMangueiraBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =160
+            X: =470
+            Y: =131
+      - lbl_ValMangueiraBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaBob.Selected.Mangueira
+            Width: =160
+            X: =470
+            Y: =151
+      - lbl_RotTrancBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TRANÇADEIRA"
+            Width: =130
+            X: =645
+            Y: =131
+      - lbl_ValTrancBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaBob.Selected.Trancadeira
+            Width: =130
+            X: =645
+            Y: =151
+      - lbl_RotQtdPlanBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="PLANO DA LINHA"
+            X: =790
+            Y: =131
+      - lbl_ValQtdPlanBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaBob.Selected.Quantidade, "—")
+            X: =790
+            Y: =151
+      - lbl_RotSituacaoBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="SITUAÇÃO"
+            Width: =145
+            X: =955
+            Y: =131
+      - lbl_ValSituacaoBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO",
+                  fx_CorOK,
+                  fx_CorAlerta
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Switch(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status),
+                  "BOBINANDO", "Bobinando",
+                  "CONCLUIDA", "Concluída",
+                  "Aguardando"
+              )
+            Width: =145
+            X: =955
+            Y: =151
+      - lbl_RotVersaoBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="VERSÃO DO DELINEAMENTO"
+            Width: =215
+            X: =365
+            Y: =191
+      - lbl_ValVersaoBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_LIST_BOBINAGEM,
+                      Trim(Bobbin_Code) = Trim(gal_FilaBob.Selected.CodProduto),
+                      Part_Number
+                  ),
+                  "—"
+              )
+            Width: =200
+            X: =365
+            Y: =211
+      - lbl_RotCodBobBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="CÓDIGO DE BOBINAGEM"
+            Width: =200
+            X: =580
+            Y: =191
+      - lbl_ValCodBobBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaBob.Selected.CodProduto, "—")
+            Width: =200
+            X: =580
+            Y: =211
+      - lbl_RotFioBob_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="CÓDIGO DO FIO (SPEC)"
+            Width: =180
+            X: =795
+            Y: =191
+      - lbl_ValFioBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      WIRE_YARN_PN
+                  ),
+                  "—"
+              )
+            Width: =180
+            X: =795
+            Y: =211
+      - lbl_RotTrancSpecBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TRANÇ. (SPEC)"
+            Width: =110
+            X: =990
+            Y: =191
+      - lbl_ValTrancSpecBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      BRAID
+                  ),
+                  "—"
+              )
+            Width: =110
+            X: =990
+            Y: =211
+      - btn_CardEntradaBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =404
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =267
+      - lbl_SecaoEntradaBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENTRADA DE DADOS"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =240
+            X: =369
+            Y: =287
+      - rct_DivisorEntradaBob:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =472
+            X: =369
+            Y: =310
+      - lbl_RotBobinasBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="QTD DE BOBINAS"
+            Width: =148
+            X: =369
+            Y: =333
+      - inp_BobinasBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Quantidade de bobinas produzidas"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaBob.Selected.QtdBobinas
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =369
+            Y: =353
+      - lbl_RotMetragemBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =38
+            Size: =fx_FonteApoio
+            Text: ="METRAGEM BOBINADA (m) *"
+            Width: =148
+            X: =531
+            Y: =315
+      - inp_MetragemBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Metragem bobinada em metros"
+            BorderColor: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && (IsBlank(Self.Text) || Value(Self.Text) <= 0),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =gal_FilaBob.Selected.Metragem
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =148
+            X: =531
+            Y: =353
+      - lbl_RotNFiosBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Nº DE FIOS"
+            Width: =148
+            X: =693
+            Y: =333
+      - inp_NFiosBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Número de fios"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaBob.Selected.NFios
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =693
+            Y: =353
+      - lbl_RotRtBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="RT"
+            Width: =148
+            X: =369
+            Y: =423
+      - inp_RtBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Código RT"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaBob.Selected.RT
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =369
+            Y: =443
+      - lbl_RotLiBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="LI (LOTE DO FIO)"
+            Width: =148
+            X: =531
+            Y: =416
+      - inp_LiBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="LI, lote do fio"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaBob.Selected.LI
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =531
+            Y: =443
+      - lbl_RotMaquinaBob_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            Size: =fx_FonteApoio
+            Text: ="MÁQUINA DE BOBINAGEM *"
+            Width: =161
+            X: =680
+            Y: =407
+      - cmb_MaquinaBob_1:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            AccessibleLabel: ="Máquina de bobinagem"
+            BorderColor: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && IsBlank(Self.Selected.Value),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            Default: =gal_FilaBob.Selected.'Maquina de Bobinagem'
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            Items: =["BA13", "BA14","BA15", "BA16"]
+            Items.Value: =Value
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SelectionColor: =fx_CorInfo
+            SelectionFill: =fx_CorInfoSuave
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =693
+            Y: =443
+      - lbl_RotOperadorBob_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR (E-NUMBER) *"
+            Width: =162
+            X: =369
+            Y: =499
+      - inp_OperadorBob:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="E-Number do operador"
+            BorderColor: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && IsBlank(Self.Text),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =gal_FilaBob.Selected.Operador
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =369
+            Y: =533
+      - lbl_RotObsBob_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO"
+            Width: =310
+            X: =531
+            Y: =506
+      - inp_ObsBob_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação da bobinagem"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaBob.Selected.Observação
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =310
+            X: =531
+            Y: =533
+      - lbl_AlertaMetragemBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="⚠ Metragem fora da spec do delineamento (" &
+              Text(
+                  IfError(
+                      Value(
+                          LookUp(
+                              colDM_WIREWINDING,
+                              PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                              LENGTH_m
+                          )
+                      ),
+                      0
+                  ),
+                  "[$-pt-BR]#.##0"
+              ) & " m). Confirme antes de enviar."
+            Visible: |-
+              =With(
+                  {
+                      _spec: IfError(
+                          Value(
+                              LookUp(
+                                  colDM_WIREWINDING,
+                                  PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                                  LENGTH_m
+                              )
+                          ),
+                          0
+                      ),
+                      _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
+                  },
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" &&
+                  _spec > 0 && _lido > 0 &&
+                  Abs(_lido - _spec) / _spec > 0.05
+              )
+            Width: =472
+            X: =369
+            Y: =561
+      - lbl_AlertaNFiosBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="⚠ Nº de fios diferente da spec (" &
+              Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      WIRES_YARN
+                  ),
+                  "—"
+              ) & "). Confira a versão do delineamento."
+            Visible: |-
+              =With(
+                  {
+                      _spec: IfError(
+                          Value(
+                              LookUp(
+                                  colDM_WIREWINDING,
+                                  PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                                  WIRES_YARN
+                              )
+                          ),
+                          0
+                      ),
+                      _lido: Coalesce(Value(inp_NFiosBob.Text), 0)
+                  },
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" &&
+                  _spec > 0 && _lido > 0 && _lido <> _spec
+              )
+            Width: =472
+            X: =369
+            Y: =589
+      - lbl_AvisoInicieBob:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =60
+            Size: =fx_FonteCorpo
+            Text: ="Selecione a linha na fila e toque em Iniciar Bobinagem para escolher a versão do delineamento e liberar a entrada de dados."
+            Visible: =fx_EstadoBob(gal_FilaBob.Selected.Status) = "AGUARDANDO"
+            Width: =472
+            X: =369
+            Y: =603
+      - btn_CardSpecBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =404
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =267
+      - lbl_SecaoSpecBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="SPEC DESTA VERSÃO"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =909
+            Y: =287
+      - lbl_RotSpecComprBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="COMPRIMENTO (m)"
+            Width: =185
+            X: =909
+            Y: =331
+      - lbl_ValSpecComprBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      LENGTH_m
+                  ),
+                  "—"
+              )
+            Width: =185
+            X: =909
+            Y: =353
+      - lbl_RotSpecFiosBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="NÚMERO DE FIOS"
+            Width: =185
+            X: =909
+            Y: =393
+      - lbl_ValSpecFiosBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      WIRES_YARN
+                  ),
+                  "—"
+              )
+            Width: =185
+            X: =909
+            Y: =415
+      - lbl_RotSpecCodFioBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="CÓDIGO DO FIO"
+            Width: =185
+            X: =909
+            Y: =455
+      - lbl_ValSpecCodFioBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      WIRE_YARN_PN
+                  ),
+                  "—"
+              )
+            Width: =185
+            X: =909
+            Y: =477
+      - lbl_RotSpecDiamBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="DIÂMETRO DO FIO (pol.)"
+            Width: =185
+            X: =909
+            Y: =517
+      - lbl_ValSpecDiamBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =With(
+                  {
+                      _fio: LookUp(
+                          colDM_WIREWINDING,
+                          PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                          WIRE_YARN_PN
+                      )
+                  },
+                  Coalesce(LookUp(colDM_FIOS, PARTNUMBER = _fio, WGAGE_in), "—")
+              )
+            Width: =185
+            X: =909
+            Y: =539
+      - lbl_RotSpecCatBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="PESO DA CATENÁRIA (kg)"
+            Width: =185
+            X: =909
+            Y: =579
+      - lbl_ValSpecCatBob:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(
+                  LookUp(
+                      colDM_WIREWINDING,
+                      PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                      CATENARY_kg
+                  ),
+                  "—"
+              )
+            Width: =185
+            X: =909
+            Y: =601
+      - rct_RodapeBob_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeBob_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshBob_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =Refresh(FifoBobinadeira);
+              UpdateContext({ctxAgora: Now()})
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_IniciarBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaBob.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =ClearCollect(
+                  colVersoesBob,
+                  With(
+                      { _base: Trim(gal_FilaBob.Selected.Mangueira) },
+                      Sort(
+                          AddColumns(
+                              Distinct(
+                                  Filter(
+                                      colDM_LIST_BOBINAGEM,
+                                      Trim(Part_Number) = _base ||
+                                      StartsWith(Trim(Part_Number), _base & "-")
+                                  ),
+                                  Trim(Part_Number)
+                              ) As _v,
+                              Rotulo,
+                              If(
+                                  _v.Value = _base,
+                                  "Versão padrão",
+                                  "Versão " & Last(Split(_v.Value, "-")).Value
+                              ),
+                              Codigos,
+                              CountRows(
+                                  Filter(colDM_LIST_BOBINAGEM, Trim(Part_Number) = _v.Value)
+                              )
+                          ),
+                          Value,
+                          SortOrder.Ascending
+                      )
+                  )
+              );
+              Refresh(FifoBobinadeira);
+              With(
+                  {_h: Sort(Filter(FifoBobinadeira, Carrinho >= 1), ID, SortOrder.Descending)},
+                  ClearCollect(
+                      colCarrinhos,
+                      ForAll(
+                          Sequence(20) As _c,
+                          With(
+                              {_u: LookUp(_h, Carrinho = _c.Value)},
+                              {
+                                  Carrinho: _c.Value,
+                                  Status: Coalesce(_u.Status, "LIVRE"),
+                                  IdLinha: _u.ID
+                              }
+                          )
+                      )
+                  )
+              );
+              Reset(cmb_CodDelinBob);
+              Reset(inp_ConfFioBob);
+              Reset(cmb_CarrinhoBob);
+              UpdateContext({
+                  ctxBaseBob: Trim(gal_FilaBob.Selected.Mangueira),
+                  ctxVersaoBob: First(colVersoesBob).Value,
+                  ctxConsultaBob: false,
+                  ctxModalDelinBob: true
+              })
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Iniciar Bobinagem"
+            Visible: =fx_EstadoBob(gal_FilaBob.Selected.Status) = "AGUARDANDO"
+            Width: =360
+            X: =549
+            Y: =700
+      - btn_SalvarBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaBob.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(FifoBobinadeira);
+              With(
+                  { _r: LookUp(FifoBobinadeira, ID = gal_FilaBob.Selected.ID) },
+                  If(
+                      _r.Modified <> gal_FilaBob.Selected.Modified,
+                      Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                      Set(varProcessando, false),
+                      _r.Status <> "EP",
+                      Notify("Esta linha não está em bobinagem. Inicie antes de salvar.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      Patch(
+                          FifoBobinadeira,
+                          _r,
+                          {
+                              QtdBobinas: Value(inp_BobinasBob.Text),
+                              Metragem: Value(inp_MetragemBob.Text),
+                              NFios: Value(inp_NFiosBob.Text),
+                              RT: inp_RtBob.Text,
+                              LI: inp_LiBob.Text,
+                              'Maquina de Bobinagem': cmb_MaquinaBob_1.Selected.Value,
+                              Operador: inp_OperadorBob.Text,
+                              Observação: inp_ObsBob_1.Text,
+                              DataHoraSalvo: Now()
+                          }
+                      );
+                      If(
+                          !IsEmpty(Errors(FifoBobinadeira)),
+                          Notify("Falha ao salvar o parcial: " & First(Errors(FifoBobinadeira)).Message, NotificationType.Error, 10000);
+                          Set(varProcessando, false),
+                          Refresh(FifoBobinadeira);
+                          UpdateContext({ctxAgora: Now()});
+                          Set(varProcessando, false);
+                          Notify("Parcial da bobinagem salvo.", NotificationType.Success, 4000)
+                      )
+                  )
+              )
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar Parcial"
+            Visible: =fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO"
+            Width: =220
+            X: =440
+            Y: =700
+      - btn_EnviarBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(gal_FilaBob.Selected.ID) &&
+                  !varProcessando &&
+                  !IsBlank(inp_OperadorBob.Text) &&
+                  !IsBlank(cmb_MaquinaBob_1.Selected.Value) &&
+                  Coalesce(Value(inp_MetragemBob.Text), 0) > 0,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxModalEnviarBob: true})
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Concluir Bobinagem"
+            Visible: =fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO"
+            Width: =340
+            X: =676
+            Y: =700
+      - rct_DivisorLateralBob:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralBob:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcaoS
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="MENU LATERAL"
+            X: =1157
+      - btn_CatenariaBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scr_Catenaria_1)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤCatenária"
+            Width: =183
+            X: =1168
+            Y: =113
+      - img_CatenariaBob:
+          Control: Image@2.2.3
+          Properties:
+            DisplayMode: =btn_CatenariaBob.DisplayMode
+            Height: =24
+            Image: ='package-check'
+            OnSelect: =Select(btn_CatenariaBob)
+            Width: =24
+            X: =1186
+            Y: =132
+      - btn_RefugoBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scr_RefugoBobinadeira_1)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤRefugo"
+            Width: =183
+            X: =1168
+            Y: =195
+      - img_RefugoBob:
+          Control: Image@2.2.3
+          Properties:
+            DisplayMode: =btn_RefugoBob.DisplayMode
+            Height: =24
+            Image: =bolt
+            OnSelect: =Select(btn_RefugoBob)
+            Width: =24
+            X: =1186
+            Y: =214
+      - btn_ConsultaDelinBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaBob.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =ClearCollect(
+                  colVersoesBob,
+                  With(
+                      { _base: Trim(gal_FilaBob.Selected.Mangueira) },
+                      Sort(
+                          AddColumns(
+                              Distinct(
+                                  Filter(
+                                      colDM_LIST_BOBINAGEM,
+                                      Trim(Part_Number) = _base ||
+                                      StartsWith(Trim(Part_Number), _base & "-")
+                                  ),
+                                  Trim(Part_Number)
+                              ) As _v,
+                              Rotulo,
+                              If(
+                                  _v.Value = _base,
+                                  "Versão padrão",
+                                  "Versão " & Last(Split(_v.Value, "-")).Value
+                              ),
+                              Codigos,
+                              CountRows(
+                                  Filter(colDM_LIST_BOBINAGEM, Trim(Part_Number) = _v.Value)
+                              )
+                          ),
+                          Value,
+                          SortOrder.Ascending
+                      )
+                  )
+              );
+              Reset(cmb_CodDelinBob);
+              Reset(inp_ConfFioBob);
+              UpdateContext({
+                  ctxBaseBob: Trim(gal_FilaBob.Selected.Mangueira),
+                  ctxVersaoBob: Coalesce(
+                      LookUp(
+                          colDM_LIST_BOBINAGEM,
+                          Trim(Bobbin_Code) = Trim(gal_FilaBob.Selected.CodProduto),
+                          Trim(Part_Number)
+                      ),
+                      First(colVersoesBob).Value
+                  ),
+                  ctxConsultaBob: true,
+                  ctxModalDelinBob: true
+              })
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤDelineamento"
+            Width: =183
+            X: =1168
+            Y: =277
+      - ico_ConsultaDelinBob:
+          Control: ModernIcon@1.1.1
+          Properties:
+            Height: =24
+            Icon: ="Search"
+            IconColor: =fx_CorInfo
+            OnSelect: =Select(btn_ConsultaDelinBob)
+            Width: =24
+            X: =1186
+            Y: =296
+      - btn_CancelarPedidoBob:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaBob.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(cmb_MotivoCancelarBob);
+              Reset(inp_PorCancelarBob);
+              Reset(inp_DetalheCancelarBob);
+              UpdateContext({ctxModalCancelarBob: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤCancelar Pedido"
+            Width: =183
+            X: =1168
+            Y: =359
+      - ico_CancelarPedidoBob:
+          Control: ModernIcon@1.1.1
+          Properties:
+            Height: =24
+            Icon: ="Dismiss"
+            IconColor: =fx_CorErro
+            OnSelect: =Select(btn_CancelarPedidoBob)
+            Width: =24
+            X: =1186
+            Y: =378
+      - lbl_VersaoTelaBob:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="Versão 0.4.1"
+            Width: =183
+            X: =1168
+            Y: =710
+      - cntr_DelinBob:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalDelinBob
+            Width: =1366
+          Children:
+            - btn_BgDelinBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =660
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =1120
+                  X: =123
+                  Y: =54
+            - lbl_TituloDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: |-
+                    =If(
+                        ctxConsultaBob,
+                        "Consulta do Delineamento",
+                        "Set-up do Delineamento"
+                    )
+                  Width: =600
+                  X: =155
+                  Y: =78
+            - lbl_SubDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Bobinagem  ·  linha " & gal_FilaBob.Selected.Linha &
+                    "  ·  " & gal_FilaBob.Selected.Mangueira &
+                    "  ·  trançadeira " & gal_FilaBob.Selected.Trancadeira
+                  Width: =800
+                  X: =155
+                  Y: =112
+            - lbl_RotVersoesDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =31
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        CountRows(colVersoesBob) > 1,
+                        "VERSÃO DA MANGUEIRA — " & CountRows(colVersoesBob) & " CADASTRADAS",
+                        "VERSÃO DA MANGUEIRA"
+                    )
+                  Width: =250
+                  X: =155
+                  Y: =144
+            - gal_VersoesDelinBob:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =132
+                  Items: =colVersoesBob
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =44
+                  Width: =250
+                  X: =155
+                  Y: =178
+                Children:
+                  - btn_ChipVersaoBob:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: |-
+                          =If(
+                              ThisItem.Value = ctxVersaoBob,
+                              fx_CorInfo,
+                              fx_CorBorda
+                          )
+                        BorderThickness: =If(ThisItem.Value = ctxVersaoBob, 2, 1)
+                        Color: =fx_CorTexto
+                        DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                        Fill: |-
+                          =If(
+                              ThisItem.Value = ctxVersaoBob,
+                              fx_CorInfoSuave,
+                              fx_CorSuperficie
+                          )
+                        Font: =fx_FonteFamilia
+                        HoverFill: =fx_CorInfoSuave
+                        OnSelect: |-
+                          =UpdateContext({ctxVersaoBob: ThisItem.Value});
+                          Reset(cmb_CodDelinBob);
+                          Reset(inp_ConfFioBob)
+                        PressedFill: =fx_CorInfoSuave
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =240
+                  - lbl_ChipVersaoBob:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: |-
+                          =If(
+                              ThisItem.Value = ctxVersaoBob,
+                              fx_CorInfo,
+                              fx_CorTexto
+                          )
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        OnSelect: =Select(btn_ChipVersaoBob)
+                        Size: =fx_FonteCorpo
+                        Text: =ThisItem.Value
+                        X: =12
+                  - lbl_ChipCodigosBob:
+                      Control: Label@2.5.1
+                      Properties:
+                        Align: =Align.Right
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        OnSelect: =Select(btn_ChipVersaoBob)
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.Codigos & " cód."
+                        Width: =76
+                        X: =162
+            - lbl_RotCodDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DE BOBINAGEM *"
+                  Width: =250
+                  X: =155
+                  Y: =322
+            - cmb_CodDelinBob:
+                Control: Classic/ComboBox@2.4.0
+                Properties:
+                  AccessibleLabel: ="Código de bobinagem da versão selecionada"
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Selected.Value),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  ChevronBackground: =fx_CorInfo
+                  ChevronFill: =fx_CorSuperficie
+                  ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+                  ChevronHoverFill: =fx_CorSuperficie
+                  Color: =fx_CorTexto
+                  DisplayFields: =["Value"]
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  InputTextPlaceholder: ="Selecione o código"
+                  Items: |-
+                    =Sort(
+                        RenameColumns(
+                            ShowColumns(
+                                Filter(
+                                    colDM_LIST_BOBINAGEM,
+                                    Trim(Part_Number) = ctxVersaoBob
+                                ),
+                                Bobbin_Code
+                            ),
+                            Bobbin_Code,
+                            Value
+                        ),
+                        Value,
+                        SortOrder.Ascending
+                    )
+                  OnChange: =Reset(inp_ConfFioBob)
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["Value"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorSuperficie
+                  SelectionFill: =fx_CorInfo
+                  Size: =fx_FonteCorpo
+                  Width: =250
+                  X: =155
+                  Y: =344
+            - lbl_AvisoCodDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =80
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsEmpty(colVersoesBob),
+                        "Nenhuma versão desta mangueira encontrada no delineamento. Confira o cadastro com a Engenharia.",
+                        "Escolha o código de bobinagem para ver a especificação completa."
+                    )
+                  Visible: =IsBlank(cmb_CodDelinBob.Selected.Value)
+                  Width: =250
+                  X: =155
+                  Y: =400
+            - btn_CardIdentBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =320
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =252
+                  X: =425
+                  Y: =156
+            - lbl_SecaoIdentBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="IDENTIFICAÇÃO"
+                  Width: =220
+                  X: =441
+                  Y: =170
+            - lbl_RotConstrBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="CONSTRUÇÃO"
+                  Width: =220
+                  X: =441
+                  Y: =200
+            - lbl_ValConstrBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            HOSE
+                        ),
+                        "—"
+                    )
+                  Width: =236
+                  X: =441
+                  Y: =220
+            - lbl_RotCodFioBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="CÓDIGO DO FIO"
+                  Width: =220
+                  X: =441
+                  Y: =254
+            - lbl_ValCodFioBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            WIRE_YARN_PN
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =441
+                  Y: =274
+            - lbl_RotDiamFioBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="DIÂMETRO DO FIO (pol.)"
+                  Width: =220
+                  X: =441
+                  Y: =308
+            - lbl_ValDiamFioBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        {
+                            _fio: LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                WIRE_YARN_PN
+                            )
+                        },
+                        Coalesce(LookUp(colDM_FIOS, PARTNUMBER = _fio, WGAGE_in), "—")
+                    )
+                  Width: =220
+                  X: =441
+                  Y: =328
+            - lbl_RotNFiosSpecBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="NÚMERO DE FIOS"
+                  Width: =220
+                  X: =441
+                  Y: =362
+            - lbl_ValNFiosSpecBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            WIRES_YARN
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =441
+                  Y: =382
+            - lbl_RotTrancDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="TRANÇADEIRA (SPEC)"
+                  Width: =220
+                  X: =441
+                  Y: =416
+            - lbl_ValTrancDelinBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            BRAID
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =441
+                  Y: =436
+            - btn_CardEspecBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =320
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =252
+                  X: =687
+                  Y: =156
+            - lbl_SecaoEspecBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="ESPECIFICAÇÃO"
+                  Width: =220
+                  X: =703
+                  Y: =170
+            - lbl_RotComprBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="COMPRIMENTO (m)"
+                  Width: =220
+                  X: =703
+                  Y: =200
+            - lbl_ValComprBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            LENGTH_m
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =703
+                  Y: =220
+            - lbl_RotPesoCatBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="PESO DA CATENÁRIA (kg)"
+                  Width: =220
+                  X: =703
+                  Y: =254
+            - lbl_ValPesoCatBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            CATENARY_kg
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =703
+                  Y: =274
+            - lbl_RotDCatBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =48
+                  Size: =fx_FonteApoio
+                  Text: ="DIÂMETRO DA CATENÁRIA (mm)"
+                  Width: =220
+                  X: =703
+                  Y: =308
+            - lbl_ValDCatBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            CATENARYD_mm
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =703
+                  Y: =356
+            - btn_CardFerrBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =320
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =252
+                  X: =949
+                  Y: =156
+            - lbl_SecaoFerrBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: ="FERRAMENTAL"
+                  Width: =220
+                  X: =965
+                  Y: =170
+            - lbl_RotRollerBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="ROLLER BEAK (pol.)"
+                  Width: =220
+                  X: =965
+                  Y: =200
+            - lbl_ValRollerBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            RB_TOOL_in
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =965
+                  Y: =220
+            - lbl_RotBicoInfBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="BICO INFERIOR (pol.)"
+                  Width: =220
+                  X: =965
+                  Y: =254
+            - lbl_ValBicoInfBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            LB_TOOL_in
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =965
+                  Y: =274
+            - lbl_RotBicoSupBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="BICO SUPERIOR (pol.)"
+                  Width: =220
+                  X: =965
+                  Y: =308
+            - lbl_ValBicoSupBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            UB_TOOL_in
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =965
+                  Y: =328
+            - btn_CardConfBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =110
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =1056
+                  X: =155
+                  Y: =496
+            - lbl_SecaoConfBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        ctxConsultaBob,
+                        "MODO CONSULTA",
+                        "CONFERÊNCIA DO FIO"
+                    )
+                  Width: =400
+                  X: =175
+                  Y: =508
+            - lbl_ConsultaAvisoBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Size: =fx_FonteCorpo
+                  Text: ="Você está apenas consultando o delineamento desta mangueira. Nada será gravado na fila."
+                  Visible: =ctxConsultaBob
+                  Width: =900
+                  X: =175
+                  Y: =540
+            - lbl_RotConfBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="DIGITE O CÓDIGO DO FIO QUE VOCÊ PEGOU *"
+                  Visible: =!ctxConsultaBob
+                  Width: =400
+                  X: =175
+                  Y: =534
+            - inp_ConfFioBob:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código do fio conferido pelo operador"
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Text),
+                        fx_CorBorda,
+                        If(
+                            fx_NormCodigo(Self.Text) = fx_NormCodigo(
+                                LookUp(
+                                    colDM_WIREWINDING,
+                                    PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                    WIRE_YARN_PN
+                                )
+                            ),
+                            fx_CorOK,
+                            fx_CorErro
+                        )
+                    )
+                  Default: =
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(cmb_CodDelinBob.Selected.Value) || varProcessando,
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =fx_AlturaCampo
+                  HintText: ="Código do fio"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Visible: =!ctxConsultaBob
+                  Width: =280
+                  X: =175
+                  Y: =554
+            - lbl_StatusConfBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        fx_NormCodigo(inp_ConfFioBob.Text) = fx_NormCodigo(
+                            LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                WIRE_YARN_PN
+                            )
+                        ),
+                        fx_CorOK,
+                        fx_CorErro
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaCampo
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        fx_NormCodigo(inp_ConfFioBob.Text) = fx_NormCodigo(
+                            LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                WIRE_YARN_PN
+                            )
+                        ),
+                        "✓ Fio conferido — bate com a especificação desta versão.",
+                        "✗ Fio DIVERGENTE. A versão " & ctxVersaoBob & " pede: " &
+                        Coalesce(
+                            LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                WIRE_YARN_PN
+                            ),
+                            "—"
+                        )
+                    )
+                  Visible: =!ctxConsultaBob && !IsBlank(Trim(inp_ConfFioBob.Text))
+                  Width: =580
+                  X: =475
+                  Y: =554
+            - lbl_RotCarrinhoBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsBlank(gal_FilaBob.Selected.Carrinho),
+                        "CARRINHO *",
+                        "CARRINHO (DO PEDIDO)"
+                    )
+                  Visible: =!ctxConsultaBob
+                  Width: =136
+                  X: =1055
+                  Y: =508
+            - cmb_CarrinhoBob:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Número do carrinho usado nesta bobinagem"
+                  AllowEmptySelection: =true
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Selected.Carrinho),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Default: =gal_FilaBob.Selected.Carrinho
+                  DisplayMode: |-
+                    =If(
+                        varProcessando || !IsBlank(gal_FilaBob.Selected.Carrinho),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: |-
+                    =Filter(
+                        colCarrinhos,
+                        Status in ["LIVRE", "CA"] || Carrinho = gal_FilaBob.Selected.Carrinho
+                    )
+                  Items.Value: =Carrinho
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Visible: =!ctxConsultaBob
+                  Width: =120
+                  X: =1071
+                  Y: =554
+            - btn_CancelarDelinBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(cmb_CodDelinBob);
+                    Reset(inp_ConfFioBob);
+                    UpdateContext({ctxModalDelinBob: false, ctxConsultaBob: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: =If(ctxConsultaBob, "Fechar", "Cancelar")
+                  Width: =150
+                  X: =851
+                  Y: =634
+            - btn_ConfirmarDelinBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_CodDelinBob.Selected.Value) &&
+                        !IsBlank(cmb_CarrinhoBob.Selected.Carrinho) &&
+                        !IsBlank(Trim(inp_ConfFioBob.Text)) &&
+                        fx_NormCodigo(inp_ConfFioBob.Text) = fx_NormCodigo(
+                            LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                                WIRE_YARN_PN
+                            )
+                        ),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(FifoBobinadeira);
+                    With(
+                        {
+                            _r: LookUp(FifoBobinadeira, ID = gal_FilaBob.Selected.ID),
+                            _spec: LookUp(
+                                colDM_WIREWINDING,
+                                PARTNUMBER = cmb_CodDelinBob.Selected.Value
+                            ),
+                            _carro: cmb_CarrinhoBob.Selected.Carrinho,
+                            _agora: Now()
+                        },
+                        If(
+                            _r.Modified <> gal_FilaBob.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            _r.Status <> "AB",
+                            Notify("Esta linha já foi iniciada por outro operador. Atualize a fila.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            With(
+                                {
+                                    _ult: First(
+                                        Sort(
+                                            Filter(FifoBobinadeira, Carrinho = _carro),
+                                            ID,
+                                            SortOrder.Descending
+                                        )
+                                    )
+                                },
+                                !IsBlank(_ult.ID) && _ult.ID <> _r.ID && _ult.Status <> "CA"
+                            ),
+                            Notify("O carrinho " & _carro & " não está vazio (em outro pedido, bobinando ou cheio na trançadeira). Escolha outro.", NotificationType.Error, 8000);
+                            Reset(cmb_CarrinhoBob);
+                            Set(varProcessando, false),
+                            Patch(
+                                FifoBobinadeira,
+                                _r,
+                                {
+                                    Status: "EP",
+                                    DataHoraInicio: _agora,
+                                    CodProduto: cmb_CodDelinBob.Selected.Value,
+                                    NFios: IfError(Value(_spec.WIRES_YARN), Blank()),
+                                    Carrinho: _carro
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(FifoBobinadeira)),
+                                Notify("Falha ao iniciar a bobinagem: " & First(Errors(FifoBobinadeira)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                Refresh(FifoBobinadeira);
+                                Reset(cmb_CodDelinBob);
+                                Reset(inp_ConfFioBob);
+                                Reset(cmb_CarrinhoBob);
+                                Reset(inp_BobinasBob);
+                                Reset(inp_MetragemBob);
+                                Reset(inp_NFiosBob);
+                                Reset(inp_RtBob);
+                                Reset(inp_LiBob);
+                                Reset(cmb_MaquinaBob_1);
+                                Reset(inp_OperadorBob);
+                                Reset(inp_ObsBob_1);
+                                UpdateContext({ctxModalDelinBob: false, ctxAgora: Now()});
+                                Set(varProcessando, false);
+                                Notify("Bobinagem iniciada na versão " & ctxVersaoBob & ", carrinho " & _carro & ".", NotificationType.Success, 5000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Visible: =!ctxConsultaBob
+                  Width: =200
+                  X: =1011
+                  Y: =634
+            - lbl_RotDCatBob_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =32
+                  Size: =fx_FonteApoio
+                  Text: ="Tensão de Bobinagem (kg)"
+                  Width: =220
+                  X: =703
+                  Y: =382
+            - lbl_ValDCatBob_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(
+                        LookUp(
+                            colDM_WIREWINDING,
+                            PARTNUMBER = cmb_CodDelinBob.Selected.Value,
+                            Tensão_de_Bobinagem
+                        ),
+                        "—"
+                    )
+                  Width: =220
+                  X: =703
+                  Y: =406
+      - cntr_EnviarBob:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalEnviarBob
+            Width: =1366
+          Children:
+            - btn_BgEnviarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =420
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =174
+            - lbl_TituloEnviarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Concluir Bobinagem"
+                  Width: =460
+                  X: =403
+                  Y: =198
+            - lbl_SubEnviarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Linha " & gal_FilaBob.Selected.Linha &
+                    "  ·  " & gal_FilaBob.Selected.Mangueira &
+                    "  ·  código " & gal_FilaBob.Selected.CodProduto
+                  Width: =560
+                  X: =403
+                  Y: =232
+            - btn_ResumoEnviarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =52
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(Value(inp_MetragemBob.Text), 0) & " m   ·   " &
+                    Coalesce(Value(inp_BobinasBob.Text), 0) & " bobinas   ·   " &
+                    Coalesce(cmb_MaquinaBob_1.Selected.Value, "—") & "   ·   " &
+                    Coalesce(inp_OperadorBob.Text, "—")
+                  Width: =560
+                  X: =403
+                  Y: =276
+            - lbl_ConfereEnviarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =With(
+                        {
+                            _spec: IfError(
+                                Value(
+                                    LookUp(
+                                        colDM_WIREWINDING,
+                                        PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                                        LENGTH_m
+                                    )
+                                ),
+                                0
+                            ),
+                            _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
+                        },
+                        If(
+                            _spec > 0 && Abs(_lido - _spec) / _spec > 0.05,
+                            fx_CorAlerta,
+                            fx_CorTextoSuave
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        {
+                            _spec: IfError(
+                                Value(
+                                    LookUp(
+                                        colDM_WIREWINDING,
+                                        PARTNUMBER = gal_FilaBob.Selected.CodProduto,
+                                        LENGTH_m
+                                    )
+                                ),
+                                0
+                            ),
+                            _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
+                        },
+                        If(
+                            _spec > 0 && Abs(_lido - _spec) / _spec > 0.05,
+                            "A metragem informada foge da spec desta versão (" & Text(_spec, "[$-pt-BR]#.##0") & " m). Confirme que o valor é o que a máquina realmente bobinou.",
+                            "Depois de concluir, esta linha sai da fila da Bobinadeira e o apontamento não pode mais ser editado aqui."
+                        )
+                    )
+                  Width: =560
+                  X: =403
+                  Y: =344
+            - btn_CancelarEnviarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalEnviarBob: false});
+                    Set(varProcessando, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =403
+                  Y: =510
+            - btn_ConfirmarEnviarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(inp_OperadorBob.Text) &&
+                        !IsBlank(cmb_MaquinaBob_1.Selected.Value) &&
+                        Coalesce(Value(inp_MetragemBob.Text), 0) > 0,
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(FifoBobinadeira);
+                    With(
+                        {
+                            _r: LookUp(FifoBobinadeira, ID = gal_FilaBob.Selected.ID),
+                            _agora: Now()
+                        },
+                        If(
+                            _r.Modified <> gal_FilaBob.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            _r.Status <> "EP",
+                            Notify("Esta linha não está em bobinagem. Atualize a fila.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            Patch(
+                                FifoBobinadeira,
+                                _r,
+                                {
+                                    QtdBobinas: Value(inp_BobinasBob.Text),
+                                    Metragem: Value(inp_MetragemBob.Text),
+                                    NFios: Value(inp_NFiosBob.Text),
+                                    RT: inp_RtBob.Text,
+                                    LI: inp_LiBob.Text,
+                                    'Maquina de Bobinagem': cmb_MaquinaBob_1.Selected.Value,
+                                    Operador: inp_OperadorBob.Text,
+                                    Observação: inp_ObsBob_1.Text,
+                                    Status: "BC",
+                                    DataHoraFinal: _agora,
+                                    Turno: fx_TurnoEm(_agora)
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(FifoBobinadeira)),
+                                Notify("Falha ao concluir: " & First(Errors(FifoBobinadeira)).Message, NotificationType.Error, 12000);
+                                Set(varProcessando, false),
+                                Refresh(FifoBobinadeira);
+                                Reset(inp_BobinasBob);
+                                Reset(inp_MetragemBob);
+                                Reset(inp_NFiosBob);
+                                Reset(inp_RtBob);
+                                Reset(inp_LiBob);
+                                Reset(cmb_MaquinaBob_1);
+                                Reset(inp_OperadorBob);
+                                Reset(inp_ObsBob_1);
+                                Reset(gal_FilaBob);
+                                UpdateContext({ctxModalEnviarBob: false, ctxAgora: Now()});
+                                Set(varProcessando, false);
+                                Notify("Bobinagem concluída.", NotificationType.Success, 6000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Conclusão"
+                  Width: =240
+                  X: =723
+                  Y: =510
+      - cntr_CancelarBob:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalCancelarBob
+            Width: =1366
+          Children:
+            - btn_BgCancelarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =440
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =164
+            - lbl_TituloCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorErro
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Cancelar Pedido"
+                  Width: =460
+                  X: =403
+                  Y: =188
+            - lbl_SubCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Linha " & gal_FilaBob.Selected.Linha &
+                    "  ·  " & gal_FilaBob.Selected.Mangueira &
+                    "  ·  trançadeira " & gal_FilaBob.Selected.Trancadeira &
+                    "  ·  " & If(
+                        fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO",
+                        "em bobinagem",
+                        "aguardando"
+                    )
+                  Width: =560
+                  X: =403
+                  Y: =222
+            - lbl_AvisoCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =48
+                  Size: =fx_FonteCorpo
+                  Text: ="O pedido sai da fila da Bobinadeira em todos os tablets. O que já foi apontado fica registrado."
+                  Width: =560
+                  X: =403
+                  Y: =256
+            - lbl_RotMotivoCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="MOTIVO *"
+                  Width: =270
+                  X: =403
+                  Y: =316
+            - cmb_MotivoCancelarBob:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Motivo do cancelamento"
+                  AllowEmptySelection: =true
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Selected.Value),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Default: =Blank()
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =["Pedido duplicado", "Linha ou mangueira errada", "Trançadeira não vai usar", "Outro"]
+                  Items.Value: =Value
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =270
+                  X: =403
+                  Y: =338
+            - lbl_RotPorCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="SEU E-NUMBER *"
+                  Width: =270
+                  X: =693
+                  Y: =316
+            - inp_PorCancelarBob:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="E-Number de quem está cancelando"
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Trim(Self.Text)),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =270
+                  X: =693
+                  Y: =338
+            - lbl_RotDetalheCancelarBob:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: =If(cmb_MotivoCancelarBob.Selected.Value = "Outro", "DETALHE *", "DETALHE (OPCIONAL)")
+                  Width: =560
+                  X: =403
+                  Y: =398
+            - inp_DetalheCancelarBob:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Detalhe do cancelamento"
+                  BorderColor: |-
+                    =If(
+                        cmb_MotivoCancelarBob.Selected.Value = "Outro" && IsBlank(Trim(Self.Text)),
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="O que aconteceu"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =560
+                  X: =403
+                  Y: =420
+            - btn_VoltarCancelarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalCancelarBob: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Voltar"
+                  Width: =180
+                  X: =403
+                  Y: =520
+            - btn_ConfirmarCancelarBob:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_MotivoCancelarBob.Selected.Value) &&
+                        !IsBlank(Trim(inp_PorCancelarBob.Text)) &&
+                        (cmb_MotivoCancelarBob.Selected.Value <> "Outro" || !IsBlank(Trim(inp_DetalheCancelarBob.Text))),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorErro, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(FifoBobinadeira);
+                    With(
+                        {
+                            _r: LookUp(FifoBobinadeira, ID = gal_FilaBob.Selected.ID),
+                            _det: Trim(inp_DetalheCancelarBob.Text),
+                            _agora: Now()
+                        },
+                        If(
+                            _r.Modified <> gal_FilaBob.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            !(_r.Status in ["AB", "EP"]),
+                            Notify("Este pedido já saiu da fila (concluído ou cancelado). Atualize a fila.", NotificationType.Warning, 8000);
+                            UpdateContext({ctxModalCancelarBob: false});
+                            Set(varProcessando, false),
+                            Patch(
+                                FifoBobinadeira,
+                                _r,
+                                {
+                                    Status: "CA",
+                                    MotivoCancelamento: cmb_MotivoCancelarBob.Selected.Value,
+                                    CanceladoPor: Trim(inp_PorCancelarBob.Text),
+                                    DataHoraCancelamento: _agora,
+                                    Observação: If(
+                                        IsBlank(_det),
+                                        _r.Observação,
+                                        If(IsBlank(_r.Observação), "", _r.Observação & " | ") & "Cancelamento: " & _det
+                                    )
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(FifoBobinadeira)),
+                                Notify("Falha ao cancelar: " & First(Errors(FifoBobinadeira)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                Refresh(FifoBobinadeira);
+                                Reset(inp_BobinasBob);
+                                Reset(inp_MetragemBob);
+                                Reset(inp_NFiosBob);
+                                Reset(inp_RtBob);
+                                Reset(inp_LiBob);
+                                Reset(cmb_MaquinaBob_1);
+                                Reset(inp_OperadorBob);
+                                Reset(inp_ObsBob_1);
+                                Reset(gal_FilaBob);
+                                UpdateContext({ctxModalCancelarBob: false, ctxAgora: Now()});
+                                Set(varProcessando, false);
+                                Notify("Pedido cancelado e retirado da fila.", NotificationType.Success, 5000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorErro, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Cancelamento"
+                  Width: =240
+                  X: =723
+                  Y: =520
+      - rct_OverlayBob_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_ProcessandoBob_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =60
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Salvando... Aguarde"
+            Visible: =varProcessando
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoBob_1:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366

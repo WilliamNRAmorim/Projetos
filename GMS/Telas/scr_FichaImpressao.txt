@@ -1,0 +1,1418 @@
+Screens:
+  scr_FichaImpressao:
+    Properties:
+      Fill: =RGBA(180, 180, 180, 1)
+    Children:
+      - btn_voltar_ficha_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            Fill: =RGBA(100, 116, 139, 1)
+            Font: =Font.'Open Sans'
+            Height: =34
+            OnSelect: =Navigate(scr_ConsultaOP_1, ScreenTransition.None)
+            Text: ="← Voltar"
+            Visible: =!Parent.Printing
+            Width: =110
+            X: =16
+            Y: =10
+      - btn_imprimir_ficha_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            Fill: =RGBA(30, 86, 160, 1)
+            Font: =Font.'Open Sans'
+            Height: =34
+            OnSelect: =Print()
+            Text: |-
+              ="Imprimir 🖨️"
+            Visible: =!Parent.Printing
+            Width: =130
+            X: =134
+            Y: =10
+      - rct_fundo_ficha_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =2
+            Fill: =RGBA(240, 253, 232, 1)
+            Height: =649
+            Width: =1350
+            X: =8
+            Y: =52
+      - lbl_fh_titulo_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(200, 220, 172, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            Size: =10
+            Text: ="FICHA DE PRODUCAO"
+            Width: =90
+            X: =8
+            Y: =52
+      - lbl_fh_linha1_2:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            Size: =10
+            Text: |-
+              ="MANGUEIRA: " & gSelectedOP.Mangueira & "   OP: " & gSelectedOP.OP & "   STATUS: " & gSelectedOP.status_processo & "   TRANÇADEIRA: " & gSelectedOP.Trançadeira
+            Width: =1260
+            X: =98
+            Y: =52
+      - lbl_fh_linha2_2:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =26
+            Size: =10
+            Text: |-
+              ="BITOLA: " & gSelectedOP.Bitola & "   FINALIZAÇÃO: " & If(IsBlank(gSelectedOP.DataFinalizacao), "Em andamento", Text(DateValue(gSelectedOP.DataFinalizacao, "pt-BR"), "dd/mm/yyyy"))
+            Width: =1260
+            X: =98
+            Y: =78
+      - lbl_fh_faixa_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(180, 204, 152, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =11
+            Text: ="DADOS DE PRODUÇÃO POR PROCESSO"
+            Width: =1350
+            X: =8
+            Y: =104
+      - lbl_th_dado_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(152, 184, 120, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =9
+            Text: ="DADOS ↓  PROCESSOS"
+            Width: =90
+            X: =8
+            Y: =128
+      - lbl_th_proc_1_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="MANDRIL"
+            Width: =202
+            X: =98
+            Y: =128
+      - lbl_th_proc_2_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="TUBO"
+            Width: =176
+            X: =300
+            Y: =128
+      - lbl_th_proc_3_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="TRANÇAGEM"
+            Width: =151
+            X: =476
+            Y: =128
+      - lbl_th_proc_4_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="COBERTURA"
+            Width: =151
+            X: =627
+            Y: =128
+      - lbl_th_proc_5_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="BANDAGEM"
+            Width: =139
+            X: =778
+            Y: =128
+      - lbl_th_proc_6_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="VULCANIZAÇÃO"
+            Width: =151
+            X: =917
+            Y: =128
+      - lbl_th_proc_7_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="DEBANDAGEM"
+            Width: =139
+            X: =1068
+            Y: =128
+      - lbl_th_proc_8_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(176, 200, 144, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =10
+            Text: ="EXTR./TESTE"
+            Width: =151
+            X: =1207
+            Y: =128
+      - lbl_rh_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =98
+            Size: =9
+            Text: ="CÓDIGO"
+            Width: =90
+            X: =8
+            Y: =164
+      - lbl_c1_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: =gSelectedOP.cod_mandril
+            Width: =202
+            X: =98
+            Y: =164
+      - lbl_c1_2_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: |-
+              =gSelectedOP.'Cod.CompostoTubo' & "
+              Lote: 
+              " & gSelectedOP.'Lote Composto Tubo'
+            Width: =176
+            X: =300
+            Y: =164
+      - lbl_c1_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: |-
+              =gSelectedOP.Cod_Trançagem & " / Lote: " & gSelectedOP.Lote_Trançagem
+            Width: =151
+            X: =476
+            Y: =164
+      - lbl_c1_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: |-
+              =gSelectedOP.'Cod.Cobertura' & " / Lote: " & gSelectedOP.Lote_cobertura
+            Width: =151
+            X: =627
+            Y: =164
+      - lbl_c1_5_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =778
+            Y: =164
+      - lbl_c1_6_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =917
+            Y: =164
+      - lbl_c1_7_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =1068
+            Y: =164
+      - lbl_c1_8_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =98
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =1207
+            Y: =164
+      - lbl_rh_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =49
+            Size: =9
+            Text: ="Ø DIA. (mm)"
+            Width: =90
+            X: =8
+            Y: =262
+      - lbl_c2_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.diametro_mandril)
+            Width: =202
+            X: =98
+            Y: =262
+      - lbl_c2_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.diametro_tubo)
+            Width: =176
+            X: =300
+            Y: =262
+      - lbl_c2_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.Diametro_Trançagem)
+            Width: =151
+            X: =476
+            Y: =262
+      - lbl_c2_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.diametro_cobertura)
+            Width: =151
+            X: =627
+            Y: =262
+      - lbl_c2_5_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =778
+            Y: =262
+      - lbl_c2_6_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =917
+            Y: =262
+      - lbl_c2_7_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =1068
+            Y: =262
+      - lbl_c2_8_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =1207
+            Y: =262
+      - lbl_rh_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =73
+            Size: =9
+            Text: ="DESMOLD. / VAL. COMPOSTO"
+            Width: =90
+            X: =8
+            Y: =311
+      - lbl_c3_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =gSelectedOP.desmoldante_mandril
+            Width: =202
+            X: =98
+            Y: =311
+      - lbl_c3_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =gSelectedOP.'Data de Validade do Composto Tubo'
+            Width: =176
+            X: =300
+            Y: =311
+      - lbl_c3_3_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =476
+            Y: =311
+      - lbl_c3_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =gSelectedOP.'Data de Validade  do composto cobertura'
+            Width: =151
+            X: =627
+            Y: =311
+      - lbl_c3_5_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =778
+            Y: =311
+      - lbl_c3_6_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =917
+            Y: =311
+      - lbl_c3_7_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =1068
+            Y: =311
+      - lbl_c3_8_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =1207
+            Y: =311
+      - lbl_rh_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =49
+            Size: =9
+            Text: ="QTD. (m)"
+            Width: =90
+            X: =8
+            Y: =384
+      - lbl_c4_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_mandril)
+            Width: =202
+            X: =98
+            Y: =384
+      - lbl_c4_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_tubo)
+            Width: =176
+            X: =300
+            Y: =384
+      - lbl_c4_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_trancagem)
+            Width: =151
+            X: =476
+            Y: =384
+      - lbl_c4_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_cobertura)
+            Width: =151
+            X: =627
+            Y: =384
+      - lbl_c4_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_bandagem)
+            Width: =139
+            X: =778
+            Y: =384
+      - lbl_c4_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_vulcanizacao)
+            Width: =151
+            X: =917
+            Y: =384
+      - lbl_c4_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_debandagem)
+            Width: =139
+            X: =1068
+            Y: =384
+      - lbl_c4_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.quantidade_extracao)
+            Width: =151
+            X: =1207
+            Y: =384
+      - lbl_rh_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =49
+            Size: =9
+            Text: ="DATA"
+            Width: =90
+            X: =8
+            Y: =433
+      - lbl_c5_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_mandril), "dd/mm/yy")
+            Width: =202
+            X: =98
+            Y: =433
+      - lbl_c5_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_tubo), "dd/mm/yy")
+            Width: =176
+            X: =300
+            Y: =433
+      - lbl_c5_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_trancadeira), "dd/mm/yy")
+            Width: =151
+            X: =476
+            Y: =433
+      - lbl_c5_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_cobertura), "dd/mm/yy")
+            Width: =151
+            X: =627
+            Y: =433
+      - lbl_c5_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_bandagem), "dd/mm/yy")
+            Width: =139
+            X: =778
+            Y: =433
+      - lbl_c5_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_vulcanizacao), "dd/mm/yy")
+            Width: =151
+            X: =917
+            Y: =433
+      - lbl_c5_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_inicio_debandagem), "dd/mm/yy")
+            Width: =139
+            X: =1068
+            Y: =433
+      - lbl_c5_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_extracao), "dd/mm/yy")
+            Width: =151
+            X: =1207
+            Y: =433
+      - lbl_rh_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =73
+            Size: =9
+            Text: ="HORÁRIO DE TÉRMINO"
+            Width: =90
+            X: =8
+            Y: =482
+      - lbl_c6_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_mandril), "hh:mm")
+            Width: =202
+            X: =98
+            Y: =482
+      - lbl_c6_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_tubo), "hh:mm")
+            Width: =176
+            X: =300
+            Y: =482
+      - lbl_c6_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_trancadeira), "hh:mm")
+            Width: =151
+            X: =476
+            Y: =482
+      - lbl_c6_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_cobertura), "hh:mm")
+            Width: =151
+            X: =627
+            Y: =482
+      - lbl_c6_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_bandagem), "hh:mm")
+            Width: =139
+            X: =778
+            Y: =482
+      - lbl_c6_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_vulcanizacao), "hh:mm")
+            Width: =151
+            X: =917
+            Y: =482
+      - lbl_c6_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_debandagem), "hh:mm")
+            Width: =139
+            X: =1068
+            Y: =482
+      - lbl_c6_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =73
+            Size: =10
+            Text: =Text(DateTimeValue(gSelectedOP.data_hora_final_extracao), "hh:mm")
+            Width: =151
+            X: =1207
+            Y: =482
+      - lbl_rh_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =49
+            Size: =9
+            Text: ="TURNO"
+            Width: =90
+            X: =8
+            Y: =555
+      - lbl_c7_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.Turno_mandril)
+            Width: =202
+            X: =98
+            Y: =555
+      - lbl_c7_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.Turno_Tubo
+            Width: =176
+            X: =300
+            Y: =555
+      - lbl_c7_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.Turno_Trançagem
+            Width: =151
+            X: =476
+            Y: =555
+      - lbl_c7_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.Turno_Cobertura
+            Width: =151
+            X: =627
+            Y: =555
+      - lbl_c7_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.Turno_Bandagem
+            Width: =139
+            X: =778
+            Y: =555
+      - lbl_c7_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.Turno_Vulcanização
+            Width: =151
+            X: =917
+            Y: =555
+      - lbl_c7_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.Turno_Debandagem)
+            Width: =139
+            X: =1068
+            Y: =555
+      - lbl_c7_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =gSelectedOP.'Turno_Extr/Teste'
+            Width: =151
+            X: =1207
+            Y: =555
+      - lbl_rh_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =49
+            Size: =9
+            Text: ="QTD. DEFEITOS"
+            Width: =90
+            X: =8
+            Y: =604
+      - lbl_c8_1_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: |-
+              ="Lote: "  & gSelectedOP.lote_mandril
+            Width: =202
+            X: =98
+            Y: =604
+      - lbl_c8_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.defeito_tubo)
+            Width: =176
+            X: =300
+            Y: =604
+      - lbl_c8_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.defeito_trancagem)
+            Width: =151
+            X: =476
+            Y: =604
+      - lbl_c8_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: =Text(gSelectedOP.defeito_cobertura)
+            Width: =151
+            X: =627
+            Y: =604
+      - lbl_c8_5_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =778
+            Y: =604
+      - lbl_c8_6_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =917
+            Y: =604
+      - lbl_c8_7_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =139
+            X: =1068
+            Y: =604
+      - lbl_c8_8_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(120, 120, 120, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =49
+            Size: =10
+            Text: ="—"
+            Width: =151
+            X: =1207
+            Y: =604
+      - lbl_rh_9_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(216, 232, 192, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =9
+            Text: ="OPERADOR"
+            Width: =90
+            X: =8
+            Y: =653
+      - lbl_c9_1_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =Text(gSelectedOP.operador_mandril)
+            Width: =202
+            X: =98
+            Y: =653
+      - lbl_c9_2_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =Text(gSelectedOP.operador_tubo)
+            Width: =176
+            X: =300
+            Y: =653
+      - lbl_c9_3_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =gSelectedOP.operador_trancagem
+            Width: =151
+            X: =476
+            Y: =653
+      - lbl_c9_4_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =gSelectedOP.operador_cobertura
+            Width: =151
+            X: =627
+            Y: =653
+      - lbl_c9_5_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =Text(gSelectedOP.operador_bandagem)
+            Width: =139
+            X: =778
+            Y: =653
+      - lbl_c9_6_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =Text(gSelectedOP.operador_vulcanizacao)
+            Width: =151
+            X: =917
+            Y: =653
+      - lbl_c9_7_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =Text(gSelectedOP.operador_debandagem)
+            Width: =139
+            X: =1068
+            Y: =653
+      - lbl_c9_8_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(60, 80, 40, 1)
+            BorderThickness: =1
+            Color: =RGBA(30, 30, 30, 1)
+            Fill: =RGBA(240, 253, 232, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            Size: =10
+            Text: =gSelectedOP.operador_extracao
+            Width: =151
+            X: =1207
+            Y: =653

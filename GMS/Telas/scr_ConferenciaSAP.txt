@@ -1,0 +1,1114 @@
+Screens:
+  scr_ConferenciaSAP:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({ctxAgoraConf: Now(), ctxFiltroConf: "Todas"});
+        Select(btn_CarregarConf)
+    Children:
+      - btn_CarregarConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =ClearCollect(
+                  // v0.1.1 · MEL-196 · C29. Filhos da galeria com Select(Parent) (v0.1.0 não selecionava); Justificada trava tratativa até Reabrir. A conta é do fluxo GMS_Conferencia_Diaria; a tela só lê a lista
+                  // Conferencia_SAP (Status é texto: filtro delegável) e grava a tratativa.
+                  // DifAbs entra na carga para os dois lados (galeria e ctxConfSel) terem o MESMO schema.
+                  colConfSAP,
+                  AddColumns(
+                      Filter(Conferencia_SAP, Status = "Aberto" || Status = "Justificado"),
+                      DifAbs, Abs(Dif_m)
+                  )
+              );
+              ClearCollect(
+                  colConfResolvSAP,
+                  AddColumns(
+                      FirstN(Sort(Filter(Conferencia_SAP, Status = "Resolvido"), ID, SortOrder.Descending), 60),
+                      DifAbs, Abs(Dif_m)
+                  )
+              );
+              UpdateContext({ctxConfSel: LookUp(colConfSAP, ID = ctxConfSel.ID)});
+              If(
+                  IsBlank(ctxConfSel.ID),
+                  UpdateContext({ctxConfSel: First(SortByColumns(colConfSAP, "Prioridade", SortOrder.Ascending, "DifAbs", SortOrder.Descending))})
+              )
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+      - tmr_RelogioConf:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgoraConf: Now()})
+            Repeat: =true
+            Text: =""
+            Width: =1
+      - rct_HeaderConf:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =1366
+      - rct_LinhaHeaderConf:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =1366
+            Y: =68
+      - ico_VoltarConf:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para Gestão"
+            Color: =fx_CorInfo
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_SelecaoGestao_1, ScreenTransition.Fade)
+            Tooltip: ="Voltar"
+            Width: =49
+            X: =20
+            Y: =4
+      - lbl_UltimaConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =59
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  { _d: Max(Table({d: Max(colConfSAP, DataRef)}, {d: Max(colConfResolvSAP, DataRef)}), d) },
+                  If(IsBlank(_d), "Sem conferência ainda", "Última conferência: " & Text(_d, "dd/mm/yyyy"))
+              )
+            Width: =250
+            X: =78
+            Y: =4
+      - lbl_TituloConf:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Conferência GMS × SAP × Packing"
+            Width: =700
+            X: =333
+            Y: =4
+      - ico_RefreshConf:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Recarregar pendências"
+            Color: =fx_CorInfo
+            Height: =40
+            Icon: =Icon.Reload
+            OnSelect: =Select(btn_CarregarConf)
+            Tooltip: ="Recarregar"
+            Width: =40
+            X: =1110
+            Y: =14
+      - lbl_VersaoConf:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.1.1"
+            Width: =180
+            X: =1166
+            Y: =21
+      - btn_KpiAbertasConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =64
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =318
+            X: =20
+            Y: =84
+      - lbl_KpiAbertasRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="Pendências abertas"
+            Width: =290
+            X: =34
+            Y: =90
+      - lbl_KpiAbertasValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(CountRows(Filter(colConfSAP, Status = "Aberto")) > 0, fx_CorErro, fx_CorOK)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteTitulo
+            Text: =Text(CountRows(Filter(colConfSAP, Status = "Aberto")))
+            Width: =290
+            X: =34
+            Y: =110
+      - btn_KpiMetrosConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =64
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =318
+            X: =356
+            Y: =84
+      - lbl_KpiMetrosRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="Metros em jogo (GMS × SAP, abertas)"
+            Width: =290
+            X: =370
+            Y: =90
+      - lbl_KpiMetrosValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteTitulo
+            Text: =fx_MetrosBR(Sum(Filter(colConfSAP, Status = "Aberto" && Prioridade <= 10), DifAbs)) & " m"
+            Width: =290
+            X: =370
+            Y: =110
+      - btn_KpiJustConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =64
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =318
+            X: =692
+            Y: =84
+      - lbl_KpiJustRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="Justificadas (não é erro, ainda divergem)"
+            Width: =290
+            X: =706
+            Y: =90
+      - lbl_KpiJustValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteTitulo
+            Text: =Text(CountRows(Filter(colConfSAP, Status = "Justificado")))
+            Width: =290
+            X: =706
+            Y: =110
+      - btn_KpiAntigaConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =64
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =318
+            X: =1028
+            Y: =84
+      - lbl_KpiAntigaRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="Pendência aberta mais antiga"
+            Width: =290
+            X: =1042
+            Y: =90
+      - lbl_KpiAntigaValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteTitulo
+            Text: |-
+              =With(
+                  { _d: Min(Filter(colConfSAP, Status = "Aberto"), DataDeteccao) },
+                  If(IsBlank(_d), "—", Text(DateDiff(_d, ctxAgoraConf, TimeUnit.Days)) & " dia(s)")
+              )
+            Width: =290
+            X: =1042
+            Y: =110
+      - btn_ChipTodasConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "Todas", fx_CorInfo, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "Todas", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "Todas", fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "Todas", fx_CorInfo, fx_CorInfoSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "Todas"})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Todas (" & CountRows(colConfSAP) & ")"
+            Width: =200
+            X: =20
+            Y: =160
+      - btn_ChipOPConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "OP", fx_CorInfo, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "OP", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "OP", fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "OP", fx_CorInfo, fx_CorInfoSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "OP"})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="GMS × SAP (" & CountRows(Filter(colConfSAP, fx_GrupoConf(Prioridade) = "OP")) & ")"
+            Width: =200
+            X: =232
+            Y: =160
+      - btn_ChipRefConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "REF", fx_CorInfo, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "REF", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "REF", fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "REF", fx_CorInfo, fx_CorInfoSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "REF"})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Refugo (" & CountRows(Filter(colConfSAP, fx_GrupoConf(Prioridade) = "REF")) & ")"
+            Width: =200
+            X: =444
+            Y: =160
+      - btn_ChipPackConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "PACK", fx_CorInfo, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "PACK", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "PACK", fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "PACK", fx_CorInfo, fx_CorInfoSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "PACK"})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Packing (" & CountRows(Filter(colConfSAP, fx_GrupoConf(Prioridade) = "PACK")) & ")"
+            Width: =200
+            X: =656
+            Y: =160
+      - btn_ChipJustConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "JUST", fx_CorInfo, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "JUST", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "JUST", fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "JUST", fx_CorInfo, fx_CorInfoSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "JUST"})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Justificadas (" & CountRows(Filter(colConfSAP, Status = "Justificado")) & ")"
+            Width: =200
+            X: =868
+            Y: =160
+      - btn_ChipResConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxFiltroConf = "RES", fx_CorOK, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(ctxFiltroConf = "RES", fx_CorSuperficie, fx_CorTexto)
+            Fill: =If(ctxFiltroConf = "RES", fx_CorOK, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =If(ctxFiltroConf = "RES", fx_CorOK, fx_CorOKSuave)
+            OnSelect: |-
+              =UpdateContext({ctxFiltroConf: "RES"})
+            PressedFill: =fx_CorOKSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Resolvidas recentes (" & CountRows(colConfResolvSAP) & ")"
+            Width: =266
+            X: =1080
+            Y: =160
+      - gal_PendConf:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Fill: =Color.Transparent
+            Height: =530
+            Items: |-
+              =SortByColumns(
+                  Filter(
+                      If(ctxFiltroConf = "RES", colConfResolvSAP, colConfSAP),
+                      ctxFiltroConf = "Todas" || ctxFiltroConf = "RES" ||
+                      (ctxFiltroConf = "JUST" && Status = "Justificado") ||
+                      fx_GrupoConf(Prioridade) = ctxFiltroConf
+                  ),
+                  "Prioridade", SortOrder.Ascending,
+                  "DifAbs", SortOrder.Descending
+              )
+            OnSelect: |-
+              =UpdateContext({ctxConfSel: ThisItem})
+            TemplateSize: =86
+            Width: =660
+            X: =20
+            Y: =218
+          Children:
+            - rct_ItemConf:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =If(ThisItem.ID = ctxConfSel.ID, fx_CorInfo, fx_CorBorda)
+                  BorderThickness: =If(ThisItem.ID = ctxConfSel.ID, 2, 1)
+                  Fill: =If(ThisItem.ID = ctxConfSel.ID, fx_CorInfoSuave, fx_CorSuperficie)
+                  Height: =80
+                  OnSelect: =Select(Parent)
+                  Width: =636
+                  Y: =3
+            - rct_FaixaItemConf:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorConf(ThisItem.Prioridade)
+                  Height: =80
+                  OnSelect: =Select(Parent)
+                  Width: =6
+                  Y: =3
+            - lbl_ItemChaveConf:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: =If(StartsWith(ThisItem.Title, "PL "), "Romaneio " & Mid(ThisItem.Title, 4), "OP " & ThisItem.Title)
+                  Width: =250
+                  X: =18
+                  Y: =8
+            - lbl_ItemPnConf:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.PN
+                  Width: =170
+                  X: =270
+                  Y: =8
+            - lbl_ItemDifConf:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =fx_CorConf(ThisItem.Prioridade)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    =If(
+                        ThisItem.Prioridade <= 10,
+                        If(ThisItem.Dif_m > 0, "+", "") & fx_MetrosBR(ThisItem.Dif_m) & " m",
+                        ThisItem.Packing_m > 0,
+                        fx_MetrosBR(ThisItem.Packing_m) & " m no packing",
+                        ""
+                    )
+                  Width: =186
+                  X: =440
+                  Y: =8
+            - lbl_ItemCatConf:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorConf(ThisItem.Prioridade)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.Categoria
+                  Width: =440
+                  X: =18
+                  Y: =34
+            - lbl_ItemDesdeConf:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        ThisItem.Status = "Resolvido",
+                        "Fechada pela conferência de " & Text(ThisItem.DataRef, "dd/mm"),
+                        "Desde " & Text(ThisItem.DataDeteccao, "dd/mm") & " · " &
+                        Text(DateDiff(ThisItem.DataDeteccao, ctxAgoraConf, TimeUnit.Days)) & " dia(s)" &
+                        If(IsBlank(ThisItem.Tratativa), " · sem tratativa", " · com tratativa")
+                    )
+                  Width: =440
+                  X: =18
+                  Y: =56
+            - lbl_ItemStatusConf:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =If(ThisItem.Status = "Resolvido", fx_CorOK, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: =If(ThisItem.Status = "Aberto", "", ThisItem.Status)
+                  Width: =160
+                  X: =466
+                  Y: =56
+      - btn_PainelConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =530
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =650
+            X: =696
+            Y: =218
+      - lbl_VazioConf:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =80
+            Size: =fx_FonteCorpo
+            Text: |-
+              =If(
+                  CountRows(colConfSAP) = 0,
+                  "Nenhuma pendência aberta. O que foi corrigido no GMS, no SAP ou no Packing a conferência da manhã fecha sozinha.",
+                  "Escolha uma pendência à esquerda."
+              )
+            Visible: =IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =440
+      - lbl_DetChaveConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =32
+            Size: =fx_FonteAcao
+            Text: |-
+              =If(StartsWith(ctxConfSel.Title, "PL "), "Romaneio " & Mid(ctxConfSel.Title, 4), "OP " & ctxConfSel.Title) &
+              If(IsBlank(ctxConfSel.PN), "", "  ·  " & ctxConfSel.PN)
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =430
+            X: =716
+            Y: =230
+      - lbl_DetStatusConf:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: |-
+              =Switch(
+                  ctxConfSel.Status,
+                  "Resolvido", fx_CorOK,
+                  "Justificado", fx_CorTextoSuave,
+                  fx_CorErro
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =32
+            Size: =fx_FonteCorpo
+            Text: =ctxConfSel.Status
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =170
+            X: =1156
+            Y: =230
+      - lbl_DetCatConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorConf(ctxConfSel.Prioridade)
+            Fill: =fx_CorConfSuave(ctxConfSel.Prioridade)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =10
+            Size: =fx_FonteCorpo
+            Text: =ctxConfSel.Categoria
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =266
+      - lbl_DetDatasConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =24
+            Size: =fx_FonteApoio
+            Text: |-
+              ="Detectada em " & Text(ctxConfSel.DataDeteccao, "dd/mm/yyyy") &
+              " · última conferência " & Text(ctxConfSel.DataRef, "dd/mm/yyyy") &
+              If(IsBlank(ctxConfSel.Cabine), "", " · Cabine " & ctxConfSel.Cabine)
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =300
+      - btn_TileGmsConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =114
+            X: =716
+            Y: =328
+      - lbl_TileGmsRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="GMS aprovado"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =722
+            Y: =332
+      - lbl_TileGmsValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: =If(ctxConfSel.Prioridade = 11 || ctxConfSel.Prioridade = 12, "—", fx_MetrosBR(ctxConfSel.GMS_m))
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =722
+            Y: =350
+      - btn_TileRefConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =114
+            X: =840
+            Y: =328
+      - lbl_TileRefRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Refugo GMS"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =846
+            Y: =332
+      - lbl_TileRefValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: =If(ctxConfSel.Prioridade = 11 || ctxConfSel.Prioridade = 12, "—", fx_MetrosBR(ctxConfSel.Refugo_m))
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =846
+            Y: =350
+      - btn_TileSapConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =114
+            X: =964
+            Y: =328
+      - lbl_TileSapRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="SAP (101−102)"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =970
+            Y: =332
+      - lbl_TileSapValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: =If(ctxConfSel.Prioridade = 11 || ctxConfSel.Prioridade = 12, "—", fx_MetrosBR(ctxConfSel.SAP_m))
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =970
+            Y: =350
+      - btn_TilePackConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =114
+            X: =1088
+            Y: =328
+      - lbl_TilePackRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Packing"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =1094
+            Y: =332
+      - lbl_TilePackValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: =If(ctxConfSel.Packing_m > 0, fx_MetrosBR(ctxConfSel.Packing_m), "—")
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =1094
+            Y: =350
+      - btn_TileDifConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorConf(ctxConfSel.Prioridade)
+            BorderThickness: =1
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorConfSuave(ctxConfSel.Prioridade)
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorConfSuave(ctxConfSel.Prioridade)
+            PressedFill: =fx_CorConfSuave(ctxConfSel.Prioridade)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =114
+            X: =1212
+            Y: =328
+      - lbl_TileDifRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorConf(ctxConfSel.Prioridade)
+            Font: =fx_FonteFamilia
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Diferença"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =1218
+            Y: =332
+      - lbl_TileDifValConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorConf(ctxConfSel.Prioridade)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: =If(ctxConfSel.Prioridade <= 10, If(ctxConfSel.Dif_m > 0, "+", "") & fx_MetrosBR(ctxConfSel.Dif_m), "—")
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =104
+            X: =1218
+            Y: =350
+      - lbl_DetProvavelConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =10
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Provável OP certa: " & ctxConfSel.ProvavelOP
+            Visible: =!IsBlank(ctxConfSel.ID) && !IsBlank(ctxConfSel.ProvavelOP)
+            Width: =610
+            X: =716
+            Y: =398
+      - lbl_DetDetalheRotConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="O que a conferência achou"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =430
+      - lbl_DetDetalheConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =118
+            Size: =fx_FonteApoio
+            Text: =Substitute(ctxConfSel.Detalhe, " | ", Char(10))
+            VerticalAlign: =VerticalAlign.Top
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =450
+      - lbl_DetAcaoConf:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =45
+            Size: =fx_FonteApoio
+            Text: |-
+              =If(
+                  ctxConfSel.Status = "Resolvido",
+                  "Fechada sozinha: a conferência viu GMS, SAP e Packing batendo.",
+                  ctxConfSel.Status = "Justificado",
+                  "Justificada e travada. Para editar, clique em Reabrir. Se a divergência bater, a conferência fecha sozinha.",
+                  "O que fazer: " & ctxConfSel.Acao & If(IsBlank(ctxConfSel.QuemResolve), "", "  ·  Quem resolve: " & ctxConfSel.QuemResolve)
+              )
+            VerticalAlign: =VerticalAlign.Top
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =561
+      - inp_TratativaConf:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Tratativa da pendência"
+            BorderColor: =fx_CorBorda
+            Default: =ctxConfSel.Tratativa
+            DelayOutput: =true
+            DisplayMode: =If(ctxConfSel.Status = "Aberto", DisplayMode.Edit, DisplayMode.View)
+            Font: =fx_FonteFamilia
+            Height: =76
+            HintText: |-
+              ="O que foi feito ou por que não é erro (ex.: estornado no SAP doc 3026..., OP corrigida no GMS)"
+            HoverFill: =fx_CorInfoSuave
+            Mode: =TextMode.MultiLine
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =610
+            X: =716
+            Y: =606
+      - inp_ResponsavelConf:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Responsável pela tratativa"
+            BorderColor: =fx_CorBorda
+            Default: =If(IsBlank(ctxConfSel.Responsavel), User().FullName, ctxConfSel.Responsavel)
+            DelayOutput: =true
+            DisplayMode: =If(ctxConfSel.Status = "Aberto", DisplayMode.Edit, DisplayMode.View)
+            Font: =fx_FonteFamilia
+            Height: =48
+            HintText: ="Responsável"
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =230
+            X: =716
+            Y: =690
+      - btn_SalvarConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisplayMode: =If(!IsBlank(ctxConfSel.ID) && ctxConfSel.Status = "Aberto", DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            HoverFill: =ColorFade(fx_CorInfo, -15%)
+            OnSelect: |-
+              =If(
+                  // Barreira dupla (B 3.10.1): o DisplayMode trava, e a condição abaixo trava de novo.
+                  // Só pendência Aberta recebe tratativa; Justificada está travada até Reabrir.
+                  IsBlank(ctxConfSel.ID) || ctxConfSel.Status <> "Aberto",
+                  Notify(
+                      If(ctxConfSel.Status = "Justificado", "Pendência justificada: clique em Reabrir para editar.", "Pendência já fechada pela conferência."),
+                      NotificationType.Warning
+                  ),
+                  IsBlank(Trim(inp_TratativaConf.Text)),
+                  Notify("Escreva a tratativa antes de salvar.", NotificationType.Warning),
+                  IfError(
+                      Patch(
+                          Conferencia_SAP,
+                          LookUp(Conferencia_SAP, ID = ctxConfSel.ID),
+                          {
+                              Tratativa: Trim(inp_TratativaConf.Text),
+                              Responsavel: Trim(inp_ResponsavelConf.Text),
+                              DataTratativa: Now()
+                          }
+                      );
+                      Select(btn_CarregarConf);
+                      Notify("Tratativa salva. A conferência da manhã confirma se a divergência fechou.", NotificationType.Success),
+                      Notify("Falha ao salvar — tente novamente. Se persistir, chame o supervisor.", NotificationType.Error)
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorInfo, -25%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar tratativa"
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =178
+            X: =958
+            Y: =690
+      - btn_JustificarConf:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorTextoSuave
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =If(IsBlank(ctxConfSel.ID) || ctxConfSel.Status = "Resolvido", DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =48
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =If(
+                  // Justificar = "não é erro de sistema" (legado, produção fora do GMS). Exige motivo escrito.
+                  // A conferência continua olhando: se a divergência fechar, ela vira Resolvido sozinha.
+                  IsBlank(ctxConfSel.ID) || ctxConfSel.Status = "Resolvido",
+                  Notify("Pendência já fechada pela conferência.", NotificationType.Warning),
+                  ctxConfSel.Status <> "Justificado" && IsBlank(Trim(inp_TratativaConf.Text)),
+                  Notify("Para justificar, escreva o motivo na tratativa.", NotificationType.Warning),
+                  IfError(
+                      // Reabrir só destrava (Status volta a Aberto); a tratativa gravada fica como está.
+                      If(
+                          ctxConfSel.Status = "Justificado",
+                          Patch(Conferencia_SAP, LookUp(Conferencia_SAP, ID = ctxConfSel.ID), {Status: "Aberto"}),
+                          Patch(
+                              Conferencia_SAP,
+                              LookUp(Conferencia_SAP, ID = ctxConfSel.ID),
+                              {
+                                  Status: "Justificado",
+                                  Tratativa: Trim(inp_TratativaConf.Text),
+                                  Responsavel: Trim(inp_ResponsavelConf.Text),
+                                  DataTratativa: Now()
+                              }
+                          )
+                      );
+                      Select(btn_CarregarConf);
+                      Notify("Pendência atualizada.", NotificationType.Success),
+                      Notify("Falha ao salvar — tente novamente. Se persistir, chame o supervisor.", NotificationType.Error)
+                  )
+              )
+            PressedFill: =fx_CorBorda
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: =If(ctxConfSel.Status = "Justificado", "Reabrir", "Justificar")
+            Visible: =!IsBlank(ctxConfSel.ID)
+            Width: =178
+            X: =1148
+            Y: =690

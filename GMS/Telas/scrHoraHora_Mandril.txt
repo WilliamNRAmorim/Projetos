@@ -1,0 +1,416 @@
+Screens:
+  scrHoraHora_Mandril:
+    Properties:
+      Fill: |+
+        =
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =UpdateContext({varDadosSalvos1: Blank()}); 
+        Set(varProcessando1, false);
+        UpdateContext({
+            varDataProducao1: If(Hour(Now()) < 6, Today() - 1, Today()),
+            varTurnoAtual1: 
+        If(
+            Hour(Now()) >= 5 && Hour(Now()) < 14, 
+                "1º Turno",
+            Hour(Now()) >= 14 || Hour(Now()) < 5,
+                "2º Turno"
+        )
+        });
+        Clear(colProducao1);
+    Children:
+      - Icon5_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(0, 18, 107, 1)
+            Height: =49
+            Icon: =Icon.ArrowLeft
+            OnSelect: |-
+              =If(
+                  varAlterado1,
+                  Notify(
+                      "Atenção: Você tem dados não salvos! Salve antes de voltar para o menu principal.", 
+                      NotificationType.Error, 
+                      5000
+                  ),
+                  Navigate(scr_mandril_1)
+              )
+            Width: =49
+            X: =46
+      - TextCanvas2_12:
+          Control: Text@0.0.51
+          Properties:
+            Height: =29
+            Size: =20
+            Text: ="Selecione o turno"
+            Width: =180
+            X: =8
+            Y: =95
+      - Image4_1:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =69
+            Image: ='Logo Vermelho'
+            Width: =190
+            X: =1176
+      - tmrCaoDeGuarda_10:
+          Control: Timer@2.1.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =ColorFade(Self.BorderColor, 70%)
+            DisabledColor: =ColorFade(Self.Fill, 90%)
+            DisabledFill: =ColorFade(Self.Fill, 70%)
+            Duration: =45000
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+            OnTimerEnd: |-
+              =Set(varProcessando1, false);
+              UpdateContext({ 
+                  varMostrarAviso: true, 
+                  varTipoAviso: "ERRO", 
+                  varMensagemAviso: "TEMPO LIMITE EXCEDIDO! O SERVIDOR NÃO RESPONDEU. TENTE NOVAMENTE." 
+              });
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Start: =varProcessando1
+            Visible: =false
+            X: =1206
+      - DropdownTurno_1:
+          Control: DropDown@0.0.45
+          Properties:
+            DefaultSelectedItems: =[""]
+            FontSize: =20
+            Height: =34
+            Items: =[" " ,"1º Turno", "2º Turno", "3º Turno"]
+            OnChange: |-
+              =
+              Set(varProcessando1, true);
+
+              ClearCollect(
+                  colDadosSalvosBanco, 
+                  Filter(
+                      Hora_Hora_Mandril,
+                      Data = varDataProducao1 && 
+                      Turno = DropdownTurno_1.Selected.Value
+                  )
+              );
+
+              ClearCollect(
+                  colProducao1,
+                  Switch(
+                      DropdownTurno_1.Selected.Value, 
+                      "1º Turno", Table(
+                          {ID: 1, Horario: "04:20 - 05:20", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 2, Horario: "05:20 - 06:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 3, Horario: "06:00 - 07:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 4, Horario: "07:00 - 08:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 5, Horario: "08:00 - 09:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 6, Horario: "09:00 - 10:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 7, Horario: "10:00 - 11:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 8, Horario: "11:00 - 12:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 9, Horario: "12:00 - 13:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 10, Horario: "13:00 - 13:57", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""}
+                      ),
+                      "2º Turno", Table(
+                          {ID: 1, Horario: "13:47 - 15:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 2, Horario: "15:00 - 16:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 3, Horario: "16:00 - 17:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 4, Horario: "17:00 - 18:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 5, Horario: "18:00 - 19:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 6, Horario: "19:00 - 20:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 7, Horario: "20:00 - 21:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 8, Horario: "21:00 - 22:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 9, Horario: "22:00 - 22:20", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 10, Horario: "22:20 - 23:20", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""}
+                      ),
+                      "3º Turno", Table(
+                          {ID: 1, Horario: "22:20 - 23:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 2, Horario: "23:00 - 00:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 3, Horario: "00:00 - 01:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 4, Horario: "01:00 - 02:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 5, Horario: "02:00 - 03:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 6, Horario: "03:00 - 04:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 7, Horario: "04:00 - 05:00", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""},
+                          {ID: 8, Horario: "05:00 - 05:20", MetaReal: 0, MangueiraNome: "", ProducaoReal: 0, TempoParado: 0, Motivo: "", Motivo2: "", Comentario: ""}
+                      )
+                  )
+              );
+
+              UpdateIf(
+                  colProducao1,
+
+                  true, 
+                  {
+                      TempoParado: Coalesce(LookUp(colDadosSalvosBanco, Hora = Horario).'Tempo Parado (min)', 0),
+                      Motivo: Coalesce(LookUp(colDadosSalvosBanco, Hora = Horario).Motivo, ""),
+                      Motivo2: Coalesce(LookUp(colDadosSalvosBanco, Hora = Horario).'Motivo 2', ""),
+                      Comentario: Coalesce(LookUp(colDadosSalvosBanco, Hora = Horario).'Comentário / Ação', "")
+                  }
+              );
+
+              Set(varProcessando1, false);
+              UpdateContext({varAlterado1: false});
+            Width: =136
+            X: =30
+            Y: =134
+      - TextCanvas2_13:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            Height: =42
+            Text: ="Tempo Parado"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =!TextCanvas4_1.Visible
+            Width: =82
+            X: =357
+            Y: =49
+      - TextCanvas2_14:
+          Control: Text@0.0.51
+          Properties:
+            Height: =30
+            Text: ="Hora"
+            Visible: =!TextCanvas4_1.Visible
+            Width: =54
+            X: =268
+            Y: =55
+      - TextCanvas2_21:
+          Control: Text@0.0.51
+          Properties:
+            Height: =30
+            Text: ="Motivo"
+            Visible: =!TextCanvas4_1.Visible
+            Width: =62
+            X: =496
+            Y: =59
+      - TextCanvas2_22:
+          Control: Text@0.0.51
+          Properties:
+            Height: =30
+            Text: ="Motivo 2(se tiver)"
+            Visible: =!TextCanvas4_1.Visible
+            Width: =129
+            X: =656
+            Y: =59
+      - TextCanvas2_23:
+          Control: Text@0.0.51
+          Properties:
+            Height: =30
+            Text: ="Comentário / Ação"
+            Visible: =!TextCanvas4_1.Visible
+            Width: =129
+            X: =907
+            Y: =59
+      - Gallery5_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =494
+            Items: =colProducao1
+            TemplateSize: =41
+            Visible: =!TextCanvas4_1.Visible
+            Width: =900
+            X: =234
+            Y: =92
+          Children:
+            - txtHora_1:
+                Control: Text@0.0.51
+                Properties:
+                  Align: ='TextCanvas.Align'.Center
+                  BorderStyle: =BorderStyle.Solid
+                  Fill: =RGBA(0, 0,0, 20%)
+                  Height: =41
+                  Size: =15
+                  Text: =ThisItem.Horario
+                  VerticalAlign: =VerticalAlign.Middle
+                  Width: =105
+            - txtTempoParado_1:
+                Control: TextInput@0.0.54
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderStyle: =BorderStyle.Solid
+                  BorderThickness: =1
+                  Height: =41
+                  OnChange: |-
+                    =If(!varProcessando1, UpdateContext({varAlterado1: true}));
+                    Patch(colProducao1, ThisItem, { TempoParado: Value(Self.Value) });
+                  Value: =ThisItem.TempoParado
+                  Width: =50
+                  X: =129
+            - cmbMotivo_2:
+                Control: DropDown@0.0.45
+                Properties:
+                  Appearance: ='DropdownCanvas.Appearance'.FilledDarker
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderStyle: =BorderStyle.Solid
+                  BorderThickness: =1
+                  DefaultSelectedItems: |-
+                    =If(
+                        IsBlank(ThisItem.Motivo), 
+                        Blank(), 
+                        {Value: ThisItem.Motivo}
+                    )
+                  Height: =41
+                  Items: |-
+                    =[
+                        "  ",
+                        "1 - Manutenção Preventiva",
+                        "2 - Manutenção Preventiva (Fora do Prazo)",
+                        "3 - Manutenção Corretiva",
+                        "4 - Execução Check List Lean",
+                        "5 - Set-up",
+                        "6 - Troca de Carretel",
+                        "7 - Falta de energia / ar",
+                        "8 - Falta de Carretel",
+                        "9 - Falta de Mandril",
+                        "10 - Reunião/Treinamento",
+                        "11 - Falta de Demanda",
+                        "12 - Divergência do Tempo Padrão",
+                        "13 - Falta de desmoldante"
+                    ]
+                  OnChange: |+
+                    =If(!varProcessando1, UpdateContext({varAlterado1: true}));
+                    Patch(colProducao1, ThisItem, { Motivo: Self.Selected.Value });
+                  Width: =173
+                  X: =202
+            - cmbMotivo_3:
+                Control: DropDown@0.0.45
+                Properties:
+                  Appearance: ='DropdownCanvas.Appearance'.FilledDarker
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderStyle: =BorderStyle.Solid
+                  BorderThickness: =1
+                  DefaultSelectedItems: |-
+                    =If(
+                        IsBlank(ThisItem.Motivo2), 
+                        Blank(), 
+                        {Value: ThisItem.Motivo2}
+                    )
+                  Height: =41
+                  Items: |-
+                    =[
+                        "  ",
+                        "1 - Manutenção Preventiva",
+                        "2 - Manutenção Preventiva (Fora do Prazo)",
+                        "3 - Manutenção Corretiva",
+                        "4 - Execução Check List Lean",
+                        "5 - Set-up",
+                        "6 - Troca de Carretel",
+                        "7 - Falta de energia / ar",
+                        "8 - Falta de Carretel",
+                        "9 - Falta de Mandril",
+                        "10 - Reunião/Treinamento",
+                        "11 - Falta de Demanda",
+                        "12 - Divergência do Tempo Padrão",
+                        "13 - Falta de desmoldante"
+                    ]
+                  OnChange: |+
+                    =If(!varProcessando1, UpdateContext({varAlterado1: true}));
+                    Patch(colProducao1, ThisItem, { Motivo2: Self.Selected.Value });
+                  Width: =173
+                  X: =398
+            - txtComentario_1:
+                Control: TextInput@0.0.54
+                Properties:
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderStyle: =BorderStyle.Solid
+                  BorderThickness: =1
+                  Height: =41
+                  OnChange: |-
+                    =If(!varProcessando1, UpdateContext({varAlterado1: true}));
+                    Patch(colProducao1, ThisItem, { Comentario: Self.Value });
+                  Value: =ThisItem.Comentario
+                  Width: =266
+                  X: =601
+      - ButtonCanvas5_2:
+          Control: Button@0.0.45
+          Properties:
+            Align: =Align.Center
+            BasePaletteColor: =RGBA(5, 102, 178, 1)
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderRadius: =20
+            BorderStyle: =BorderStyle.Solid
+            BorderThickness: =5
+            FontSize: =30
+            Height: =81
+            OnSelect: "=Set(varProcessando1, true);\r\nClearCollect(\r\n    colDadosExistentes1, \r\n    Filter(\r\n        Hora_Hora_Mandril, \r\n        Data = varDataProducao1 && \r\n        Turno = DropdownTurno_1.Selected.Value\r\n    )\r\n);\r\nForAll(\r\n   Filter(colProducao1, TempoParado > 0 || !IsBlank(Motivo)),\r\n    \r\n    With(\r\n        {\r\n            _RegistroExistente1: LookUp(colDadosExistentes1, Hora = Horario)\r\n        },\r\n        \r\n        IfError(\r\n            Patch(Hora_Hora_Mandril,\r\n                Coalesce(_RegistroExistente1, Defaults(Hora_Hora_Mandril)),\r\n                {\r\n                    Title: Text(Now(), \"dd/mm/yyyy\") & \" - \" & DropdownTurno_1.Selected.Value,\r\n                    Data: varDataProducao1, \r\n                    Turno: DropdownTurno_1.Selected.Value,\r\n                    Hora: Horario,\r\n                    'Tempo Parado (min)': TempoParado,\r\n                    Motivo: Motivo,\r\n                    'Motivo 2': Motivo2,\r\n                    'Comentário / Ação': Comentario,\r\n                    Status: \"Rascunho\"\r\n                }\r\n            ),\r\n            Notify(\"Erro ao salvar hora: \" & Horario, NotificationType.Error),\r\n            RemoveIf(colProducao1, ID = ThisRecord.ID)\r\n        )\r\n    )\r\n);\r\nIf(\r\n    CountRows(Filter(colProducao1, TempoParado > 0 || !IsBlank(Motivo))) > 0,\r\n    Set(varProcessando1, false); Notify(\"Alguns itens não foram salvos. Verifique a rede.\", NotificationType.Warning),\r\n    UpdateContext({varAlterado: false});\r\n    Set(varProcessando1, false);\r\n    Notify(\"Dados salvos com sucesso!\", NotificationType.Success)\r\n);"
+            Text: ="Salvar"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =181
+            X: =940
+            Y: =622
+      - ButtonCanvas5_3:
+          Control: Button@0.0.45
+          Properties:
+            Align: =Align.Center
+            BasePaletteColor: =RGBA(255, 0, 4, 1)
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderRadius: =20
+            BorderStyle: =BorderStyle.Solid
+            BorderThickness: =5
+            FontSize: =30
+            Height: =81
+            OnSelect: "=Set(varProcessando1, true);\r\nForAll(\r\n    Filter(colProducao1, TempoParado > 0 || !IsBlank(Motivo)), \r\n    \r\n    With(\r\n        {\r\n            _RegistroExistente1: LookUp(Hora_Hora_Mandril, \r\n            \r\n                Data = varDataProducao1 && \r\n                Turno = DropdownTurno_1.Selected.Value && \r\n                Hora = Horario\r\n            )\r\n        },\r\n        IfError(\r\n            Patch(Hora_Hora_Mandril,\r\n                Coalesce(_RegistroExistente1, Defaults(Hora_Hora_Mandril)),\r\n                {\r\n                    Title: Text(Now(), \"dd/mm/yyyy\") & \" - \" & DropdownTurno_1.Selected.Value,\r\n                    Data: varDataProducao1,  \r\n                    Turno: DropdownTurno_1.Selected.Value,\r\n                    Hora: Horario,\r\n                    'Tempo Parado (min)': TempoParado,\r\n                    Motivo: Motivo,\r\n                    'Motivo 2': Motivo2,\r\n                    'Comentário / Ação': Comentario,\r\n                    Status: \"Finalizado\" \r\n                }\r\n            ),\r\n            Notify(\"Erro ao lançar hora: \" & Horario, NotificationType.Error),\r\n            RemoveIf(colProducao1, ID = ThisRecord.ID)\r\n        )\r\n    )\r\n);\r\nIf(\r\n    CountRows(Filter(colProducao1, TempoParado > 0 || !IsBlank(Motivo))) > 0,\r\n    Set(varProcessando1, false); Notify(\"Alguns itens não foram salvos. Verifique a rede.\", NotificationType.Warning),\r\n    UpdateContext({varAlterado: false});\r\n    Set(varProcessando1, false);\r\n    Notify(\"Dados salvos com sucesso!\", NotificationType.Success)\r\n);"
+            Text: ="Lançar"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =181
+            X: =1159
+            Y: =622
+      - Image12:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =202
+            Image: ='Screenshot 2026-02-18 111835'
+            Width: =785
+            Y: =564
+      - Rectangle7_10:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(0, 0, 0, 0.3)
+            Height: =768
+            Visible: =varProcessando1
+            Width: =1366
+      - Spinner1_10:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando1
+            Width: =1366
+      - TextCanvas6_9:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            Height: =60
+            Size: =25
+            Text: ="Salvando... Aguarde"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =varProcessando1
+            Width: =247
+            X: =561
+            Y: =403
+      - TextCanvas4_1:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            Font: =Font.Arial
+            FontColor: =RGBA(50, 50, 50, 1)
+            Height: =198
+            Size: =26
+            Text: ="⚠️ SELECIONE UM TURNO PARA INICIAR"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =IsBlank(DropdownTurno_1.Selected.Value) || Trim(DropdownTurno_1.Selected.Value) = ""
+            Weight: ='TextCanvas.Weight'.Semibold
+            Width: =558
+            X: =371
+            Y: =217

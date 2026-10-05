@@ -1,0 +1,1078 @@
+Screens:
+  scr_selecaosetor_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({ctxAgora: Now()});
+        Select(btn_RecarregarMenu_1)
+    Children:
+      - btn_RecarregarMenu_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Refresh(ficha_producao);
+              Refresh(CarreteisMandril);
+              Refresh(ControleExtrusora_estrutura);
+              Concurrent(
+                  ClearCollect(
+                      colAtivasMenu,
+                      ForAll(
+                          Filter(ficha_producao, status_processo = "Em processo") As _r,
+                          {
+                              ID:                           _r.ID,
+                              OP:                           _r.OP,
+                              Mangueira:                    _r.Mangueira,
+                              Bitola:                       _r.Bitola,
+                              processo:                     _r.processo,
+                              maquina_mandril:              _r.maquina_mandril,
+                              cabine_teste:                 _r.cabine_teste,
+                              Trançadeira:                  _r.Trançadeira,
+                              data_hora_inicio_mandril:     _r.data_hora_inicio_mandril,
+                              data_hora_inicio_trancadeira: _r.data_hora_inicio_trancadeira,
+                              data_hora_inicio_extracao:    _r.data_hora_inicio_extracao
+                          }
+                      )
+                  ),
+                  ClearCollect(
+                      colAguardMenu,
+                      ForAll(
+                          Filter(ficha_producao, status_processo = "Aguardando") As _r,
+                          {
+                              ID:          _r.ID,
+                              processo:    _r.processo,
+                              Trançadeira: _r.Trançadeira
+                          }
+                      )
+                  ),
+                  ClearCollect(
+                      colCarrMenu,
+                      ForAll(
+                          CarreteisMandril As _c,
+                          {
+                              Title:             _c.Title,
+                              Status:            _c.Status,
+                              Bitola:            _c.Bitola,
+                              quantidade_metros: _c.quantidade_metros
+                          }
+                      )
+                  ),
+                  ClearCollect(
+                      colExtAbertaMenu,
+                      ForAll(
+                          Filter(
+                              ControleExtrusora_estrutura,
+                              data_hora_inicio >= DateAdd(Now(), -7, TimeUnit.Days)
+                          ) As _r,
+                          {
+                              ID:               _r.ID,
+                              Title:            _r.Title,
+                              Bitola:           _r.Bitola,
+                              data_hora_inicio: _r.data_hora_inicio,
+                              data_hora_final:  _r.data_hora_final
+                          }
+                      )
+                  )
+              );
+              If(
+                  IsEmpty(colMenuEtapas),
+                  ClearCollect(
+                      colMenuEtapas,
+                      { Ordem: 1, Nome: "Extrusora Mandril", Cor: fx_CorEtapaExtMandril, Tela: scr_ExtrusoraMandril_1, Imagem: send,     Processo: "",            Multi: false },
+                      { Ordem: 2, Nome: "Solda Mandril",     Cor: fx_CorEtapaSolda,      Tela: scr_mandril_1,          Imagem: cylinder, Processo: "Mandril",     Multi: true  },
+                      { Ordem: 3, Nome: "Tubo",              Cor: fx_CorEtapaTubo,       Tela: scr_tubo_1,             Imagem: pipette,  Processo: "Tubo",        Multi: false },
+                      { Ordem: 4, Nome: "Cobertura",         Cor: fx_CorEtapaCobertura,  Tela: scr_Cobertura_2,        Imagem: layers,   Processo: "Cobertura",   Multi: false },
+                      { Ordem: 5, Nome: "Bandagem",          Cor: fx_CorEtapaBandagem,   Tela: scr_Bandagem_1,         Imagem: disc,     Processo: "Bandagem",    Multi: false },
+                      { Ordem: 6, Nome: "Vulcanização",      Cor: fx_CorEtapaVulca,      Tela: scr_Vulcanizacao_1,     Imagem: flame,    Processo: "Vulcanização",Multi: false },
+                      { Ordem: 7, Nome: "Debandagem",        Cor: fx_CorEtapaDeband,     Tela: scr_Debandagem_2,       Imagem: 'undo-2', Processo: "Debandagem",  Multi: false },
+                      { Ordem: 8, Nome: "Extr./Teste",       Cor: fx_CorEtapaExtracao,   Tela: scr_Finalização_1,      Imagem: activity, Processo: "Extr./Teste", Multi: true  }
+                  )
+              );
+              If(
+                  IsEmpty(colPostosMultiCad),
+                  ClearCollect(
+                      colPostosMultiCad,
+                      { Processo: "Mandril",     Slot: "A", Posto: "TERMOFUSAO",                      Rotulo: "Solda Quente",                       Imagem: flame    },
+                      { Processo: "Mandril",     Slot: "B", Posto: "VIBRACIONAL",                     Rotulo: "Solda Vibracional",                  Imagem: activity },
+                      { Processo: "Extr./Teste", Slot: "A", Posto: Index(fx_CabinesTeste, 1).Posto,   Rotulo: Index(fx_CabinesTeste, 1).Rotulo,     Imagem: activity },
+                      { Processo: "Extr./Teste", Slot: "B", Posto: Index(fx_CabinesTeste, 2).Posto,   Rotulo: Index(fx_CabinesTeste, 2).Rotulo,     Imagem: activity }
+                  )
+              );
+              ClearCollect(
+                  colEstadoEtapaMenu,
+                  ForAll(
+                      Filter(colMenuEtapas, !IsBlank(Processo)) As _e,
+                      With(
+                          { _f: LookUp(colAtivasMenu As _a, _a.processo = _e.Processo) },
+                          {
+                              Processo:   _e.Processo,
+                              FichaID:    Coalesce(_f.ID, 0),
+                              OP:         Coalesce(_f.OP, 0),
+                              Mangueira:  Coalesce(Text(_f.Mangueira), ""),
+                              Produzindo: !IsBlank(_f.ID),
+                              Fila: CountRows(
+                                  Filter(colAguardMenu As _g, _g.processo = _e.Processo)
+                              )
+                          }
+                      )
+                  )
+              );
+              ClearCollect(
+                  colPostosMultiMenu,
+                  ForAll(
+                      colPostosMultiCad As _c,
+                      With(
+                          {
+                              _f: LookUp(
+                                  colAtivasMenu As _a,
+                                  _a.processo = _c.Processo &&
+                                  If(_c.Processo = "Mandril", _a.maquina_mandril, _a.cabine_teste) = _c.Posto
+                              )
+                          },
+                          {
+                              Processo:   _c.Processo,
+                              Slot:       _c.Slot,
+                              Posto:      _c.Posto,
+                              Rotulo:     _c.Rotulo,
+                              Imagem:     _c.Imagem,
+                              OP:         Coalesce(_f.OP, 0),
+                              Detalhe:    If(
+                                              _c.Processo = "Mandril",
+                                              "Bitola " & Text(Coalesce(_f.Bitola, 0), "[$-en-US]0"),
+                                              Coalesce(Text(_f.Mangueira), "")
+                                          ),
+                              Inicio:     If(_c.Processo = "Mandril", _f.data_hora_inicio_mandril, _f.data_hora_inicio_extracao),
+                              Produzindo: !IsBlank(_f.ID)
+                          }
+                      )
+                  )
+              );
+              ClearCollect(
+                  colPostosTrancMenu,
+                  ForAll(
+                      Filter(fx_LayoutBalizas, tranc) As _b,
+                      With(
+                          {
+                              _f: LookUp(
+                                  colAtivasMenu As _a,
+                                  _a.processo = "Trançadeira" && _a.Trançadeira = _b.Trançadeira
+                              )
+                          },
+                          {
+                              Posto:      _b.Trançadeira,
+                              Rotulo:     _b.nome,
+                              FichaID:    Coalesce(_f.ID, 0),
+                              OP:         Coalesce(_f.OP, 0),
+                              Mangueira:  Coalesce(Text(_f.Mangueira), ""),
+                              Inicio:     _f.data_hora_inicio_trancadeira,
+                              Produzindo: !IsBlank(_f.ID),
+                              Fila: CountRows(
+                                  Filter(
+                                      colAguardMenu As _g,
+                                      _g.processo = "Trançadeira" && _g.Trançadeira = _b.Trançadeira
+                                  )
+                              )
+                          }
+                      )
+                  )
+              );
+              With(
+                  {
+                      _reg: First(
+                          Sort(
+                              Filter(
+                                  colExtAbertaMenu As _r,
+                                  IsBlank(_r.data_hora_final) &&
+                                  !IsBlank(_r.Title) &&
+                                  !IsBlank(LookUp(colCarrMenu As _c, _c.Title = _r.Title && _c.Status = "Enchendo").Title)
+                              ),
+                              data_hora_inicio,
+                              SortOrder.Descending
+                          )
+                      ),
+                      _falta: LookUp(
+                          colCarrMenu As _u,
+                          _u.Status = "Em uso" &&
+                          IsBlank(LookUp(colCarrMenu As _k, _k.Status = "Cheio" && _k.Bitola = _u.Bitola).Title)
+                      )
+                  },
+                  ClearCollect(
+                      colEstadoExtMenu,
+                      {
+                          Aberta:      !IsBlank(_reg.ID),
+                          Bitola:      _reg.Bitola,
+                          Carretel:    _reg.Title,
+                          Inicio:      _reg.data_hora_inicio,
+                          Cheios:      CountRows(Filter(colCarrMenu, Status = "Cheio")),
+                          Metros:      Sum(Filter(colCarrMenu, Status = "Cheio"), quantidade_metros),
+                          Falta:       !IsBlank(_falta.Title),
+                          BitolaFalta: _falta.Bitola
+                      }
+                  )
+              );
+              UpdateContext({ctxAgora: Now()})
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+            X: =1360
+            Y: =756
+      - tmr_DadosMenu_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: =Select(btn_RecarregarMenu_1)
+            Repeat: =true
+            Text: =""
+            Width: =1
+            X: =1200
+            Y: =756
+      - tmr_RelogioMenu_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Text: =""
+            Width: =1
+            X: =1200
+            Y: =756
+      - btn_VoltarMenu_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =50
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(Menu_1)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =100
+            RadiusBottomRight: =100
+            RadiusTopLeft: =100
+            RadiusTopRight: =100
+            Text: =""
+            Width: =50
+            X: =40
+            Y: =24
+      - ico_VoltarMenu_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para o menu principal"
+            Color: =fx_CorInfo
+            Height: =26
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Select(btn_VoltarMenu_1)
+            Width: =26
+            X: =52
+            Y: =36
+      - lbl_TituloMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            PaddingLeft: =0
+            Size: =fx_FonteTitulo
+            Text: ="Selecione o Setor"
+            Width: =400
+            X: =104
+            Y: =20
+      - lbl_SubtituloMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Estado da célula ao vivo · atualiza sozinho a cada 2 minutos"
+            Width: =520
+            X: =104
+            Y: =52
+      - lbl_ResumoCelulaMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: =Text(CountRows(colAtivasMenu)) & " OP em processo · " & Text(CountRows(colAguardMenu)) & " aguardando"
+            Width: =400
+            X: =946
+            Y: =38
+      - gal_EtapasMenu_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =Color.Transparent
+            Height: =400
+            Items: =colMenuEtapas
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =12
+            TemplateSize: =196
+            Width: =1245
+            WrapCount: =4
+            X: =101
+            Y: =84
+          Children:
+            - btn_FundoEtapa_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: |-
+                    =If(
+                        IsBlank(ThisItem.Processo) && First(colEstadoExtMenu).Falta,
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  BorderThickness: =If(IsBlank(ThisItem.Processo) && First(colEstadoExtMenu).Falta, 2, 1)
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =188
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =296
+                  X: =0.25
+                  Y: =2
+            - btn_TopoEtapa_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ThisItem.Cor
+                  Font: =fx_FonteFamilia
+                  Height: =6
+                  HoverFill: =ThisItem.Cor
+                  PressedFill: =ThisItem.Cor
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =296
+                  X: =0.25
+                  Y: =2
+            - btn_IconeEtapa_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ColorFade(ThisItem.Cor, 85%)
+                  Font: =fx_FonteFamilia
+                  Height: =48
+                  HoverFill: =ColorFade(ThisItem.Cor, 85%)
+                  PressedFill: =ColorFade(ThisItem.Cor, 85%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =!ThisItem.Multi
+                  Width: =48
+                  X: =22
+                  Y: =26
+            - img_IconeEtapa_1:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Height: =24
+                  Image: =ThisItem.Imagem
+                  Visible: =!ThisItem.Multi
+                  Width: =24
+                  X: =34
+                  Y: =38
+            - lbl_NomeEtapa_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: =ThisItem.Nome
+                  Visible: =!ThisItem.Multi
+                  Width: =214
+                  X: =82
+                  Y: =26
+            - lbl_EstadoEtapa_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =With(
+                        { _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo) },
+                        If(
+                            IsBlank(ThisItem.Processo), If(First(colEstadoExtMenu).Aberta, fx_CorOK, fx_CorTextoSuave),
+                            _e.Produzindo,              fx_CorOK,
+                            _e.Fila > 0,                fx_CorAlerta,
+                            fx_CorTextoSuave
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo) },
+                        If(
+                            IsBlank(ThisItem.Processo), If(First(colEstadoExtMenu).Aberta, "Extrudando", "Parada"),
+                            _e.Produzindo,              "Em produção",
+                            _e.Fila > 0,                "Parada, com fila",
+                            "Livre"
+                        )
+                    )
+                  Visible: =!ThisItem.Multi
+                  Width: =196
+                  X: =82
+                  Y: =52
+            - rct_DivisorEtapa_1:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Visible: =!ThisItem.Multi
+                  Width: =256
+                  X: =22
+                  Y: =92
+            - lbl_OPEtapa_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =Font.'Courier New'
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo) },
+                        If(
+                            IsBlank(ThisItem.Processo),
+                            With(
+                                { _x: First(colEstadoExtMenu) },
+                                If(
+                                    _x.Aberta,
+                                    "Bitola " & Text(_x.Bitola, "[$-en-US]0") & " · " & _x.Carretel,
+                                    "—"
+                                )
+                            ),
+                            If(_e.Produzindo, "OP " & Text(_e.OP, "[$-en-US]0"), "—")
+                        )
+                    )
+                  Visible: =!ThisItem.Multi
+                  Width: =198
+                  X: =22
+                  Y: =104
+            - lbl_CronoEtapa_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo) },
+                        If(
+                            IsBlank(ThisItem.Processo),
+                            If(
+                                First(colEstadoExtMenu).Aberta,
+                                fx_Crono(First(colEstadoExtMenu).Inicio, ctxAgora),
+                                ""
+                            ),
+                            If(_e.Fila > 0, Text(_e.Fila, "[$-en-US]0") & " na fila", "")
+                        )
+                    )
+                  Visible: =!ThisItem.Multi
+                  Width: =84
+                  X: =194
+                  Y: =104
+            - lbl_MangueiraEtapa_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =If(
+                        IsBlank(ThisItem.Processo) && First(colEstadoExtMenu).Falta,
+                        fx_CorErro,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: |-
+                    =If(
+                        IsBlank(ThisItem.Processo) && First(colEstadoExtMenu).Falta,
+                        FontWeight.Bold,
+                        FontWeight.Normal
+                    )
+                  Height: =46
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo),
+                            _x: First(colEstadoExtMenu)
+                        },
+                        If(
+                            IsBlank(ThisItem.Processo),
+                            If(
+                                _x.Falta,
+                                "⛔ Solda sem reserva · bitola " & Text(_x.BitolaFalta, "[$-en-US]0"),
+                                _x.Cheios = 0,
+                                "Estoque p/ solda: vazio",
+                                "Estoque p/ solda: " & Text(_x.Cheios, "[$-en-US]0") &
+                                If(_x.Cheios = 1, " cheio · ", " cheios · ") &
+                                Text(_x.Metros, "[$-pt-BR]#.##0") & " m"
+                            ),
+                            If(_e.Produzindo, fx_Ou(_e.Mangueira), "")
+                        )
+                    )
+                  Visible: =!ThisItem.Multi
+                  Width: =256
+                  X: =22
+                  Y: =128
+            - lbl_TituloMandMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _e: LookUp(colEstadoEtapaMenu, Processo = ThisItem.Processo) },
+                        Upper(ThisItem.Nome) & If(_e.Fila > 0, "   ·   " & Text(_e.Fila, "[$-en-US]0") & " na fila", "")
+                    )
+                  Visible: =ThisItem.Multi
+                  Width: =256
+                  X: =22
+                  Y: =16
+            - btn_IconeMandA_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ColorFade(ThisItem.Cor, 85%)
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  HoverFill: =ColorFade(ThisItem.Cor, 85%)
+                  PressedFill: =ColorFade(ThisItem.Cor, 85%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =ThisItem.Multi
+                  Width: =44
+                  X: =22
+                  Y: =40
+            - img_IconeMandA_1:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Height: =24
+                  Image: =LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "A").Imagem
+                  Visible: =ThisItem.Multi
+                  Width: =24
+                  X: =32
+                  Y: =50
+            - lbl_NomeMandA_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "A").Rotulo
+                  Visible: =ThisItem.Multi
+                  Width: =206
+                  X: =76
+                  Y: =40
+            - lbl_StatusMandA_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =If(
+                        LookUp(colPostosMultiMenu, Processo = ThisItem.Processo && Slot = "A").Produzindo,
+                        fx_CorOK,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =31
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _p: LookUp(colPostosMultiMenu, Processo = ThisItem.Processo && Slot = "A") },
+                        If(
+                            !_p.Produzindo,
+                            "Livre",
+                            "Em produção   OP " & Text(_p.OP, "[$-en-US]0") & "   " & _p.Detalhe & "   " & fx_Crono(_p.Inicio, ctxAgora)
+                        )
+                    )
+                  Visible: =ThisItem.Multi
+                  Width: =206
+                  X: =76
+                  Y: =62
+            - rct_DivisorMandMenu_1:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Visible: =ThisItem.Multi
+                  Width: =256
+                  X: =22
+                  Y: =98
+            - btn_IconeMandB_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ColorFade(ThisItem.Cor, 85%)
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  HoverFill: =ColorFade(ThisItem.Cor, 85%)
+                  PressedFill: =ColorFade(ThisItem.Cor, 85%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =ThisItem.Multi
+                  Width: =44
+                  X: =22
+                  Y: =110
+            - img_IconeMandB_1:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Height: =24
+                  Image: =LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "B").Imagem
+                  Visible: =ThisItem.Multi
+                  Width: =24
+                  X: =32
+                  Y: =120
+            - lbl_NomeMandB_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "B").Rotulo
+                  Visible: =ThisItem.Multi
+                  Width: =206
+                  X: =76
+                  Y: =110
+            - lbl_StatusMandB_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =If(
+                        LookUp(colPostosMultiMenu, Processo = ThisItem.Processo && Slot = "B").Produzindo,
+                        fx_CorOK,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =30
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        { _p: LookUp(colPostosMultiMenu, Processo = ThisItem.Processo && Slot = "B") },
+                        If(
+                            !_p.Produzindo,
+                            "Livre",
+                            "Em produção   OP " & Text(_p.OP, "[$-en-US]0") & "   " & _p.Detalhe & "   " & fx_Crono(_p.Inicio, ctxAgora)
+                        )
+                    )
+                  Visible: =ThisItem.Multi
+                  Width: =206
+                  X: =76
+                  Y: =132
+            - btn_AcaoEtapa_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =Color.Transparent
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =188
+                  HoverFill: =fx_CorHoverSutil
+                  OnSelect: |-
+                    =Set(varPostoAtivo, "");
+                    Navigate(ThisItem.Tela)
+                  PressedFill: =fx_CorHoverForte
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Visible: =!ThisItem.Multi
+                  Width: =296
+                  X: =0.25
+                  Y: =2
+            - btn_PostoMandA_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =Color.Transparent
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =58
+                  HoverFill: =fx_CorHoverSutil
+                  OnSelect: |-
+                    =Set(varPostoAtivo, LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "A").Posto);
+                    Navigate(ThisItem.Tela)
+                  PressedFill: =fx_CorHoverForte
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =ThisItem.Multi
+                  Width: =280
+                  X: =10
+                  Y: =34
+            - btn_PostoMandB_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =Color.Transparent
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =70
+                  HoverFill: =fx_CorHoverSutil
+                  OnSelect: |-
+                    =Set(varPostoAtivo, LookUp(colPostosMultiCad, Processo = ThisItem.Processo && Slot = "B").Posto);
+                    Navigate(ThisItem.Tela)
+                  PressedFill: =fx_CorHoverForte
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =ThisItem.Multi
+                  Width: =280
+                  X: =10
+                  Y: =104
+      - btn_FaixaTrancMenu_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =280
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =1245
+            X: =101
+            Y: =484
+      - btn_TopoFaixaTrancMenu_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorEtapaTrancagem
+            Font: =fx_FonteFamilia
+            Height: =6
+            HoverFill: =fx_CorEtapaTrancagem
+            PressedFill: =fx_CorEtapaTrancagem
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =1245
+            X: =101
+            Y: =484
+      - btn_IconeTrancMenu_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: =ColorFade(fx_CorEtapaTrancagem, 85%)
+            Font: =fx_FonteFamilia
+            HoverFill: =ColorFade(fx_CorEtapaTrancagem, 85%)
+            PressedFill: =ColorFade(fx_CorEtapaTrancagem, 85%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =40
+            X: =123
+            Y: =500
+      - img_IconeTrancMenu_1:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =fx_CorBorda
+            Height: =22
+            Image: =hash
+            Width: =22
+            X: =132
+            Y: =509
+      - lbl_TituloTrancMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: ="Trançagem"
+            Width: =240
+            X: =175
+            Y: =498
+      - lbl_ApoioTrancMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Toque na máquina para abrir a fila dela"
+            Width: =320
+            X: =175
+            Y: =522
+      - lbl_ResumoTrancMenu_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =Text(CountRows(Filter(colPostosTrancMenu, Produzindo)), "[$-en-US]0")
+              & " de "
+              & Text(CountRows(colPostosTrancMenu), "[$-en-US]0")
+              & " trançando"
+            Width: =300
+            X: =1024
+            Y: =506
+      - gal_PostosTrancMenu_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =Color.Transparent
+            Height: =216
+            Items: =colPostosTrancMenu
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =8
+            TemplateSize: =72
+            Width: =1213
+            WrapCount: =4
+            X: =117
+            Y: =544
+          Children:
+            - btn_FundoTrancMenu_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.Produzindo, fx_CorOK, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =If(ThisItem.Produzindo, fx_CorOKSuave, fx_CorFundo)
+                  Font: =fx_FonteFamilia
+                  Height: =64
+                  HoverFill: =If(ThisItem.Produzindo, fx_CorOKSuave, fx_CorFundo)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =288
+                  X: =2
+                  Y: =2
+            - lbl_NomeTrancMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: =ThisItem.Rotulo
+                  Width: =76
+                  X: =14
+                  Y: =8
+            - lbl_OPTrancMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =Font.'Courier New'
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =If(ThisItem.Produzindo, "OP " & Text(ThisItem.OP, "[$-en-US]0"), "")
+                  Width: =151
+                  X: =94
+                  Y: =9
+            - lbl_CronoTrancMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =If(ThisItem.Produzindo, fx_Crono(ThisItem.Inicio, ctxAgora), "")
+                  Width: =74
+                  X: =208
+                  Y: =9
+            - lbl_StatusTrancMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Color: |-
+                    =If(
+                        ThisItem.Produzindo, fx_CorOK,
+                        ThisItem.Fila > 0,   fx_CorAlerta,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        ThisItem.Produzindo, fx_Ou(ThisItem.Mangueira),
+                        ThisItem.Fila > 0,   "Parada, com fila",
+                        "Livre"
+                    )
+                  Width: =180
+                  X: =14
+                  Y: =36
+            - lbl_FilaTrancMenu_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: =If(ThisItem.Fila > 0, Text(ThisItem.Fila, "[$-en-US]0") & " na fila", "")
+                  Width: =84
+                  X: =198
+                  Y: =36
+            - btn_AcaoTrancMenu_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =Color.Transparent
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =64
+                  HoverFill: =fx_CorHoverSutil
+                  OnSelect: |-
+                    =Set(varTrancAtiva, ThisItem.Posto);
+                    Navigate(scr_Trancagem_3)
+                  PressedFill: =fx_CorHoverForte
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =288
+                  X: =2
+                  Y: =2

@@ -1,0 +1,3136 @@
+Screens:
+  scr_ExtrusoraMandril_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxProcExt: false,
+            ctxModalDelinExt: false,
+            ctxModoInicioExt: false,
+            ctxModalIniExt: false,
+            ctxModalRefExt: false,
+            ctxModalGestaoExt: false,
+            ctxModalCancExt: false,
+            ctxCarrSelExt: ""
+        });
+        ClearCollect(
+            colBitolasExt,
+            { Bitola: 3,  PartNumber: "FM00195" },
+            { Bitola: 4,  PartNumber: "FM00248" },
+            { Bitola: 5,  PartNumber: "FM00315" },
+            { Bitola: 6,  PartNumber: "FM00370" },
+            { Bitola: 7,  PartNumber: "FM00425" },
+            { Bitola: 8,  PartNumber: "FM00480" },
+            { Bitola: 8,  PartNumber: "FM00500" },
+            { Bitola: 10, PartNumber: "FM00610" },
+            { Bitola: 12, PartNumber: "FM00730" },
+            { Bitola: 16, PartNumber: "FM00980" }
+        );
+        If(
+            IsEmpty(colMaquinasMandril),
+            ClearCollect(
+                colMaquinasMandril,
+                { Posto: "TERMOFUSAO",  Rotulo: "Solda Quente" },
+                { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
+            )
+        );
+        If(IsEmpty(colDM_MANDREL), ClearCollect(colDM_MANDREL, DM_MANDREL));
+        UpdateContext({
+            ctxBitolaExt: If(
+                IsBlank(ctxBitolaExt.PartNumber),
+                First(colBitolasExt),
+                ctxBitolaExt
+            )
+        });
+        Select(btn_CarregarExt)
+    Children:
+      - tmr_RelogioExt_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            Width: =1
+            X: =1206
+            Y: =760
+      - tmr_DadosExt:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: =Select(btn_CarregarExt)
+            Repeat: =true
+            Start: =!ctxProcExt && !(ctxModalDelinExt || ctxModalIniExt || ctxModalRefExt || ctxModalGestaoExt || ctxModalCancExt)
+            Visible: =false
+            Width: =1
+            X: =1226
+            Y: =760
+      - tmr_GuardaExt_1:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =45000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ctxProcExt: false});
+              Notify("Tempo limite excedido. O servidor não respondeu — confira a tela antes de repetir.", NotificationType.Error, 10000)
+            Start: =ctxProcExt
+            Visible: =false
+            Width: =1
+            X: =1246
+            Y: =760
+      - btn_CarregarExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Refresh(CarreteisMandril);
+              Refresh(ControleExtrusora_estrutura);
+              Refresh(ficha_producao);
+              Concurrent(
+                  ClearCollect(colCarrExt, CarreteisMandril),
+                  ClearCollect(
+                      colAbertosExt,
+                      Filter(
+                          ControleExtrusora_estrutura,
+                          data_hora_inicio >= DateAdd(Now(), -7, TimeUnit.Days)
+                      )
+                  ),
+                  ClearCollect(
+                      colSoldaExt,
+                      Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+                  )
+              );
+              With(
+                  {
+                      _reg: First(
+                          Sort(
+                              Filter(
+                                  colAbertosExt As _r,
+                                  IsBlank(_r.data_hora_final) &&
+                                  !IsBlank(_r.Title) &&
+                                  !IsBlank(
+                                      LookUp(colCarrExt As _c, _c.Title = _r.Title && _c.Status = "Enchendo").ID
+                                  )
+                              ),
+                              data_hora_inicio,
+                              SortOrder.Descending
+                          )
+                      )
+                  },
+                  UpdateContext({
+                      ctxRegExt: _reg,
+                      ctxProduzindoExt: !IsBlank(_reg.ID),
+                      ctxAgora: Now()
+                  });
+                  If(
+                      !IsBlank(_reg.ID),
+                      UpdateContext({
+                          ctxDesmExt: Coalesce(_reg.desmoldante, ""),
+                          ctxBitolaExt: If(
+                              IsBlank(LookUp(colBitolasExt, PartNumber = _reg.cod_mandril).PartNumber),
+                              If(
+                                  IsBlank(LookUp(colBitolasExt, Bitola = _reg.Bitola).PartNumber),
+                                  ctxBitolaExt,
+                                  LookUp(colBitolasExt, Bitola = _reg.Bitola)
+                              ),
+                              LookUp(colBitolasExt, PartNumber = _reg.cod_mandril)
+                          )
+                      })
+                  )
+              )
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+            X: =1364
+            Y: =760
+      - rct_HeaderFilaExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaExt_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Bitolas"
+            Width: =180
+            X: =20
+            Y: =14
+      - lbl_TotalFilaExt_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(CountRows(Filter(colCarrExt, Status = "Cheio")), "[$-pt-BR]0") & " cheios"
+            Width: =92
+            X: =203
+            Y: =20
+      - rct_BarraFilaExt:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =56
+            Width: =315
+            Y: =68
+      - lbl_RotLegendaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="ESTOQUE PARA A SOLDA, POR BITOLA"
+            Width: =290
+            X: =12
+            Y: =67
+      - lbl_LegendaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="verde tem estoque · vermelho falta para a solda"
+            Width: =315
+            X: =7
+            Y: =85
+      - rct_DivisorFilaExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =315
+            Y: =124
+      - gal_FilaExt_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            DisplayMode: =If(ctxProduzindoExt || ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =Color.Transparent
+            Height: =643
+            Items: |-
+              =ForAll(
+                  colBitolasExt As _b,
+                  With(
+                      {
+                          _cheios: CountRows(Filter(colCarrExt As _c, _c.Status = "Cheio" && _c.Bitola = _b.Bitola)),
+                          _metros: Sum(Filter(colCarrExt As _c, _c.Status = "Cheio" && _c.Bitola = _b.Bitola), quantidade_metros),
+                          _emUso: CountRows(Filter(colCarrExt As _c, _c.Status = "Em uso" && _c.Bitola = _b.Bitola)),
+                          _soldando: CountRows(Filter(colSoldaExt As _s, _s.Bitola = _b.Bitola))
+                      },
+                      {
+                          Bitola:     _b.Bitola,
+                          PartNumber: _b.PartNumber,
+                          Cheios:     _cheios,
+                          Metros:     Coalesce(_metros, 0),
+                          EmUso:      _emUso,
+                          Soldando:   _soldando,
+                          Nivel: If(
+                              _emUso > 0 && _cheios = 0,    "FALTA",
+                              _soldando > 0 && _cheios = 0, "ATENCAO",
+                              _cheios > 0,                  "ESTOQUE",
+                              "VAZIO"
+                          )
+                      }
+                  )
+              )
+            OnSelect: |-
+              =UpdateContext({
+                  ctxBitolaExt: { Bitola: ThisItem.Bitola, PartNumber: ThisItem.PartNumber }
+              })
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplateSize: =88
+            Width: =315
+            Y: =125
+          Children:
+            - btn_CardFilaExt_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorPrimaria, If(ThisItem.Nivel = "FALTA", fx_CorErro, fx_CorBorda))
+                  BorderThickness: =If(ThisItem.Nivel = "FALTA" && !(ThisItem.PartNumber = ctxBitolaExt.PartNumber), 2, 1)
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =80
+                  HoverFill: =If(ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =297
+                  X: =8
+                  Y: =4
+            - lbl_BitolaFilaExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: ="Bitola " & Text(ThisItem.Bitola)
+                  Width: =140
+                  X: =20
+                  Y: =12
+            - lbl_PnFilaExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =Font.'Courier New'
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.PartNumber
+                  Width: =140
+                  X: =20
+                  Y: =44
+            - btn_ChipFilaExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =Switch(
+                        ThisItem.Nivel,
+                        "FALTA",   fx_CorSuperficie,
+                        "ATENCAO", fx_CorAlerta,
+                        "ESTOQUE", fx_CorOK,
+                        fx_CorTextoSuave
+                    )
+                  DisplayMode: =DisplayMode.View
+                  Fill: |-
+                    =Switch(
+                        ThisItem.Nivel,
+                        "FALTA",   fx_CorErro,
+                        "ATENCAO", fx_CorAlertaSuave,
+                        "ESTOQUE", fx_CorOKSuave,
+                        fx_CorFundo
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  HoverFill: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        ThisItem.Cheios = 0,
+                        "sem estoque",
+                        Text(ThisItem.Cheios, "[$-pt-BR]0") & If(ThisItem.Cheios = 1, " cheio", " cheios")
+                    )
+                  Width: =118
+                  X: =175
+                  Y: =12
+            - lbl_DetFilaExt:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =If(
+                        ThisItem.PartNumber = ctxBitolaExt.PartNumber, fx_CorSuperficie,
+                        ThisItem.Nivel = "FALTA", fx_CorErro,
+                        ThisItem.Nivel = "ATENCAO", fx_CorAlerta,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =Switch(
+                        ThisItem.Nivel,
+                        "FALTA",   "solda no último",
+                        "ATENCAO", "solda nesta bitola",
+                        "ESTOQUE", Text(ThisItem.Metros, "[$-pt-BR]#.##0") & " m",
+                        ""
+                    )
+                  Width: =118
+                  X: =175
+                  Y: =46
+      - rct_HeaderExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarExt_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para a seleção de setor"
+            Color: =fx_CorInfo
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Extrusora de Mandril"
+            Width: =700
+            X: =400
+            Y: =4
+      - btn_CardDadosExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =166
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaDadosExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoDadosExt:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DADOS DA EXTRUSÃO"
+            Width: =300
+            X: =365
+            Y: =85
+      - lbl_IdDadosExt:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              =If(
+                  ctxProduzindoExt,
+                  "EXTRUDANDO DESDE " & Text(ctxRegExt.data_hora_inicio, "[$-pt-BR]dd/mm hh:mm"),
+                  "SEM EXTRUSÃO ABERTA"
+              )
+            Width: =320
+            X: =778
+            Y: =85
+      - lbl_RotPnExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MANDRIL (PN)"
+            X: =365
+            Y: =131
+      - lbl_ValPnExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(ctxBitolaExt.PartNumber, "—")
+            X: =365
+            Y: =151
+      - lbl_RotBitolaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="BITOLA"
+            Width: =90
+            X: =530
+            Y: =131
+      - lbl_ValBitolaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =Text(Coalesce(ctxBitolaExt.Bitola, 0))
+            Width: =90
+            X: =530
+            Y: =151
+      - lbl_RotCarretelExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="CARRETEL ENCHENDO"
+            Width: =160
+            X: =630
+            Y: =125
+      - lbl_ValCarretelExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(ctxProduzindoExt, fx_CorTexto, fx_CorTextoSuave)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =If(ctxProduzindoExt, Coalesce(ctxRegExt.Title, "—"), "—")
+            Width: =160
+            X: =630
+            Y: =151
+      - lbl_RotSituacaoExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="SITUAÇÃO"
+            Width: =140
+            X: =800
+            Y: =131
+      - lbl_ValSituacaoExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(ctxProduzindoExt, fx_CorOK, fx_CorAlerta)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =If(ctxProduzindoExt, "Extrudando", "Parada")
+            Width: =140
+            X: =800
+            Y: =151
+      - lbl_RotEstoqueExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="ESTOQUE DESTA BITOLA"
+            Width: =160
+            X: =948
+            Y: =125
+      - lbl_ValEstoqueExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =With(
+                  { _i: LookUp(gal_FilaExt_1.AllItems, PartNumber = ctxBitolaExt.PartNumber) },
+                  If(_i.Nivel = "FALTA", fx_CorErro, _i.Cheios = 0, fx_CorAlerta, fx_CorOK)
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: |-
+              =With(
+                  { _i: LookUp(gal_FilaExt_1.AllItems, PartNumber = ctxBitolaExt.PartNumber) },
+                  If(
+                      _i.Cheios = 0,
+                      "nenhum cheio",
+                      Text(_i.Cheios, "[$-pt-BR]0") & " · " & Text(_i.Metros, "[$-pt-BR]#.##0") & " m"
+                  )
+              )
+            Width: =165
+            X: =948
+            Y: =151
+      - lbl_RotTempoExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="TEMPO EXTRUDANDO"
+            Width: =160
+            X: =365
+            Y: =191
+      - lbl_ValTempoExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =If(ctxProduzindoExt, fx_Crono(ctxRegExt.data_hora_inicio, ctxAgora), "—")
+            Width: =160
+            X: =365
+            Y: =211
+      - lbl_RotLotePadExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="LOTE PADRÃO (SPEC)"
+            Width: =200
+            X: =545
+            Y: =191
+      - lbl_ValLotePadExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Ou(Text(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._34REEL_QTT))
+            Width: =200
+            X: =545
+            Y: =211
+      - lbl_RotMaterialExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MATERIAL (SPEC)"
+            Width: =170
+            X: =765
+            Y: =191
+      - lbl_ValMaterialExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Ou(Text(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._5MATERIAL))
+            Width: =170
+            X: =765
+            Y: =211
+      - lbl_RotCarretelSpecExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="CARRETEL (SPEC)"
+            Width: =165
+            X: =948
+            Y: =191
+      - lbl_ValCarretelSpecExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Ou(Text(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._CARRETEL_))
+            Width: =165
+            X: =948
+            Y: =211
+      - btn_CardEntradaExt_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =344
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =267
+      - lbl_SecaoEntradaExt_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENTRADA DE DADOS"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =240
+            X: =369
+            Y: =287
+      - rct_DivisorEntradaExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =472
+            X: =369
+            Y: =310
+      - lbl_RotQtdExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="QUANTIDADE (m) *"
+            Width: =148
+            X: =369
+            Y: =320
+      - inp_QtdExt_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Metragem extrudada neste carretel"
+            BorderColor: =If(ctxProduzindoExt && Coalesce(fx_Num(Self.Text), 0) <= 0, fx_CorErro, fx_CorBorda)
+            Default: =Text(ctxRegExt.quantidade)
+            DelayOutput: =true
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =148
+            X: =369
+            Y: =354
+      - lbl_RotOpExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="OP DA EXTRUSÃO"
+            Width: =148
+            X: =531
+            Y: =320
+      - inp_OpExt:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="OP da extrusão"
+            BorderColor: =If(!IsBlank(Trim(Self.Text)) && !IsMatch(Trim(Self.Text), "\d+"), fx_CorErro, fx_CorBorda)
+            Default: =If(IsBlank(ctxRegExt.OP), "", Text(ctxRegExt.OP, "[$-en-US]0"))
+            DelayOutput: =true
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HintText: =
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =531
+            Y: =354
+      - lbl_RotDesmExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="DESMOLDANTE *"
+            Width: =148
+            X: =693
+            Y: =320
+      - btn_DesmSimExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxDesmExt = "Sim", fx_CorOK, fx_CorBorda)
+            BorderThickness: =If(ctxDesmExt = "Sim", 3, 1)
+            Color: =If(ctxDesmExt = "Sim", fx_CorSuperficie, fx_CorOK)
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(ctxDesmExt = "Sim", fx_CorOK, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaCampo
+            HoverFill: =If(ctxDesmExt = "Sim", ColorFade(fx_CorOK, -20%), fx_CorOKSuave)
+            OnSelect: |-
+              =UpdateContext({ctxDesmExt: "Sim"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Sim"
+            Width: =70
+            X: =693
+            Y: =354
+      - btn_DesmNaoExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxDesmExt = "Não", fx_CorAlerta, fx_CorBorda)
+            BorderThickness: =If(ctxDesmExt = "Não", 3, 1)
+            Color: =If(ctxDesmExt = "Não", fx_CorSuperficie, fx_CorAlerta)
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(ctxDesmExt = "Não", fx_CorAlerta, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaCampo
+            HoverFill: =If(ctxDesmExt = "Não", ColorFade(fx_CorAlerta, -20%), fx_CorAlertaSuave)
+            OnSelect: |-
+              =UpdateContext({ctxDesmExt: "Não"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Não"
+            Width: =70
+            X: =771
+            Y: =354
+      - lbl_RotOperadorExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR (U-NUMBER) *"
+            Width: =310
+            X: =369
+            Y: =408
+      - cmb_OperadorExt_1:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador da extrusora"
+            BorderColor: =If(ctxProduzindoExt && IsBlank(Self.Selected.Nome), fx_CorErro, fx_CorBorda)
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DefaultSelectedItems: =Filter(Colaboradores.Nome, Nome = ctxRegExt.operador)
+            DisplayFields: =["field_1"]
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Buscar operador..."
+            Items: =Colaboradores.Nome
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["field_1"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorInfo
+            SelectionFill: =fx_CorInfoSuave
+            Size: =fx_FonteCorpo
+            Width: =310
+            X: =369
+            Y: =442
+      - lbl_RotOdExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Ø EXTERNO (SPEC, pol.)"
+            Width: =160
+            X: =693
+            Y: =408
+      - lbl_ValOdExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaCampo
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  { _s: LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber) },
+                  If(
+                      IsBlank(_s._1MANDREL_PN),
+                      "—",
+                      fx_Ou(Text(_s._2MIN_OD_in)) & "  a  " & fx_Ou(Text(_s._4MAX_OD_in))
+                  )
+              )
+            Width: =160
+            X: =693
+            Y: =442
+      - lbl_RotObsExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO"
+            Width: =472
+            X: =369
+            Y: =496
+      - inp_ObsExt:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação da extrusão"
+            BorderColor: =fx_CorBorda
+            Default: =ctxRegExt.Observacao
+            DelayOutput: =true
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =472
+            X: =369
+            Y: =516
+      - lbl_AvisoEntradaExt:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =38
+            Size: =10
+            Text: |-
+              =If(
+                  ctxProduzindoExt,
+                  "Ao enviar, o carretel " & Coalesce(ctxRegExt.Title, "—") &
+                  " entra no estoque da solda com a metragem informada — é esse número que a solda vai consumir.",
+                  "Escolha a bitola na lista e toque em Iniciar Extrusão para conferir o set-up e pegar um carretel vazio."
+              )
+            Width: =472
+            X: =369
+            Y: =568
+      - btn_CardSetupExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =344
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =267
+      - lbl_SecaoSetupExt:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="SET-UP DA EXTRUSORA"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =905
+            Y: =287
+      - gal_SetupExt:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =285
+            Items: |-
+              =With(
+                  { _s: LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber) },
+                  Table(
+                      {rot: "MATRIZ", val: fx_Ou(Text(_s._15EXT_TOOL_DWG))},
+                      {rot: "PLACA DO TANQUE", val: fx_Ou(Text(_s._16SIZING_PLATE))},
+                      {rot: "EXT. VELOC. PROD. (±10)", val: fx_Ou(Text(_s._22EXTPROD_SPEED_50))},
+                      {rot: "PUX. VELOC. PROD. (±1)", val: fx_Ou(Text(_s._24CATPROD_SPEED_1))},
+                      {rot: "HEAD 1 (±15 °C)", val: fx_Ou(Text(_s._30HEAD1_TEMP_15ºC))}
+                  )
+              )
+            TemplateFill: =Color.Transparent
+            TemplateSize: =54
+            Width: =208
+            X: =901
+            Y: =318
+          Children:
+            - lbl_RotItemSetupExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =16
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.rot
+                  Width: =190
+                  Y: =2
+            - lbl_ValItemSetupExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.val
+                  Width: =190
+                  Y: =18
+      - lbl_SemSpecExt:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =60
+            Size: =fx_FonteApoio
+            Text: ="Sem set-up cadastrado para este PN em DM_MANDREL."
+            Visible: =IsBlank(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._1MANDREL_PN)
+            Width: =208
+            X: =901
+            Y: =400
+      - lbl_AlertaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(IsBlank(LookUp(gal_FilaExt_1.AllItems, Nivel = "FALTA").PartNumber), fx_CorAlerta, fx_CorErro)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  {
+                      _falta: LookUp(gal_FilaExt_1.AllItems, Nivel = "FALTA"),
+                      _sel: LookUp(gal_FilaExt_1.AllItems, PartNumber = ctxBitolaExt.PartNumber),
+                      _orfao: LookUp(
+                          colCarrExt As _c,
+                          _c.Status = "Enchendo" && _c.Title <> Coalesce(ctxRegExt.Title, "")
+                      )
+                  },
+                  If(
+                      !IsBlank(_falta.PartNumber),
+                      "⛔ A solda está no ÚLTIMO carretel da bitola " & Text(_falta.Bitola) &
+                      " e não há nenhum cheio no estoque. Priorize a bitola " & Text(_falta.Bitola) & ".",
+                      IsBlank(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._1MANDREL_PN),
+                      "⚠ Este PN não tem set-up em DM_MANDREL. Confira a receita com a engenharia antes de extrudar.",
+                      _sel.Nivel = "ATENCAO",
+                      "⚠ A solda está trabalhando na bitola " & Text(_sel.Bitola) & " e o estoque dela está zerado.",
+                      !IsBlank(_orfao.Title),
+                      "⚠ O carretel " & _orfao.Title & " está marcado como Enchendo sem extrusão aberta. Libere em Carretéis.",
+                      ""
+                  )
+              )
+            Visible: =!IsBlank(Self.Text)
+            Width: =773
+            X: =345
+            Y: =627
+      - rct_RodapeExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshExt_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Atualizar extrusão, estoque e solda"
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: =Select(btn_CarregarExt)
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_IniciarExt_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(IsBlank(ctxBitolaExt.PartNumber) || ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorInfo, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxModoInicioExt: true, ctxModalDelinExt: true})
+            PressedFill: =ColorFade(fx_CorInfo, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Iniciar Extrusão"
+            Visible: =!ctxProduzindoExt
+            Width: =360
+            X: =549
+            Y: =700
+      - btn_CancelarAbrirExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorAlerta
+            BorderThickness: =1
+            Color: =fx_CorAlerta
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorAlertaSuave
+            OnSelect: |-
+              =Reset(inp_MotivoCancExt);
+              UpdateContext({ctxModalCancExt: true})
+            PressedFill: =fx_CorAlertaSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Cancelar extrusão"
+            Visible: =ctxProduzindoExt
+            Width: =200
+            X: =430
+            Y: =700
+      - btn_EnviarExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  ctxProduzindoExt &&
+                  !ctxProcExt &&
+                  !IsBlank(ctxDesmExt) &&
+                  !IsBlank(cmb_OperadorExt_1.Selected.Nome) &&
+                  Coalesce(fx_Num(inp_QtdExt_1.Text), 0) > 0,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxProcExt: true});
+              Refresh(ControleExtrusora_estrutura);
+              Refresh(CarreteisMandril);
+              With(
+                  {
+                      _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
+                      _agora: Now(),
+                      _q: Coalesce(fx_Num(inp_QtdExt_1.Text), 0),
+                      _op: Trim(inp_OpExt.Text),
+                      _quem: cmb_OperadorExt_1.Selected.Nome
+                  },
+                  With(
+                      { _car: LookUp(CarreteisMandril, Title = _r.Title) },
+                      If(
+                          IsBlank(_r.ID),
+                          Notify("Esta extrusão não existe mais no servidor. A tela foi recarregada.", NotificationType.Error, 8000);
+                          Select(btn_CarregarExt);
+                          UpdateContext({ctxProcExt: false}),
+                          !IsBlank(_r.data_hora_final),
+                          Notify("Esta extrusão já foi fechada em outro aparelho. A tela foi recarregada.", NotificationType.Error, 8000);
+                          Select(btn_CarregarExt);
+                          UpdateContext({ctxProcExt: false}),
+                          _q <= 0,
+                          Notify("Informe a metragem extrudada.", NotificationType.Warning, 6000);
+                          UpdateContext({ctxProcExt: false}),
+                          !IsBlank(_op) && !IsMatch(_op, "\d+"),
+                          Notify("A OP da extrusão aceita só números.", NotificationType.Warning, 6000);
+                          UpdateContext({ctxProcExt: false}),
+                          Patch(
+                              ControleExtrusora_estrutura,
+                              _r,
+                              {
+                                  OP: If(IsBlank(_op), Blank(), Value(_op)),
+                                  quantidade: _q,
+                                  operador: _quem,
+                                  desmoldante: ctxDesmExt,
+                                  data_hora_final: _agora,
+                                  Observacao: inp_ObsExt.Text
+                              }
+                          );
+                          If(
+                              !IsEmpty(Errors(ControleExtrusora_estrutura)),
+                              Notify(
+                                  "NÃO fechou a extrusão: " & First(Errors(ControleExtrusora_estrutura)).Message,
+                                  NotificationType.Error,
+                                  15000
+                              );
+                              UpdateContext({ctxProcExt: false}),
+                              If(
+                                  IsBlank(_car.ID),
+                                  Notify(
+                                      "Extrusão fechada, mas o carretel " & Coalesce(_r.Title, "—") &
+                                      " não foi achado em CarreteisMandril — a solda NÃO vai ver este mandril. Confira em Carretéis.",
+                                      NotificationType.Error,
+                                      15000
+                                  ),
+                                  Patch(
+                                      CarreteisMandril,
+                                      _car,
+                                      {
+                                          Status: "Cheio",
+                                          quantidade_metros: _q,
+                                          cod_mandril: _r.cod_mandril,
+                                          Bitola: _r.Bitola,
+                                          OP_extrusora: _op,
+                                          operador_extrusora: _quem,
+                                          desmoldante: ctxDesmExt,
+                                          data_enchimento: _agora,
+                                          OP_solda: Blank(),
+                                          data_consumo: Blank()
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(CarreteisMandril)),
+                                      Notify(
+                                          "Extrusão fechada, mas o carretel " & _car.Title & " NÃO entrou no estoque: " &
+                                          First(Errors(CarreteisMandril)).Message & ". Confira em Carretéis.",
+                                          NotificationType.Error,
+                                          15000
+                                      ),
+                                      Notify(
+                                          "Carretel " & _car.Title & " cheio — " & Text(_q, "[$-pt-BR]#.##0") &
+                                          " m de bitola " & Text(_r.Bitola) & " disponíveis para a solda.",
+                                          NotificationType.Success,
+                                          6000
+                                      )
+                                  )
+                              );
+                              Reset(inp_QtdExt_1);
+                              Reset(inp_OpExt);
+                              Reset(inp_ObsExt);
+                              UpdateContext({ctxDesmExt: ""});
+                              Select(btn_CarregarExt);
+                              UpdateContext({ctxProcExt: false})
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Enviar p/ Estoque"
+            Visible: =ctxProduzindoExt
+            Width: =269
+            X: =849
+            Y: =700
+      - btn_SalvarExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =UpdateContext({ctxProcExt: true});
+              Refresh(ControleExtrusora_estrutura);
+              With(
+                  {
+                      _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
+                      _q: fx_Num(inp_QtdExt_1.Text),
+                      _op: Trim(inp_OpExt.Text)
+                  },
+                  If(
+                      IsBlank(_r.ID) || !IsBlank(_r.data_hora_final),
+                      Notify("Esta extrusão já não está aberta. A tela foi recarregada.", NotificationType.Error, 8000);
+                      Select(btn_CarregarExt);
+                      UpdateContext({ctxProcExt: false}),
+                      _r.Modified <> ctxRegExt.Modified,
+                      Notify("Outro aparelho salvou esta extrusão. A tela foi recarregada — confira os campos e salve de novo.", NotificationType.Error, 8000);
+                      Select(btn_CarregarExt);
+                      UpdateContext({ctxProcExt: false}),
+                      !IsBlank(_op) && !IsMatch(_op, "\d+"),
+                      Notify("A OP da extrusão aceita só números.", NotificationType.Warning, 6000);
+                      UpdateContext({ctxProcExt: false}),
+                      Patch(
+                          ControleExtrusora_estrutura,
+                          _r,
+                          {
+                              quantidade: If(Coalesce(_q, 0) > 0, _q, Blank()),
+                              OP: If(IsBlank(_op), Blank(), Value(_op)),
+                              operador: cmb_OperadorExt_1.Selected.Nome,
+                              desmoldante: ctxDesmExt,
+                              Observacao: inp_ObsExt.Text
+                          }
+                      );
+                      If(
+                          !IsEmpty(Errors(ControleExtrusora_estrutura)),
+                          Notify(
+                              "NÃO salvou: " & First(Errors(ControleExtrusora_estrutura)).Message,
+                              NotificationType.Error,
+                              12000
+                          );
+                          UpdateContext({ctxProcExt: false}),
+                          Select(btn_CarregarExt);
+                          UpdateContext({ctxProcExt: false});
+                          Notify("Salvo. A extrusão continua aberta no carretel " & _r.Title & ".", NotificationType.Success, 4000)
+                      )
+                  )
+              )
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar"
+            Visible: =ctxProduzindoExt && !(ctxModalDelinExt || ctxModalIniExt || ctxModalRefExt || ctxModalGestaoExt || ctxModalCancExt)
+            Width: =190
+            X: =645
+            Y: =700
+      - rct_DivisorLateralExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralExt_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MENU LATERAL"
+            Width: =183
+            X: =1157
+            Y: =8
+      - btn_CardSoldaExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =150
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =195
+            X: =1157
+            Y: =48
+      - lbl_SecaoSoldaExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="SOLDA DE MANDRIL — AGORA"
+            Width: =175
+            X: =1169
+            Y: =54
+      - gal_SoldaExt:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =116
+            Items: |-
+              =ForAll(
+                  colMaquinasMandril As _m,
+                  With(
+                      { _f: LookUp(colSoldaExt As _s, _s.maquina_mandril = _m.Posto) },
+                      {
+                          Posto:      _m.Posto,
+                          Rotulo:     _m.Rotulo,
+                          Produzindo: !IsBlank(_f.ID),
+                          Bitola:     Coalesce(_f.Bitola, 0),
+                          Carretel:   Coalesce(
+                                          LookUp(
+                                              colCarrExt As _c,
+                                              _c.Status = "Em uso" && _c.OP_solda = Text(Coalesce(_f.ID, -1))
+                                          ).Title,
+                                          ""
+                                      )
+                      }
+                  )
+              )
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplateSize: =48
+            Width: =183
+            X: =1163
+            Y: =78
+          Children:
+            - lbl_PostoSoldaExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =22
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.Rotulo
+                  Width: =170
+                  X: =3
+            - lbl_EstadoSoldaExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.Produzindo, fx_CorOK, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =34
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        !ThisItem.Produzindo,
+                        "parada",
+                        "bitola " & Text(ThisItem.Bitola) & " · " &
+                        If(IsBlank(ThisItem.Carretel), "mandril velho", "consumindo " & ThisItem.Carretel)
+                    )
+                  Width: =170
+                  X: =3
+                  Y: =22
+      - btn_CardEstoqueExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =120
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =195
+            X: =1157
+            Y: =208
+      - lbl_SecaoEstoqueExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =31
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="ESTOQUE PARA A SOLDA"
+            Width: =175
+            X: =1169
+            Y: =212
+      - lbl_ValEstoqueTotExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =46
+            PaddingLeft: =0
+            Size: =fx_FonteNumero
+            Text: =Text(CountRows(Filter(colCarrExt, Status = "Cheio")), "[$-pt-BR]0")
+            Width: =60
+            X: =1169
+            Y: =236
+      - lbl_UnidEstoqueExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =46
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  { _m: Sum(Filter(colCarrExt, Status = "Cheio"), quantidade_metros) },
+                  "carretéis cheios · " & Text(Coalesce(_m, 0), "[$-pt-BR]#.##0") & " m"
+              )
+            Width: =115
+            X: =1231
+            Y: =236
+      - lbl_StatusEstoqueExt:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  {
+                      _en: CountRows(Filter(colCarrExt, Status = "Enchendo")),
+                      _us: CountRows(Filter(colCarrExt, Status = "Em uso")),
+                      _vz: CountRows(Filter(colCarrExt, Status = "Vazio"))
+                  },
+                  "enchendo " & Text(_en, "[$-pt-BR]0") &
+                  "  ·  em uso " & Text(_us, "[$-pt-BR]0") &
+                  "  ·  vazios " & Text(_vz, "[$-pt-BR]0")
+              )
+            Width: =180
+            X: =1169
+            Y: =290
+      - btn_DelinExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(IsBlank(ctxBitolaExt.PartNumber), DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =UpdateContext({ctxModoInicioExt: false, ctxModalDelinExt: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤDelineamento"
+            Width: =183
+            X: =1168
+            Y: =342
+      - ico_DelinExt:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.Document
+            OnSelect: =Select(btn_DelinExt)
+            Width: =24
+            X: =1179
+            Y: =359
+      - btn_RefugoAbrirExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(cmb_TipoRefExt);
+              Reset(inp_KgRefExt);
+              Reset(inp_ObsRefExt);
+              UpdateContext({ctxModalRefExt: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤApontar refugo"
+            Width: =183
+            X: =1168
+            Y: =408
+      - ico_RefugoExt:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.Warning
+            OnSelect: =Select(btn_RefugoAbrirExt)
+            Width: =24
+            X: =1179
+            Y: =425
+      - btn_GestaoAbrirExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =UpdateContext({ctxCarrSelExt: "", ctxModalGestaoExt: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤCarretéis"
+            Width: =183
+            X: =1168
+            Y: =474
+      - ico_GestaoExt:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.Settings
+            OnSelect: =Select(btn_GestaoAbrirExt)
+            Width: =24
+            X: =1179
+            Y: =491
+      - lbl_VersaoTelaExt:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =26
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.2.1"
+            Width: =183
+            X: =1168
+            Y: =710
+      - cntr_DelinExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalDelinExt
+            Width: =1366
+          Children:
+            - btn_BgDelinExt_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardDelinExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =628
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =1000
+                  X: =183
+                  Y: =70
+            - lbl_TituloDelinExt_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: =If(ctxModoInicioExt, "Set-up da Extrusora", "Delineamento da Extrusora")
+                  Width: =700
+                  X: =213
+                  Y: =92
+            - lbl_SubDelinExt_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _i: LookUp(gal_FilaExt_1.AllItems, PartNumber = ctxBitolaExt.PartNumber) },
+                        "Mandril " & Coalesce(ctxBitolaExt.PartNumber, "—") &
+                        "  ·  bitola " & Text(Coalesce(ctxBitolaExt.Bitola, 0)) &
+                        "  ·  estoque da solda nesta bitola: " & Text(Coalesce(_i.Cheios, 0), "[$-pt-BR]0") & " cheio(s)"
+                    )
+                  Width: =940
+                  X: =213
+                  Y: =128
+            - lbl_SecaoSpecDelinExt:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorInfo
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: ="ESPECIFICAÇÃO (DM_MANDREL)"
+                  VerticalAlign: =VerticalAlign.Top
+                  Width: =400
+                  X: =213
+                  Y: =162
+            - gal_DelinExt_1:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =457
+                  Items: |-
+                    =With(
+                        { _s: LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber) },
+                        Table(
+                            {rot: "MATERIAL", val: fx_Ou(Text(_s._5MATERIAL))},
+                            {rot: "CÓD. MATERIAL", val: fx_Ou(Text(_s._6MAT_SUP))},
+                            {rot: "LOTE PADRÃO", val: fx_Ou(Text(_s._34REEL_QTT))},
+                            {rot: "CARRETEL", val: fx_Ou(Text(_s._CARRETEL_))},
+                            {rot: "MATRIZ", val: fx_Ou(Text(_s._15EXT_TOOL_DWG))},
+                            {rot: "SOPRADOR", val: fx_Ou(Text(_s._13AIR_WIPE))},
+                            {rot: "CONJUNTO DE FILTROS", val: fx_Ou(Text(_s._20METAL_FILTER))},
+                            {rot: "PLACA DO TANQUE", val: fx_Ou(Text(_s._16SIZING_PLATE))},
+                            {rot: "Ø EXTERNO MÍN (pol.)", val: fx_Ou(Text(_s._2MIN_OD_in))},
+                            {rot: "Ø EXTERNO MÁX (pol.)", val: fx_Ou(Text(_s._4MAX_OD_in))},
+                            {rot: "BLEND (%)", val: fx_Ou(Text(_s._8BLEND))},
+                            {rot: "DIST. DO TANQUE", val: fx_Ou(Text(_s._17DIE_TO_PLATE_DISTANCE))},
+                            {rot: "TEMPO SECAGEM (h)", val: fx_Ou(Text(_s._9DRY_TIME_h))},
+                            {rot: "TEMP. SECAGEM (°C)", val: fx_Ou(Text(_s._10DRY_TEMP_ºC))},
+                            {rot: "TEMP. FREEZER (°C)", val: fx_Ou(Text(_s._12FREEZER_TEMP_ºC))},
+                            {rot: "MATERIAL REF. (°C)", val: fx_Ou(Text(_s._33MT_TEMP_ºC_ref))},
+                            {rot: "ALTURA DA FRENTE", val: fx_Ou(Text(_s._18TANK_HEIGHT_FRONT))},
+                            {rot: "ALTURA DE TRÁS", val: fx_Ou(Text(_s._19TANK_HEIGHT_REAR))},
+                            {rot: "EXT. VELOC. SETUP (±10)", val: fx_Ou(Text(_s._21EXTSETUP_SPEED_10))},
+                            {rot: "EXT. VELOC. PROD. (±10)", val: fx_Ou(Text(_s._22EXTPROD_SPEED_50))},
+                            {rot: "PUX. VELOC. SETUP (±1)", val: fx_Ou(Text(_s._23CATSETUP_SPEED))},
+                            {rot: "PUX. VELOC. PROD. (±1)", val: fx_Ou(Text(_s._24CATPROD_SPEED_1))},
+                            {rot: "ZONA 1 (±10 °C)", val: fx_Ou(Text(_s._25ZN1_TEMP_10ºC))},
+                            {rot: "ZONA 2 (±10 °C)", val: fx_Ou(Text(_s._26ZN2_TEMP_10ºC))},
+                            {rot: "ZONA 3 (±10 °C)", val: fx_Ou(Text(_s._27ZN3_TEMP_10ºC))},
+                            {rot: "ZONA 4 (±10 °C)", val: fx_Ou(Text(_s._28ZN4_TEMP_10ºC))},
+                            {rot: "ZONA 5 (±10 °C)", val: fx_Ou(Text(_s._29ZN5_TEMP_10ºC))},
+                            {rot: "HEAD 1 (±15 °C)", val: fx_Ou(Text(_s._30HEAD1_TEMP_15ºC))},
+                            {rot: "HEAD 2 (±20 °C)", val: fx_Ou(Text(_s._31HEAD2_TEMP_20ºC))},
+                            {rot: "HEAD 3 (±30 °C)", val: fx_Ou(Text(_s._32HEAD3_TEMP_30ºC))}
+                        )
+                    )
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =52
+                  Width: =950
+                  WrapCount: =4
+                  X: =208
+                  Y: =192
+                Children:
+                  - lbl_RotItemDelinExt_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =16
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =225
+                        Y: =2
+                  - lbl_ValItemDelinExt_1:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =34
+                        PaddingLeft: =0
+                        Size: =fx_FonteCorpo
+                        Text: =ThisItem.val
+                        Width: =231.25
+                        Y: =18
+            - lbl_SemSpecDelinExt:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: ="⚠ Este PN não tem set-up cadastrado em DM_MANDREL. Dá para iniciar, mas confira a receita com a engenharia."
+                  Visible: =IsBlank(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._1MANDREL_PN)
+                  Width: =940
+                  X: =213
+                  Y: =360
+            - btn_FecharDelinExt_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  DisabledFill: =fx_CorBorda
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalDelinExt: false, ctxModoInicioExt: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: =If(ctxModoInicioExt, "Cancelar", "Fechar")
+                  Width: =180
+                  X: =603
+                  Y: =635
+            - btn_ContinuarDelinExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Refresh(CarreteisMandril);
+                    ClearCollect(colCarrExt, CarreteisMandril);
+                    Reset(cmb_CarretelIniExt);
+                    UpdateContext({ctxModalDelinExt: false, ctxModalIniExt: true})
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Conferi o set-up — continuar"
+                  Visible: =ctxModoInicioExt && !ctxProduzindoExt
+                  Width: =320
+                  X: =803
+                  Y: =628
+      - cntr_IniExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalIniExt
+            Width: =1366
+          Children:
+            - btn_BgIniExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardIniExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =380
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =640
+                  X: =363
+                  Y: =194
+            - lbl_TituloIniExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Carretel que vai receber o mandril"
+                  Width: =580
+                  X: =393
+                  Y: =216
+            - lbl_SubIniExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Extrusora  ·  " & Coalesce(ctxBitolaExt.PartNumber, "—") &
+                    "  ·  bitola " & Text(Coalesce(ctxBitolaExt.Bitola, 0)) &
+                    "  ·  desmoldante " & If(IsBlank(ctxDesmExt), "a informar", ctxDesmExt)
+                  Width: =580
+                  X: =393
+                  Y: =252
+            - lbl_RotCarretelIniExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL VAZIO *"
+                  Width: =400
+                  X: =393
+                  Y: =298
+            - cmb_CarretelIniExt:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel vazio que vai receber o mandril extrudado"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =Sort(Filter(colCarrExt, Status = "Vazio"), Title)
+                  Items.Value: =Title
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =360
+                  X: =393
+                  Y: =320
+            - lbl_StatusCarretelIniExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(IsBlank(cmb_CarretelIniExt.Selected.Title), fx_CorTextoSuave, fx_CorOK)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(cmb_CarretelIniExt.Selected.Title),
+                        If(
+                            IsEmpty(Filter(colCarrExt, Status = "Vazio")),
+                            "Nenhum carretel vazio. Libere um em Carretéis.",
+                            "Escolha um carretel vazio."
+                        ),
+                        "Carretel " & cmb_CarretelIniExt.Selected.Title & " vazio e pronto para receber material."
+                    )
+                  Width: =210
+                  X: =773
+                  Y: =316
+            - lbl_AvisoIniExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  Size: =fx_FonteApoio
+                  Text: ="Ao confirmar, o carretel fica como Enchendo e a solda passa a vê-lo quando você enviar para o estoque."
+                  Width: =580
+                  X: =393
+                  Y: =392
+            - btn_CancelarIniExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  DisabledFill: =fx_CorBorda
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(cmb_CarretelIniExt);
+                    UpdateContext({ctxModalIniExt: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =493
+                  Y: =490
+            - btn_ConfirmarIniExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(!ctxProcExt && !IsBlank(cmb_CarretelIniExt.Selected.Title), DisplayMode.Edit, DisplayMode.Disabled)
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =UpdateContext({ctxProcExt: true});
+                    Refresh(CarreteisMandril);
+                    Refresh(ControleExtrusora_estrutura);
+                    ClearCollect(colCarrExt, CarreteisMandril);
+                    ClearCollect(
+                        colAbertosExt,
+                        Filter(
+                            ControleExtrusora_estrutura,
+                            data_hora_inicio >= DateAdd(Now(), -7, TimeUnit.Days)
+                        )
+                    );
+                    With(
+                        {
+                            _car: LookUp(CarreteisMandril, Title = cmb_CarretelIniExt.Selected.Title),
+                            _aberto: LookUp(
+                                colAbertosExt As _r,
+                                IsBlank(_r.data_hora_final) &&
+                                !IsBlank(_r.Title) &&
+                                !IsBlank(LookUp(colCarrExt As _c, _c.Title = _r.Title && _c.Status = "Enchendo").ID)
+                            ),
+                            _agora: Now(),
+                            _b: ctxBitolaExt
+                        },
+                        If(
+                            !IsBlank(_aberto.ID),
+                            Notify(
+                                "A extrusora já tem uma extrusão aberta (carretel " & _aberto.Title & "). Feche ou cancele antes de iniciar outra.",
+                                NotificationType.Error,
+                                10000
+                            );
+                            UpdateContext({ctxModalIniExt: false});
+                            Select(btn_CarregarExt);
+                            UpdateContext({ctxProcExt: false}),
+                            IsBlank(_car.ID) || _car.Status <> "Vazio",
+                            Notify("Este carretel não está mais vazio. Escolha outro.", NotificationType.Error, 8000);
+                            Reset(cmb_CarretelIniExt);
+                            UpdateContext({ctxProcExt: false}),
+                            IsBlank(_b.PartNumber),
+                            Notify("Escolha a bitola na lista antes de iniciar.", NotificationType.Warning, 6000);
+                            UpdateContext({ctxProcExt: false}),
+                            With(
+                                {
+                                    _novo: Patch(
+                                        ControleExtrusora_estrutura,
+                                        Defaults(ControleExtrusora_estrutura),
+                                        {
+                                            Title: _car.Title,
+                                            cod_mandril: _b.PartNumber,
+                                            Bitola: _b.Bitola,
+                                            desmoldante: ctxDesmExt,
+                                            data_hora_inicio: _agora,
+                                            Turno: Text(fx_TurnoEm(_agora)) & "º Turno"
+                                        }
+                                    )
+                                },
+                                If(
+                                    !IsEmpty(Errors(ControleExtrusora_estrutura)),
+                                    Notify(
+                                        "NÃO iniciou: " & First(Errors(ControleExtrusora_estrutura)).Message,
+                                        NotificationType.Error,
+                                        12000
+                                    );
+                                    UpdateContext({ctxProcExt: false}),
+                                    Patch(
+                                        CarreteisMandril,
+                                        _car,
+                                        {
+                                            Status: "Enchendo",
+                                            cod_mandril: _b.PartNumber,
+                                            Bitola: _b.Bitola,
+                                            quantidade_metros: Blank(),
+                                            OP_solda: Blank(),
+                                            data_consumo: Blank()
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(CarreteisMandril)),
+                                        Patch(
+                                            ControleExtrusora_estrutura,
+                                            _novo,
+                                            {
+                                                data_hora_final: _agora,
+                                                quantidade: 0,
+                                                Observacao: "[início desfeito: carretel " & _car.Title & " não foi reservado]"
+                                            }
+                                        );
+                                        Notify(
+                                            "NÃO iniciou: o carretel " & _car.Title & " não foi reservado (" &
+                                            First(Errors(CarreteisMandril)).Message & "). Tente de novo.",
+                                            NotificationType.Error,
+                                            12000
+                                        );
+                                        UpdateContext({ctxProcExt: false}),
+                                        Reset(cmb_CarretelIniExt);
+                                        UpdateContext({ctxModalIniExt: false});
+                                        Select(btn_CarregarExt);
+                                        UpdateContext({ctxProcExt: false});
+                                        Notify(
+                                            "Extrusão iniciada: bitola " & Text(_b.Bitola) & " no carretel " & _car.Title & ".",
+                                            NotificationType.Success,
+                                            5000
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Width: =260
+                  X: =693
+                  Y: =490
+      - cntr_RefExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalRefExt
+            Width: =1366
+          Children:
+            - btn_BgRefExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardRefExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =440
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =560
+                  X: =403
+                  Y: =164
+            - lbl_TituloRefExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Apontar refugo da extrusão"
+                  Width: =500
+                  X: =433
+                  Y: =186
+            - lbl_SubRefExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(IsBlank(cmb_OperadorExt_1.Selected.Nome), fx_CorErro, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Bitola " & Text(Coalesce(ctxRegExt.Bitola, 0)) &
+                    "  ·  carretel " & Coalesce(ctxRegExt.Title, "—") &
+                    "  ·  " & If(
+                        IsBlank(cmb_OperadorExt_1.Selected.Nome),
+                        "escolha o operador na ficha",
+                        cmb_OperadorExt_1.Selected.Nome
+                    )
+                  Width: =500
+                  X: =433
+                  Y: =222
+            - lbl_RotTipoRefExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="TIPO DE ERRO *"
+                  Width: =500
+                  X: =433
+                  Y: =262
+            - cmb_TipoRefExt:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Tipo de erro do refugo"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Default: =""
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: |-
+                    =[
+                        "1- Borra",
+                        "2- Set-Up",
+                        "3 - Defeito superficial",
+                        "4 - Diâmetro fora de especificação",
+                        "5 - Bolha de ar",
+                        "6 - Contaminação",
+                        "7 - Falha de extrusão"
+                    ]
+                  Items.Value: =Value
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =500
+                  X: =433
+                  Y: =284
+            - lbl_RotKgRefExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="QUANTIDADE REFUGADA (kg) *"
+                  Width: =240
+                  X: =433
+                  Y: =338
+            - inp_KgRefExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Quantidade refugada em quilos"
+                  BorderColor: =fx_CorBorda
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Format: =TextFormat.Number
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =200
+                  X: =433
+                  Y: =360
+            - lbl_RotObsRefExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="OBSERVAÇÃO"
+                  Width: =500
+                  X: =433
+                  Y: =414
+            - inp_ObsRefExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Observação do refugo"
+                  BorderColor: =fx_CorBorda
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =500
+                  X: =433
+                  Y: =436
+            - btn_CancelarRefExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  DisabledFill: =fx_CorBorda
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalRefExt: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =533
+                  Y: =520
+            - btn_RegistrarRefExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !ctxProcExt &&
+                        !IsBlank(cmb_TipoRefExt.Selected.Value) &&
+                        Coalesce(fx_Num(inp_KgRefExt.Text), 0) > 0 &&
+                        !IsBlank(cmb_OperadorExt_1.Selected.Nome),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =UpdateContext({ctxProcExt: true});
+                    With(
+                        {
+                            _agora: Now(),
+                            _kg: Coalesce(fx_Num(inp_KgRefExt.Text), 0)
+                        },
+                        If(
+                            IsBlank(cmb_TipoRefExt.Selected.Value) || _kg <= 0 || IsBlank(cmb_OperadorExt_1.Selected.Nome),
+                            Notify("Informe o tipo, a quantidade em kg e o operador na ficha.", NotificationType.Warning, 6000);
+                            UpdateContext({ctxProcExt: false}),
+                            Patch(
+                                RefugoExtrusora_estrutura,
+                                Defaults(RefugoExtrusora_estrutura),
+                                {
+                                    Title: Trim(inp_OpExt.Text),
+                                    Bitola: ctxRegExt.Bitola,
+                                    cod_mandril: ctxRegExt.cod_mandril,
+                                    CodigoErro: cmb_TipoRefExt.Selected.Value,
+                                    Quantidade: _kg,
+                                    operador: cmb_OperadorExt_1.Selected.Nome,
+                                    DataHoraRefugo: _agora,
+                                    Observacao: inp_ObsRefExt.Text,
+                                    Turno: Text(fx_TurnoEm(_agora))
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(RefugoExtrusora_estrutura)),
+                                Notify(
+                                    "Refugo NÃO registrado: " & First(Errors(RefugoExtrusora_estrutura)).Message,
+                                    NotificationType.Error,
+                                    12000
+                                );
+                                UpdateContext({ctxProcExt: false}),
+                                Reset(cmb_TipoRefExt);
+                                Reset(inp_KgRefExt);
+                                Reset(inp_ObsRefExt);
+                                UpdateContext({ctxModalRefExt: false, ctxProcExt: false});
+                                Notify(
+                                    "Refugo registrado: " & Text(_kg, "[$-pt-BR]#.##0,0") & " kg · " & cmb_TipoRefExt.Selected.Value & ".",
+                                    NotificationType.Success,
+                                    5000
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Registrar refugo"
+                  Width: =200
+                  X: =733
+                  Y: =520
+      - cntr_GestaoExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalGestaoExt
+            Width: =1366
+          Children:
+            - btn_BgGestaoExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardGestaoExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =560
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =760
+                  X: =303
+                  Y: =104
+            - lbl_TituloGestaoExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Carretéis de mandril"
+                  Width: =560
+                  X: =333
+                  Y: =126
+            - lbl_SubGestaoExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Size: =fx_FonteCorpo
+                  Text: ="Toque num carretel ocupado para esvaziar. Esvaziar não desfaz apontamento — use quando o carretel físico já está vazio."
+                  Width: =700
+                  X: =333
+                  Y: =162
+            - gal_GestaoExt:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =340
+                  Items: =Sort(Filter(colCarrExt, Status <> "Vazio"), Title)
+                  OnSelect: |-
+                    =UpdateContext({ctxCarrSelExt: ThisItem.Title})
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =56
+                  Width: =700
+                  X: =333
+                  Y: =212
+                Children:
+                  - btn_ItemGestaoExt:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =If(ThisItem.Title = ctxCarrSelExt, fx_CorInfo, fx_CorBorda)
+                        BorderThickness: =If(ThisItem.Title = ctxCarrSelExt, 2, 1)
+                        Color: =fx_CorTexto
+                        Fill: =If(ThisItem.Title = ctxCarrSelExt, fx_CorInfoSuave, fx_CorSuperficie)
+                        Font: =fx_FonteFamilia
+                        Height: =50
+                        HoverFill: =fx_CorInfoSuave
+                        OnSelect: =Select(Parent)
+                        PressedFill: =Self.Fill
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =670
+                        Y: =2
+                  - lbl_TitItemGestaoExt:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =26
+                        PaddingLeft: =0
+                        Size: =fx_FonteCorpo
+                        Text: =ThisItem.Title
+                        Width: =120
+                        X: =16
+                        Y: =12
+                  - btn_StatusItemGestaoExt:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =Color.Transparent
+                        BorderThickness: =0
+                        Color: |-
+                          =Switch(
+                              ThisItem.Status,
+                              "Cheio",    fx_CorOK,
+                              "Enchendo", fx_CorInfo,
+                              "Em uso",   fx_CorAlerta,
+                              fx_CorTextoSuave
+                          )
+                        DisplayMode: =DisplayMode.View
+                        Fill: |-
+                          =Switch(
+                              ThisItem.Status,
+                              "Cheio",    fx_CorOKSuave,
+                              "Enchendo", fx_CorInfoSuave,
+                              "Em uso",   fx_CorAlertaSuave,
+                              fx_CorFundo
+                          )
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        HoverFill: =Self.Fill
+                        PressedFill: =Self.Fill
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.Status
+                        Width: =100
+                        X: =140
+                        Y: =13
+                  - lbl_DetItemGestaoExt:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =26
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: |-
+                          ="bitola " & Text(Coalesce(ThisItem.Bitola, 0)) &
+                          "  ·  " & Text(Coalesce(ThisItem.quantidade_metros, 0), "[$-pt-BR]#.##0") & " m" &
+                          If(IsBlank(ThisItem.OP_solda), "", "  ·  solda OP " & ThisItem.OP_solda) &
+                          If(
+                              IsBlank(ThisItem.data_enchimento),
+                              "",
+                              "  ·  cheio em " & Text(ThisItem.data_enchimento, "[$-pt-BR]dd/mm hh:mm")
+                          )
+                        Width: =400
+                        X: =256
+                        Y: =12
+            - lbl_VazioGestaoExt:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =30
+                  Size: =fx_FonteCorpo
+                  Text: ="Todos os carretéis estão vazios."
+                  Visible: =IsEmpty(Filter(colCarrExt, Status <> "Vazio"))
+                  Width: =700
+                  X: =333
+                  Y: =300
+            - btn_FecharGestaoExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  DisabledFill: =fx_CorBorda
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalGestaoExt: false, ctxCarrSelExt: ""})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Fechar"
+                  Width: =180
+                  X: =493
+                  Y: =580
+            - btn_EsvaziarExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(!ctxProcExt && !IsBlank(ctxCarrSelExt), DisplayMode.Edit, DisplayMode.Disabled)
+                  Fill: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorAlerta, -20%)
+                  OnSelect: |-
+                    =UpdateContext({ctxProcExt: true});
+                    Refresh(CarreteisMandril);
+                    Refresh(ficha_producao);
+                    ClearCollect(
+                        colSoldaExt,
+                        Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+                    );
+                    With(
+                        { _c: LookUp(CarreteisMandril, Title = ctxCarrSelExt) },
+                        With(
+                            { _solda: LookUp(colSoldaExt As _s, Text(_s.ID) = Coalesce(_c.OP_solda, "")) },
+                            If(
+                                IsBlank(_c.ID),
+                                Notify("Carretel não encontrado. Atualize a tela.", NotificationType.Error, 8000);
+                                UpdateContext({ctxProcExt: false}),
+                                _c.Status = "Enchendo" && _c.Title = Coalesce(ctxRegExt.Title, ""),
+                                Notify("Este é o carretel da extrusão aberta. Use Cancelar extrusão na ficha.", NotificationType.Warning, 8000);
+                                UpdateContext({ctxProcExt: false}),
+                                _c.Status = "Em uso" && !IsBlank(_solda.ID),
+                                Notify(
+                                    "Este carretel está sendo consumido pela solda na OP " & Text(_solda.ID) &
+                                    ". A baixa acontece quando ela enviar para o Tubo.",
+                                    NotificationType.Warning,
+                                    10000
+                                );
+                                UpdateContext({ctxProcExt: false}),
+                                Patch(
+                                    CarreteisMandril,
+                                    _c,
+                                    {
+                                        Status: "Vazio",
+                                        cod_mandril: Blank(),
+                                        Bitola: Blank(),
+                                        quantidade_metros: Blank(),
+                                        OP_extrusora: Blank(),
+                                        operador_extrusora: Blank(),
+                                        OP_solda: Blank(),
+                                        data_enchimento: Blank(),
+                                        data_consumo: Blank()
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(CarreteisMandril)),
+                                    Notify("Não esvaziou: " & First(Errors(CarreteisMandril)).Message, NotificationType.Error, 10000);
+                                    UpdateContext({ctxProcExt: false}),
+                                    ClearCollect(colCarrExt, CarreteisMandril);
+                                    UpdateContext({ctxCarrSelExt: "", ctxProcExt: false});
+                                    Notify("Carretel " & _c.Title & " esvaziado.", NotificationType.Success, 4000)
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorAlerta, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: =If(IsBlank(ctxCarrSelExt), "Esvaziar carretel", "Esvaziar " & ctxCarrSelExt)
+                  Width: =240
+                  X: =693
+                  Y: =580
+      - cntr_CancExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalCancExt
+            Width: =1366
+          Children:
+            - btn_BgCancExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardCancExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =340
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =560
+                  X: =403
+                  Y: =214
+            - lbl_TituloCancExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Cancelar esta extrusão"
+                  Width: =500
+                  X: =433
+                  Y: =236
+            - lbl_SubCancExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =64
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="O registro fecha com 0 m e o carretel " & Coalesce(ctxRegExt.Title, "—") &
+                    " volta a Vazio. Use só quando iniciou por engano — mandril extrudado de verdade vai por Enviar p/ Estoque."
+                  Width: =500
+                  X: =433
+                  Y: =272
+            - lbl_RotMotivoCancExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="MOTIVO *"
+                  Width: =500
+                  X: =433
+                  Y: =350
+            - inp_MotivoCancExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Motivo do cancelamento da extrusão"
+                  BorderColor: =If(IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(ctxProcExt, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: |-
+                    ="Ex.: bitola errada, carretel errado"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =500
+                  X: =433
+                  Y: =372
+            - btn_VoltarCancExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  DisabledFill: =fx_CorBorda
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalCancExt: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Voltar"
+                  Width: =180
+                  X: =533
+                  Y: =470
+            - btn_ConfirmarCancExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(!ctxProcExt && !IsBlank(Trim(inp_MotivoCancExt.Text)), DisplayMode.Edit, DisplayMode.Disabled)
+                  Fill: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorErro, -20%)
+                  OnSelect: |-
+                    =UpdateContext({ctxProcExt: true});
+                    Refresh(ControleExtrusora_estrutura);
+                    Refresh(CarreteisMandril);
+                    With(
+                        {
+                            _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
+                            _agora: Now(),
+                            _motivo: Trim(inp_MotivoCancExt.Text)
+                        },
+                        With(
+                            { _car: LookUp(CarreteisMandril, Title = _r.Title) },
+                            If(
+                                IsBlank(_r.ID) || !IsBlank(_r.data_hora_final),
+                                Notify("Esta extrusão já não está aberta. A tela foi recarregada.", NotificationType.Error, 8000);
+                                UpdateContext({ctxModalCancExt: false});
+                                Select(btn_CarregarExt);
+                                UpdateContext({ctxProcExt: false}),
+                                IsBlank(_motivo),
+                                Notify("Escreva o motivo do cancelamento.", NotificationType.Warning, 6000);
+                                UpdateContext({ctxProcExt: false}),
+                                Patch(
+                                    ControleExtrusora_estrutura,
+                                    _r,
+                                    {
+                                        data_hora_final: _agora,
+                                        quantidade: 0,
+                                        operador: Coalesce(cmb_OperadorExt_1.Selected.Nome, _r.operador),
+                                        Observacao: Trim(
+                                            Coalesce(_r.Observacao, "") &
+                                            "  [EXTRUSÃO CANCELADA " & Text(_agora, "[$-pt-BR]dd/mm hh:mm") & " - " & _motivo & "]"
+                                        )
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ControleExtrusora_estrutura)),
+                                    Notify(
+                                        "NÃO cancelou: " & First(Errors(ControleExtrusora_estrutura)).Message,
+                                        NotificationType.Error,
+                                        12000
+                                    );
+                                    UpdateContext({ctxProcExt: false}),
+                                    If(
+                                        !IsBlank(_car.ID) && _car.Status = "Enchendo",
+                                        Patch(
+                                            CarreteisMandril,
+                                            _car,
+                                            {
+                                                Status: "Vazio",
+                                                cod_mandril: Blank(),
+                                                Bitola: Blank(),
+                                                quantidade_metros: Blank()
+                                            }
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(CarreteisMandril)),
+                                            Notify(
+                                                "Extrusão cancelada, mas o carretel " & _car.Title & " continua como Enchendo. Esvazie em Carretéis.",
+                                                NotificationType.Error,
+                                                12000
+                                            )
+                                        )
+                                    );
+                                    Reset(inp_QtdExt_1);
+                                    Reset(inp_OpExt);
+                                    Reset(inp_ObsExt);
+                                    Reset(inp_MotivoCancExt);
+                                    UpdateContext({ctxDesmExt: "", ctxModalCancExt: false});
+                                    Select(btn_CarregarExt);
+                                    UpdateContext({ctxProcExt: false});
+                                    Notify("Extrusão cancelada. Carretel " & Coalesce(_r.Title, "—") & " liberado.", NotificationType.Success, 6000)
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorErro, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar extrusão"
+                  Width: =200
+                  X: =733
+                  Y: =470
+      - rct_OverlayExt_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =ctxProcExt
+            Width: =1366
+      - lbl_ProcessandoExt_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Gravando... não feche a tela."
+            Visible: =ctxProcExt
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoExt_1:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =ctxProcExt
+            Width: =1366

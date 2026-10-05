@@ -1,0 +1,1856 @@
+Screens:
+  scr_Vulcanizacao_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxModalSetupVulca: false,
+            ctxModalLoteVulca: false,
+            ctxEditarPlanoVulca: false
+        });
+        Clear(colLoteVulca);
+        Clear(colProntasVulca)
+    Children:
+      - tmr_RelogioVulca:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - rct_HeaderFilaVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =Font.Arial
+            FontWeight: =FontWeight.Bold
+            Height: =65
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Fila de Produção"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =180
+            X: =25
+            Y: =20
+      - lbl_TotalFilaVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =5
+            RadiusBottomRight: =5
+            RadiusTopLeft: =5
+            RadiusTopRight: =5
+            Size: =14
+            Text: |-
+              ="Total: " & CountRows(gal_FilaVulca.AllItems)
+            Width: =83
+            X: =215
+            Y: =20
+      - rct_DivisorFilaVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =314
+      - gal_FilaVulca:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =700
+            Items: =Filter(ficha_producao, processo = "Vulcanização")
+            TemplateFill: =Color.Transparent
+            TemplateSize: =112
+            Width: =315
+            Y: =68
+          Children:
+            - btn_CardFilaVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HoverFill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =297
+                  X: =8
+                  Y: =4
+            - lbl_OpFilaVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    ="OP: " & ThisItem.OP
+                  Width: =200
+                  X: =20
+                  Y: =12
+            - lbl_MangueiraFilaVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Mangueira: " & ThisItem.Mangueira
+                  Width: =235
+                  X: =20
+                  Y: =40
+            - lbl_CarretelFilaVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & Coalesce(ThisItem.quantidade_bandagem, 0) & " m"
+                  Width: =200
+                  X: =20
+                  Y: =64
+            - btn_BadgeFilaVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =Switch(
+                        fx_EstadoVulca(ThisItem.status_processo, ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora),
+                        "AGUARDANDO", fx_CorAlerta,
+                        "VULCANIZANDO", fx_CorErro,
+                        fx_CorGelo
+                    )
+                  Fill: |-
+                    =Switch(
+                        fx_EstadoVulca(ThisItem.status_processo, ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora),
+                        "AGUARDANDO", fx_CorAlertaSuave,
+                        "VULCANIZANDO", fx_CorErroSuave,
+                        fx_CorGeloSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =26
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =Switch(
+                        fx_EstadoVulca(ThisItem.status_processo, ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora),
+                        "AGUARDANDO", "Aguardando",
+                        "VULCANIZANDO", "Vulcanizando",
+                        "Resfriando"
+                    )
+                  Width: =111
+                  X: =182
+                  Y: =12
+            - lbl_CronoFilaVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =fx_Crono(
+                        fx_InicioCronoVulca(
+                            fx_EstadoVulca(ThisItem.status_processo, ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora),
+                            ThisItem.InicioAguardando_Vulcanização,
+                            ThisItem.data_hora_inicio_vulcanizacao,
+                            ThisItem.InicioResfriamento_Vulcanizacao
+                        ),
+                        ctxAgora
+                    )
+                  Width: =80
+                  X: =214
+                  Y: =62
+      - rct_HeaderVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarVulca:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloVulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Vulcanização"
+            Width: =572
+            X: =447
+            Y: =4
+      - btn_CardOrdemVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =116
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaOrdemVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoOrdemVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DADOS DA ORDEM"
+            Width: =220
+            X: =365
+            Y: =85
+      - lbl_IdOrdemVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              ="ID: " & gal_FilaVulca.Selected.ID
+            Width: =200
+            X: =898
+            Y: =85
+      - lbl_RotOpVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="ORDEM DE PRODUÇÃO"
+            Width: =180
+            X: =365
+            Y: =131
+      - lbl_ValOpVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Text(gal_FilaVulca.Selected.OP, "0")
+            Width: =180
+            X: =365
+            Y: =151
+      - lbl_RotMangueiraVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =180
+            X: =555
+            Y: =131
+      - lbl_ValMangueiraVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaVulca.Selected.Mangueira
+            Width: =180
+            X: =555
+            Y: =151
+      - lbl_RotTrancadeiraVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="TRANÇADEIRA"
+            Width: =180
+            X: =745
+            Y: =131
+      - lbl_ValTrancadeiraVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =gal_FilaVulca.Selected.Trançadeira
+            Width: =180
+            X: =745
+            Y: =151
+      - lbl_RotMetragemVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="METRAGEM RECEBIDA"
+            Width: =180
+            X: =918
+            Y: =131
+      - lbl_ValMetragemVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaVulca.Selected.quantidade_bandagem, 0) & " m"
+            Width: =180
+            X: =918
+            Y: =151
+      - btn_CardEstadoVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =310
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =221
+      - lbl_SecaoEstadoVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="SITUAÇÃO DA OP"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =229
+            X: =369
+            Y: =241
+      - rct_TrilhaStepVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =3
+            Width: =260
+            X: =455
+            Y: =288
+      - btn_Step1Vulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =13
+            RadiusBottomRight: =13
+            RadiusTopLeft: =13
+            RadiusTopRight: =13
+            Size: =fx_FonteApoio
+            Text: ="1"
+            Width: =26
+            X: =442
+            Y: =277
+      - btn_Step2Vulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisplayMode: =DisplayMode.View
+            Fill: |-
+              =If(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora) = "AGUARDANDO",
+                  fx_CorBorda,
+                  fx_CorInfo
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =13
+            RadiusBottomRight: =13
+            RadiusTopLeft: =13
+            RadiusTopRight: =13
+            Size: =fx_FonteApoio
+            Text: ="2"
+            Width: =26
+            X: =572
+            Y: =277
+      - btn_Step3Vulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisplayMode: =DisplayMode.View
+            Fill: |-
+              =If(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora) = "RESFRIANDO",
+                  fx_CorGelo,
+                  fx_CorBorda
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =13
+            RadiusBottomRight: =13
+            RadiusTopLeft: =13
+            RadiusTopRight: =13
+            Size: =fx_FonteApoio
+            Text: ="3"
+            Width: =26
+            X: =702
+            Y: =277
+      - lbl_Step1Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Na fila"
+            Width: =110
+            X: =400
+            Y: =307
+      - lbl_Step2Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Vulcanizando"
+            Width: =110
+            X: =530
+            Y: =307
+      - lbl_Step3Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Resfriando"
+            Width: =110
+            X: =660
+            Y: =307
+      - lbl_CronoVulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: |-
+              =Switch(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
+                  "AGUARDANDO", fx_CorTextoSuave,
+                  "VULCANIZANDO", fx_CorTexto,
+                  fx_CorGelo
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =62
+            Size: =fx_FonteCrono
+            Text: |-
+              =fx_Crono(
+                  fx_InicioCronoVulca(
+                      fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
+                      gal_FilaVulca.Selected.InicioAguardando_Vulcanização,
+                      gal_FilaVulca.Selected.data_hora_inicio_vulcanizacao,
+                      gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao
+                  ),
+                  ctxAgora
+              )
+            Width: =472
+            X: =369
+            Y: =348
+      - lbl_CronoRotuloVulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteCorpo
+            Text: |-
+              =Switch(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
+                  "AGUARDANDO", "aguardando carga na autoclave",
+                  "VULCANIZANDO", "em ciclo de vulcanização",
+                  "em resfriamento · liberada para envio"
+              )
+            Width: =472
+            X: =369
+            Y: =412
+      - lbl_ReceitaVulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Receita: " &
+              Coalesce(Text(LookUp(colDM_BANDAGEM, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaVulca.Selected.Mangueira), Tempo)), "n/d") &
+              "  ·  " &
+              Coalesce(Text(LookUp(colDM_BANDAGEM, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaVulca.Selected.Mangueira), Temperatura)), "n/d")
+            Width: =472
+            X: =369
+            Y: =458
+      - lbl_AlertaReceitaVulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: ="⚠ Ciclo acima do tempo de receita"
+            Visible: |-
+              =With(
+                  { r: fx_NumeroReceita(Text(LookUp(colDM_BANDAGEM, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaVulca.Selected.Mangueira), Tempo))) },
+                  r > 0 &&
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora) = "VULCANIZANDO" &&
+                  DateDiff(gal_FilaVulca.Selected.data_hora_inicio_vulcanizacao, ctxAgora, TimeUnit.Minutes) > r
+              )
+            Width: =472
+            X: =369
+            Y: =474
+      - btn_CardResumoVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =310
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =221
+      - lbl_SecaoResumoVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENVIADO NO TURNO"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =909
+            Y: =241
+      - lbl_RotT1Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="1º Turno"
+            Width: =110
+            X: =909
+            Y: =285
+      - lbl_ValT1Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno1_Vulcanizacao, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =285
+      - lbl_RotT2Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="2º Turno"
+            Width: =110
+            X: =909
+            Y: =325
+      - lbl_ValT2Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno2_Vulcanizacao, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =325
+      - lbl_RotT3Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            Size: =fx_FonteCorpo
+            Text: ="3º Turno"
+            Width: =110
+            X: =909
+            Y: =365
+      - lbl_ValT3Vulca:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =22
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaVulca.Selected.Qtd_Turno3_Vulcanizacao, 0) & " m"
+            Width: =95
+            X: =1000
+            Y: =365
+      - rct_DivisorResumoVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =185
+            X: =909
+            Y: =410
+      - lbl_RotProntasVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: ="LIBERADAS PARA ENVIO"
+            Width: =185
+            X: =909
+            Y: =428
+      - lbl_ValProntasVulca:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorGelo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Size: =fx_FonteNumero
+            Text: |-
+              =CountRows(
+                  Filter(
+                      gal_FilaVulca.AllItems,
+                      status_processo = "Em processo" && !IsBlank(InicioResfriamento_Vulcanizacao)
+                  )
+              )
+            Width: =185
+            X: =909
+            Y: =450
+      - rct_RodapeVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshVulca:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: =Refresh(ficha_producao)
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_AcaoVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: |-
+              =Switch(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
+                  "AGUARDANDO", fx_CorInfo,
+                  "VULCANIZANDO", fx_CorGelo,
+                  fx_CorOK
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =With(
+                  { _e: fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora) },
+                  If(
+                      _e = "AGUARDANDO",
+                      UpdateContext({ctxModalSetupVulca: true}),
+
+                      _e = "VULCANIZANDO",
+                      Set(varProcessando, true);
+                      Refresh(ficha_producao);
+                      With(
+                          { _r: LookUp(ficha_producao, ID = gal_FilaVulca.Selected.ID) },
+                          If(
+                              _r.Modified <> gal_FilaVulca.Selected.Modified,
+                              Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                              Set(varProcessando, false),
+
+                              Patch(ficha_producao, _r, { InicioResfriamento_Vulcanizacao: Now() });
+                              If(
+                                  !IsEmpty(Errors(ficha_producao)),
+                                  Notify("Falha ao registrar o resfriamento: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                  Set(varProcessando, false),
+
+                                  Refresh(ficha_producao);
+                                  UpdateContext({ctxAgora: Now()});
+                                  Set(varProcessando, false);
+                                  Notify("Resfriamento registrado. A OP está liberada para envio.", NotificationType.Success, 4000)
+                              )
+                          )
+                      ),
+
+                      Clear(colLoteVulca);
+                      Reset(cmb_OperadorLoteVulca);
+                      ClearCollect(
+                          colProntasVulca,
+                          Filter(
+                              Filter(ficha_producao, processo = "Vulcanização" && status_processo = "Em processo"),
+                              !IsBlank(InicioResfriamento_Vulcanizacao)
+                          )
+                      );
+                      With(
+                          { _sel: LookUp(colProntasVulca, ID = gal_FilaVulca.Selected.ID) },
+                          If(!IsBlank(_sel.ID), Collect(colLoteVulca, _sel))
+                      );
+                      UpdateContext({ctxModalLoteVulca: true})
+                  )
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Switch(
+                  fx_EstadoVulca(gal_FilaVulca.Selected.status_processo, gal_FilaVulca.Selected.InicioResfriamento_Vulcanizacao, ctxAgora),
+                  "AGUARDANDO", "Iniciar Vulcanização",
+                  "VULCANIZANDO", "Iniciar Resfriamento",
+                  "Enviar para Debandagem"
+              )
+            Width: =360
+            X: =549
+            Y: =700
+      - rct_DivisorLateralVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Semibold
+            Height: =48
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="MENU LATERAL"
+            X: =1157
+      - btn_EditarPlanoVulca:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =UpdateContext({ctxEditarPlanoVulca: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤEditar Plano"
+            Width: =183
+            X: =1168
+            Y: =113
+      - img_EditarPlanoVulca:
+          Control: Image@2.2.3
+          Properties:
+            Height: =24
+            Image: ='pen-line'
+            OnSelect: =Select(btn_EditarPlanoVulca)
+            Width: =24
+            X: =1186
+            Y: =132
+      - lbl_VersaoVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="Versão 0.3.0"
+            Width: =183
+            X: =1168
+            Y: =710
+      - cntr_SetupVulca:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalSetupVulca
+            Width: =1366
+          Children:
+            - btn_BgSetupVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =390
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =560
+                  X: =403
+                  Y: =189
+            - lbl_TituloSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Set-up de Vulcanização"
+                  Width: =360
+                  X: =435
+                  Y: =217
+            - lbl_SubtituloSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="OP " & Text(gal_FilaVulca.Selected.OP, "0") & "  ·  " & gal_FilaVulca.Selected.Mangueira
+                  Width: =360
+                  X: =435
+                  Y: =249
+            - btn_CardTempoSetupVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =110
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =248
+                  X: =435
+                  Y: =293
+            - lbl_RotTempoSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="TEMPO DE CICLO"
+                  Width: =248
+                  X: =435
+                  Y: =308
+            - lbl_ValTempoSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =56
+                  Size: =fx_FonteReceita
+                  Text: =Coalesce(Text(LookUp(colDM_BANDAGEM, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaVulca.Selected.Mangueira), Tempo)), "n/d")
+                  Width: =248
+                  X: =435
+                  Y: =332
+            - btn_CardTempSetupVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =110
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =248
+                  X: =695
+                  Y: =293
+            - lbl_RotTempSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="TEMPERATURA"
+                  Width: =248
+                  X: =695
+                  Y: =308
+            - lbl_ValTempSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =56
+                  Size: =fx_FonteReceita
+                  Text: =Coalesce(Text(LookUp(colDM_BANDAGEM, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaVulca.Selected.Mangueira), Temperatura)), "n/d")
+                  Width: =248
+                  X: =695
+                  Y: =332
+            - lbl_AvisoSetupVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Size: =fx_FonteCorpo
+                  Text: ="Confira os parâmetros no painel da autoclave antes de confirmar."
+                  Width: =508
+                  X: =435
+                  Y: =415
+            - btn_CancelarSetupVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =48
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalSetupVulca: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =435
+                  Y: =505
+            - btn_ConfirmarSetupVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        gal_FilaVulca.Selected.status_processo = "Aguardando",
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =48
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                      Refresh(ficha_producao);
+                      With(
+                          {
+                              _r: LookUp(ficha_producao, ID = gal_FilaVulca.Selected.ID),
+                              _min: Hour(Now()) * 60 + Minute(Now()),
+                              _agora: Now()
+                          },
+                          If(
+                              _r.Modified <> gal_FilaVulca.Selected.Modified,
+                              Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                              Set(varProcessando, false),
+                              CountRows(
+                                  Filter(
+                                      Filter(ficha_producao, processo = "Vulcanização" && status_processo = "Em processo"),
+                                      IsBlank(InicioResfriamento_Vulcanizacao)
+                                  )
+                              ) >= 5,
+                              Notify("Autoclave cheia: já há 5 carretéis vulcanizando. Inicie o resfriamento de um deles antes.", NotificationType.Warning, 6000);
+                              Set(varProcessando, false),
+
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                                      status_processo: "Em processo",
+                                      data_hora_inicio_vulcanizacao: _agora,
+                                      InicioEmProcesso_Vulcanização: _agora,
+                                      Turno_Vulcanização: Text(fx_Turno(_min))
+                                  }
+                              );
+                              If(
+                                  !IsEmpty(Errors(ficha_producao)),
+                                  Notify("Falha ao iniciar a Vulcanização: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                  Set(varProcessando, false),
+
+                                  Patch(
+                                      Historico_Carretel,
+                                      Defaults(Historico_Carretel),
+                                      {
+                                          Title: _r.'Carretel Entrada',
+                                          OP_ID: _r.OP,
+                                          etapa: "Vulcanização",
+                                          mangueira: Text(_r.Bitola),
+                                          metros_entrada: Coalesce(_r.quantidade_bandagem, 0),
+                                          data_hora_entrada: _agora
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(Historico_Carretel)),
+                                      Notify("OP iniciada, mas a custódia do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                                  );
+
+                                  Patch(
+                                      Eventos_Producao,
+                                      Defaults(Eventos_Producao),
+                                      {
+                                          Title: Text(_r.ID) & "-Vulcanizacao-Inicio",
+                                          origem: {Value: "ficha_producao"},
+                                          origem_ID: _r.ID,
+                                          etapa: {Value: "Vulcanização"},
+                                          tipo: {Value: "Início"},
+                                          data_hora: _agora,
+                                          data_ref: DateAdd(DateValue(_agora), If(_min < 320, -1, 0), TimeUnit.Days),
+                                          turno: fx_Turno(_min),
+                                          bitola: _r.Bitola,
+                                          metros: Coalesce(_r.quantidade_bandagem, 0),
+                                          recurso: _r.Trançadeira
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(Eventos_Producao)),
+                                      Notify("Evento de início não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                  );
+
+                                  Refresh(ficha_producao);
+                                  UpdateContext({ctxModalSetupVulca: false, ctxAgora: Now()});
+                                  Set(varProcessando, false);
+                                  Notify("Vulcanização iniciada.", NotificationType.Success, 4000)
+                              )
+                          )
+                      )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Width: =200
+                  X: =743
+                  Y: =505
+      - cntr_LoteVulca:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalLoteVulca
+            Width: =1366
+          Children:
+            - btn_BgLoteVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =560
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =104
+            - lbl_TituloLoteVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Lançar OPs para Debandagem"
+                  Width: =560
+                  X: =403
+                  Y: =128
+            - lbl_SubLoteVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="Só aparecem OPs com resfriamento acionado — " & CountRows(colLoteVulca) & "/5 selecionadas"
+                  Width: =560
+                  X: =403
+                  Y: =162
+            - lbl_VazioLoteVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: ="Nenhuma OP com resfriamento acionado. Aperte Iniciar Resfriamento na ficha antes de enviar."
+                  Visible: =IsEmpty(colProntasVulca)
+                  Width: =460
+                  X: =453
+                  Y: =330
+            - gal_LoteVulca:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =324
+                  Items: =colProntasVulca
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =72
+                  Width: =560
+                  X: =403
+                  Y: =196
+                Children:
+                  - btn_LinhaLoteVulca:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =If(!IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)), fx_CorOK, fx_CorBorda)
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: |-
+                          =If(
+                              !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)) || CountRows(colLoteVulca) < 5,
+                              DisplayMode.Edit,
+                              DisplayMode.Disabled
+                          )
+                        Fill: =If(!IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)), fx_CorOKSuave, fx_CorFundo)
+                        Font: =fx_FonteFamilia
+                        Height: =64
+                        HoverFill: =ColorFade(Self.Fill, -10%)
+                        OnSelect: |-
+                          =If(
+                              !IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID)),
+                              Remove(colLoteVulca, LookUp(colLoteVulca, ID = ThisItem.ID)),
+                              If(
+                                  CountRows(colLoteVulca) < 5,
+                                  Collect(colLoteVulca, ThisItem),
+                                  Notify("Máximo de 5 carretéis por batelada.", NotificationType.Warning, 3000)
+                              )
+                          )
+                        PressedFill: =Self.Fill
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =550
+                  - lbl_OpLoteVulca:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =24
+                        OnSelect: =Select(btn_LinhaLoteVulca)
+                        Size: =fx_FonteCorpo
+                        Text: ="OP " & ThisItem.OP & "  •  " & ThisItem.Mangueira
+                        Width: =440
+                        X: =16
+                        Y: =8
+                  - lbl_DetalheLoteVulca:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
+                        Height: =20
+                        OnSelect: =Select(btn_LinhaLoteVulca)
+                        Size: =fx_FonteApoio
+                        Text: |-
+                          ="Carretel " & ThisItem.'Carretel Entrada' & "  •  " & Coalesce(ThisItem.quantidade_bandagem, 0) & " m  •  resfriando há " &
+                          fx_Crono(ThisItem.InicioResfriamento_Vulcanizacao, ctxAgora)
+                        Width: =440
+                        X: =16
+                        Y: =34
+                  - ico_CheckLoteVulca:
+                      Control: Classic/Icon@2.5.0
+                      Properties:
+                        Color: =fx_CorOK
+                        Height: =26
+                        Icon: =Icon.CheckBadge
+                        OnSelect: =Select(btn_LinhaLoteVulca)
+                        Visible: =!IsBlank(LookUp(colLoteVulca, ID = ThisItem.ID))
+                        Width: =26
+                        X: =516
+                        Y: =19
+            - lbl_RotOperadorLoteVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteCorpo
+                  Text: ="Operador responsável (vale para todas as OPs)"
+                  Width: =560
+                  X: =403
+                  Y: =530
+            - cmb_OperadorLoteVulca:
+                Control: Classic/ComboBox@2.4.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =fx_CorInfo
+                  ChevronFill: =fx_CorSuperficie
+                  ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+                  ChevronHoverFill: =fx_CorSuperficie
+                  DisplayFields: =["field_1"]
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HoverFill: =fx_CorInfoSuave
+                  InputTextPlaceholder: ="Selecione o operador da Vulcanização"
+                  Items: =Colaboradores.Nome
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["field_1"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorSuperficie
+                  SelectionFill: =fx_CorInfo
+                  Width: =560
+                  X: =403
+                  Y: =552
+            - btn_CancelarLoteVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =48
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Clear(colLoteVulca);
+                    UpdateContext({ctxModalLoteVulca: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =403
+                  Y: =608
+            - btn_ConfirmarLoteVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        CountRows(colLoteVulca) > 0 && !IsBlank(cmb_OperadorLoteVulca.Selected.Nome),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =48
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Set(varQtdLote, CountRows(colLoteVulca));
+                    With(
+                        {
+                            min: Hour(Now()) * 60 + Minute(Now()),
+                            agora: Now(),
+                            OperadorLote: cmb_OperadorLoteVulca.Selected.Nome
+                        },
+                        ForAll(
+                            colLoteVulca As _op,
+                            With(
+                                {_qtd: Coalesce(_op.quantidade_bandagem, 0)},
+                                With(
+                                    {_cust: LookUp(Historico_Carretel, etapa = "Vulcanização" && Title = _op.'Carretel Entrada' && OP_ID = _op.OP)},
+                                    Patch(
+                                        Historico_Carretel,
+                                        Coalesce(_cust, Defaults(Historico_Carretel)),
+                                        {
+                                            Title: _op.'Carretel Entrada',
+                                            OP_ID: _op.OP,
+                                            etapa: "Vulcanização",
+                                            mangueira: Text(_op.Bitola),
+                                            metros_entrada: _qtd,
+                                            metros_saida: _qtd,
+                                            data_hora_entrada: Coalesce(_cust.data_hora_entrada, _op.data_hora_inicio_vulcanizacao),
+                                            data_hora_saida: agora,
+                                            operador: OperadorLote
+                                        }
+                                    )
+                                );
+
+                                Patch(
+                                    ficha_producao,
+                                    LookUp(ficha_producao, ID = _op.ID),
+                                    {
+                                        processo: "Debandagem",
+                                        status_processo: "Aguardando",
+                                        data_hora_final_vulcanizacao: agora,
+                                        InicioAguardando_Debandagem: agora,
+                                        operador_vulcanizacao: OperadorLote,
+                                        quantidade_vulcanizacao: _qtd,
+                                        Turno_Vulcanização: Text(fx_Turno(min)),
+                                        Qtd_Turno1_Vulcanizacao: If(
+                                            fx_Turno(min) = 1,
+                                            Coalesce(_op.Qtd_Turno1_Vulcanizacao, 0) + _qtd,
+                                            _op.Qtd_Turno1_Vulcanizacao
+                                        ),
+                                        Qtd_Turno2_Vulcanizacao: If(
+                                            fx_Turno(min) = 2,
+                                            Coalesce(_op.Qtd_Turno2_Vulcanizacao, 0) + _qtd,
+                                            _op.Qtd_Turno2_Vulcanizacao
+                                        ),
+                                        Qtd_Turno3_Vulcanizacao: If(
+                                            fx_Turno(min) = 3,
+                                            Coalesce(_op.Qtd_Turno3_Vulcanizacao, 0) + _qtd,
+                                            _op.Qtd_Turno3_Vulcanizacao
+                                        )
+                                    }
+                                );
+
+                                Patch(
+                                    Eventos_Producao,
+                                    Defaults(Eventos_Producao),
+                                    {
+                                        Title: Text(_op.ID) & "-Vulcanizacao-Fim",
+                                        origem: {Value: "ficha_producao"},
+                                        origem_ID: _op.ID,
+                                        etapa: {Value: "Vulcanização"},
+                                        tipo: {Value: "Fim"},
+                                        data_hora: agora,
+                                        data_ref: DateAdd(DateValue(agora), If(min < 320, -1, 0), TimeUnit.Days),
+                                        turno: fx_Turno(min),
+                                        bitola: _op.Bitola,
+                                        metros: _qtd,
+                                        recurso: _op.Trançadeira,
+                                        operador: OperadorLote
+                                    }
+                                )
+                            )
+                        );
+                        If(
+                            !IsEmpty(Errors(ficha_producao)) || !IsEmpty(Errors(Eventos_Producao)),
+                            Notify("Falha ao lançar uma ou mais OPs. Verifique a conexão.", NotificationType.Error, 10000);
+                            Set(varProcessando, false),
+
+                            Refresh(ficha_producao);
+                            Clear(colLoteVulca);
+                            Clear(colProntasVulca);
+                            UpdateContext({ctxModalLoteVulca: false});
+                            Set(varProcessando, false);
+                            Notify(varQtdLote & " OP(s) lançada(s) para a Debandagem!", NotificationType.Success, 6000)
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Lançar selecionadas"
+                  Width: =180
+                  X: =783
+                  Y: =608
+      - cntr_EditarPlanoVulca:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxEditarPlanoVulca
+            Width: =1366
+          Children:
+            - btn_BgEditarVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =430
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =169
+            - lbl_TituloEditarVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Editar dados da OP"
+                  Width: =400
+                  X: =455
+                  Y: =197
+            - lbl_RotMangueiraEditarVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MANGUEIRA"
+                  Width: =456
+                  X: =455
+                  Y: =245
+            - inp_MangueiraEditarVulca:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaVulca.Selected.Mangueira
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =456
+                  X: =455
+                  Y: =267
+            - lbl_RotCarretelEntradaEditarVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE ENTRADA"
+                  Width: =218
+                  X: =455
+                  Y: =325
+            - inp_CarretelEntradaEditarVulca:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaVulca.Selected.'Carretel Entrada'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =347
+            - lbl_RotCarretelSaidaEditarVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE SAÍDA"
+                  Width: =218
+                  X: =693
+                  Y: =325
+            - inp_CarretelSaidaEditarVulca:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaVulca.Selected.'Carretel Saida'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =42
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =347
+            - lbl_AvisoEditarVulca:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Size: =fx_FonteApoio
+                  Text: ="A OP não é editável aqui. Para corrigir OP, Chame a Supervisão."
+                  Width: =456
+                  X: =455
+                  Y: =401
+            - btn_CancelarEditarVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =48
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxEditarPlanoVulca: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =520
+            - btn_SalvarEditarVulca:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(IsBlank(gal_FilaVulca.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =48
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    With(
+                        { _r: LookUp(ficha_producao, ID = gal_FilaVulca.Selected.ID) },
+                        If(
+                            _r.Modified <> gal_FilaVulca.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+
+                            Patch(
+                                ficha_producao,
+                                _r,
+                                {
+                                    Mangueira: inp_MangueiraEditarVulca.Text,
+                                    'Carretel Entrada': inp_CarretelEntradaEditarVulca.Text,
+                                    'Carretel Saida': inp_CarretelSaidaEditarVulca.Text
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(ficha_producao)),
+                                Notify("Falha ao salvar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+
+                                Refresh(ficha_producao);
+                                UpdateContext({ctxEditarPlanoVulca: false});
+                                Set(varProcessando, false);
+                                Notify("Dados da OP atualizados.", NotificationType.Success, 4000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Salvar"
+                  Width: =200
+                  X: =711
+                  Y: =520
+      - rct_OverlayVulca:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_ProcessandoVulca:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =60
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Salvando... Aguarde"
+            Visible: =varProcessando
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoVulca:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366

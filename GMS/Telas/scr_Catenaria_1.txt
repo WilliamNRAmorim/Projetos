@@ -1,0 +1,1360 @@
+Screens:
+  scr_Catenaria_1:
+    Properties:
+      Fill: =RGBA(241, 245, 249, 1)
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =Set(varProcessando, false);
+          UpdateContext({ctxLimpar_cat: false, locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
+          ResetForm(frm_catenaria)
+    Children:
+      - rct_header_cat:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =68
+            Width: =1366
+      - ico_voltar_cat:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(0, 18, 107, 1)
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_Bobinadeira_1)
+            Width: =49
+            X: =20
+      - lbl_titulo_cat:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =22
+            Text: ="Controle de Catenaria - Bobinadeira"
+            Width: =700
+            X: =333
+            Y: =4
+      - lbl_hora_cat:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.End
+            FontColor: =RGBA(100, 116, 139, 1)
+            Height: =59
+            Size: =13
+            Text: =Text(Now(), "dd/mm/yyyy hh:mm")
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Semibold
+            Width: =200
+            X: =1146
+            Y: =4
+      - rct_linha_topo_cat:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(226, 232, 240, 1)
+            Height: =1
+            Width: =1366
+            Y: =68
+      - rct_divisor_vertical_cat:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(226, 232, 240, 1)
+            Height: =630
+            Width: =1
+            X: =460
+            Y: =69
+      - rct_rodape_cat:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(226, 232, 240, 1)
+            BorderThickness: =1
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255, 255, 255, 1)
+            Font: =Font.'Open Sans'
+            Height: =68
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: =""
+            Width: =1366
+            Y: =700
+      - rct_rodape_linha_cat:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(226, 232, 240, 1)
+            Height: =1
+            Width: =1366
+            Y: =700
+      - tmr_watchdog_cat:
+          Control: Timer@2.1.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            Duration: =45000
+            Fill: =RGBA(56, 96, 178, 1)
+            Font: =Font.'Open Sans'
+            OnTimerEnd: |-
+              =Set(varProcessando, false);
+              Notify("TEMPO LIMITE EXCEDIDO! Tente novamente.", NotificationType.Error)
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Start: =varProcessando
+            Visible: =false
+      - lbl_form_titulo_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(30, 58, 138, 1)
+            Height: =36
+            Text: ="NOVO REGISTRO"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =200
+            X: =20
+            Y: =78
+      - rct_form_fundo_cat:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(226, 232, 240, 1)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(255, 255, 255, 1)
+            Font: =Font.'Open Sans'
+            Height: =590
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            RadiusBottomLeft: =12
+            RadiusBottomRight: =12
+            RadiusTopLeft: =12
+            RadiusTopRight: =12
+            Text: =""
+            Width: =430
+            X: =15
+            Y: =110
+      - frm_catenaria:
+          Control: Form@2.4.4
+          Variant: Classic
+          Layout: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            DataSource: =Controle_Catenaria
+            DefaultMode: =FormMode.New
+            Height: =560
+            NumberOfColumns: =2
+            OnFailure: |-
+              =Set(varProcessando, false);
+              Notify("Erro ao salvar: " & First(Errors(Controle_Catenaria)).Message, NotificationType.Error)
+            OnSuccess: |-
+              =Refresh(Controle_Catenaria);
+              ResetForm(Self);
+              Notify("Registro salvo com sucesso!", NotificationType.Success, 4000);
+              Set(varProcessando, false)
+            Width: =420
+            X: =20
+            Y: =115
+          Children:
+            - Maquina_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Maquina"
+                  Default: =""
+                  DisplayName: ="Maquina"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_maquina_cat.Text
+                  Width: =200
+                  X: =0
+                  Y: =0
+                Children:
+                  - StarVisible_maquina_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_maquina_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_maquina_cat.Y
+                  - DataCardKey_maquina_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_maquina_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: |-
+                          ="Ex: T6"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_maquina_cat.Y + DataCardKey_maquina_cat.Height + 4
+                  - ErrorMessage_maquina_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_maquina_cat.Y + DataCardValue_maquina_cat.Height
+            - NFios_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicNumberEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="NFios"
+                  Default: =0
+                  DisplayName: ="No. Fios"
+                  Required: =true
+                  Update: =Value(DataCardValue_nfios_cat.Text)
+                  Width: =200
+                  X: =1
+                  Y: =0
+                Children:
+                  - StarVisible_nfios_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_nfios_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_nfios_cat.Y
+                  - DataCardKey_nfios_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_nfios_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        Format: =TextFormat.Number
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_nfios_cat.Y + DataCardKey_nfios_cat.Height + 4
+                  - ErrorMessage_nfios_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_nfios_cat.Y + DataCardValue_nfios_cat.Height
+            - Mangueira_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Mangueira"
+                  Default: =""
+                  DisplayName: ="Mangueira"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =cmb_mangueira_cat.Selected.NomeMangueira
+                  Width: =420
+                  X: =0
+                  Y: =1
+                Children:
+                  - StarVisible_mangueira_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_mangueira_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_mangueira_cat.Y
+                  - DataCardKey_mangueira_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - cmb_mangueira_cat:
+                      Control: Classic/ComboBox@2.4.0
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =RGBA(226, 232, 240, 1)
+                        ChevronBackground: =RGBA(56, 96, 178, 1)
+                        ChevronFill: =RGBA(255, 255, 255, 1)
+                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
+                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        DisplayFields: =["NomeMangueira"]
+                        Font: =Font.'Open Sans'
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Items: =colMangueiras
+                        PressedColor: =RGBA(255, 255, 255, 1)
+                        PressedFill: =RGBA(0, 18, 107, 1)
+                        SearchFields: =["NomeMangueira"]
+                        SelectMultiple: =false
+                        SelectionColor: =RGBA(255, 255, 255, 1)
+                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_mangueira_cat.Y + DataCardKey_mangueira_cat.Height + 4
+                  - ErrorMessage_mangueira_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =cmb_mangueira_cat.Y + cmb_mangueira_cat.Height
+            - DiamEspecPol_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="DiamEspecPol"
+                  Default: =""
+                  DisplayName: ="Diam. Espec. (pol)"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_especpol_cat.Text
+                  Width: =200
+                  X: =0
+                  Y: =2
+                Children:
+                  - StarVisible_especpol_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_especpol_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_especpol_cat.Y
+                  - DataCardKey_especpol_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_especpol_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: |-
+                          ="Ex: 0.30"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_especpol_cat.Y + DataCardKey_especpol_cat.Height + 4
+                  - ErrorMessage_especpol_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_especpol_cat.Y + DataCardValue_especpol_cat.Height
+            - DiamEspecMM_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="DiamEspecMM"
+                  Default: =""
+                  DisplayName: ="Diam. Espec. (mm)"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_especmm_cat.Text
+                  Width: =200
+                  X: =1
+                  Y: =2
+                Children:
+                  - StarVisible_especmm_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_especmm_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_especmm_cat.Y
+                  - DataCardKey_especmm_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =22
+                        Text: =Parent.DisplayName
+                        Width: =170
+                        Wrap: =false
+                        X: =30
+                        Y: =4
+                  - DataCardValue_especmm_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: |-
+                          ="Ex: 88.90"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_especmm_cat.Y + DataCardKey_especmm_cat.Height + 4
+                  - ErrorMessage_especmm_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_especmm_cat.Y + DataCardValue_especmm_cat.Height
+            - DiamAtualMM_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="DiamAtualMM"
+                  Default: =""
+                  DisplayName: ="Diam. Atual (mm)"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_atual_cat.Text
+                  Width: =200
+                  X: =0
+                  Y: =3
+                Children:
+                  - StarVisible_atual_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_atual_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_atual_cat.Y
+                  - DataCardKey_atual_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_atual_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: ="Medido agora"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_atual_cat.Y + DataCardKey_atual_cat.Height + 4
+                  - ErrorMessage_atual_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_atual_cat.Y + DataCardValue_atual_cat.Height
+            - TensaoPol_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="TensaoPol"
+                  Default: =""
+                  DisplayName: ="Tensao (pol)"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_tensao_cat.Text
+                  Width: =200
+                  X: =1
+                  Y: =3
+                Children:
+                  - StarVisible_tensao_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_tensao_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_tensao_cat.Y
+                  - DataCardKey_tensao_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_tensao_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: |-
+                          ="Ex: 1"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_tensao_cat.Y + DataCardKey_tensao_cat.Height + 4
+                  - ErrorMessage_tensao_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_tensao_cat.Y + DataCardValue_tensao_cat.Height
+            - ENumber_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="ENumber"
+                  Default: =""
+                  DisplayName: ="E-Number"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =true
+                  Update: =DataCardValue_enumber_cat.Text
+                  Width: =200
+                  X: =0
+                  Y: =4
+                Children:
+                  - StarVisible_enumber_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldRequired
+                      Properties:
+                        Align: =Align.Center
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(0, 18, 107, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =DataCardKey_enumber_cat.Height
+                        Text: ="*"
+                        Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
+                        Width: =30
+                        Wrap: =false
+                        Y: =DataCardKey_enumber_cat.Y
+                  - DataCardKey_enumber_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_enumber_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        HintText: |-
+                          ="Ex: Y54"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_enumber_cat.Y + DataCardKey_enumber_cat.Height + 4
+                  - ErrorMessage_enumber_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_enumber_cat.Y + DataCardValue_enumber_cat.Height
+            - Observacoes_DataCard_cat:
+                Control: TypedDataCard@1.0.7
+                Variant: ClassicTextualEdit
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  DataField: ="Observacoes"
+                  Default: =""
+                  DisplayName: ="Observacoes"
+                  MaxLength: =DataSourceInfo(%DATACARD_DATASOURCE_NAME.ID%, %DataSourceInfo.RESERVED%.MaxLength, '%DATACARD_FIELD_NAME.ID%')
+                  Required: =false
+                  Update: =DataCardValue_obs_cat.Text
+                  Width: =420
+                  X: =0
+                  Y: =5
+                Children:
+                  - DataCardKey_obs_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: FieldName
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(71, 85, 105, 1)
+                        Font: =Font.'Open Sans'
+                        FontWeight: =FontWeight.Semibold
+                        Height: =28
+                        Text: =Parent.DisplayName
+                        Width: =Parent.Width - 40
+                        Wrap: =false
+                        X: =30
+                  - DataCardValue_obs_cat:
+                      Control: Classic/TextInput@2.3.2
+                      MetadataKey: FieldValue
+                      Properties:
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        Default: =Parent.Default
+                        DelayOutput: =true
+                        DisplayMode: =Parent.DisplayMode
+                        Font: =Font.'Open Sans'
+                        Height: =60
+                        HintText: ="Opcional"
+                        HoverBorderColor: =RGBA(0, 18, 107, 1)
+                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Mode: =TextMode.MultiLine
+                        PaddingLeft: =5
+                        RadiusBottomLeft: =4
+                        RadiusBottomRight: =4
+                        RadiusTopLeft: =4
+                        RadiusTopRight: =4
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardKey_obs_cat.Y + DataCardKey_obs_cat.Height + 4
+                  - ErrorMessage_obs_cat:
+                      Control: Label@2.5.1
+                      MetadataKey: ErrorMessage
+                      Properties:
+                        AutoHeight: =true
+                        BorderColor: =RGBA(0, 0, 0, 1)
+                        Color: =RGBA(168, 0, 0, 1)
+                        Font: =Font.'Open Sans'
+                        Height: =10
+                        Live: =Live.Assertive
+                        Size: =14
+                        Text: =Parent.Error
+                        Visible: =Parent.DisplayMode=DisplayMode.Edit
+                        Width: =Parent.Width - 40
+                        X: =30
+                        Y: =DataCardValue_obs_cat.Y + DataCardValue_obs_cat.Height
+      - lbl_toggle_label_cat:
+          Control: Text@0.0.51
+          Properties:
+            Font: =Font.'Open Sans'
+            FontColor: =RGBA(71, 85, 105, 1)
+            Height: =28
+            Size: =15
+            Text: ="Aprovado?"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Semibold
+            Width: =90
+            X: =267
+            Y: =472
+      - tgl_aprovado_cat:
+          Control: Toggle@1.1.5
+          Properties:
+            X: =244
+            Y: =509
+      - lbl_toggle_status_cat:
+          Control: Text@0.0.51
+          Properties:
+            BorderRadius: =6
+            Fill: =If(tgl_aprovado_cat.Checked, RGBA(220, 252, 231, 1), RGBA(254, 226, 226, 1))
+            FontColor: =If(tgl_aprovado_cat.Checked, RGBA(22, 101, 52, 1), RGBA(153, 27, 27, 1))
+            Height: =28
+            Size: =13
+            Text: =If(tgl_aprovado_cat.Checked, "APROVADO", "REPROVADO")
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =110
+            X: =305
+            Y: =512
+      - btn_registrar_cat:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =ColorFade(Self.Fill, -15%)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Fill: =RGBA(54, 176, 75, 1)
+            Font: =Font.'Open Sans'
+            Height: =48
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =If(
+                    IsBlank(DataCardValue_maquina_cat.Text) || IsBlank(cmb_mangueira_cat.Selected) || IsBlank(DataCardValue_nfios_cat.Text) || IsBlank(DataCardValue_especpol_cat.Text) || IsBlank(DataCardValue_especmm_cat.Text) || IsBlank(DataCardValue_atual_cat.Text) || IsBlank(DataCardValue_tensao_cat.Text) || IsBlank(DataCardValue_enumber_cat.Text),
+                    Notify("Preencha todos os campos obrigatorios (marcados com *).", NotificationType.Warning),
+                    Set(varProcessando, true);
+                    Patch(
+                        Controle_Catenaria,
+                        Defaults(Controle_Catenaria),
+                        {
+                            Title: Text(Now(), "yyyymmddhhmmss"),
+                            DataHora: Now(),
+                            Maquina: DataCardValue_maquina_cat.Text,
+                            Mangueira: cmb_mangueira_cat.Selected.NomeMangueira,
+                            NFios: Value(DataCardValue_nfios_cat.Text),
+                            DiamEspecPol: DataCardValue_especpol_cat.Text,
+                            DiamEspecMM: DataCardValue_especmm_cat.Text,
+                            DiamAtualMM: DataCardValue_atual_cat.Text,
+                            TensaoPol: DataCardValue_tensao_cat.Text,
+                            Aprovado: tgl_aprovado_cat.Checked,
+                            ENumber: DataCardValue_enumber_cat.Text,
+                            Observacoes: DataCardValue_obs_cat.Text,
+                            Turno: If(
+                                Now() >= gblTurno1_Inicio && Now() <= gblTurno1_Fim, 1,
+                                Now() >= gblTurno2_Inicio && Now() <= gblTurno2_Fim, 2,
+                                3
+                            )
+                        }
+                    );
+                    If(
+                        !IsEmpty(Errors(Controle_Catenaria)),
+                        Notify("Erro ao registrar: " & First(Errors(Controle_Catenaria)).Message, NotificationType.Error);
+                        Set(varProcessando, false),
+                        UpdateContext({locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
+                        Refresh(Controle_Catenaria);
+                        ResetForm(frm_catenaria);
+                        UpdateContext({ctxLimpar_cat: true});
+                        UpdateContext({ctxLimpar_cat: false});
+                        Set(varProcessando, false);
+                        Notify("Registro salvo!", NotificationType.Success, 3000)
+                    )
+                )
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: ="ㅤRegistrar"
+            Width: =200
+            X: =20
+            Y: =713
+      - ico_registrar_cat:
+          Control: Image@2.2.3
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =28
+            Image: =send
+            Width: =28
+            X: =35
+            Y: =724
+      - ico_refresh_cat:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(148, 163, 184, 1)
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =UpdateContext({locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
+                Refresh(Controle_Catenaria)
+            Width: =49
+            X: =240
+            Y: =704
+      - lbl_tabela_titulo_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(30, 58, 138, 1)
+            Height: =36
+            Text: ="REGISTROS DAS ULTIMAS 24H - " & Text(CountRows(Filter(Controle_Catenaria, DataHora >= locCorte_cat)), "0") & " registros"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =700
+            X: =475
+            Y: =78
+      - rct_tabela_header_cat:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =RGBA(203, 213, 225, 1)
+            Color: =RGBA(255, 255, 255, 1)
+            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            DisplayMode: =DisplayMode.View
+            Fill: =RGBA(30, 41, 59, 1)
+            Font: =Font.'Open Sans'
+            Height: =36
+            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
+            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverFill: =
+            PressedBorderColor: =Self.Fill
+            PressedColor: =Self.Fill
+            PressedFill: =Self.Color
+            Text: =""
+            Width: =880
+            X: =475
+            Y: =115
+      - lbl_th_hora_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="HORA"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =70
+            X: =480
+            Y: =115
+      - lbl_th_maquina_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="MAQ."
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =55
+            X: =550
+            Y: =115
+      - lbl_th_mangueira_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="MANGUEIRA"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =110
+            X: =605
+            Y: =115
+      - lbl_th_fios_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="FIOS"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =50
+            X: =715
+            Y: =115
+      - lbl_th_especpol_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="ESP.(pol)"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =70
+            X: =765
+            Y: =115
+      - lbl_th_especmm_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="ESP.(mm)"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =70
+            X: =835
+            Y: =115
+      - lbl_th_atual_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="ATUAL(mm)"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =80
+            X: =905
+            Y: =115
+      - lbl_th_tensao_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="TEN.(pol)"
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =70
+            X: =985
+            Y: =115
+      - lbl_th_aprov_cat:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="APROV."
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =65
+            X: =1055
+            Y: =115
+      - lbl_th_enumber_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="E-NUM."
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =65
+            X: =1120
+            Y: =115
+      - lbl_th_obs_cat:
+          Control: Text@0.0.51
+          Properties:
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =36
+            Size: =11
+            Text: ="OBS."
+            VerticalAlign: =VerticalAlign.Middle
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =110
+            X: =1195
+            Y: =115
+      - gal_registros_cat:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(226, 232, 240, 1)
+            Fill: =Color.Transparent
+            Height: =545
+            Items: |-
+              =Sort(
+                    Filter(
+                        Controle_Catenaria,
+                        DataHora >= locCorte_cat
+                    ),
+                    DataHora,
+                    SortOrder.Descending
+                )
+            TemplateFill: =If(Mod(ThisItem.Aprovado, 2) = 0, RGBA(248, 250, 252, 1), RGBA(255, 255, 255, 1))
+            TemplateSize: =44
+            Width: =880
+            X: =475
+            Y: =151
+          Children:
+            - lbl_row_hora_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: |-
+                    =If(
+                          ThisItem.DataHora < Today(),
+                          Text(ThisItem.DataHora, "dd/mm") & Char(10) & Text(ThisItem.DataHora, "hh:mm"),
+                          Text(ThisItem.DataHora, "hh:mm")
+                      )
+                  Width: =70
+                  X: =5
+            - lbl_row_maquina_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.Maquina
+                  Width: =55
+                  X: =75
+            - lbl_row_mangueira_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(30, 58, 138, 1)
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.Mangueira
+                  Width: =110
+                  X: =130
+            - lbl_row_fios_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.NFios
+                  Width: =50
+                  X: =240
+            - lbl_row_especpol_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.DiamEspecPol
+                  Width: =70
+                  X: =290
+            - lbl_row_especmm_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.DiamEspecMM
+                  Width: =70
+                  X: =360
+            - lbl_row_atual_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.DiamAtualMM
+                  Width: =80
+                  X: =430
+            - lbl_row_tensao_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.TensaoPol
+                  Width: =70
+                  X: =510
+            - lbl_row_aprov_cat:
+                Control: Text@0.0.51
+                Properties:
+                  Align: ='TextCanvas.Align'.Center
+                  BorderRadius: =4
+                  Fill: =If(ThisItem.Aprovado, RGBA(220, 252, 231, 1), RGBA(254, 226, 226, 1))
+                  FontColor: =If(ThisItem.Aprovado, RGBA(22, 101, 52, 1), RGBA(153, 27, 27, 1))
+                  Height: =28
+                  Size: =11
+                  Text: =If(ThisItem.Aprovado, "APROV", "REPROV")
+                  VerticalAlign: =VerticalAlign.Middle
+                  Weight: ='TextCanvas.Weight'.Bold
+                  Width: =60
+                  X: =580
+                  Y: =8
+            - lbl_row_enumber_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(51, 65, 85, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =12
+                  Text: =ThisItem.ENumber
+                  Width: =65
+                  X: =645
+            - lbl_row_obs_cat:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =RGBA(226, 232, 240, 1)
+                  Color: =RGBA(100, 116, 139, 1)
+                  Font: =Font.'Open Sans'
+                  Height: =44
+                  Size: =11
+                  Text: =ThisItem.Observacoes
+                  Width: =120
+                  X: =715
+            - Image14:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =RGBA(0, 18, 107, 1)
+                  Height: =24
+                  Image: |-
+                    ="data:image/svg+xml;utf8," & EncodeUrl(
+                        "<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='#DC2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                          <path d='M3 6h18'/>
+                          <path d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'/>
+                          <path d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'/>
+                          <line x1='10' x2='10' y1='11' y2='17'/>
+                          <line x1='14' x2='14' y1='11' y2='17'/>
+                        </svg>"
+                    )
+                  OnSelect: |-
+                    =Remove(
+                        Controle_Catenaria,    
+                        ThisItem       
+                    );
+                    Notify("Apontamento Removido!", NotificationType.Success, 1000)
+                  Width: =35
+                  X: =835
+                  Y: =10
+      - rct_overlay_spinner_cat:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Fill: =RGBA(0, 0, 0, 0.7)
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - spr_carregando_cat:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_carregando_cat:
+          Control: Text@0.0.51
+          Properties:
+            Align: ='TextCanvas.Align'.Center
+            FontColor: =RGBA(255, 255, 255, 1)
+            Height: =60
+            Size: =25
+            Text: ="Salvando... Aguarde"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =varProcessando
+            Weight: ='TextCanvas.Weight'.Bold
+            Width: =247
+            X: =561
+            Y: =403

@@ -1,0 +1,1138 @@
+// =============================================================================
+//  GMS · App.Formulas · v3.0.2 · 2026-09-30
+//  Arquivo ÚNICO. CONSOLIDAÇÃO: base = export do Studio de 30/09 (cabeçalho ainda
+//  dizia v2.8, conteúdo já era v2.8 + §14 do Painel colada por cima).
+// =============================================================================
+//  1. Named Formula (sem parênteses) = constante ou derivação pura.
+//     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
+//  2. O que depende de tempo é UDF que RECEBE o instante: fx_X(agora: DateTime).
+//  3. O que depende da tela é UDF que RECEBE o dado. UDF não lê fonte nem variável.
+//  4. Só a §10 toca fonte de dados, e só com filtro delegável.
+//  5. Todo nome começa com fx_.
+// -----------------------------------------------------------------------------
+//  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
+//   · Nenhuma assinatura existente muda. Nada foi removido.
+//   · Arrumação sem efeito: fx_DetFechaSeg (Painel v0.9.0) saiu do topo do arquivo
+//     e foi para a §14; o cabeçalho do PATCH v2.9 colado no meio do arquivo saiu;
+//     fx_CabinesTeste (Painel v0.8.0) ganhou comentário. Named Formula não depende
+//     de ordem — mudar de lugar não muda comportamento.
+//   · §5  fx_NumVelocidade (novo) — leitura do _13TEORICA_M_H em UM lugar.
+//   · §11 fx_VelocidadeTeorica passa a chamar fx_NumVelocidade. Resultado bit a bit
+//         igual ao da v2.7.3 (mesma regra, só saiu de dentro da UDF).
+//   · §14 autonomia de tubo do Painel v0.10.0: fx_TurnoUtilMin, fx_AutonomiaAgora,
+//         fx_AutonomiaTexto, fx_SemaforoAutonomia.
+//   · [v3.0.1 · Painel v0.10.1] fx_AutonomiaTexto: zero vira "fim?" (era "0h00").
+//   · [v3.0.2 · Painel v0.10.2] "fim?" vira "Conferir" (TV lida pela gerência); novo
+//         fx_MetrosMinCarretel (metragem implausível no Onde olhar).
+// =============================================================================
+
+
+//  §1 · COR  ══════════════════════════════════════════════════════════
+
+fx_CorPrimaria      = ColorValue("#E2231A");      // vermelho Danfoss: marca e card ativo.
+                                                  // ⛔ nunca em botão de ação (lê como "pare").
+fx_CorFundo         = ColorValue("#F5F7FA");
+fx_CorSuperficie    = Color.White;
+fx_CorHeader        = ColorValue("#1E293B");
+fx_CorBorda         = ColorValue("#E2E8F0");
+
+fx_CorTexto         = ColorValue("#0F172A");
+fx_CorTextoSuave    = ColorValue("#64748B");
+fx_CorRotulo        = ColorValue("#94A3B8");
+
+fx_CorOK            = ColorValue("#16A34A");      // concluído, produzindo
+fx_CorAlerta        = ColorValue("#E67E22");      // aguardando, atenção
+fx_CorErro          = ColorValue("#C0392B");      // refugo, falha, obrigatório vazio
+fx_CorInfo          = ColorValue("#2C6FBF");      // informativo e AÇÃO PRIMÁRIA
+fx_CorGelo          = ColorValue("#0284C7");      // processo físico sem produção (cura, resfriamento)
+
+fx_CorOKSuave       = ColorValue("#D1FAE5");
+fx_CorAlertaSuave   = ColorValue("#FEF3C7");
+fx_CorErroSuave     = ColorValue("#FEE2E2");
+fx_CorInfoSuave     = ColorValue("#EFF6FF");
+fx_CorGeloSuave     = ColorValue("#E0F2FE");
+
+fx_CorChip          = RGBA(122, 138, 143, 0.36);
+fx_CorOverlay       = RGBA(0, 0, 0, 0.6);         // scrim de modal
+fx_CorOverlayForte  = RGBA(0, 0, 0, 0.7);         // scrim de gravação
+
+fx_CorEtapaExtMandril = ColorValue("#64748B");
+fx_CorEtapaSolda      = ColorValue("#3B82F6");
+fx_CorEtapaTubo       = ColorValue("#06B6D4");
+fx_CorEtapaTrancagem  = ColorValue("#6366F1");
+fx_CorEtapaCobertura  = ColorValue("#8B5CF6");
+fx_CorEtapaBandagem   = ColorValue("#F59E0B");
+fx_CorEtapaVulca      = ColorValue("#EF4444");
+fx_CorEtapaDeband     = ColorValue("#F97316");
+fx_CorEtapaExtracao   = ColorValue("#10B981");
+
+fx_CorHoverSutil = RGBA(0, 0, 0, 0.04);
+fx_CorHoverForte = RGBA(0, 0, 0, 0.08);
+
+
+//  §2 · TIPOGRAFIA  ═══════════════════════════════════════════════════
+//  fx_Fonte* é TAMANHO. Família é fx_FonteFamilia.
+
+fx_FonteFamilia  = Font.'Open Sans';
+fx_FonteTitulo   = 22;
+fx_FonteSecao    = 15;
+fx_FonteDestaque = 16;
+fx_FonteAcao     = 20;
+fx_FonteCorpo    = 13;
+fx_FonteApoio    = 11;
+fx_FonteNumero   = 28;
+fx_FonteReceita  = 32;
+fx_FonteCrono    = 40;
+
+
+//  §3 · GEOMETRIA  ════════════════════════════════════════════════════
+//  Alvo de toque: ação ≥ 48 px; nada interativo abaixo de 44.
+
+fx_Raio          = 12;
+fx_RaioS         = 8;
+fx_RaioG         = 16;
+
+fx_EspacoS       = 8;
+fx_EspacoM       = 16;
+fx_EspacoL       = 24;
+
+fx_AlturaCampo   = 44;
+fx_AlturaAcao    = 56;
+fx_AlturaAcaoS   = 48;
+fx_BalizaTam     = 32;
+
+
+//  §4 · TEMPO  ════════════════════════════════════════════════════════
+//  T1 320 (05:20) → 836 · T2 837 (13:57) → 1360 · T3 o resto.
+//
+//  [v2.6] A fronteira do 2º turno era 828 aqui e 827 no fx_InicioTurnoMin,
+//  enquanto a fx_GradeHoraHora terminava o 1º turno às 13:57. Os 10 minutos
+//  13:47–13:57 pertenciam aos DOIS turnos: o metro apontado ali caía em
+//  Qtd_Turno2 dentro do 1º turno, o Hora-Hora abria o turno errado e o
+//  fx_FaixaVencida dava as 9 janelas do 1º turno como vencidas de uma vez
+//  (turnoLinha ≠ turno do relógio → true). Agora os três turnos ladrilham o
+//  dia sem sobra: 320 + 517 = 837 · 837 + 563 = 1400 (23:20, com hora extra) ·
+//  1340 + 420 = 1760 − 1440 = 320.
+
+fx_MinutosDoDia(agora: DateTime): Number =
+    Hour(agora) * 60 + Minute(agora);
+
+fx_Turno(minutosDoDia: Number): Number =
+    If(
+        minutosDoDia >= 320 && minutosDoDia < 837,  1,
+        minutosDoDia >= 837 && minutosDoDia < 1361, 2,
+        3
+    );
+
+fx_TurnoEm(agora: DateTime): Number =
+    fx_Turno(fx_MinutosDoDia(agora));
+
+fx_TurnoLabelEm(agora: DateTime): Text =
+    Text(fx_TurnoEm(agora)) & "º Turno";
+
+// Antes das 05:20 o apontamento pertence ao dia anterior.
+fx_DataRefEm(agora: DateTime): Date =
+    DateAdd(
+        DateValue(agora),
+        If(fx_MinutosDoDia(agora) < 320, -1, 0),
+        TimeUnit.Days
+    );
+
+fx_JanelaInicioEm(agora: DateTime): DateTime =
+    DateAdd(fx_DataRefEm(agora), 320, TimeUnit.Minutes);
+
+fx_JanelaFimEm(agora: DateTime): DateTime =
+    DateAdd(fx_JanelaInicioEm(agora), 1, TimeUnit.Days);
+
+// Cronômetro único do GMS, com teto visual de 24 h.
+fx_Crono(inicio: DateTime, agora: DateTime): Text =
+    If(
+        IsBlank(inicio),
+        "--:--",
+        With(
+            { _m: Max(0, DateDiff(inicio, agora, TimeUnit.Minutes)) },
+            If(
+                _m >= 1440,
+                "+24 h",
+                Text(Int(_m / 60), "00") & ":" & Text(Mod(_m, 60), "00")
+            )
+        )
+    );
+
+
+//  §5 · TEXTO E NÚMERO  ═══════════════════════════════════════════════
+//  Duas leituras de número, NÃO intercambiáveis:
+//  fx_Num = digitado pelo operador · fx_NumSpec = vindo de planilha.
+//  fx_Num("0.375") = 375 (milhar) · fx_NumSpec("0.375") = 0,375 (polegada).
+
+// Normaliza código de peça para comparação (sem espaço, caixa baixa, sem milhar).
+fx_NormCodigo(codigo: Text): Text =
+    With(
+        { _t: Substitute(Trim(codigo), " ", "") },
+        Lower(
+            If(
+                !IsBlank(_t) && IsNumeric(_t),
+                Text(Value(_t), "[$-en-US]#"),
+                _t
+            )
+        )
+    );
+
+// O texto digitado é número válido? Use antes de fx_Num em DisplayMode/BorderColor:
+// fx_Num de lixo devolve Blank, e Blank em Coalesce vira 0 — que grava zero calado.
+fx_EhNum(txt: Text): Boolean =
+    IsMatch(Trim(txt), "\d+([.,]\d+)*");
+
+// Número digitado por humano: ponto e vírgula têm o mesmo peso, independe da
+// cultura do aparelho. Blank se não for número.
+fx_Num(txt: Text): Number =
+    IfError(
+        With(
+            { _t: Substitute(Substitute(Trim(txt), " ", ""), Char(160), "") },
+            With(
+                { _seps: MatchAll(_t, "[.,]") },
+                If(
+                    CountRows(_seps) = 0,
+                    Value(_t, "en-US"),
+                    With(
+                        {
+                            _pos: Last(_seps).StartMatch,
+                            _n: CountRows(_seps)
+                        },
+                        If(
+                            _n = 1 && Len(_t) - _pos = 3,
+                            Value(Substitute(Substitute(_t, ".", ""), ",", ""), "en-US"),
+                            Value(
+                                Substitute(Substitute(Left(_t, _pos - 1), ".", ""), ",", "")
+                                & "."
+                                & Mid(_t, _pos + 1),
+                                "en-US"
+                            )
+                        )
+                    )
+                )
+            )
+        ),
+        Blank()
+    );
+
+// Valor de spec vindo de planilha (DM_*). Vazio, traço ou lixo viram 0, nunca erro.
+// Quem chama passa Text(campo) — a coluna pode ser texto ou número.
+fx_NumSpec(txt: Text): Number =
+    IfError(
+        Value(Substitute(Trim(txt), ",", "."), "en-US"),
+        0
+    );
+
+// [v3.0] Velocidade (m/h) a partir do TEXTO de _13TEORICA_M_H (DM_ENGRENAGENS).
+// Regra da v2.7.3 (MEL-112), À PROVA DE IDIOMA: tem vírgula → vírgula é decimal e
+// ponto é milhar; sem vírgula → ponto é decimal; sempre lido em "en-US".
+// "-" (Spiral) e vazio viram 0. NÃO é fx_NumSpec: fx_NumSpec lê "1.116,0" como erro.
+// Chamadores: fx_VelocidadeTeorica (§11) e a carga local do Painel (colVelTrPnl).
+fx_NumVelocidade(txt: Text): Number =
+    With(
+        { _t: Substitute(Substitute(txt, " ", ""), Char(160), "") },
+        With(
+            {
+                _en: If(
+                    !IsBlank(Find(",", _t)),
+                    Substitute(Substitute(_t, ".", ""), ",", "."),
+                    _t
+                )
+            },
+            IfError(Coalesce(Value(_en, "en-US"), 0), 0)
+        )
+    );
+
+// Faixa de especificação. Spec ausente (0) nunca acusa: poka-yoke não grita sem base.
+fx_ForaDaFaixa(lido: Number, minimo: Number, maximo: Number): Boolean =
+    lido > 0 && minimo > 0 && maximo > 0 && (lido < minimo || lido > maximo);
+
+// Conferência do fio da bobina contra os fios do delineamento (1ª e 2ª trama).
+// "SEM_FIO" quando não há o que comparar — bobina sem código ou mangueira sem spec.
+// Sem esse terceiro estado, dado faltando vira "divergente" e o operador aprende a
+// ignorar o alerta. Três chamadores: badge do seletor, bloco CONFERÊNCIA e alerta da ficha.
+fx_ConfFio(fioBobina: Text, fioTrama1: Text, fioTrama2: Text): Text =
+    With(
+        {
+            _f: fx_NormCodigo(fioBobina),
+            _a: fx_NormCodigo(fioTrama1),
+            _b: fx_NormCodigo(fioTrama2)
+        },
+        If(
+            IsBlank(_f) || (IsBlank(_a) && IsBlank(_b)), "SEM_FIO",
+            _f = _a || _f = _b,                          "OK",
+            "DIVERGE"
+        )
+    );
+
+// Número de um parâmetro de receita ("110'" → 110 · "152°C" → 152 · "45 min" → 45).
+fx_NumeroReceita(txt: Text): Number =
+    IfError(
+        Value(
+            Substitute(Substitute(Substitute(Substitute(Substitute(Substitute(
+                Lower(Trim(txt)),
+            "'", ""), "°", ""), "min", ""), "c", ""), "m", ""), " ", "")
+        ),
+        0
+    );
+
+fx_QtdBR(valor: Number): Text =
+    Substitute(Text(valor, "[$-en-US]0.00"), ".", ",");
+
+// Medida dimensional digitada pelo operador (polegada, 3 casas). Ponto e virgula
+// sao o MESMO separador decimal: "0,254" = "0.254" = 0,254. Nunca milhar.
+// NAO usar fx_Num aqui: fx_Num le "0.500" como 500 (milhar), regra correta para
+// metragem e catastrofica para diametro. Foi essa troca que corrompeu 1.454
+// medidas entre 20/08 e 28/08/2026.
+fx_NumMedida(txt: Text): Number =
+    IfError(
+        With(
+            { _t: Substitute(Substitute(Substitute(Trim(txt), " ", ""), Char(160), ""), ",", ".") },
+            If(IsBlank(_t), Blank(), Value(_t, "en-US"))
+        ),
+        Blank()
+    );
+
+// Medida com 3 casas e virgula decimal, para o operador ler.
+// fx_QtdBR tem 2 casas e mostra 0,254 como 0,25 - nao serve para diametro.
+fx_MedidaBR(valor: Number): Text =
+    Substitute(Text(valor, "[$-en-US]0.000"), ".", ",");
+
+// Escapa texto que vai dentro de SVG/HTML gerado por fórmula.
+fx_XmlSeguro(txt: Text): Text =
+    Substitute(Substitute(Substitute(txt, "&", "&amp;"), "<", "&lt;"), ">", "&gt;");
+
+
+//  §6 · ESTADO DE ETAPA  ══════════════════════════════════════════════
+//  Função pura do campo gravado, nunca variável nem propriedade de UI.
+//  Uma UDF por CLASSE de etapa — copiar por etapa cria N cópias que divergem.
+
+// Etapa CONTÍNUA (mede o que produziu): Tubo, Cobertura, Trançagem, Bandagem…
+fx_EstadoContinuo(status: Text): Text =
+    If(status = "Em processo", "PRODUZINDO", "AGUARDANDO");
+
+// fimAnterior é o fallback das fichas anteriores ao campo InicioAguardando_<Etapa>.
+fx_InicioCronoContinuo(estado: Text, inicioAguard: DateTime, inicioProc: DateTime, fimAnterior: DateTime): DateTime =
+    If(
+        estado = "PRODUZINDO",
+        inicioProc,
+        Coalesce(inicioAguard, fimAnterior)
+    );
+
+// Etapa em BATELADA com fase física (C39): Vulcanização.
+fx_EstadoVulca(status: Text, inicioResf: DateTime, agora: DateTime): Text =
+    If(
+        status <> "Em processo", "AGUARDANDO",
+        IsBlank(inicioResf),     "VULCANIZANDO",
+        "RESFRIANDO"
+    );
+
+fx_InicioCronoVulca(estado: Text, inicioAguard: DateTime, inicioVulca: DateTime, inicioResf: DateTime): DateTime =
+    Switch(
+        estado,
+        "RESFRIANDO",   inicioResf,
+        "VULCANIZANDO", inicioVulca,
+        inicioAguard
+    );
+
+// Bobina na FifoBobinadeira. AB aguardando · EP bobinando · BC pronta no carrinho ·
+// CO consumida por uma OP de Trançagem (v0.4.0).
+fx_EstadoBob(status: Text): Text =
+    Switch(
+        status,
+        "EP", "BOBINANDO",
+        "BC", "CONCLUIDA",
+        "CO", "CONSUMIDA",
+        "AGUARDANDO"
+    );
+
+fx_InicioCronoBob(estado: Text, criado: DateTime, inicio: DateTime): DateTime =
+    If(
+        estado = "BOBINANDO",
+        inicio,
+        criado
+    );
+
+// Aliases legados — saem quando Cobertura e Bandagem forem republicadas.
+fx_EstadoCob(status: Text): Text =
+    fx_EstadoContinuo(status);
+
+fx_InicioCronoCob(estado: Text, inicioAguard: DateTime, inicioProc: DateTime, fimTrancagem: DateTime): DateTime =
+    fx_InicioCronoContinuo(estado, inicioAguard, inicioProc, fimTrancagem);
+
+fx_EstadoBand(status: Text): Text =
+    fx_EstadoContinuo(status);
+
+fx_InicioCronoBand(estado: Text, inicioAguard: DateTime, inicioProc: DateTime, fimCobertura: DateTime): DateTime =
+    fx_InicioCronoContinuo(estado, inicioAguard, inicioProc, fimCobertura);
+
+fx_ProcessoDeEtapa(etapaLayout: Text): Text =
+    Switch(
+        etapaLayout,
+        "Trançagem",   "Trançadeira",
+        "Finalização", "Extr./Teste",
+        etapaLayout
+    );
+
+fx_EstadoPosto(produzindo: Boolean, fila: Number): Text =
+    If(
+        produzindo,  "PRODUZINDO",
+        fila > 0,    "COM FILA",
+        "LIVRE"
+    );
+
+
+//  §7 · EXIBIÇÃO  ═════════════════════════════════════════════════════
+//  Quem chama passa SEMPRE Text(campo) — imuniza contra o tipo da coluna.
+
+fx_DataHoraBR(v: Text): Text =
+    IfError(Text(DateTimeValue(v), "dd/mm/yyyy hh:mm"), "—");
+
+fx_DataBR(v: Text): Text =
+    IfError(Text(DateValue(v), "dd/mm/yyyy"), "—");
+
+// DataFinalizacao ainda é texto en-US (M/D/YYYY) até a MEL-086 migrar a coluna.
+fx_DataFinalizacaoBR(v: Text): Text =
+    IfError(Text(DateValue(v, "en-US"), "dd/mm/yyyy"), "—");
+
+// Campo vazio nunca vira buraco branco na tela.
+fx_Ou(v: Text): Text =
+    If(IsBlank(Trim(v)), "—", Trim(v));
+
+
+//  §8 · CÓDIGO DE BARRAS  ═════════════════════════════════════════════
+//  Code 128 Set B (C21 · C35). START = 104; com 103 toda minúscula corrompe.
+
+// Os 95 caracteres do Code Set B: valor = posição - 1.
+fx_C128Charset = " !""#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+
+// Padrões 0..105 concatenados, 11 módulos cada. O padrão de n é Mid(_, n*11+1, 11).
+fx_C128Patterns = "11011001100110011011001100110011010010011000100100011001000100110010011001000100110001001000110010011001001000110010001001100010010010110011100100110111001001100111010111001100100111011001001110011011001110010110010111001100100111011011100100110011101001110110111011101001100111001011001110010011011101100100111001101001110011001011011011000110110001101100011011010100011000100010110001000100011010110001000100011010001000110001011010001000110001010001100010001010110111000101100011101000110111010111011000101110001101000111011011101110110110100011101100010111011011101000110111000101101110111011101011000111010001101110001011011101101000111011000101110001101011101111010110010000101111000101010100110000101000011001001011000010010000110100001011001000010011010110010000101100001001001101000010011000010100001101001000011001011000010010110010100001111011101011000010100100011110101010011110010010111100100100111101011110010010011110100100111100101111010010011110010100111100100101101101111011011110110111101101101010111100010100011110100010111101011110100010111100010111101010001111010001010111011110101111011101110101111011110101110110100001001101001000011010011100";
+
+fx_C128Val(c: Text): Number =
+    Coalesce(Find(c, fx_C128Charset), 1) - 1;
+
+fx_C128Pat(n: Number): Text =
+    If(
+        n = 106,
+        "1100011101011",                        // STOP (13 módulos)
+        Mid(fx_C128Patterns, n * 11 + 1, 11)
+    );
+
+// START B + dados + checksum + STOP.
+fx_C128Bits(txt: Text): Text =
+    If(
+        IsBlank(txt),
+        "",
+        With(
+            { _n: Len(txt) },
+            With(
+                {
+                    _chk: Mod(
+                        104 + Sum(
+                            ForAll(
+                                Sequence(_n) As _i,
+                                fx_C128Val(Mid(txt, _i.Value, 1)) * _i.Value
+                            ),
+                            Value
+                        ),
+                        103
+                    )
+                },
+                fx_C128Pat(104)
+                & Concat(
+                    ForAll(
+                        Sequence(_n) As _i,
+                        fx_C128Pat(fx_C128Val(Mid(txt, _i.Value, 1)))
+                    ),
+                    Value
+                )
+                & fx_C128Pat(_chk)
+                & fx_C128Pat(106)
+            )
+        )
+    );
+
+// SVG pronto para HtmlViewer e impressão. crispEdges impede o borrão da barra.
+fx_CodigoBarras(txt: Text): Text =
+    If(
+        IsBlank(txt),
+        "",
+        With(
+            { _bits: fx_C128Bits(txt), _bw: 2, _h: 60, _qz: 20 },
+            With(
+                { _w: Len(_bits) * _bw + _qz * 2 },
+                "<svg xmlns='http://www.w3.org/2000/svg' width='" & Text(_w, "[$-en-US]0")
+                & "' height='90' viewBox='0 0 " & Text(_w, "[$-en-US]0")
+                & " 90' shape-rendering='crispEdges'>"
+                & "<rect width='100%' height='100%' fill='white'/>"
+                & "<path fill='black' d='"
+                & Concat(
+                    ForAll(
+                        Sequence(Len(_bits)) As _i,
+                        If(
+                            Mid(_bits, _i.Value, 1) = "1",
+                            "M" & Text(_qz + (_i.Value - 1) * _bw, "[$-en-US]0")
+                            & " 8h" & Text(_bw, "[$-en-US]0")
+                            & "v" & Text(_h, "[$-en-US]0")
+                            & "h-" & Text(_bw, "[$-en-US]0") & "z",
+                            ""
+                        )
+                    ),
+                    Value
+                )
+                & "'/>"
+                & "<text x='" & Text(_w / 2, "[$-en-US]0")
+                & "' y='84' text-anchor='middle' font-family='monospace' font-size='14' fill='black'>"
+                & fx_XmlSeguro(txt)
+                & "</text></svg>"
+            )
+        )
+    );
+
+
+//  §9 · LAYOUT  ═══════════════════════════════════════════════════════
+//  Posição de elemento é DADO, não coordenada dentro do controle.
+
+fx_LayoutBalizas =
+    Table(
+        {id: "SOLDA",   nome: "Solda de Mandril",      etapa_gms: "Mandril",      Trançadeira: "",       tranc: false, temFila: true,  px: 14.7, py: 18.1, fx: 3.4,  fy: 28.9},
+        {id: "EXTMAND", nome: "Extrusora de Mandril",  etapa_gms: "Mandril",      Trançadeira: "",       tranc: false, temFila: false, px: 14.7, py: 34.6, fx: 0,    fy: 0},
+        {id: "TUBO",    nome: "Extrusão de Tubo",      etapa_gms: "Tubo",         Trançadeira: "",       tranc: false, temFila: true,  px: 30.0, py: 26.3, fx: 20.1, fy: 28.9},
+        {id: "TH01",    nome: "TH01",                  etapa_gms: "Trançagem",    Trançadeira: "TH01",   tranc: true,  temFila: true,  px: 43.6, py: 25.4, fx: 36.9, fy: 26.9},
+        {id: "TH02",    nome: "TH02",                  etapa_gms: "Trançagem",    Trançadeira: "TH02",   tranc: true,  temFila: true,  px: 55.0, py: 25.4, fx: 48.3, fy: 26.9},
+        {id: "TH03",    nome: "TH03",                  etapa_gms: "Trançagem",    Trançadeira: "TH03",   tranc: true,  temFila: true,  px: 66.3, py: 25.4, fx: 59.7, fy: 26.9},
+        {id: "TH04",    nome: "TH04",                  etapa_gms: "Trançagem",    Trançadeira: "TH04",   tranc: true,  temFila: true,  px: 77.7, py: 25.4, fx: 71.0, fy: 26.9},
+        {id: "TH05",    nome: "TH05",                  etapa_gms: "Trançagem",    Trançadeira: "TH05",   tranc: true,  temFila: true,  px: 43.6, py: 36.2, fx: 36.9, fy: 37.6},
+        {id: "TH06",    nome: "TH06",                  etapa_gms: "Trançagem",    Trançadeira: "TH06",   tranc: true,  temFila: true,  px: 55.0, py: 36.2, fx: 48.3, fy: 37.6},
+        {id: "TH07",    nome: "TH07",                  etapa_gms: "Trançagem",    Trançadeira: "TH07",   tranc: true,  temFila: true,  px: 66.3, py: 36.2, fx: 59.7, fy: 37.6},
+        {id: "TO04",    nome: "TO04",                  etapa_gms: "Trançagem",    Trançadeira: "TO04",   tranc: true,  temFila: true,  px: 77.7, py: 36.2, fx: 71.0, fy: 37.6},
+        {id: "TM01",    nome: "TM01",                  etapa_gms: "Trançagem",    Trançadeira: "TM01",   tranc: true,  temFila: true,  px: 43.6, py: 46.9, fx: 36.9, fy: 48.4},
+        {id: "TM04",    nome: "TM04",                  etapa_gms: "Trançagem",    Trançadeira: "TM04",   tranc: true,  temFila: true,  px: 55.0, py: 46.9, fx: 48.3, fy: 48.4},
+        {id: "SPIRAL",  nome: "Spiral",                etapa_gms: "Trançagem",    Trançadeira: "Spiral", tranc: true,  temFila: true,  px: 66.3, py: 46.9, fx: 59.7, fy: 48.4},
+        {id: "COBER",   nome: "Extrusão de Cobertura", etapa_gms: "Cobertura",    Trançadeira: "",       tranc: false, temFila: true,  px: 92.8, py: 79.3, fx: 96.6, fy: 81.2},
+        {id: "BAND",    nome: "Bandagem",              etapa_gms: "Bandagem",     Trançadeira: "",       tranc: false, temFila: true,  px: 78.3, py: 78.7, fx: 81.0, fy: 81.4},
+        {id: "VULC",    nome: "Vulcanização",          etapa_gms: "Vulcanização", Trançadeira: "",       tranc: false, temFila: true,  px: 64.0, py: 77.8, fx: 68.1, fy: 81.9},
+        {id: "DEBAND",  nome: "Debandagem",            etapa_gms: "Debandagem",   Trançadeira: "",       tranc: false, temFila: true,  px: 48.3, py: 79.3, fx: 52.5, fy: 81.9},
+        {id: "CAB1",    nome: "Cabine de Teste 1",     etapa_gms: "Finalização",  Trançadeira: "",       tranc: false, temFila: true,  px: 32.5, py: 71.1, fx: 38.3, fy: 82.0},
+        {id: "CAB2",    nome: "Cabine de Teste 2",     etapa_gms: "Finalização",  Trançadeira: "",       tranc: false, temFila: false, px: 32.5, py: 87.6, fx: 0,    fy: 0}
+    );
+
+
+//  §10 · CONSULTAS  ═══════════════════════════════════════════════════
+//  Única seção que toca fonte de dados. Só filtro delegável.
+
+fx_FichasAtivas = Filter(ficha_producao, processo <> "Finalizado");
+
+// Lista padrão da ConsultaOP quando não há busca digitada.
+fx_ConsultaOP_Ativas = fx_FichasAtivas;
+
+fx_KanbanAlvo       = 4;      // carretéis aguardando no Tubo >= alvo   → verde
+fx_KanbanMinimo     = 2;      // = mínimo → amarelo · abaixo do mínimo  → vermelho
+fx_MetaTurnoMandril = 5000;   // metros de mandril soldado por turno completo
+
+//  Semáforo do kanban. Um ponto só: card lateral, chip da galeria de bitolas,
+//  alerta da ficha e o Notify do timer leem daqui.
+fx_SemaforoKanban(qtd: Number): Color =
+    If(
+        qtd >= fx_KanbanAlvo,   fx_CorOK,
+        qtd >= fx_KanbanMinimo, fx_CorAlerta,
+        fx_CorErro
+    );
+
+fx_TrancKanbanMinimo = 1;     // carretéis exigidos atrás de cada trançadeira rodando
+
+fx_SemaforoTranc(rodando: Boolean, qtd: Number): Color =
+    If(
+        !rodando,                    fx_CorErro,
+        qtd >= fx_TrancKanbanMinimo, fx_CorOK,
+        fx_CorAlerta
+    );
+
+
+//  §11 · HORA-HORA (C13 · MEL-100)  ═══════════════════════════════════
+//  A JANELA HORÁRIA NÃO É UMA HORA. Ela vale o que dura:
+//  1º turno 05:20→13:57 = 517 min · 2º 13:57→23:20 = 563 · 3º 22:20→05:20 = 420.
+//  Meta da linha = velocidade (m/h) × minutos da janela ÷ 60 — nunca o MFG cheio.
+//  Evidência (export 'Hora-Hora' 11/01→03/09/2026, 24.316 linhas de trançagem):
+//  em 100% dos pares conferidos a janela curta recebeu a MESMA meta da janela
+//  cheia (1.234 pares em 22:00–22:20, que vale 20 min e cobrava 60). Meta inflada
+//  em ~+5% no 1º e 2º turno e +14,3% no 3º.
+//
+//  [v2.5] A janela 04:20–05:20 do 1º turno SAIU (decisão William, 03/09): ela
+//  sobrepunha o 3º turno no relógio e, por cair antes das 05:20, o fx_DataRefEm
+//  jogava o registro para o dia anterior. Com o 1º turno começando em 05:20
+//  (=320), nenhuma janela do turno atravessa a fronteira de data. Se voltar a
+//  existir hora extra de madrugada, ela volta como UMA LINHA nesta tabela.
+//
+//  [v2.6] A 1ª janela do 2º turno passou de 73 para 63 min: o turno começa
+//  13:57, não 13:47 (decisão William, 08/09). A meta dela estava 16% inflada
+//  todo dia. 2º turno: 573 → 563 min.
+
+// Grade oficial das trançadeiras. `Hora` é CHAVE (bate com a coluna Hora já gravada
+// na lista — nunca mude o texto); `Rotulo` é o que o operador lê; `Minutos` é a
+// duração real; `Fim` é o minuto da janela contado desde o início do turno.
+// ⚠ A coluna de duração chama-se Minutos, não Min: `Min` colide com a função Min().
+// ⚠ A 1ª janela do 2º turno é o caso em que Hora e Rotulo divergem de propósito:
+//   a chave "13:47 - 15:00" tem 8 meses de registro atrás dela na lista e no BI.
+//   Trocar o texto criaria duas séries para a mesma janela.
+fx_GradeHoraHora =
+    Table(
+        {Turno: 1, Ord: 1, Hora: "05:20 - 06:00", Rotulo: "05:20 - 06:00", Minutos: 40, Fim:  40},
+        {Turno: 1, Ord: 2, Hora: "06:00 - 07:00", Rotulo: "06:00 - 07:00", Minutos: 60, Fim: 100},
+        {Turno: 1, Ord: 3, Hora: "07:00 - 08:00", Rotulo: "07:00 - 08:00", Minutos: 60, Fim: 160},
+        {Turno: 1, Ord: 4, Hora: "08:00 - 09:00", Rotulo: "08:00 - 09:00", Minutos: 60, Fim: 220},
+        {Turno: 1, Ord: 5, Hora: "09:00 - 10:00", Rotulo: "09:00 - 10:00", Minutos: 60, Fim: 280},
+        {Turno: 1, Ord: 6, Hora: "10:00 - 11:00", Rotulo: "10:00 - 11:00", Minutos: 60, Fim: 340},
+        {Turno: 1, Ord: 7, Hora: "11:00 - 12:00", Rotulo: "11:00 - 12:00", Minutos: 60, Fim: 400},
+        {Turno: 1, Ord: 8, Hora: "12:00 - 13:00", Rotulo: "12:00 - 13:00", Minutos: 60, Fim: 460},
+        {Turno: 1, Ord: 9, Hora: "13:00 - 13:57", Rotulo: "13:00 - 13:57", Minutos: 57, Fim: 517},
+
+        {Turno: 2, Ord:  1, Hora: "13:47 - 15:00", Rotulo: "13:57 - 15:00",              Minutos: 63, Fim:  63},
+        {Turno: 2, Ord:  2, Hora: "15:00 - 16:00", Rotulo: "15:00 - 16:00",              Minutos: 60, Fim: 123},
+        {Turno: 2, Ord:  3, Hora: "16:00 - 17:00", Rotulo: "16:00 - 17:00",              Minutos: 60, Fim: 183},
+        {Turno: 2, Ord:  4, Hora: "17:00 - 18:00", Rotulo: "17:00 - 18:00",              Minutos: 60, Fim: 243},
+        {Turno: 2, Ord:  5, Hora: "18:00 - 19:00", Rotulo: "18:00 - 19:00",              Minutos: 60, Fim: 303},
+        {Turno: 2, Ord:  6, Hora: "19:00 - 20:00", Rotulo: "19:00 - 20:00",              Minutos: 60, Fim: 363},
+        {Turno: 2, Ord:  7, Hora: "20:00 - 21:00", Rotulo: "20:00 - 21:00",              Minutos: 60, Fim: 423},
+        {Turno: 2, Ord:  8, Hora: "21:00 - 22:00", Rotulo: "21:00 - 22:00",              Minutos: 60, Fim: 483},
+        {Turno: 2, Ord:  9, Hora: "22:00 - 22:20", Rotulo: "22:00 - 22:20",              Minutos: 20, Fim: 503},
+        {Turno: 2, Ord: 10, Hora: "22:20 - 23:20", Rotulo: "22:20 - 23:20 · hora extra", Minutos: 60, Fim: 563},
+
+        {Turno: 3, Ord: 1, Hora: "22:20 - 23:00", Rotulo: "22:20 - 23:00", Minutos: 40, Fim:  40},
+        {Turno: 3, Ord: 2, Hora: "23:00 - 00:00", Rotulo: "23:00 - 00:00", Minutos: 60, Fim: 100},
+        {Turno: 3, Ord: 3, Hora: "00:00 - 01:00", Rotulo: "00:00 - 01:00", Minutos: 60, Fim: 160},
+        {Turno: 3, Ord: 4, Hora: "01:00 - 02:00", Rotulo: "01:00 - 02:00", Minutos: 60, Fim: 220},
+        {Turno: 3, Ord: 5, Hora: "02:00 - 03:00", Rotulo: "02:00 - 03:00", Minutos: 60, Fim: 280},
+        {Turno: 3, Ord: 6, Hora: "03:00 - 04:00", Rotulo: "03:00 - 04:00", Minutos: 60, Fim: 340},
+        {Turno: 3, Ord: 7, Hora: "04:00 - 05:00", Rotulo: "04:00 - 05:00", Minutos: 60, Fim: 400},
+        {Turno: 3, Ord: 8, Hora: "05:00 - 05:20", Rotulo: "05:00 - 05:20", Minutos: 20, Fim: 420}
+    );
+
+// Motivos de parada — lista fechada, um lugar só. Antes existiam duas cópias de 25
+// itens dentro da mesma tela e uma terceira, diferente, no Excel.
+// `Tipo` é o que separa parada de FALHA de parada PROGRAMADA: sem essa distinção o
+// MTBF do BI (K17) não significa nada — é a pendência dMotivoParada de 31/08.
+fx_MotivosParada =
+    Table(
+        {Motivo: "Amostra",                      Tipo: "Programada"},
+        {Motivo: "Manut. Prod. Total (MPT)",     Tipo: "Programada"},
+        {Motivo: "Manutenção Preventiva",        Tipo: "Programada"},
+        {Motivo: "Manutenção Corretiva",         Tipo: "Falha"},
+        {Motivo: "Alimentação de fio",           Tipo: "Processo"},
+        {Motivo: "Troca de boneca",              Tipo: "Processo"},
+        {Motivo: "Falta de Carretel",            Tipo: "Material"},
+        {Motivo: "Falta de tubo",                Tipo: "Material"},
+        {Motivo: "Falta de Mandril",             Tipo: "Material"},
+        {Motivo: "Falta de Mandril Soldado",     Tipo: "Material"},
+        {Motivo: "Falta de fio - Bobinadeira",  Tipo: "Material"},
+        {Motivo: "Falta de programação",        Tipo: "Organizacional"},
+        {Motivo: "Quebra de fio",               Tipo: "Falha"},
+        {Motivo: "Falta de energia / ar",       Tipo: "Falha"},
+        {Motivo: "Falta de operador",           Tipo: "Organizacional"},
+        {Motivo: "Set-up",                      Tipo: "Programada"},
+        {Motivo: "Ajuste da Máquina",           Tipo: "Processo"},
+        {Motivo: "Falta de insulation",         Tipo: "Material"},
+        {Motivo: "Falta de Lenon",              Tipo: "Material"},
+        {Motivo: "Troca de Lenon",              Tipo: "Processo"},
+        {Motivo: "Falta de Mangueira",          Tipo: "Material"},
+        {Motivo: "Almoço",                      Tipo: "Programada"},
+        {Motivo: "Troca de Carretel",           Tipo: "Processo"},
+        {Motivo: "Emenda de Fita",              Tipo: "Processo"},
+        {Motivo: "Divergência do Tempo Padrão", Tipo: "Organizacional"},
+        {Motivo: "Reunião",                     Tipo: "Programada"},
+        {Motivo: "Execução Check List Lean",    Tipo: "Programada"},
+        {Motivo: "Falta de Demanda",            Tipo: "Organizacional"},
+        {Motivo: "Resto de fio",                Tipo: "Material"},
+        {Motivo: "Motivo Não Declarado",        Tipo: "Organizacional"},
+        {Motivo: "Sem apontamento",             Tipo: "Organizacional"},
+        {Motivo: "Análise/Problema no tubo",             Tipo: "Falha"}
+    );
+
+// Trançadeiras que apontam Hora-Hora, na ordem física da célula.
+fx_CelulasTrancagem =
+    Table(
+        {Celula: "TH01"}, {Celula: "TH02"}, {Celula: "TH03"}, {Celula: "TH04"},
+        {Celula: "TH05"}, {Celula: "TH06"}, {Celula: "TH07"}, {Celula: "TO04"},
+        {Celula: "TM01"}, {Celula: "TM04"}, {Celula: "Spiral"}
+    );
+
+// "2º Turno" → 2. O dropdown guarda o rótulo porque é o que a lista grava.
+fx_TurnoNum(rotulo: Text): Number =
+    Switch(Left(Trim(rotulo), 1), "1", 1, "2", 2, "3", 3, 0);
+
+// Minuto do dia em que cada turno começa: 05:20 · 13:57 · 22:20.
+// Tem que fechar com o fx_Turno (§4) e com a dTurno do BI (Mestre BI §2.3).
+fx_InicioTurnoMin(turno: Number): Number =
+    Switch(turno, 1, 320, 2, 837, 3, 1340, 0);
+
+// Minutos decorridos desde o início do turno. Mod resolve a virada de meia-noite
+// do 3º turno sem comparar data com número (B §3.3).
+fx_MinNoTurno(agora: DateTime, turno: Number): Number =
+    Mod(fx_MinutosDoDia(agora) - fx_InicioTurnoMin(turno) + 1440, 1440);
+
+// A META DA JANELA. mfgHora vem de colVelocidadeProducao (m/h por mangueira × máquina).
+fx_MetaFaixa(mfgHora: Number, minutos: Number): Number =
+    Round(mfgHora * minutos / 60, 0);
+
+// A janela já fechou? Turno futuro nunca vence (senão a tela abre gritando quando
+// o operador consulta o turno seguinte); turno passado vence inteiro.
+fx_FaixaVencida(fimOffset: Number, turnoLinha: Number, agora: DateTime): Boolean =
+    With(
+        { _ta: fx_TurnoEm(agora) },
+        If(
+            turnoLinha = _ta,                fx_MinNoTurno(agora, turnoLinha) >= fimOffset,
+            turnoLinha = Mod(_ta, 3) + 1,    false,
+            true
+        )
+    );
+
+// Pendência da linha, em um lugar só.
+// "" = nada a cobrar · SEM_APONTAMENTO = janela fechada e vazia ·
+// SEM_MOTIVO = ficou abaixo da meta e não disse por quê.
+// Janela aberta nunca acusa: cobrar hora que ainda não terminou ensina o operador
+// a ignorar o alerta (mesma regra do terceiro estado do fx_ConfFio).
+// ⚠ As telas NÃO chamam esta aqui direto — elas chamam a fx_PendenciaMaqHH abaixo.
+//   Esta fica exposta para quem não tem o conceito de recurso ativo.
+fx_PendenciaHH(vencida: Boolean, mangueira: Text, meta: Number, real: Number, motivo: Text): Text =
+    If(
+        !vencida,                                          "",
+        IsBlank(Trim(mangueira)) && real <= 0,             "SEM_APONTAMENTO",
+        meta > 0 && real < meta && IsBlank(Trim(motivo)),  "SEM_MOTIVO",
+        ""
+    );
+
+// [v2.6 · MEL-111] A MESMA pendência, com o filtro de MÁQUINA ATIVA por cima.
+// Um recurso só é cobrado se deu sinal de vida no turno:
+//   A) alguma janela já apontada (metro ou mangueira), ou
+//   B) OP com status_processo = "Em processo" endereçada a ele na ficha_producao.
+// Sem sinal, a máquina aparece cinza, "sem produção no turno", fora do contador.
+// Histórico (360 turnos): 7,6 trançadeiras apontam por turno de 11, e as 11 rodam
+// em 6,1% dos turnos — cobrar as 11 dava ~38 janelas falsas por turno, e alerta
+// que grita sem base ensina o operador a ignorar o alerta (C1 · C17 · C24).
+// A regra nasceu na v0.5.2 dentro do código da tela e MORREU na reescrita da
+// v0.5.3. Por isso ela mora aqui agora: bloco de tela é reescrito, fx_ não.
+// Chamadores: cor/borda da linha, borda do Real, borda do Motivo, faixa de alerta
+// (cor, visibilidade e texto), trava do Fechar turno, contador da célula e o card
+// do Hora-Hora na ficha da Trançagem.
+fx_PendenciaMaqHH(ativa: Boolean, vencida: Boolean, mangueira: Text, meta: Number, real: Number, motivo: Text): Text =
+    If(
+        !ativa,
+        "",
+        fx_PendenciaHH(vencida, mangueira, meta, real, motivo)
+    );
+
+fx_RendimentoHH(meta: Number, real: Number): Number =
+    If(meta > 0, Round(real / meta * 100, 1), 0);
+
+// [v2.6 · MEL-111] Qual máquina a tela está mostrando: a da OP selecionada; sem OP,
+// a do filtro da fila; filtro em "Todas", nenhuma — e aí o painel diz CÉLULA no
+// rótulo em vez de mostrar o total das 11 com cara de número de uma máquina só.
+// Número de célula sob rótulo de máquina foi o que fez a TH04 aparecer devendo 53
+// apontamentos em 08/09 sem ter rodado uma OP.
+fx_MaquinaFoco(daOP: Text, doFiltro: Text): Text =
+    With(
+        { _op: Trim(daOP), _fi: Trim(doFiltro) },
+        If(
+            !IsBlank(_op),  _op,
+            _fi = "Todas",  "",
+            _fi
+        )
+    );
+
+// Chave canônica da mangueira para casar o que o operador escolhe com o que está
+// gravado: sem espaço, caixa alta, sufixo LRL reduzido e "-0" normalizado para "-".
+fx_MangCanon(mangueira: Text): Text =
+    With(
+        { _u: Upper(Substitute(Trim(mangueira), " ", "")) },
+        Substitute(
+            If(Right(_u, 3) = "LRL", Left(_u, Len(_u) - 2), _u),
+            "-0",
+            "-"
+        )
+    );
+// [v2.7.1] Nome de célula usado no app x nome de máquina no DM_ENGRENAGENS: só diverge na
+// Spiral (app) / TE01 (planilha). Sem isso a Spiral fica sem nenhuma mangueira no Hora-Hora.
+fx_MaquinaEngrenagens(célula: Text): Text =
+    If(célula = "Spiral", "TE01", célula);
+
+// [v2.7.1] Velocidade teórica (m/h) pelo delineamento: DM_ENGRENAGENS casado por máquina +
+// construção, com fx_NormCodigo() dos dois lados em cada campo — a mesma normalização que o
+// delineamento da Trançagem já usa nesse exato casamento _2BRD_CODE(DM_TRANÇAGEM)↔_1CONSTRUCAO
+// (App_Formulas §5). Sem ela, um espaço ou caixa diferente entre DM_TRANÇAGEM (SharePoint,
+// digitado à mão) e DM_ENGRENAGENS vira Blank() em silêncio → MFG = 0 → mangueira some da lista.
+// _13TEORICA_M_H vem com vírgula decimal e tem linhas "-" (Spiral) — Text()+Substitute cobre
+// número ou texto na origem, e "-"/Blank() viram 0 (a chamadora decide o que fazer com MFG = 0).
+fx_VelocidadeTeorica(maquina: Text, construcao: Text): Number =
+    fx_NumVelocidade(
+        Text(
+            LookUp(
+                DM_ENGRENAGENS,
+                fx_NormCodigo(_4MAQUINA) = fx_NormCodigo(maquina) &&
+                    fx_NormCodigo(_1CONSTRUCAO) = fx_NormCodigo(construcao),
+                _13TEORICA_M_H
+            )
+        )
+    );
+// [v2.7.2] Fallback pra Spiral enquanto DM_ENGRENAGENS._13TEORICA_M_H estiver "-" nessas 5
+// construções. Valores herdados do mock antigo (colVelocidadeProducao). Some sozinho quando
+// alguém preencher a planilha — fx_VelocidadeTeorica volta a MFG > 0 e o Switch nunca é atingido.
+fx_VelocidadeFallbackSpiral(mangueira: Text): Number =
+    Switch(
+        fx_MangCanon(mangueira),
+        fx_MangCanon("GH493-6"),  216,
+        fx_MangCanon("GH493-8"),  240,
+        fx_MangCanon("GH493-10"), 288,
+        fx_MangCanon("GH493-12"), 354,
+        fx_MangCanon("GH493-16"), 456,
+        fx_MangCanon("EC415-6"),  216,
+        fx_MangCanon("EC415-8"),  240,
+        fx_MangCanon("EC415-10"), 288,
+        fx_MangCanon("EC415-12"), 354,
+        fx_MangCanon("EC415-16"), 276,
+        0
+    );
+
+// [v2.7.2] Envelope de fx_VelocidadeTeorica: só cai no fallback quando o delineamento real
+// devolveu 0 (planilha sem essa construção). Onde DM_ENGRENAGENS já tem o número, este UDF
+// devolve exatamente o mesmo valor de antes — zero risco pras outras células.
+fx_VelocidadeComFallback(maquina: Text, construcao: Text, mangueira: Text): Number =
+    With(
+        { _v: fx_VelocidadeTeorica(maquina, construcao) },
+        If(_v > 0, _v, fx_VelocidadeFallbackSpiral(mangueira))
+    );
+
+
+//  §12 · EVENTOS DE PRODUÇÃO  ═════════════════════════════════════════
+//  Fonte: lista Eventos_Producao. Grão: 1 linha por OP × etapa × tipo.
+//  tipo ∈ {Início, Fim, Parcial, Cancelado} · turno e data_ref já vêm gravados.
+//  ⚠ Conferido no export de 27/07 a 09/09/2026 (6.240 linhas): a coluna data_ref
+//    respeita a fronteira das 05:20 em 100% das linhas — ela é o dia de produção,
+//    não a data do relógio. Mesmo assim a tela filtra por data_hora contra a
+//    janela, porque data_hora é DateTime garantido e o filtro delega igual.
+ 
+// As 8 etapas da linha, na ordem física. Rotulo é o que o operador lê;
+// Etapa é a CHAVE, e tem que bater exatamente com a coluna etapa da lista
+// (é "Extração", não "Extr./Teste" — esse é o nome do processo na ficha).
+fx_EtapasLinha =
+    Table(
+        {Ord: 1, Etapa: "Mandril",      Rotulo: "MANDRIL"},
+        {Ord: 2, Etapa: "Tubo",         Rotulo: "TUBO"},
+        {Ord: 3, Etapa: "Trançagem",    Rotulo: "TRANÇAGEM"},
+        {Ord: 4, Etapa: "Cobertura",    Rotulo: "COBERTURA"},
+        {Ord: 5, Etapa: "Bandagem",     Rotulo: "BANDAGEM"},
+        {Ord: 6, Etapa: "Vulcanização", Rotulo: "VULCANIZAÇÃO"},
+        {Ord: 7, Etapa: "Debandagem",   Rotulo: "DEBANDAGEM"},
+        {Ord: 8, Etapa: "Extração",     Rotulo: "EXTRAÇÃO"}
+    );
+ 
+// Cor da etapa em um lugar só. Os tokens já existem na §1 desde a v2.0 — o que
+// não existia era a função que casa o nome gravado com o token, e por isso cada
+// tela repetia um Switch com RGBA literal dentro.
+fx_CorEtapa(etapa: Text): Color =
+    Switch(
+        etapa,
+        "Mandril",      fx_CorEtapaSolda,
+        "Tubo",         fx_CorEtapaTubo,
+        "Trançagem",    fx_CorEtapaTrancagem,
+        "Cobertura",    fx_CorEtapaCobertura,
+        "Bandagem",     fx_CorEtapaBandagem,
+        "Vulcanização", fx_CorEtapaVulca,
+        "Debandagem",   fx_CorEtapaDeband,
+        "Extração",     fx_CorEtapaExtracao,
+        fx_CorTextoSuave
+    );
+ 
+// Cor do tipo de evento: fim é conclusão (verde), início é informação (azul),
+// parcial é atenção, cancelado é erro.
+fx_CorTipoEvento(tipo: Text): Color =
+    Switch(
+        tipo,
+        "Fim",       fx_CorOK,
+        "Início",    fx_CorInfo,
+        "Parcial",   fx_CorAlerta,
+        "Cancelado", fx_CorErro,
+        fx_CorTextoSuave
+    );
+ 
+// Nome de máquina canônico. A coluna recurso tem a MESMA trançadeira escrita de
+// quatro jeitos — no export de 09/09: TH07 (1.018), TH-07 (9), TO04 (474),
+// TO-04 (35), TH05 (149), TH.05 (12). Sem normalizar, o ranking de máquina
+// mostra a mesma trançadeira em duas linhas e nenhuma das duas é o total dela.
+// ⚠ NÃO resolve VIBRACIONAL × VIBRATION (193 × 179 linhas): são a mesma máquina
+//   de mandril em dois idiomas, e unificar isso é decisão de negócio, não de
+//   fórmula — vira MEL própria.
+fx_RecursoCanon(recurso: Text): Text =
+    Upper(
+        Substitute(
+            Substitute(Substitute(Trim(recurso), "-", ""), ".", ""),
+            " ",
+            ""
+        )
+    );
+ 
+// Refugo em % do que foi produzido. Denominador explícito no nome porque a
+// pergunta "por cento de quê" é o que separa esse número de uma mentira:
+// aqui é refugo ÷ metros bons apontados, não refugo ÷ (bons + refugo).
+fx_PctRefugoProduzido(produzido: Number, refugo: Number): Number =
+    If(produzido > 0, Round(refugo / produzido * 100, 2), 0);
+
+
+//  §13 · HORA-HORA DA COBERTURA (C13 · C19 · C20)  ════════════════════
+//  Duas telas apontam a Cobertura e as duas gravam na MESMA lista 'Hora-Hora'
+//  com a MESMA meta: a que o operador digita (scr_HoraHora_Cobertura_1) e a
+//  que deriva do carretel que a ficha já grava (scr_HoraHora_CoberturaGMS_1).
+//  Meta em dois lugares seria duas verdades para a mesma etapa — pilar 1.
+//
+//  ⚠ fx_JanelaInicioEm / fx_JanelaFimEm da §4 são OUTRA COISA: elas delimitam o
+//    DIA de produção (05:20 → 05:20). As daqui delimitam UMA JANELA da grade, e
+//    por isso se chamam fx_JanelaHHIni / fx_JanelaHHFim.
+
+// A Cobertura aponta como UMA célula só (decisão William, 21/09).
+// A fábrica tem Extrusora 1 e Extrusora 2 e as duas rodam Tubo e Cobertura, mas
+// a ficha_producao NÃO TEM campo de máquina para Cobertura e o fx_LayoutBalizas
+// (§9) tem só a baliza COBER. Separar as duas no indicador exige coluna nova na
+// lista — enquanto ela não existe, inventar duas células aqui só criaria um
+// rótulo sem dado por trás.
+// Named Formula e não literal na tela: quando a coluna nascer, isto vira uma
+// tabela igual à fx_CelulasTrancagem e as duas telas acompanham sozinhas.
+fx_CelulaCobertura = "Cobertura";
+
+// O DM_EXTRUSAO_COBERTURA guarda SPEEDY_mpm em METRO POR MINUTO.
+// A lista 'Hora-Hora' e a fx_MetaFaixa trabalham em METRO POR HORA.
+// O ×60 mora AQUI, num lugar só — é a mesma disciplina do fx_VelocidadeTeorica
+// da §11, que concentra a leitura da velocidade da trançagem. Duas réguas de
+// velocidade no mesmo sistema já custaram caro: em 03/09, 41 dos 118 pares
+// mangueira×máquina divergiam entre o App.OnStart e a planilha, e 20,5% do
+// histórico tinha sido medido contra velocidade não confirmada.
+fx_VelCobHora(metroPorMinuto: Number): Number =
+    Round(Coalesce(metroPorMinuto, 0) * 60, 0);
+
+// Abertura e fechamento de UMA janela da grade.
+// `fim` e `minutos` vêm da fx_GradeHoraHora; `dataRef` vem do fx_DataRefEm.
+// Somar minutos à data resolve sozinho a virada de meia-noite do 3º turno:
+// 1340 + 420 = 1760 min = 05:20 do dia seguinte. Nada de comparar data com
+// número (B §3.3).
+fx_JanelaHHIni(dataRef: Date, turno: Number, fim: Number, minutos: Number): DateTime =
+    DateAdd(dataRef, fx_InicioTurnoMin(turno) + fim - minutos, TimeUnit.Minutes);
+
+fx_JanelaHHFim(dataRef: Date, turno: Number, fim: Number): DateTime =
+    DateAdd(dataRef, fx_InicioTurnoMin(turno) + fim, TimeUnit.Minutes);
+
+// Quantos minutos um carretel passou DENTRO de uma janela. É a primitiva do
+// rateio: o carretel entrega metros à janela na proporção do tempo que rodou
+// dentro dela.
+// Carretel que atravessa a virada de turno entra nas janelas dos DOIS turnos,
+// cada uma com a sua fatia — e é assim que tem que ser.
+// Blank de qualquer lado devolve 0: carretel sem carimbo não rateia nada e não
+// inventa produção.
+// ⚠ Max()/Min() de DateTime não têm assinatura garantida no Power Fx — por isso
+//   o recorte é feito com If explícito.
+fx_OverlapMin(janIni: DateTime, janFim: DateTime, runIni: DateTime, runFim: DateTime): Number =
+    If(
+        IsBlank(runIni) || IsBlank(runFim) || IsBlank(janIni) || IsBlank(janFim),
+        0,
+        With(
+            {
+                _i: If(runIni > janIni, runIni, janIni),
+                _f: If(runFim < janFim, runFim, janFim)
+            },
+            If(_f <= _i, 0, DateDiff(_i, _f, TimeUnit.Minutes))
+        )
+    );
+
+// Quanto de uma grandeza do carretel (metros produzidos, perda) cai numa janela.
+// Proporcional ao TEMPO — é a melhor aproximação sem sensor. Quando o Factbird
+// entrar (C20), a contagem por minuto substitui isto e o rateio deixa de
+// existir; até lá, é rateio declarado, não medição disfarçada.
+// duracao <= 0 devolve 0 em vez de estourar: carretel de duração zero é dado
+// ruim, e dado ruim não vira divisão por zero na tela do operador.
+fx_RateioCob(valor: Number, minutosNaJanela: Number, duracaoTotal: Number): Number =
+    If(
+        duracaoTotal <= 0 || minutosNaJanela <= 0,
+        0,
+        Coalesce(valor, 0) * minutosNaJanela / duracaoTotal
+    );
+
+// Motivos de parada da Cobertura — lista fechada, com Tipo, pelo mesmo motivo da
+// fx_MotivosParada: sem Tipo o MTBF do BI (K17) não significa nada.
+//
+// Os códigos são OS MESMOS da fx_MotivosParada onde o motivo é o mesmo, de
+// propósito — mesmo motivo, mesmo código, para o Pareto somar entre etapas.
+// Entram só os que existem na Cobertura: "Troca de boneca", "Alimentação de
+// fio", "Quebra de fio" e "Resto de fio" são de trançadeira; "Falta de Mandril"
+// e "Falta de Mandril Soldado" são do Tubo/Mandril.
+//
+// ⚠ Os novos começam em 32, e NÃO em 31: o 31 já está ocupado por "Problema no
+//   tubo" na fx_MotivosParada. Reaproveitar o 31 aqui com outro significado
+//   quebraria exatamente o Pareto que a numeração compartilhada existe para
+//   permitir — dois motivos diferentes viram a mesma barra.
+//
+// 32–38 vêm da "Lista de paradas Extrusoras" (aba Listas, col. B) e dos motivos
+// soltos da aba Extrusora 2 (R10:W16) da planilha Hora-Hora 2024.
+// ⚠ O Tipo dos sete novos é PROPOSTA e precisa do aval da Manutenção antes de
+//   virar régua de MTBF. O mais discutível é o 32: a fábrica separa a preventiva
+//   fora do prazo justamente por estar fora do plano, mas o trabalho em si
+//   continua sendo planejado — está como Programada.
+fx_MotivosParadaCobertura =
+    Table(
+        {Motivo: "1 - Manut. Prod. Total (MPT)",                Tipo: "Programada"},
+        {Motivo: "2 - Manutenção Preventiva",                   Tipo: "Programada"},
+        {Motivo: "3 - Manutenção Corretiva",                    Tipo: "Falha"},
+        {Motivo: "6 - Falta de Carretel",                       Tipo: "Material"},
+        {Motivo: "11 - Falta de programação",                   Tipo: "Organizacional"},
+        {Motivo: "13 - Falta de energia / ar",                  Tipo: "Falha"},
+        {Motivo: "14 - Falta de operador",                      Tipo: "Organizacional"},
+        {Motivo: "15 - Set-up",                                 Tipo: "Programada"},
+        {Motivo: "16 - Ajuste da Máquina",                      Tipo: "Processo"},
+        {Motivo: "20 - Falta de Mangueira",                     Tipo: "Material"},
+        {Motivo: "21 - Refeição",                               Tipo: "Programada"},
+        {Motivo: "22 - Troca de Carretel",                      Tipo: "Processo"},
+        {Motivo: "24 - Divergência do Tempo Padrão",            Tipo: "Organizacional"},
+        {Motivo: "25 - Reunião",                                Tipo: "Programada"},
+        {Motivo: "26 - Execução Check List Lean",               Tipo: "Programada"},
+        {Motivo: "27 - Falta de Demanda",                       Tipo: "Organizacional"},
+        {Motivo: "29 - Motivo Não Declarado",                   Tipo: "Organizacional"},
+        {Motivo: "30 - Sem apontamento",                        Tipo: "Organizacional"},
+        {Motivo: "31 - Problema no tubo",                       Tipo: "Falha"},
+        {Motivo: "32 - Manutenção Preventiva (fora do prazo)",  Tipo: "Programada"},
+        {Motivo: "33 - Troca de composto",                      Tipo: "Processo"},
+        {Motivo: "34 - Falta de composto",                      Tipo: "Material"},
+        {Motivo: "35 - Problemas com composto",                 Tipo: "Material"},
+        {Motivo: "36 - Troca de Ferramental (fieira/matriz)",   Tipo: "Processo"},
+        {Motivo: "37 - Problemas de qualidade",                 Tipo: "Processo"},
+        {Motivo: "38 - Inventário",                             Tipo: "Programada"}
+    );
+
+
+//  §14 · PAINEL DA CÉLULA  ════════════════════════════════════════════
+//
+//  POR QUE TOKENS NOVOS E NÃO OS DA §1:
+//  o painel é a ÚNICA superfície do GMS que não é operada — é lida de 4 a 8 m
+//  de distância, em corredor com luz de galpão. Fundo claro (fx_CorFundo) a essa
+//  distância vira borrão e o brilho do monitor cansa em turno de 8 h; é por isso
+//  que todo mimic panel de SCADA é escuro. Os quatro tokens abaixo NÃO inventam
+//  paleta: são os mesmos valores da §1 com o papel invertido —
+//    fx_CorPainelFundo      = o valor de fx_CorTexto      (#0F172A)
+//    fx_CorPainelSuperficie = o valor de fx_CorHeader     (#1E293B)
+//    fx_CorPainelTexto      = o valor de fx_CorFundo      (#F5F7FA)
+//  Só o fx_CorPainelBorda é cor nova (#334155, o slate-700 que fecha a escala
+//  entre fx_CorHeader e fx_CorRotulo), porque fx_CorBorda (#E2E8F0) sobre fundo
+//  escuro vira uma linha branca gritando.
+//
+//  ⛔ Estes tokens valem SÓ para telas de parede. Tela de operador continua na §1.
+
+fx_CorPainelFundo      = ColorValue("#0F172A");
+fx_CorPainelSuperficie = ColorValue("#1E293B");
+fx_CorPainelBorda      = ColorValue("#334155");
+fx_CorPainelTexto      = ColorValue("#F5F7FA");
+
+// A cor do estado, em UM lugar. Sem isto, o mesmo If de 4 ramos se repetiria em
+// ~20 propriedades da tela (borda da máquina, fundo do carretel, cor do rótulo,
+// cor do cronômetro) e divergiria na primeira manutenção — foi exatamente o que
+// aconteceu com as cores de etapa antes do fx_CorEtapa (§12).
+// As chaves são as que fx_EstadoPosto (§6), fx_EstadoVulca (§6) e fx_EstadoBob
+// (§6) já devolvem. Nenhum texto novo é inventado aqui.
+fx_CorEstadoPosto(estado: Text): Color =
+    Switch(
+        estado,
+        "PRODUZINDO",   fx_CorOK,
+        "BOBINANDO",    fx_CorOK,
+        "VULCANIZANDO", fx_CorOK,
+        "COM FILA",     fx_CorAlerta,
+        "AGUARDANDO",   fx_CorAlerta,
+        "RESFRIANDO",   fx_CorGelo,
+        "PARADA",       fx_CorErro,
+        fx_CorTextoSuave        // LIVRE e qualquer estado ainda não mapeado
+    );
+
+// Bitolas que o estoque de mandril exibe, na ordem física do quadro de papel.
+// Named Formula e não literal na tela: bitola nova é uma linha aqui e aparece no
+// painel sozinha. Os valores vêm do quadro em uso na célula (−4 a −16).
+// ⚠ É CADASTRO, não verdade do dado: uma OP com bitola fora desta lista não
+//   some do sistema, só não ganha linha no painel. Conferir contra a coluna
+//   Bitola da ficha_producao antes de tratar o painel como inventário.
+fx_BitolasMandril =
+    Table(
+        {Bitola: 4}, {Bitola: 6}, {Bitola: 8},
+        {Bitola: 10}, {Bitola: 12}, {Bitola: 16}
+    );
+
+// As 4 etapas do bloco de acabamento do painel, na ordem do fluxo físico.
+// Processo é a CHAVE (bate com a coluna processo da ficha_producao); Rotulo é o
+// que o supervisor lê. Mesmo padrão do fx_EtapasLinha (§12).
+// A Trançagem não entra aqui: ela tem bloco próprio (11 postos, fx_LayoutBalizas).
+fx_EtapasAcabPainel =
+    Table(
+        {Ord: 1, Processo: "Cobertura",    Rotulo: "Extrusão de Cobertura"},
+        {Ord: 2, Processo: "Bandagem",     Rotulo: "Bandagem"},
+        {Ord: 3, Processo: "Vulcanização", Rotulo: "Vulcanização"},
+        {Ord: 4, Processo: "Debandagem",   Rotulo: "Debandagem"}
+    );
+
+// Teto de OP zumbi, em horas. Espelha o K09 do Mestre BI ("OPs abertas há mais
+// que o teto configurado, padrão 72 h"), que nasceu da OP de 4.162 h da auditoria.
+// Aqui é Named Formula e não linha de ConfiguracaoGMS porque o painel é leitura
+// pura — quando a supervisão quiser recalibrar sem republish, sobe para a tabela
+// junto com fx_KanbanAlvo (§10), no mesmo movimento.
+fx_TetoOPHoras = 72;
+
+// Quantos carretéis o painel desenha por posto antes de resumir em "+N".
+// 4 na trançagem é o que cabe na faixa de 294 px sem o círculo ficar ilegível a
+// 4 m; o bloco de acabamento tem mais largura e usa 6 (o segundo valor).
+fx_PainelSlotsTranc = 4;
+fx_PainelSlotsAcab  = 6;
+
+// [Painel v0.8.0 · C37] As duas cabines físicas da Extração/Teste. Posto é a CHAVE
+// (bate com a coluna cabine_teste da ficha_producao); Rotulo é o que a TV mostra.
+fx_CabinesTeste = Table(
+    { Posto: "CABINE_L1", Rotulo: "Cabine L1" },
+    { Posto: "CABINE_L2", Rotulo: "Cabine L2" }
+);
+
+// [Painel v0.9.0] A ficha de consulta do painel fecha sozinha: a TV não pode ficar
+// presa num modal esquecido. Conferido pelo tmr_RelogioPnl (30 s), então fecha entre
+// 90 e 120 s depois do último toque. Recalibrar aqui, nunca na tela.
+fx_DetFechaSeg = 90;
+
+// ── [v3.0 · Painel v0.10.0] AUTONOMIA DE TUBO DAS TRANÇADEIRAS (C10 · C23) ──
+
+// Turno útil em minutos (7h20, William 28/09). É a régua da autonomia de tubo:
+// < 1 turno vermelho · 1 a < 2 turnos laranja · >= 2 turnos verde.
+// ⚠ Não é a janela do Hora-Hora (1º turno = 517 min). Recalibrar AQUI, nunca na tela.
+fx_TurnoUtilMin = 440;
+
+// Autonomia AGORA: a calculada na carga (minCarga, no instante sinc) menos o que o
+// relógio da tela andou desde então. Recebe os instantes, não lê Now() (regra 2).
+fx_AutonomiaAgora(minCarga: Number, sinc: DateTime, agora: DateTime): Number =
+    Max(0, minCarga - Max(0, DateDiff(sinc, agora, TimeUnit.Minutes)));
+
+// "5h40" · "12h05" · "+24 h". Formato diferente do fx_Crono ("05:40") de propósito:
+// crono é tempo que PASSOU, autonomia é tempo que FALTA — não podem se confundir na TV.
+// [v3.0.2] Zero vira "Conferir": pela conta o carretel montado já acabou e não há fila, mas
+// a OP segue Em processo. "0h00" com a máquina girando lia como painel quebrado, e "fim?"
+// (v3.0.1) não servia numa TV lida por gerente e diretor. O motivo vai no Onde olhar
+// ("tubo esgotado pela conta" + janelas sem Hora-Hora).
+fx_AutonomiaTexto(minutos: Number): Text =
+    With(
+        { _m: Round(Max(0, minutos), 0) },
+        If(
+            _m <= 0,
+            "Conferir",
+            _m >= 1440,
+            "+24 h",
+            Text(Int(_m / 60), "[$-en-US]0") & "h" & Text(Mod(_m, 60), "[$-en-US]00")
+        )
+    );
+
+// [v3.0.2] Abaixo disto, a metragem de um carretel na fila é apontamento errado e entra no
+// Onde olhar (ex.: carretel de 1 m na Spiral, 30/09). Vazio conta como 0. Recalibrar aqui.
+fx_MetrosMinCarretel = 10;
+
+fx_SemaforoAutonomia(minutos: Number): Color =
+    If(
+        minutos >= 2 * fx_TurnoUtilMin, fx_CorOK,
+        minutos >= fx_TurnoUtilMin,     fx_CorAlerta,
+        fx_CorErro
+    );

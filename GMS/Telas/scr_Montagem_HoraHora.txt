@@ -1,0 +1,1831 @@
+Screens:
+  scr_Montagem_HoraHora:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =Set(varAgora, Now());
+        Set(varDataTela, fx_DataRefEm(varAgora));
+        Set(varTurnoTela, fx_TurnoLabelEm(varAgora));
+        Set(varCelulaMontagem,
+            Coalesce(varCelulaMontagem, LookUp(MapeamentoSetor, EmailComputador = User().Email).Celula)
+        );
+        Set(varProcM, false);
+        Set(varPNAtivo, Blank());
+        Set(varPopupFinalizar_M, false);
+        UpdateContext({ctxPopExcesso: false});
+        Concurrent(
+            Refresh(Producao_Montagem),
+            Refresh(Paradas_Montagem)
+        );
+        ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
+        Collect(colOPsAbertas,
+            ForAll(
+                Filter(Producao_Montagem,
+                    Celula = varCelulaMontagem && Status = "EmAndamento"
+                ) As r,
+                {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+            )
+        );
+        ClearCollect(colParadasM,
+            Filter(Paradas_Montagem,
+                Celula = varCelulaMontagem &&
+                Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+            )
+        );
+        ClearCollect(colDescM,
+            ForAll(
+                Distinct(
+                    Filter(colParadasM,
+                        Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                    ),
+                    OPVinculada
+                ) As d,
+                {
+                    Chave: d.Value,
+                    MinDesc: Sum(
+                        Filter(colParadasM,
+                            OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                        ),
+                        TempoParadoMin
+                    )
+                }
+            )
+        )
+    Children:
+      - tmr_RelogioMont:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =Set(varAgora, Now());
+              Refresh(Producao_Montagem);
+              Refresh(Paradas_Montagem);
+              ClearCollect(colParadasM,
+                  Filter(Paradas_Montagem,
+                      Celula = varCelulaMontagem &&
+                      Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                  )
+              );
+              ClearCollect(colDescM,
+                  ForAll(
+                      Distinct(
+                          Filter(colParadasM,
+                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                          ),
+                          OPVinculada
+                      ) As d,
+                      {
+                          Chave: d.Value,
+                          MinDesc: Sum(
+                              Filter(colParadasM,
+                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                              ),
+                              TempoParadoMin
+                          )
+                      }
+                  )
+              )
+            Repeat: =true
+            Start: =!varPopupFinalizar_M && !varProcM
+            Visible: =false
+            Width: =1
+            X: =160
+            Y: =14
+      - rct_header_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =1366
+      - ico_voltar_m_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_Montagem)
+            Visible: =!varAcessoRestrito
+            Width: =49
+            X: =20
+      - lbl_titulo_m_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Montagem - " & Coalesce(varCelulaMontagem, "—")
+            Width: =700
+            X: =333
+            Y: =4
+      - lbl_hora_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorTextoSuave
+            FontWeight: =FontWeight.Semibold
+            Height: =59
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: =varTurnoTela & "  •  " & Text(varDataTela, "dd/mm/yyyy")
+            Width: =260
+            X: =1105
+            Y: =4
+      - ico_refresh_m_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorRotulo
+            Height: =36
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =Set(varAgora, Now());
+              Refresh(Producao_Montagem);
+              Refresh(Paradas_Montagem);
+              ClearCollect(colParadasM,
+                  Filter(Paradas_Montagem,
+                      Celula = varCelulaMontagem &&
+                      Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                  )
+              );
+              ClearCollect(colDescM,
+                  ForAll(
+                      Distinct(
+                          Filter(colParadasM,
+                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                          ),
+                          OPVinculada
+                      ) As d,
+                      {
+                          Chave: d.Value,
+                          MinDesc: Sum(
+                              Filter(colParadasM,
+                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                              ),
+                              TempoParadoMin
+                          )
+                      }
+                  )
+              )
+            Width: =42
+            X: =1153
+            Y: =16
+      - rct_linha_topo_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =1366
+            Y: =68
+      - rct_divisor_vertical_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =690
+            Width: =1
+            X: =683
+            Y: =69
+      - lbl_prod_titulo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorOK, -40%)
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteDestaque
+            Text: ="PRODUÇÃO"
+            Width: =300
+            X: =20
+            Y: =78
+      - rct_prod_card_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =300
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =643
+            X: =20
+            Y: =116
+      - rct_prod_status_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: |-
+              =If(
+                  CountRows(Filter(gal_prod_m_1.AllItems, Status = "EmAndamento")) = 0,
+                  fx_CorFundo,
+                  fx_CorOKSuave
+              )
+            Height: =58
+            Width: =603
+            X: =40
+            Y: =132
+      - lbl_prod_status_m_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: |-
+              =If(
+                  CountRows(Filter(gal_prod_m_1.AllItems, Status = "EmAndamento")) = 0,
+                  fx_CorTextoSuave,
+                  ColorFade(fx_CorOK, -40%)
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =58
+            Size: =fx_FonteDestaque
+            Text: |-
+              =With(
+                  { _n: CountRows(Filter(gal_prod_m_1.AllItems, Status = "EmAndamento")) },
+                  If(_n = 0, "Nenhuma produção em andamento", "● " & _n & " OP(s) EM ANDAMENTO")
+              )
+            Width: =603
+            X: =40
+            Y: =132
+      - lbl_prod_pn_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Part Number *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =300
+            X: =40
+            Y: =202
+      - txt_prod_pn_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Part Number da OT"
+            BorderColor: =fx_CorBorda
+            Default: =ctxBipePN
+            Font: =fx_FonteFamilia
+            HintText: ="Bipe ou digite o P/N"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =537
+            X: =40
+            Y: =228
+      - bcr_bipe_pn_m_1:
+          Control: BarcodeReader@1.0.25
+          Properties:
+            BarcodeType: =BarcodeType.Auto
+            Height: =48
+            OnScan: |-
+              =UpdateContext({ctxBipePN: Text(First(bcr_bipe_pn_m_1.Barcodes).Value)});
+              Reset(txt_prod_pn_m_1)
+            Text: |-
+              ="📷"
+            Visible: =false
+            Width: =58
+            X: =585
+            Y: =224
+      - lbl_prod_ot_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="OT *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =40
+            Y: =273
+      - txt_prod_ot_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Número da OT"
+            BorderColor: =fx_CorBorda
+            Default: =ctxBipeOT
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            HintText: |-
+              ="Ex: 28696799"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =231
+            X: =40
+            Y: =299
+      - bcr_bipe_ot_m_1:
+          Control: BarcodeReader@1.0.25
+          Properties:
+            BarcodeType: =BarcodeType.Auto
+            Height: =48
+            OnScan: |-
+              =UpdateContext({ctxBipeOT: Text(First(bcr_bipe_ot_m_1.Barcodes).Value)});
+              Reset(txt_prod_ot_m_1)
+            Text: |-
+              ="📷"
+            Visible: =false
+            Width: =58
+            X: =285
+            Y: =295
+      - lbl_prod_qtd_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Qtd OT *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =180
+            X: =363
+            Y: =273
+      - txt_prod_qtd_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Quantidade de peças da OT"
+            BorderColor: =fx_CorBorda
+            Default: =ctxBipeQtd
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            HintText: ="0"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =203
+            X: =363
+            Y: =299
+      - bcr_bipe_qtd_m_1:
+          Control: BarcodeReader@1.0.25
+          Properties:
+            BarcodeType: =BarcodeType.Auto
+            Height: =48
+            OnScan: |-
+              =UpdateContext({ctxBipeQtd: Text(First(bcr_bipe_qtd_m_1.Barcodes).Value)});
+              Reset(txt_prod_qtd_m_1)
+            Text: |-
+              ="📷"
+            Visible: =false
+            Width: =58
+            X: =585
+            Y: =295
+      - lbl_prod_cracha_m:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Crachá do Operador *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =300
+            X: =40
+            Y: =343
+      - txt_prod_cracha_m:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Crachá do operador"
+            BorderColor: =fx_CorBorda
+            Default: =ctxBipeCracha
+            Font: =fx_FonteFamilia
+            HintText: ="Bipe o crachá"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =537
+            X: =39
+            Y: =368
+      - bcr_bipe_cracha_m_1:
+          Control: BarcodeReader@1.0.25
+          Properties:
+            BarcodeType: =BarcodeType.Auto
+            Height: =48
+            OnScan: |-
+              =UpdateContext({ctxBipeCracha: Text(First(bcr_bipe_cracha_m_1.Barcodes).Value)});
+              Reset(txt_prod_cracha_m)
+            Text: |-
+              ="📷"
+            Visible: =false
+            Width: =58
+            X: =584
+            Y: =364
+      - btn_iniciar_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(txt_prod_pn_m_1.Text) &&
+                  !IsBlank(txt_prod_ot_m_1.Text) &&
+                  Coalesce(Value(txt_prod_qtd_m_1.Text), 0) > 0 &&
+                  !IsBlank(txt_prod_cracha_m.Text) &&
+                  !varProcM,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =64
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Set(varProcM, true);
+              Refresh(Producao_Montagem);
+              If(
+                  !IsBlank(LookUp(Producao_Montagem,
+                      OT = Value(txt_prod_ot_m_1.Text) && Status = "EmAndamento" && Celula = varCelulaMontagem
+                  )),
+                  Notify("Esta OT já está em andamento nesta célula.", NotificationType.Error, 6000);
+                  Set(varProcM, false),
+                  With(
+                      { _agora: Now() },
+                      Patch(Producao_Montagem, Defaults(Producao_Montagem),
+                          {
+                              Title: Text(varDataTela, "dd/mm/yyyy") & " - " & varTurnoTela & " - " & varCelulaMontagem,
+                              Data: varDataTela,
+                              Turno: varTurnoTela,
+                              Celula: varCelulaMontagem,
+                              PN: Upper(Trim(txt_prod_pn_m_1.Text)),
+                              Cracha: Trim(txt_prod_cracha_m.Text),
+                              OT: Value(txt_prod_ot_m_1.Text),
+                              QtdOT: Value(txt_prod_qtd_m_1.Text),
+                              InicioEm: _agora,
+                              QtdProduzida: 0,
+                              MetaHora: With(
+                                  {_t: LookUp(Tempos, Material = Upper(Trim(txt_prod_pn_m_1.Text))).TempoMinPc},
+                                  If(Coalesce(_t, 0) <= 0, 0, Round(60 / _t, 4))
+                              ),
+                              Status: "EmAndamento"
+                          }
+                      )
+                  );
+                  If(!IsEmpty(Errors(Producao_Montagem)),
+                      Notify("Erro: " & First(Errors(Producao_Montagem)).Message, NotificationType.Error, 10000);
+                      Set(varProcM, false),
+                      Notify("Produção iniciada: " & txt_prod_pn_m_1.Text, NotificationType.Success, 2500);
+                      UpdateContext({ctxBipePN: Blank(), ctxBipeOT: Blank(), ctxBipeQtd: Blank(), ctxBipeCracha: Blank()});
+                      Reset(txt_prod_pn_m_1);
+                      Reset(txt_prod_ot_m_1);
+                      Reset(txt_prod_qtd_m_1);
+                      Reset(txt_prod_cracha_m);
+                      Set(varAgora, Now());
+                      Refresh(Producao_Montagem);
+                      ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
+                      Collect(colOPsAbertas,
+                          ForAll(
+                              Filter(Producao_Montagem,
+                                  Celula = varCelulaMontagem && Status = "EmAndamento"
+                              ) As r,
+                              {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+                          )
+                      );
+                      Set(varProcM, false)
+                  )
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FonteAcao
+            Text: ="▶  INICIAR"
+            Width: =643
+            X: =20
+            Y: =420
+      - lbl_prod_tab_tit_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorInfo, -35%)
+            FontWeight: =FontWeight.Bold
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="LANÇAMENTOS - " & varTurnoTela & "  ·  " & Text(CountRows(gal_prod_m_1.AllItems), "0")
+            Width: =600
+            X: =20
+            Y: =496
+      - rct_prod_thead_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =38
+            Width: =643
+            X: =20
+            Y: =528
+      - lbl_pth_pn_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="P/N"
+            Width: =118
+            X: =22
+            Y: =528
+      - lbl_pth_ot_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="OT"
+            Width: =92
+            X: =155
+            Y: =528
+      - lbl_pth_ini_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="INÍCIO"
+            Width: =52
+            X: =256
+            Y: =528
+      - lbl_pth_fim_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="FIM"
+            Width: =46
+            X: =340
+            Y: =528
+      - lbl_pth_real_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="REAL."
+            Width: =64
+            X: =379
+            Y: =528
+      - lbl_pth_meta_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="META"
+            Width: =64
+            X: =453
+            Y: =528
+      - lbl_pth_acao_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="AÇÃO"
+            Width: =120
+            X: =528
+            Y: =528
+      - gal_prod_m_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =210
+            Items: |-
+              =Sort(
+                  Filter(Producao_Montagem,
+                      Celula = varCelulaMontagem &&
+                      (
+                          Status = "EmAndamento" ||
+                          (Data = varDataTela && Turno = varTurnoTela)
+                      )
+                  ),
+                  InicioEm, SortOrder.Descending
+              )
+            TemplateFill: |-
+              =If(
+                  ThisItem.Status <> "EmAndamento", fx_CorSuperficie,
+                  ThisItem.Turno <> varTurnoTela || ThisItem.Data <> varDataTela, fx_CorAlertaSuave,
+                  fx_CorOKSuave
+              )
+            TemplateSize: =50
+            Width: =669
+            X: =14
+            Y: =558
+          Children:
+            - lbl_prow_pn_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =ColorFade(fx_CorInfo, -35%)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =ThisItem.PN &
+                     If(ThisItem.Data <> varDataTela || ThisItem.Turno <> varTurnoTela,
+                        "  · " & Left(ThisItem.Turno, 2), "") & "Turno"
+                  Width: =137
+            - lbl_prow_ot_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: =Text(ThisItem.OT, "[$-en-US]0")
+                  Width: =92
+                  X: =113
+            - lbl_prow_ini_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: =Text(ThisItem.InicioEm, "hh:mm")
+                  Width: =67
+                  X: =226
+            - lbl_prow_fim_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: =If(ThisItem.Status = "EmAndamento", "—", Text(ThisItem.FimEm, "hh:mm"))
+                  Width: =62
+                  X: =293
+            - lbl_prow_real_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: |-
+                    =With(
+                        {
+                            _real: If(ThisItem.Status = "EmAndamento",
+                                Max(
+                                    DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) -
+                                    Coalesce(
+                                        LookUp(colDescM,
+                                            Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
+                                        ).MinDesc,
+                                        0
+                                    ),
+                                    0
+                                ),
+                                Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
+                            _meta: With(
+                                {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
+                                If(Coalesce(_t, 0) <= 0, -1, ThisItem.QtdOT * _t)
+                            )
+                        },
+                        If(_meta > 0 && _real > _meta,
+                            ColorFade(fx_CorAlerta, -30%),
+                            fx_CorTexto
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        {
+                            _desc: If(ThisItem.Status = "EmAndamento",
+                                Coalesce(
+                                    LookUp(colDescM,
+                                        Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
+                                    ).MinDesc,
+                                    0
+                                ),
+                                Coalesce(ThisItem.DescontoMin, 0))
+                        },
+                        With(
+                            {
+                                _real: If(ThisItem.Status = "EmAndamento",
+                                    Max(DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) - _desc, 0),
+                                    Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin))
+                            },
+                            Text(_real, "0") & " min" & If(_desc > 0, "*", "")
+                        )
+                    )
+                  Tooltip: |-
+                    =With(
+                        {
+                            _bruto: If(ThisItem.Status = "EmAndamento",
+                                DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes),
+                                ThisItem.DuracaoMin),
+                            _desc: If(ThisItem.Status = "EmAndamento",
+                                Coalesce(
+                                    LookUp(colDescM,
+                                        Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
+                                    ).MinDesc,
+                                    0
+                                ),
+                                Coalesce(ThisItem.DescontoMin, 0))
+                        },
+                        If(_desc <= 0,
+                            "Tempo real: " & Text(_bruto, "0") & " min",
+                            "Bruto " & Text(_bruto, "0") & " min − " & Text(_desc, "0") &
+                            " min de paradas vinculadas = " & Text(Max(_bruto - _desc, 0), "0") & " min"
+                        )
+                    )
+                  Width: =94
+                  X: =355
+            - lbl_prow_meta_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: |-
+                    =With(
+                        {
+                            _real: If(ThisItem.Status = "EmAndamento",
+                                Max(
+                                    DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) -
+                                    Coalesce(
+                                        LookUp(colDescM,
+                                            Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
+                                        ).MinDesc,
+                                        0
+                                    ),
+                                    0
+                                ),
+                                Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
+                            _meta: With(
+                                {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
+                                If(Coalesce(_t, 0) <= 0, -1, ThisItem.QtdOT * _t)
+                            )
+                        },
+                        If(_meta > 0 && _real > _meta,
+                            ColorFade(fx_CorAlerta, -30%),
+                            fx_CorTexto
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
+                        If(
+                            Coalesce(_t, 0) <= 0,
+                            "—",
+                            Text(RoundDown(ThisItem.QtdOT * _t, 0), "0") & " min"
+                        )
+                    )
+                  Width: =64
+                  X: =449
+            - btn_prow_finalizar_m_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =If(ThisItem.Status = "EmAndamento", fx_CorSuperficie, ColorFade(fx_CorOK, -40%))
+                  DisplayMode: =If(ThisItem.Status = "EmAndamento" && !varProcM, DisplayMode.Edit, DisplayMode.View)
+                  Fill: =If(ThisItem.Status = "EmAndamento", fx_CorErro, fx_CorOKSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  HoverFill: =ColorFade(Self.Fill, -20%)
+                  OnSelect: |-
+                    =Set(varPNAtivo, ThisItem);
+                    ClearCollect(colParadasM,
+                        Filter(Paradas_Montagem,
+                            Celula = varCelulaMontagem &&
+                            Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                        )
+                    );
+                    ClearCollect(colDescM,
+                        ForAll(
+                            Distinct(
+                                Filter(colParadasM,
+                                    Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                                ),
+                                OPVinculada
+                            ) As d,
+                            {
+                                Chave: d.Value,
+                                MinDesc: Sum(
+                                    Filter(colParadasM,
+                                        OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                    ),
+                                    TempoParadoMin
+                                )
+                            }
+                        )
+                    );
+                    With(
+                        {
+                            _t: Coalesce(LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc, 0),
+                            _bruto: RoundDown(DateDiff(ThisItem.InicioEm, Now(), TimeUnit.Minutes), 0),
+                            _desc: Coalesce(
+                                LookUp(colDescM,
+                                    Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
+                                ).MinDesc,
+                                0
+                            )
+                        },
+                        Set(varBrutoPop, _bruto);
+                        Set(varDescontoPop, _desc);
+                        Set(varDuracaoPop, Max(_bruto - _desc, 0));
+                        Set(varMetaPop, If(_t <= 0, -1, RoundDown(ThisItem.QtdOT * _t, 0)));
+                        UpdateContext({
+                            ctxPopExcesso: _t > 0 &&
+                                Max(_bruto - _desc, 0) > RoundDown(ThisItem.QtdOT * _t, 0)
+                        })
+                    );
+                    Reset(txt_pop_qtd_m_1);
+                    Reset(txt_pop_obs_m_1);
+                    Set(varPopupFinalizar_M, true)
+                  PressedFill: =ColorFade(Self.Fill, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: =If(ThisItem.Status = "EmAndamento", "■ FINALIZAR", "✓ OK")
+                  Width: =120
+                  X: =523
+                  Y: =7
+      - lbl_par_titulo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorAlerta, -30%)
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteDestaque
+            Text: ="PARADAS"
+            Width: =300
+            X: =703
+            Y: =78
+      - rct_par_card_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =300
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =643
+            X: =703
+            Y: =116
+      - lbl_par_motivo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Motivo da Parada *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =300
+            X: =723
+            Y: =136
+      - cmb_par_motivo_m_1:
+          Control: ModernDropdown@1.0.3
+          Properties:
+            AccessibleLabel: ="Motivo da parada"
+            ItemDisplayText: =ThisItem.Value
+            Items: |-
+              =[
+                  " ",
+                 "RT - Retrabalho",
+                 "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)",
+                 "IT - Aguardando Instrucao de Trabalho / liberacao Engenharia",
+                 "AC - Acidente de Trabalho / Primeiros Socorros",
+                 "AU - Auditoria (Qualidade / Seguranca)",
+                 "CA - Calibracao / Verificacao de Instrumento",
+                 "LI - 5S",
+                 "AP - Alteracao de Planejamento",
+                 "FI - Falta de Embalagem / Termoencolhível",
+                 "TU - Troca de Turno",
+                 "RF - Refeição",
+                 "TE - Tempo Excedido"
+              ]
+            Size: =0
+            Width: =603
+            X: =723
+            Y: =162
+      - lbl_par_op_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="OP Vinculada"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =300
+            X: =723
+            Y: =214
+      - cmb_par_op_m_1:
+          Control: ModernDropdown@1.0.3
+          Properties:
+            AccessibleLabel: ="OP vinculada à parada"
+            ItemDisplayText: =ThisItem.Value
+            Items: =colOPsAbertas
+            Size: =0
+            Width: =603
+            X: =723
+            Y: =240
+      - lbl_par_desconto_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorInfo, -35%)
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =If(
+                  IsBlank(cmb_par_op_m_1.Selected.Value) ||
+                  cmb_par_op_m_1.Selected.Value = "— Sem OP —" ||
+                  IsBlank(Trim(cmb_par_motivo_m_1.Selected.Value)),
+                  "",
+                  cmb_par_motivo_m_1.Selected.Value = "TE - Tempo Excedido",
+                  "Tempo excedido NÃO desconta do tempo real da OP.",
+                  "Estes minutos serão descontados do tempo real da OP."
+              )
+            Width: =603
+            X: =723
+            Y: =284
+      - lbl_par_tempo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Tempo Parado (min) *"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =280
+            X: =723
+            Y: =306
+      - txt_par_tempo_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Tempo parado em minutos"
+            BorderColor: =fx_CorBorda
+            Default: =""
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            HintText: |-
+              ="Ex: 25"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =280
+            X: =723
+            Y: =332
+      - lbl_par_obs_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Observação"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =300
+            X: =1023
+            Y: =306
+      - txt_par_obs_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação da parada"
+            BorderColor: =fx_CorBorda
+            Default: =""
+            Font: =fx_FonteFamilia
+            HintText: ="Opcional"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =303
+            X: =1023
+            Y: =332
+      - btn_registrar_parada_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(Trim(cmb_par_motivo_m_1.Selected.Value)) &&
+                  Coalesce(Value(txt_par_tempo_m_1.Text), 0) > 0 &&
+                  !varProcM,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =64
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Set(varProcM, true);
+              With(
+                  { _agora: Now() },
+                  Patch(Paradas_Montagem, Defaults(Paradas_Montagem),
+                      {
+                          Title: Text(varDataTela, "dd/mm/yyyy") & " - " & varTurnoTela & " - " & varCelulaMontagem,
+                          Data: varDataTela,
+                          Turno: varTurnoTela,
+                          Celula: varCelulaMontagem,
+                          RegistradoEm: _agora,
+                          Motivo: cmb_par_motivo_m_1.Selected.Value,
+                          TempoParadoMin: Value(txt_par_tempo_m_1.Text),
+                          Observacao: txt_par_obs_m_1.Text,
+                          OPVinculada: If(
+                              IsBlank(cmb_par_op_m_1.Selected.Value) || cmb_par_op_m_1.Selected.Value = "— Sem OP —",
+                              Blank(),
+                              cmb_par_op_m_1.Selected.Value
+                          )
+                      }
+                  )
+              );
+              If(!IsEmpty(Errors(Paradas_Montagem)),
+                  Notify("Erro: " & First(Errors(Paradas_Montagem)).Message, NotificationType.Error, 10000);
+                  Set(varProcM, false),
+                  Reset(cmb_par_motivo_m_1);
+                  Reset(cmb_par_op_m_1);
+                  Reset(txt_par_tempo_m_1);
+                  Reset(txt_par_obs_m_1);
+                  Set(varAgora, Now());
+                  Refresh(Paradas_Montagem);
+                  ClearCollect(colParadasM,
+                      Filter(Paradas_Montagem,
+                          Celula = varCelulaMontagem &&
+                          Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                      )
+                  );
+                  ClearCollect(colDescM,
+                      ForAll(
+                          Distinct(
+                              Filter(colParadasM,
+                                  Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                              ),
+                              OPVinculada
+                          ) As d,
+                          {
+                              Chave: d.Value,
+                              MinDesc: Sum(
+                                  Filter(colParadasM,
+                                      OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                  ),
+                                  TempoParadoMin
+                              )
+                          }
+                      )
+                  );
+                  Set(varProcM, false);
+                  Notify("Parada registrada!", NotificationType.Success, 2500)
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FonteAcao
+            Text: ="REGISTRAR PARADA"
+            Width: =643
+            X: =703
+            Y: =420
+      - lbl_par_tab_tit_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorInfo, -35%)
+            FontWeight: =FontWeight.Bold
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="PARADAS - " & varTurnoTela & "  ·  " & Text(CountRows(gal_par_m_1.AllItems), "0")
+            Width: =600
+            X: =703
+            Y: =496
+      - rct_par_thead_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =38
+            Width: =643
+            X: =703
+            Y: =528
+      - lbl_parh_motivo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="MOTIVO"
+            Width: =270
+            X: =711
+            Y: =528
+      - lbl_parh_op_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="OP"
+            Width: =120
+            X: =985
+            Y: =528
+      - lbl_parh_tempo_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="TEMPO"
+            Width: =70
+            X: =1115
+            Y: =528
+      - lbl_parh_obs_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =38
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteApoio
+            Text: ="OBS."
+            Width: =140
+            X: =1195
+            Y: =528
+      - gal_par_m_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =210
+            Items: |-
+              =Sort(
+                  Filter(Paradas_Montagem,
+                      Data = varDataTela &&
+                      Turno = varTurnoTela &&
+                      Celula = varCelulaMontagem
+                  ),
+                  RegistradoEm, SortOrder.Descending
+              )
+            TemplateFill: =fx_CorSuperficie
+            TemplateSize: =50
+            Width: =661
+            X: =696
+            Y: =558
+          Children:
+            - lbl_parow_motivo_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =ColorFade(fx_CorAlerta, -30%)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.Motivo
+                  Width: =270
+                  X: =8
+            - lbl_parow_op_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =ColorFade(fx_CorInfo, -35%)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =50
+                  Size: =fx_FonteApoio
+                  Text: =If(IsBlank(ThisItem.OPVinculada), "—", ThisItem.OPVinculada)
+                  Width: =120
+                  X: =282
+            - lbl_parow_tempo_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        ColorFade(fx_CorInfo, -35%),
+                        fx_CorTexto
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =50
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        "− " & ThisItem.TempoParadoMin & " min",
+                        ThisItem.TempoParadoMin & " min"
+                    )
+                  Tooltip: |-
+                    =If(
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        "Descontado do tempo real da OP " & ThisItem.OPVinculada,
+                        ""
+                    )
+                  Width: =92
+                  X: =389
+            - lbl_parow_obs_m_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =50
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.Observacao
+                  Width: =140
+                  X: =492
+      - rct_pop_bg_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =varPopupFinalizar_M
+            Width: =1366
+      - rct_faixa_turno_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorAlertaSuave
+            Height: =52
+            Visible: |-
+              =fx_TurnoLabelEm(varAgora) <> varTurnoTela ||
+               fx_DataRefEm(varAgora) <> varDataTela
+            Width: =1366
+            Y: =69
+      - rct_faixa_borda_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorAlerta
+            Height: =4
+            Visible: =rct_faixa_turno_m_1.Visible
+            Width: =1366
+            Y: =117
+      - lbl_faixa_turno_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =ColorFade(fx_CorAlerta, -45%)
+            FontWeight: =FontWeight.Semibold
+            Height: =52
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Virou o " & fx_TurnoLabelEm(varAgora) &
+               ". Você continua apontando no " & varTurnoTela &
+               ". Termine o que está aberto e depois entre no turno novo."
+            Visible: =rct_faixa_turno_m_1.Visible
+            Width: =1060
+            X: =24
+            Y: =69
+      - btn_faixa_turno_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisplayMode: =If(varProcM, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Set(varAgora, Now());
+              Set(varDataTela, fx_DataRefEm(varAgora));
+              Set(varTurnoTela, fx_TurnoLabelEm(varAgora));
+              Concurrent(
+                  Refresh(Producao_Montagem),
+                  Refresh(Paradas_Montagem)
+              );
+              ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
+              Collect(colOPsAbertas,
+                  ForAll(
+                      Filter(Producao_Montagem,
+                          Celula = varCelulaMontagem && Status = "EmAndamento"
+                      ) As r,
+                      {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+                  )
+              );
+              ClearCollect(colParadasM,
+                  Filter(Paradas_Montagem,
+                      Celula = varCelulaMontagem &&
+                      Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                  )
+              );
+              ClearCollect(colDescM,
+                  ForAll(
+                      Distinct(
+                          Filter(colParadasM,
+                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                          ),
+                          OPVinculada
+                      ) As d,
+                      {
+                          Chave: d.Value,
+                          MinDesc: Sum(
+                              Filter(colParadasM,
+                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                              ),
+                              TempoParadoMin
+                          )
+                      }
+                  )
+              );
+              Notify("Agora apontando no " & varTurnoTela, NotificationType.Success, 3000)
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ENTRAR NO TURNO NOVO"
+            Visible: =rct_faixa_turno_m_1.Visible
+            Width: =222
+            X: =1120
+            Y: =75
+      - rct_pop_box_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =If(ctxPopExcesso, 460, 340)
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Text: =""
+            Visible: =varPopupFinalizar_M
+            Width: =520
+            X: =423
+            Y: =If(ctxPopExcesso, 154, 224)
+      - lbl_pop_tit_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Finalizar Produção"
+            Visible: =varPopupFinalizar_M
+            Width: =480
+            X: =443
+            Y: =If(ctxPopExcesso, 176, 246)
+      - lbl_pop_pn_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteDestaque
+            Text: |-
+              =If(
+                  IsBlank(varPNAtivo),
+                  "",
+                  varPNAtivo.PN & "  (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")"
+              )
+            Visible: =varPopupFinalizar_M
+            Width: =480
+            X: =443
+            Y: =If(ctxPopExcesso, 224, 294)
+      - lbl_pop_qtd_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Height: =30
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteDestaque
+            Text: ="Quantidade produzida:"
+            Visible: =varPopupFinalizar_M
+            Width: =480
+            X: =443
+            Y: =If(ctxPopExcesso, 270, 340)
+      - txt_pop_qtd_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Quantidade produzida"
+            Align: =Align.Center
+            BorderColor: =fx_CorBorda
+            Default: =""
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            Height: =60
+            HintText: ="0"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteNumero
+            Visible: =varPopupFinalizar_M
+            Width: =200
+            X: =583
+            Y: =If(ctxPopExcesso, 306, 376)
+      - lbl_pop_aviso_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =ColorFade(fx_CorAlerta, -45%)
+            Fill: =fx_CorAlertaSuave
+            FontWeight: =FontWeight.Semibold
+            Height: =56
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =If(varDescontoPop > 0,
+                  "Tempo acima do previsto: " & Text(varBrutoPop, "0") & " min − " &
+                  Text(varDescontoPop, "0") & " min de paradas = " & Text(varDuracaoPop, "0") &
+                  " min vs meta " & Text(varMetaPop, "0") & " min. Descreva o motivo no comentário.",
+                  "Tempo acima do previsto (" & Text(varDuracaoPop, "0") & " min vs meta " &
+                  Text(varMetaPop, "0") & " min). Descreva o motivo no comentário."
+              )
+            Visible: =varPopupFinalizar_M && ctxPopExcesso
+            Width: =476
+            X: =445
+            Y: =378
+      - lbl_pop_obs_m_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =22
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="Comentário *"
+            VerticalAlign: =VerticalAlign.Top
+            Visible: =varPopupFinalizar_M && ctxPopExcesso
+            Width: =300
+            X: =445
+            Y: =444
+      - txt_pop_obs_m_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Comentário do tempo excedido"
+            BorderColor: =fx_CorBorda
+            Default: =""
+            Font: =fx_FonteFamilia
+            HintText: |-
+              ="Obrigatório: explique o tempo excedido"
+            HoverFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Visible: =varPopupFinalizar_M && ctxPopExcesso
+            Width: =476
+            X: =445
+            Y: =470
+      - btn_pop_cancelar_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTextoSuave
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =50
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Reset(txt_pop_qtd_m_1);
+              Reset(txt_pop_obs_m_1);
+              Set(varPopupFinalizar_M, false);
+              Set(varPNAtivo, Blank());
+              UpdateContext({ctxPopExcesso: false})
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="Cancelar"
+            Visible: =varPopupFinalizar_M
+            Width: =220
+            X: =443
+            Y: =If(ctxPopExcesso, 542, 474)
+      - btn_pop_confirmar_m_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  Coalesce(Value(txt_pop_qtd_m_1.Text), 0) <= 0 ||
+                  (ctxPopExcesso && IsBlank(Trim(txt_pop_obs_m_1.Text))) ||
+                  varProcM,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =50
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Set(varProcM, true);
+              Set(varFimM, Now());
+              Set(varDuracaoFim, RoundDown(DateDiff(varPNAtivo.InicioEm, varFimM, TimeUnit.Minutes), 0));
+              Set(varDescontoFim,
+                  Coalesce(
+                      LookUp(colDescM,
+                          Chave = varPNAtivo.PN & " (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")"
+                      ).MinDesc,
+                      0
+                  )
+              );
+              Set(varLiquidoFim, Max(varDuracaoFim - varDescontoFim, 0));
+              Set(varMetaFim,
+                  With(
+                      {_t: LookUp(Tempos, Material = Upper(Trim(varPNAtivo.PN))).TempoMinPc},
+                      If(Coalesce(_t, 0) <= 0, 0, RoundDown(varPNAtivo.QtdOT * _t, 0))
+                  )
+              );
+              Set(varObsFim, Trim(txt_pop_obs_m_1.Text));
+              Patch(Producao_Montagem, varPNAtivo,
+                  {
+                      FimEm: varFimM,
+                      QtdProduzida: Value(txt_pop_qtd_m_1.Text),
+                      DuracaoMin: varDuracaoFim,
+                      DuracaoSeg: DateDiff(varPNAtivo.InicioEm, varFimM, TimeUnit.Seconds),
+                      DescontoMin: varDescontoFim,
+                      DuracaoRealMin: varLiquidoFim,
+                      Status: "Finalizado"
+                  }
+              );
+              If(!IsEmpty(Errors(Producao_Montagem)),
+                  Notify("Erro: " & First(Errors(Producao_Montagem)).Message, NotificationType.Error, 10000);
+                  Set(varProcM, false),
+                  If(ctxPopExcesso,
+                      Patch(Paradas_Montagem, Defaults(Paradas_Montagem),
+                          {
+                              Title: Text(varDataTela, "dd/mm/yyyy") & " - " & varTurnoTela & " - " & varCelulaMontagem,
+                              Data: varDataTela,
+                              Turno: varTurnoTela,
+                              Celula: varCelulaMontagem,
+                              RegistradoEm: Now(),
+                              Motivo: "TE - Tempo Excedido",
+                              TempoParadoMin: Max(varLiquidoFim - varMetaFim, 0),
+                              Observacao: varObsFim,
+                              OPVinculada: varPNAtivo.PN & " (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")"
+                          }
+                      );
+                      If(!IsEmpty(Errors(Paradas_Montagem)),
+                          Notify("OP finalizada, mas a parada NÃO gravou: " & First(Errors(Paradas_Montagem)).Message, NotificationType.Error, 10000)
+                      )
+                  );
+                  Reset(txt_pop_qtd_m_1);
+                  Reset(txt_pop_obs_m_1);
+                  Set(varPopupFinalizar_M, false);
+                  Set(varPNAtivo, Blank());
+                  UpdateContext({ctxPopExcesso: false});
+                  Set(varAgora, Now());
+                  Concurrent(
+                      Refresh(Producao_Montagem),
+                      Refresh(Paradas_Montagem)
+                  );
+                  ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
+                  Collect(colOPsAbertas,
+                      ForAll(
+                          Filter(Producao_Montagem,
+                              Celula = varCelulaMontagem && Status = "EmAndamento"
+                          ) As r,
+                          {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+                      )
+                  );
+                  ClearCollect(colParadasM,
+                      Filter(Paradas_Montagem,
+                          Celula = varCelulaMontagem &&
+                          Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                      )
+                  );
+                  ClearCollect(colDescM,
+                      ForAll(
+                          Distinct(
+                              Filter(colParadasM,
+                                  Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                              ),
+                              OPVinculada
+                          ) As d,
+                          {
+                              Chave: d.Value,
+                              MinDesc: Sum(
+                                  Filter(colParadasM,
+                                      OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                  ),
+                                  TempoParadoMin
+                              )
+                          }
+                      )
+                  );
+                  Set(varProcM, false);
+                  Notify("Produção finalizada!", NotificationType.Success, 2500)
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="■ Finalizar"
+            Visible: =varPopupFinalizar_M
+            Width: =220
+            X: =703
+            Y: =If(ctxPopExcesso, 542, 474)
+      - rct_overlay_m_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcM
+            Width: =1366
+      - spr_proc_m_1:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcM
+            Width: =1366

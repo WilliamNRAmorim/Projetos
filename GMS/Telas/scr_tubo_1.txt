@@ -1,0 +1,3595 @@
+Screens:
+  scr_tubo_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxModalIniciarTubo: false,
+            ctxModalEnviarTubo: false,
+            ctxModalEditarTubo: false,
+            ctxModalDelinTubo: false,
+            ctxDelinModoInicio: false,
+            ctxUsouTudoTubo: true
+        });
+        Set(varProcessando, false);
+        If(IsEmpty(colSpecTubo), ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION));
+        Set(varMangueiraEscolhidaTubo, Blank());
+        Select(ico_RefreshTubo_1)
+    Children:
+      - tmr_RelogioTubo_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_DadosTubo:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalIniciarTubo &&
+                  !ctxModalEnviarTubo && !ctxModalEditarTubo,
+                  Select(ico_RefreshTubo_1)
+              )
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_GuardaTubo_1:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =45000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =Set(varProcessando, false);
+              Notify("Tempo limite excedido. O servidor não respondeu — confira a fila antes de repetir.", NotificationType.Error, 10000)
+            Start: =varProcessando
+            Visible: =false
+            X: =1206
+      - rct_HeaderFilaTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =Font.Arial
+            FontWeight: =FontWeight.Bold
+            Height: =65
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Fila de Produção"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =180
+            X: =25
+            Y: =20
+      - lbl_TotalFilaTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =5
+            RadiusBottomRight: =5
+            RadiusTopLeft: =5
+            RadiusTopRight: =5
+            Size: =14
+            Text: |-
+              ="Total: " & CountRows(gal_FilaTubo_1.AllItems)
+            Width: =83
+            X: =215
+            Y: =20
+      - rct_DivisorFilaTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =314
+      - gal_FilaTubo_1:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =700
+            Items: =Filter(ficha_producao, processo = "Tubo")
+            OnSelect: |-
+              =Reset(inp_CodTubo_1);
+              Reset(inp_LoteTubo_1);
+              Reset(dte_ValidadeTubo_1);
+              Reset(inp_DiametroTubo_1);
+              Reset(inp_QtdTubo_1);
+              Reset(inp_RefugoTubo_1);
+              Reset(cmb_OperadorTubo_1);
+              Reset(cmb_MangueiraTubo_1);
+              Reset(drp_TrancadeiraTubo_1);
+              Reset(inp_OpTubo_1);
+              Reset(inp_ObsTubo_1);
+              Set(varMangueiraEscolhidaTubo, Blank())
+            TemplateFill: =Color.Transparent
+            TemplateSize: =112
+            Width: =315
+            Y: =68
+          Children:
+            - btn_CardFilaTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HoverFill: =If(ThisItem.IsSelected, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =305
+                  Y: =4
+            - lbl_BitolaFilaTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteDestaque
+                  Text: |-
+                    ="Bitola: " & Coalesce(Text(ThisItem.Bitola), "—")
+                  Width: =160
+                  X: =20
+                  Y: =12
+            - btn_BadgeFilaTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        fx_CorOK,
+                        fx_CorAlerta
+                    )
+                  Fill: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        fx_CorOKSuave,
+                        fx_CorAlertaSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =26
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
+                        "Produzindo",
+                        "Aguardando"
+                    )
+                  Width: =111
+                  X: =182
+                  Y: =12
+            - lbl_OpFilaTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(ThisItem.OP) || ThisItem.OP = 0,
+                        "OP ainda não informada",
+                        "OP " & Text(ThisItem.OP, "00000000")
+                    )
+                  Width: =235
+                  X: =20
+                  Y: =40
+            - lbl_CarretelFilaTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteApoio
+                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & Coalesce(ThisItem.quantidade_mandril, 0) & " m"
+                  Width: =190
+                  X: =20
+                  Y: =64
+            - lbl_CronoFilaTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =fx_Crono(
+                        fx_InicioCronoContinuo(
+                            fx_EstadoContinuo(ThisItem.status_processo),
+                            ThisItem.InicioAguardando_Tubo,
+                            ThisItem.data_hora_inicio_tubo,
+                            ThisItem.data_hora_final_mandril
+                        ),
+                        ctxAgora
+                    )
+                  Width: =80
+                  X: =214
+                  Y: =64
+      - rct_HeaderTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarTubo_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Tubo"
+            Width: =572
+            X: =447
+            Y: =4
+      - btn_CardOrdemTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =166
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaOrdemTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoOrdemTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="RECEBIDO DO MANDRIL"
+            Width: =260
+            X: =365
+            Y: =85
+      - lbl_IdOrdemTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              ="ID: " & gal_FilaTubo_1.Selected.ID
+            Width: =200
+            X: =898
+            Y: =85
+      - lbl_RotBitolaTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="BITOLA"
+            Width: =180
+            X: =365
+            Y: =131
+      - lbl_ValBitolaTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(Text(gal_FilaTubo_1.Selected.Bitola), "—")
+            Width: =180
+            X: =365
+            Y: =151
+      - lbl_RotCodMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="CÓDIGO DO MANDRIL"
+            Width: =180
+            X: =555
+            Y: =131
+      - lbl_ValCodMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaTubo_1.Selected.cod_mandril, "—")
+            Width: =180
+            X: =555
+            Y: =151
+      - lbl_RotDiaMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="Ø DO MANDRIL"
+            Width: =160
+            X: =745
+            Y: =131
+      - lbl_ValDiaMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(Text(gal_FilaTubo_1.Selected.diametro_mandril), "—")
+            Width: =160
+            X: =745
+            Y: =151
+      - lbl_RotRecebidoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MATERIAL RECEBIDO"
+            Width: =190
+            X: =918
+            Y: =131
+      - lbl_ValRecebidoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m"
+            Width: =190
+            X: =918
+            Y: =151
+      - lbl_RotCarretelTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="CARRETEL  ENTRADA → SAÍDA"
+            Width: =230
+            X: =365
+            Y: =191
+      - lbl_ValCarretelTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(gal_FilaTubo_1.Selected.'Carretel Entrada', "—") & "   →   " & Coalesce(gal_FilaTubo_1.Selected.'Carretel Saida', "—")
+            Width: =230
+            X: =365
+            Y: =211
+      - lbl_RotObsMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO DO MANDRIL"
+            Width: =340
+            X: =620
+            Y: =191
+      - lbl_ValObsMandrilTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =28
+            Size: =fx_FonteCorpo
+            Text: =Coalesce(gal_FilaTubo_1.Selected.Observação_mandril, "—")
+            Width: =478
+            X: =620
+            Y: =211
+      - btn_CardEntradaTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =420
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =259
+      - lbl_SecaoEntradaTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENTRADA DE DADOS"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =240
+            X: =369
+            Y: =275
+      - rct_DivisorEntradaTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =472
+            X: =369
+            Y: =298
+      - lbl_RotCodTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            Size: =fx_FonteApoio
+            Text: ="CÓDIGO DO COMPOSTO"
+            Width: =148
+            X: =369
+            Y: =303
+      - inp_CodTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Código do composto do tubo"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaTubo_1.Selected.'Cod.CompostoTubo'
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =369
+            Y: =341
+      - lbl_RotLoteTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =41
+            Size: =fx_FonteApoio
+            Text: ="LOTE DO COMPOSTO *"
+            Width: =148
+            X: =531
+            Y: =298
+      - inp_LoteTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Lote do composto do tubo"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Text),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =gal_FilaTubo_1.Selected.'Lote Composto Tubo'
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =531
+            Y: =341
+      - lbl_RotValidadeTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =41
+            Size: =fx_FonteApoio
+            Text: ="VALIDADE DO COMPOSTO *"
+            Width: =148
+            X: =693
+            Y: =298
+      - dte_ValidadeTubo_1:
+          Control: Classic/DatePicker@2.6.0
+          Properties:
+            AccessibleLabel: ="Validade do composto do tubo"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.SelectedDate),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            DefaultDate: |-
+              =If(
+                  Year(gal_FilaTubo_1.Selected.'Data de Validade do Composto Tubo') < 2015,
+                  Blank(),
+                  gal_FilaTubo_1.Selected.'Data de Validade do Composto Tubo'
+              )
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            EndYear: =Year(Today()) + 10
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            IconBackground: =fx_CorInfo
+            IconFill: =fx_CorSuperficie
+            IsEditable: =true
+            PaddingLeft: =10
+            Size: =fx_FonteCorpo
+            StartYear: =2020
+            Width: =148
+            X: =693
+            Y: =341
+      - lbl_RotDiametroTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="DIÂMETRO (mm)"
+            Width: =148
+            X: =369
+            Y: =397
+      - inp_DiametroTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Diâmetro do tubo em milímetros"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaTubo_1.Selected.diametro_tubo
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =369
+            Y: =424
+      - lbl_RotQtdTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Size: =fx_FonteApoio
+            Text: ="METRAGEM PRODUZIDA (m) *"
+            Width: =148
+            X: =531
+            Y: =385
+      - inp_QtdTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Metragem de tubo produzida em metros"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && (IsBlank(Self.Text) || Value(Self.Text) <= 0),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =gal_FilaTubo_1.Selected.quantidade_tubo
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =148
+            X: =531
+            Y: =424
+      - lbl_RotRefugoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="REFUGO (m)"
+            Width: =148
+            X: =693
+            Y: =397
+      - inp_RefugoTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Refugo do tubo em metros"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaTubo_1.Selected.defeito_tubo
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =693
+            Y: =424
+      - lbl_RotOperadorTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR *"
+            Width: =148
+            X: =369
+            Y: =473
+      - cmb_OperadorTubo_1:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador responsável pelo tubo"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Selected.Nome),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: =Filter(Colaboradores, Nome = gal_FilaTubo_1.Selected.operador_tubo)
+            DisplayFields: =["field_1"]
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Selecione na lista"
+            IsSearchable: =false
+            Items: =Colaboradores.Nome
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["field_1"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Width: =148
+            X: =369
+            Y: =500
+      - lbl_RotMangueiraTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA *"
+            Width: =148
+            X: =531
+            Y: =473
+      - cmb_MangueiraTubo_1:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Mangueira que será produzida"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Selected.NomeMangueira),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: |-
+              =Filter(
+                  colMangueiras,
+                  NomeMangueira = Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira)
+              )
+            DisplayFields: =["NomeMangueira"]
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Selecione na lista"
+            IsSearchable: =false
+            Items: =colMangueiras
+            OnChange: =Set(varMangueiraEscolhidaTubo, Self.Selected.NomeMangueira)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["NomeMangueira"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Width: =148
+            X: =531
+            Y: =507
+      - lbl_RotTrancadeiraTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =51
+            Size: =fx_FonteApoio
+            Text: ="TRANÇADEIRA DE DESTINO *"
+            Width: =160
+            X: =693
+            Y: =463
+      - drp_TrancadeiraTubo_1:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            AccessibleLabel: ="Trançadeira que vai receber o material"
+            AllowEmptySelection: =true
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Selected.Value),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            Default: =gal_FilaTubo_1.Selected.Trançadeira
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            Items: =colTrancadeiras
+            Items.Value: =Value
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SelectionColor: =fx_CorInfo
+            SelectionFill: =fx_CorInfoSuave
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =693
+            Y: =507
+      - lbl_DestinoKanbanTubo:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: |-
+              =With(
+                  {
+                      _d: LookUp(
+                          colKanbanTrancTubo As _k,
+                          _k.Celula = drp_TrancadeiraTubo_1.Selected.Value
+                      )
+                  },
+                  If(
+                      IsBlank(_d.Celula),
+                      fx_CorTextoSuave,
+                      fx_SemaforoTranc(_d.Rodando, _d.Qtd)
+                  )
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =20
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  {
+                      _d: LookUp(
+                          colKanbanTrancTubo As _k,
+                          _k.Celula = drp_TrancadeiraTubo_1.Selected.Value
+                      )
+                  },
+                  If(
+                      IsBlank(drp_TrancadeiraTubo_1.Selected.Value), "",
+                      IsBlank(_d.Celula),                          "sem registro hoje",
+                      !_d.Rodando,                                 "destino parado",
+                      Text(_d.Qtd) & " atrás hoje"
+                  )
+              )
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO"
+            Width: =160
+            X: =693
+            Y: =551
+      - lbl_RotOpTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =39
+            Size: =fx_FonteApoio
+            Text: ="ORDEM DE PRODUÇÃO *"
+            Width: =148
+            X: =369
+            Y: =544
+      - inp_OpTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Número da ordem de produção, oito dígitos"
+            BorderColor: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" &&
+                  (Len(Trim(Self.Text)) <> 8 || Coalesce(Value(Self.Text), 0) <= 0),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.OP) || gal_FilaTubo_1.Selected.OP = 0,
+                  "",
+                  Text(gal_FilaTubo_1.Selected.OP, "00000000")
+              )
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HintText: ="8 dígitos"
+            HoverFill: =fx_CorInfoSuave
+            MaxLength: =8
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =148
+            X: =369
+            Y: =583
+      - lbl_RotObsTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO"
+            Width: =310
+            X: =531
+            Y: =556
+      - inp_ObsTubo_1:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação do tubo"
+            BorderColor: =fx_CorBorda
+            Default: =gal_FilaTubo_1.Selected.Observação_tubo
+            DelayOutput: =true
+            DisplayMode: |-
+              =If(
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =310
+            X: =531
+            Y: =583
+      - lbl_AlertaBalancoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: ="⚠ Produzido + refugo passou do que entrou — confira a digitação."
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" &&
+              Coalesce(Value(inp_QtdTubo_1.Text), 0) + Coalesce(Value(inp_RefugoTubo_1.Text), 0) > Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0)
+            Width: =472
+            X: =369
+            Y: =625
+      - lbl_AlertaValidadeTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: ="⚠ Composto com validade vencida — chame a supervisão antes de aplicar."
+            Visible: =!IsBlank(dte_ValidadeTubo_1.SelectedDate) && dte_ValidadeTubo_1.SelectedDate < ctxAgora
+            Width: =472
+            X: =369
+            Y: =651
+      - lbl_AvisoInicieTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =60
+            Size: =fx_FonteCorpo
+            Text: ="Selecione a OP na fila e toque em Iniciar Produção para liberar a entrada de dados."
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "AGUARDANDO"
+            Width: =472
+            X: =369
+            Y: =625
+      - btn_CardResumoTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =420
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =259
+      - lbl_SecaoResumoTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="BALANÇO DA OP"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =909
+            Y: =275
+      - lbl_RotEntrouTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="ENTROU"
+            Width: =185
+            X: =909
+            Y: =311
+      - lbl_ValEntrouTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteNumero
+            Text: =Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m"
+            Width: =185
+            X: =909
+            Y: =329
+      - lbl_RotProduzidoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="PRODUZIDO"
+            Width: =185
+            X: =909
+            Y: =371
+      - lbl_ValProduzidoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteNumero
+            Text: =Coalesce(Value(inp_QtdTubo_1.Text), 0) & " m"
+            Width: =185
+            X: =909
+            Y: =389
+      - lbl_RotRefugoResumoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="REFUGO"
+            Width: =185
+            X: =909
+            Y: =431
+      - lbl_ValRefugoResumoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  Coalesce(Value(inp_RefugoTubo_1.Text), 0) > 0,
+                  fx_CorErro,
+                  fx_CorTexto
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteNumero
+            Text: =Coalesce(Value(inp_RefugoTubo_1.Text), 0) & " m"
+            Width: =185
+            X: =909
+            Y: =449
+      - rct_DivisorResumoTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =185
+            X: =909
+            Y: =495
+      - lbl_RotSaldoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="SALDO NO CARRETEL"
+            Width: =185
+            X: =909
+            Y: =503
+      - lbl_ValSaldoTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0) < 0,
+                  fx_CorErro,
+                  fx_CorTexto
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteNumero
+            Text: =(Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0)) & " m"
+            Width: =185
+            X: =909
+            Y: =521
+      - rct_DivisorSobraTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =185
+            X: =909
+            Y: =567
+      - lbl_RotSobraTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="SOBRA DISPONÍVEL NESTA BITOLA"
+            Width: =185
+            X: =909
+            Y: =575
+      - lbl_ValSobraTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =If(
+                  Sum(Filter(colCarreteisTubo, metros_restantes > 0 && IsBlank(op) && Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola)), metros_restantes) > 0,
+                  fx_CorOK,
+                  fx_CorTextoSuave
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteNumero
+            Text: |-
+              =Coalesce(
+                  Sum(Filter(colCarreteisTubo, metros_restantes > 0 && IsBlank(op) && Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola)), metros_restantes),
+                  0
+              ) & " m"
+            Width: =185
+            X: =909
+            Y: =607
+      - rct_RodapeTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshTubo_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: |-
+              =Refresh(ficha_producao);
+              Refresh(lista_carreteis);
+              Refresh('Hora-Hora');
+              ClearCollect(colCarreteisTubo, lista_carreteis);
+              ClearCollect(
+                  colFilaTrancTubo,
+                  Filter(ficha_producao, processo = "Trançadeira")
+              );
+              ClearCollect(
+                  colHHDiaTubo,
+                  Filter('Hora-Hora', Data = fx_DataRefEm(Now()))
+              );
+              ClearCollect(
+                  colKanbanTrancTubo,
+                  ForAll(
+                      fx_CelulasTrancagem As _c,
+                      With(
+                          {
+                              _rodando: CountRows(
+                                  Filter(
+                                      colFilaTrancTubo As _f,
+                                      _f.Trançadeira = _c.Celula &&
+                                      _f.status_processo = "Em processo"
+                                  )
+                              ) > 0,
+                              _qtd: CountRows(
+                                  Filter(
+                                      colFilaTrancTubo As _g,
+                                      _g.Trançadeira = _c.Celula &&
+                                      _g.status_processo = "Aguardando" &&
+                                      !IsBlank(_g.'Carretel Entrada')
+                                  )
+                              ),
+                              _hh: CountRows(
+                                  Filter(
+                                      colHHDiaTubo As _h,
+                                      _h.Célula = _c.Celula &&
+                                      (Coalesce(_h.'Real. Hora', 0) > 0 || !IsBlank(_h.Mangueira))
+                                  )
+                              ) > 0
+                          },
+                          {
+                              Celula:  _c.Celula,
+                              Tipo:    "MAQ",
+                              Rodando: _rodando,
+                              Qtd:     _qtd,
+                              Ativa:   _rodando || _hh
+                          }
+                      )
+                  )
+              );
+              With(
+                  {
+                      _orf: CountRows(
+                          Filter(
+                              colFilaTrancTubo As _o,
+                              _o.status_processo = "Aguardando" &&
+                              !IsBlank(_o.'Carretel Entrada') &&
+                              IsBlank(
+                                  LookUp(fx_CelulasTrancagem As _c2, _c2.Celula = _o.Trançadeira).Celula
+                              )
+                          )
+                      )
+                  },
+                  If(
+                      _orf > 0,
+                      Collect(
+                          colKanbanTrancTubo,
+                          { Celula: "fora da grade", Tipo: "ORF", Rodando: false, Qtd: _orf, Ativa: true }
+                      )
+                  )
+              );
+              UpdateContext({ctxAgora: Now()})
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_IniciarTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Reset(cmb_CarretelSaidaTubo_1);
+              Reset(cmb_SobraTubo_1);
+              UpdateContext({ctxDelinModoInicio: true});
+              Select(btn_AbrirDelinTubo)
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Iniciar Produção"
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "AGUARDANDO"
+            Width: =360
+            X: =549
+            Y: =700
+      - btn_SalvarTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  { _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID) },
+                  If(
+                      _r.Modified <> gal_FilaTubo_1.Selected.Modified,
+                      Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                      Set(varProcessando, false),
+                      With(
+                          { _min: fx_MinutosDoDia(Now()) },
+                          Patch(
+                              ficha_producao,
+                              _r,
+                              {
+                                  'Cod.CompostoTubo': inp_CodTubo_1.Text,
+                                  'Lote Composto Tubo': inp_LoteTubo_1.Text,
+                                  'Data de Validade do Composto Tubo': dte_ValidadeTubo_1.SelectedDate,
+                                  diametro_tubo: Value(inp_DiametroTubo_1.Text),
+                                  quantidade_tubo: Value(inp_QtdTubo_1.Text),
+                                  defeito_tubo: Value(inp_RefugoTubo_1.Text),
+                                  operador_tubo: cmb_OperadorTubo_1.Selected.Nome,
+                                  Mangueira: cmb_MangueiraTubo_1.Selected.NomeMangueira,
+                                  Trançadeira: drp_TrancadeiraTubo_1.Selected.Value,
+                                  Observação_tubo: inp_ObsTubo_1.Text,
+                                  Turno_Tubo: Text(fx_Turno(_min))
+                              }
+                          )
+                      );
+                      If(
+                          !IsEmpty(Errors(ficha_producao)),
+                          Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                          Set(varProcessando, false),
+                          Refresh(ficha_producao);
+                          UpdateContext({ctxAgora: Now()});
+                          Set(varProcessando, false);
+                          Notify("Parcial do Tubo salvo.", NotificationType.Success, 4000)
+                      )
+                  )
+              )
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar Parcial"
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO"
+            Width: =220
+            X: =440
+            Y: =700
+      - btn_EnviarTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(gal_FilaTubo_1.Selected.ID) &&
+                  !varProcessando &&
+                  !IsBlank(cmb_OperadorTubo_1.Selected.Nome) &&
+                  !IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) &&
+                  !IsBlank(drp_TrancadeiraTubo_1.Selected.Value) &&
+                  !IsBlank(inp_LoteTubo_1.Text) &&
+                  !IsBlank(dte_ValidadeTubo_1.SelectedDate) &&
+                  Len(Trim(inp_OpTubo_1.Text)) = 8 &&
+                  Coalesce(Value(inp_OpTubo_1.Text), 0) > 0 &&
+                  Coalesce(Value(inp_QtdTubo_1.Text), 0) > 0,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =Reset(inp_SobraTubo_1);
+              UpdateContext({ctxUsouTudoTubo: true, ctxModalEnviarTubo: true})
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Enviar para Trançadeira"
+            Visible: =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO"
+            Width: =340
+            X: =676
+            Y: =700
+      - rct_DivisorLateralTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcaoS
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteCorpo
+            Text: ="MENU LATERAL"
+            X: =1157
+      - btn_EditarPlanoTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(inp_BitolaEditarTubo_1);
+              Reset(inp_CarretelEntradaEditarTubo_1);
+              Reset(inp_CarretelSaidaEditarTubo_1);
+              UpdateContext({ctxModalEditarTubo: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤEditar Plano"
+            Width: =183
+            X: =1168
+            Y: =57
+      - img_EditarPlanoTubo_1:
+          Control: Image@2.2.3
+          Properties:
+            DisplayMode: =btn_EditarPlanoTubo_1.DisplayMode
+            Height: =24
+            Image: ='pen-line'
+            OnSelect: =Select(btn_EditarPlanoTubo_1)
+            Width: =24
+            X: =1186
+            Y: =76
+      - btn_HoraHoraTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scrHoraHora_Tubo, ScreenTransition.CoverRight)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤHora a Hora"
+            Width: =183
+            X: =1168
+            Y: =149
+      - img_HoraHoraTubo_1:
+          Control: Image@2.2.3
+          Properties:
+            Height: =24
+            Image: ='clock-3'
+            OnSelect: =Select(btn_HoraHoraTubo_1)
+            Width: =24
+            X: =1186
+            Y: =168
+      - btn_HistoricoTurnoTubo_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =62
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scr_HistoricoTurno_Tubo, ScreenTransition.CoverRight)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤHistórico do turno"
+            Width: =183
+            X: =1168
+            Y: =241
+      - img_HistoricoTurnoTubo_1:
+          Control: Image@2.2.3
+          Properties:
+            Height: =24
+            Image: =send
+            OnSelect: =Select(btn_HistoricoTurnoTubo_1)
+            Width: =24
+            X: =1186
+            Y: =260
+      - lbl_TituloKanbanTubo:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            Size: =fx_FonteApoio
+            Text: ="TRANÇADEIRAS DE HOJE"
+            Width: =209
+            X: =1157
+            Y: =374
+      - lbl_SubKanbanTubo:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =With(
+                  { _at: Filter(colKanbanTrancTubo, Ativa) },
+                  If(
+                      CountRows(Filter(_at, Rodando = false)) > 0, fx_CorErro,
+                      CountRows(Filter(_at, Rodando = true, Qtd < fx_TrancKanbanMinimo)) > 0, fx_CorAlerta,
+                      fx_CorTextoSuave
+                  )
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  { _at: Filter(colKanbanTrancTubo, Ativa) },
+                  With(
+                      {
+                          _p: CountRows(Filter(_at, Rodando = false)),
+                          _s: CountRows(Filter(_at, Rodando = true, Qtd < fx_TrancKanbanMinimo))
+                      },
+                      If(
+                          IsEmpty(_at),     "nenhuma rodou hoje",
+                          _p = 0 && _s = 0, "todas abastecidas",
+                          Text(_s) & " sem carretel · " & Text(_p) & " parada(s)"
+                      )
+                  )
+              )
+            Width: =209
+            X: =1157
+            Y: =402
+      - gal_KanbanTubo:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =307
+            Items: =Filter(colKanbanTrancTubo, Ativa)
+            TemplateFill: =Color.Transparent
+            TemplateSize: =44
+            Width: =198
+            X: =1168
+            Y: =431
+          Children:
+            - btn_LinhaKanbanTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =ColorFade(fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd), 88%)
+                  Font: =fx_FonteFamilia
+                  HoverFill: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =173
+                  Y: =2
+            - lbl_MaqKanbanTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.Celula
+                  Width: =72
+                  X: =12
+                  Y: =2
+            - lbl_EstadoKanbanTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        ThisItem.Tipo = "ORF",
+                        Text(ThisItem.Qtd) & " s/ grade",
+                        ThisItem.Rodando,
+                        Text(ThisItem.Qtd) & " atrás",
+                        "parada" & If(ThisItem.Qtd > 0, " · " & Text(ThisItem.Qtd), "")
+                    )
+                  Width: =87
+                  X: =84
+                  Y: =2
+      - lbl_TurnoLateralTubo_1:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =24
+            Size: =fx_FonteCorpo
+            Text: =fx_TurnoLabelEm(ctxAgora)
+            Width: =183
+            X: =939
+            Y: =25
+      - lbl_VersaoTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="Versão 0.4.0"
+            Width: =183
+            X: =1168
+            Y: =738
+      - cntr_IniciarTubo_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalIniciarTubo
+            Width: =1366
+          Children:
+            - btn_BgIniciarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =460
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =154
+            - lbl_TituloIniciarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Iniciar Produção"
+                  Width: =400
+                  X: =403
+                  Y: =178
+            - lbl_SubIniciarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="Tubo  ·  Bitola " & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola), "—") & "  ·  " & Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) & " m recebidos do Mandril"
+                  Width: =560
+                  X: =403
+                  Y: =212
+            - lbl_SobraIniciarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        CountRows(Filter(colCarreteisTubo, metros_restantes > 0 && IsBlank(op) && Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola))) > 0,
+                        fx_CorOK,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        CountRows(Filter(colCarreteisTubo, metros_restantes > 0 && IsBlank(op) && Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola))) > 0,
+                        "SOBRA DISPONÍVEL NESTA BITOLA — " & Sum(Filter(colCarreteisTubo, metros_restantes > 0 && IsBlank(op) && Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola)), metros_restantes) & " m",
+                        "SEM SOBRA PARA ESTA BITOLA"
+                    )
+                  Width: =560
+                  X: =403
+                  Y: =256
+            - cmb_SobraTubo_1:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel com sobra desta bitola"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: |-
+                    =Filter(
+                        colCarreteisTubo,
+                        metros_restantes > 0 &&
+                        IsBlank(op) &&
+                        Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola)
+                    )
+                  Items.Value: =Title
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Visible: |-
+                    =CountRows(
+                        Filter(
+                            colCarreteisTubo,
+                            metros_restantes > 0 &&
+                            IsBlank(op) &&
+                            Text(mangueira_atual) = Text(gal_FilaTubo_1.Selected.Bitola)
+                        )
+                    ) > 0
+                  Width: =560
+                  X: =403
+                  Y: =282
+            - lbl_RotCarretelSaidaTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE SAÍDA *"
+                  Width: =560
+                  X: =403
+                  Y: =346
+            - cmb_CarretelSaidaTubo_1:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel de saída do tubo"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =Filter(colCarreteisTubo, IsBlank(op) && (IsBlank(metros_restantes) || metros_restantes = 0))
+                  Items.Value: =Title
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =560
+                  X: =403
+                  Y: =368
+            - btn_StatusCarretelTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: |-
+                    =If(
+                        IsBlank(LookUp(colCarreteisTubo, Title = cmb_CarretelSaidaTubo_1.Selected.Title).op),
+                        fx_CorOK,
+                        fx_CorErro
+                    )
+                  DisplayMode: =DisplayMode.View
+                  Fill: |-
+                    =If(
+                        IsBlank(LookUp(colCarreteisTubo, Title = cmb_CarretelSaidaTubo_1.Selected.Title).op),
+                        fx_CorOKSuave,
+                        fx_CorErroSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcao
+                  HoverFill: =Self.Fill
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(LookUp(colCarreteisTubo, Title = cmb_CarretelSaidaTubo_1.Selected.Title).op),
+                        "Carretel limpo e pronto para receber material",
+                        "Carretel já alocado em outra OP — escolha outro"
+                    )
+                  Visible: =!IsBlank(cmb_CarretelSaidaTubo_1.Selected.Title)
+                  Width: =560
+                  X: =403
+                  Y: =432
+            - btn_CancelarIniciarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(cmb_CarretelSaidaTubo_1);
+                    Reset(cmb_SobraTubo_1);
+                    UpdateContext({ctxModalIniciarTubo: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =403
+                  Y: =542
+            - btn_ConfirmarIniciarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !IsBlank(cmb_CarretelSaidaTubo_1.Selected.Title) &&
+                        IsBlank(LookUp(colCarreteisTubo, Title = cmb_CarretelSaidaTubo_1.Selected.Title).op) &&
+                        fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "AGUARDANDO",
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    Refresh(lista_carreteis);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID),
+                            _carretel: LookUp(lista_carreteis, Title = cmb_CarretelSaidaTubo_1.Selected.Title),
+                            _sobra: LookUp(lista_carreteis, Title = cmb_SobraTubo_1.Selected.Title),
+                            _agora: Now(),
+                            _min: fx_MinutosDoDia(Now())
+                        },
+                        If(
+                            _r.Modified <> gal_FilaTubo_1.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            !IsBlank(_carretel.op),
+                            Notify("Este carretel acabou de ser alocado em outra OP. Escolha outro.", NotificationType.Error, 8000);
+                            ClearCollect(colCarreteisTubo, lista_carreteis);
+                            Set(varProcessando, false),
+                            With(
+                                {
+                                    _entrada: If(
+                                        !IsBlank(_sobra.Title),
+                                        Coalesce(_sobra.metros_restantes, 0),
+                                        Coalesce(_r.quantidade_mandril, 0)
+                                    ),
+                                    _carretelEnt: Coalesce(_sobra.Title, _r.'Carretel Entrada')
+                                },
+                                If(
+                                    !IsBlank(_sobra.Title),
+                                    Patch(
+                                        lista_carreteis,
+                                        _sobra,
+                                        {
+                                            metros_restantes: 0,
+                                            op: Blank(),
+                                            etapa_processo: Blank(),
+                                            mangueira_atual: Blank()
+                                        }
+                                    )
+                                );
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        status_processo: "Em processo",
+                                        data_hora_inicio_tubo: _agora,
+                                        InicioEmProcesso_Tubo: _agora,
+                                        Turno_Tubo: Text(fx_Turno(_min)),
+                                        'Carretel Saida': _carretel.Title
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Falha ao iniciar o Tubo: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                    Set(varProcessando, false),
+                                    Patch(
+                                        lista_carreteis,
+                                        _carretel,
+                                        {
+                                            op: Text(_r.ID),
+                                            etapa_processo: "Tubo"
+                                        }
+                                    );
+                                    With(
+                                        { _cust: LookUp(Historico_Carretel, etapa = "Tubo" && Title = _carretel.Title && OP_ID = _r.OP) },
+                                        Patch(
+                                            Historico_Carretel,
+                                            Coalesce(_cust, Defaults(Historico_Carretel)),
+                                            {
+                                                Title: _carretel.Title,
+                                                OP_ID: _r.OP,
+                                                etapa: "Tubo",
+                                                mangueira: Text(_r.Bitola),
+                                                metros_entrada: _entrada,
+                                                data_hora_entrada: Coalesce(_cust.data_hora_entrada, _agora),
+                                                operador: _r.operador_tubo
+                                            }
+                                        )
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Historico_Carretel)),
+                                        Notify("OP iniciada, mas a custódia do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(_r.ID) & "-Tubo-Inicio",
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: _r.ID,
+                                            etapa: {Value: "Tubo"},
+                                            tipo: {Value: "Início"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: fx_Turno(_min),
+                                            bitola: _r.Bitola,
+                                            metros: _entrada,
+                                            sobra: 0,
+                                            carretel: _carretelEnt,
+                                            recurso: _r.Trançadeira
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify("Evento de início não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Refresh(ficha_producao);
+                                    Refresh(lista_carreteis);
+                                    ClearCollect(colCarreteisTubo, lista_carreteis);
+                                    Reset(cmb_CarretelSaidaTubo_1);
+                                    Reset(cmb_SobraTubo_1);
+                                    Reset(inp_CodTubo_1);
+                                    Reset(inp_LoteTubo_1);
+                                    Reset(dte_ValidadeTubo_1);
+                                    Reset(inp_DiametroTubo_1);
+                                    Reset(inp_QtdTubo_1);
+                                    Reset(inp_RefugoTubo_1);
+                                    Reset(cmb_OperadorTubo_1);
+                                    Reset(cmb_MangueiraTubo_1);
+                                    Reset(drp_TrancadeiraTubo_1);
+                                    Reset(inp_OpTubo_1);
+                                    Reset(inp_ObsTubo_1);
+                                    UpdateContext({ctxModalIniciarTubo: false, ctxAgora: Now()});
+                                    Set(varProcessando, false);
+                                    Notify("Tubo iniciado na bitola " & Coalesce(Text(_r.Bitola), "—") & ".", NotificationType.Success, 4000)
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Width: =220
+                  X: =743
+                  Y: =542
+      - cntr_EnviarTubo_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalEnviarTubo
+            Width: =1366
+          Children:
+            - btn_BgEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =500
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =620
+                  X: =373
+                  Y: =134
+            - lbl_TituloEnviarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Enviar para a " & Coalesce(drp_TrancadeiraTubo_1.Selected.Value, "Trançadeira")
+                  Width: =460
+                  X: =403
+                  Y: =158
+            - lbl_SubEnviarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteCorpo
+                  Text: ="OP " & Trim(inp_OpTubo_1.Text) & "  ·  " & Coalesce(cmb_MangueiraTubo_1.Selected.NomeMangueira, "—") & "  ·  carretel " & Coalesce(gal_FilaTubo_1.Selected.'Carretel Saida', "—")
+                  Width: =560
+                  X: =403
+                  Y: =192
+            - lbl_KanbanEnviarTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =With(
+                        {
+                            _d: LookUp(
+                                colKanbanTrancTubo As _k,
+                                _k.Celula = drp_TrancadeiraTubo_1.Selected.Value
+                            )
+                        },
+                        If(
+                            IsBlank(_d.Celula),
+                            fx_CorTextoSuave,
+                            fx_SemaforoTranc(_d.Rodando, _d.Qtd)
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            _d: LookUp(
+                                colKanbanTrancTubo As _k,
+                                _k.Celula = drp_TrancadeiraTubo_1.Selected.Value
+                            )
+                        },
+                        If(
+                            IsBlank(_d.Celula),
+                            "Este destino não registrou produção hoje.",
+                            !_d.Rodando,
+                            "Atenção: este destino está PARADO hoje — " & Text(_d.Qtd) & " carretel(éis) já aguardando.",
+                            _d.Qtd < fx_TrancKanbanMinimo,
+                            "Este destino está rodando SEM carretel atrás. É o que este envio resolve.",
+                            "Este destino já tem " & Text(_d.Qtd) & " carretel(éis) aguardando."
+                        )
+                    )
+                  Width: =560
+                  X: =403
+                  Y: =214
+            - btn_ResumoEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
+                  Font: =fx_FonteFamilia
+                  Height: =52
+                  HoverFill: =fx_CorFundo
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Produzido " & Coalesce(Value(inp_QtdTubo_1.Text), 0) & " m   ·   refugo " & Coalesce(Value(inp_RefugoTubo_1.Text), 0) & " m   ·   " & Coalesce(cmb_OperadorTubo_1.Selected.Nome, "—")
+                  Width: =560
+                  X: =403
+                  Y: =240
+            - lbl_PerguntaEnviarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteDestaque
+                  Text: ="Usou todo o material do carretel de entrada?"
+                  Width: =560
+                  X: =403
+                  Y: =296
+            - btn_SimEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ctxUsouTudoTubo, ColorFade(fx_CorOK, -40%), Color.Transparent)
+                  BorderThickness: =If(ctxUsouTudoTubo, 4, 0)
+                  Color: =fx_CorSuperficie
+                  Fill: =If(ctxUsouTudoTubo, fx_CorOK, ColorFade(fx_CorOK, 60%))
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcao
+                  HoverFill: =ColorFade(Self.Fill, -10%)
+                  OnSelect: |-
+                    =UpdateContext({ctxUsouTudoTubo: true});
+                    Reset(inp_SobraTubo_1)
+                  PressedFill: =ColorFade(Self.Fill, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteDestaque
+                  Text: ="SIM, usei tudo"
+                  Width: =270
+                  X: =403
+                  Y: =332
+            - btn_NaoEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(!ctxUsouTudoTubo, ColorFade(fx_CorAlerta, -40%), Color.Transparent)
+                  BorderThickness: =If(!ctxUsouTudoTubo, 4, 0)
+                  Color: =fx_CorSuperficie
+                  Fill: =If(!ctxUsouTudoTubo, fx_CorAlerta, ColorFade(fx_CorAlerta, 60%))
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcao
+                  HoverFill: =ColorFade(Self.Fill, -10%)
+                  OnSelect: |-
+                    =UpdateContext({ctxUsouTudoTubo: false})
+                  PressedFill: =ColorFade(Self.Fill, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteDestaque
+                  Text: ="NÃO, sobrou material"
+                  Width: =270
+                  X: =693
+                  Y: =332
+            - lbl_RotSobraEnviarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="QUANTOS METROS SOBRARAM NO CARRETEL DE ENTRADA? *"
+                  Visible: =!ctxUsouTudoTubo
+                  Width: =560
+                  X: =403
+                  Y: =410
+            - inp_SobraTubo_1:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Metros que sobraram no carretel de entrada"
+                  BorderColor: |-
+                    =If(
+                        IsBlank(Self.Text) || Value(Self.Text) <= 0,
+                        fx_CorErro,
+                        fx_CorBorda
+                    )
+                  Default: =""
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Format: =TextFormat.Number
+                  Height: =fx_AlturaCampo
+                  HintText: |-
+                    ="Ex.: 50"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteDestaque
+                  Visible: =!ctxUsouTudoTubo
+                  Width: =220
+                  X: =403
+                  Y: =432
+            - lbl_DicaSobraTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =56
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="Pelo balanço da ficha sobraram cerca de " &
+                    Max(0, Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) - Coalesce(Value(inp_QtdTubo_1.Text), 0) - Coalesce(Value(inp_RefugoTubo_1.Text), 0)) &
+                    " m. A sobra volta para a fila do Tubo como uma nova OP, no carretel de entrada."
+                  Visible: =!ctxUsouTudoTubo
+                  Width: =320
+                  X: =643
+                  Y: =432
+            - btn_CancelarEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalEnviarTubo: false});
+                    Set(varProcessando, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =403
+                  Y: =550
+            - btn_ConfirmarEnviarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_OperadorTubo_1.Selected.Nome) &&
+                        !IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) &&
+                        !IsBlank(drp_TrancadeiraTubo_1.Selected.Value) &&
+                        !IsBlank(inp_LoteTubo_1.Text) &&
+                        Len(Trim(inp_OpTubo_1.Text)) = 8 &&
+                        Coalesce(Value(inp_QtdTubo_1.Text), 0) > 0 &&
+                        (ctxUsouTudoTubo || Coalesce(Value(inp_SobraTubo_1.Text), 0) > 0),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID),
+                            _agora: Now(),
+                            _min: fx_MinutosDoDia(Now()),
+                            _op: Value(Trim(inp_OpTubo_1.Text)),
+                            _qtd: Coalesce(Value(inp_QtdTubo_1.Text), 0),
+                            _refugo: Coalesce(Value(inp_RefugoTubo_1.Text), 0),
+                            _operador: cmb_OperadorTubo_1.Selected.Nome,
+                            _mangueira: cmb_MangueiraTubo_1.Selected.NomeMangueira,
+                            _trancadeira: drp_TrancadeiraTubo_1.Selected.Value,
+                            _sobra: If(ctxUsouTudoTubo, 0, Coalesce(Value(inp_SobraTubo_1.Text), 0))
+                        },
+                        If(
+                            Len(Trim(inp_OpTubo_1.Text)) <> 8 || _op <= 0,
+                            Notify("A OP deve ter exatamente 8 dígitos e não pode ser zero.", NotificationType.Warning, 8000);
+                            Set(varProcessando, false),
+                            IsBlank(_operador) || IsBlank(_mangueira) || IsBlank(_trancadeira) || IsBlank(inp_LoteTubo_1.Text) || _qtd <= 0,
+                            Notify("Preencha operador, mangueira, trançadeira, lote e metragem antes de enviar.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            !ctxUsouTudoTubo && _sobra <= 0,
+                            Notify("Informe quantos metros sobraram no carretel de entrada.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            !ctxUsouTudoTubo && _sobra >= Coalesce(_r.quantidade_mandril, 0),
+                            Notify("A sobra informada é maior ou igual ao material que entrou. Confira o valor.", NotificationType.Warning, 8000);
+                            Set(varProcessando, false),
+                            _r.Modified <> gal_FilaTubo_1.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            With(
+                                { _dup: LookUp(ficha_producao, OP = _op) },
+                                If(
+                                    !IsBlank(_dup.ID) && _dup.ID <> _r.ID,
+                                    Notify("Esta OP já existe no sistema (ID " & Text(_dup.ID) & "). Confira o número.", NotificationType.Error, 10000);
+                                    Set(varProcessando, false),
+                                    With(
+                                        { _qtdEntrada: Coalesce(_r.quantidade_mandril, 0) },
+                                        Set(
+                                            gvarRegistroTubo,
+                                            Patch(
+                                                ficha_producao,
+                                                _r,
+                                                {
+                                                    OP: _op,
+                                                    'Cod.CompostoTubo': inp_CodTubo_1.Text,
+                                                    'Lote Composto Tubo': inp_LoteTubo_1.Text,
+                                                    'Data de Validade do Composto Tubo': dte_ValidadeTubo_1.SelectedDate,
+                                                    diametro_tubo: Value(inp_DiametroTubo_1.Text),
+                                                    quantidade_tubo: _qtd,
+                                                    defeito_tubo: _refugo,
+                                                    operador_tubo: _operador,
+                                                    Mangueira: _mangueira,
+                                                    Trançadeira: _trancadeira,
+                                                    Observação_tubo: inp_ObsTubo_1.Text,
+                                                    data_hora_final_tubo: _agora,
+                                                    processo: "Trançadeira",
+                                                    status_processo: "Aguardando",
+                                                    InicioAguardando_Trançadeira: _agora,
+                                                    'Carretel Entrada': _r.'Carretel Saida',
+                                                    'Carretel Saida': Blank(),
+                                                    quantidade_mandril: _qtdEntrada - _sobra,
+                                                    Turno_Tubo: Text(fx_Turno(_min))
+                                                }
+                                            )
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(ficha_producao)),
+                                            Notify("Falha ao gravar o apontamento. Confira a conexão e tente de novo.", NotificationType.Error, 12000);
+                                            Set(varProcessando, false),
+                                            With(
+                                                { _cust: LookUp(Historico_Carretel, etapa = "Tubo" && Title = _r.'Carretel Saida' && OP_ID = _op) },
+                                                Patch(
+                                                    Historico_Carretel,
+                                                    Coalesce(_cust, Defaults(Historico_Carretel)),
+                                                    {
+                                                        Title: _r.'Carretel Saida',
+                                                        OP_ID: _op,
+                                                        etapa: "Tubo",
+                                                        mangueira: Text(_r.Bitola),
+                                                        metros_entrada: _qtdEntrada,
+                                                        metros_saida: _qtd,
+                                                        data_hora_entrada: Coalesce(_cust.data_hora_entrada, _r.data_hora_inicio_tubo),
+                                                        data_hora_saida: _agora,
+                                                        operador: _operador
+                                                    }
+                                                )
+                                            );
+                                            If(
+                                                !IsEmpty(Errors(Historico_Carretel)),
+                                                Notify("Apontamento salvo, mas a custódia do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                                            );
+                                            Patch(
+                                                Eventos_Producao,
+                                                Defaults(Eventos_Producao),
+                                                {
+                                                    Title: Text(_r.ID) & "-Tubo-Fim",
+                                                    origem: {Value: "ficha_producao"},
+                                                    origem_ID: _r.ID,
+                                                    etapa: {Value: "Tubo"},
+                                                    tipo: {Value: "Fim"},
+                                                    data_hora: _agora,
+                                                    data_ref: fx_DataRefEm(_agora),
+                                                    turno: fx_Turno(_min),
+                                                    bitola: _r.Bitola,
+                                                    metros: _qtd,
+                                                    refugo: _refugo,
+                                                    sobra: _sobra,
+                                                    carretel: _r.'Carretel Saida',
+                                                    operador: _operador,
+                                                    recurso: _trancadeira
+                                                }
+                                            );
+                                            If(
+                                                !IsEmpty(Errors(Eventos_Producao)),
+                                                Notify("Evento de fim não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                            );
+                                            If(
+                                                ctxUsouTudoTubo,
+                                                If(
+                                                    !IsBlank(_r.'Carretel Entrada'),
+                                                    Patch(
+                                                        lista_carreteis,
+                                                        LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
+                                                        {
+                                                            op: Blank(),
+                                                            etapa_processo: Blank(),
+                                                            lote: Blank(),
+                                                            metros_restantes: 0,
+                                                            mangueira_atual: Blank()
+                                                        }
+                                                    )
+                                                ),
+                                                Set(
+                                                    gvarFilhoTubo,
+                                                    Patch(
+                                                        ficha_producao,
+                                                        Defaults(ficha_producao),
+                                                        {
+                                                            Title: _r.Title & " (sobra)",
+                                                            processo: "Tubo",
+                                                            status_processo: "Aguardando",
+                                                            InicioAguardando_Tubo: _agora,
+                                                            'Carretel Entrada': _r.'Carretel Entrada',
+                                                            Bitola: _r.Bitola,
+                                                            cod_mandril: _r.cod_mandril,
+                                                            diametro_mandril: _r.diametro_mandril,
+                                                            quantidade_mandril: _sobra,
+                                                            operador_mandril: _r.operador_mandril,
+                                                            desmoldante_mandril: _r.desmoldante_mandril,
+                                                            lote_mandril: _r.lote_mandril,
+                                                            Observação_mandril: _r.Observação_mandril,
+                                                            data_hora_inicio_mandril: _r.data_hora_inicio_mandril,
+                                                            data_hora_final_mandril: _r.data_hora_final_mandril,
+                                                            Turno_mandril: _r.Turno_mandril,
+                                                            maquina_mandril: _r.maquina_mandril
+                                                        }
+                                                    )
+                                                );
+                                                If(
+                                                    !IsEmpty(Errors(ficha_producao)),
+                                                    Notify("ATENÇÃO: a sobra NÃO voltou para a fila do Tubo. Avise a supervisão.", NotificationType.Error, 15000),
+                                                    If(
+                                                        !IsBlank(_r.'Carretel Entrada'),
+                                                        Patch(
+                                                            lista_carreteis,
+                                                            LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
+                                                            {
+                                                                op: Text(gvarFilhoTubo.ID),
+                                                                etapa_processo: "Tubo",
+                                                                metros_restantes: _sobra,
+                                                                mangueira_atual: Text(_r.Bitola)
+                                                            }
+                                                        )
+                                                    );
+                                                    Notify(
+                                                        "Sobra de " & Text(_sobra) & " m devolvida à fila do Tubo no carretel " & _r.'Carretel Entrada' & ".",
+                                                        NotificationType.Information,
+                                                        8000
+                                                    )
+                                                )
+                                            );
+                                            Refresh(ficha_producao);
+                                            Refresh(lista_carreteis);
+                                            ClearCollect(colCarreteisTubo, lista_carreteis);
+                                            Reset(inp_CodTubo_1);
+                                            Reset(inp_LoteTubo_1);
+                                            Reset(dte_ValidadeTubo_1);
+                                            Reset(inp_DiametroTubo_1);
+                                            Reset(inp_QtdTubo_1);
+                                            Reset(inp_RefugoTubo_1);
+                                            Reset(cmb_OperadorTubo_1);
+                                            Reset(cmb_MangueiraTubo_1);
+                                            Reset(drp_TrancadeiraTubo_1);
+                                            Reset(inp_OpTubo_1);
+                                            Reset(inp_ObsTubo_1);
+                                            Reset(inp_SobraTubo_1);
+                                            Reset(gal_FilaTubo_1);
+                                            UpdateContext({ctxModalEnviarTubo: false, ctxUsouTudoTubo: true, ctxAgora: Now()});
+                                            Set(varProcessando, false);
+                                            Select(ico_RefreshTubo_1);
+                                            Notify("Tubo finalizado. Material enviado para a " & _trancadeira & ".", NotificationType.Success, 6000)
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Envio"
+                  Width: =220
+                  X: =743
+                  Y: =550
+      - cntr_EditarPlanoTubo_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalEditarTubo
+            Width: =1366
+          Children:
+            - btn_BgEditarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =430
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =169
+            - lbl_TituloEditarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Editar dados da OP"
+                  Width: =400
+                  X: =455
+                  Y: =197
+            - lbl_RotBitolaEditarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="BITOLA"
+                  Width: =456
+                  X: =455
+                  Y: =245
+            - inp_BitolaEditarTubo_1:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Bitola da ordem"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaTubo_1.Selected.Bitola
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Format: =TextFormat.Number
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =456
+                  X: =455
+                  Y: =267
+            - lbl_RotCarretelEntradaEditarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE ENTRADA"
+                  Width: =218
+                  X: =455
+                  Y: =325
+            - inp_CarretelEntradaEditarTubo_1:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Carretel de entrada"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaTubo_1.Selected.'Carretel Entrada'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =347
+            - lbl_RotCarretelSaidaEditarTubo_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL DE SAÍDA"
+                  Width: =218
+                  X: =693
+                  Y: =325
+            - inp_CarretelSaidaEditarTubo_1:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Carretel de saída"
+                  BorderColor: =fx_CorBorda
+                  Default: =gal_FilaTubo_1.Selected.'Carretel Saida'
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =347
+            - btn_CancelarEditarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(inp_BitolaEditarTubo_1);
+                    Reset(inp_CarretelEntradaEditarTubo_1);
+                    Reset(inp_CarretelSaidaEditarTubo_1);
+                    UpdateContext({ctxModalEditarTubo: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =520
+            - btn_SalvarEditarTubo_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(IsBlank(gal_FilaTubo_1.Selected.ID), DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        { _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID) },
+                        If(
+                            _r.Modified <> gal_FilaTubo_1.Selected.Modified,
+                            Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                            Set(varProcessando, false),
+                            Patch(
+                                ficha_producao,
+                                _r,
+                                {
+                                    Bitola: Value(inp_BitolaEditarTubo_1.Text),
+                                    'Carretel Entrada': inp_CarretelEntradaEditarTubo_1.Text,
+                                    'Carretel Saida': inp_CarretelSaidaEditarTubo_1.Text
+                                }
+                            );
+                            If(
+                                !IsEmpty(Errors(ficha_producao)),
+                                Notify("Falha ao salvar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                Refresh(ficha_producao);
+                                UpdateContext({ctxModalEditarTubo: false});
+                                Set(varProcessando, false);
+                                Notify("Dados da OP atualizados.", NotificationType.Success, 4000)
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Salvar"
+                  Width: =200
+                  X: =711
+                  Y: =520
+      - cntr_DelineamentoTubo:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalDelinTubo
+            Width: =1366
+          Children:
+            - btn_BgDelinTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =688
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =1180
+                  X: =93
+                  Y: =40
+            - lbl_TituloDelinTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =Font.'Segoe UI'
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteTitulo
+                  Text: ="Delineamento — Extrusão de Tubo"
+                  Width: =600
+                  X: =125
+                  Y: =64
+            - lbl_SubDelinTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        ctxDelinModoInicio,
+                        "Confira o set-up na máquina antes de iniciar   ·   ",
+                        ""
+                    ) &
+                    "Bitola " & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola), "—") &
+                    "   ·   valores de referência, não editáveis"
+                  Width: =590
+                  X: =125
+                  Y: =96
+            - ico_FecharDelinTubo:
+                Control: Classic/Icon@2.5.0
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Height: =40
+                  Icon: =Icon.Cancel
+                  OnSelect: |-
+                    =UpdateContext({ctxModalDelinTubo: false})
+                  Width: =40
+                  X: =1201
+                  Y: =64
+            - lbl_RotMangDelinTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="MANGUEIRA DA BITOLA " & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola, "[$-en-US]#"), "—") & " *"
+                  Width: =440
+                  X: =740
+                  Y: =46
+            - cmb_MangueiraDelinTubo:
+                Control: Classic/ComboBox@2.4.0
+                Properties:
+                  AccessibleLabel: ="Mangueira que será produzida nesta bitola"
+                  BorderColor: =If(IsBlank(Self.Selected.PARTNUMBER), fx_CorErro, fx_CorBorda)
+                  ChevronBackground: =fx_CorInfo
+                  ChevronFill: =fx_CorSuperficie
+                  ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+                  ChevronHoverFill: =fx_CorSuperficie
+                  DefaultSelectedItems: |-
+                    =Filter(
+                        colSpecTubo,
+                        Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                    )
+                  DisplayFields: =["PARTNUMBER"]
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  InputTextPlaceholder: ="Digite para filtrar"
+                  Items: |-
+                    =With(
+                        {
+                            _daBitola: Filter(
+                                colSpecTubo,
+                                EndsWith(Trim(PARTNUMBER), "-" & Text(gal_FilaTubo_1.Selected.Bitola, "[$-en-US]#"))
+                            )
+                        },
+                        If(CountRows(_daBitola) > 0, _daBitola, colSpecTubo)
+                    )
+                  OnChange: =Set(varMangueiraEscolhidaTubo, Self.Selected.PARTNUMBER)
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SearchFields: =["PARTNUMBER"]
+                  SelectMultiple: =false
+                  SelectionColor: =fx_CorSuperficie
+                  SelectionFill: =fx_CorInfo
+                  Width: =440
+                  X: =740
+                  Y: =64
+            - lbl_AvisoBitolaDelinTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  Size: =fx_FonteApoio
+                  Text: ="Nenhuma mangueira termina em -" & Coalesce(Text(gal_FilaTubo_1.Selected.Bitola, "[$-en-US]#"), "?") & " — a lista está mostrando todas."
+                  Visible: |-
+                    =CountRows(
+                        Filter(
+                            colSpecTubo,
+                            EndsWith(Trim(PARTNUMBER), "-" & Text(gal_FilaTubo_1.Selected.Bitola, "[$-en-US]#"))
+                        )
+                    ) = 0
+                  Width: =440
+                  X: =740
+                  Y: =110
+            - lbl_SemSpecTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =53
+                  Size: =fx_FonteDestaque
+                  Text: ="Sem delineamento cadastrado para esta mangueira em DM_TUBE_EXTRUSION. Confira o código da mangueira ou chame a Engenharia."
+                  Visible: |-
+                    =IsBlank(
+                        LookUp(
+                            colSpecTubo,
+                            Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                        ).PARTNUMBER
+                    )
+                  Width: =1116
+                  X: =113
+                  Y: =111
+            - lbl_ToleranciaDelinTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Right
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="TOLERÂNCIA:  temperatura ±20 °C   ·   pressão ±50 bar"
+                  Visible: |-
+                    =!IsBlank(
+                        LookUp(
+                            colSpecTubo,
+                            Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                        ).PARTNUMBER
+                    )
+                  Width: =600
+                  X: =641
+                  Y: =488
+            - lbl_SecCompostoTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteSecao
+                  Text: ="COMPOSTO E SET-UP"
+                  Width: =1116
+                  X: =125
+                  Y: =140
+            - rct_SecCompostoTubo:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1116
+                  X: =125
+                  Y: =166
+            - gal_DelinCompostoTubo:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =76
+                  Items: |-
+                    =With(
+                        {
+                            _s: LookUp(
+                                colSpecTubo,
+                                Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                            )
+                        },
+                        Table(
+                            {rot: "COMPOSTO",           val: Coalesce(Text(_s.TUBE_PN), "—")},
+                            {rot: "MANDRIL",            val: Coalesce(Text(_s.MANDREL), "—")},
+                            {rot: "LOTE PADRÃO (m)",    val: Coalesce(Text(_s.REEL_QTT), "—")},
+                            {rot: "ANTIADERENTE",       val: Coalesce(Text(_s.LUBE_PROT), "—")},
+                            {rot: "SET-UP (rpm)",       val: Coalesce(Text(_s.SETUP_RPM), "—")},
+                            {rot: "PRODUÇÃO (rpm)",     val: Coalesce(Text(_s.PROD_RPM), "—")},
+                            {rot: "VELOCIDADE (m/min)", val: Coalesce(Text(_s.SPEEDY_mpm), "—")},
+                            {rot: "CARGA (%) ±10",      val: Coalesce(Text(_s.LOAD), "—")}
+                        )
+                    )
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =76
+                  Width: =1116
+                  WrapCount: =8
+                  X: =125
+                  Y: =168
+                Children:
+                  - btn_CardDelinCompostoTubo:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =fx_CorBorda
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: =DisplayMode.View
+                        Fill: =fx_CorFundo
+                        Font: =fx_FonteFamilia
+                        Height: =68
+                        HoverFill: =fx_CorFundo
+                        PressedFill: =fx_CorFundo
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_RotCompostoTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =34
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_ValCompostoTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(ThisItem.val = "—", fx_CorRotulo, fx_CorTexto)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingLeft: =0
+                        Size: =fx_FonteDestaque
+                        Text: =ThisItem.val
+                        Width: =119
+                        X: =8
+                        Y: =36
+            - lbl_SecEspecTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteSecao
+                  Text: ="ESPECIFICAÇÃO DO TUBO"
+                  Width: =1116
+                  X: =125
+                  Y: =256
+            - rct_SecEspecTubo:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1116
+                  X: =125
+                  Y: =282
+            - gal_DelinEspecTubo:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =88
+                  Items: |-
+                    =With(
+                        {
+                            _s: LookUp(
+                                colSpecTubo,
+                                Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                            )
+                        },
+                        Table(
+                            {rot: "Ø EXTERNO MÍN (pol.)",   val: Coalesce(Text(_s.MIN_OD), "—")},
+                            {rot: "Ø EXTERNO MÉDIO (pol.)", val: Coalesce(Text(_s.MED_OD), "—")},
+                            {rot: "Ø EXTERNO MÁX (pol.)",   val: Coalesce(Text(_s.MAX_OD), "—")},
+                            {rot: "ESPESSURA (pol.)",       val: Coalesce(Text(_s.FIN_WALL), "—")},
+                            {rot: "ESPESSURA MÍN (pol.)",   val: Coalesce(Text(_s.MIN_WTHICK), "—")},
+                            {rot: "ESPESSURA MÁX (pol.)",   val: Coalesce(Text(_s.MAX_WTHICK), "—")},
+                            {rot: "CONCENTRICIDADE (pol.)", val: Coalesce(Text(_s.CONC), "—")},
+                            {rot: "PESO (kg/m)",            val: Coalesce(Text(_s.WEIGHT_kg_m), "—")}
+                        )
+                    )
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =76
+                  Width: =1116
+                  WrapCount: =8
+                  X: =125
+                  Y: =284
+                Children:
+                  - btn_CardDelinEspecTubo:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =fx_CorBorda
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: =DisplayMode.View
+                        Fill: =fx_CorFundo
+                        Font: =fx_FonteFamilia
+                        Height: =68
+                        HoverFill: =fx_CorFundo
+                        PressedFill: =fx_CorFundo
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_RotEspecTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =30
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =131
+                        X: =2
+                        Y: =6
+                  - lbl_ValEspecTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(ThisItem.val = "—", fx_CorRotulo, fx_CorTexto)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingLeft: =0
+                        Size: =fx_FonteDestaque
+                        Text: =ThisItem.val
+                        Width: =119
+                        X: =8
+                        Y: =36
+            - lbl_SecFerramentalTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteSecao
+                  Text: ="FERRAMENTAL"
+                  Width: =1116
+                  X: =125
+                  Y: =372
+            - rct_SecFerramentalTubo:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1116
+                  X: =125
+                  Y: =398
+            - gal_DelinFerramentalTubo:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =76
+                  Items: |-
+                    =With(
+                        {
+                            _s: LookUp(
+                                colSpecTubo,
+                                Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                            )
+                        },
+                        Table(
+                            {rot: "FIEIRA (pol.)",     val: Coalesce(Text(_s.EXT_PIN), "—")},
+                            {rot: "FIEIRA MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_PIN), "—")},
+                            {rot: "FIEIRA MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_PIN), "—")},
+                            {rot: "FIEIRA (cód.)",     val: Coalesce(Text(_s.PIN_COD), "—")},
+                            {rot: "MATRIZ (pol.)",     val: Coalesce(Text(_s.EXT_DIE), "—")},
+                            {rot: "MATRIZ MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_DIE), "—")},
+                            {rot: "MATRIZ MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_DIE), "—")},
+                            {rot: "MATRIZ (cód.)",     val: Coalesce(Text(_s.DIE_COD), "—")}
+                        )
+                    )
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =76
+                  Width: =1116
+                  WrapCount: =8
+                  X: =125
+                  Y: =400
+                Children:
+                  - btn_CardDelinFerramentalTubo:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =fx_CorBorda
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: =DisplayMode.View
+                        Fill: =fx_CorFundo
+                        Font: =fx_FonteFamilia
+                        Height: =68
+                        HoverFill: =fx_CorFundo
+                        PressedFill: =fx_CorFundo
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_RotFerramentalTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =30
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =131
+                        X: =2
+                        Y: =6
+                  - lbl_ValFerramentalTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(ThisItem.val = "—", fx_CorRotulo, fx_CorTexto)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingLeft: =0
+                        Size: =fx_FonteDestaque
+                        Text: =ThisItem.val
+                        Width: =119
+                        X: =8
+                        Y: =36
+            - lbl_SecParametrosTubo:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteSecao
+                  Text: ="PARÂMETROS DE MÁQUINA"
+                  Width: =1116
+                  X: =125
+                  Y: =488
+            - rct_SecParametrosTubo:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1116
+                  X: =125
+                  Y: =514
+            - gal_DelinParametrosTubo:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =152
+                  Items: |-
+                    =With(
+                        {
+                            _s: LookUp(
+                                colSpecTubo,
+                                Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira, "")))
+                            )
+                        },
+                        Table(
+                            {rot: "TEMP. FUSO (°C)",        val: Coalesce(Text(_s.TEMP_SCREW), "—")},
+                            {rot: "TEMP. ZONA 1 (°C)",      val: Coalesce(Text(_s.TEMP_ZONE1), "—")},
+                            {rot: "TEMP. ZONA 2 (°C)",      val: Coalesce(Text(_s.TEMP_ZONE2), "—")},
+                            {rot: "TEMP. ZONA 3 (°C)",      val: Coalesce(Text(_s.TEMP_ZONE3), "—")},
+                            {rot: "TEMP. ZONA 4 (°C)",      val: Coalesce(Text(_s.TEMP_ZONE4), "—")},
+                            {rot: "TEMP. CABEÇOTE (°C)",    val: Coalesce(Text(_s.TEMP_HEAD), "—")},
+                            {rot: "TEMP. MASSA (°C)",       val: Coalesce(Text(_s.TEMP_MASS), "—")},
+                            {rot: "PRESSÃO CAMISA (bar)",   val: Coalesce(Text(_s.PRESSURE_BARREL), "—")},
+                            {rot: "PRESSÃO CABEÇOTE (bar)", val: Coalesce(Text(_s.PRESSURE_HEAD), "—")},
+                            {rot: "VÁCUO (kPa)",            val: Coalesce(Text(_s.VACUUM_KPA), "—")}
+                        )
+                    )
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =76
+                  Width: =1116
+                  WrapCount: =8
+                  X: =125
+                  Y: =516
+                Children:
+                  - btn_CardDelinParametrosTubo:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =fx_CorBorda
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: =DisplayMode.View
+                        Fill: =fx_CorFundo
+                        Font: =fx_FonteFamilia
+                        Height: =68
+                        HoverFill: =fx_CorFundo
+                        PressedFill: =fx_CorFundo
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_RotParametrosTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =34
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =131
+                        X: =2
+                        Y: =2
+                  - lbl_ValParametrosTubo:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(ThisItem.val = "—", fx_CorRotulo, fx_CorTexto)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =28
+                        PaddingLeft: =0
+                        Size: =fx_FonteDestaque
+                        Text: =ThisItem.val
+                        Width: =119
+                        X: =8
+                        Y: =36
+            - btn_FecharDelinTubo:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        ctxDelinModoInicio && IsBlank(cmb_MangueiraDelinTubo.Selected.PARTNUMBER),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =If(ctxDelinModoInicio, fx_CorOK, fx_CorInfo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(Self.Fill, -20%)
+                  OnSelect: |-
+                    =If(
+                        ctxDelinModoInicio,
+                        Set(varMangueiraEscolhidaTubo, cmb_MangueiraDelinTubo.Selected.PARTNUMBER);
+                        Reset(cmb_MangueiraTubo_1);
+                        UpdateContext({ctxModalDelinTubo: false, ctxModalIniciarTubo: true}),
+                        UpdateContext({ctxModalDelinTubo: false})
+                    )
+                  PressedFill: =ColorFade(Self.Fill, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: =If(ctxDelinModoInicio, "Continuar", "Fechar")
+                  Width: =220
+                  X: =1021
+                  Y: =676
+      - btn_ConsultarDelinTubo:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorInfo
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTubo_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =50
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =UpdateContext({ctxDelinModoInicio: false});
+              Select(btn_AbrirDelinTubo)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Ver delineamento"
+            Width: =184
+            X: =1168
+            Y: =315
+      - rct_OverlayTubo_1:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_ProcessandoTubo_1:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =60
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Salvando... Aguarde"
+            Visible: =varProcessando
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoTubo_1:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366
+      - btn_AbrirDelinTubo:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            OnSelect: |-
+              =If(IsEmpty(colSpecTubo), ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION));
+              UpdateContext({ctxModalDelinTubo: true})
+            Text: =""
+            Visible: =false
+            Width: =40
+            X: =1206
+            Y: =60

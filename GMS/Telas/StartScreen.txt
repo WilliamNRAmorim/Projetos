@@ -1,0 +1,29 @@
+With(
+    {
+        registroMapeamento: LookUp(
+            MapeamentoSetor,
+            EmailComputador = User().Email
+        )
+    },
+    If(
+        IsBlank(registroMapeamento) || registroMapeamento.AcessoRestrito <> true,
+        Menu_1,
+        Switch(
+            registroMapeamento.TelaSetor,
+            "scr_ExtrusoraMandril_1", scr_ExtrusoraMandril_1,
+            "scr_mandril_1", scr_mandril_1,
+            "scr_tubo_1", scr_tubo_1,
+            "scr_trançagem_1", scr_Trancagem_3,
+            "scr_Cobertura_1", scr_Cobertura_2,
+            "scr_Bandagem_1", scr_Bandagem_1,
+            "scr_Vulcanização_1", scr_Vulcanizacao_1,
+            "scr_debandagem_1", scr_Debandagem_2,
+            "scr_Finalização_1", scr_Finalização_1,
+            "scr_selecaosetor_1", scr_selecaosetor_1,
+            "scr_selecaosetor_Montagem", scr_selecaosetor_Montagem,
+            "scr_Montagem_HoraHora", scr_Montagem_HoraHora,
+            "Menu_1", Menu_1,
+            Menu_1
+        )
+    )
+)

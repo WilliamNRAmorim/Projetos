@@ -1,0 +1,3948 @@
+Screens:
+  scr_mandril_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAgora: Now(),
+            ctxModalSetupMand: false,
+            ctxModalCarretelMand: false,
+            ctxDesmoldanteMand: "",
+            ctxModalTurnoMand: false,
+            ctxModalCorrigirMand: false,
+            ctxMotivoCorrMand: ""
+        });
+        Set(varProcessando, false);
+        ClearCollect(ColTabelaBitolas,
+            { Bitola: 3,  PartNumber: "FM00195" },
+            { Bitola: 4,  PartNumber: "FM00248" },
+            { Bitola: 5,  PartNumber: "FM00315" },
+            { Bitola: 6,  PartNumber: "FM00370" },
+            { Bitola: 7,  PartNumber: "FM00425" },
+            { Bitola: 8,  PartNumber: "FM0480"  },
+            { Bitola: 8,  PartNumber: "FM00500" },
+            { Bitola: 10, PartNumber: "FM00610" },
+            { Bitola: 12, PartNumber: "FM00730" },
+            { Bitola: 16, PartNumber: "FM00980" }
+        );
+        If(
+            IsEmpty(colMaquinasMandril),
+            ClearCollect(colMaquinasMandril,
+                { Posto: "TERMOFUSAO",  Rotulo: "Solda Quente" },
+                { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
+            )
+        );
+        If(IsEmpty(colDM_MANDREL), ClearCollect(colDM_MANDREL, DM_MANDREL));
+        Set(varPostoAtivo, If(IsBlank(varPostoAtivo), First(colMaquinasMandril).Posto, varPostoAtivo));
+        Set(varModoMandril, "Velho");
+        Select(btn_CarregarPostoMand_2)
+    Children:
+      - tmr_RelogioMand_2:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            Width: =1
+            X: =1206
+            Y: =760
+      - tmr_KanbanMand_2:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =180000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: =Select(btn_KanbanMand_2)
+            Repeat: =true
+            Visible: =false
+            Width: =1
+            X: =1226
+            Y: =760
+      - tmr_GuardaMand_2:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =45000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =Set(varProcessando, false);
+              Notify("Tempo limite excedido. O servidor não respondeu — confira a fila antes de repetir.", NotificationType.Error, 10000)
+            Start: =varProcessando
+            Visible: =false
+            Width: =1
+            X: =1246
+            Y: =760
+      - btn_CarregarPostoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Refresh(ficha_producao);
+              Refresh(lista_carreteis);
+              Refresh(CarreteisMandril);
+              ClearCollect(colCarreteisMand, lista_carreteis);
+              ClearCollect(colCarreteisMpMand, CarreteisMandril);
+              ClearCollect(
+                  colMandrilAbertos,
+                  Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+              );
+              ClearCollect(
+                  colPostosMandril,
+                  ForAll(
+                      colMaquinasMandril As _m,
+                      With(
+                          { _f: LookUp(colMandrilAbertos, maquina_mandril = _m.Posto) },
+                          {
+                              Posto:      _m.Posto,
+                              Rotulo:     _m.Rotulo,
+                              FichaID:    Coalesce(_f.ID, 0),
+                              Inicio:     _f.data_hora_inicio_mandril,
+                              CodMandril: _f.cod_mandril,
+                              Bitola:     Coalesce(_f.Bitola, 0),
+                              Produzindo: !IsBlank(_f.ID)
+                          }
+                      )
+                  )
+              );
+              ClearCollect(colMandrilSemPosto, Filter(colMandrilAbertos, IsBlank(maquina_mandril)));
+              With(
+                  { _f: LookUp(colMandrilAbertos, maquina_mandril = varPostoAtivo) },
+                  With(
+                      {
+                          _b: If(
+                              IsBlank(LookUp(ColTabelaBitolas, PartNumber = _f.cod_mandril).PartNumber),
+                              Coalesce(varMandrilSelecionado, First(ColTabelaBitolas)),
+                              LookUp(ColTabelaBitolas, PartNumber = _f.cod_mandril)
+                          )
+                      },
+                      Set(varFichaAtiva, _f);
+                      Set(varProduzindo, !IsBlank(_f.ID));
+                      Set(varMandrilSelecionado, _b);
+                      Set(varSpecMandril, LookUp(colDM_MANDREL, _1MANDREL_PN = _b.PartNumber))
+                  )
+              );
+              Set(varIdOpMand, Coalesce(varFichaAtiva.ID, 0));
+              ClearCollect(
+                  colEvOpMand,
+                  Filter(Eventos_Producao, origem_ID = varIdOpMand)
+              );
+              Set(
+                  varCarretelMpMand,
+                  Coalesce(
+                      LookUp(
+                          colCarreteisMpMand,
+                          Status = "Em uso" && OP_solda = Text(Coalesce(varFichaAtiva.ID, -1))
+                      ).Title,
+                      ""
+                  )
+              );
+              UpdateContext({
+                  ctxAgora: Now(),
+                  ctxDesmoldanteMand: Coalesce(varFichaAtiva.desmoldante_mandril, "")
+              });
+              Select(btn_KanbanMand_2);
+              Reset(inp_QtdMand_2);
+              Reset(cmb_OperadorMand_2);
+              Reset(inp_LoteMand_2);
+              Reset(inp_ObsMand_2)
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+            X: =1364
+            Y: =760
+      - rct_HeaderFilaMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =68
+            Width: =315
+      - lbl_TituloFilaMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =Font.Arial
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Mandris"
+            Width: =205
+            X: =20
+            Y: =14
+      - lbl_TotalFilaMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorChip
+            Height: =29
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(CountRows(ColTabelaBitolas)) & " PN"
+            Width: =62
+            X: =233
+            Y: =20
+      - rct_BarraPostoMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =56
+            Width: =315
+            Y: =68
+      - lbl_RotPostoFilaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="POSTO ATIVO"
+            Width: =170
+            X: =12
+            Y: =74
+      - lbl_ValPostoFilaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =29
+            PaddingLeft: =0
+            Size: =15
+            Text: =Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "—")
+            Width: =187
+            X: =12
+            Y: =92
+      - btn_EstadoPostoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =If(varProduzindo, fx_CorOK, fx_CorAlerta)
+            DisplayMode: =DisplayMode.View
+            Fill: =If(varProduzindo, fx_CorOKSuave, fx_CorAlertaSuave)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteApoio
+            Text: =If(varProduzindo, "Produzindo", "Parado")
+            Width: =104
+            X: =199
+            Y: =82
+      - rct_DivisorFilaMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =315
+            Y: =124
+      - gal_MandrilMand_2:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Default: =varMandrilSelecionado
+            DisplayMode: =If(varProduzindo || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =Color.Transparent
+            Height: =643
+            Items: =ColTabelaBitolas
+            OnSelect: |-
+              =Set(varMandrilSelecionado, ThisItem);
+              Set(varSpecMandril, LookUp(colDM_MANDREL, _1MANDREL_PN = ThisItem.PartNumber))
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplateSize: =96
+            Width: =315
+            Y: =125
+          Children:
+            - btn_CardMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ThisItem.PartNumber = varMandrilSelecionado.PartNumber, fx_CorPrimaria, fx_CorBorda)
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.PartNumber = varMandrilSelecionado.PartNumber, fx_CorPrimaria, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =88
+                  HoverFill: =If(ThisItem.PartNumber = varMandrilSelecionado.PartNumber, fx_CorPrimaria, fx_CorInfoSuave)
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =297
+                  X: =8
+                  Y: =4
+            - lbl_BitolaMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.PartNumber = varMandrilSelecionado.PartNumber, fx_CorSuperficie, fx_CorTexto)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: ="Bitola " & Text(ThisItem.Bitola)
+                  Width: =140
+                  X: =20
+                  Y: =12
+            - lbl_PnMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(ThisItem.PartNumber = varMandrilSelecionado.PartNumber, fx_CorSuperficie, fx_CorTextoSuave)
+                  Font: =Font.'Courier New'
+                  Height: =22
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.PartNumber
+                  Width: =140
+                  X: =20
+                  Y: =42
+      - rct_HeaderMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =68
+            Width: =827
+            X: =315
+      - rct_LinhaHeaderMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =69
+      - ico_VoltarMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para a seleção de setor"
+            Color: =fx_CorInfo
+            Height: =59
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_selecaosetor_1)
+            Width: =49
+            X: =338
+            Y: =4
+      - lbl_TituloMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTexto
+            Font: =Font.'Segoe UI'
+            FontWeight: =FontWeight.Bold
+            Height: =59
+            Size: =fx_FonteTitulo
+            Text: ="Ficha de Produção – Mandril"
+            Width: =572
+            X: =447
+            Y: =4
+      - btn_CardOrdemMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =166
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - btn_FaixaOrdemMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =fx_CorInfoSuave
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =773
+            X: =345
+            Y: =85
+      - lbl_SecaoOrdemMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="DADOS DO POSTO"
+            Width: =300
+            X: =365
+            Y: =85
+      - lbl_IdOrdemMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorInfo
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: |-
+              =If(IsBlank(varFichaAtiva.ID), "SEM OP ABERTA", "OP: " & Text(varFichaAtiva.ID))
+            Width: =240
+            X: =858
+            Y: =85
+      - lbl_RotPostoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="POSTO"
+            X: =365
+            Y: =131
+      - lbl_ValPostoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            PaddingLeft: =0
+            Size: =15
+            Text: =Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "—")
+            X: =365
+            Y: =144
+      - lbl_RotPnMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MANDRIL (PN)"
+            Width: =140
+            X: =530
+            Y: =131
+      - lbl_ValPnMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =Font.'Courier New'
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(varMandrilSelecionado.PartNumber, "—")
+            Width: =140
+            X: =530
+            Y: =151
+      - lbl_RotBitolaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="BITOLA"
+            Width: =80
+            X: =685
+            Y: =131
+      - lbl_ValBitolaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =Text(Coalesce(varMandrilSelecionado.Bitola, varFichaAtiva.Bitola))
+            Width: =80
+            X: =685
+            Y: =151
+      - ico_CorrigirMand_1:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Corrigir a bitola ou descartar esta OP"
+            Color: =fx_CorAlerta
+            Height: =30
+            Icon: =Icon.Edit
+            OnSelect: |-
+              =Set(
+                  varMandrilCorrMand,
+                  If(
+                      IsBlank(LookUp(ColTabelaBitolas, PartNumber = varFichaAtiva.cod_mandril).PartNumber),
+                      varMandrilSelecionado,
+                      LookUp(ColTabelaBitolas, PartNumber = varFichaAtiva.cod_mandril)
+                  )
+              );
+              Reset(inp_MotivoCorrMand_1);
+              UpdateContext({ctxModalCorrigirMand: true, ctxMotivoCorrMand: ""})
+            Visible: =varProduzindo && !varProcessando
+            Width: =30
+            X: =735
+            Y: =150
+      - lbl_RotCarretelMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="CARRETEL DE SAÍDA"
+            Width: =160
+            X: =780
+            Y: =131
+      - lbl_ValCarretelMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(IsBlank(varFichaAtiva.'Carretel Saida'), fx_CorTextoSuave, fx_CorTexto)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =Coalesce(varFichaAtiva.'Carretel Saida', "—")
+            Width: =160
+            X: =780
+            Y: =151
+      - lbl_RotSituacaoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="SITUAÇÃO"
+            X: =948
+            Y: =131
+      - lbl_ValSituacaoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(varProduzindo, fx_CorOK, fx_CorAlerta)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =If(varProduzindo, "Produzindo", "Parado")
+            X: =948
+            Y: =151
+      - lbl_RotTempoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="TEMPO NO POSTO"
+            Width: =160
+            X: =365
+            Y: =191
+      - lbl_ValTempoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Crono(varFichaAtiva.data_hora_inicio_mandril, ctxAgora)
+            Width: =160
+            X: =365
+            Y: =211
+      - lbl_RotEntradaMpMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MANDRIL DE ENTRADA"
+            Width: =200
+            X: =545
+            Y: =191
+      - lbl_ValEntradaMpMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(IsBlank(varCarretelMpMand), fx_CorTextoSuave, fx_CorTexto)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =37
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: |-
+              =If(
+                  IsBlank(varCarretelMpMand),
+                  "— mandril velho —",
+                  varCarretelMpMand & "  ·  " &
+                  Text(
+                      Coalesce(
+                          LookUp(colCarreteisMpMand, Title = varCarretelMpMand).quantidade_metros,
+                          0
+                      ),
+                      "[$-pt-BR]#.##0"
+                  ) & " m"
+              )
+            Width: =214
+            X: =531
+            Y: =211
+      - lbl_RotMatrizMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MATRIZ (SPEC)"
+            Width: =160
+            X: =765
+            Y: =191
+      - lbl_ValMatrizMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Ou(Text(varSpecMandril._38WELD_DIE))
+            Width: =160
+            X: =765
+            Y: =211
+      - lbl_RotLubeMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="DESMOLDANTE (SPEC)"
+            Width: =170
+            X: =948
+            Y: =191
+      - lbl_ValLubeMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingLeft: =0
+            Size: =fx_FonteDestaque
+            Text: =fx_Ou(Text(varSpecMandril._35MANDREL_LUBE))
+            Width: =170
+            X: =948
+            Y: =211
+      - btn_CardEntradaMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =344
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =520
+            X: =345
+            Y: =267
+      - lbl_SecaoEntradaMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="ENTRADA DE DADOS"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =240
+            X: =369
+            Y: =287
+      - rct_DivisorEntradaMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =472
+            X: =369
+            Y: =310
+      - lbl_RotQtdMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="QUANTIDADE (m) *"
+            Width: =148
+            X: =369
+            Y: =320
+      - inp_QtdMand_2:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Quantidade soldada em metros"
+            BorderColor: |-
+              =If(
+                  varProduzindo && Coalesce(fx_Num(Self.Text), 0) <= 0,
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =Text(varFichaAtiva.quantidade_mandril)
+            DelayOutput: =true
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Format: =TextFormat.Number
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Width: =148
+            X: =369
+            Y: =354
+      - lbl_RotLoteMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="LOTE *"
+            Width: =148
+            X: =531
+            Y: =320
+      - inp_LoteMand_2:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Lote do mandril"
+            BorderColor: |-
+              =If(
+                  varProduzindo && IsBlank(Trim(Self.Text)),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            Default: =Coalesce(varFichaAtiva.lote_mandril, varUltimoLote3)
+            DelayOutput: =true
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =148
+            X: =531
+            Y: =354
+      - lbl_RotDesmoldanteMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="DESMOLDANTE APLICADO *"
+            Width: =148
+            X: =693
+            Y: =320
+      - btn_DesmSimMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxDesmoldanteMand = "Sim", fx_CorOK, fx_CorBorda)
+            BorderThickness: =If(ctxDesmoldanteMand = "Sim", 3, 1)
+            Color: =If(ctxDesmoldanteMand = "Sim", fx_CorSuperficie, fx_CorOK)
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(ctxDesmoldanteMand = "Sim", fx_CorOK, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaCampo
+            HoverFill: =If(ctxDesmoldanteMand = "Sim", ColorFade(fx_CorOK, -20%), fx_CorOKSuave)
+            OnSelect: |-
+              =UpdateContext({ctxDesmoldanteMand: "Sim"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Sim"
+            Width: =70
+            X: =693
+            Y: =354
+      - btn_DesmNaoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxDesmoldanteMand = "Não", fx_CorAlerta, fx_CorBorda)
+            BorderThickness: =If(ctxDesmoldanteMand = "Não", 3, 1)
+            Color: =If(ctxDesmoldanteMand = "Não", fx_CorSuperficie, fx_CorAlerta)
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(ctxDesmoldanteMand = "Não", fx_CorAlerta, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaCampo
+            HoverFill: =If(ctxDesmoldanteMand = "Não", ColorFade(fx_CorAlerta, -20%), fx_CorAlertaSuave)
+            OnSelect: |-
+              =UpdateContext({ctxDesmoldanteMand: "Não"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Não"
+            Width: =70
+            X: =771
+            Y: =354
+      - lbl_RotOperadorMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR (U-NUMBER) *"
+            Width: =310
+            X: =369
+            Y: =408
+      - cmb_OperadorMand_2:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador da solda de mandril"
+            BorderColor: |-
+              =If(
+                  varProduzindo && IsBlank(Self.Selected.Nome),
+                  fx_CorErro,
+                  fx_CorBorda
+              )
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DefaultSelectedItems: =Filter(Colaboradores.Nome, Nome = varFichaAtiva.operador_mandril)
+            DisplayFields: =["field_1"]
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Buscar operador..."
+            Items: =Colaboradores.Nome
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["field_1"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorInfo
+            SelectionFill: =fx_CorInfoSuave
+            Size: =fx_FonteCorpo
+            Width: =310
+            X: =369
+            Y: =442
+      - lbl_RotDiametroMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Ø DO MANDRIL (pol.)"
+            Width: =148
+            X: =693
+            Y: =408
+      - lbl_ValDiametroMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaCampo
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  {
+                      _d: IfError(
+                          Value(Substitute(Upper(Coalesce(varMandrilSelecionado.PartNumber, "")), "FM", "")) / 1000,
+                          Blank()
+                      )
+                  },
+                  If(
+                      IsBlank(_d),
+                      "—",
+                      fx_QtdBR(_d) & "   (derivado do PN)"
+                  )
+              )
+            Width: =148
+            X: =693
+            Y: =442
+      - lbl_RotObsMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÃO"
+            Width: =472
+            X: =369
+            Y: =496
+      - inp_ObsMand_2:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observação da solda de mandril"
+            BorderColor: =fx_CorBorda
+            Default: =varFichaAtiva.Observação_mandril
+            DelayOutput: =true
+            DisplayMode: =If(varProduzindo && !varProcessando, DisplayMode.Edit, DisplayMode.Disabled)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =472
+            X: =369
+            Y: =516
+      - lbl_AvisoInicieMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =36
+            Size: =fx_FonteCorpo
+            Text: ="Escolha a bitola na lista e toque em Iniciar Solda para conferir o set-up e pegar o carretel de saída."
+            Visible: =!varProduzindo
+            Width: =472
+            X: =369
+            Y: =570
+      - lbl_RateioTurnoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =29
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  {
+                      _t1: Coalesce(varFichaAtiva.Qtd_Turno1, 0),
+                      _t2: Coalesce(varFichaAtiva.Qtd_Turno2, 0),
+                      _t3: Coalesce(varFichaAtiva.Qtd_Turno3, 0),
+                      _q:  Coalesce(fx_Num(inp_QtdMand_2.Text), 0)
+                  },
+                  With(
+                      { _ja: _t1 + _t2 + _t3 },
+                      If(
+                          _ja <= 0 && _q <= 0,
+                          "Nada apontado nesta OP ainda.",
+                          "Já registrado:   " &
+                          If(_t1 > 0, "1º turno " & Text(_t1, "[$-pt-BR]#.##0") & " m    ", "") &
+                          If(_t2 > 0, "2º turno " & Text(_t2, "[$-pt-BR]#.##0") & " m    ", "") &
+                          If(_t3 > 0, "3º turno " & Text(_t3, "[$-pt-BR]#.##0") & " m    ", "") &
+                          If(_ja <= 0, "nenhum turno fechado    ", "") &
+                          If(
+                              _q - _ja > 0,
+                              "·   neste turno, ainda em aberto: " & Text(_q - _ja, "[$-pt-BR]#.##0") & " m",
+                              ""
+                          )
+                      )
+                  )
+              )
+            Visible: =varProduzindo
+            Width: =472
+            X: =369
+            Y: =570
+      - lbl_AvisoViradaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =62
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  {
+                      _tAtual: fx_TurnoEm(ctxAgora),
+                      _ultimo: Last(Sort(colEvOpMand, ID, SortOrder.Ascending)),
+                      _delta: Coalesce(fx_Num(inp_QtdMand_2.Text), 0) -
+                              (Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                               Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                               Coalesce(varFichaAtiva.Qtd_Turno3, 0))
+                  },
+                  If(
+                      !IsBlank(_ultimo.ID) && _ultimo.turno <> _tAtual && _delta > 0,
+                      "⚠ Esta OP vem do " & Text(_ultimo.turno) & "º turno e ainda tem " &
+                      Text(_delta, "[$-pt-BR]#.##0") &
+                      " m sem turno definido. Toque em Encerrar meu turno para fechar o que é do turno anterior.",
+                      ""
+                  )
+              )
+            Visible: =varProduzindo && !IsBlank(Self.Text)
+            Width: =514
+            X: =369
+            Y: =599
+      - btn_CardSpecMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =344
+            HoverFill: =fx_CorSuperficie
+            PressedFill: =fx_CorSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =233
+            X: =885
+            Y: =267
+      - lbl_SecaoSpecMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Color: =fx_CorRotulo
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteSecao
+            Text: ="SET-UP DO MANDRIL"
+            VerticalAlign: =VerticalAlign.Top
+            Width: =200
+            X: =905
+            Y: =287
+      - gal_SpecMand_2:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =285
+            Items: |-
+              =With(
+                  { _s: LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber) },
+                  Table(
+                      {rot: "MÁQUINA DE SOLDA", val: fx_Ou(Text(_s._37WELD_MACHINE))},
+                      {rot: "MATRIZ", val: fx_Ou(Text(_s._38WELD_DIE))},
+                      {rot: "DESMOLDANTE", val: fx_Ou(Text(_s._35MANDREL_LUBE))},
+                      {rot: "Ø EXTERNO MÍN (pol.)", val: fx_Ou(Text(_s._39INSP_MIN_OD_in))},
+                      {rot: "Ø EXTERNO MÁX (pol.)", val: fx_Ou(Text(_s._41INSP_MAX_OD_in))}
+                  )
+              )
+            TemplateFill: =Color.Transparent
+            TemplateSize: =47
+            Width: =208
+            X: =901
+            Y: =318
+          Children:
+            - lbl_RotItemSpecMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =16
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.rot
+                  Width: =190
+                  Y: =2
+            - lbl_ValItemSpecMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.val
+                  Width: =190
+                  Y: =18
+      - lbl_SemSpecMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =60
+            Size: =fx_FonteApoio
+            Text: ="Sem set-up cadastrado para este PN em DM_MANDREL."
+            Visible: |-
+              =IsBlank(
+                  LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber)._1MANDREL_PN
+              )
+            Width: =208
+            X: =901
+            Y: =400
+      - lbl_AlertaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(varKanbanTuboMand < fx_KanbanMinimo, fx_CorErro, fx_CorAlerta)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  {
+                      _semSpec: IsBlank(
+                          LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber)._1MANDREL_PN
+                      )
+                  },
+                  If(
+                      varKanbanTuboMand < fx_KanbanMinimo,
+                      "⛔ Kanban do Tubo CRÍTICO: " & Text(varKanbanTuboMand) &
+                      " carretel(éis) aguardando, mínimo " & Text(fx_KanbanMinimo) & ". Priorize a solda.",
+                      _semSpec,
+                      "⚠ Este PN não tem set-up em DM_MANDREL. Confira com a engenharia antes de soldar.",
+                      varKanbanTuboMand >= fx_KanbanAlvo,
+                      "⚠ Kanban do Tubo já está no alvo (" & Text(varKanbanTuboMand) &
+                      " carretéis). Confira o plano antes de soldar mais.",
+                      ""
+                  )
+              )
+            Visible: =!IsBlank(Self.Text)
+            Width: =773
+            X: =345
+            Y: =647
+      - rct_RodapeMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =80
+            Width: =827
+            X: =315
+            Y: =688
+      - rct_LinhaRodapeMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =1
+            Width: =827
+            X: =315
+            Y: =688
+      - ico_RefreshMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Atualizar posto, carretéis e kanban"
+            Color: =fx_CorRotulo
+            Height: =60
+            Icon: =Icon.Reload
+            OnSelect: =Select(btn_CarregarPostoMand_2)
+            Width: =85
+            X: =325
+            Y: =698
+      - btn_IniciarMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(varMandrilSelecionado.PartNumber) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Refresh(CarreteisMandril);
+              ClearCollect(colCarreteisMpMand, CarreteisMandril);
+              Set(varSpecMandril, LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber));
+              Set(varModoMandril, "Velho");
+              UpdateContext({ctxModalSetupMand: true})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Iniciar Solda"
+            Visible: =!varProduzindo
+            Width: =360
+            X: =549
+            Y: =700
+      - btn_SalvarMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(varFichaAtiva.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
+                      _q: Coalesce(fx_Num(inp_QtdMand_2.Text), 0),
+                      _turno: fx_TurnoEm(Now())
+                  },
+                  If(
+                      IsBlank(_r.ID),
+                      Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                      Select(btn_CarregarPostoMand_2);
+                      Set(varProcessando, false),
+                      _r.Modified <> varFichaAtiva.Modified,
+                      Notify("Registro desatualizado. A tela foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                      Select(btn_CarregarPostoMand_2);
+                      Set(varProcessando, false),
+                      _r.status_processo <> "Em processo",
+                      Notify("Esta OP não está em processo. Inicie antes de salvar.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      With(
+                          {
+                              _ja: Coalesce(_r.Qtd_Turno1, 0) +
+                                   Coalesce(_r.Qtd_Turno2, 0) +
+                                   Coalesce(_r.Qtd_Turno3, 0)
+                          },
+                          Patch(
+                              ficha_producao,
+                              _r,
+                              {
+                                  desmoldante_mandril: ctxDesmoldanteMand,
+                                  quantidade_mandril: _q,
+                                  operador_mandril: cmb_OperadorMand_2.Selected.Nome,
+                                  lote_mandril: inp_LoteMand_2.Text,
+                                  Observação_mandril: inp_ObsMand_2.Text,
+                                  Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
+                                  Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
+                                  Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3)
+                              }
+                          )
+                      );
+                      If(
+                          !IsEmpty(Errors(ficha_producao)),
+                          Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                          Set(varProcessando, false),
+                          Set(varUltimoLote3, inp_LoteMand_2.Text);
+                          Select(btn_CarregarPostoMand_2);
+                          Set(varProcessando, false);
+                          Notify("Parcial do mandril salvo.", NotificationType.Success, 4000)
+                      )
+                  )
+              )
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar Parcial"
+            Visible: =varProduzindo
+            Width: =200
+            X: =430
+            Y: =700
+      - btn_EncerrarTurnoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorAlerta
+            BorderThickness: =1
+            Color: =fx_CorAlerta
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(varFichaAtiva.ID) &&
+                  !varProcessando &&
+                  !IsBlank(cmb_OperadorMand_2.Selected.Nome) &&
+                  Coalesce(fx_Num(inp_QtdMand_2.Text), 0) >
+                      Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                      Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                      Coalesce(varFichaAtiva.Qtd_Turno3, 0),
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorAlertaSuave
+            OnSelect: |-
+              =UpdateContext({ctxModalTurnoMand: true})
+            PressedFill: =fx_CorAlertaSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Encerrar meu turno"
+            Visible: =varProduzindo
+            Width: =190
+            X: =645
+            Y: =700
+      - btn_EnviarMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !IsBlank(varFichaAtiva.ID) &&
+                  !varProcessando &&
+                  !IsBlank(ctxDesmoldanteMand) &&
+                  !IsBlank(cmb_OperadorMand_2.Selected.Nome) &&
+                  !IsBlank(Trim(inp_LoteMand_2.Text)) &&
+                  Coalesce(fx_Num(inp_QtdMand_2.Text), 0) > 0,
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
+                      _agora: Now(),
+                      _consumo: Coalesce(fx_Num(inp_QtdMand_2.Text), 0),
+                      _cod: Coalesce(varMandrilSelecionado.PartNumber, varFichaAtiva.cod_mandril)
+                  },
+                  With(
+                      {
+                          _posto: Coalesce(varFichaAtiva.maquina_mandril, varPostoAtivo),
+                          _carretelSaida: varFichaAtiva.'Carretel Saida',
+                          _idFicha: varFichaAtiva.ID,
+                          _turno: fx_TurnoEm(_agora),
+                          _carrMP: LookUp(CarreteisMandril, Title = varCarretelMpMand),
+                          _diam: IfError(
+                              Value(Substitute(Upper(Coalesce(_cod, "")), "FM", "")) / 1000,
+                              Blank()
+                          ),
+                          _bitola: Coalesce(varMandrilSelecionado.Bitola, varFichaAtiva.Bitola),
+                          _ja: Coalesce(_r.Qtd_Turno1, 0) +
+                               Coalesce(_r.Qtd_Turno2, 0) +
+                               Coalesce(_r.Qtd_Turno3, 0)
+                      },
+                      With(
+                          {
+                              _sobra: If(
+                                  IsBlank(_carrMP),
+                                  0,
+                                  Max(0, Coalesce(_carrMP.quantidade_metros, 0) - _consumo)
+                              )
+                          },
+                          If(
+                              IsBlank(_r.ID),
+                              Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                              Select(btn_CarregarPostoMand_2);
+                              Set(varProcessando, false),
+                              _r.Modified <> varFichaAtiva.Modified,
+                              Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
+                              Select(btn_CarregarPostoMand_2);
+                              Set(varProcessando, false),
+                              _r.status_processo <> "Em processo",
+                              Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
+                              Select(btn_CarregarPostoMand_2);
+                              Set(varProcessando, false),
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                                      desmoldante_mandril: ctxDesmoldanteMand,
+                                      quantidade_mandril: _consumo,
+                                      operador_mandril: cmb_OperadorMand_2.Selected.Nome,
+                                      lote_mandril: inp_LoteMand_2.Text,
+                                      Observação_mandril: inp_ObsMand_2.Text,
+                                      'Carretel Entrada': _carretelSaida,
+                                      'Carretel Saida': Blank(),
+                                      data_hora_final_mandril: _agora,
+                                      Turno_mandril: Text(_turno),
+                                      diametro_mandril: _diam,
+                                      processo: "Tubo",
+                                      status_processo: "Aguardando",
+                                      InicioAguardando_Tubo: _agora,
+                                      cod_mandril: _cod,
+                                      Bitola: _bitola,
+                                      Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_consumo - _ja), _r.Qtd_Turno1),
+                                      Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_consumo - _ja), _r.Qtd_Turno2),
+                                      Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_consumo - _ja), _r.Qtd_Turno3)
+                                  }
+                              );
+                              If(
+                                  !IsEmpty(Errors(ficha_producao)),
+                                  Notify(
+                                      "NÃO enviou pro Tubo: " & First(Errors(ficha_producao)).Message,
+                                      NotificationType.Error,
+                                      15000
+                                  );
+                                  Set(varProcessando, false),
+                                  If(
+                                      !IsBlank(LookUp(lista_carreteis, op = _idFicha)),
+                                      Patch(
+                                          lista_carreteis,
+                                          LookUp(lista_carreteis, op = _idFicha),
+                                          {etapa_processo: "Tubo"}
+                                      )
+                                  );
+                                  Patch(
+                                      Eventos_Producao,
+                                      Defaults(Eventos_Producao),
+                                      {
+                                          Title: Text(_idFicha) & "-Mandril-Fim",
+                                          origem: {Value: "ficha_producao"},
+                                          origem_ID: _idFicha,
+                                          etapa: {Value: "Mandril"},
+                                          tipo: {Value: "Fim"},
+                                          data_hora: _agora,
+                                          data_ref: fx_DataRefEm(_agora),
+                                          turno: _turno,
+                                          bitola: _bitola,
+                                          metros: Max(0, _consumo - _ja),
+                                          sobra: _sobra,
+                                          carretel: _carretelSaida,
+                                          recurso: _posto,
+                                          operador: cmb_OperadorMand_2.Selected.Nome
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(Eventos_Producao)),
+                                      Notify(
+                                          "Evento de fim não gravou — a meta do turno vai ficar defasada: " &
+                                          First(Errors(Eventos_Producao)).Message,
+                                          NotificationType.Error,
+                                          12000
+                                      )
+                                  );
+                                  If(
+                                      !IsBlank(_carrMP),
+                                      If(
+                                          _sobra <= 0,
+                                          Patch(
+                                              CarreteisMandril,
+                                              _carrMP,
+                                              {
+                                                  Status: "Vazio",
+                                                  quantidade_metros: Blank(),
+                                                  cod_mandril: Blank(),
+                                                  Bitola: Blank(),
+                                                  OP_extrusora: Blank(),
+                                                  operador_extrusora: Blank(),
+                                                  OP_solda: Text(_idFicha),
+                                                  data_consumo: _agora
+                                              }
+                                          ),
+                                          Patch(
+                                              CarreteisMandril,
+                                              _carrMP,
+                                              {
+                                                  Status: "Cheio",
+                                                  quantidade_metros: _sobra,
+                                                  OP_solda: Text(_idFicha),
+                                                  data_consumo: _agora
+                                              }
+                                          )
+                                      );
+                                      If(
+                                          !IsEmpty(Errors(CarreteisMandril)),
+                                          Notify(
+                                              "OP enviada, mas a baixa do mandril de entrada NÃO gravou: " &
+                                              First(Errors(CarreteisMandril)).Message,
+                                              NotificationType.Error,
+                                              10000
+                                          )
+                                      )
+                                  );
+                                  Patch(
+                                      colPostosMandril,
+                                      LookUp(colPostosMandril, Posto = _posto),
+                                      {
+                                          FichaID:    0,
+                                          Inicio:     Blank(),
+                                          CodMandril: Blank(),
+                                          Bitola:     0,
+                                          Produzindo: false
+                                      }
+                                  );
+                                  Set(varUltimoLote3, inp_LoteMand_2.Text);
+                                  Set(varCarretelMpMand, "");
+                                  Set(varProduzindo, false);
+                                  Set(varFichaAtiva, Blank());
+                                  Select(btn_CarregarPostoMand_2);
+                                  Set(varProcessando, false);
+                                  Notify(
+                                      "Enviado para o Tubo. " &
+                                      Coalesce(LookUp(colMaquinasMandril, Posto = _posto).Rotulo, "Solda") &
+                                      " liberada, carretel " & Coalesce(_carretelSaida, "—") & " na entrada do Tubo.",
+                                      NotificationType.Success,
+                                      6000
+                                  )
+                              )
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Enviar p/ Tubo"
+            Visible: =varProduzindo
+            Width: =269
+            X: =849
+            Y: =700
+      - rct_DivisorLateralMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorBorda
+            Height: =768
+            Width: =1
+            X: =1142
+      - rct_LateralMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorSuperficie
+            Height: =768
+            Width: =223
+            X: =1143
+      - lbl_MenuLateralMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MENU LATERAL"
+            Width: =183
+            X: =1157
+            Y: =8
+      - btn_CardKanbanMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_SemaforoKanban(varKanbanTuboMand)
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =ColorFade(fx_SemaforoKanban(varKanbanTuboMand), 88%)
+            Font: =fx_FonteFamilia
+            Height: =120
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =195
+            X: =1157
+            Y: =48
+      - lbl_SecaoKanbanMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="TUBO — AGUARDANDO"
+            Width: =175
+            X: =1169
+            Y: =53
+      - lbl_ValKanbanMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_SemaforoKanban(varKanbanTuboMand)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =46
+            PaddingLeft: =0
+            Size: =fx_FonteNumero
+            Text: =Text(varKanbanTuboMand)
+            Width: =58
+            X: =1169
+            Y: =94
+      - lbl_UnidKanbanMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =47
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="carretéis prontos para o Tubo"
+            Width: =115
+            X: =1229
+            Y: =91
+      - lbl_MetaKanbanMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="alvo " & Text(fx_KanbanAlvo) & "  ·  mínimo " & Text(fx_KanbanMinimo)
+            Width: =175
+            X: =1169
+            Y: =144
+      - btn_CardMetaMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorFundo
+            Font: =fx_FonteFamilia
+            Height: =116
+            HoverFill: =fx_CorFundo
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =195
+            X: =1157
+            Y: =180
+      - lbl_SecaoMetaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MANDRIL — " & fx_TurnoLabelEm(ctxAgora)
+            Width: =175
+            X: =1169
+            Y: =188
+      - lbl_ValMetaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: |-
+              =With(
+                  {
+                      _p: Sum(
+                          Filter(
+                              colEvTurnoMand,
+                              data_ref = fx_DataRefEm(ctxAgora),
+                              turno = fx_TurnoEm(ctxAgora)
+                          ),
+                          metros
+                      )
+                  },
+                  If(_p >= fx_MetaTurnoMandril, fx_CorOK, fx_CorInfo)
+              )
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            PaddingLeft: =0
+            Size: =fx_FonteNumero
+            Text: |-
+              =Text(
+                  Coalesce(
+                      Sum(
+                          Filter(
+                              colEvTurnoMand,
+                              data_ref = fx_DataRefEm(ctxAgora),
+                              turno = fx_TurnoEm(ctxAgora)
+                          ),
+                          metros
+                      ),
+                      0
+                  ),
+                  "[$-pt-BR]#.##0"
+              )
+            Width: =175
+            X: =1169
+            Y: =208
+      - lbl_AlvoMetaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="de " & Text(fx_MetaTurnoMandril, "[$-pt-BR]#.##0") & " m no turno"
+            Width: =175
+            X: =1169
+            Y: =248
+      - btn_BarraMetaFundoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorBorda
+            Font: =fx_FonteFamilia
+            Height: =8
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =4
+            RadiusBottomRight: =4
+            RadiusTopLeft: =4
+            RadiusTopRight: =4
+            Text: =""
+            Width: =175
+            X: =1169
+            Y: =270
+      - btn_BarraMetaMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: |-
+              =With(
+                  {
+                      _p: Sum(
+                          Filter(
+                              colEvTurnoMand,
+                              data_ref = fx_DataRefEm(ctxAgora),
+                              turno = fx_TurnoEm(ctxAgora)
+                          ),
+                          metros
+                      )
+                  },
+                  If(_p >= fx_MetaTurnoMandril, fx_CorOK, fx_CorInfo)
+              )
+            Font: =fx_FonteFamilia
+            Height: =8
+            HoverFill: =Self.Fill
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =4
+            RadiusBottomRight: =4
+            RadiusTopLeft: =4
+            RadiusTopRight: =4
+            Text: =""
+            Width: |-
+              =With(
+                  {
+                      _p: Coalesce(
+                          Sum(
+                              Filter(
+                                  colEvTurnoMand,
+                                  data_ref = fx_DataRefEm(ctxAgora),
+                                  turno = fx_TurnoEm(ctxAgora)
+                              ),
+                              metros
+                          ),
+                          0
+                      )
+                  },
+                  Min(175, 175 * _p / fx_MetaTurnoMandril)
+              )
+            X: =1169
+            Y: =270
+      - lbl_TurnosDiaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  { _d: fx_DataRefEm(ctxAgora) },
+                  With(
+                      {
+                          _t1: Coalesce(Sum(Filter(colEvTurnoMand, data_ref = _d, turno = 1), metros), 0),
+                          _t2: Coalesce(Sum(Filter(colEvTurnoMand, data_ref = _d, turno = 2), metros), 0),
+                          _t3: Coalesce(Sum(Filter(colEvTurnoMand, data_ref = _d, turno = 3), metros), 0)
+                      },
+                      "1º " & If(_t1 > 0, Text(_t1, "[$-pt-BR]#.##0"), "—") &
+                      "   ·   2º " & If(_t2 > 0, Text(_t2, "[$-pt-BR]#.##0"), "—") &
+                      "   ·   3º " & If(_t3 > 0, Text(_t3, "[$-pt-BR]#.##0"), "—")
+                  )
+              )
+            Width: =195
+            X: =1157
+            Y: =277
+      - btn_HoraHoraMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scrHoraHora_Mandril)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤHora-Hora"
+            Width: =183
+            X: =1168
+            Y: =312
+      - ico_HoraHoraMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.Clock
+            OnSelect: =Select(btn_HoraHoraMand_2)
+            Width: =24
+            X: =1179
+            Y: =329
+      - btn_PlanoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scr_Monitor_Mandril)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤPlano Diário"
+            Width: =183
+            X: =1168
+            Y: =378
+      - ico_PlanoMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.DetailList
+            OnSelect: =Select(btn_PlanoMand_2)
+            Width: =24
+            X: =1179
+            Y: =395
+      - btn_HistoricoMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: =Navigate(scr_HistoricoTurno_Mandril, ScreenTransition.CoverRight)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =12
+            Text: ="ㅤㅤHistórico do turno"
+            Width: =183
+            X: =1168
+            Y: =444
+      - ico_HistoricoMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.History
+            OnSelect: =Select(btn_HistoricoMand_2)
+            Width: =24
+            X: =1172
+            Y: =461
+      - btn_ConsultaSetupMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Align: =Align.Left
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            DisplayMode: =If(IsBlank(varMandrilSelecionado.PartNumber), DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =58
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Set(varSpecMandril, LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber));
+              UpdateContext({ctxModalSetupMand: true})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤDelineamento"
+            Width: =183
+            X: =1168
+            Y: =510
+      - ico_ConsultaSetupMand_2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            Color: =fx_CorInfo
+            Height: =24
+            Icon: =Icon.Document
+            OnSelect: =Select(btn_ConsultaSetupMand_2)
+            Width: =24
+            X: =1179
+            Y: =527
+      - lbl_OutroPostoMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =With(
+                  { _o: LookUp(colPostosMandril, Posto <> varPostoAtivo) },
+                  If(
+                      IsBlank(_o.Posto),
+                      "",
+                      _o.Rotulo & ": " &
+                      If(
+                          _o.Produzindo,
+                          "OP " & Text(_o.FichaID) & " · bitola " & Text(_o.Bitola),
+                          "parada"
+                      )
+                  )
+              )
+            Width: =183
+            X: =1168
+            Y: =584
+      - lbl_VersaoTelaMand_2:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =26
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.5.4"
+            Width: =183
+            X: =1168
+            Y: =710
+      - cntr_SetupMand_2:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalSetupMand
+            Width: =1366
+          Children:
+            - btn_BgSetupMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardSetupMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =508
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =900
+                  X: =233
+                  Y: =130
+            - lbl_TituloSetupMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Set-up da " & Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "Solda")
+                  Width: =600
+                  X: =263
+                  Y: =154
+            - lbl_SubSetupMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="Mandril " & Coalesce(varMandrilSelecionado.PartNumber, "—") &
+                    "  ·  bitola " & Text(Coalesce(varMandrilSelecionado.Bitola, 0)) &
+                    "  ·  Tubo tem " & Text(varKanbanTuboMand) & " carretel(éis) aguardando"
+                  Width: =840
+                  X: =263
+                  Y: =190
+            - lbl_SecaoSpecSetupMand_2:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorInfo
+                  FontWeight: =FontWeight.Bold
+                  Height: =38
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: ="ESPECIFICAÇÃO (DM_MANDREL)"
+                  Width: =400
+                  X: =263
+                  Y: =214
+            - gal_SetupMand_2:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =110
+                  Items: |-
+                    =With(
+                        { _s: LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber) },
+                        Table(
+                            {rot: "MÁQUINA DE SOLDA", val: fx_Ou(Text(_s._37WELD_MACHINE))},
+                            {rot: "MATRIZ", val: fx_Ou(Text(_s._38WELD_DIE))},
+                            {rot: "DESMOLDANTE", val: fx_Ou(Text(_s._35MANDREL_LUBE))},
+                            {rot: "Ø EXTERNO MÍN (pol.)", val: fx_Ou(Text(_s._39INSP_MIN_OD_in))},
+                            {rot: "Ø EXTERNO MÁX (pol.)", val: fx_Ou(Text(_s._41INSP_MAX_OD_in))},
+                            {rot: "Ø DO MANDRIL (pol.)", val: fx_QtdBR(IfError(Value(Substitute(Upper(Coalesce(varMandrilSelecionado.PartNumber, "")), "FM", "")) / 1000, 0))}
+                        )
+                    )
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =46
+                  Width: =840
+                  WrapCount: =3
+                  X: =263
+                  Y: =256
+                Children:
+                  - lbl_RotItemSetupMand_2:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =16
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Width: =260
+                        Y: =2
+                  - lbl_ValItemSetupMand_2:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorTexto
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =24
+                        PaddingLeft: =0
+                        Size: =fx_FonteCorpo
+                        Text: =ThisItem.val
+                        Width: =260
+                        Y: =18
+            - lbl_SemSpecSetupMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: ="⚠ Este PN não tem set-up cadastrado em DM_MANDREL. Dá para iniciar, mas confira a receita com a engenharia."
+                  Visible: |-
+                    =IsBlank(
+                        LookUp(colDM_MANDREL, _1MANDREL_PN = varMandrilSelecionado.PartNumber)._1MANDREL_PN
+                    )
+                  Width: =840
+                  X: =263
+                  Y: =352
+            - lbl_SecaoOrigemMand_2:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorInfo
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: ="MANDRIL DE ORIGEM"
+                  Width: =400
+                  X: =263
+                  Y: =382
+            - btn_MandrilNovoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(varModoMandril = "Novo", fx_CorInfo, fx_CorBorda)
+                  BorderThickness: =If(varModoMandril = "Novo", 3, 1)
+                  Color: =If(varModoMandril = "Novo", fx_CorSuperficie, fx_CorInfo)
+                  Fill: =If(varModoMandril = "Novo", fx_CorInfo, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =If(varModoMandril = "Novo", ColorFade(fx_CorInfo, -20%), fx_CorInfoSuave)
+                  OnSelect: =Set(varModoMandril, "Novo")
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Mandril NOVO (da extrusora)"
+                  Width: =260
+                  X: =263
+                  Y: =418
+            - btn_MandrilVelhoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(varModoMandril = "Velho", fx_CorTextoSuave, fx_CorBorda)
+                  BorderThickness: =If(varModoMandril = "Velho", 3, 1)
+                  Color: =If(varModoMandril = "Velho", fx_CorSuperficie, fx_CorTextoSuave)
+                  Fill: =If(varModoMandril = "Velho", fx_CorTextoSuave, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =If(varModoMandril = "Velho", ColorFade(fx_CorTextoSuave, -20%), fx_CorFundo)
+                  OnSelect: |-
+                    =Set(varModoMandril, "Velho");
+                    Reset(cmb_EntradaMpMand_2)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Mandril VELHO (reaproveitado)"
+                  Width: =260
+                  X: =543
+                  Y: =418
+            - cmb_EntradaMpMand_2:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel de mandril novo a consumir"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: |-
+                    =AddColumns(
+                        Filter(
+                            colCarreteisMpMand,
+                            Status = "Cheio",
+                            Bitola = varMandrilSelecionado.Bitola
+                        ),
+                        Rotulo,
+                        Title & "   " & Text(Coalesce(quantidade_metros, 0), "[$-pt-BR]#.##0") & " m"
+                    )
+                  Items.Value: =Rotulo
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Visible: =varModoMandril = "Novo"
+                  Width: =300
+                  X: =823
+                  Y: =418
+            - lbl_SaldoMpMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(IsBlank(cmb_EntradaMpMand_2.Selected.Title), fx_CorAlerta, fx_CorOK)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsBlank(cmb_EntradaMpMand_2.Selected.Title),
+                        "Selecione um carretel cheio desta bitola.",
+                        "Saldo neste carretel: " &
+                        Text(Coalesce(cmb_EntradaMpMand_2.Selected.quantidade_metros, 0), "[$-pt-BR]#.##0") & " m"
+                    )
+                  Visible: =varModoMandril = "Novo"
+                  Width: =300
+                  X: =823
+                  Y: =466
+            - btn_CancelarSetupMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(cmb_EntradaMpMand_2);
+                    UpdateContext({ctxModalSetupMand: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: =If(varProduzindo, "Fechar", "Cancelar")
+                  Width: =180
+                  X: =622
+                  Y: =570
+            - btn_ContinuarSetupMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        (varModoMandril = "Velho" || !IsBlank(cmb_EntradaMpMand_2.Selected.Title)),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =ClearCollect(colCarreteisMand, lista_carreteis);
+                    UpdateContext({ctxModalSetupMand: false, ctxModalCarretelMand: true})
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Conferi o set-up — continuar"
+                  Visible: =!varProduzindo
+                  Width: =300
+                  X: =815
+                  Y: =570
+      - cntr_CarretelMand_2:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalCarretelMand
+            Width: =1366
+          Children:
+            - btn_BgCarretelMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardCarretelMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =420
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =760
+                  X: =303
+                  Y: =174
+            - lbl_TituloCarretelMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Carretel de saída"
+                  Width: =600
+                  X: =333
+                  Y: =198
+            - lbl_SubCarretelMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "Solda") &
+                    "  ·  " & Coalesce(varMandrilSelecionado.PartNumber, "—") &
+                    "  ·  bitola " & Text(Coalesce(varMandrilSelecionado.Bitola, 0)) &
+                    If(
+                        varModoMandril = "Novo",
+                        "  ·  entrada " & Coalesce(cmb_EntradaMpMand_2.Selected.Title, "—"),
+                        "  ·  mandril velho"
+                    )
+                  Width: =700
+                  X: =333
+                  Y: =234
+            - lbl_RotCarretelSaidaMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="CARRETEL QUE VAI RECEBER O MANDRIL SOLDADO *"
+                  Width: =700
+                  X: =333
+                  Y: =282
+            - cmb_CarretelSaidaMand_2:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel de saída da solda de mandril"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: |-
+                    =Filter(
+                        colCarreteisMand,
+                        IsBlank(op) && (Status = "Vazio" || IsBlank(Status))
+                    )
+                  Items.Value: =Title
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =440
+                  X: =333
+                  Y: =304
+            - lbl_StatusCarretelMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =If(IsBlank(cmb_CarretelSaidaMand_2.Selected.Title), fx_CorTextoSuave, fx_CorOK)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =If(
+                        IsBlank(cmb_CarretelSaidaMand_2.Selected.Title),
+                        "Escolha um carretel limpo.",
+                        "Carretel " & cmb_CarretelSaidaMand_2.Selected.Title & " limpo e pronto para receber material."
+                    )
+                  Width: =240
+                  X: =793
+                  Y: =304
+            - lbl_SecaoLimparMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="LIBERAR UM CARRETEL PRESO EM OUTRA OP"
+                  Width: =440
+                  X: =333
+                  Y: =368
+            - cmb_LimparCarretelMand_2:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Carretel ocupado a liberar"
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =Filter(colCarreteisMand, !IsBlank(op))
+                  Items.Value: =Title
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorInfoSuave
+                  Size: =fx_FonteCorpo
+                  Width: =260
+                  X: =333
+                  Y: =390
+            - lbl_AvisoLimparMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =If(
+                        IsBlank(cmb_LimparCarretelMand_2.Selected.Title),
+                        "Use só quando o carretel estiver preso numa OP encerrada.",
+                        "Carretel " & cmb_LimparCarretelMand_2.Selected.Title & " está " &
+                        Text(cmb_LimparCarretelMand_2.Selected.etapa_processo) & ". Liberar não desfaz apontamento."
+                    )
+                  Width: =420
+                  X: =613
+                  Y: =390
+            - btn_LimparCarretelMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorAlerta
+                  BorderThickness: =1
+                  Color: =fx_CorAlerta
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !IsBlank(cmb_LimparCarretelMand_2.Selected.Title) && !varProcessando,
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorAlertaSuave
+                  OnSelect: |-
+                    =Patch(
+                        lista_carreteis,
+                        LookUp(lista_carreteis, Title = cmb_LimparCarretelMand_2.Selected.Title),
+                        {
+                            op: Blank(),
+                            etapa_processo: Blank()
+                        }
+                    );
+                    If(
+                        !IsEmpty(Errors(lista_carreteis)),
+                        Notify("Falha ao liberar o carretel: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000),
+                        Refresh(lista_carreteis);
+                        ClearCollect(colCarreteisMand, lista_carreteis);
+                        Reset(cmb_LimparCarretelMand_2);
+                        Notify("Carretel liberado.", NotificationType.Success, 4000)
+                    )
+                  PressedFill: =fx_CorAlertaSuave
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="Liberar carretel"
+                  X: =333
+                  Y: =442
+            - btn_CancelarCarretelMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(cmb_CarretelSaidaMand_2);
+                    Reset(cmb_LimparCarretelMand_2);
+                    UpdateContext({ctxModalCarretelMand: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =593
+                  Y: =520
+            - btn_ConfirmarInicioMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_CarretelSaidaMand_2.Selected.Title) &&
+                        IsBlank(
+                            LookUp(colCarreteisMand, Title = cmb_CarretelSaidaMand_2.Selected.Title).op
+                        ) &&
+                        (varModoMandril = "Velho" || !IsBlank(cmb_EntradaMpMand_2.Selected.Title)),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorOK
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorOK, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    Refresh(lista_carreteis);
+                    With(
+                        {
+                            _ocupado: LookUp(
+                                ficha_producao,
+                                processo = "Mandril" && status_processo = "Em processo" && maquina_mandril = varPostoAtivo
+                            ),
+                            _saida: LookUp(lista_carreteis, Title = cmb_CarretelSaidaMand_2.Selected.Title),
+                            _mp: LookUp(CarreteisMandril, Title = cmb_EntradaMpMand_2.Selected.Title),
+                            _agora: Now()
+                        },
+                        With(
+                            {
+                                _min: fx_MinutosDoDia(_agora),
+                                _entrada: If(
+                                    varModoMandril = "Novo",
+                                    Coalesce(_mp.quantidade_metros, 0),
+                                    0
+                                )
+                            },
+                            If(
+                                !IsBlank(_ocupado.ID),
+                                Notify(
+                                    "Esta solda já tem OP em andamento (OP " & Text(_ocupado.ID) & "). Finalize antes de iniciar outra.",
+                                    NotificationType.Error,
+                                    8000
+                                );
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                IsBlank(_saida.Title) || !IsBlank(_saida.op),
+                                Notify(
+                                    "Este carretel acabou de ser ocupado por outro operador. Escolha outro.",
+                                    NotificationType.Error,
+                                    8000
+                                );
+                                ClearCollect(colCarreteisMand, lista_carreteis);
+                                Set(varProcessando, false),
+                                varModoMandril = "Novo" && (IsBlank(_mp.ID) || _mp.Status <> "Cheio"),
+                                Notify(
+                                    "Este carretel de mandril novo não está mais cheio. Atualize e escolha outro.",
+                                    NotificationType.Error,
+                                    8000
+                                );
+                                ClearCollect(colCarreteisMpMand, CarreteisMandril);
+                                Set(varProcessando, false),
+                                Set(
+                                    varRegistroSalvo,
+                                    Patch(
+                                        ficha_producao,
+                                        Defaults(ficha_producao),
+                                        {
+                                            Title: "OP-" & Text(_agora, "[$-en-US]yyMMddHHmm"),
+                                            status_processo: "Em processo",
+                                            data_hora_inicio_mandril: _agora,
+                                            'Carretel Saida': _saida.Title,
+                                            processo: "Mandril",
+                                            maquina_mandril: varPostoAtivo,
+                                            Bitola: varMandrilSelecionado.Bitola,
+                                            cod_mandril: varMandrilSelecionado.PartNumber,
+                                            quantidade_mandril: 0
+                                        }
+                                    )
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Falha ao abrir a OP: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                                    Set(varProcessando, false),
+                                    Patch(
+                                        lista_carreteis,
+                                        _saida,
+                                        {op: varRegistroSalvo.ID, etapa_processo: "Mandril"}
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(lista_carreteis)),
+                                        Notify(
+                                            "OP aberta, mas o carretel de saída NÃO foi reservado: " &
+                                            First(Errors(lista_carreteis)).Message,
+                                            NotificationType.Error,
+                                            10000
+                                        )
+                                    );
+                                    If(
+                                        varModoMandril = "Novo" && !IsBlank(_mp.ID),
+                                        Patch(
+                                            CarreteisMandril,
+                                            _mp,
+                                            {Status: "Em uso", OP_solda: Text(varRegistroSalvo.ID)}
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(CarreteisMandril)),
+                                            Notify(
+                                                "OP aberta, mas o mandril novo " & _mp.Title &
+                                                " NÃO foi reservado — a extrusora continua vendo ele como cheio: " &
+                                                First(Errors(CarreteisMandril)).Message,
+                                                NotificationType.Error,
+                                                10000
+                                            )
+                                        )
+                                    );
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(varRegistroSalvo.ID) & "-Mandril-Inicio",
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: varRegistroSalvo.ID,
+                                            etapa: {Value: "Mandril"},
+                                            tipo: {Value: "Início"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: fx_Turno(_min),
+                                            bitola: varMandrilSelecionado.Bitola,
+                                            metros: _entrada,
+                                            sobra: 0,
+                                            carretel: _saida.Title,
+                                            recurso: varPostoAtivo
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify("Evento de início não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                    );
+                                    Patch(
+                                        colPostosMandril,
+                                        LookUp(colPostosMandril, Posto = varPostoAtivo),
+                                        {
+                                            FichaID:    varRegistroSalvo.ID,
+                                            Inicio:     _agora,
+                                            CodMandril: varMandrilSelecionado.PartNumber,
+                                            Bitola:     varMandrilSelecionado.Bitola,
+                                            Produzindo: true
+                                        }
+                                    );
+                                    Set(varProduzindo, true);
+                                    Set(varCarretelMpMand, If(varModoMandril = "Novo", Coalesce(_mp.Title, ""), ""));
+                                    Set(varFichaAtiva, varRegistroSalvo);
+                                    Reset(cmb_CarretelSaidaMand_2);
+                                    Reset(cmb_EntradaMpMand_2);
+                                    UpdateContext({ctxModalCarretelMand: false});
+                                    Select(btn_KanbanMand_2);
+                                    Set(varProcessando, false);
+                                    Notify(
+                                        "Solda iniciada na " &
+                                        Coalesce(LookUp(colMaquinasMandril, Posto = varPostoAtivo).Rotulo, "solda") &
+                                        ". OP " & Text(varRegistroSalvo.ID) & ".",
+                                        NotificationType.Success,
+                                        5000
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorOK, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Confirmar Início"
+                  Width: =260
+                  X: =793
+                  Y: =520
+      - cntr_TurnoMand_2:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalTurnoMand
+            Width: =1366
+          Children:
+            - btn_BgTurnoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardTurnoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =360
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =600
+                  X: =383
+                  Y: =204
+            - lbl_TituloTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Encerrar o " & fx_TurnoLabelEm(ctxAgora) & " nesta OP"
+                  Width: =540
+                  X: =413
+                  Y: =228
+            - lbl_SubTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    ="A OP " & Text(varFichaAtiva.ID) &
+                    " continua aberta no posto. O próximo operador entra e continua de onde parou — o que você fez fica carimbado no seu turno."
+                  Width: =540
+                  X: =413
+                  Y: =264
+            - lbl_RotDeltaTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="VAI PARA O " & Upper(fx_TurnoLabelEm(ctxAgora))
+                  Width: =260
+                  X: =413
+                  Y: =320
+            - lbl_ValDeltaTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =46
+                  PaddingLeft: =0
+                  Size: =fx_FonteNumero
+                  Text: |-
+                    =Text(
+                        Max(
+                            0,
+                            Coalesce(fx_Num(inp_QtdMand_2.Text), 0) -
+                            (Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                             Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                             Coalesce(varFichaAtiva.Qtd_Turno3, 0))
+                        ),
+                        "[$-pt-BR]#.##0"
+                    ) & " m"
+                  Width: =260
+                  X: =413
+                  Y: =340
+            - lbl_RotOperadorTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =18
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: ="NO NOME DE"
+                  Width: =260
+                  X: =693
+                  Y: =320
+            - lbl_ValOperadorTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =46
+                  PaddingLeft: =0
+                  Size: =fx_FonteDestaque
+                  Text: =fx_Ou(Text(cmb_OperadorMand_2.Selected.Nome))
+                  Width: =260
+                  X: =693
+                  Y: =344
+            - lbl_JaTurnoMand_2:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            _t1: Coalesce(varFichaAtiva.Qtd_Turno1, 0),
+                            _t2: Coalesce(varFichaAtiva.Qtd_Turno2, 0),
+                            _t3: Coalesce(varFichaAtiva.Qtd_Turno3, 0)
+                        },
+                        If(
+                            _t1 + _t2 + _t3 <= 0,
+                            "Nenhum turno fechado nesta OP até agora.",
+                            "Já fechado nesta OP:   " &
+                            If(_t1 > 0, "1º " & Text(_t1, "[$-pt-BR]#.##0") & " m    ", "") &
+                            If(_t2 > 0, "2º " & Text(_t2, "[$-pt-BR]#.##0") & " m    ", "") &
+                            If(_t3 > 0, "3º " & Text(_t3, "[$-pt-BR]#.##0") & " m", "")
+                        )
+                    )
+                  Width: =540
+                  X: =413
+                  Y: =400
+            - btn_CancelarTurnoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalTurnoMand: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =180
+                  X: =533
+                  Y: =492
+            - btn_ConfirmarTurnoMand_2:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(cmb_OperadorMand_2.Selected.Nome) &&
+                        Coalesce(fx_Num(inp_QtdMand_2.Text), 0) >
+                            Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno3, 0),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorAlerta, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
+                            _agora: Now(),
+                            _q: Coalesce(fx_Num(inp_QtdMand_2.Text), 0)
+                        },
+                        With(
+                            {
+                                _turno: fx_TurnoEm(_agora),
+                                _ja: Coalesce(_r.Qtd_Turno1, 0) +
+                                     Coalesce(_r.Qtd_Turno2, 0) +
+                                     Coalesce(_r.Qtd_Turno3, 0)
+                            },
+                            If(
+                                IsBlank(_r.ID),
+                                Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.Modified <> varFichaAtiva.Modified,
+                                Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.status_processo <> "Em processo",
+                                Notify("Esta OP não está em processo. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _q - _ja <= 0,
+                                Notify("Não há metragem nova para fechar neste turno.", NotificationType.Warning, 6000);
+                                Set(varProcessando, false),
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        desmoldante_mandril: ctxDesmoldanteMand,
+                                        quantidade_mandril: _q,
+                                        operador_mandril: cmb_OperadorMand_2.Selected.Nome,
+                                        lote_mandril: inp_LoteMand_2.Text,
+                                        Observação_mandril: inp_ObsMand_2.Text,
+                                        Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
+                                        Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
+                                        Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3),
+                                        Turno_mandril: Text(_turno)
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Falha ao fechar o turno: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                                    Set(varProcessando, false),
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(_r.ID) & "-Mandril-Parcial-T" & Text(_turno),
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: _r.ID,
+                                            etapa: {Value: "Mandril"},
+                                            tipo: {Value: "Parcial"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: _turno,
+                                            bitola: Coalesce(varMandrilSelecionado.Bitola, _r.Bitola),
+                                            metros: _q - _ja,
+                                            sobra: 0,
+                                            carretel: _r.'Carretel Saida',
+                                            recurso: Coalesce(_r.maquina_mandril, varPostoAtivo),
+                                            operador: cmb_OperadorMand_2.Selected.Nome
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify(
+                                            "Turno fechado na ficha, mas o evento NÃO gravou — a meta do turno vai ficar defasada: " &
+                                            First(Errors(Eventos_Producao)).Message,
+                                            NotificationType.Error,
+                                            12000
+                                        )
+                                    );
+                                    UpdateContext({ctxModalTurnoMand: false});
+                                    Select(btn_CarregarPostoMand_2);
+                                    Select(btn_KanbanMand_2);
+                                    Set(varProcessando, false);
+                                    Notify(
+                                        Text(_q - _ja, "[$-pt-BR]#.##0") & " m fechados no " &
+                                        Text(_turno) & "º turno para " & cmb_OperadorMand_2.Selected.Nome &
+                                        ". A OP continua aberta no posto.",
+                                        NotificationType.Success,
+                                        8000
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorAlerta, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Fechar meu turno"
+                  Width: =220
+                  X: =733
+                  Y: =492
+      - cntr_CorrigirMand_1:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalCorrigirMand
+            Width: =1366
+          Children:
+            - btn_BgCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =530
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =600
+                  X: =383
+                  Y: =134
+            - lbl_TituloCorrMand_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Corrigir a OP " & Text(varFichaAtiva.ID)
+                  Width: =540
+                  X: =413
+                  Y: =151
+            - lbl_SubCorrMand_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =60
+                  Size: =fx_FonteCorpo
+                  Text: ="Errou a bitola e ainda não soldou nada? Troque aqui. Mudou o plano? Descarte a OP — o carretel volta pra fila e a solda fica livre."
+                  Width: =570
+                  X: =413
+                  Y: =182
+            - rct_DivisorCorrMand_1:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =540
+                  X: =413
+                  Y: =242
+            - lbl_SecaoBitolaCorrMand_1:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorRotulo
+                  FontWeight: =FontWeight.Bold
+                  Height: =31
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: ="1 · TROCAR A BITOLA"
+                  Width: =540
+                  X: =413
+                  Y: =243
+            - gal_BitolaCorrMand_1:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Default: =varMandrilCorrMand
+                  DisplayMode: |-
+                    =If(
+                        varProcessando ||
+                        Max(
+                            Coalesce(varFichaAtiva.quantidade_mandril, 0),
+                            Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno3, 0)
+                        ) > 0,
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =Color.Transparent
+                  Height: =176
+                  Items: =ColTabelaBitolas
+                  OnSelect: =Set(varMandrilCorrMand, ThisItem)
+                  TemplateFill: =Color.Transparent
+                  TemplateSize: =44
+                  Width: =272
+                  X: =400
+                  Y: =280
+                Children:
+                  - btn_ItemBitolaCorrMand_1:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =If(ThisItem.PartNumber = varMandrilCorrMand.PartNumber, fx_CorPrimaria, fx_CorBorda)
+                        BorderThickness: =1
+                        Color: =If(ThisItem.PartNumber = varMandrilCorrMand.PartNumber, fx_CorSuperficie, fx_CorTexto)
+                        DisabledBorderColor: =fx_CorBorda
+                        DisabledFill: =fx_CorFundo
+                        Fill: =If(ThisItem.PartNumber = varMandrilCorrMand.PartNumber, fx_CorPrimaria, fx_CorSuperficie)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =38
+                        HoverFill: =If(ThisItem.PartNumber = varMandrilCorrMand.PartNumber, fx_CorPrimaria, fx_CorInfoSuave)
+                        OnSelect: =Set(varMandrilCorrMand, ThisItem)
+                        PressedFill: =Self.Fill
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Size: =fx_FonteCorpo
+                        Text: ="Bitola " & Text(ThisItem.Bitola) & "   ·   " & ThisItem.PartNumber
+                        Width: =248
+                        Y: =2
+            - lbl_AtualBitolaCorrMand_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =46
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="A OP está aberta em bitola " & Text(Coalesce(varFichaAtiva.Bitola, 0)) &
+                    "  ·  " & Coalesce(varFichaAtiva.cod_mandril, "—") &
+                    ". Escolha ao lado a bitola certa."
+                  Width: =275
+                  X: =693
+                  Y: =273
+            - lbl_BloqueioBitolaCorrMand_1:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =74
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            _ja: Max(
+                                Coalesce(varFichaAtiva.quantidade_mandril, 0),
+                                Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                                Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                                Coalesce(varFichaAtiva.Qtd_Turno3, 0)
+                            )
+                        },
+                        If(
+                            _ja > 0,
+                            "⛔ Esta OP já tem " & Text(_ja, "[$-pt-BR]#.##0") &
+                            " m apontados nesta bitola. Descarte a OP abaixo e abra outra.",
+                            !IsBlank(varCarretelMpMand),
+                            "⛔ Esta OP consome o mandril novo " & varCarretelMpMand &
+                            " da bitola atual. Descarte a OP abaixo — o carretel volta pro estoque.",
+                            ""
+                        )
+                    )
+                  Visible: =!IsBlank(Self.Text)
+                  Width: =275
+                  X: =693
+                  Y: =326
+            - btn_TrocarBitolaCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(varFichaAtiva.ID) &&
+                        IsBlank(varCarretelMpMand) &&
+                        Max(
+                            Coalesce(varFichaAtiva.quantidade_mandril, 0),
+                            Coalesce(varFichaAtiva.Qtd_Turno1, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno2, 0) +
+                            Coalesce(varFichaAtiva.Qtd_Turno3, 0)
+                        ) <= 0 &&
+                        !IsBlank(varMandrilCorrMand.PartNumber) &&
+                        varMandrilCorrMand.PartNumber <> varFichaAtiva.cod_mandril,
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    ClearCollect(
+                        colEvOpMand,
+                        Filter(Eventos_Producao, origem_ID = Coalesce(varFichaAtiva.ID, 0))
+                    );
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
+                            _agora: Now(),
+                            _novo: varMandrilCorrMand
+                        },
+                        With(
+                            {
+                                _ja: Max(
+                                    Coalesce(_r.quantidade_mandril, 0),
+                                    Coalesce(_r.Qtd_Turno1, 0) +
+                                    Coalesce(_r.Qtd_Turno2, 0) +
+                                    Coalesce(_r.Qtd_Turno3, 0)
+                                ),
+                                _idIni: Coalesce(LookUp(colEvOpMand, tipo.Value = "Início").ID, 0)
+                            },
+                            If(
+                                IsBlank(_r.ID),
+                                Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.Modified <> varFichaAtiva.Modified,
+                                Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.status_processo <> "Em processo",
+                                Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _ja > 0,
+                                Notify(
+                                    "Esta OP já tem " & Text(_ja, "[$-pt-BR]#.##0") &
+                                    " m apontados. Não dá para trocar a bitola — descarte a OP e abra outra.",
+                                    NotificationType.Error,
+                                    12000
+                                );
+                                Set(varProcessando, false),
+                                !IsBlank(LookUp(CarreteisMandril, Status = "Em uso" && OP_solda = Text(_r.ID)).ID),
+                                Notify(
+                                    "Esta OP está consumindo um mandril novo da bitola atual. Descarte a OP — o carretel volta pro estoque — e abra outra na bitola certa.",
+                                    NotificationType.Error,
+                                    12000
+                                );
+                                Set(varProcessando, false),
+                                _novo.PartNumber = _r.cod_mandril,
+                                Notify("Esta já é a bitola da OP.", NotificationType.Warning, 6000);
+                                Set(varProcessando, false),
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        Bitola: _novo.Bitola,
+                                        cod_mandril: _novo.PartNumber,
+                                        Observação_mandril: Trim(
+                                            Coalesce(_r.Observação_mandril, "") &
+                                            "  [" & Text(_agora, "[$-pt-BR]dd/mm hh:mm") &
+                                            " bitola corrigida de " & Text(Coalesce(_r.Bitola, 0)) &
+                                            "/" & Coalesce(_r.cod_mandril, "—") &
+                                            " para " & Text(_novo.Bitola) & "/" & _novo.PartNumber & "]"
+                                        )
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Não trocou a bitola: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                                    Set(varProcessando, false),
+                                    If(
+                                        _idIni > 0,
+                                        Patch(
+                                            Eventos_Producao,
+                                            LookUp(Eventos_Producao, ID = _idIni),
+                                            {bitola: _novo.Bitola}
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(Eventos_Producao)),
+                                            Notify(
+                                                "Bitola corrigida na ficha, mas o evento de início ficou com a bitola velha: " &
+                                                First(Errors(Eventos_Producao)).Message,
+                                                NotificationType.Error,
+                                                12000
+                                            )
+                                        ),
+                                        Notify(
+                                            "Bitola corrigida na ficha, mas o evento de início desta OP não foi encontrado.",
+                                            NotificationType.Warning,
+                                            8000
+                                        )
+                                    );
+                                    Set(varMandrilSelecionado, _novo);
+                                    Set(varSpecMandril, LookUp(colDM_MANDREL, _1MANDREL_PN = _novo.PartNumber));
+                                    Patch(
+                                        colPostosMandril,
+                                        LookUp(colPostosMandril, Posto = Coalesce(_r.maquina_mandril, varPostoAtivo)),
+                                        {
+                                            CodMandril: _novo.PartNumber,
+                                            Bitola:     _novo.Bitola
+                                        }
+                                    );
+                                    UpdateContext({ctxModalCorrigirMand: false});
+                                    Select(btn_CarregarPostoMand_2);
+                                    Set(varProcessando, false);
+                                    Notify(
+                                        "OP " & Text(_r.ID) & " corrigida para bitola " & Text(_novo.Bitola) &
+                                        " (" & _novo.PartNumber & "). Confira o set-up antes de soldar.",
+                                        NotificationType.Success,
+                                        8000
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Trocar a bitola"
+                  Width: =260
+                  X: =693
+                  Y: =408
+            - rct_Divisor2CorrMand_1:
+                Control: Rectangle@2.3.0
+                Properties:
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =540
+                  X: =413
+                  Y: =474
+            - lbl_SecaoDescCorrMand_1:
+                Control: ModernText@1.0.0
+                Properties:
+                  Color: =fx_CorRotulo
+                  FontWeight: =FontWeight.Bold
+                  Height: =31
+                  PaddingBottom: =0
+                  PaddingLeft: =0
+                  PaddingRight: =0
+                  PaddingTop: =0
+                  Size: =fx_FonteSecao
+                  Text: ="2 · DESCARTAR A OP  —  MOTIVO"
+                  Width: =540
+                  X: =413
+                  Y: =475
+            - btn_MotBitolaCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ctxMotivoCorrMand = "Bitola errada", fx_CorErro, fx_CorBorda)
+                  BorderThickness: =If(ctxMotivoCorrMand = "Bitola errada", 3, 1)
+                  Color: =If(ctxMotivoCorrMand = "Bitola errada", fx_CorSuperficie, fx_CorTexto)
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =If(ctxMotivoCorrMand = "Bitola errada", fx_CorErro, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =36
+                  HoverFill: =If(ctxMotivoCorrMand = "Bitola errada", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+                  OnSelect: |-
+                    =UpdateContext({ctxMotivoCorrMand: "Bitola errada"})
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="Bitola errada"
+                  Width: =128
+                  X: =413
+                  Y: =512
+            - btn_MotPlanoCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ctxMotivoCorrMand = "Mudança de plano", fx_CorErro, fx_CorBorda)
+                  BorderThickness: =If(ctxMotivoCorrMand = "Mudança de plano", 3, 1)
+                  Color: =If(ctxMotivoCorrMand = "Mudança de plano", fx_CorSuperficie, fx_CorTexto)
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =If(ctxMotivoCorrMand = "Mudança de plano", fx_CorErro, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =36
+                  HoverFill: =If(ctxMotivoCorrMand = "Mudança de plano", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+                  OnSelect: |-
+                    =UpdateContext({ctxMotivoCorrMand: "Mudança de plano"})
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="Mudou o plano"
+                  Width: =128
+                  X: =549
+                  Y: =512
+            - btn_MotCarretelCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ctxMotivoCorrMand = "Carretel errado", fx_CorErro, fx_CorBorda)
+                  BorderThickness: =If(ctxMotivoCorrMand = "Carretel errado", 3, 1)
+                  Color: =If(ctxMotivoCorrMand = "Carretel errado", fx_CorSuperficie, fx_CorTexto)
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =If(ctxMotivoCorrMand = "Carretel errado", fx_CorErro, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =36
+                  HoverFill: =If(ctxMotivoCorrMand = "Carretel errado", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+                  OnSelect: |-
+                    =UpdateContext({ctxMotivoCorrMand: "Carretel errado"})
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="Carretel errado"
+                  Width: =128
+                  X: =685
+                  Y: =512
+            - btn_MotOutroCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =If(ctxMotivoCorrMand = "Outro", fx_CorErro, fx_CorBorda)
+                  BorderThickness: =If(ctxMotivoCorrMand = "Outro", 3, 1)
+                  Color: =If(ctxMotivoCorrMand = "Outro", fx_CorSuperficie, fx_CorTexto)
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: =If(ctxMotivoCorrMand = "Outro", fx_CorErro, fx_CorSuperficie)
+                  Font: =fx_FonteFamilia
+                  Height: =36
+                  HoverFill: =If(ctxMotivoCorrMand = "Outro", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+                  OnSelect: |-
+                    =UpdateContext({ctxMotivoCorrMand: "Outro"})
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="Outro"
+                  Width: =128
+                  X: =821
+                  Y: =512
+            - inp_MotivoCorrMand_1:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Detalhe do motivo do descarte"
+                  BorderColor: =If(ctxMotivoCorrMand = "Outro" && IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+                  Default: =""
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Detalhe (obrigatório quando o motivo é Outro)"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =540
+                  X: =413
+                  Y: =556
+            - btn_CancelarCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =UpdateContext({ctxModalCorrigirMand: false, ctxMotivoCorrMand: ""});
+                    Reset(inp_MotivoCorrMand_1)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Voltar"
+                  Width: =180
+                  X: =413
+                  Y: =608
+            - btn_DescartarCorrMand_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        !varProcessando &&
+                        !IsBlank(varFichaAtiva.ID) &&
+                        !IsBlank(ctxMotivoCorrMand) &&
+                        (ctxMotivoCorrMand <> "Outro" || !IsBlank(Trim(inp_MotivoCorrMand_1.Text))),
+                        DisplayMode.Edit,
+                        DisplayMode.Disabled
+                    )
+                  Fill: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorErro, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    Refresh(lista_carreteis);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
+                            _agora: Now(),
+                            _motivo: Trim(
+                                ctxMotivoCorrMand &
+                                If(
+                                    !IsBlank(Trim(inp_MotivoCorrMand_1.Text)),
+                                    " - " & Trim(inp_MotivoCorrMand_1.Text),
+                                    ""
+                                )
+                            )
+                        },
+                        With(
+                            {
+                                _turno: fx_TurnoEm(_agora),
+                                _refugo: Max(
+                                    Coalesce(_r.quantidade_mandril, 0),
+                                    Coalesce(_r.Qtd_Turno1, 0) +
+                                    Coalesce(_r.Qtd_Turno2, 0) +
+                                    Coalesce(_r.Qtd_Turno3, 0)
+                                ),
+                                _carretel: _r.'Carretel Saida',
+                                _posto: Coalesce(_r.maquina_mandril, varPostoAtivo),
+                                _quem: Coalesce(cmb_OperadorMand_2.Selected.Nome, _r.operador_mandril)
+                            },
+                            If(
+                                IsBlank(_r.ID),
+                                Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.Modified <> varFichaAtiva.Modified,
+                                Notify("Este registro foi alterado por outro usuário. A tela foi recarregada.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                _r.status_processo <> "Em processo",
+                                Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
+                                Select(btn_CarregarPostoMand_2);
+                                Set(varProcessando, false),
+                                IsBlank(_motivo),
+                                Notify("Escolha o motivo antes de descartar.", NotificationType.Warning, 6000);
+                                Set(varProcessando, false),
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        status_processo: "Cancelado",
+                                        data_hora_final_mandril: _agora,
+                                        Turno_mandril: Text(_turno),
+                                        operador_mandril: _quem,
+                                        Observação_mandril: Trim(
+                                            Coalesce(_r.Observação_mandril, "") &
+                                            "  [OP DESCARTADA " & Text(_agora, "[$-pt-BR]dd/mm hh:mm") &
+                                            " por " & Coalesce(_quem, "—") & " - " & _motivo &
+                                            If(
+                                                _refugo > 0,
+                                                " - " & Text(_refugo, "[$-pt-BR]#.##0") & " m viraram refugo",
+                                                ""
+                                            ) & "]"
+                                        )
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Não descartou a OP: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 15000);
+                                    Set(varProcessando, false),
+                                    If(
+                                        !IsBlank(LookUp(lista_carreteis, op = _r.ID)),
+                                        Patch(
+                                            lista_carreteis,
+                                            LookUp(lista_carreteis, op = _r.ID),
+                                            {op: Blank(), etapa_processo: Blank()}
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(lista_carreteis)),
+                                            Notify(
+                                                "OP descartada, mas o carretel " & Coalesce(_carretel, "—") &
+                                                " NÃO foi liberado — libere na tela de carretéis: " &
+                                                First(Errors(lista_carreteis)).Message,
+                                                NotificationType.Error,
+                                                15000
+                                            )
+                                        )
+                                    );
+                                    With(
+                                        { _mpUso: LookUp(CarreteisMandril, Status = "Em uso" && OP_solda = Text(_r.ID)) },
+                                        If(
+                                            !IsBlank(_mpUso.ID),
+                                            If(
+                                                Coalesce(_mpUso.quantidade_metros, 0) - _refugo <= 0,
+                                                Patch(
+                                                    CarreteisMandril,
+                                                    _mpUso,
+                                                    {
+                                                        Status: "Vazio",
+                                                        quantidade_metros: Blank(),
+                                                        cod_mandril: Blank(),
+                                                        Bitola: Blank(),
+                                                        OP_extrusora: Blank(),
+                                                        operador_extrusora: Blank(),
+                                                        data_consumo: _agora
+                                                    }
+                                                ),
+                                                Patch(
+                                                    CarreteisMandril,
+                                                    _mpUso,
+                                                    {
+                                                        Status: "Cheio",
+                                                        quantidade_metros: Coalesce(_mpUso.quantidade_metros, 0) - _refugo,
+                                                        data_consumo: _agora
+                                                    }
+                                                )
+                                            );
+                                            If(
+                                                !IsEmpty(Errors(CarreteisMandril)),
+                                                Notify(
+                                                    "OP descartada, mas o mandril novo " & _mpUso.Title &
+                                                    " NÃO voltou para o estoque — ajuste na tela da Extrusora (Carretéis): " &
+                                                    First(Errors(CarreteisMandril)).Message,
+                                                    NotificationType.Error,
+                                                    15000
+                                                )
+                                            )
+                                        )
+                                    );
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(_r.ID) & "-Mandril-Cancelado",
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: _r.ID,
+                                            etapa: {Value: "Mandril"},
+                                            tipo: {Value: "Cancelado"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: _turno,
+                                            bitola: Coalesce(_r.Bitola, 0),
+                                            metros: 0,
+                                            sobra: _refugo,
+                                            carretel: _carretel,
+                                            recurso: _posto,
+                                            operador: _quem
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify(
+                                            "OP descartada, mas o evento de cancelamento NÃO gravou — o histórico vai ficar sem o motivo: " &
+                                            First(Errors(Eventos_Producao)).Message,
+                                            NotificationType.Error,
+                                            15000
+                                        )
+                                    );
+                                    Patch(
+                                        colPostosMandril,
+                                        LookUp(colPostosMandril, Posto = _posto),
+                                        {
+                                            FichaID:    0,
+                                            Inicio:     Blank(),
+                                            CodMandril: Blank(),
+                                            Bitola:     0,
+                                            Produzindo: false
+                                        }
+                                    );
+                                    Set(varCarretelMpMand, "");
+                                    Set(varProduzindo, false);
+                                    Set(varFichaAtiva, Blank());
+                                    UpdateContext({ctxModalCorrigirMand: false, ctxMotivoCorrMand: ""});
+                                    Reset(inp_MotivoCorrMand_1);
+                                    Select(btn_CarregarPostoMand_2);
+                                    Select(btn_KanbanMand_2);
+                                    Set(varProcessando, false);
+                                    Notify(
+                                        "OP " & Text(_r.ID) & " descartada (" & _motivo & "). Carretel " &
+                                        Coalesce(_carretel, "—") & " liberado e " &
+                                        Coalesce(LookUp(colMaquinasMandril, Posto = _posto).Rotulo, "solda") &
+                                        " livre." &
+                                        If(
+                                            _refugo > 0,
+                                            " " & Text(_refugo, "[$-pt-BR]#.##0") & " m registrados como refugo.",
+                                            ""
+                                        ),
+                                        NotificationType.Success,
+                                        10000
+                                    )
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorErro, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Descartar a OP"
+                  Width: =180
+                  X: =773
+                  Y: =608
+      - rct_OverlayMand_2:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - lbl_ProcessandoMand_2:
+          Control: ModernText@1.0.0
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            PaddingBottom: =0
+            PaddingLeft: =0
+            PaddingRight: =0
+            PaddingTop: =0
+            Size: =fx_FonteTitulo
+            Text: ="Gravando... não feche a tela."
+            Visible: =varProcessando
+            Width: =400
+            X: =483
+            Y: =403
+      - spr_ProcessandoMand_2:
+          Control: ModernSpinner@1.1.0
+          Properties:
+            FontWeight: =""
+            Height: =768
+            PaddingBottom: =362
+            PaddingLeft: =362
+            PaddingRight: =362
+            PaddingTop: =362
+            Visible: =varProcessando
+            Width: =1366
+      - btn_KanbanMand_2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Refresh(Eventos_Producao);
+              Refresh(ficha_producao);
+              Set(varDiaRefMand, fx_DataRefEm(Now()));
+              ClearCollect(
+                  colEvDiaMand,
+                  Filter(Eventos_Producao, data_ref >= varDiaRefMand)
+              );
+              ClearCollect(
+                  colEvMandFimMand,
+                  Filter(colEvDiaMand, etapa.Value = "Mandril", tipo.Value = "Fim")
+              );
+              ClearCollect(
+                  colEvMandParcMand,
+                  Filter(colEvDiaMand, etapa.Value = "Mandril", tipo.Value = "Parcial")
+              );
+              ClearCollect(colEvTurnoMand, colEvMandFimMand);
+              Collect(colEvTurnoMand, colEvMandParcMand);
+              ClearCollect(
+                  colFilaTuboMand,
+                  Filter(
+                      ficha_producao,
+                      processo = "Tubo",
+                      status_processo = "Aguardando"
+                  )
+              );
+              Set(
+                  varKanbanTuboMand,
+                  CountRows(
+                      Filter(colFilaTuboMand As _f, !IsBlank(_f.'Carretel Entrada'))
+                  )
+              );
+              With(
+                  {
+                      _nivel: If(
+                          varKanbanTuboMand >= fx_KanbanAlvo,   "OK",
+                          varKanbanTuboMand >= fx_KanbanMinimo, "ATENCAO",
+                          "CRITICO"
+                      )
+                  },
+                  If(
+                      _nivel = "CRITICO" && varKanbanNivelMand <> "CRITICO",
+                      Notify(
+                          "Kanban do Tubo crítico: " & Text(varKanbanTuboMand) &
+                          " carretel(éis) aguardando (mínimo " & Text(fx_KanbanMinimo) & ").",
+                          NotificationType.Warning,
+                          15000
+                      )
+                  );
+                  Set(varKanbanNivelMand, _nivel)
+              )
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =1
+            X: =1364
+            Y: =764

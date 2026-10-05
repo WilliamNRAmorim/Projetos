@@ -1,0 +1,390 @@
+Screens:
+  scr_Monitor_Mandril:
+    Properties:
+      Fill: =RGBA(238, 240, 244, 1)
+      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      OnVisible: |-
+        =UpdateContext({varAgora: Now(), varBlink: false});
+        ClearCollect(
+            colMonitor,
+            SortByColumns(Estado_Trancadeiras, "ID", SortOrder.Ascending)
+        )
+    Children:
+      - tmrClock:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =600
+            OnTimerEnd: |
+              =UpdateContext({varAgora: Now(), varBlink: !varBlink})
+            Repeat: =true
+            Visible: =false
+      - tmrRefresh:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            OnTimerEnd: |-
+              =Refresh(Estado_Trancadeiras);
+              ClearCollect(colMonitor, SortByColumns(Estado_Trancadeiras, "ID", SortOrder.Ascending))
+            Repeat: =true
+            Visible: =false
+      - recTituloBg:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =56
+            Width: =Parent.Width
+      - lblTitulo:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(20, 28, 64, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            Size: =22
+            Text: ="ANÁLISE DE PARADAS DAS TRANÇADEIRAS"
+            Width: =Parent.Width
+      - recTurnoBg:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =RGBA(248, 249, 251, 1)
+            Height: =44
+            Width: =Parent.Width
+            Y: =56
+      - recTurnoBorda:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =RGBA(210, 214, 222, 1)
+            Height: =44
+            Width: =1
+            X: =Parent.Width * 0.22 - 1
+            Y: =56
+      - lblData:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(40, 40, 40, 1)
+            Height: =44
+            Size: =16
+            Text: =Text(Today(), "dd/mm/yyyy")
+            Width: =Parent.Width * 0.18
+            X: =Parent.Width * 0.22
+            Y: =56
+      - lblAtualizacaoLbl:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(20, 28, 64, 1)
+            FontWeight: =FontWeight.Semibold
+            Height: =44
+            Size: =18
+            Text: ="Atualização"
+            Width: =Parent.Width * 0.30
+            X: =Parent.Width * 0.40
+            Y: =56
+      - lblHora:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(20, 28, 64, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =20
+            Text: =Text(varAgora, "hh:mm")
+            Width: =Parent.Width * 0.30
+            X: =Parent.Width * 0.70
+            Y: =56
+      - lblTurno:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(20, 28, 64, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =16
+            Text: |
+              =With(
+                  {HoraAtual: TimeValue(Now())},
+                  If(
+                      HoraAtual >= Time(5, 20, 0) && HoraAtual < Time(13, 48, 0), "1º Turno",
+                      HoraAtual >= Time(13, 48, 0) && HoraAtual < Time(22, 41, 0), "2º Turno",
+                      "3º Turno"
+                  )
+              )
+            Width: =Parent.Width * 0.22
+            Y: =56
+      - recBanner:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: |
+              =With(
+                  {top: First(SortByColumns(Filter(colMonitor, !IsBlank(Hora_Parada)), "Hora_Parada", SortOrder.Ascending))},
+                  If(
+                      !IsBlank(top) && DateDiff(varAgora, top.Hora_Parada, TimeUnit.Minutes) < 30,
+                      If(varBlink, RGBA(214, 40, 40, 1), RGBA(120, 18, 18, 1)),
+                      RGBA(20, 28, 64, 1)
+                  )
+              )
+            Height: =64
+            Width: =Parent.Width
+            Y: =108
+      - lblBannerIcone:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            Height: =64
+            Size: =30
+            Text: |
+              =With(
+                  {top: First(SortByColumns(Filter(colMonitor, !IsBlank(Hora_Parada)), "Hora_Parada", SortOrder.Ascending))},
+                  If(!IsBlank(top) && DateDiff(varAgora, top.Hora_Parada,TimeUnit.Minutes) < 30, "⚠", "")
+              )
+            Width: =56
+            X: =16
+            Y: =108
+      - lblBanner:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =64
+            Size: =22
+            Text: |
+              =With(
+                  {top: First(SortByColumns(Filter(colMonitor, !IsBlank(Hora_Parada)), "Hora_Parada", SortOrder.Ascending))},
+                  If(
+                      IsBlank(top),
+                      "SEM PARADAS PREVISTAS",
+                      "PRÓXIMO: SOLDAR MANDRIL  •  bitola " & top.Bitola
+                          & "  •  " & top.Title
+                          & "  •  " & Text(top.Hora_Parada, "hh:mm")
+                          & "   (faltam " & Text(Max(0, DateDiff(varAgora, top.Hora_Parada, TimeUnit.Hours))) & "h)"
+                  )
+              )
+            Width: =Parent.Width - 88
+            X: =72
+            Y: =108
+      - recHeaderTabela:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =RGBA(20, 28, 64, 1)
+            Height: =48
+            Width: =Parent.Width
+            Y: =176
+      - lblHdrMaquina:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Trançadeiras"
+            Width: =Parent.Width * 0.10
+            X: =Parent.Width * 0.00
+            Y: =176
+      - lblHdrMangueira:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Mangueira"
+            Width: =Parent.Width * 0.12
+            X: =Parent.Width * 0.10
+            Y: =176
+      - lblHdrCarga:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Carga Máquina (m/h)"
+            Width: =Parent.Width * 0.09
+            X: =Parent.Width * 0.22
+            Y: =176
+      - lblHdrBitola:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Bitola"
+            Width: =Parent.Width * 0.07
+            X: =Parent.Width * 0.31
+            Y: =176
+      - lblHdrQtd:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Quantidade Abastecida (m)"
+            Width: =Parent.Width * 0.12
+            X: =Parent.Width * 0.38
+            Y: =176
+      - lblHdrPrevisao:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Previsão Parada"
+            Width: =Parent.Width * 0.12
+            X: =Parent.Width * 0.50
+            Y: =176
+      - lblHdrAcoes:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =RGBA(255, 255, 255, 1)
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =11
+            Text: ="Ações de Paradas Críticas"
+            Width: =Parent.Width * 0.38
+            X: =Parent.Width * 0.62
+            Y: =176
+      - galMaquinas:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Height: =Parent.Height - 224
+            Items: =colMonitor
+            TemplateFill: |-
+              =With(
+                  {h: !IsBlank(ThisItem.Hora_Parada), m: DateDiff(varAgora, ThisItem.Hora_Parada, TimeUnit.Minutes)},
+                  If(
+                      h && m < 30,
+                      If(varBlink, RGBA(255, 205, 205, 1), RGBA(255, 255, 255, 1)),
+                      RGBA(255, 255, 255, 1)
+                  )
+              )
+            TemplateSize: =44
+            Width: =Parent.Width
+            Y: =224
+          Children:
+            - celMaquina:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(255, 255, 255, 1)
+                  Fill: =RGBA(20, 28, 64, 1)
+                  FontWeight: =FontWeight.Bold
+                  Height: =Parent.TemplateHeight
+                  Size: =12
+                  Text: =ThisItem.Title
+                  Width: =Parent.TemplateWidth * 0.10
+            - celMangueira:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(30, 30, 30, 1)
+                  FontWeight: =FontWeight.Semibold
+                  Height: =Parent.TemplateHeight
+                  Text: =If(!IsBlank(ThisItem.Mangueira_Atual),(ThisItem.Mangueira_Atual),"—")
+                  Width: =Parent.TemplateWidth * 0.12
+                  X: =Parent.TemplateWidth * 0.10
+            - celCarga:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(30, 30, 30, 1)
+                  Height: =Parent.TemplateHeight
+                  Text: =If(IsBlank(ThisItem.Velocidade), "—", Text(ThisItem.Velocidade))
+                  Width: =Parent.TemplateWidth * 0.09
+                  X: =Parent.TemplateWidth * 0.22
+            - celBitola:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(30, 30, 30, 1)
+                  FontWeight: =FontWeight.Bold
+                  Height: =Parent.TemplateHeight
+                  Text: =If(IsBlank(ThisItem.Bitola), "—", Text(ThisItem.Bitola))
+                  Width: =Parent.TemplateWidth * 0.07
+                  X: =Parent.TemplateWidth * 0.31
+            - celQtd:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(30, 30, 30, 1)
+                  Height: =Parent.TemplateHeight
+                  Text: |
+                    =If(
+                        ThisItem.Status = "Manutencao", "MAN.",
+                        ThisItem.Status = "SemPlano", "S/PLAN.",
+                        Text(RoundDown(ThisItem.Quantidade_m, 0)) & " m"
+                    )
+                  Width: =Parent.TemplateWidth * 0.12
+                  X: =Parent.TemplateWidth * 0.38
+            - celPrevisao:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(255, 255, 255, 1)
+                  Fill: |
+                    =With(
+                        {h: !IsBlank(ThisItem.Hora_Parada), m: DateDiff(varAgora, ThisItem.Hora_Parada, TimeUnit.Minutes)},
+                        If(
+                            ThisItem.Status = "Manutencao", RGBA(130, 130, 130, 1),
+                            !h, RGBA(130, 130, 130, 1),
+                            m < 30, RGBA(214, 40, 40, 1),
+                            m < 90, RGBA(243, 166, 30, 1),
+                            RGBA(46, 160, 67, 1)
+                        )
+                    )
+                  FontWeight: =FontWeight.Bold
+                  Height: =Parent.TemplateHeight
+                  Text: |
+                    =With(
+                        {h: !IsBlank(ThisItem.Hora_Parada)},
+                        If(
+                            ThisItem.Status = "Manutencao", "—",
+                            !h, "S/PLAN.",
+                            Text(ThisItem.Hora_Parada, "hh:mm dd/m")
+                        )
+                    )
+                  Width: =Parent.TemplateWidth * 0.12
+                  X: =Parent.TemplateWidth * 0.50
+            - celAcoes:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =RGBA(206, 22, 22, 1)
+                  FontWeight: =FontWeight.Bold
+                  Height: =Parent.TemplateHeight
+                  Size: =14
+                  Text: |
+                    =If(
+                        ThisItem.Status = "Manutencao", "MANUTENÇÃO",
+                        !IsBlank(ThisItem.Proxima_Mangueira),
+                            "PRÓXIMA " & ThisItem.Proxima_Mangueira & " — SOLDAR MANDRIL",
+                        "SOLDAR MANDRIL"
+                    )
+                  Width: =Parent.TemplateWidth * 0.38
+                  X: =Parent.TemplateWidth * 0.62
+      - Icon2:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            BorderColor: =RGBA(0, 18, 107, 1)
+            Color: =RGBA(0, 18, 107, 1)
+            Height: =56
+            Icon: =Icon.ArrowLeft
+            OnSelect: =Navigate(scr_mandril_1)
+            Width: =60
+            X: =51

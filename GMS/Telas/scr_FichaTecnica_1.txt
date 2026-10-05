@@ -1,0 +1,1208 @@
+Screens:
+  scr_FichaTecnica_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxAbaFT: "MANDRIL",
+            ctxMangFT: "",
+            ctxMandrilFT: "",
+            ctxBobinaFT: "",
+            ctxConstrFT: "",
+            ctxEngrFT: ""
+        });
+        Concurrent(
+            If(IsEmpty(colSpecMandrilFT), ClearCollect(colSpecMandrilFT, DM_MANDREL)),
+            If(IsEmpty(colSpecBobFT), ClearCollect(colSpecBobFT, DM_WIREWINDING)),
+            If(IsEmpty(colBobCodFT), ClearCollect(colBobCodFT, DM_LIST_BOBINAGEM)),
+            If(IsEmpty(colSpecTuboFT), ClearCollect(colSpecTuboFT, DM_TUBE_EXTRUSION)),
+            If(IsEmpty(colSpecTrancFT), ClearCollect(colSpecTrancFT, DM_TRANÇAGEM)),
+            If(IsEmpty(colSpecEngrFT), ClearCollect(colSpecEngrFT, DM_ENGRENAGENS)),
+            If(IsEmpty(colFiosFT), ClearCollect(colFiosFT, DM_FIOS)),
+            If(IsEmpty(colSpecCobFT), ClearCollect(colSpecCobFT, DM_EXTRUSAO_COBERTURA)),
+            If(IsEmpty(colSpecBandFT), ClearCollect(colSpecBandFT, DM_BANDAGEM)),
+            If(IsEmpty(colLaylineFT), ClearCollect(colLaylineFT, DM_LAYLINE)),
+            If(IsEmpty(colSpecTesteFT), ClearCollect(colSpecTesteFT, DM_EXTRA_TESTE_INSP)),
+            If(IsEmpty(colTesteInspFT), ClearCollect(colTesteInspFT, DM_TESTE_INSP)),
+            If(IsEmpty(colFitasFT), ClearCollect(colFitasFT, 'Imagens Fitas'))
+        )
+    Children:
+      - rct_FundoFT:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorFundo
+            Height: =768
+            Width: =1366
+      - rct_HeaderFT:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorHeader
+            Fill: =fx_CorHeader
+            Height: =84
+            Width: =1366
+      - ico_VoltarFT:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para a tela anterior"
+            Color: =fx_CorSuperficie
+            Height: =40
+            Icon: =Icon.BackArrow
+            OnSelect: =Navigate(Menu_1)
+            Tooltip: ="Voltar"
+            Width: =40
+            X: =16
+            Y: =22
+      - lbl_TituloFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FonteTitulo
+            Text: ="Delineamento"
+            Width: =300
+            X: =68
+            Y: =14
+      - lbl_SubFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =20
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Delineamento de engenharia · somente leitura"
+            Width: =420
+            X: =68
+            Y: =46
+      - lbl_RotMangFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =14
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =460
+            X: =520
+            Y: =14
+      - cmb_MangFT:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Mangueira do delineamento"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: |-
+              =Filter(
+                  Distinct(colSpecTuboFT, PARTNUMBER),
+                  Upper(Trim(Value)) = Upper(Trim(ctxMangFT))
+              )
+            DisplayFields: =["Value"]
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Digite para filtrar"
+            Items: =Distinct(colSpecTuboFT, PARTNUMBER)
+            OnChange: |-
+              =UpdateContext({
+                  ctxMangFT: Self.Selected.Value,
+                  ctxBobinaFT: "",
+                  ctxConstrFT: "",
+                  ctxEngrFT: ""
+              })
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Value"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =460
+            X: =520
+            Y: =32
+      - lbl_VersaoFT:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =18
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Versão 1.2.1"
+            Width: =240
+            X: =1040
+            Y: =52
+      - ico_LimparFT:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Limpar a consulta"
+            Color: =fx_CorRotulo
+            Height: =36
+            Icon: =Icon.Cancel
+            OnSelect: |-
+              =UpdateContext({
+                  ctxMangFT: "",
+                  ctxMandrilFT: "",
+                  ctxBobinaFT: "",
+                  ctxConstrFT: "",
+                  ctxEngrFT: ""
+              });
+              Reset(cmb_MangFT);
+              Reset(cmb_MandrilFT);
+              Reset(cmb_BobinaFT);
+              Reset(cmb_ConstrFT);
+              Reset(cmb_EngrFT)
+            Tooltip: ="Limpar consulta"
+            Width: =36
+            X: =1306
+            Y: =24
+      - gal_AbasFT:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =48
+            Items: |-
+              =Table(
+                  {id: "MANDRIL",   rot: "MANDRIL",          cor: fx_CorEtapaExtMandril},
+                  {id: "BOBINAGEM", rot: "BOBINAGEM",        cor: fx_CorEtapaSolda},
+                  {id: "TUBO",      rot: "TUBO",             cor: fx_CorEtapaTubo},
+                  {id: "TRANCAGEM", rot: "TRANÇAGEM",        cor: fx_CorEtapaTrancagem},
+                  {id: "COBERTURA", rot: "COBERTURA",        cor: fx_CorEtapaCobertura},
+                  {id: "BANDAGEM",  rot: "BANDAGEM/VULCA.",  cor: fx_CorEtapaBandagem},
+                  {id: "EXTRACAO",  rot: "EXTRAÇÃO/TESTE",   cor: fx_CorEtapaExtracao}
+              )
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =0
+            TemplateSize: =48
+            Width: =1318
+            WrapCount: =7
+            X: =24
+            Y: =92
+          Children:
+            - btn_AbaFT:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =If(ThisItem.id = ctxAbaFT, 1, 0)
+                  Color: =fx_CorTexto
+                  Fill: =If(ThisItem.id = ctxAbaFT, fx_CorSuperficie, fx_CorFundo)
+                  Font: =fx_FonteFamilia
+                  Height: =44
+                  HoverFill: =fx_CorSuperficie
+                  OnSelect: |-
+                    =UpdateContext({ctxAbaFT: ThisItem.id})
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: =""
+                  Width: =182
+                  X: =3
+            - lbl_AbaFT:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =If(ThisItem.id = ctxAbaFT, fx_CorTexto, fx_CorTextoSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =30
+                  OnSelect: =Select(btn_AbaFT)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: =ThisItem.rot
+                  Width: =182
+                  X: =3
+                  Y: =5
+            - rct_BarraAbaFT:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  Fill: =If(ThisItem.id = ctxAbaFT, ThisItem.cor, Color.Transparent)
+                  Height: =4
+                  Width: =182
+                  X: =3
+                  Y: =40
+      - lbl_RotSelFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =14
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =Switch(
+                  ctxAbaFT,
+                  "MANDRIL",   "CÓDIGO DO MANDRIL",
+                  "BOBINAGEM", "CÓDIGO DE BOBINAGEM",
+                  "TRANCAGEM", "CÓDIGO DE TRANÇAGEM",
+                  ""
+              )
+            Visible: =ctxAbaFT = "MANDRIL" || ctxAbaFT = "BOBINAGEM" || ctxAbaFT = "TRANCAGEM"
+            Width: =300
+            X: =24
+            Y: =146
+      - cmb_MandrilFT:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Código do mandril"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DisplayFields: =["Value"]
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Digite para filtrar"
+            Items: =Distinct(colSpecMandrilFT, _1MANDREL_PN)
+            OnChange: |-
+              =UpdateContext({ctxMandrilFT: Self.Selected.Value})
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Value"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Visible: =ctxAbaFT = "MANDRIL"
+            Width: =300
+            X: =24
+            Y: =164
+      - cmb_BobinaFT:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Código de bobinagem"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DisplayFields: =["Value"]
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Digite para filtrar"
+            Items: |-
+              =Distinct(
+                  Filter(
+                      colBobCodFT,
+                      Upper(Trim(Part_Number)) = Upper(Trim(ctxMangFT))
+                  ),
+                  Bobbin_Code
+              )
+            OnChange: |-
+              =UpdateContext({ctxBobinaFT: Self.Selected.Value})
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Value"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Visible: =ctxAbaFT = "BOBINAGEM"
+            Width: =300
+            X: =24
+            Y: =164
+      - cmb_ConstrFT:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Código de trançagem"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DisplayFields: =["Value"]
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Digite para filtrar"
+            Items: |-
+              =Distinct(
+                  Filter(
+                      colSpecTrancFT,
+                      Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxMangFT))
+                  ),
+                  _2BRD_CODE
+              )
+            OnChange: |-
+              =UpdateContext({ctxConstrFT: Self.Selected.Value, ctxEngrFT: ""});
+              Reset(cmb_EngrFT)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Value"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Visible: =ctxAbaFT = "TRANCAGEM"
+            Width: =300
+            X: =24
+            Y: =164
+      - lbl_RotEngrFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =14
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="MÁQUINA / JOGO DE ENGRENAGEM"
+            Visible: =ctxAbaFT = "TRANCAGEM"
+            Width: =300
+            X: =340
+            Y: =146
+      - cmb_EngrFT:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Máquina e jogo de engrenagem"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DisplayFields: =["Value"]
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Digite para filtrar"
+            Items: |-
+              =Distinct(
+                  Filter(
+                      colSpecEngrFT,
+                      fx_NormCodigo(_1CONSTRUCAO) = fx_NormCodigo(ctxConstrFT)
+                  ),
+                  _2BRD_CODE
+              )
+            OnChange: |-
+              =UpdateContext({ctxEngrFT: Self.Selected.Value})
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Value"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Visible: =ctxAbaFT = "TRANCAGEM"
+            Width: =300
+            X: =340
+            Y: =164
+      - lbl_TrilhaFT:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: ="Especificação de engenharia da mangueira " & fx_Ou(ctxMangFT)
+            Visible: =ctxAbaFT <> "MANDRIL" && ctxAbaFT <> "BOBINAGEM" && ctxAbaFT <> "TRANCAGEM"
+            Width: =620
+            X: =24
+            Y: =164
+      - lbl_AvisoFT:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorAlerta
+            Fill: =fx_CorAlertaSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaCampo
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =If(
+                  ctxAbaFT = "MANDRIL" && IsBlank(Trim(ctxMandrilFT)),
+                      "Escolha o código do mandril.",
+                  IsBlank(Trim(ctxMangFT)),
+                      "Escolha a mangueira para carregar o delineamento.",
+                  ctxAbaFT = "BOBINAGEM" && IsBlank(Trim(ctxBobinaFT)),
+                      "Escolha o código de bobinagem.",
+                  ctxAbaFT = "TRANCAGEM" && IsBlank(Trim(ctxConstrFT)),
+                      "Escolha o código de trançagem.",
+                  "Sem delineamento cadastrado para esta etapa. Confira o código ou chame a Engenharia."
+              )
+            Visible: |-
+              =If(
+                  ctxAbaFT = "MANDRIL",
+                      IsBlank(Trim(ctxMandrilFT)) ||
+                      IsBlank(LookUp(colSpecMandrilFT, _1MANDREL_PN = ctxMandrilFT)._1MANDREL_PN),
+                  IsBlank(Trim(ctxMangFT)),
+                      true,
+                  ctxAbaFT = "BOBINAGEM",
+                      IsBlank(Trim(ctxBobinaFT)),
+                  ctxAbaFT = "TRANCAGEM",
+                      IsBlank(Trim(ctxConstrFT)),
+                  ctxAbaFT = "TUBO",
+                      IsBlank(LookUp(colSpecTuboFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxMangFT))).PARTNUMBER),
+                  ctxAbaFT = "COBERTURA",
+                      IsBlank(LookUp(colSpecCobFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxMangFT))).PARTNUMBER),
+                  ctxAbaFT = "BANDAGEM",
+                      IsBlank(LookUp(colSpecBandFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxMangFT))).PARTNUMBER),
+                  ctxAbaFT = "EXTRACAO",
+                      IsBlank(LookUp(colSpecTesteFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxMangFT))).PARTNUMBER),
+                  false
+              )
+            Width: =682
+            X: =660
+            Y: =164
+      - gal_ConteudoFT:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =536
+            Items: |-
+              =With(
+                  { _m: Upper(Trim(ctxMangFT)) },
+                  Switch(
+                      ctxAbaFT,
+
+                      "MANDRIL",
+                      With(
+                          { _s: LookUp(colSpecMandrilFT, _1MANDREL_PN = ctxMandrilFT) },
+                          Table(
+                              {
+                                  sec: "MATERIAL E SECAGEM",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "MATERIAL",            val: Coalesce(Text(_s._5MATERIAL), "—")},
+                                      {rot: "CÓD. MATERIAL",       val: Coalesce(Text(_s._6MAT_SUP), "—")},
+                                      {rot: "LOTE PADRÃO (m)",     val: Coalesce(Text(_s._34REEL_QTT), "—")},
+                                      {rot: "BLEND (%)",           val: Coalesce(Text(_s._8BLEND), "—")},
+                                      {rot: "TEMPO SECAGEM (h)",   val: Coalesce(Text(_s._9DRY_TIME_h), "—")},
+                                      {rot: "TEMP. SECAGEM (°C)",  val: Coalesce(Text(_s._10DRY_TEMP_ºC), "—")},
+                                      {rot: "TEMP. FREEZER (°C)",  val: Coalesce(Text(_s._12FREEZER_TEMP_ºC), "—")},
+                                      {rot: "DESMOLDANTE",         val: Coalesce(Text(_s._35MANDREL_LUBE), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "FERRAMENTAL DE EXTRUSÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "MATRIZ",              val: Coalesce(Text(_s._15EXT_TOOL_DWG), "—")},
+                                      {rot: "SOPRADOR",            val: Coalesce(Text(_s._13AIR_WIPE), "—")},
+                                      {rot: "CONJUNTO DE FILTROS", val: Coalesce(Text(_s._20METAL_FILTER), "—")},
+                                      {rot: "PLACA DO TANQUE",     val: Coalesce(Text(_s._16SIZING_PLATE), "—")},
+                                      {rot: "DIST. DO TANQUE",     val: Coalesce(Text(_s._17DIE_TO_PLATE_DISTANCE), "—")},
+                                      {rot: "ALTURA DA FRENTE",    val: Coalesce(Text(_s._18TANK_HEIGHT_FRONT), "—")},
+                                      {rot: "ALTURA DE TRÁS",      val: Coalesce(Text(_s._19TANK_HEIGHT_REAR), "—")},
+                                      {rot: "",                    val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "ESPECIFICAÇÃO E VELOCIDADE",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø EXTERNO MÍN (pol.)",     val: Coalesce(Text(_s._2MIN_OD_in), "—")},
+                                      {rot: "Ø EXTERNO MÁX (pol.)",     val: Coalesce(Text(_s._4MAX_OD_in), "—")},
+                                      {rot: "EXT. VELOC. SET-UP (±10)", val: Coalesce(Text(_s._21EXTSETUP_SPEED_10), "—")},
+                                      {rot: "EXT. VELOC. PROD. (±50)",  val: Coalesce(Text(_s._22EXTPROD_SPEED_50), "—")},
+                                      {rot: "PUX. VELOC. SET-UP (±1)",  val: Coalesce(Text(_s._23CATSETUP_SPEED), "—")},
+                                      {rot: "PUX. VELOC. PROD. (±1)",   val: Coalesce(Text(_s._24CATPROD_SPEED_1), "—")},
+                                      {rot: "",                         val: ""},
+                                      {rot: "",                         val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "TEMPERATURA DAS ZONAS (°C ±10)",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "ZONA 1", val: Coalesce(Text(_s._25ZN1_TEMP_10ºC), "—")},
+                                      {rot: "ZONA 2", val: Coalesce(Text(_s._26ZN2_TEMP_10ºC), "—")},
+                                      {rot: "ZONA 3", val: Coalesce(Text(_s._27ZN3_TEMP_10ºC), "—")},
+                                      {rot: "ZONA 4", val: Coalesce(Text(_s._28ZN4_TEMP_10ºC), "—")},
+                                      {rot: "ZONA 5", val: Coalesce(Text(_s._29ZN5_TEMP_10ºC), "—")},
+                                      {rot: "",       val: ""},
+                                      {rot: "",       val: ""},
+                                      {rot: "",       val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "TEMPERATURA DE CABEÇOTE (°C)",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "HEAD 1 (±15)",    val: Coalesce(Text(_s._30HEAD1_TEMP_15ºC), "—")},
+                                      {rot: "HEAD 2 (±20)",    val: Coalesce(Text(_s._31HEAD2_TEMP_20ºC), "—")},
+                                      {rot: "HEAD 3 (±30)",    val: Coalesce(Text(_s._32HEAD3_TEMP_30ºC), "—")},
+                                      {rot: "MATERIAL (ref.)", val: Coalesce(Text(_s._33MT_TEMP_ºC_ref), "—")},
+                                      {rot: "",                val: ""},
+                                      {rot: "",                val: ""},
+                                      {rot: "",                val: ""},
+                                      {rot: "",                val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "SOLDA DE MANDRIL",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "MATRIZ",              val: Coalesce(Text(_s._38WELD_DIE), "—")},
+                                      {rot: "MÁQUINA",             val: Coalesce(Text(_s._37WELD_MACHINE), "—")},
+                                      {rot: "Ø INSP. MÍN (pol.)",  val: Coalesce(Text(_s._39INSP_MIN_OD_in), "—")},
+                                      {rot: "Ø INSP. MÁX (pol.)",  val: Coalesce(Text(_s._41INSP_MAX_OD_in), "—")},
+                                      {rot: "",                    val: ""},
+                                      {rot: "",                    val: ""},
+                                      {rot: "",                    val: ""},
+                                      {rot: "",                    val: ""}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "BOBINAGEM",
+                      With(
+                          { _s: LookUp(colSpecBobFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(ctxBobinaFT))) },
+                          Table(
+                              {
+                                  sec: "IDENTIFICAÇÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CONSTRUÇÃO",          val: Coalesce(Text(_s.HOSE), "—")},
+                                      {rot: "TRANÇADEIRA",         val: Coalesce(Text(_s.BRAID), "—")},
+                                      {rot: "CÓDIGO DO FIO",       val: Coalesce(Text(_s.WIRE_YARN_PN), "—")},
+                                      {rot: "BITOLA DO FIO (pol.)", val: Coalesce(Text(LookUp(colFiosFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(_s.WIRE_YARN_PN))).WGAGE_in), "—")},
+                                      {rot: "NÚMERO DE FIOS",      val: Coalesce(Text(_s.WIRES_YARN), "—")},
+                                      {rot: "",                    val: ""},
+                                      {rot: "",                    val: ""},
+                                      {rot: "",                    val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "ESPECIFICAÇÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "PESO DA CATENÁRIA (kg)",   val: Coalesce(Text(_s.CATENARY_kg), "—")},
+                                      {rot: "Ø CATENÁRIA (mm)",         val: Coalesce(Text(_s.CATENARYD_mm), "—")},
+                                      {rot: "COMPRIMENTO (m)",          val: Coalesce(Text(_s.LENGTH_m), "—")},
+                                      {rot: "Tensão de Bobinagem (kg)", val: Coalesce(Text(_s.Tensão_de_Bobinagem),"—")},
+                                      {rot: "",                         val: ""},
+                                      {rot: "",                         val: ""},
+                                      {rot: "",                         val: ""},
+                                      {rot: "",                         val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "FERRAMENTAL",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "ROLLER BEAK (pol.)",   val: Coalesce(Text(_s.RB_TOOL_in), "—")},
+                                      {rot: "BICO INFERIOR (pol.)", val: Coalesce(Text(_s.LB_TOOL_in), "—")},
+                                      {rot: "BICO SUPERIOR (pol.)", val: Coalesce(Text(_s.UB_TOOL_in), "—")},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "TUBO",
+                      With(
+                          { _s: LookUp(colSpecTuboFT, Upper(Trim(PARTNUMBER)) = _m) },
+                          Table(
+                              {
+                                  sec: "COMPOSTO E SET-UP",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "COMPOSTO",           val: Coalesce(Text(_s.TUBE_PN), "—")},
+                                      {rot: "MANDRIL",            val: Coalesce(Text(_s.MANDREL), "—")},
+                                      {rot: "LOTE PADRÃO (m)",    val: Coalesce(Text(_s.REEL_QTT), "—")},
+                                      {rot: "ANTIADERENTE",       val: Coalesce(Text(_s.LUBE_PROT), "—")},
+                                      {rot: "SET-UP (rpm)",       val: Coalesce(Text(_s.SETUP_RPM), "—")},
+                                      {rot: "PRODUÇÃO (rpm)",     val: Coalesce(Text(_s.PROD_RPM), "—")},
+                                      {rot: "VELOCIDADE (m/min)", val: Coalesce(Text(_s.SPEEDY_mpm), "—")},
+                                      {rot: "CARGA (%) ±10",      val: Coalesce(Text(_s.LOAD), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "ESPECIFICAÇÃO DO TUBO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø EXTERNO MÍN (pol.)",   val: Coalesce(Text(_s.MIN_OD), "—")},
+                                      {rot: "Ø EXTERNO MÉDIO (pol.)", val: Coalesce(Text(_s.MED_OD), "—")},
+                                      {rot: "Ø EXTERNO MÁX (pol.)",   val: Coalesce(Text(_s.MAX_OD), "—")},
+                                      {rot: "ESPESSURA (pol.)",       val: Coalesce(Text(_s.FIN_WALL), "—")},
+                                      {rot: "ESPESSURA MÍN (pol.)",   val: Coalesce(Text(_s.MIN_WTHICK), "—")},
+                                      {rot: "ESPESSURA MÁX (pol.)",   val: Coalesce(Text(_s.MAX_WTHICK), "—")},
+                                      {rot: "CONCENTRICIDADE (pol.)", val: Coalesce(Text(_s.CONC), "—")},
+                                      {rot: "PESO (kg/m)",            val: Coalesce(Text(_s.WEIGHT_kg_m), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "FERRAMENTAL",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "FIEIRA (pol.)",     val: Coalesce(Text(_s.EXT_PIN), "—")},
+                                      {rot: "FIEIRA MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_PIN), "—")},
+                                      {rot: "FIEIRA MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_PIN), "—")},
+                                      {rot: "FIEIRA (cód.)",     val: Coalesce(Text(_s.PIN_COD), "—")},
+                                      {rot: "MATRIZ (pol.)",     val: Coalesce(Text(_s.EXT_DIE), "—")},
+                                      {rot: "MATRIZ MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_DIE), "—")},
+                                      {rot: "MATRIZ MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_DIE), "—")},
+                                      {rot: "MATRIZ (cód.)",     val: Coalesce(Text(_s.DIE_COD), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "TEMPERATURAS (°C ±20)",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "FUSO",      val: Coalesce(Text(_s.TEMP_SCREW), "—")},
+                                      {rot: "ZONA 1",    val: Coalesce(Text(_s.TEMP_ZONE1), "—")},
+                                      {rot: "ZONA 2",    val: Coalesce(Text(_s.TEMP_ZONE2), "—")},
+                                      {rot: "ZONA 3",    val: Coalesce(Text(_s.TEMP_ZONE3), "—")},
+                                      {rot: "ZONA 4",    val: Coalesce(Text(_s.TEMP_ZONE4), "—")},
+                                      {rot: "CABEÇOTE",  val: Coalesce(Text(_s.TEMP_HEAD), "—")},
+                                      {rot: "MASSA",     val: Coalesce(Text(_s.TEMP_MASS), "—")},
+                                      {rot: "",          val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "PRESSÃO E VÁCUO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CAMISA (bar ±50)",   val: Coalesce(Text(_s.PRESSURE_BARREL), "—")},
+                                      {rot: "CABEÇOTE (bar ±50)", val: Coalesce(Text(_s.PRESSURE_HEAD), "—")},
+                                      {rot: "VÁCUO (kPa)",        val: Coalesce(Text(_s.VACUUM_KPA), "—")},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "TRANCAGEM",
+                      With(
+                          {
+                              _t: LookUp(
+                                  colSpecTrancFT,
+                                  Upper(Trim(PARTNUMBER)) = _m &&
+                                  fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(ctxConstrFT)
+                              ),
+                              _e: LookUp(
+                                  colSpecEngrFT,
+                                  fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(ctxEngrFT)
+                              )
+                          },
+                          Table(
+                              {
+                                  sec: "CONSTRUÇÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓDIGO DE TRANÇAGEM",     val: Coalesce(Text(_t._2BRD_CODE), "—")},
+                                      {rot: "TRANÇADEIRA PRINCIPAL",   val: Coalesce(Text(_t._1BRD_PRINC), "—")},
+                                      {rot: "TRANÇADEIRAS ALTERNAT.",  val: Coalesce(Text(_t._3BRD_DESCRIPTION), "—")},
+                                      {rot: "Nº DE CARRIERS",          val: Coalesce(Text(_t._5_CARRIERS), "—")},
+                                      {rot: "TENSÃO 1º DECK (ref.)",   val: Coalesce(Text(_t._9TENSION_1ST_kg), "—")},
+                                      {rot: "TENSÃO 2º DECK (ref.)",   val: Coalesce(Text(_t._29TENSION_2ST_kg), "—")},
+                                      {rot: "",                        val: ""},
+                                      {rot: "",                        val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "1ª TRAMA — Ø E PICKS",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø MÍN (pol.)",       val: Coalesce(Text(_t._12OD_1ST_MIN_in), "—")},
+                                      {rot: "Ø MÉDIO (pol.)",     val: Coalesce(Text(_t._13OD_1ST_MED_in), "—")},
+                                      {rot: "Ø MÁX (pol.)",       val: Coalesce(Text(_t._14OD_1ST_MAX_in), "—")},
+                                      {rot: "PICKS MÍN (5 pol.)", val: Coalesce(Text(_t._15PICKS_1ST_MIN_5), "—")},
+                                      {rot: "PICKS MÉD (5 pol.)", val: Coalesce(Text(_t._16PICKS_1ST_MED_5), "—")},
+                                      {rot: "PICKS MÁX (5 pol.)", val: Coalesce(Text(_t._17PICKS_1ST_MAX_5), "—")},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "1ª TRAMA — FIO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓDIGO DO FIO",        val: Coalesce(Text(_t._10WIRE_PN_1ST), "—")},
+                                      {rot: "BITOLA DO FIO (pol.)", val: Coalesce(Text(LookUp(colFiosFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(_t._10WIRE_PN_1ST))).WGAGE_in), "—")},
+                                      {rot: "Nº DE FIOS",           val: Coalesce(Text(_t._11WIRES_1ST), "—")},
+                                      {rot: "PESO (kg/m)",          val: Coalesce(Text(_t._48WEIGHT_1ST_kg_m), "—")},
+                                      {rot: "PASSO OMA 1º DECK",    val: Coalesce(Text(_t._8PITCH_1ST), "—")},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "2ª TRAMA — Ø E PICKS",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø MÍN (pol.)",       val: Coalesce(Text(_t._32OD_2ST_MIN_in), "—")},
+                                      {rot: "Ø MÉDIO (pol.)",     val: Coalesce(Text(_t._33OD_2ST_MED_in), "—")},
+                                      {rot: "Ø MÁX (pol.)",       val: Coalesce(Text(_t._34OD_2ST_MAX_in), "—")},
+                                      {rot: "PICKS MÍN (5 pol.)", val: Coalesce(Text(_t._35PICKS_2ST_MIN_5), "—")},
+                                      {rot: "PICKS MÉD (5 pol.)", val: Coalesce(Text(_t._36PICKS_2ST_MED_5), "—")},
+                                      {rot: "PICKS MÁX (5 pol.)", val: Coalesce(Text(_t._37PICKS_2ST_MAX_5), "—")},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "2ª TRAMA — FIO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓDIGO DO FIO",        val: Coalesce(Text(_t._30WIRE_PN_2ST), "—")},
+                                      {rot: "BITOLA DO FIO (pol.)", val: Coalesce(Text(LookUp(colFiosFT, Upper(Trim(PARTNUMBER)) = Upper(Trim(_t._30WIRE_PN_2ST))).WGAGE_in), "—")},
+                                      {rot: "Nº DE FIOS",           val: Coalesce(Text(_t._31_WIRES_2ST), "—")},
+                                      {rot: "PESO (kg/m)",          val: Coalesce(Text(_t._49WEIGHT_2ST_kg_m), "—")},
+                                      {rot: "PASSO OMA 2º DECK",    val: Coalesce(Text(_t._28PITCH_2ST), "—")},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "INSULATION",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓDIGO",                  val: Coalesce(Text(_t._45INSULATION_PN), "—")},
+                                      {rot: "ESPESSURA (±0,002 pol.)", val: Coalesce(Text(_t._46INS_THICKNESS_0_002in), "—")},
+                                      {rot: "LARGURA (±0,125 pol.)",   val: Coalesce(Text(_t._47INS_WIDTH_0_125in), "—")},
+                                      {rot: "PESO (kg/m)",             val: Coalesce(Text(_t._50WEIGHT_INS_kg_m), "—")},
+                                      {rot: "",                        val: ""},
+                                      {rot: "",                        val: ""},
+                                      {rot: "",                        val: ""},
+                                      {rot: "",                        val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "MÁQUINA E ENGRENAGEM",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "VEL. TEÓRICA (m/h)",     val: Coalesce(Text(_e._13TEORICA_M_H), "—")},
+                                      {rot: "ENGRENAGEM 1º DECK R/N", val: Coalesce(Text(_e._8DECK1), "—")},
+                                      {rot: "ENGRENAGEM 2º DECK R/N", val: Coalesce(Text(_e._10DECK2), "—")},
+                                      {rot: "PUXADOR",                val: Coalesce(Text(_e._7PUXADOR), "—")},
+                                      {rot: "",                       val: ""},
+                                      {rot: "",                       val: ""},
+                                      {rot: "",                       val: ""},
+                                      {rot: "",                       val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "OBSERVAÇÃO DO DELINEAMENTO",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Text(_t._51OBSERVACAO))}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "COBERTURA",
+                      With(
+                          {
+                              _s: LookUp(colSpecCobFT, Upper(Trim(PARTNUMBER)) = _m),
+                              _u: LookUp(colSpecTuboFT, Upper(Trim(PARTNUMBER)) = _m)
+                          },
+                          Table(
+                              {
+                                  sec: "COMPOSTO E SET-UP",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "COMPOSTO",           val: Coalesce(Text(_s.COVER_PN), "—")},
+                                      {rot: "ANTIADERENTE",       val: Coalesce(Text(_s.LUBE_PROT), "—")},
+                                      {rot: "LOTE PADRÃO (m)",    val: Coalesce(Text(_u.REEL_QTT), "—")},
+                                      {rot: "SET-UP (rpm)",       val: Coalesce(Text(_s.SETUP_RPM), "—")},
+                                      {rot: "PRODUÇÃO (rpm)",     val: Coalesce(Text(_s.PROD_RPM), "—")},
+                                      {rot: "VELOCIDADE (m/min)", val: Coalesce(Text(_s.SPEEDY_mpm), "—")},
+                                      {rot: "CARGA (%) ±10",      val: Coalesce(Text(_s.LOAD_10), "—")},
+                                      {rot: "",                   val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "ESPECIFICAÇÃO DA COBERTURA",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø EXTERNO MÍN (pol.)",   val: Coalesce(Text(_s.MIN_OD), "—")},
+                                      {rot: "Ø EXTERNO MÉDIO (pol.)", val: Coalesce(Text(_s.MED_OD), "—")},
+                                      {rot: "Ø EXTERNO MÁX (pol.)",   val: Coalesce(Text(_s.MAX_OD), "—")},
+                                      {rot: "ESPESSURA (pol.)",       val: Coalesce(Text(_s.FIN_WALL), "—")},
+                                      {rot: "ESPESSURA MÍN (pol.)",   val: Coalesce(Text(_s.MIN_WTHICK), "—")},
+                                      {rot: "ESPESSURA MÁX (pol.)",   val: Coalesce(Text(_s.MAX_WTHICK), "—")},
+                                      {rot: "CONCENTRICIDADE (pol.)", val: Coalesce(Text(_s.CONC), "—")},
+                                      {rot: "PESO (kg/m)",            val: Coalesce(Text(_s.WEIGHT_kg_m), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "FERRAMENTAL",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "FIEIRA (pol.)",     val: Coalesce(Text(_s.EXT_PIN), "—")},
+                                      {rot: "FIEIRA MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_PIN), "—")},
+                                      {rot: "FIEIRA MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_PIN), "—")},
+                                      {rot: "FIEIRA (cód.)",     val: Coalesce(Text(_s.PIN_COD), "—")},
+                                      {rot: "MATRIZ (pol.)",     val: Coalesce(Text(_s.EXT_DIE), "—")},
+                                      {rot: "MATRIZ MÍN (pol.)", val: Coalesce(Text(_s.MIN_EXT_DIE), "—")},
+                                      {rot: "MATRIZ MÁX (pol.)", val: Coalesce(Text(_s.MAX_EXT_DIE), "—")},
+                                      {rot: "MATRIZ (cód.)",     val: Coalesce(Text(_s.DIE_COD), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "TEMPERATURAS (°C ±20)",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "FUSO",     val: Coalesce(Text(_s.TEMP_SCREW), "—")},
+                                      {rot: "ZONA 1",   val: Coalesce(Text(_s.TEMP_ZONE1), "—")},
+                                      {rot: "ZONA 2",   val: Coalesce(Text(_s.TEMP_ZONE2), "—")},
+                                      {rot: "ZONA 3",   val: Coalesce(Text(_s.TEMP_ZONE3), "—")},
+                                      {rot: "ZONA 4",   val: Coalesce(Text(_s.TEMP_ZONE4), "—")},
+                                      {rot: "CABEÇOTE", val: Coalesce(Text(_s.TEMP_HEAD), "—")},
+                                      {rot: "MASSA",    val: Coalesce(Text(_s.TEMP_MASS), "—")},
+                                      {rot: "",         val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "PRESSÃO E VÁCUO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CAMISA (bar ±50)",   val: Coalesce(Text(_s.PRESSURE_BARREL_50), "—")},
+                                      {rot: "CABEÇOTE (bar ±50)", val: Coalesce(Text(_s.PRESSURE_HEAD_50), "—")},
+                                      {rot: "VÁCUO (kPa ±20)",    val: Coalesce(Text(_s.VACUUM_KPA_20), "—")},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""},
+                                      {rot: "",                   val: ""}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "BANDAGEM",
+                      With(
+                          {
+                              _s: LookUp(colSpecBandFT, Upper(Trim(PARTNUMBER)) = _m),
+                              _l: LookUp(colLaylineFT, Upper(Trim(PARTNUMBER)) = _m)
+                          },
+                          Table(
+                              {
+                                  sec: "BANDAGEM — FITA E MÁQUINA",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓD. FITA BANDAGEM",   val: Coalesce(Text(_s.PN_BANDAGEM), "—")},
+                                      {rot: "LARGURA DA FITA (pol.)", val: Coalesce(Text(_s.'LARGURA DA FITA DE BAND.'), "—")},
+                                      {rot: "PASSO",                val: Coalesce(Trim(Substitute(Substitute(Text(_s.Passo), Char(10), " "), Char(13), " ")), "—")},
+                                      {rot: "TENSÃO DA BANDAGEM",   val: Coalesce(Text(_s.'Tensão bandagem'), "—")},
+                                      {rot: "VELOCIDADE",           val: Coalesce(Text(_s.'Velocidade bandagem'), "—")},
+                                      {rot: "Nº CONE DE BORRACHA",  val: Coalesce(Text(_s.'Nº cone de borracha'), "—")},
+                                      {rot: "Nº DO BICO GUIA",      val: Coalesce(Text(_s.'Número do bico guia'), "—")},
+                                      {rot: "Nº DO GUIA DA FITA",   val: Coalesce(Text(_s.'Numero do guia da fita'), "—")}
+                                  )
+                              },
+                              {
+                                  sec: "MARCAÇÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "AUTO-RELEVO",            val: If(Upper(Trim(Text(_s.EMBOSSED))) = "SIM", "SIM", "NÃO")},
+                                      {rot: "TENSÃO FITA ALTO-RELEVO", val: Coalesce(Text(_s.'Tensão fita alto-relevo'), "—")},
+                                      {rot: "INKJET",                 val: If(Upper(Trim(Text(_s.INKJET))) = "SIM", "SIM", "NÃO")},
+                                      {rot: "MARCAÇÃO INKJET",        val: Coalesce(Text(_s.'Marcação inkjet'), "—")},
+                                      {rot: "CÓD. FITA MATCH-MATE",   val: Coalesce(Text(_s.'Código fita match-mate'), "—")},
+                                      {rot: "TENSÃO FITA MATCH-MATE", val: Coalesce(Text(_s.'Tensão fita matchmate'), "—")},
+                                      {rot: "",                       val: ""},
+                                      {rot: "",                       val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "FILME BRUISER",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "CÓDIGO DO FILME", val: Coalesce(Text(_s.'Código film bruiser'), "—")},
+                                      {rot: "ESPESSURA",       val: Coalesce(Text(_s.'Espessura do filme'), "—")},
+                                      {rot: "LARGURA",         val: Coalesce(Text(_s.'Largura do Filme'), "—")},
+                                      {rot: "TENSÃO",          val: Coalesce(Text(_s.Tensão_Bruiser), "—")},
+                                      {rot: "SG",              val: Coalesce(Text(_s.SG), "—")},
+                                      {rot: "",                val: ""},
+                                      {rot: "",                val: ""},
+                                      {rot: "",                val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "FITA MATCH-MATE",
+                                  tipo: "imagem",
+                                  campos: Table(
+                                      {rot: "", val: Text(_s.'Código fita match-mate')}
+                                  )
+                              },
+                              {
+                                  sec: "VULCANIZAÇÃO",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "TEMPO",       val: Coalesce(Text(_s.Tempo), "—")},
+                                      {rot: "TEMPERATURA", val: Coalesce(Text(_s.Temperatura), "—")},
+                                      {rot: "",            val: ""},
+                                      {rot: "",            val: ""},
+                                      {rot: "",            val: ""},
+                                      {rot: "",            val: ""},
+                                      {rot: "",            val: ""},
+                                      {rot: "",            val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "OBSERVAÇÃO DO DELINEAMENTO",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Substitute(Substitute(Text(_s.Observação), Char(10), " "), Char(13), " "))}
+                                  )
+                              },
+                              {
+                                  sec: "LAYLINE — AUTO-RELEVO",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Text(_l.EMB_DESC))}
+                                  )
+                              },
+                              {
+                                  sec: "LAYLINE — INKJET",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Text(_l.INKJ_DESC))}
+                                  )
+                              }
+                          )
+                      ),
+
+                      "EXTRACAO",
+                      With(
+                          {
+                              _s: LookUp(colSpecTesteFT, Upper(Trim(PARTNUMBER)) = _m),
+                              _i: LookUp(colTesteInspFT, Upper(Trim(PARTNUMBER)) = _m),
+                              _l: LookUp(colLaylineFT, Upper(Trim(PARTNUMBER)) = _m)
+                          },
+                          Table(
+                              {
+                                  sec: "TESTE",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "PRODUTO DE SEGURANÇA", val: If(Upper(Trim(Text(_i.SAFETY_PRODUCT))) = "SIM", "SIM", "NÃO")},
+                                      {rot: "CARRETEL",             val: Coalesce(Text(_s.REEL_SIZE), "—")},
+                                      {rot: "HIDROSTÁTICO (psi)",   val: Coalesce(Text(_s.TEST_PRESSURE_psi), "—")},
+                                      {rot: "HIDROSTÁTICO (bar)",   val: Coalesce(Text(_s.TEST_PRESSURE_bar), "—")},
+                                      {rot: "PNEUMÁTICO (ref.)",    val: Coalesce(Text(_s.AUW_TEST), "—")},
+                                      {rot: "COMP. LANCE (m) ref.", val: Coalesce(Text(_s.COMP_LANCE_50m), "—")},
+                                      {rot: "",                     val: ""},
+                                      {rot: "",                     val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "ESPECIFICAÇÃO FINAL",
+                                  tipo: "cards",
+                                  campos: Table(
+                                      {rot: "Ø EXTERNO MÍN (pol.)",   val: Coalesce(Text(_s.MIN_FINAL_OD_in), "—")},
+                                      {rot: "Ø EXTERNO MÁX (pol.)",   val: Coalesce(Text(_s.MAX_FINAL_OD_in), "—")},
+                                      {rot: "Ø INTERNO MÍN (pol.)",   val: Coalesce(Text(_s.MIN_FINAL_ID_in), "—")},
+                                      {rot: "Ø INTERNO MÁX (pol.)",   val: Coalesce(Text(_s.MAX_FINAL_ID_in), "—")},
+                                      {rot: "CONCENTRICIDADE (pol.)", val: Coalesce(Text(_s.ID_TO_OD_CONC_in), "—")},
+                                      {rot: "PESO (kg/m)",            val: Coalesce(Text(_s.FINAL_WEIGTH_kg_m), "—")},
+                                      {rot: "",                       val: ""},
+                                      {rot: "",                       val: ""}
+                                  )
+                              },
+                              {
+                                  sec: "LAYLINE — AUTO-RELEVO",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Text(_l.EMB_DESC))}
+                                  )
+                              },
+                              {
+                                  sec: "LAYLINE — INKJET",
+                                  tipo: "texto",
+                                  campos: Table(
+                                      {rot: "", val: fx_Ou(Text(_l.INKJ_DESC))}
+                                  )
+                              }
+                          )
+                      ),
+
+                      Table(
+                          {
+                              sec: "",
+                              tipo: "cards",
+                              campos: Table({rot: "", val: ""})
+                          }
+                      )
+                  )
+              )
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =0
+            TemplateSize: =126
+            Width: =1318
+            X: =24
+            Y: =216
+          Children:
+            - lbl_SecFT:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =20
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.sec
+                  Width: =900
+                  X: =4
+                  Y: =4
+            - rct_LinhaSecFT:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =fx_CorBorda
+                  Height: =1
+                  Width: =1304
+                  X: =4
+                  Y: =26
+            - btn_FundoTextoFT:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =86
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Visible: =ThisItem.tipo <> "cards"
+                  Width: =1304
+                  X: =4
+                  Y: =32
+            - lbl_TextoFT:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  Height: =74
+                  PaddingLeft: =0
+                  Size: =fx_FonteCorpo
+                  Text: =First(ThisItem.campos).val
+                  Visible: =ThisItem.tipo = "texto"
+                  Width: =1272
+                  X: =20
+                  Y: =38
+            - img_FitaFT:
+                Control: Image@2.2.3
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Height: =74
+                  Image: |-
+                    =LookUp(
+                        colFitasFT,
+                        Upper(Trim(Name)) = Upper(Trim(First(ThisItem.campos).val)),
+                        Thumbnail.Large
+                    )
+                  Visible: =ThisItem.tipo = "imagem"
+                  Width: =1272
+                  X: =20
+                  Y: =38
+            - gal_CamposFT:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =90
+                  Items: =ThisItem.campos
+                  ShowScrollbar: =false
+                  TemplateFill: =Color.Transparent
+                  TemplatePadding: =0
+                  TemplateSize: =90
+                  Visible: =ThisItem.tipo = "cards"
+                  Width: =1312
+                  WrapCount: =8
+                  X: =2
+                  Y: =30
+                Children:
+                  - btn_CardFT:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        BorderColor: =fx_CorBorda
+                        BorderThickness: =1
+                        Color: =fx_CorTexto
+                        DisplayMode: =DisplayMode.View
+                        Fill: =fx_CorSuperficie
+                        Font: =fx_FonteFamilia
+                        Height: =84
+                        HoverFill: =fx_CorSuperficie
+                        PressedFill: =fx_CorSuperficie
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Text: =""
+                        Visible: =!IsBlank(ThisItem.rot)
+                        Width: =158
+                        X: =3
+                        Y: =2
+                  - lbl_RotCampoFT:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =fx_CorRotulo
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Semibold
+                        Height: =34
+                        PaddingLeft: =0
+                        Size: =fx_FonteApoio
+                        Text: =ThisItem.rot
+                        Tooltip: =ThisItem.rot
+                        Visible: =!IsBlank(ThisItem.rot)
+                        Width: =142
+                        X: =11
+                        Y: =2
+                  - lbl_ValCampoFT:
+                      Control: Label@2.5.1
+                      Properties:
+                        Color: =If(ThisItem.val = "—", fx_CorRotulo, fx_CorTexto)
+                        Font: =fx_FonteFamilia
+                        FontWeight: =FontWeight.Bold
+                        Height: =44
+                        PaddingLeft: =0
+                        Size: |-
+                          =If(
+                              Len(ThisItem.val) <= 12, fx_FonteDestaque,
+                              Len(ThisItem.val) <= 20, fx_FonteCorpo,
+                              fx_FonteApoio
+                          )
+                        Text: =ThisItem.val
+                        Tooltip: =ThisItem.val
+                        Visible: =!IsBlank(ThisItem.rot)
+                        Width: =142
+                        X: =11
+                        Y: =36
