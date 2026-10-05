@@ -1,17 +1,21 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.2 · 2026-09-30
-//  Arquivo ÚNICO. CONSOLIDAÇÃO: base = export do Studio de 30/09 (cabeçalho ainda
-//  dizia vfonte de dados, e só com filtro delegável.
+//  GMS · App.Formulas · v3.0.5 · 2026-10-05
+//  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
+//  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
+//  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
+//  o que o próprio arquivo comprova. Histórico completo de versões: linhas [vX.Y] abaixo
+//  e GMS_Diario.md.
 //  5. Todo nome começa com fx_.
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
-//   · Nenhuma assinatura existente m2.8, conteúdo já era v2.8 + §14 do Painel colada por cima).
+//   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
+//     3º turno às 22:41, §4 e §11).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
 //  2. O que depende de tempo é UDF que RECEBE o instante: fx_X(agora: DateTime).
 //  3. O que depende da tela é UDF que RECEBE o dado. UDF não lê fonte nem variável.
-//  4. Só a §10 toca uda. Nada foi removido.
+//  4. Só a §10 toca fonte de dados. (Exceção conhecida: fx_VelocidadeTeorica, §11 — Auditoria 00.)
 //   · Arrumação sem efeito: fx_DetFechaSeg (Painel v0.9.0) saiu do topo do arquivo
 //     e foi para a §14; o cabeçalho do PATCH v2.9 colado no meio do arquivo saiu;
 //     fx_CabinesTeste (Painel v0.8.0) ganhou comentário. Named Formula não depende
@@ -105,7 +109,12 @@ fx_BalizaTam     = 32;
 
 
 //  §4 · TEMPO  ════════════════════════════════════════════════════════
-//  T1 320 (05:20) → 836 · T2 837 (13:57) → 1360 · T3 o resto.
+//  T1 320 (05:20) → 836 · T2 837 (13:57) → 1360 · T3 1361 (22:41) → 319.
+//  [v3.0.5] fx_InicioTurnoMin(3) e a fx_GradeHoraHora ainda marcavam o 3º turno às 22:20
+//  (1340) enquanto fx_Turno e o BI (dTurno) o iniciavam às 22:41 (1361). Entre 22:20 e 22:40
+//  o Patch gravava Turno = 2 e o Hora-Hora já tratava como 3º. Decisão William, 05/10/2026:
+//  22:41. Os comentários antigos abaixo (563 min, "hora extra até 23:20") descrevem a régua
+//  anterior; os totais valem agora 2º turno 524 min e 3º turno 399 min.
 //
 //  [v2.6] A fronteira do 2º turno era 828 aqui e 827 no fx_InicioTurnoMin,
 //  enquanto a fx_GradeHoraHora terminava o 1º turno às 13:57. Os 10 minutos
@@ -555,7 +564,8 @@ fx_SemaforoTranc(rodando: Boolean, qtd: Number): Color =
 
 //  §11 · HORA-HORA (C13 · MEL-100)  ═══════════════════════════════════
 //  A JANELA HORÁRIA NÃO É UMA HORA. Ela vale o que dura:
-//  1º turno 05:20→13:57 = 517 min · 2º 13:57→23:20 = 563 · 3º 22:20→05:20 = 420.
+//  1º turno 05:20→13:57 = 517 min · 2º 13:57→22:41 = 524 · 3º 22:41→05:20 = 399 (v3.0.5;
+//  antes: 563 e 420, com o 3º turno às 22:20).
 //  Meta da linha = velocidade (m/h) × minutos da janela ÷ 60 — nunca o MFG cheio.
 //  Evidência (export 'Hora-Hora' 11/01→03/09/2026, 24.316 linhas de trançagem):
 //  em 100% dos pares conferidos a janela curta recebeu a MESMA meta da janela
@@ -599,16 +609,18 @@ fx_GradeHoraHora =
         {Turno: 2, Ord:  6, Hora: "19:00 - 20:00", Rotulo: "19:00 - 20:00",              Minutos: 60, Fim: 363},
         {Turno: 2, Ord:  7, Hora: "20:00 - 21:00", Rotulo: "20:00 - 21:00",              Minutos: 60, Fim: 423},
         {Turno: 2, Ord:  8, Hora: "21:00 - 22:00", Rotulo: "21:00 - 22:00",              Minutos: 60, Fim: 483},
-        {Turno: 2, Ord:  9, Hora: "22:00 - 22:20", Rotulo: "22:00 - 22:20",              Minutos: 20, Fim: 503},
+        // [v3.0.5] O 3º turno começa 22:41 (William, 05/10), não 22:20. As janelas de fronteira
+        // mantêm a CHAVE Hora de sempre (histórico na lista e no BI); só Rotulo, Minutos e Fim mudam.
+        {Turno: 2, Ord:  9, Hora: "22:00 - 22:20", Rotulo: "22:00 - 22:41",              Minutos: 41, Fim: 524},
 
-        {Turno: 3, Ord: 1, Hora: "22:20 - 23:00", Rotulo: "22:20 - 23:00", Minutos: 40, Fim:  40},
-        {Turno: 3, Ord: 2, Hora: "23:00 - 00:00", Rotulo: "23:00 - 00:00", Minutos: 60, Fim: 100},
-        {Turno: 3, Ord: 3, Hora: "00:00 - 01:00", Rotulo: "00:00 - 01:00", Minutos: 60, Fim: 160},
-        {Turno: 3, Ord: 4, Hora: "01:00 - 02:00", Rotulo: "01:00 - 02:00", Minutos: 60, Fim: 220},
-        {Turno: 3, Ord: 5, Hora: "02:00 - 03:00", Rotulo: "02:00 - 03:00", Minutos: 60, Fim: 280},
-        {Turno: 3, Ord: 6, Hora: "03:00 - 04:00", Rotulo: "03:00 - 04:00", Minutos: 60, Fim: 340},
-        {Turno: 3, Ord: 7, Hora: "04:00 - 05:00", Rotulo: "04:00 - 05:00", Minutos: 60, Fim: 400},
-        {Turno: 3, Ord: 8, Hora: "05:00 - 05:20", Rotulo: "05:00 - 05:20", Minutos: 20, Fim: 420}
+        {Turno: 3, Ord: 1, Hora: "22:20 - 23:00", Rotulo: "22:41 - 23:00", Minutos: 19, Fim:  19},
+        {Turno: 3, Ord: 2, Hora: "23:00 - 00:00", Rotulo: "23:00 - 00:00", Minutos: 60, Fim:  79},
+        {Turno: 3, Ord: 3, Hora: "00:00 - 01:00", Rotulo: "00:00 - 01:00", Minutos: 60, Fim: 139},
+        {Turno: 3, Ord: 4, Hora: "01:00 - 02:00", Rotulo: "01:00 - 02:00", Minutos: 60, Fim: 199},
+        {Turno: 3, Ord: 5, Hora: "02:00 - 03:00", Rotulo: "02:00 - 03:00", Minutos: 60, Fim: 259},
+        {Turno: 3, Ord: 6, Hora: "03:00 - 04:00", Rotulo: "03:00 - 04:00", Minutos: 60, Fim: 319},
+        {Turno: 3, Ord: 7, Hora: "04:00 - 05:00", Rotulo: "04:00 - 05:00", Minutos: 60, Fim: 379},
+        {Turno: 3, Ord: 8, Hora: "05:00 - 05:20", Rotulo: "05:00 - 05:20", Minutos: 20, Fim: 399}
     );
 
 // Motivos de parada — lista fechada, um lugar só. Antes existiam duas cópias de 25
@@ -663,10 +675,10 @@ fx_CelulasTrancagem =
 fx_TurnoNum(rotulo: Text): Number =
     Switch(Left(Trim(rotulo), 1), "1", 1, "2", 2, "3", 3, 0);
 
-// Minuto do dia em que cada turno começa: 05:20 · 13:57 · 22:20.
+// Minuto do dia em que cada turno começa: 05:20 · 13:57 · 22:41 (William, 05/10/2026).
 // Tem que fechar com o fx_Turno (§4) e com a dTurno do BI (Mestre BI §2.3).
 fx_InicioTurnoMin(turno: Number): Number =
-    Switch(turno, 1, 320, 2, 837, 3, 1340, 0);
+    Switch(turno, 1, 320, 2, 837, 3, 1361, 0);
 
 // Minutos decorridos desde o início do turno. Mod resolve a virada de meia-noite
 // do 3º turno sem comparar data com número (B §3.3).
