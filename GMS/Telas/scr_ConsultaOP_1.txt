@@ -4,8 +4,16 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({ctxAbaCOP: 1});
-        ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas)
+        =UpdateContext({ctxAbaCOP: 1, ctxBuscaCOP: ""});
+        If(
+            IsEmpty(colRecentesCOP),
+            Collect(colRecentesCOP, {OP: 0, Mangueira: "", Quando: Now()});
+            Clear(colRecentesCOP)
+        );
+        IfError(
+            ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+            Notify("Não consegui ler a lista de OPs. Toque em atualizar.", NotificationType.Error, 8000)
+        )
     Children:
       - rct_HeaderCOP:
           Control: Rectangle@2.3.0
@@ -58,7 +66,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.3.1"
             Width: =180
             X: =1090
             Y: =21
@@ -70,12 +78,10 @@ Screens:
             Height: =56
             Icon: =Icon.Reload
             OnSelect: |-
-              =If(
-                  IsBlank(Trim(txt_BuscaCOP.Text)),
+              =Refresh(ficha_producao);
+              IfError(
                   ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
-                  IsNumeric(Trim(txt_BuscaCOP.Text)),
-                  ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(Trim(txt_BuscaCOP.Text)))),
-                  ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, Trim(txt_BuscaCOP.Text))))
+                  Notify("Não consegui ler a lista de OPs. Tente de novo.", NotificationType.Error, 8000)
               )
             Tooltip: ="Recarregar"
             Width: =56
@@ -114,19 +120,20 @@ Screens:
             AccessibleLabel: ="Número da OP ou início do código da mangueira"
             BorderColor: =fx_CorBorda
             Color: =fx_CorTexto
-            Default: =""
+            Default: =ctxBuscaCOP
             DelayOutput: =true
             Font: =fx_FonteFamilia
             Height: =fx_AlturaCampo
             HintText: ="Nº da OP ou início da mangueira"
             HoverFill: =fx_CorInfoSuave
             OnChange: |-
-              =If(
-                  IsBlank(Trim(Self.Text)),
-                  ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
-                  IsNumeric(Trim(Self.Text)),
-                  ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(Trim(Self.Text)))),
-                  ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, Trim(Self.Text))))
+              =With(
+                  { _r: If(IsNumeric(Trim(Self.Text)), LookUp(ficha_producao, OP = Value(Trim(Self.Text)))) },
+                  If(
+                      !IsBlank(_r.OP),
+                      RemoveIf(colRecentesCOP, OP = _r.OP);
+                      Collect(colRecentesCOP, {OP: _r.OP, Mangueira: Text(_r.Mangueira), Quando: Now()})
+                  )
               )
             PaddingLeft: =10
             RadiusBottomLeft: =fx_RaioS
@@ -145,12 +152,125 @@ Screens:
             Height: =fx_AlturaCampo
             Icon: =Icon.Cancel
             OnSelect: |-
-              =Reset(txt_BuscaCOP);
-              ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas)
+              =UpdateContext({ctxBuscaCOP: ""});
+              Reset(txt_BuscaCOP)
             Tooltip: ="Limpar busca"
             Width: =44
             X: =260
             Y: =106
+      - lbl_RotRecentesCOP:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="RECENTES"
+            Visible: =CountRows(colRecentesCOP) > 0
+            Width: =288
+            X: =16
+            Y: =158
+      - btn_Recente1COP:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            HoverFill: =fx_CorSuperficie
+            OnSelect: |-
+              =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0")});
+              Reset(txt_BuscaCOP)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0")
+            Visible: =CountRows(colRecentesCOP) >= 1
+            Width: =66
+            X: =16
+            Y: =178
+      - btn_Recente2COP:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            HoverFill: =fx_CorSuperficie
+            OnSelect: |-
+              =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP, "0")});
+              Reset(txt_BuscaCOP)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP, "0")
+            Visible: =CountRows(colRecentesCOP) >= 2
+            Width: =66
+            X: =90
+            Y: =178
+      - btn_Recente3COP:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            HoverFill: =fx_CorSuperficie
+            OnSelect: |-
+              =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP, "0")});
+              Reset(txt_BuscaCOP)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP, "0")
+            Visible: =CountRows(colRecentesCOP) >= 3
+            Width: =66
+            X: =164
+            Y: =178
+      - btn_Recente4COP:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorInfo
+            Fill: =fx_CorInfoSuave
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            HoverFill: =fx_CorSuperficie
+            OnSelect: |-
+              =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP, "0")});
+              Reset(txt_BuscaCOP)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP, "0")
+            Visible: =CountRows(colRecentesCOP) >= 4
+            Width: =66
+            X: =238
+            Y: =178
       - lbl_ContagemCOP:
           Control: Label@2.5.1
           Properties:
@@ -161,12 +281,12 @@ Screens:
             Text: |-
               =If(
                   IsBlank(Trim(txt_BuscaCOP.Text)),
-                  CountRows(colConsultaOP) & " OPs em andamento",
-                  CountRows(colConsultaOP) & " OPs encontradas"
+                  CountRows(gal_FilaCOP.AllItems) & " OPs em andamento",
+                  CountRows(gal_FilaCOP.AllItems) & " OPs encontradas"
               )
             Width: =288
             X: =16
-            Y: =158
+            Y: =If(CountRows(colRecentesCOP) > 0, 216, 158)
       - lbl_VazioBuscaCOP:
           Control: Label@2.5.1
           Properties:
@@ -176,20 +296,43 @@ Screens:
             Height: =80
             Size: =fx_FonteCorpo
             Text: ="Nenhuma OP encontrada. Confira o número ou digite o início do código da mangueira."
-            Visible: =IsEmpty(colConsultaOP)
+            Visible: =IsEmpty(gal_FilaCOP.AllItems)
             Width: =288
             X: =16
-            Y: =220
+            Y: =If(CountRows(colRecentesCOP) > 0, 280, 220)
       - gal_FilaCOP:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
             Fill: =Color.Transparent
-            Height: =584
-            Items: =Sort(colConsultaOP, OP, SortOrder.Descending)
+            Height: =768 - Self.Y
+            Items: |-
+              =Sort(
+                  With(
+                      { _q: Trim(txt_BuscaCOP.Text) },
+                      If(
+                          IsBlank(_q),
+                          colConsultaOP,
+                          IsNumeric(_q),
+                          Filter(ficha_producao, OP = Value(_q)),
+                          Filter(ficha_producao, StartsWith(Mangueira, _q))
+                      )
+                  ),
+                  OP,
+                  SortOrder.Descending
+              )
+            OnSelect: |-
+              =With(
+                  { _r: gal_FilaCOP.Selected },
+                  If(
+                      !IsBlank(_r.OP),
+                      RemoveIf(colRecentesCOP, OP = _r.OP);
+                      Collect(colRecentesCOP, {OP: _r.OP, Mangueira: Text(_r.Mangueira), Quando: Now()})
+                  )
+              )
             TemplateSize: =76
             Width: =320
-            Y: =184
+            Y: =If(CountRows(colRecentesCOP) > 0, 240, 184)
           Children:
             - rct_ItemCOP:
                 Control: Rectangle@2.3.0
@@ -198,6 +341,7 @@ Screens:
                   BorderThickness: =If(ThisItem.IsSelected, 2, 1)
                   Fill: =If(ThisItem.IsSelected, fx_CorInfoSuave, fx_CorSuperficie)
                   Height: =72
+                  OnSelect: =Select(Parent)
                   Width: =296
                   X: =12
                   Y: =2
@@ -208,6 +352,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =24
+                  OnSelect: =Select(Parent)
                   Size: =fx_FonteDestaque
                   Text: ="OP " & Text(ThisItem.OP)
                   Width: =170
@@ -254,6 +399,7 @@ Screens:
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
                   Height: =18
+                  OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
                   Text: =fx_Ou(Text(ThisItem.Mangueira))
                   Width: =274
@@ -265,6 +411,7 @@ Screens:
                   Color: =fx_CorRotulo
                   Font: =fx_FonteFamilia
                   Height: =18
+                  OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
                   Text: |-
                     ="Etapa: " & fx_Ou(Text(ThisItem.processo)) &
@@ -560,7 +707,7 @@ Screens:
                   Height: =20
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_mandril)) &
+                    ="Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_mandril) &
                     "   ·   Código " & fx_Ou(Text(gal_FilaCOP.Selected.cod_mandril))
                   Width: =470
                   X: =30
@@ -647,7 +794,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_tubo)) &
+                    ="Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_tubo) &
                     "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_tubo))
                   Width: =470
                   X: =544
@@ -722,7 +869,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_trancagem)) &
+                    ="Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_trancagem) &
                     "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_trancagem))
                   Width: =470
                   X: =30
@@ -796,7 +943,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_cobertura)) &
+                    ="Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_cobertura) &
                     "   ·   Refugo " & fx_Ou(Text(gal_FilaCOP.Selected.defeito_cobertura))
                   Width: =470
                   X: =544
@@ -833,7 +980,7 @@ Screens:
                   Text: |-
                     ="Bandagem — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Bandagem)) &
                     "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_bandagem)) &
-                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_bandagem))
+                    "   ·   Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_bandagem)
                   Width: =980
                   X: =30
                   Y: =372
@@ -847,7 +994,7 @@ Screens:
                   Text: |-
                     ="Vulcanização — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Vulcanização)) &
                     "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_vulcanizacao)) &
-                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_vulcanizacao))
+                    "   ·   Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_vulcanizacao)
                   Width: =980
                   X: =30
                   Y: =394
@@ -861,7 +1008,7 @@ Screens:
                   Text: |-
                     ="Debandagem — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.Turno_Debandagem)) &
                     "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_debandagem)) &
-                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_debandagem))
+                    "   ·   Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_debandagem)
                   Width: =980
                   X: =30
                   Y: =416
@@ -876,7 +1023,7 @@ Screens:
                   Text: |-
                     ="Extração / Teste — Turno " & fx_Ou(Text(gal_FilaCOP.Selected.'Turno_Extr/Teste')) &
                     "   ·   Operador " & fx_Ou(Text(gal_FilaCOP.Selected.operador_extracao)) &
-                    "   ·   Quantidade " & fx_Ou(Text(gal_FilaCOP.Selected.quantidade_extracao))
+                    "   ·   Quantidade " & fx_MetrosUn(gal_FilaCOP.Selected.quantidade_extracao)
                   Width: =980
                   X: =30
                   Y: =442
@@ -1076,7 +1223,7 @@ Screens:
                         Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Size: =fx_FonteApoio
-                        Text: =fx_Ou(Text(ThisItem.Quantidade))
+                        Text: =fx_MetrosUn(ThisItem.Quantidade)
                         Width: =62
                         X: =218
                   - lbl_RowInspDiCOP:
@@ -1085,7 +1232,7 @@ Screens:
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
                         Size: =fx_FonteApoio
-                        Text: =fx_Ou(Text(ThisItem.Diametro_Interno))
+                        Text: =If(IsBlank(ThisItem.Diametro_Interno), "—", fx_MedidaBR(ThisItem.Diametro_Interno))
                         Width: =110
                         X: =288
                   - lbl_RowInspDeCOP:
@@ -1094,7 +1241,7 @@ Screens:
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
                         Size: =fx_FonteApoio
-                        Text: =fx_Ou(Text(ThisItem.Diametro_Externo))
+                        Text: =If(IsBlank(ThisItem.Diametro_Externo), "—", fx_MedidaBR(ThisItem.Diametro_Externo))
                         Width: =110
                         X: =406
                   - lbl_RowInspConcCOP:
@@ -1103,7 +1250,7 @@ Screens:
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
                         Size: =fx_FonteApoio
-                        Text: =fx_Ou(Text(ThisItem.Concentricidade))
+                        Text: =If(IsBlank(ThisItem.Concentricidade), "—", fx_MedidaBR(ThisItem.Concentricidade))
                         Width: =130
                         X: =524
                   - lbl_RowInspDefeitoCOP:
@@ -1168,7 +1315,7 @@ Screens:
                   Size: =fx_FonteDestaque
                   Text: |-
                     ="Refugo total: " &
-                    Text(Sum(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP), Quantidade), "#.##0,##") &
+                    fx_QtdBR(Coalesce(Sum(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP), Quantidade), 0)) & " m" &
                     "   ·   " &
                     CountRows(Filter(TiposErros, OP_ID = gal_FilaCOP.Selected.OP)) &
                     " ocorrências"
@@ -1284,7 +1431,7 @@ Screens:
                         Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Bold
                         Size: =fx_FonteApoio
-                        Text: =fx_Ou(Text(ThisItem.Quantidade))
+                        Text: =fx_MetrosUn(ThisItem.Quantidade)
                         Width: =110
                         X: =474
                   - lbl_RowErroTurnoCOP:
