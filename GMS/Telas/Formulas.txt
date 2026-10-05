@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.7 · 2026-10-05
+//  GMS · App.Formulas · v3.0.8 · 2026-10-05
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu e fx_DiametroPol (§5).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -264,6 +264,28 @@ fx_ForaDaFaixa(lido: Number, minimo: Number, maximo: Number): Boolean =
 // Coalesce(x, 0) na gravação transformava dado ausente em zero calado.
 fx_MetragemOk(metros: Number): Boolean =
     !IsBlank(metros) && metros > 0;
+
+// [v3.0.8 · MEL-202] Margem aceitável para a metragem SUBIR de uma etapa para a seguinte (William, 05/10/2026:
+// "pode subir, mas com margem para não virar várzea"). Provisória em 10%: nos últimos 60 dias, só 2% a 8% das OPs
+// passaram de 10% (Cobertura→Bandagem 2,4% · Debandagem→Extração 2,7% · Trançagem→Cobertura 7,9%) e as altas
+// absurdas são erro de digitação. Vira aviso (não bloqueia). William confirma o número com o delineamento.
+fx_MargemMetragemPct = 10;
+
+// A metragem informada passou da margem sobre a da etapa anterior? Etapa anterior em branco ou 0 nunca acusa
+// (poka-yoke não grita sem base).
+fx_MetragemSubiu(atual: Number, anterior: Number): Boolean =
+    !IsBlank(anterior) && anterior > 0 && !IsBlank(atual) &&
+    atual > anterior * (1 + fx_MargemMetragemPct / 100);
+
+// Diâmetro digitado em polegada. Aceita vírgula ou ponto ("0,412" = "0.412") e também o milésimo digitado
+// ("412" = 0,412): diâmetro de mangueira acima de 5 pol não existe nesta fábrica, então valor > 5 é milésimo.
+// Histórico: a coluna Diametro_Trançagem guardou milésimos até meados de setembro (55 a 70% > 5) e polegada depois.
+// Blank se não for número. NÃO usar fx_Num aqui (lê "0.500" como 500).
+fx_DiametroPol(txt: Text): Number =
+    With(
+        { _v: fx_NumMedida(txt) },
+        If(IsBlank(_v), Blank(), If(_v > 5, _v / 1000, _v))
+    );
 
 // Conferência do fio da bobina contra os fios do delineamento (1ª e 2ª trama).
 // "SEM_FIO" quando não há o que comparar — bobina sem código ou mangueira sem spec.
@@ -1247,8 +1269,22 @@ fx_MetrosBR(valor: Number): Text =
 
 // [v3.0.7 · MEL-201] Metros com unidade para exibição em card/label: vazio mostra "—", nunca "0 m".
 // Substitui Coalesce(campo, 0) & " m", que mostrava metragem inexistente como zero (regra 6 do CLAUDE.md).
+// Inteiro sai sem decimal ("1.138 m"); fracionado com 1 casa ("1.138,5 m"), milhar com ponto, decimal com vírgula.
 fx_MetrosUn(valor: Number): Text =
-    If(IsBlank(valor), "—", fx_MetrosBR(valor) & " m");
+    If(
+        IsBlank(valor),
+        "—",
+        Substitute(
+            Substitute(
+                Substitute(
+                    Text(valor, If(valor = Int(valor), "[$-en-US]#,##0", "[$-en-US]#,##0.0")),
+                    ",", "#"
+                ),
+                ".", ","
+            ),
+            "#", "."
+        ) & " m"
+    );
 
 // Filtro da tela: em que bloco a pendência cai.
 fx_GrupoConf(prioridade: Number): Text =
