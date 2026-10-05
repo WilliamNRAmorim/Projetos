@@ -24,16 +24,16 @@ Screens:
                     ClearCollect(colColabExt, Colaboradores),
                     ClearCollect(colDefeitosExt, Choices(RegistrosInspeção.CodigoDefeito)),
                     If(IsEmpty(colSpecExt), ClearCollect(colSpecExt, DM_TESTE_INSP)),
-                    ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)),
-                    ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)),
-                    ClearCollect(
+                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                    IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                    IfError(ClearCollect(
                         colInspDiaExt,
                         Filter(
                             RegistrosInspeção,
                             Created >= ctxIniDiaExt,
                             Created < ctxFimDiaExt
                         )
-                    )
+                    ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                 )
     Children:
       - tmr_RelogioExt:
@@ -45,6 +45,21 @@ Screens:
             Font: =fx_FonteFamilia
             OnTimerEnd: |-
               =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_AutoRefreshExt:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(
+                  !varProcessando && !ctxModalFinalizarExt && !ctxModalEditarExt && !ctxModalExcluirExt && !ctxModalDelinExt,
+                  Select(ico_RefreshExt)
+              )
             Repeat: =true
             Visible: =false
             X: =1206
@@ -70,7 +85,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.Arial
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =43
             PaddingBottom: =0
@@ -94,11 +109,11 @@ Screens:
             PaddingLeft: =0
             PaddingRight: =0
             PaddingTop: =0
-            RadiusBottomLeft: =5
-            RadiusBottomRight: =5
-            RadiusTopLeft: =5
-            RadiusTopRight: =5
-            Size: =14
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
             Text: |-
               ="Total: " & CountRows(gal_FilaExt.AllItems)
             Width: =83
@@ -142,7 +157,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =If(IsBlank(ctxCabineExt.Posto), fx_CorErro, fx_CorTexto)
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -313,7 +328,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =Coalesce(gal_FilaExt.Selected.quantidade_debandagem, 0) & " m"
+            Text: =fx_MetrosUn(gal_FilaExt.Selected.quantidade_debandagem)
             Width: =200
             X: =918
             Y: =151
@@ -536,13 +551,13 @@ Screens:
       - inp_DiamIntExt:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Diâmetro interno medido, em milímetros"
+            AccessibleLabel: ="Diâmetro interno medido, em polegadas"
             Align: =Align.Center
             BorderColor: |-
               =With(
                   {
                       _s: LookUp(colSpecExt, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaExt.Selected.Mangueira)),
-                      _v: fx_NumMedida(Self.Text)
+                      _v: fx_DiametroPol(Self.Text)
                   },
                   If(
                       fx_EstadoContinuo(gal_FilaExt.Selected.status_processo) = "PRODUZINDO" &&
@@ -594,7 +609,7 @@ Screens:
                   If(
                       fx_NumSpec(Text(_s.MAX_FINAL_OD_in)) > 0,
                       "Ø EXTERNO *   " & fx_MedidaBR(fx_NumSpec(Text(_s.MIN_FINAL_OD_in))) & " a " & fx_MedidaBR(fx_NumSpec(Text(_s.MAX_FINAL_OD_in))),
-                      "Ø EXTERNO*"
+                      "Ø EXTERNO *"
                   )
               )
             Width: =218
@@ -603,13 +618,13 @@ Screens:
       - inp_DiamExtExt:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Diâmetro externo medido, em milímetros"
+            AccessibleLabel: ="Diâmetro externo medido, em polegadas"
             Align: =Align.Center
             BorderColor: |-
               =With(
                   {
                       _s: LookUp(colSpecExt, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaExt.Selected.Mangueira)),
-                      _v: fx_NumMedida(Self.Text)
+                      _v: fx_DiametroPol(Self.Text)
                   },
                   If(
                       fx_EstadoContinuo(gal_FilaExt.Selected.status_processo) = "PRODUZINDO" &&
@@ -670,13 +685,13 @@ Screens:
       - inp_ConcExt:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Concentricidade medida"
+            AccessibleLabel: ="Concentricidade medida, em polegadas"
             Align: =Align.Center
             BorderColor: |-
               =With(
                   {
                       _max: fx_NumSpec(Text(LookUp(colSpecExt, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaExt.Selected.Mangueira)).ID_TO_OD_CONC_in)),
-                      _v: fx_NumMedida(Self.Text)
+                      _v: fx_DiametroPol(Self.Text)
                   },
                   If(
                       fx_EstadoContinuo(gal_FilaExt.Selected.status_processo) = "PRODUZINDO" &&
@@ -804,7 +819,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =37
             Size: =fx_FonteApoio
-            Text: '="METROS (m) *" '
+            Text: ="METROS (m) *"
             Width: =134
             X: =611
             Y: =548
@@ -1256,16 +1271,16 @@ Screens:
                   ctxFimDiaExt: fx_JanelaFimEm(Now())
               });
               Concurrent(
-                  ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)),
-                  ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)),
-                  ClearCollect(
+                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(
                       colInspDiaExt,
                       Filter(
                           RegistrosInspeção,
                           Created >= ctxIniDiaExt,
                           Created < ctxFimDiaExt
                       )
-                  )
+                  ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
               )
             Width: =85
             X: =325
@@ -1732,7 +1747,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.4.0"
+            Text: ="Versão 0.4.1"
             Width: =183
             X: =1168
             Y: =710
@@ -1757,16 +1772,16 @@ Screens:
               Reset(inp_RefugoExt);
               Reset(cmb_DefeitoExt);
               Concurrent(
-                  ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)),
-                  ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)),
-                  ClearCollect(
+                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(
                       colInspDiaExt,
                       Filter(
                           RegistrosInspeção,
                           Created >= ctxIniDiaExt,
                           Created < ctxFimDiaExt
                       )
-                  )
+                  ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
               )
             TemplateFill: =Color.Transparent
             TemplateSize: =112
@@ -1828,7 +1843,7 @@ Screens:
                   Height: =22
                   OnSelect: =Select(Parent)
                   Size: =fx_FonteApoio
-                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & Coalesce(ThisItem.quantidade_debandagem, 0) & " m"
+                  Text: ="Carretel " & Coalesce(ThisItem.'Carretel Entrada', "—") & "  •  " & fx_MetrosUn(ThisItem.quantidade_debandagem)
                   Width: =190
                   X: =20
                   Y: =64
@@ -1917,8 +1932,7 @@ Screens:
               With(
                   {
                       _r: LookUp(ficha_producao, ID = gal_FilaExt.Selected.ID),
-                      _agora: Now(),
-                      _min: fx_MinutosDoDia(Now())
+                      _agora: Now()
                   },
                   If(
                       IsBlank(ctxCabineExt.Posto),
@@ -1927,7 +1941,10 @@ Screens:
                       _r.Modified <> gal_FilaExt.Selected.Modified,
                       Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                       Set(varProcessando, false),
-                      _r.status_processo = "Em processo",
+                      !fx_MetragemOk(_r.quantidade_debandagem),
+                      Notify("OP sem metragem recebida da Debandagem. Chame a Supervisão para corrigir antes de inspecionar.", NotificationType.Warning, 8000);
+                      Set(varProcessando, false),
+                      fx_EstadoContinuo(_r.status_processo) = "PRODUZINDO",
                       Notify(
                           If(
                               !IsBlank(_r.cabine_teste) && _r.cabine_teste <> varPostoAtivo,
@@ -1946,7 +1963,7 @@ Screens:
                               cabine_teste: varPostoAtivo,
                               data_hora_inicio_extracao: _agora,
                               'InicioEmProcesso_Extr./Teste': _agora,
-                              'Turno_Extr/Teste': fx_Turno(_min)
+                              'Turno_Extr/Teste': fx_TurnoEm(_agora)
                           }
                       );
                       If(
@@ -1983,7 +2000,7 @@ Screens:
                                   tipo: {Value: "Início"},
                                   data_hora: _agora,
                                   data_ref: fx_DataRefEm(_agora),
-                                  turno: fx_Turno(_min),
+                                  turno: fx_TurnoEm(_agora),
                                   bitola: _r.Bitola,
                                   metros: Coalesce(_r.quantidade_debandagem, 0),
                                   recurso: varPostoAtivo
@@ -1995,8 +2012,8 @@ Screens:
                           );
                           Refresh(ficha_producao);
                           Concurrent(
-                              ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = _r.OP)),
-                              ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = _r.OP))
+                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = _r.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                              IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = _r.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000))
                           );
                           UpdateContext({ctxAgora: _agora, ctxSincExt: _agora});
                           Set(varProcessando, false);
@@ -2028,8 +2045,8 @@ Screens:
                   !varProcessando &&
                   !IsBlank(ctxCabineExt.Posto) &&
                   fx_EhNum(inp_QtdExt.Text) && fx_Num(inp_QtdExt.Text) > 0 &&
-                  fx_EhNum(inp_DiamIntExt.Text) && fx_NumMedida(inp_DiamIntExt.Text) > 0 &&
-                  fx_EhNum(inp_DiamExtExt.Text) && fx_NumMedida(inp_DiamExtExt.Text) > 0 &&
+                  fx_EhNum(inp_DiamIntExt.Text) && fx_DiametroPol(inp_DiamIntExt.Text) > 0 &&
+                  fx_EhNum(inp_DiamExtExt.Text) && fx_DiametroPol(inp_DiamExtExt.Text) > 0 &&
                   fx_EhNum(inp_ConcExt.Text),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
@@ -2045,15 +2062,14 @@ Screens:
                   {
                       _r: gal_FilaExt.Selected,
                       _agora: Now(),
-                      _min: fx_MinutosDoDia(Now()),
                       _qtd: fx_Num(inp_QtdExt.Text),
-                      _int: fx_NumMedida(inp_DiamIntExt.Text),
-                      _ext: fx_NumMedida(inp_DiamExtExt.Text),
-                      _conc: fx_NumMedida(inp_ConcExt.Text),
+                      _int: fx_DiametroPol(inp_DiamIntExt.Text),
+                      _ext: fx_DiametroPol(inp_DiamExtExt.Text),
+                      _conc: fx_DiametroPol(inp_ConcExt.Text),
                       _s: LookUp(colSpecExt, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaExt.Selected.Mangueira))
                   },
                   If(
-                      IsBlank(_qtd) || _qtd <= 0 || IsBlank(_int) || IsBlank(_ext) || IsBlank(_conc),
+                      !fx_MetragemOk(_qtd) || IsBlank(_int) || IsBlank(_ext) || IsBlank(_conc),
                       Notify("Confira os números: quantidade maior que zero e as três medidas preenchidas. Vírgula ou ponto, tanto faz.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
                       Patch(
@@ -2071,8 +2087,8 @@ Screens:
                               Diametro_Interno: _int,
                               Diametro_Externo: _ext,
                               Concentricidade: _conc,
-                              DataHoraInspecao: _agora,
-                              TurnoTeste: fx_Turno(_min),
+                              DataHoraInspecao: Coalesce(ctxEditandoLanceExt.DataHoraInspecao, _agora),
+                              TurnoTeste: Coalesce(ctxEditandoLanceExt.TurnoTeste, fx_TurnoEm(_agora)),
                               cabine_teste: Coalesce(ctxEditandoLanceExt.cabine_teste, varPostoAtivo)
                           }
                       );
@@ -2081,15 +2097,15 @@ Screens:
                           Notify("Falha ao gravar o lance: " & First(Errors(RegistrosInspeção)).Message, NotificationType.Error, 12000);
                           Set(varProcessando, false),
                           Concurrent(
-                              ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)),
-                              ClearCollect(
+                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                              IfError(ClearCollect(
                                   colInspDiaExt,
                                   Filter(
                                       RegistrosInspeção,
                                       Created >= ctxIniDiaExt,
                                       Created < ctxFimDiaExt
                                   )
-                              )
+                              ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                           );
                           UpdateContext({ctxEditandoLanceExt: Blank(), ctxSincExt: _agora});
                           Reset(inp_QtdExt);
@@ -2156,12 +2172,11 @@ Screens:
                   {
                       _r: gal_FilaExt.Selected,
                       _agora: Now(),
-                      _min: fx_MinutosDoDia(Now()),
                       _qtd: fx_Num(inp_RefugoExt.Text),
                       _cod: cmb_DefeitoExt.Selected.Value
                   },
                   If(
-                      IsBlank(_qtd) || _qtd <= 0 || IsBlank(_cod),
+                      !fx_MetragemOk(_qtd) || IsBlank(_cod),
                       Notify("Informe o código do defeito e uma metragem maior que zero.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
                       Patch(
@@ -2173,7 +2188,7 @@ Screens:
                               Quantidade: _qtd,
                               CodigoErro: _cod,
                               DataHoraRefugo: _agora,
-                              'Turno Erro': Text(fx_Turno(_min)),
+                              'Turno Erro': Text(fx_TurnoEm(_agora)),
                               cabine_teste: varPostoAtivo
                           }
                       );
@@ -2181,7 +2196,7 @@ Screens:
                           !IsEmpty(Errors(TiposErros)),
                           Notify("Falha ao gravar o refugo: " & First(Errors(TiposErros)).Message, NotificationType.Error, 12000);
                           Set(varProcessando, false),
-                          ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP));
+                          IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                           Reset(inp_RefugoExt);
                           Reset(cmb_DefeitoExt);
                           UpdateContext({ctxSincExt: _agora});
@@ -2233,7 +2248,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -2317,6 +2332,22 @@ Screens:
                   Width: =560
                   X: =403
                   Y: =340
+            - lbl_AlertaMargemFinalizarExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =16
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="⚠ Aprovado passa " &
+                    Text(Round((Sum(colLancesExt, Quantidade) / Coalesce(gal_FilaExt.Selected.quantidade_debandagem, 1) - 1) * 100, 0), "[$-en-US]0") &
+                    "% do recebido da Debandagem (margem " & fx_MargemMetragemPct & "%). Confira os lances."
+                  Visible: =fx_MetragemSubiu(Sum(colLancesExt, Quantidade), gal_FilaExt.Selected.quantidade_debandagem)
+                  Width: =560
+                  X: =403
+                  Y: =302
             - lbl_AvisoFinalizarExt:
                 Control: Label@2.5.1
                 Properties:
@@ -2374,13 +2405,12 @@ Screens:
                   HoverFill: =ColorFade(fx_CorOK, -20%)
                   OnSelect: |-
                     =Set(varProcessando, true);
-                    ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP));
+                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                     Refresh(ficha_producao);
                     With(
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaExt.Selected.ID),
                             _agora: Now(),
-                            _min: fx_MinutosDoDia(Now()),
                             _operador: cmb_OperadorExt.Selected.Nome,
                             _total: Coalesce(Sum(colLancesExt, Quantidade), 0)
                         },
@@ -2391,7 +2421,7 @@ Screens:
                             IsBlank(_operador),
                             Notify("Selecione o U-Number do operador antes de finalizar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
-                            _total <= 0,
+                            !fx_MetragemOk(_total),
                             Notify("Nenhum lance aprovado nesta OP. Registre a inspeção antes de finalizar — a ficha não pode fechar com zero.", NotificationType.Error, 10000);
                             Set(varProcessando, false),
                             _r.Modified <> gal_FilaExt.Selected.Modified,
@@ -2417,7 +2447,7 @@ Screens:
                                             data_hora_final_extracao: _agora,
                                             status_processo: "Finalizado",
                                             processo: "Finalizado",
-                                            'Turno_Extr/Teste': fx_Turno(_min)
+                                            'Turno_Extr/Teste': fx_TurnoEm(_agora)
                                         }
                                     )
                                 );
@@ -2458,7 +2488,7 @@ Screens:
                                             tipo: {Value: "Fim"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: fx_Turno(_min),
+                                            turno: fx_TurnoEm(_agora),
                                             bitola: gvarRegistroExtracao.Bitola,
                                             metros: _total,
                                             recurso: gvarRegistroExtracao.cabine_teste,
@@ -2471,10 +2501,17 @@ Screens:
                                     );
                                     If(
                                         !IsBlank(_carretel),
-                                        Patch(
-                                            lista_carreteis,
-                                            LookUp(lista_carreteis, Title = Text(_carretel)),
-                                            {op: Blank(), etapa_processo: Blank()}
+                                        With(
+                                            { _c: LookUp(lista_carreteis, Title = Text(_carretel)) },
+                                            If(
+                                                IsBlank(_c),
+                                                Notify("Ficha salva, mas o carretel " & Text(_carretel) & " não foi encontrado para liberar. Avise a Supervisão.", NotificationType.Warning, 10000),
+                                                Patch(lista_carreteis, _c, {op: Blank(), etapa_processo: Blank()});
+                                                If(
+                                                    !IsEmpty(Errors(lista_carreteis)),
+                                                    Notify("Ficha salva, mas o carretel NÃO foi liberado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                                                )
+                                            )
                                         )
                                     );
                                     Refresh(ficha_producao);
@@ -2529,7 +2566,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorErro
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -2608,15 +2645,15 @@ Screens:
                             !IsEmpty(Errors(RegistrosInspeção)),
                             Notify("Falha ao excluir o lance: " & First(Errors(RegistrosInspeção)).Message, NotificationType.Error, 10000),
                             Concurrent(
-                                ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)),
-                                ClearCollect(
+                                IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                                IfError(ClearCollect(
                                     colInspDiaExt,
                                     Filter(
                                         RegistrosInspeção,
                                         Created >= ctxIniDiaExt,
                                         Created < ctxFimDiaExt
                                     )
-                                )
+                                ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                             );
                             Notify("Lance excluído.", NotificationType.Success, 3000)
                         ),
@@ -2624,7 +2661,7 @@ Screens:
                         If(
                             !IsEmpty(Errors(TiposErros)),
                             Notify("Falha ao excluir o reprovado: " & First(Errors(TiposErros)).Message, NotificationType.Error, 10000),
-                            ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP));
+                            IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                             Notify("Reprovado excluído.", NotificationType.Success, 3000)
                         )
                     );
@@ -2679,7 +2716,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteSecao
@@ -2822,7 +2859,12 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(IsBlank(gal_FilaExt.Selected.ID) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(gal_FilaExt.Selected.ID) || varProcessando || IsBlank(Trim(inp_MangueiraEditarExt.Text)),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -2841,9 +2883,9 @@ Screens:
                                 ficha_producao,
                                 _r,
                                 {
-                                    Mangueira: inp_MangueiraEditarExt.Text,
-                                    'Carretel Entrada': inp_CarretelEntradaEditarExt.Text,
-                                    'Carretel Saida': inp_CarretelSaidaEditarExt.Text
+                                    Mangueira: Upper(Trim(inp_MangueiraEditarExt.Text)),
+                                    'Carretel Entrada': Trim(inp_CarretelEntradaEditarExt.Text),
+                                    'Carretel Saida': Trim(inp_CarretelSaidaEditarExt.Text)
                                 }
                             );
                             If(
@@ -2900,7 +2942,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =Font.'Segoe UI'
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =48
                   Size: =fx_FonteTitulo
