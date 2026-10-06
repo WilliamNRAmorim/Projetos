@@ -10,17 +10,20 @@ Screens:
             ctxFimBob: fx_JanelaFimEm(ctxAgora)
         });
         Set(varProcessando, false);
-        ClearCollect(
-            colRefugoBob,
-            Sort(
-                Filter(
-                    Refugo_Bobinadeira,
-                    DataHoraRefugo >= ctxIniBob,
-                    DataHoraRefugo < ctxFimBob
-                ),
-                DataHoraRefugo,
-                SortOrder.Descending
-            )
+        IfError(
+            ClearCollect(
+                colRefugoBob,
+                Sort(
+                    Filter(
+                        Refugo_Bobinadeira,
+                        DataHoraRefugo >= ctxIniBob,
+                        DataHoraRefugo < ctxFimBob
+                    ),
+                    DataHoraRefugo,
+                    SortOrder.Descending
+                )
+            ),
+            Notify("Não consegui carregar os registros. Toque em atualizar.", NotificationType.Error, 8000)
         )
     Children:
       - tmr_RelogioBob:
@@ -79,7 +82,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -333,7 +336,7 @@ Screens:
           Control: Classic/TextInput@2.3.2
           Properties:
             AccessibleLabel: ="Quantidade de fio refugado"
-            BorderColor: =If(Coalesce(Value(Self.Text), 0) <= 0, fx_CorErro, fx_CorBorda)
+            BorderColor: =If(fx_EhNum(Self.Text) && fx_Num(Self.Text) > 0, fx_CorBorda, fx_CorErro)
             Default: =""
             DelayOutput: =true
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
@@ -450,7 +453,7 @@ Screens:
             Size: =fx_FonteSecao
             Text: |-
               ="REGISTROS DE " & Text(fx_DataRefEm(ctxAgora), "dd/mm") & "  ·  " & CountRows(colRefugoBob) & " registros  ·  " &
-              Text(Sum(colRefugoBob, QuantidadeRefugo), "#.##0,##") & " refugados"
+              Text(Sum(colRefugoBob, QuantidadeRefugo), "[$-pt-BR]#.##0,##") & " refugados"
             Width: =700
             X: =475
             Y: =80
@@ -645,7 +648,7 @@ Screens:
                   FontWeight: =FontWeight.Bold
                   Height: =44
                   Size: =fx_FonteCorpo
-                  Text: =Text(ThisItem.QuantidadeRefugo, "#.##0,##")
+                  Text: =Text(ThisItem.QuantidadeRefugo, "[$-pt-BR]#.##0,##")
                   Width: =50
                   X: =745
             - lbl_RowTurnoBob:
@@ -722,7 +725,7 @@ Screens:
                   !IsBlank(cmb_MaquinaBob.Selected.Value) &&
                   !IsBlank(cmb_FioBob.Selected.Value) &&
                   !IsBlank(cmb_MotivoBob.Selected.Value) &&
-                  Coalesce(Value(inp_QtdBob.Text), 0) > 0,
+                  fx_EhNum(inp_QtdBob.Text) && fx_Num(inp_QtdBob.Text) > 0,
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -736,7 +739,7 @@ Screens:
               With(
                   {
                       _agora: Now(),
-                      _qtd: Coalesce(Value(inp_QtdBob.Text), 0),
+                      _qtd: If(fx_EhNum(inp_QtdBob.Text), fx_Num(inp_QtdBob.Text), Blank()),
                       _operador: cmb_OperadorBob.Selected.Nome,
                       _maquina: cmb_MaquinaBob.Selected.Value,
                       _fio: cmb_FioBob.Selected.Value,
@@ -746,7 +749,7 @@ Screens:
                       IsBlank(_operador) || IsBlank(_maquina) || IsBlank(_fio) || IsBlank(_motivo),
                       Notify("Preencha operador, máquina, fio e motivo antes de registrar.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
-                      _qtd <= 0,
+                      IsBlank(_qtd) || _qtd <= 0,
                       Notify("A quantidade refugada precisa ser maior que zero.", NotificationType.Warning, 6000);
                       Set(varProcessando, false),
                       Patch(
@@ -760,7 +763,7 @@ Screens:
                               CodigoFio: _fio,
                               Motivos: _motivo,
                               QuantidadeRefugo: _qtd,
-                              Observacao: inp_ObsBob.Text,
+                              Observacao: Trim(inp_ObsBob.Text),
                               Turno: fx_TurnoEm(_agora)
                           }
                       );
@@ -790,7 +793,7 @@ Screens:
                               )
                           );
                           Set(varProcessando, false);
-                          Notify("Refugo de " & _qtd & " registrado em " & _maquina & ".", NotificationType.Success, 4000)
+                          Notify("Refugo de " & Text(_qtd, "[$-pt-BR]#.##0,##") & " registrado em " & _maquina & ".", NotificationType.Success, 4000)
                       )
                   )
               )
@@ -826,19 +829,21 @@ Screens:
                   ctxIniBob: fx_JanelaInicioEm(ctxAgora),
                   ctxFimBob: fx_JanelaFimEm(ctxAgora)
               });
-              ClearCollect(
-                  colRefugoBob,
-                  Sort(
-                      Filter(
-                          Refugo_Bobinadeira,
-                          DataHoraRefugo >= ctxIniBob,
-                          DataHoraRefugo < ctxFimBob
-                      ),
-                      DataHoraRefugo,
-                      SortOrder.Descending
-                  )
-              );
-              Set(varProcessando, false)
+              IfError(
+                  ClearCollect(
+                      colRefugoBob,
+                      Sort(
+                          Filter(
+                              Refugo_Bobinadeira,
+                              DataHoraRefugo >= ctxIniBob,
+                              DataHoraRefugo < ctxFimBob
+                          ),
+                          DataHoraRefugo,
+                          SortOrder.Descending
+                      )
+                  ),
+                  Notify("Não consegui atualizar os registros. Confira a rede.", NotificationType.Warning, 5000)
+              )
             Width: =56
             X: =300
             Y: =706
@@ -855,7 +860,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteCorpo
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.4.0"
             Width: =183
             X: =1163
             Y: =721
