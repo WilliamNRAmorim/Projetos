@@ -883,3 +883,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | DECISÃO | scr_Montagem_HoraHora | — | MEL-233 | OT aberta em outra célula NÃO bloqueia o início (William); fica como está #F1
 2026-10-06 | ENTREGUE | resumo do dia | — | — | Resumo e próximos passos em Auditoria/99_Resumo_06-10-2026.md #F1
 2026-10-06 | ENTREGUE | ficha_producao | — | MEL-234 | Export de 06/10 gravado em Sharepoint Data GMS e análise de saúde em Analises/Saude_ficha_producao_2026-10-06.md: dado pós-15/09 saudável; frentes são diâmetro em milésimo, Turno em texto, durações >24h e OPs de teste presas #F1 #esfM
+2026-10-06 | ENTREGUE | TelaImpressao | — | MEL-235 | Refeita em 1123x794 (A4 paisagem, template Portrait print): preenche a folha, barcodes 132 mm, tokens, botão Classic; fica pendente a scr_FichaImpressao #F1 #esfM
