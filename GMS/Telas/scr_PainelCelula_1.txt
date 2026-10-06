@@ -20,9 +20,13 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =Refresh(ficha_producao);
-              Refresh(Eventos_Producao);
-              Refresh('Hora-Hora');
+              =Set(varFalhaPnl, false);
+              IfError(
+                  Refresh(ficha_producao);
+                  Refresh(Eventos_Producao);
+                  Refresh('Hora-Hora'),
+                  Set(varFalhaPnl, true)
+              );
               // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
               // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
               // Cadastro carregado 1x por dia (ou ao abrir a tela) numa colecao local: o calculo por maquina
@@ -32,8 +36,11 @@ Screens:
               // maquina pega a MESMA velocidade que o Hora-Hora pega.
               If(
                   IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(Now()),
-                  Refresh(DM_TRANÇAGEM);
-                  Refresh(DM_ENGRENAGENS);
+                  IfError(
+                      Refresh(DM_TRANÇAGEM);
+                      Refresh(DM_ENGRENAGENS),
+                      Set(varFalhaPnl, true)
+                  );
                   With(
                       {
                           _eng: ForAll(
@@ -1159,7 +1166,8 @@ Screens:
                   )
               );
               Set(varAndonQtdPnl, CountRows(colAndonPnl));
-              Set(varSincPnl, Now())
+              Set(varSincPnl, Now());
+              If(!varFalhaPnl, Set(varUltOkPnl, varSincPnl))
             PressedFill: =Color.Transparent
             Text: =""
             Width: =1
@@ -4304,7 +4312,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 1).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 1).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 1).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 1).Qtd >= 1, 0, 1)
@@ -4315,7 +4323,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 1, Color.Transparent,
                       1 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4337,7 +4345,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 1).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 1).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 1).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 1).Qtd >= 2, 0, 1)
@@ -4348,7 +4356,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 2, Color.Transparent,
                       2 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4370,7 +4378,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 1).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 1).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 1).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 1).Qtd >= 3, 0, 1)
@@ -4381,7 +4389,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 3, Color.Transparent,
                       3 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4403,7 +4411,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 1).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 1).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 1).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 1).Qtd >= 4, 0, 1)
@@ -4414,7 +4422,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 4, Color.Transparent,
                       4 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4436,7 +4444,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 1).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 1).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 1).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 1).Qtd >= 5, 0, 1)
@@ -4447,7 +4455,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 5, Color.Transparent,
                       5 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4484,7 +4492,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 2).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 2).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 2).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 2).Qtd >= 1, 0, 1)
@@ -4495,7 +4503,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 1, Color.Transparent,
                       1 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4517,7 +4525,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 2).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 2).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 2).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 2).Qtd >= 2, 0, 1)
@@ -4528,7 +4536,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 2, Color.Transparent,
                       2 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4550,7 +4558,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 2).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 2).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 2).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 2).Qtd >= 3, 0, 1)
@@ -4561,7 +4569,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 3, Color.Transparent,
                       3 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4583,7 +4591,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 2).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 2).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 2).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 2).Qtd >= 4, 0, 1)
@@ -4594,7 +4602,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 4, Color.Transparent,
                       4 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4616,7 +4624,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 2).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 2).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 2).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 2).Qtd >= 5, 0, 1)
@@ -4627,7 +4635,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 5, Color.Transparent,
                       5 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4664,7 +4672,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 3).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 3).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 3).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 3).Qtd >= 1, 0, 1)
@@ -4675,7 +4683,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 1, Color.Transparent,
                       1 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4697,7 +4705,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 3).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 3).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 3).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 3).Qtd >= 2, 0, 1)
@@ -4708,7 +4716,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 2, Color.Transparent,
                       2 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4730,7 +4738,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 3).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 3).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 3).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 3).Qtd >= 3, 0, 1)
@@ -4741,7 +4749,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 3, Color.Transparent,
                       3 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4763,7 +4771,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 3).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 3).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 3).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 3).Qtd >= 4, 0, 1)
@@ -4774,7 +4782,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 4, Color.Transparent,
                       4 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4796,7 +4804,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 3).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 3).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 3).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 3).Qtd >= 5, 0, 1)
@@ -4807,7 +4815,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 5, Color.Transparent,
                       5 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4844,7 +4852,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 4).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 4).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 4).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 4).Qtd >= 1, 0, 1)
@@ -4855,7 +4863,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 1, Color.Transparent,
                       1 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4877,7 +4885,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 4).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 4).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 4).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 4).Qtd >= 2, 0, 1)
@@ -4888,7 +4896,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 2, Color.Transparent,
                       2 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4910,7 +4918,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 4).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 4).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 4).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 4).Qtd >= 3, 0, 1)
@@ -4921,7 +4929,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 3, Color.Transparent,
                       3 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4943,7 +4951,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 4).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 4).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 4).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 4).Qtd >= 4, 0, 1)
@@ -4954,7 +4962,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 4, Color.Transparent,
                       4 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -4976,7 +4984,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 4).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 4).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 4).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 4).Qtd >= 5, 0, 1)
@@ -4987,7 +4995,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 5, Color.Transparent,
                       5 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5024,7 +5032,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 5).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 5).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 5).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 5).Qtd >= 1, 0, 1)
@@ -5035,7 +5043,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 1, Color.Transparent,
                       1 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5057,7 +5065,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 5).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 5).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 5).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 5).Qtd >= 2, 0, 1)
@@ -5068,7 +5076,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 2, Color.Transparent,
                       2 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5090,7 +5098,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 5).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 5).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 5).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 5).Qtd >= 3, 0, 1)
@@ -5101,7 +5109,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 3, Color.Transparent,
                       3 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5123,7 +5131,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 5).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 5).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 5).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 5).Qtd >= 4, 0, 1)
@@ -5134,7 +5142,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 4, Color.Transparent,
                       4 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5156,7 +5164,7 @@ Screens:
             BorderColor: |-
               =If(
                   LookUp(colBatVulcPnl, Ord = 5).Estado = "CONCLUIDA" && LookUp(colBatVulcPnl, Ord = 5).Qtd < 5,
-                  RGBA(242, 201, 76, 1),
+                  fx_CorBatelada,
                   fx_CorPainelBorda
               )
             BorderThickness: =If(LookUp(colBatVulcPnl, Ord = 5).Estado <> "FUTURA" && LookUp(colBatVulcPnl, Ord = 5).Qtd >= 5, 0, 1)
@@ -5167,7 +5175,7 @@ Screens:
                   If(
                       _b.Estado = "FUTURA" || _b.Qtd < 5, Color.Transparent,
                       5 > _b.Qtd - _b.QtdAuto,            fx_CorGelo,
-                      _b.Qtd < 5,                          RGBA(242, 201, 76, 1),
+                      _b.Qtd < 5,                          fx_CorBatelada,
                       fx_CorOK
                   )
               )
@@ -5771,13 +5779,13 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorRotulo
+            Color: =If(varFalhaPnl, fx_CorAlerta, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Sincronizado às " & Text(varSincPnl, "hh:mm") & "  ·  atualiza a cada 2 min  ·  toque para detalhar"
+            Text: =If(varFalhaPnl, "⚠ Sem conexão com o servidor — dados das " & Text(varUltOkPnl, "hh:mm") & "  ·  tentando de novo a cada 2 min", "Sincronizado às " & Text(varSincPnl, "hh:mm") & "  ·  atualiza a cada 2 min  ·  toque para detalhar")
             Width: =600
             X: =640
             Y: =736
@@ -5791,8 +5799,8 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =16
             PaddingLeft: =0
-            Size: =7
-            Text: ="Versão 0.10.2"
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.10.3"
             Width: =98
             X: =1244
             Y: =743

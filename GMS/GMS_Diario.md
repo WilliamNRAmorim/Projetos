@@ -873,3 +873,6 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | REVERTIDO | scr_ConferenciaSAP | v0.1.2 | MEL-227 | Voltou à v0.1.1: William não quer mexer na lógica dessa tela. Mantido só o selo na scr_SelecaoGestao_1 #F1
 2026-10-06 | DESCARTADO | Conferencia_SAP | — | MEL-228 | A conferência SAP continua no Power Automate; a ideia de tirar o fluxo era do scr_Monitor_Mandril, não dela #F1
 2026-10-06 | ENTREGUE | scr_FichaTecnica_1 | v1.2.2 | MEL-229 | Carga das 13 tabelas com IfError e aviso (falha de rede não vira "sem delineamento") #F1
+2026-10-06 | ENTREGUE | scr_PainelCelula_1 | v0.10.3 | MEL-230 | Falha de Refresh deixa de parecer "sincronizado": rodapé laranja com a hora da última carga boa; fx_CorBatelada no lugar de 50 RGBA; versão legível; geometria intacta #F1 #esfM
+2026-10-06 | ENTREGUE | App.Formulas | v3.0.9 | MEL-230 | Só acrescenta fx_CorBatelada (§1); colar antes do scr_PainelCelula_1 v0.10.3 #F1
+2026-10-06 | PENDÊNCIA | scr_Monitor_Mandril | — | MEL-231 | Tirar o Power Automate que calcula "trançadeira parada" e fazer no app como o Painel da Célula (parada vem do Hora-Hora: janela atual sem produção + motivo); ler a tela e propor #F1 #esfM
