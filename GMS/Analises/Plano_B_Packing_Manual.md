@@ -18,3 +18,11 @@ Title (OP, texto) · Mangueira (texto) · Lances (várias linhas; metragens sepa
 
 ## Depende de
 Lista `Packing_Manual` criada no SharePoint. Sem ela não há o que gravar.
+
+## Revisão 06/10/2026 (William): sem modal, a própria TelaImpressao editável
+O modal da Finalização foi removido. "Pack manual" abre a **TelaImpressao** em modo manual: a folha é a mesma, com campos editáveis por cima.
+- Editáveis: OP (8 dígitos), PART-NUMBER, 26 lances (grade N° / QTY), operador (dropdown da lista Colaboradores) e motivo (dropdown).
+- Não editável: DATE (hora de abertura da tela). Total e códigos de barras (Code 39) recalculam sozinhos.
+- Ao imprimir a folha, os campos viram texto (sem caixas). Operador e motivo saem impressos no rodapé direito.
+- **Nunca bloqueia**: se a OP já existe em `ficha_producao`, aparece só um aviso laranja na tela ("pode imprimir, fica registrado"), a tarja da folha vira "PACKING MANUAL" (sem "SEM OP NO SISTEMA") e a impressão é liberada. Se o registro em `Packing_Manual` falhar (rede), avisa e imprime mesmo assim.
+- Reimprimir na mesma abertura atualiza o mesmo registro em `Packing_Manual` (não duplica).
