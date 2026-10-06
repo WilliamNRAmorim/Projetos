@@ -3,7 +3,8 @@ Screens:
     Properties:
       Fill: =RGBA(255, 255, 255, 1)
       OnVisible: |-
-        =If(
+        =Set(varFalhaRegManual, false);
+        If(
             varPackingManual,
             Reset(inp_OPManualImp);
             Reset(inp_PNManualImp);
@@ -270,6 +271,7 @@ Screens:
               =If(
                   varPackingManual,
                   Set(varProcessando, true);
+                  Set(varFalhaRegManual, false);
                   IfError(
                       Set(
                           varManualReg,
@@ -290,7 +292,7 @@ Screens:
                           )
                       );
                       true,
-                      Notify("Não consegui registrar o packing manual (sem rede?). A folha imprime mesmo assim: avise a supervisão para lançar.", NotificationType.Warning, 10000)
+                      Set(varFalhaRegManual, true)
                   );
                   Set(varProcessando, false)
               );
@@ -602,13 +604,13 @@ Screens:
       - lbl_avisoOPExisteImp:
           Control: Label@2.5.1
           Properties:
-            Color: =RGBA(180, 83, 9, 1)
+            Color: =If(varFalhaRegManual, RGBA(192, 57, 43, 1), RGBA(180, 83, 9, 1))
             Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =52
             Size: =fx_FonteApoio
-            Text: ="Esta OP já existe no sistema. Pode imprimir, fica registrado para conferência."
-            Visible: =varPackingManual && !Parent.Printing && !IsBlank(varManualFicha.ID)
+            Text: =If(varFalhaRegManual, "Não registrou no sistema (sem rede?). Imprima mesmo assim e avise a supervisão.", "Esta OP já existe no sistema. Pode imprimir, fica registrado para conferência.")
+            Visible: =varPackingManual && !Parent.Printing && (varFalhaRegManual || !IsBlank(varManualFicha.ID))
             Width: =196
             X: =398
             Y: =696
