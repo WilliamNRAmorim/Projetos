@@ -1,25 +1,30 @@
 Screens:
   scr_Catenaria_1:
     Properties:
-      Fill: =RGBA(241, 245, 249, 1)
-      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
         =Set(varProcessando, false);
-          UpdateContext({ctxLimpar_cat: false, locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
-          ResetForm(frm_catenaria)
+        UpdateContext({ctxAgora: Now()});
+        UpdateContext({
+            ctxLimpar_cat: false,
+            ctxExcluirCat: 0,
+            locCorte_cat: DateAdd(ctxAgora, -24, TimeUnit.Hours)
+        });
+        ResetForm(frm_catenaria)
     Children:
       - rct_header_cat:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Fill: =RGBA(255, 255, 255, 1)
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorSuperficie
             Height: =68
             Width: =1366
       - ico_voltar_cat:
           Control: Classic/Icon@2.5.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorInfo
             Height: =59
             Icon: =Icon.ArrowLeft
             OnSelect: =Navigate(scr_Bobinadeira_1)
@@ -29,11 +34,11 @@ Screens:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Font: =Font.'Segoe UI'
+            BorderColor: =fx_CorBorda
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
-            Size: =22
+            Size: =fx_FonteTitulo
             Text: ="Controle de Catenaria - Bobinadeira"
             Width: =700
             X: =333
@@ -42,10 +47,10 @@ Screens:
           Control: Text@0.0.51
           Properties:
             Align: ='TextCanvas.Align'.End
-            FontColor: =RGBA(100, 116, 139, 1)
+            FontColor: =fx_CorTextoSuave
             Height: =59
-            Size: =13
-            Text: =Text(Now(), "dd/mm/yyyy hh:mm")
+            Size: =fx_FonteCorpo
+            Text: =Text(ctxAgora, "dd/mm/yyyy hh:mm")
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Semibold
             Width: =200
@@ -54,16 +59,16 @@ Screens:
       - rct_linha_topo_cat:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Fill: =RGBA(226, 232, 240, 1)
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorBorda
             Height: =1
             Width: =1366
             Y: =68
       - rct_divisor_vertical_cat:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Fill: =RGBA(226, 232, 240, 1)
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorBorda
             Height: =630
             Width: =1
             X: =460
@@ -71,16 +76,16 @@ Screens:
       - rct_rodape_cat:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(226, 232, 240, 1)
+            BorderColor: =fx_CorBorda
             BorderThickness: =1
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             DisplayMode: =DisplayMode.View
-            Fill: =RGBA(255, 255, 255, 1)
-            Font: =Font.'Open Sans'
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
             Height: =68
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
@@ -91,19 +96,43 @@ Screens:
       - rct_rodape_linha_cat:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Fill: =RGBA(226, 232, 240, 1)
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorBorda
             Height: =1
             Width: =1366
             Y: =700
+      - tmr_relogio_cat:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =UpdateContext({ctxAgora: Now()})
+            Repeat: =true
+            Visible: =false
+            X: =1206
+      - tmr_auto_cat:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =If(!varProcessando, Select(ico_refresh_cat))
+            Repeat: =true
+            Visible: =false
+            X: =1206
       - tmr_watchdog_cat:
           Control: Timer@2.1.0
           Properties:
             BorderColor: =ColorFade(Self.Fill, -15%)
-            Color: =RGBA(255, 255, 255, 1)
+            Color: =fx_CorSuperficie
             Duration: =45000
-            Fill: =RGBA(56, 96, 178, 1)
-            Font: =Font.'Open Sans'
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
             OnTimerEnd: |-
               =Set(varProcessando, false);
               Notify("TEMPO LIMITE EXCEDIDO! Tente novamente.", NotificationType.Error)
@@ -115,7 +144,7 @@ Screens:
       - lbl_form_titulo_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(30, 58, 138, 1)
+            FontColor: =fx_CorInfo
             Height: =36
             Text: ="NOVO REGISTRO"
             VerticalAlign: =VerticalAlign.Middle
@@ -126,15 +155,15 @@ Screens:
       - rct_form_fundo_cat:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(226, 232, 240, 1)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             DisplayMode: =DisplayMode.View
-            Fill: =RGBA(255, 255, 255, 1)
-            Font: =Font.'Open Sans'
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
             Height: =590
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
@@ -152,7 +181,7 @@ Screens:
           Variant: Classic
           Layout: Vertical
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             DataSource: =Controle_Catenaria
             DefaultMode: =FormMode.New
             Height: =560
@@ -173,7 +202,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="Maquina"
                   Default: =""
                   DisplayName: ="Maquina"
@@ -189,9 +218,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_maquina_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -203,9 +232,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -216,15 +245,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: |-
                           ="Ex: T6"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -238,9 +267,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -253,12 +282,12 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicNumberEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="NFios"
                   Default: =0
                   DisplayName: ="No. Fios"
                   Required: =true
-                  Update: =Value(DataCardValue_nfios_cat.Text)
+                  Update: =If(fx_EhNum(DataCardValue_nfios_cat.Text), fx_Num(DataCardValue_nfios_cat.Text), Blank())
                   Width: =200
                   X: =1
                   Y: =0
@@ -268,9 +297,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_nfios_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -282,9 +311,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -295,14 +324,14 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         Format: =TextFormat.Number
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -316,9 +345,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -331,7 +360,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="Mangueira"
                   Default: =""
                   DisplayName: ="Mangueira"
@@ -347,9 +376,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_mangueira_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -361,9 +390,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -374,21 +403,21 @@ Screens:
                       Control: Classic/ComboBox@2.4.0
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =RGBA(226, 232, 240, 1)
-                        ChevronBackground: =RGBA(56, 96, 178, 1)
-                        ChevronFill: =RGBA(255, 255, 255, 1)
-                        ChevronHoverBackground: =ColorFade(RGBA(56, 96, 178, 1), -20%)
-                        ChevronHoverFill: =RGBA(255, 255, 255, 1)
+                        BorderColor: =fx_CorBorda
+                        ChevronBackground: =fx_CorInfo
+                        ChevronFill: =fx_CorSuperficie
+                        ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+                        ChevronHoverFill: =fx_CorSuperficie
                         DisplayFields: =["NomeMangueira"]
-                        Font: =Font.'Open Sans'
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        Font: =fx_FonteFamilia
+                        HoverFill: =fx_CorInfoSuave
                         Items: =colMangueiras
-                        PressedColor: =RGBA(255, 255, 255, 1)
-                        PressedFill: =RGBA(0, 18, 107, 1)
+                        PressedColor: =fx_CorSuperficie
+                        PressedFill: =fx_CorInfo
                         SearchFields: =["NomeMangueira"]
                         SelectMultiple: =false
-                        SelectionColor: =RGBA(255, 255, 255, 1)
-                        SelectionFill: =RGBA(56, 96, 178, 1)
+                        SelectionColor: =fx_CorSuperficie
+                        SelectionFill: =fx_CorInfo
                         Width: =Parent.Width - 40
                         X: =30
                         Y: =DataCardKey_mangueira_cat.Y + DataCardKey_mangueira_cat.Height + 4
@@ -397,9 +426,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -412,7 +441,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="DiamEspecPol"
                   Default: =""
                   DisplayName: ="Diam. Espec. (pol)"
@@ -428,9 +457,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_especpol_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -442,9 +471,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -455,15 +484,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: |-
                           ="Ex: 0.30"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -477,9 +506,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -492,7 +521,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="DiamEspecMM"
                   Default: =""
                   DisplayName: ="Diam. Espec. (mm)"
@@ -508,9 +537,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_especmm_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -521,9 +550,9 @@ Screens:
                       Control: Label@2.5.1
                       MetadataKey: FieldName
                       Properties:
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =22
                         Text: =Parent.DisplayName
@@ -535,15 +564,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: |-
                           ="Ex: 88.90"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -557,9 +586,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -572,7 +601,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="DiamAtualMM"
                   Default: =""
                   DisplayName: ="Diam. Atual (mm)"
@@ -588,9 +617,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_atual_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -602,9 +631,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -615,14 +644,14 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: ="Medido agora"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -636,9 +665,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -651,7 +680,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="TensaoPol"
                   Default: =""
                   DisplayName: ="Tensao (pol)"
@@ -667,9 +696,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_tensao_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -681,9 +710,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -694,15 +723,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: |-
                           ="Ex: 1"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -716,9 +745,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -731,7 +760,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="ENumber"
                   Default: =""
                   DisplayName: ="E-Number"
@@ -747,9 +776,9 @@ Screens:
                       MetadataKey: FieldRequired
                       Properties:
                         Align: =Align.Center
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(0, 18, 107, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorInfo
+                        Font: =fx_FonteFamilia
                         Height: =DataCardKey_enumber_cat.Height
                         Text: ="*"
                         Visible: =And(Parent.Required, Parent.DisplayMode=DisplayMode.Edit)
@@ -761,9 +790,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -774,15 +803,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         HintText: |-
                           ="Ex: Y54"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
                         RadiusBottomRight: =4
@@ -796,9 +825,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -811,7 +840,7 @@ Screens:
                 Control: TypedDataCard@1.0.7
                 Variant: ClassicTextualEdit
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   DataField: ="Observacoes"
                   Default: =""
                   DisplayName: ="Observacoes"
@@ -827,9 +856,9 @@ Screens:
                       MetadataKey: FieldName
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(71, 85, 105, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorTextoSuave
+                        Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =28
                         Text: =Parent.DisplayName
@@ -840,15 +869,15 @@ Screens:
                       Control: Classic/TextInput@2.3.2
                       MetadataKey: FieldValue
                       Properties:
-                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, Color.Red)
+                        BorderColor: =If(IsBlank(Parent.Error), Parent.BorderColor, fx_CorErro)
                         Default: =Parent.Default
                         DelayOutput: =true
                         DisplayMode: =Parent.DisplayMode
-                        Font: =Font.'Open Sans'
+                        Font: =fx_FonteFamilia
                         Height: =60
                         HintText: ="Opcional"
-                        HoverBorderColor: =RGBA(0, 18, 107, 1)
-                        HoverFill: =RGBA(186, 202, 226, 1)
+                        HoverBorderColor: =fx_CorInfo
+                        HoverFill: =fx_CorInfoSuave
                         Mode: =TextMode.MultiLine
                         PaddingLeft: =5
                         RadiusBottomLeft: =4
@@ -863,9 +892,9 @@ Screens:
                       MetadataKey: ErrorMessage
                       Properties:
                         AutoHeight: =true
-                        BorderColor: =RGBA(0, 0, 0, 1)
-                        Color: =RGBA(168, 0, 0, 1)
-                        Font: =Font.'Open Sans'
+                        BorderColor: =fx_CorBorda
+                        Color: =fx_CorErro
+                        Font: =fx_FonteFamilia
                         Height: =10
                         Live: =Live.Assertive
                         Size: =14
@@ -877,10 +906,10 @@ Screens:
       - lbl_toggle_label_cat:
           Control: Text@0.0.51
           Properties:
-            Font: =Font.'Open Sans'
-            FontColor: =RGBA(71, 85, 105, 1)
+            Font: =fx_FonteFamilia
+            FontColor: =fx_CorTextoSuave
             Height: =28
-            Size: =15
+            Size: =fx_FonteSecao
             Text: ="Aprovado?"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Semibold
@@ -896,10 +925,10 @@ Screens:
           Control: Text@0.0.51
           Properties:
             BorderRadius: =6
-            Fill: =If(tgl_aprovado_cat.Checked, RGBA(220, 252, 231, 1), RGBA(254, 226, 226, 1))
-            FontColor: =If(tgl_aprovado_cat.Checked, RGBA(22, 101, 52, 1), RGBA(153, 27, 27, 1))
+            Fill: =If(tgl_aprovado_cat.Checked, fx_CorOKSuave, fx_CorErroSuave)
+            FontColor: =If(tgl_aprovado_cat.Checked, fx_CorOK, fx_CorErro)
             Height: =28
-            Size: =13
+            Size: =fx_FonteCorpo
             Text: =If(tgl_aprovado_cat.Checked, "APROVADO", "REPROVADO")
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -909,55 +938,86 @@ Screens:
       - btn_registrar_cat:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =ColorFade(Self.Fill, -15%)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            Fill: =RGBA(54, 176, 75, 1)
-            Font: =Font.'Open Sans'
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !varProcessando &&
+                  !IsBlank(Trim(DataCardValue_maquina_cat.Text)) &&
+                  !IsBlank(cmb_mangueira_cat.Selected) &&
+                  fx_EhNum(DataCardValue_nfios_cat.Text) && fx_Num(DataCardValue_nfios_cat.Text) > 0 &&
+                  !IsBlank(fx_DiametroPol(DataCardValue_especpol_cat.Text)) &&
+                  !IsBlank(fx_NumMedida(DataCardValue_especmm_cat.Text)) &&
+                  !IsBlank(fx_NumMedida(DataCardValue_atual_cat.Text)) &&
+                  !IsBlank(fx_NumMedida(DataCardValue_tensao_cat.Text)) &&
+                  !IsBlank(Trim(DataCardValue_enumber_cat.Text)),
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
             Height: =48
-            HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-            HoverColor: =RGBA(255, 255, 255, 1)
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
-              =If(
-                    IsBlank(DataCardValue_maquina_cat.Text) || IsBlank(cmb_mangueira_cat.Selected) || IsBlank(DataCardValue_nfios_cat.Text) || IsBlank(DataCardValue_especpol_cat.Text) || IsBlank(DataCardValue_especmm_cat.Text) || IsBlank(DataCardValue_atual_cat.Text) || IsBlank(DataCardValue_tensao_cat.Text) || IsBlank(DataCardValue_enumber_cat.Text),
-                    Notify("Preencha todos os campos obrigatorios (marcados com *).", NotificationType.Warning),
-                    Set(varProcessando, true);
-                    Patch(
-                        Controle_Catenaria,
-                        Defaults(Controle_Catenaria),
-                        {
-                            Title: Text(Now(), "yyyymmddhhmmss"),
-                            DataHora: Now(),
-                            Maquina: DataCardValue_maquina_cat.Text,
-                            Mangueira: cmb_mangueira_cat.Selected.NomeMangueira,
-                            NFios: Value(DataCardValue_nfios_cat.Text),
-                            DiamEspecPol: DataCardValue_especpol_cat.Text,
-                            DiamEspecMM: DataCardValue_especmm_cat.Text,
-                            DiamAtualMM: DataCardValue_atual_cat.Text,
-                            TensaoPol: DataCardValue_tensao_cat.Text,
-                            Aprovado: tgl_aprovado_cat.Checked,
-                            ENumber: DataCardValue_enumber_cat.Text,
-                            Observacoes: DataCardValue_obs_cat.Text,
-                            Turno: fx_TurnoEm(Now())
-                        }
-                    );
-                    If(
-                        !IsEmpty(Errors(Controle_Catenaria)),
-                        Notify("Erro ao registrar: " & First(Errors(Controle_Catenaria)).Message, NotificationType.Error);
-                        Set(varProcessando, false),
-                        UpdateContext({locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
-                        Refresh(Controle_Catenaria);
-                        ResetForm(frm_catenaria);
-                        UpdateContext({ctxLimpar_cat: true});
-                        UpdateContext({ctxLimpar_cat: false});
-                        Set(varProcessando, false);
-                        Notify("Registro salvo!", NotificationType.Success, 3000)
-                    )
-                )
-            PressedBorderColor: =Self.Fill
-            PressedColor: =Self.Fill
-            PressedFill: =Self.Color
+              =Set(varProcessando, true);
+              With(
+                  {
+                      _agora: Now(),
+                      _nfios: If(fx_EhNum(DataCardValue_nfios_cat.Text), fx_Num(DataCardValue_nfios_cat.Text), Blank()),
+                      _pol: fx_DiametroPol(DataCardValue_especpol_cat.Text),
+                      _emm: fx_NumMedida(DataCardValue_especmm_cat.Text),
+                      _atual: fx_NumMedida(DataCardValue_atual_cat.Text),
+                      _tensao: fx_NumMedida(DataCardValue_tensao_cat.Text)
+                  },
+                  If(
+                      IsBlank(Trim(DataCardValue_maquina_cat.Text)) || IsBlank(cmb_mangueira_cat.Selected) || IsBlank(Trim(DataCardValue_enumber_cat.Text)),
+                      Notify("Preencha máquina, mangueira e E-Number.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      IsBlank(_nfios) || _nfios <= 0 || IsBlank(_pol) || IsBlank(_emm) || IsBlank(_atual) || IsBlank(_tensao),
+                      Notify("Confira os números: nº de fios, diâmetros e tensão precisam ser valores válidos.", NotificationType.Warning, 6000);
+                      Set(varProcessando, false),
+                      Patch(
+                          Controle_Catenaria,
+                          Defaults(Controle_Catenaria),
+                          {
+                              Title: Text(_agora, "yyyymmddhhmmss"),
+                              DataHora: _agora,
+                              Maquina: Upper(Trim(DataCardValue_maquina_cat.Text)),
+                              Mangueira: cmb_mangueira_cat.Selected.NomeMangueira,
+                              NFios: _nfios,
+                              DiamEspecPol: Text(_pol, "[$-en-US]0.00##"),
+                              DiamEspecMM: Text(_emm, "[$-en-US]0.00##"),
+                              DiamAtualMM: Text(_atual, "[$-en-US]0.00##"),
+                              TensaoPol: Text(_tensao, "[$-en-US]0.00##"),
+                              Aprovado: tgl_aprovado_cat.Checked,
+                              ENumber: Upper(Trim(DataCardValue_enumber_cat.Text)),
+                              Observacoes: Trim(DataCardValue_obs_cat.Text),
+                              Turno: fx_TurnoEm(_agora)
+                          }
+                      );
+                      If(
+                          !IsEmpty(Errors(Controle_Catenaria)),
+                          Notify("Erro ao registrar: " & First(Errors(Controle_Catenaria)).Message, NotificationType.Error, 10000);
+                          Set(varProcessando, false),
+                          UpdateContext({ctxAgora: Now()});
+                          UpdateContext({locCorte_cat: DateAdd(ctxAgora, -24, TimeUnit.Hours), ctxExcluirCat: 0});
+                          IfError(Refresh(Controle_Catenaria), Blank());
+                          ResetForm(frm_catenaria);
+                          Reset(tgl_aprovado_cat);
+                          Set(varProcessando, false);
+                          Notify("Registro salvo!", NotificationType.Success, 3000)
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
             Text: ="ㅤRegistrar"
             Width: =200
             X: =20
@@ -965,30 +1025,36 @@ Screens:
       - ico_registrar_cat:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =28
+            DisplayMode: =btn_registrar_cat.DisplayMode
             Image: =send
+            OnSelect: =Select(btn_registrar_cat)
             Width: =28
             X: =35
             Y: =724
       - ico_refresh_cat:
           Control: Classic/Icon@2.5.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Color: =RGBA(148, 163, 184, 1)
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorRotulo
             Icon: =Icon.Reload
             OnSelect: |-
-              =UpdateContext({locCorte_cat: DateAdd(Now(), -24, TimeUnit.Hours)});
-                Refresh(Controle_Catenaria)
+              =UpdateContext({ctxAgora: Now()});
+              UpdateContext({locCorte_cat: DateAdd(ctxAgora, -24, TimeUnit.Hours), ctxExcluirCat: 0});
+              IfError(
+                  Refresh(Controle_Catenaria),
+                  Notify("Não consegui atualizar os registros. Confira a rede.", NotificationType.Warning, 5000)
+              )
             Width: =49
             X: =240
             Y: =704
       - lbl_tabela_titulo_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(30, 58, 138, 1)
+            FontColor: =fx_CorInfo
             Height: =36
-            Text: ="REGISTROS DAS ULTIMAS 24H - " & Text(CountRows(Filter(Controle_Catenaria, DataHora >= locCorte_cat)), "0") & " registros"
+            Text: ="REGISTROS DAS ÚLTIMAS 24H - " & CountRows(gal_registros_cat.AllItems) & " registros"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
             Width: =700
@@ -997,15 +1063,15 @@ Screens:
       - rct_tabela_header_cat:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(203, 213, 225, 1)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             DisplayMode: =DisplayMode.View
-            Fill: =RGBA(30, 41, 59, 1)
-            Font: =Font.'Open Sans'
+            Fill: =fx_CorHeader
+            Font: =fx_FonteFamilia
             Height: =36
             HoverBorderColor: =ColorFade(Self.BorderColor, 20%)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =
             PressedBorderColor: =Self.Fill
             PressedColor: =Self.Fill
@@ -1017,9 +1083,9 @@ Screens:
       - lbl_th_hora_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="HORA"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1029,9 +1095,9 @@ Screens:
       - lbl_th_maquina_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="MAQ."
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1041,9 +1107,9 @@ Screens:
       - lbl_th_mangueira_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="MANGUEIRA"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1053,9 +1119,9 @@ Screens:
       - lbl_th_fios_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="FIOS"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1065,9 +1131,9 @@ Screens:
       - lbl_th_especpol_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="ESP.(pol)"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1077,9 +1143,9 @@ Screens:
       - lbl_th_especmm_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="ESP.(mm)"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1089,9 +1155,9 @@ Screens:
       - lbl_th_atual_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="ATUAL(mm)"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1101,9 +1167,9 @@ Screens:
       - lbl_th_tensao_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="TEN.(pol)"
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1114,9 +1180,9 @@ Screens:
           Control: Text@0.0.51
           Properties:
             Align: ='TextCanvas.Align'.Center
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="APROV."
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1126,9 +1192,9 @@ Screens:
       - lbl_th_enumber_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="E-NUM."
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1138,9 +1204,9 @@ Screens:
       - lbl_th_obs_cat:
           Control: Text@0.0.51
           Properties:
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =36
-            Size: =11
+            Size: =fx_FonteApoio
             Text: ="OBS."
             VerticalAlign: =VerticalAlign.Middle
             Weight: ='TextCanvas.Weight'.Bold
@@ -1151,7 +1217,7 @@ Screens:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
-            BorderColor: =RGBA(226, 232, 240, 1)
+            BorderColor: =fx_CorBorda
             Fill: =Color.Transparent
             Height: =545
             Items: |-
@@ -1163,7 +1229,7 @@ Screens:
                     DataHora,
                     SortOrder.Descending
                 )
-            TemplateFill: =If(Mod(ThisItem.Aprovado, 2) = 0, RGBA(248, 250, 252, 1), RGBA(255, 255, 255, 1))
+            TemplateFill: =If(Mod(ThisItem.ID, 2) = 0, fx_CorFundo, fx_CorSuperficie)
             TemplateSize: =44
             Width: =880
             X: =475
@@ -1172,14 +1238,14 @@ Screens:
             - lbl_row_hora_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: |-
                     =If(
-                          ThisItem.DataHora < Today(),
+                          ThisItem.DataHora < Date(Year(ctxAgora), Month(ctxAgora), Day(ctxAgora)),
                           Text(ThisItem.DataHora, "dd/mm") & Char(10) & Text(ThisItem.DataHora, "hh:mm"),
                           Text(ThisItem.DataHora, "hh:mm")
                       )
@@ -1188,9 +1254,9 @@ Screens:
             - lbl_row_maquina_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =44
                   Size: =12
@@ -1200,9 +1266,9 @@ Screens:
             - lbl_row_mangueira_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(30, 58, 138, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =44
                   Size: =12
@@ -1212,9 +1278,9 @@ Screens:
             - lbl_row_fios_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.NFios
@@ -1223,9 +1289,9 @@ Screens:
             - lbl_row_especpol_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.DiamEspecPol
@@ -1234,9 +1300,9 @@ Screens:
             - lbl_row_especmm_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.DiamEspecMM
@@ -1245,9 +1311,9 @@ Screens:
             - lbl_row_atual_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.DiamAtualMM
@@ -1256,9 +1322,9 @@ Screens:
             - lbl_row_tensao_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.TensaoPol
@@ -1269,10 +1335,10 @@ Screens:
                 Properties:
                   Align: ='TextCanvas.Align'.Center
                   BorderRadius: =4
-                  Fill: =If(ThisItem.Aprovado, RGBA(220, 252, 231, 1), RGBA(254, 226, 226, 1))
-                  FontColor: =If(ThisItem.Aprovado, RGBA(22, 101, 52, 1), RGBA(153, 27, 27, 1))
+                  Fill: =If(ThisItem.Aprovado, fx_CorOKSuave, fx_CorErroSuave)
+                  FontColor: =If(ThisItem.Aprovado, fx_CorOK, fx_CorErro)
                   Height: =28
-                  Size: =11
+                  Size: =fx_FonteApoio
                   Text: =If(ThisItem.Aprovado, "APROV", "REPROV")
                   VerticalAlign: =VerticalAlign.Middle
                   Weight: ='TextCanvas.Weight'.Bold
@@ -1282,9 +1348,9 @@ Screens:
             - lbl_row_enumber_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(51, 65, 85, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
                   Height: =44
                   Size: =12
                   Text: =ThisItem.ENumber
@@ -1293,22 +1359,22 @@ Screens:
             - lbl_row_obs_cat:
                 Control: Label@2.5.1
                 Properties:
-                  BorderColor: =RGBA(226, 232, 240, 1)
-                  Color: =RGBA(100, 116, 139, 1)
-                  Font: =Font.'Open Sans'
+                  BorderColor: =fx_CorBorda
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
                   Height: =44
-                  Size: =11
+                  Size: =fx_FonteApoio
                   Text: =ThisItem.Observacoes
                   Width: =120
                   X: =715
             - Image14:
                 Control: Image@2.2.3
                 Properties:
-                  BorderColor: =RGBA(0, 18, 107, 1)
+                  BorderColor: =fx_CorBorda
                   Height: =24
                   Image: |-
                     ="data:image/svg+xml;utf8," & EncodeUrl(
-                        "<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='#DC2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                        "<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='" & If(ctxExcluirCat = ThisItem.ID, "#FEE2E2", "none") & "' stroke='" & If(ctxExcluirCat = ThisItem.ID, "#7F1D1D", "#DC2626") & "' stroke-width='" & If(ctxExcluirCat = ThisItem.ID, "3", "2") & "' stroke-linecap='round' stroke-linejoin='round'>
                           <path d='M3 6h18'/>
                           <path d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'/>
                           <path d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'/>
@@ -1317,19 +1383,28 @@ Screens:
                         </svg>"
                     )
                   OnSelect: |-
-                    =Remove(
-                        Controle_Catenaria,    
-                        ThisItem       
-                    );
-                    Notify("Apontamento Removido!", NotificationType.Success, 1000)
+                    =If(
+                        ctxExcluirCat = ThisItem.ID,
+                        Set(varProcessando, true);
+                        Remove(Controle_Catenaria, ThisItem);
+                        If(
+                            !IsEmpty(Errors(Controle_Catenaria)),
+                            Notify("Não consegui excluir: " & First(Errors(Controle_Catenaria)).Message, NotificationType.Error, 8000),
+                            Notify("Apontamento removido.", NotificationType.Success, 3000)
+                        );
+                        UpdateContext({ctxExcluirCat: 0});
+                        Set(varProcessando, false),
+                        UpdateContext({ctxExcluirCat: ThisItem.ID});
+                        Notify("Toque de novo na lixeira para confirmar a exclusão.", NotificationType.Warning, 4000)
+                    )
                   Width: =35
                   X: =835
                   Y: =10
       - rct_overlay_spinner_cat:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
-            Fill: =RGBA(0, 0, 0, 0.7)
+            BorderColor: =fx_CorBorda
+            Fill: =fx_CorOverlayForte
             Height: =768
             Visible: =varProcessando
             Width: =1366
@@ -1344,7 +1419,7 @@ Screens:
           Control: Text@0.0.51
           Properties:
             Align: ='TextCanvas.Align'.Center
-            FontColor: =RGBA(255, 255, 255, 1)
+            FontColor: =fx_CorSuperficie
             Height: =60
             Size: =25
             Text: ="Salvando... Aguarde"
