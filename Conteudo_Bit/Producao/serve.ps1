@@ -1,8 +1,8 @@
-# Servidor estático mínimo com suporte a Range (seek em <video>) e POST /save (grava o render)
-$root = 'C:\Users\willi\Downloads\GMS'
-$work = 'C:\Users\willi\Downloads\GMS\05_Producao_videos'
-# ?dir=semana-AAAA-MM-DD no POST /save grava dentro dessa subpasta de 06_Conteudo_semanal
-$out  = Join-Path $root '06_Conteudo_semanal'
+﻿# Servidor estático mínimo com suporte a Range (seek em <video>) e POST /save (grava o render)
+$root = 'C:\Users\willi\Downloads\Projetos\Conteudo_Bit'
+$work = 'C:\Users\willi\Downloads\Projetos\Conteudo_Bit\Producao'
+# ?dir=semana-AAAA-MM-DD no POST /save grava dentro dessa subpasta de Semanal
+$out  = Join-Path $root 'Semanal'
 $types = @{ '.html'='text/html; charset=utf-8'; '.mp4'='video/mp4'; '.js'='text/javascript'; '.css'='text/css'; '.png'='image/png'; '.jpg'='image/jpeg'; '.wav'='audio/wav'; '.svg'='image/svg+xml'; '.webp'='image/webp'; '.ttf'='font/ttf'; '.woff2'='font/woff2' }
 $l = New-Object System.Net.HttpListener
 $l.Prefixes.Add('http://127.0.0.1:5178/')
