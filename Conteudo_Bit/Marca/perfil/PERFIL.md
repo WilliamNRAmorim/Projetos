@@ -4,7 +4,7 @@
 - **Nome:** `Will · Eng. de Computação` (25 caracteres; aparece na busca)
 - **Foto de perfil:** `foto_perfil.png` (o Bit no fundo vermelho)
 - **Categoria:** Criador de conteúdo digital
-- **Link:** o seu LinkedIn
+- **Link:** https://www.linkedin.com/in/william-amorim089/ (no Instagram só dá pra pôr pelo app: Editar perfil, Links, Adicionar link externo)
 
 ## Bio (até 150 caracteres)
 ```
