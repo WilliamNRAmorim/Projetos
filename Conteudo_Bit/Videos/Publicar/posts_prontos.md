@@ -37,26 +37,26 @@ a fábrica só descobria o que tinha acontecido no dia seguinte 👀 então eu f
 ## LinkedIn: vídeo longo (1min18)
 **Texto:**
 
-2 meses programando.
-7 meses fazendo as pessoas usarem.
+Peguei o sistema que eu mesmo construí e avaliei contra o MESA-11, o modelo de referência para sistemas de execução da manufatura.
 
-Essa foi a proporção real do GMS, o sistema de execução da manufatura (MES) que construí e implantei numa fábrica e que virou meu TCC em Engenharia de Computação.
+Ele não cobre tudo.
 
-O problema não era falta de dado. Cada etapa da produção já era anotada numa ficha de papel. Só que essa ficha era redigitada no turno seguinte pro Excel e depois pro SAP, e a informação chegava com 1 a 2 dias de atraso. A fábrica produzia sem enxergar o que estava acontecendo.
+Das 11 funções que o modelo descreve, o GMS tem:
+→ 6 implementadas
+→ 1 em expansão
+→ 2 parciais
+→ 2 fora do escopo
 
-A frase que resume o projeto:
+Essa análise está no meu TCC em Engenharia de Computação, e foi a parte mais útil de escrever. Já contei aqui como o GMS tirou o papel da produção. O que eu ainda não tinha mostrado é onde ele não chega.
+
+Parte dessas lacunas vem de uma restrição assumida desde o início: o GMS é 100% low-code (Power Apps, Microsoft Lists, Power Automate e Power BI) porque era isso que a governança de TI permitia. Low-code por restrição, não por preferência. Saber o que deixar de fora também foi engenharia.
+
+A frase que fechou o trabalho:
 "Não criamos o dado. Zeramos o custo de acessá-lo."
 
-Como foi feito:
-→ 2 semanas de Gemba Walk nos 3 turnos antes de desenhar qualquer tela
-→ ciclo diário: de manhã na estação, à tarde desenvolvendo, versão nova no turno seguinte
-→ Power Apps na coleta, Microsoft Lists nos dados, Power Automate na orquestração e Power BI na análise
-→ low-code por restrição, não por preferência: era o que a governança de TI permitia
-→ nenhum equipamento novo
+A ficha de papel já registrava cada etapa. O problema é que a informação chegava 1 a 2 dias depois. O GMS não inventou nenhum dado novo. Fez o que já existia aparecer na hora, para quem precisa decidir.
 
-O resultado: o operador registra uma vez, na fonte. A supervisão vê a célula ao vivo e é avisada de cada parada sem motivo. Qualquer ordem é rastreada nas 8 etapas numa tela só.
-
-A lição que levo pra qualquer projeto: a tecnologia é a parte rápida. O sistema só passou a ser usado quando o número da tela bateu com o chão de fábrica, e isso não se resolve com código. Se resolve ao lado do operador.
+No vídeo, o sistema funcionando do registro na estação até o painel.
 
 #EngenhariaDeComputação #MES #PowerPlatform #Indústria40 #Manufatura
 
