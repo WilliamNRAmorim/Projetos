@@ -24,8 +24,8 @@ Screens:
                     ClearCollect(colColabExt, Colaboradores),
                     ClearCollect(colDefeitosExt, Choices(RegistrosInspeção.CodigoDefeito)),
                     If(IsEmpty(colSpecExt), ClearCollect(colSpecExt, DM_TESTE_INSP)),
-                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                    IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                    IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                     IfError(ClearCollect(
                         colInspDiaExt,
                         Filter(
@@ -33,7 +33,7 @@ Screens:
                             Created >= ctxIniDiaExt,
                             Created < ctxFimDiaExt
                         )
-                    ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                    ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                 )
     Children:
       - tmr_RelogioExt:
@@ -524,7 +524,6 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            VirtualKeyboardMode: =VirtualKeyboardMode.Numeric
             Width: =178
             X: =369
             Y: =349
@@ -591,7 +590,6 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            VirtualKeyboardMode: =VirtualKeyboardMode.Numeric
             Width: =178
             X: =563
             Y: =349
@@ -658,7 +656,6 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            VirtualKeyboardMode: =VirtualKeyboardMode.Numeric
             Width: =178
             X: =369
             Y: =424
@@ -725,7 +722,6 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            VirtualKeyboardMode: =VirtualKeyboardMode.Numeric
             Width: =178
             X: =563
             Y: =424
@@ -854,7 +850,6 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            VirtualKeyboardMode: =VirtualKeyboardMode.Numeric
             Width: =120
             X: =611
             Y: =589
@@ -1271,8 +1266,8 @@ Screens:
                   ctxFimDiaExt: fx_JanelaFimEm(Now())
               });
               Concurrent(
-                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                   IfError(ClearCollect(
                       colInspDiaExt,
                       Filter(
@@ -1280,7 +1275,7 @@ Screens:
                           Created >= ctxIniDiaExt,
                           Created < ctxFimDiaExt
                       )
-                  ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                  ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
               )
             Width: =85
             X: =325
@@ -1466,6 +1461,9 @@ Screens:
                   CountRows(colLancesExt) > 26,
                   Notify("Esta OP tem mais de 26 lances. A ficha impressa mostra os 26 primeiros; o total impresso continua sendo o total real.", NotificationType.Warning, 10000)
               );
+              Set(varFichaIDImp, gal_FilaExt.Selected.ID);
+              Set(varPackingManual, false);
+              Set(varPalletTxt, "");
               Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
               Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
               Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colLancesExt, Quantidade), 0)));
@@ -1772,8 +1770,8 @@ Screens:
               Reset(inp_RefugoExt);
               Reset(cmb_DefeitoExt);
               Concurrent(
-                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                  IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                   IfError(ClearCollect(
                       colInspDiaExt,
                       Filter(
@@ -1781,7 +1779,7 @@ Screens:
                           Created >= ctxIniDiaExt,
                           Created < ctxFimDiaExt
                       )
-                  ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                  ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
               )
             TemplateFill: =Color.Transparent
             TemplateSize: =112
@@ -2012,8 +2010,8 @@ Screens:
                           );
                           Refresh(ficha_producao);
                           Concurrent(
-                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = _r.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                              IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = _r.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000))
+                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = _r.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                              IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = _r.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000))
                           );
                           UpdateContext({ctxAgora: _agora, ctxSincExt: _agora});
                           Set(varProcessando, false);
@@ -2097,7 +2095,7 @@ Screens:
                           Notify("Falha ao gravar o lance: " & First(Errors(RegistrosInspeção)).Message, NotificationType.Error, 12000);
                           Set(varProcessando, false),
                           Concurrent(
-                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                              IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                               IfError(ClearCollect(
                                   colInspDiaExt,
                                   Filter(
@@ -2105,7 +2103,7 @@ Screens:
                                       Created >= ctxIniDiaExt,
                                       Created < ctxFimDiaExt
                                   )
-                              ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                              ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                           );
                           UpdateContext({ctxEditandoLanceExt: Blank(), ctxSincExt: _agora});
                           Reset(inp_QtdExt);
@@ -2196,7 +2194,7 @@ Screens:
                           !IsEmpty(Errors(TiposErros)),
                           Notify("Falha ao gravar o refugo: " & First(Errors(TiposErros)).Message, NotificationType.Error, 12000);
                           Set(varProcessando, false),
-                          IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
+                          IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                           Reset(inp_RefugoExt);
                           Reset(cmb_DefeitoExt);
                           UpdateContext({ctxSincExt: _agora});
@@ -2405,7 +2403,7 @@ Screens:
                   HoverFill: =ColorFade(fx_CorOK, -20%)
                   OnSelect: |-
                     =Set(varProcessando, true);
-                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
+                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                     Refresh(ficha_producao);
                     With(
                         {
@@ -2645,7 +2643,7 @@ Screens:
                             !IsEmpty(Errors(RegistrosInspeção)),
                             Notify("Falha ao excluir o lance: " & First(Errors(RegistrosInspeção)).Message, NotificationType.Error, 10000),
                             Concurrent(
-                                IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                                IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                                 IfError(ClearCollect(
                                     colInspDiaExt,
                                     Filter(
@@ -2653,7 +2651,7 @@ Screens:
                                         Created >= ctxIniDiaExt,
                                         Created < ctxFimDiaExt
                                     )
-                                ), Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                                ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                             );
                             Notify("Lance excluído.", NotificationType.Success, 3000)
                         ),
@@ -2661,7 +2659,7 @@ Screens:
                         If(
                             !IsEmpty(Errors(TiposErros)),
                             Notify("Falha ao excluir o reprovado: " & First(Errors(TiposErros)).Message, NotificationType.Error, 10000),
-                            IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)), Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
+                            IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                             Notify("Reprovado excluído.", NotificationType.Success, 3000)
                         )
                     );
@@ -3093,6 +3091,699 @@ Screens:
                   Width: =190
                   X: =773
                   Y: =620
+      - btn_PackingManualExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTextoSuave
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(inp_OPManualExt);
+              Reset(inp_MangManualExt);
+              Reset(inp_LancesManualExt);
+              Reset(cmb_MotivoManualExt);
+              Reset(inp_ENumManualExt);
+              Clear(colLancesMan);
+              Set(varModalManualExt, true)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Pack manual"
+            Width: =89
+            X: =1168
+            Y: =676
+      - cntr_ManualExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =varModalManualExt
+            Width: =1366
+          Children:
+            - btn_BgManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =460
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =96
+            - lbl_TituloManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Packing manual — OP que não chegou ao sistema"
+                  Width: =456
+                  X: =455
+                  Y: =116
+            - lbl_RotOPManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="OP (8 DÍGITOS)"
+                  Width: =218
+                  X: =455
+                  Y: =162
+            - inp_OPManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Número da OP com 8 dígitos"
+                  BorderColor: =If(IsBlank(Self.Text) || IsMatch(Self.Text, "^\d{8}$"), fx_CorBorda, fx_CorErro)
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. 30409776"
+                  HoverFill: =fx_CorInfoSuave
+                  MaxLength: =8
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =182
+            - lbl_RotMangManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MANGUEIRA"
+                  Width: =218
+                  X: =693
+                  Y: =162
+            - inp_MangManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da mangueira"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. GH781-16"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =182
+            - lbl_RotLancesManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="LANCES (UMA METRAGEM POR LINHA, ATÉ 26)"
+                  Width: =456
+                  X: =455
+                  Y: =238
+            - inp_LancesManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Metragem de cada lance, uma por linha"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HintText: ="35,5"
+                  HoverFill: =fx_CorInfoSuave
+                  Mode: =TextMode.MultiLine
+                  OnChange: |-
+                    =ClearCollect(
+                        colLancesMan,
+                        Filter(
+                            ForAll(
+                                Split(Substitute(Substitute(Self.Text, Char(13), ""), ",", "."), Char(10)) As _l,
+                                IfError(Value(Trim(_l.Value), "en-US"), Blank())
+                            ),
+                            !IsBlank(Value) && Value > 0
+                        )
+                    )
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =456
+                  X: =455
+                  Y: =258
+            - lbl_ResumoManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        CountRows(colLancesMan) > 26 || CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value)))) <> CountRows(colLancesMan),
+                        fx_CorErro,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            n: CountRows(colLancesMan),
+                            t: Sum(colLancesMan, Value),
+                            linhas: CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value))))
+                        },
+                        If(
+                            linhas = 0,
+                            "Digite os lances, um por linha (ponto ou vírgula).",
+                            If(
+                                n > 26,
+                                n & " lances — o máximo é 26.",
+                                If(
+                                    linhas <> n,
+                                    "Há linha que não é número maior que zero. Corrija para continuar.",
+                                    n & " lance(s) · total " & fx_QtdBR(t) & " m"
+                                )
+                            )
+                        )
+                    )
+                  Width: =456
+                  X: =455
+                  Y: =366
+            - lbl_RotMotivoManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MOTIVO"
+                  Width: =218
+                  X: =455
+                  Y: =402
+            - cmb_MotivoManualExt:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Motivo do packing manual"
+                  AllowEmptySelection: =true
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =["OP não chegou ao sistema", "Ficha extraviada", "Outro"]
+                  Items.Value: =Value
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorSuperficie
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =422
+            - lbl_RotENumManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="E-NUMBER DE QUEM IMPRIME"
+                  Width: =218
+                  X: =693
+                  Y: =402
+            - inp_ENumManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="E-Number de quem imprime"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. 8750716"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =422
+            - btn_CancelarManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: =Set(varModalManualExt, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =488
+            - btn_ConfirmarManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        varProcessando
+                        || !IsMatch(inp_OPManualExt.Text, "^\d{8}$")
+                        || IsBlank(Trim(inp_MangManualExt.Text))
+                        || CountRows(colLancesMan) = 0
+                        || CountRows(colLancesMan) > 26
+                        || CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value)))) <> CountRows(colLancesMan)
+                        || IsBlank(cmb_MotivoManualExt.Selected.Value)
+                        || IsBlank(Trim(inp_ENumManualExt.Text)),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    IfError(
+                        Patch(
+                            Packing_Manual,
+                            Defaults(Packing_Manual),
+                            {
+                                Title: inp_OPManualExt.Text,
+                                Mangueira: Upper(Trim(inp_MangManualExt.Text)),
+                                Lances: Concat(colLancesMan, Text(Value, "[$-en-US]0.00"), ";"),
+                                TotalM: Sum(colLancesMan, Value),
+                                Motivo: cmb_MotivoManualExt.Selected.Value,
+                                Responsavel: Trim(inp_ENumManualExt.Text),
+                                Turno: fx_TurnoEm(Now()),
+                                Status: {Value: "Pendente"},
+                                DataHoraImp: Now()
+                            }
+                        );
+                        Set(VarMangueiraOP, Value(inp_OPManualExt.Text));
+                        Set(varMangueiraImp, Upper(Trim(inp_MangManualExt.Text)));
+                        Set(varTotalImp, fx_QtdBR(Sum(colLancesMan, Value)));
+                        Set(
+                            varHTMLLances,
+                            "<table style='border-collapse:collapse;width:100%'>"
+                            & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                            & Concat(
+                                ForAll(
+                                    Sequence(13) As _i,
+                                    {
+                                        linha:
+                                            "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & Text(_i.Value, "[$-en-US]0")
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & If(
+                                                CountRows(colLancesMan) >= _i.Value,
+                                                fx_QtdBR(Index(colLancesMan, _i.Value).Value),
+                                                "0,00"
+                                            )
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & Text(_i.Value + 13, "[$-en-US]0")
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & If(
+                                                CountRows(colLancesMan) >= _i.Value + 13,
+                                                fx_QtdBR(Index(colLancesMan, _i.Value + 13).Value),
+                                                "0,00"
+                                            )
+                                            & "</td></tr>"
+                                    }
+                                ),
+                                linha
+                            )
+                            & "</table>"
+                        );
+                        Set(varFichaIDImp, Blank());
+                        Set(varPackingManual, true);
+                        Set(varPalletTxt, "");
+                        Set(varModalManualExt, false);
+                        Set(varProcessando, false);
+                        Navigate(TelaImpressao, ScreenTransition.None),
+                        Set(varProcessando, false);
+                        Notify("Não consegui registrar o packing manual. Confira a rede e tente de novo; nada foi impresso.", NotificationType.Error, 10000)
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Registrar e imprimir"
+                  Width: =261
+                  X: =650
+                  Y: =488
+      - btn_DividirPalletExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTextoSuave
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaExt.Selected.ID) || IsEmpty(colLancesExt) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =ClearCollect(
+                  colPalletSel,
+                  ForAll(
+                      Sequence(CountRows(colLancesExt)) As _i,
+                      {
+                          N: _i.Value,
+                          ID: Index(colLancesExt, _i.Value).ID,
+                          Qtd: Index(colLancesExt, _i.Value).Quantidade,
+                          Sel: true
+                      }
+                  )
+              );
+              Reset(inp_PalletNumExt);
+              Set(varModalPalletExt, true)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Dividir pallet"
+            Width: =89
+            X: =1262
+            Y: =676
+      - cntr_PalletExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =varModalPalletExt
+            Width: =1366
+          Children:
+            - btn_BgPalletExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =540
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =96
+            - lbl_TituloPalletExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Dividir pallet — lances deste Packing List"
+                  Width: =456
+                  X: =455
+                  Y: =116
+            - lbl_DicaPalletExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="Toque nos lances para marcar ou desmarcar. Só os marcados saem nesta ficha."
+                  Width: =456
+                  X: =455
+                  Y: =150
+            - gal_PalletExt:
+                Control: Gallery@2.15.0
+                Variant: Vertical
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  Fill: =Color.Transparent
+                  Height: =290
+                  Items: =colPalletSel
+                  TemplatePadding: =0
+                  TemplateSize: =40
+                  Width: =456
+                  X: =455
+                  Y: =176
+                Children:
+                  - btn_ItemPalletExt:
+                      Control: Classic/Button@2.2.0
+                      Properties:
+                        Align: =Align.Left
+                        BorderColor: =If(ThisItem.Sel, fx_CorInfo, fx_CorBorda)
+                        BorderThickness: =1
+                        Color: =If(ThisItem.Sel, fx_CorTexto, fx_CorTextoSuave)
+                        Fill: =If(ThisItem.Sel, fx_CorInfoSuave, fx_CorSuperficie)
+                        Font: =fx_FonteFamilia
+                        Height: =36
+                        HoverFill: =fx_CorInfoSuave
+                        OnSelect: |-
+                          =Patch(colPalletSel, ThisItem, {Sel: !ThisItem.Sel})
+                        PressedFill: =fx_CorInfoSuave
+                        RadiusBottomLeft: =fx_RaioS
+                        RadiusBottomRight: =fx_RaioS
+                        RadiusTopLeft: =fx_RaioS
+                        RadiusTopRight: =fx_RaioS
+                        Size: =fx_FonteCorpo
+                        Text: =If(ThisItem.Sel, "☑  ", "☐  ") & Text(ThisItem.N, "[$-en-US]0") & ".   " & fx_QtdBR(ThisItem.Qtd) & " m"
+                        Width: =420
+                        X: =8
+                        Y: =2
+            - lbl_ResumoPalletExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =24
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =CountRows(Filter(colPalletSel, Sel)) & " de " & CountRows(colPalletSel) & " lances  ·  "
+                    & fx_QtdBR(Coalesce(Sum(Filter(colPalletSel, Sel), Qtd), 0)) & " m"
+                  Width: =456
+                  X: =455
+                  Y: =476
+            - lbl_RotNumPalletExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="PALLET Nº"
+                  Width: =100
+                  X: =455
+                  Y: =510
+            - inp_PalletNumExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Número do pallet desta ficha"
+                  BorderColor: =If(IsMatch(Self.Text, "^\d{1,2}$"), fx_CorBorda, fx_CorErro)
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  MaxLength: =2
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =100
+                  X: =455
+                  Y: =530
+            - btn_InverterPalletExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  OnSelect: |-
+                    =ClearCollect(
+                        colPalletTmp,
+                        ForAll(colPalletSel As _p, {N: _p.N, ID: _p.ID, Qtd: _p.Qtd, Sel: !_p.Sel})
+                    );
+                    ClearCollect(colPalletSel, colPalletTmp)
+                  PressedFill: =fx_CorInfoSuave
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Inverter seleção"
+                  Width: =160
+                  X: =575
+                  Y: =530
+            - btn_CancelarPalletExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: =Set(varModalPalletExt, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =578
+            - btn_ImprimirPalletExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        varProcessando
+                        || CountRows(Filter(colPalletSel, Sel)) = 0
+                        || CountRows(Filter(colPalletSel, Sel)) > 26
+                        || !IsMatch(inp_PalletNumExt.Text, "^\d{1,2}$"),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =ClearCollect(colPalletImp, Filter(colPalletSel, Sel));
+                    Set(varFichaIDImp, gal_FilaExt.Selected.ID);
+                    Set(varPackingManual, false);
+                    Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
+                    Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
+                    Set(varPalletTxt, "  ·  PALLET " & Text(Value(inp_PalletNumExt.Text), "[$-en-US]0"));
+                    Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colPalletImp, Qtd), 0)));
+                    Set(
+                        varHTMLLances,
+                        "<table style='border-collapse:collapse;width:100%'>"
+                        & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                        & Concat(
+                            ForAll(
+                                Sequence(13) As _i,
+                                {
+                                    linha:
+                                        "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                        & Text(_i.Value, "[$-en-US]0")
+                                        & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                        & If(
+                                            CountRows(colPalletImp) >= _i.Value,
+                                            fx_QtdBR(Index(colPalletImp, _i.Value).Qtd),
+                                            "0,00"
+                                        )
+                                        & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                        & Text(_i.Value + 13, "[$-en-US]0")
+                                        & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                        & If(
+                                            CountRows(colPalletImp) >= _i.Value + 13,
+                                            fx_QtdBR(Index(colPalletImp, _i.Value + 13).Qtd),
+                                            "0,00"
+                                        )
+                                        & "</td></tr>"
+                                }
+                            ),
+                            linha
+                        )
+                        & "</table>"
+                    );
+                    Set(varModalPalletExt, false);
+                    Navigate(TelaImpressao, ScreenTransition.None)
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Imprimir este pallet"
+                  Width: =261
+                  X: =650
+                  Y: =578
       - rct_OverlayExt:
           Control: Rectangle@2.3.0
           Properties:

@@ -1,239 +1,241 @@
 Screens:
   TelaImpressao:
     Properties:
-      Fill: =fx_CorSuperficie
-      Height: =794
-      Width: =1123
+      Fill: =RGBA(255, 255, 255, 1)
     Children:
       - rct_fundo_impressao_1:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =1
-            Fill: =fx_CorSuperficie
-            Height: =778
-            Width: =1107
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =752
+            Width: =1350
             X: =8
             Y: =8
       - btn_voltar_impressao_1:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =ColorFade(Self.Fill, -15%)
-            Color: =fx_CorSuperficie
-            Fill: =fx_CorTextoSuave
-            Font: =fx_FonteFamilia
+            Color: =RGBA(255, 255, 255, 1)
+            Fill: =RGBA(100, 116, 139, 1)
+            Font: =Font.'Open Sans'
             Height: =46
             OnSelect: =Navigate(scr_Finalização_1, ScreenTransition.None)
             Text: ="← Voltar"
-            Visible: =!TelaImpressao.Printing
+            Visible: =!Parent.Printing
             Width: =120
             X: =28
-            Y: =716
+            Y: =700
       - lbl_date_key_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteDestaque
             Text: ="DATE"
-            Width: =170
+            Width: =200
             X: =28
             Y: =28
       - lbl_date_val_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
-            Text: =Text(Now(), "yyyy-mm-dd")
-            Width: =330
-            X: =198
+            Text: =Text(Now(), "yyyy-mm-dd hh:mm")
+            Width: =360
+            X: =228
             Y: =28
       - lbl_local_key_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteDestaque
             Text: ="LOCAL"
-            Width: =170
+            Width: =200
             X: =28
             Y: =72
       - lbl_local_val_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
             Text: ="DANFOSS DRT"
-            Width: =330
-            X: =198
+            Width: =360
+            X: =228
             Y: =72
       - lbl_pn_key_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteDestaque
             Text: ="PART-NUMBER"
-            Width: =170
+            Width: =200
             X: =28
             Y: =160
       - lbl_pn_val_1:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteNumero
             Text: =varMangueiraImp
-            Width: =330
-            X: =198
+            Width: =360
+            X: =228
             Y: =160
       - img_barcode_mangueira_1:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =Color.Transparent
+            BorderColor: =RGBA(0, 0, 0, 0)
             Height: =120
             Image: |-
               =If(
                   IsBlank(varMangueiraImp),
                   "",
-                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras(varMangueiraImp))
+                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(varMangueiraImp, 120))
               )
-            Width: =500
+            Width: =560
             X: =28
-            Y: =232
+            Y: =228
       - lbl_packinglist_header_1:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Fill: =fx_CorBorda
-            Font: =fx_FonteFamilia
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
             Text: ="PACKING LIST"
-            Width: =559
-            X: =548
+            Width: =730
+            X: =608
             Y: =28
       - html_lances_1:
           Control: HtmlViewer@2.1.0
           Properties:
-            Height: =700
+            Height: =668
             HtmlText: =varHTMLLances
-            Width: =559
-            X: =548
+            Width: =730
+            X: =608
             Y: =72
       - lbl_total_header_1:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Fill: =fx_CorBorda
-            Font: =fx_FonteFamilia
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =40
             Size: =fx_FonteTitulo
             Text: ="TOTAL (m)"
-            Width: =500
+            Width: =560
             X: =28
-            Y: =372
+            Y: =370
       - lbl_total_val_1:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Fill: =fx_CorAlertaSuave
-            Font: =fx_FonteFamilia
+            Fill: =RGBA(255, 255, 0, 1)
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =90
             Size: =fx_FonteCrono
             Text: =varTotalImp
-            Width: =500
+            Width: =560
             X: =28
-            Y: =412
+            Y: =410
       - img_barcode_total_1:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =Color.Transparent
+            BorderColor: =RGBA(0, 0, 0, 0)
             Height: =130
             Image: |-
               =If(
                   IsBlank(varTotalImp),
                   "",
-                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras(Text(varTotalImp, "[$-en-US]0")))
+                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(varTotalImp, "[$-en-US]0"), 130))
               )
-            Width: =500
+            Width: =560
             X: =28
-            Y: =514
-      - btn_confirmar_impressao_1:
-          Control: Classic/Button@2.2.0
+            Y: =512
+      - lbl_tarja_manual_1:
+          Control: Label@2.5.1
           Properties:
-            BorderColor: =Color.Transparent
-            BorderThickness: =0
-            Color: =fx_CorSuperficie
-            Fill: =fx_CorInfo
-            Font: =fx_FonteFamilia
+            Align: =Align.Center
+            BorderColor: =RGBA(192, 57, 43, 1)
+            BorderThickness: =3
+            Color: =RGBA(192, 57, 43, 1)
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
+            Height: =48
+            Size: =fx_FonteTitulo
+            Text: ="PACKING MANUAL — SEM OP NO SISTEMA"
+            Visible: =varPackingManual
+            Width: =560
+            X: =28
+            Y: =646
+      - ButtonCanvas2:
+          Control: Button@0.0.45
+          Properties:
             Height: =46
-            HoverFill: =ColorFade(fx_CorInfo, -20%)
             OnSelect: =Print()
-            PressedFill: =ColorFade(fx_CorInfo, -30%)
-            RadiusBottomLeft: =fx_RaioS
-            RadiusBottomRight: =fx_RaioS
-            RadiusTopLeft: =fx_RaioS
-            RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteCorpo
-            Text: ="Confirmar Impressão"
-            Visible: =!TelaImpressao.Printing
+            Text: |-
+              ="Confirmar Impressão 🖨️"
+            Visible: =!Parent.Printing
             Width: =220
             X: =168
-            Y: =716
+            Y: =700
       - lbl_local_key_2:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteDestaque
             Text: ="ID PALLET"
-            Width: =170
+            Width: =200
             X: =28
             Y: =116
       - lbl_local_key_3:
           Control: Label@2.5.1
           Properties:
-            BorderColor: =fx_CorTexto
+            BorderColor: =RGBA(0, 0, 0, 1)
             BorderThickness: =2
-            Font: =fx_FonteFamilia
+            Font: =Font.'Open Sans'
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
-            Text: =VarMangueiraOP
-            Width: =330
-            X: =198
+            Text: =VarMangueiraOP & Coalesce(varPalletTxt, "")
+            Width: =360
+            X: =228
             Y: =116

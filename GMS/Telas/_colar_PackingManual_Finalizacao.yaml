@@ -1,0 +1,401 @@
+Screens:
+  scr_Finalização_1:
+    Children:
+      - btn_PackingManualExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTextoSuave
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Reset(inp_OPManualExt);
+              Reset(inp_MangManualExt);
+              Reset(inp_LancesManualExt);
+              Reset(cmb_MotivoManualExt);
+              Reset(inp_ENumManualExt);
+              Clear(colLancesMan);
+              Set(varModalManualExt, true)
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Packing manual"
+            Width: =183
+            X: =1168
+            Y: =676
+      - cntr_ManualExt:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =varModalManualExt
+            Width: =1366
+          Children:
+            - btn_BgManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =460
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =520
+                  X: =423
+                  Y: =96
+            - lbl_TituloManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorAlerta
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =32
+                  Size: =fx_FonteSecao
+                  Text: ="Packing manual — OP que não chegou ao sistema"
+                  Width: =456
+                  X: =455
+                  Y: =116
+            - lbl_RotOPManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="OP (8 DÍGITOS)"
+                  Width: =218
+                  X: =455
+                  Y: =162
+            - inp_OPManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Número da OP com 8 dígitos"
+                  BorderColor: =If(IsBlank(Self.Text) || IsMatch(Self.Text, "^\d{8}$"), fx_CorBorda, fx_CorErro)
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. 30409776"
+                  HoverFill: =fx_CorInfoSuave
+                  MaxLength: =8
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =182
+            - lbl_RotMangManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MANGUEIRA"
+                  Width: =218
+                  X: =693
+                  Y: =162
+            - inp_MangManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Código da mangueira"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. GH781-16"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =182
+            - lbl_RotLancesManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="LANCES (UMA METRAGEM POR LINHA, ATÉ 26)"
+                  Width: =456
+                  X: =455
+                  Y: =238
+            - inp_LancesManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Metragem de cada lance, uma por linha"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =104
+                  HintText: ="35,5"
+                  HoverFill: =fx_CorInfoSuave
+                  Mode: =TextMode.MultiLine
+                  OnChange: |-
+                    =ClearCollect(
+                        colLancesMan,
+                        Filter(
+                            ForAll(
+                                Split(Substitute(Substitute(Self.Text, Char(13), ""), ",", "."), Char(10)) As _l,
+                                IfError(Value(Trim(_l.Value), "en-US"), Blank())
+                            ),
+                            !IsBlank(Value) && Value > 0
+                        )
+                    )
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =456
+                  X: =455
+                  Y: =258
+            - lbl_ResumoManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: |-
+                    =If(
+                        CountRows(colLancesMan) > 26 || CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value)))) <> CountRows(colLancesMan),
+                        fx_CorErro,
+                        fx_CorTextoSuave
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =24
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =With(
+                        {
+                            n: CountRows(colLancesMan),
+                            t: Sum(colLancesMan, Value),
+                            linhas: CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value))))
+                        },
+                        If(
+                            linhas = 0,
+                            "Digite os lances, um por linha (ponto ou vírgula).",
+                            If(
+                                n > 26,
+                                n & " lances — o máximo é 26.",
+                                If(
+                                    linhas <> n,
+                                    "Há linha que não é número maior que zero. Corrija para continuar.",
+                                    n & " lance(s) · total " & fx_QtdBR(t) & " m"
+                                )
+                            )
+                        )
+                    )
+                  Width: =456
+                  X: =455
+                  Y: =366
+            - lbl_RotMotivoManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MOTIVO"
+                  Width: =218
+                  X: =455
+                  Y: =402
+            - cmb_MotivoManualExt:
+                Control: Classic/DropDown@2.3.1
+                Properties:
+                  AccessibleLabel: ="Motivo do packing manual"
+                  AllowEmptySelection: =true
+                  BorderColor: =fx_CorBorda
+                  ChevronBackground: =Color.Transparent
+                  ChevronFill: =fx_CorRotulo
+                  ChevronHoverBackground: =fx_CorFundo
+                  ChevronHoverFill: =fx_CorRotulo
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =fx_AlturaCampo
+                  HoverFill: =fx_CorInfoSuave
+                  Items: =["OP não chegou ao sistema", "Ficha extraviada", "Outro"]
+                  Items.Value: =Value
+                  PressedColor: =fx_CorSuperficie
+                  PressedFill: =fx_CorInfo
+                  SelectionColor: =fx_CorInfo
+                  SelectionFill: =fx_CorSuperficie
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =455
+                  Y: =422
+            - lbl_RotENumManualExt:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="E-NUMBER DE QUEM IMPRIME"
+                  Width: =218
+                  X: =693
+                  Y: =402
+            - inp_ENumManualExt:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="E-Number de quem imprime"
+                  BorderColor: =fx_CorBorda
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Ex. 8750716"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =218
+                  X: =693
+                  Y: =422
+            - btn_CancelarManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: =Set(varModalManualExt, false)
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar"
+                  Width: =170
+                  X: =455
+                  Y: =488
+            - btn_ConfirmarManualExt:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        varProcessando
+                        || !IsMatch(inp_OPManualExt.Text, "^\d{8}$")
+                        || IsBlank(Trim(inp_MangManualExt.Text))
+                        || CountRows(colLancesMan) = 0
+                        || CountRows(colLancesMan) > 26
+                        || CountRows(Filter(Split(Substitute(inp_LancesManualExt.Text, Char(13), ""), Char(10)), !IsBlank(Trim(Value)))) <> CountRows(colLancesMan)
+                        || IsBlank(cmb_MotivoManualExt.Selected.Value)
+                        || IsBlank(Trim(inp_ENumManualExt.Text)),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    IfError(
+                        Patch(
+                            Packing_Manual,
+                            Defaults(Packing_Manual),
+                            {
+                                Title: inp_OPManualExt.Text,
+                                Mangueira: Upper(Trim(inp_MangManualExt.Text)),
+                                Lances: Concat(colLancesMan, Text(Value, "[$-en-US]0.00"), ";"),
+                                TotalM: Sum(colLancesMan, Value),
+                                Motivo: cmb_MotivoManualExt.Selected.Value,
+                                Responsavel: Trim(inp_ENumManualExt.Text),
+                                Turno: fx_TurnoEm(Now()),
+                                Status: {Value: "Pendente"},
+                                DataHoraImp: Now()
+                            }
+                        );
+                        Set(VarMangueiraOP, Value(inp_OPManualExt.Text));
+                        Set(varMangueiraImp, Upper(Trim(inp_MangManualExt.Text)));
+                        Set(varTotalImp, fx_QtdBR(Sum(colLancesMan, Value)));
+                        Set(
+                            varHTMLLances,
+                            "<table style='border-collapse:collapse;width:100%'>"
+                            & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                            & Concat(
+                                ForAll(
+                                    Sequence(13) As _i,
+                                    {
+                                        linha:
+                                            "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & Text(_i.Value, "[$-en-US]0")
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & If(
+                                                CountRows(colLancesMan) >= _i.Value,
+                                                fx_QtdBR(Index(colLancesMan, _i.Value).Value),
+                                                "0,00"
+                                            )
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & Text(_i.Value + 13, "[$-en-US]0")
+                                            & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                            & If(
+                                                CountRows(colLancesMan) >= _i.Value + 13,
+                                                fx_QtdBR(Index(colLancesMan, _i.Value + 13).Value),
+                                                "0,00"
+                                            )
+                                            & "</td></tr>"
+                                    }
+                                ),
+                                linha
+                            )
+                            & "</table>"
+                        );
+                        Set(varFichaIDImp, Blank());
+                        Set(varPackingManual, true);
+                        Set(varModalManualExt, false);
+                        Set(varProcessando, false);
+                        Navigate(TelaImpressao, ScreenTransition.None),
+                        Set(varProcessando, false);
+                        Notify("Não consegui registrar o packing manual. Confira a rede e tente de novo; nada foi impresso.", NotificationType.Error, 10000)
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Registrar e imprimir"
+                  Width: =261
+                  X: =650
+                  Y: =488
