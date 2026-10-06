@@ -882,3 +882,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | PENDÊNCIA | scr_Montagem_HoraHora | — | MEL-233 | Decidir se OT em andamento em OUTRA célula deve bloquear o início (hoje só bloqueia na mesma célula) #F1
 2026-10-06 | DECISÃO | scr_Montagem_HoraHora | — | MEL-233 | OT aberta em outra célula NÃO bloqueia o início (William); fica como está #F1
 2026-10-06 | ENTREGUE | resumo do dia | — | — | Resumo e próximos passos em Auditoria/99_Resumo_06-10-2026.md #F1
+2026-10-06 | ENTREGUE | ficha_producao | — | MEL-234 | Export de 06/10 gravado em Sharepoint Data GMS e análise de saúde em Analises/Saude_ficha_producao_2026-10-06.md: dado pós-15/09 saudável; frentes são diâmetro em milésimo, Turno em texto, durações >24h e OPs de teste presas #F1 #esfM
