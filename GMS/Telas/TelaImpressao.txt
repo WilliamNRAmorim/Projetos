@@ -3,8 +3,7 @@ Screens:
     Properties:
       Fill: =RGBA(255, 255, 255, 1)
       OnVisible: |-
-        =Set(varFalhaRegManual, false);
-        If(
+        =If(
             varPackingManual,
             Reset(inp_OPManualImp);
             Reset(inp_PNManualImp);
@@ -610,7 +609,7 @@ Screens:
             Height: =52
             Size: =fx_FonteApoio
             Text: =If(varFalhaRegManual, "Não registrou no sistema (sem rede?). Imprima mesmo assim e avise a supervisão.", "Esta OP já existe no sistema. Pode imprimir, fica registrado para conferência.")
-            Visible: =varPackingManual && !Parent.Printing && (varFalhaRegManual || !IsBlank(varManualFicha.ID))
+            Visible: =!Parent.Printing && (varFalhaRegManual || (varPackingManual && !IsBlank(varManualFicha.ID)))
             Width: =196
             X: =398
             Y: =696
