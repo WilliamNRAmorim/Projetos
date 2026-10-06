@@ -24,7 +24,13 @@ Screens:
                 { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
             )
         );
-        If(IsEmpty(colDM_MANDREL), ClearCollect(colDM_MANDREL, DM_MANDREL));
+        If(
+            IsEmpty(colDM_MANDREL),
+            IfError(
+                ClearCollect(colDM_MANDREL, DM_MANDREL),
+                Notify("Não consegui ler o set-up (DM_MANDREL). Toque em atualizar.", NotificationType.Error, 8000)
+            )
+        );
         UpdateContext({
             ctxBitolaExt: If(
                 IsBlank(ctxBitolaExt.PartNumber),
@@ -88,9 +94,14 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =Refresh(CarreteisMandril);
-              Refresh(ControleExtrusora_estrutura);
-              Refresh(ficha_producao);
+              =IfError(
+                  Concurrent(
+                      Refresh(CarreteisMandril),
+                      Refresh(ControleExtrusora_estrutura),
+                      Refresh(ficha_producao)
+                  ),
+                  Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
+              );
               Concurrent(
                   ClearCollect(colCarrExt, CarreteisMandril),
                   ClearCollect(
@@ -634,7 +645,7 @@ Screens:
                   If(
                       _i.Cheios = 0,
                       "nenhum cheio",
-                      Text(_i.Cheios, "[$-pt-BR]0") & " · " & Text(_i.Metros, "[$-pt-BR]#.##0") & " m"
+                      Text(_i.Cheios, "[$-pt-BR]0") & " · " & fx_MetrosUn(_i.Metros)
                   )
               )
             Width: =165
@@ -805,8 +816,8 @@ Screens:
           Control: Classic/TextInput@2.3.2
           Properties:
             AccessibleLabel: ="Metragem extrudada neste carretel"
-            BorderColor: =If(ctxProduzindoExt && Coalesce(fx_Num(Self.Text), 0) <= 0, fx_CorErro, fx_CorBorda)
-            Default: =Text(ctxRegExt.quantidade)
+            BorderColor: =If(ctxProduzindoExt && !fx_MetragemOk(fx_Num(Self.Text)), fx_CorErro, fx_CorBorda)
+            Default: =If(ctxRegExt.quantidade > 0, Text(ctxRegExt.quantidade), "")
             DelayOutput: =true
             DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
             Font: =fx_FonteFamilia
@@ -846,7 +857,7 @@ Screens:
             DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
             Font: =fx_FonteFamilia
             Height: =fx_AlturaCampo
-            HintText: =
+            HintText: ="Número da OP"
             HoverFill: =fx_CorInfoSuave
             PaddingLeft: =10
             RadiusBottomLeft: =fx_RaioS
@@ -1033,7 +1044,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =38
-            Size: =10
+            Size: =fx_FonteApoio
             Text: |-
               =If(
                   ctxProduzindoExt,
@@ -1166,6 +1177,14 @@ Screens:
                       " e não há nenhum cheio no estoque. Priorize a bitola " & Text(_falta.Bitola) & ".",
                       IsBlank(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._1MANDREL_PN),
                       "⚠ Este PN não tem set-up em DM_MANDREL. Confira a receita com a engenharia antes de extrudar.",
+                      ctxProduzindoExt &&
+                      fx_MetragemSubiu(
+                          fx_Num(inp_QtdExt_1.Text),
+                          fx_NumSpec(Text(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._34REEL_QTT))
+                      ),
+                      "⚠ Quantidade passa do lote padrão do delineamento (" &
+                      fx_Ou(Text(LookUp(colDM_MANDREL, _1MANDREL_PN = ctxBitolaExt.PartNumber)._34REEL_QTT)) &
+                      " m, margem " & fx_MargemMetragemPct & "%). Confira a digitação.",
                       _sel.Nivel = "ATENCAO",
                       "⚠ A solda está trabalhando na bitola " & Text(_sel.Bitola) & " e o estoque dela está zerado.",
                       !IsBlank(_orfao.Title),
@@ -1269,7 +1288,7 @@ Screens:
                   !ctxProcExt &&
                   !IsBlank(ctxDesmExt) &&
                   !IsBlank(cmb_OperadorExt_1.Selected.Nome) &&
-                  Coalesce(fx_Num(inp_QtdExt_1.Text), 0) > 0,
+                  fx_MetragemOk(fx_Num(inp_QtdExt_1.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1286,7 +1305,7 @@ Screens:
                   {
                       _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
                       _agora: Now(),
-                      _q: Coalesce(fx_Num(inp_QtdExt_1.Text), 0),
+                      _q: fx_Num(inp_QtdExt_1.Text),
                       _op: Trim(inp_OpExt.Text),
                       _quem: cmb_OperadorExt_1.Selected.Nome
                   },
@@ -1301,7 +1320,7 @@ Screens:
                           Notify("Esta extrusão já foi fechada em outro aparelho. A tela foi recarregada.", NotificationType.Error, 8000);
                           Select(btn_CarregarExt);
                           UpdateContext({ctxProcExt: false}),
-                          _q <= 0,
+                          !fx_MetragemOk(_q),
                           Notify("Informe a metragem extrudada.", NotificationType.Warning, 6000);
                           UpdateContext({ctxProcExt: false}),
                           !IsBlank(_op) && !IsMatch(_op, "\d+"),
@@ -1360,8 +1379,8 @@ Screens:
                                           15000
                                       ),
                                       Notify(
-                                          "Carretel " & _car.Title & " cheio — " & Text(_q, "[$-pt-BR]#.##0") &
-                                          " m de bitola " & Text(_r.Bitola) & " disponíveis para a solda.",
+                                          "Carretel " & _car.Title & " cheio — " & fx_MetrosUn(_q) &
+                                          " de bitola " & Text(_r.Bitola) & " disponíveis para a solda.",
                                           NotificationType.Success,
                                           6000
                                       )
@@ -1640,7 +1659,7 @@ Screens:
             Text: |-
               =With(
                   { _m: Sum(Filter(colCarrExt, Status = "Cheio"), quantidade_metros) },
-                  "carretéis cheios · " & Text(Coalesce(_m, 0), "[$-pt-BR]#.##0") & " m"
+                  "carretéis cheios · " & fx_MetrosUn(Coalesce(_m, 0))
               )
             Width: =115
             X: =1231
@@ -1783,7 +1802,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.2.1"
+            Text: ="Versão 0.3.0"
             Width: =183
             X: =1168
             Y: =710
@@ -2188,14 +2207,18 @@ Screens:
                   HoverFill: =ColorFade(fx_CorOK, -20%)
                   OnSelect: |-
                     =UpdateContext({ctxProcExt: true});
-                    Refresh(CarreteisMandril);
-                    Refresh(ControleExtrusora_estrutura);
-                    ClearCollect(colCarrExt, CarreteisMandril);
-                    ClearCollect(
-                        colAbertosExt,
-                        Filter(
-                            ControleExtrusora_estrutura,
-                            data_hora_inicio >= DateAdd(Now(), -7, TimeUnit.Days)
+                    Concurrent(
+                        Refresh(CarreteisMandril),
+                        Refresh(ControleExtrusora_estrutura)
+                    );
+                    Concurrent(
+                        ClearCollect(colCarrExt, CarreteisMandril),
+                        ClearCollect(
+                            colAbertosExt,
+                            Filter(
+                                ControleExtrusora_estrutura,
+                                data_hora_inicio >= DateAdd(Now(), -7, TimeUnit.Days)
+                            )
                         )
                     );
                     With(
@@ -2548,7 +2571,7 @@ Screens:
                                 RefugoExtrusora_estrutura,
                                 Defaults(RefugoExtrusora_estrutura),
                                 {
-                                    Title: Trim(inp_OpExt.Text),
+                                    Title: Coalesce(Trim(inp_OpExt.Text), ctxRegExt.Title),
                                     Bitola: ctxRegExt.Bitola,
                                     cod_mandril: ctxRegExt.cod_mandril,
                                     CodigoErro: cmb_TipoRefExt.Selected.Value,
@@ -2572,7 +2595,7 @@ Screens:
                                 Reset(inp_ObsRefExt);
                                 UpdateContext({ctxModalRefExt: false, ctxProcExt: false});
                                 Notify(
-                                    "Refugo registrado: " & Text(_kg, "[$-pt-BR]#.##0,0") & " kg · " & cmb_TipoRefExt.Selected.Value & ".",
+                                    "Refugo registrado: " & fx_QtdBR(_kg) & " kg · " & cmb_TipoRefExt.Selected.Value & ".",
                                     NotificationType.Success,
                                     5000
                                 )
@@ -2747,7 +2770,7 @@ Screens:
                         Size: =fx_FonteApoio
                         Text: |-
                           ="bitola " & Text(Coalesce(ThisItem.Bitola, 0)) &
-                          "  ·  " & Text(Coalesce(ThisItem.quantidade_metros, 0), "[$-pt-BR]#.##0") & " m" &
+                          "  ·  " & fx_MetrosUn(ThisItem.quantidade_metros) &
                           If(IsBlank(ThisItem.OP_solda), "", "  ·  solda OP " & ThisItem.OP_solda) &
                           If(
                               IsBlank(ThisItem.data_enchimento),
