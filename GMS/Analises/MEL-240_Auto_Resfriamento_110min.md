@@ -26,6 +26,6 @@ Então o jeito certo é **gravar esse campo sozinho** aos 110 min, não criar um
 3. Na tela, em até 2 min: badge vira "Resfriando", cronômetro mostra ~1 min, botão de envio para Debandagem aparece.
 4. Repetir com OP cujo resfriamento já foi acionado à mão: o fluxo não pode tocar nela.
 
-## Perguntas ao William (não bloqueiam o fluxo)
-- 110 min é fixo para toda mangueira? (hoje a tela tem um aviso por receita em `colDM_BANDAGEM.Tempo`; se a receita mandar, o filtro vira por item em vez de fixo.)
-- O aviso "⚠ Ciclo acima do tempo de receita" só aparece em VULCANIZANDO; com receita > 110 min ele nunca vai aparecer. Manter assim?
+## Decisões do William
+- 110 min é **fixo para todas as mangueiras** (06/10/2026): o filtro do fluxo fica como está, sem consultar a receita.
+- Em aberto (não bloqueia): o aviso "⚠ Ciclo acima do tempo de receita" só aparece em VULCANIZANDO; com receita > 110 min ele nunca vai aparecer. Se quiser, o aviso passa a valer também em RESFRIANDO.
