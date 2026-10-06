@@ -3,12 +3,8 @@ Screens:
     Properties:
       Fill: =fx_CorFundo
       OnVisible: |-
-        =UpdateContext({ctxAgora: Now()});
-        With(
-
-            { _agora: Now() },
-            UpdateContext({ctxHistData: fx_DataRefEm(_agora), ctxHistTurno: fx_TurnoEm(_agora)})
-        );
+        =UpdateContext({ctxHistAgora: Now()});
+        UpdateContext({ctxHistData: fx_DataRefEm(ctxHistAgora), ctxHistTurno: fx_TurnoEm(ctxHistAgora)});
         Select(btn_hist_recarregar)
     Children:
       - rct_hist_fundo:
@@ -50,7 +46,7 @@ Screens:
             Color: =Color.White
             Height: =36
             Size: =fx_FonteCorpo
-            Text: =Text(Coalesce(ctxHistAgora, Now()), "dd/mm/yyyy HH:mm")
+            Text: =Text(ctxHistAgora, "dd/mm/yyyy HH:mm")
             Width: =220
             X: =1130
             Y: =14
@@ -93,7 +89,7 @@ Screens:
           Properties:
             BorderColor: =fx_CorTextoSuave
             Color: =fx_CorTexto
-            DisplayMode: =If(ctxHistData >= fx_DataRefEm(ctxAgora), DisplayMode.Disabled, DisplayMode.Edit)
+            DisplayMode: =If(ctxHistData >= fx_DataRefEm(ctxHistAgora), DisplayMode.Disabled, DisplayMode.Edit)
             Fill: =fx_CorFundo
             Height: =44
             OnSelect: |-
@@ -112,7 +108,7 @@ Screens:
             Fill: =fx_CorFundo
             Height: =44
             OnSelect: |-
-              =UpdateContext({ctxHistData: fx_DataRefEm(Now())});
+              =UpdateContext({ctxHistData: fx_DataRefEm(ctxHistAgora)});
               Select(btn_hist_recarregar)
             Size: =fx_FonteCorpo
             Text: ="Hoje"
@@ -141,57 +137,57 @@ Screens:
             Height: =44
             OnSelect: |-
               =UpdateContext({ctxHistCarregando: true});
+              IfError(
+                  ClearCollect(colHistTuboDia, Filter(Eventos_Producao, data_ref = ctxHistData, etapa.Value = "Tubo"));
 
-              ClearCollect(colHistDia, Filter(Eventos_Producao, data_ref = ctxHistData));
-              ClearCollect(colHistTuboDia, Filter(colHistDia, etapa.Value = "Tubo"));
-
-              With(
-                  {_turno: Switch(cmb_hist_turno.Selected.Value, "Turno 1", 1, "Turno 2", 2, "Turno 3", 3, 0)},
-                  ClearCollect(
-                      colHistEv,
-                      Filter(colHistTuboDia, _turno = 0 || turno = _turno)
-                  )
-              );
-
-              ClearCollect(
-                  colHistFichas,
-                  ForAll(
-                      Distinct(colHistEv, origem_ID) As d,
-                      With(
-                          {f: LookUp(ficha_producao, ID = d.Value)},
-                          {fID: d.Value, fOP: f.OP, fMangueira: f.Mangueira}
+                  With(
+                      {_turno: Switch(cmb_hist_turno.Selected.Value, "Turno 1", 1, "Turno 2", 2, "Turno 3", 3, 0)},
+                      ClearCollect(
+                          colHistEv,
+                          Filter(colHistTuboDia, _turno = 0 || turno = _turno)
                       )
-                  )
-              );
+                  );
 
-              ClearCollect(
-                  colHistTubo,
-                  AddColumns(
-                      colHistEv As ev,
-                      hMomento, ev.data_hora,
-                      hTipo, ev.tipo.Value,
-                      hMetros, ev.metros,
-                      hSobra, Coalesce(ev.sobra, 0),
-                      hCarreteis, ev.carretel,
-                      hBitola, ev.bitola,
-                      hOperador, ev.operador,
-                      hOP, LookUp(colHistFichas, fID = ev.origem_ID).fOP,
-                      hMangueira, LookUp(colHistFichas, fID = ev.origem_ID).fMangueira,
-                      hDelta, If(
-                          ev.tipo.Value <> "Fim",
-                          Blank(),
+                  ClearCollect(
+                      colHistFichas,
+                      ForAll(
+                          Distinct(colHistEv, origem_ID) As d,
                           With(
-                              {_ini: LookUp(colHistTuboDia, origem_ID = ev.origem_ID && tipo.Value = "Início").metros},
-                              If(
-                                  IsBlank(_ini),
-                                  Blank(),
-                                  Coalesce(ev.metros, 0) + Coalesce(ev.sobra, 0) - _ini
+                              {f: LookUp(ficha_producao, ID = d.Value)},
+                              {fID: d.Value, fOP: f.OP, fMangueira: f.Mangueira}
+                          )
+                      )
+                  );
+
+                  ClearCollect(
+                      colHistTubo,
+                      AddColumns(
+                          colHistEv As ev,
+                          hMomento, ev.data_hora,
+                          hTipo, ev.tipo.Value,
+                          hMetros, ev.metros,
+                          hSobra, Coalesce(ev.sobra, 0),
+                          hCarreteis, ev.carretel,
+                          hBitola, ev.bitola,
+                          hOperador, ev.operador,
+                          hOP, LookUp(colHistFichas, fID = ev.origem_ID).fOP,
+                          hMangueira, LookUp(colHistFichas, fID = ev.origem_ID).fMangueira,
+                          hDelta, If(
+                              ev.tipo.Value <> "Fim",
+                              Blank(),
+                              With(
+                                  {_ini: LookUp(colHistTuboDia, origem_ID = ev.origem_ID && tipo.Value = "Início").metros},
+                                  If(
+                                      IsBlank(_ini),
+                                      Blank(),
+                                      Coalesce(ev.metros, 0) + Coalesce(ev.sobra, 0) - _ini
+                                  )
                               )
                           )
                       )
-                  )
+                  ),
+                  Notify("Não consegui carregar o histórico. Confira a rede e toque em Atualizar.", NotificationType.Error, 8000)
               );
-
               UpdateContext({ctxHistCarregando: false})
             Size: =fx_FonteCorpo
             Text: ="Atualizar"
@@ -206,7 +202,7 @@ Screens:
             Height: =44
             Size: =fx_FonteCorpo
             Text: |-
-              ="Janela: " & Switch(cmb_hist_turno.Selected.Value, "Turno 1", "05:20 às 13:48", "Turno 2", "13:48 às 22:41", "Turno 3", "22:41 às 05:20", "05:20 às 05:20") & "  ·  " & CountRows(colHistTubo) & " movimentos"
+              ="Janela: " & Switch(cmb_hist_turno.Selected.Value, "Turno 1", "05:20 às 13:57", "Turno 2", "13:57 às 22:41", "Turno 3", "22:41 às 05:20", "05:20 às 05:20") & "  ·  " & CountRows(colHistTubo) & " movimentos"
             Width: =538
             X: =796
             Y: =88
@@ -435,13 +431,13 @@ Screens:
             - rct_hist_linha_fundo:
                 Control: Rectangle@2.3.0
                 Properties:
-                  Fill: =If(ThisItem.hTipo = "Início", ColorFade(fx_CorInfo, 0.92), fx_CorSuperficie)
+                  Fill: =Switch(ThisItem.hTipo, "Início", ColorFade(fx_CorInfo, 0.92), "Cancelado", fx_CorErroSuave, fx_CorSuperficie)
                   Height: =45
                   Width: =1324
             - rct_hist_linha_tag:
                 Control: Rectangle@2.3.0
                 Properties:
-                  Fill: =If(ThisItem.hTipo = "Fim", fx_CorOK, fx_CorInfo)
+                  Fill: =fx_CorTipoEvento(ThisItem.hTipo)
                   Height: =45
                   Width: =4
             - lbl_hist_linha_hora:
@@ -456,7 +452,7 @@ Screens:
             - lbl_hist_linha_tipo:
                 Control: Label@2.5.1
                 Properties:
-                  Color: =If(ThisItem.hTipo = "Fim", fx_CorOK, fx_CorInfo)
+                  Color: =fx_CorTipoEvento(ThisItem.hTipo)
                   Height: =45
                   Size: =fx_FonteApoio
                   Text: =ThisItem.hTipo

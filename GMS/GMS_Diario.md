@@ -862,3 +862,8 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | scr_HoraHora_Cobertura_1 | v0.2.0 | MEL-223 | Mesmos ajustes da Trançagem (Finalizado preservado, aviso Real>meta, Refresh concorrente, spec com IfError); já seguia o padrão #F1 #esfM
 2026-10-06 | ENTREGUE | scr_Cobertura_2 | v0.3.3 | MEL-223 | Botão Hora a Hora no menu lateral: o Hora-Hora da Cobertura estava órfão #F1
 2026-10-06 | PENDÊNCIA | scrHoraHora_Mandril / scrHoraHora_Tubo | — | MEL-224 | Refazer no padrão Hora-Hora da Trançagem (hoje ~410 linhas, modelo antigo); meta por hora e lista de máquinas dependem de definição do William (amanhã) #F1
+2026-10-06 | DECISÃO | descarte de OP | — | MEL-222 | Descartar OP = tirar do processo: o material vira não conforme e sai (não volta para a etapa anterior; editar a OP já corrige engano); só o carretel vazio é liberado/limpo. Implementar etapa a etapa a partir do modelo do Mandril #F1 #esfM
+2026-10-06 | ENTREGUE | Telas/Moldes | — | MEL-224 | Moldes scr_HoraHora_Mandril_2 e scr_HoraHora_Tubo_2 (padrão Trançagem, Hora-Hora, Meta em branco); não publicados, aguardam fonte de velocidade, máquinas e destino do BI #F1
+2026-10-06 | ENTREGUE | Menu_1 | — | MEL-225 | Falha aberta do mapeamento de setor corrigida, botão duplicado removido, data sem Today() #F1
+2026-10-06 | ENTREGUE | scr_HistoricoTurno_Mandril | — | MEL-226 | Data de referência por ctxHistAgora (abria vazio), filtro de etapa no servidor, IfError, cores por fx_CorTipoEvento, janela T1 até 13:57 #F1
+2026-10-06 | ENTREGUE | scr_HistoricoTurno_Tubo | — | MEL-226 | Mesmos ajustes do Histórico do Mandril #F1

@@ -1,26 +1,31 @@
 Screens:
   Menu_1:
     Properties:
-      LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
+      LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =Set(
-                    varAreaUsuario,
-                    Coalesce(
-                        LookUp(
-                            MapeamentoSetor,
-                            Lower(EmailComputador) = Lower(User().Email)
-                        ).Area,
-                        "Gestao"
-                    )
-                );
-                Set(varSomenteMontagem, varAreaUsuario = "Montagem");
-                Set(varAmbasAreas, varAreaUsuario = "Ambos");
-                Set(varSomenteGestao, varAreaUsuario = "Gestao")
+        =UpdateContext({ctxHoje: Today()});
+        Set(
+            varAreaUsuario,
+            IfError(
+                Coalesce(
+                    LookUp(
+                        MapeamentoSetor,
+                        Lower(EmailComputador) = Lower(User().Email)
+                    ).Area,
+                    "Gestao"
+                ),
+                Notify("Não consegui confirmar seu setor. Só o Painel de Gestão foi liberado — confira a rede e reabra o menu.", NotificationType.Error, 10000);
+                "Gestao"
+            )
+        );
+        Set(varSomenteMontagem, varAreaUsuario = "Montagem");
+        Set(varAmbasAreas, varAreaUsuario = "Ambos");
+        Set(varSomenteGestao, varAreaUsuario = "Gestao")
     Children:
       - Image6:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =768
             Image: ='Screenshot 2026-02-25 112141'
             ImagePosition: =ImagePosition.Fill
@@ -28,7 +33,7 @@ Screens:
       - Rectangle11:
           Control: Rectangle@2.3.0
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Fill: =RGBA(15, 23, 42, 0.85)
             Height: =768
             Width: =1366
@@ -36,7 +41,7 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             AutoHeight: =true
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =768
             HtmlText: "=\"<div style='\n    width: 1366px;\n    height: 768px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n    justify-content: center;\n    font-family: \"\"Segoe UI\"\", sans-serif;\n    margin: 0; padding: 0;\n'>\n\n    <div style='text-align: center; margin-bottom: 60px; margin-top: -40px;'>\n        <h1 style='\n            font-size: 56px;\n            font-weight: 800; \n            color: white; \n            margin: 0; \n            letter-spacing: -1px;\n            text-shadow: 0 4px 30px rgba(0,0,0,0.8);\n        '>Bem-vindo ao GMS</h1>\n        <p style='\n            font-size: 20px; \n            color: #CBD5E1; \n            margin-top: 10px; \n            font-weight: 400;\n            text-shadow: 0 2px 10px rgba(0,0,0,0.8);\n        '>Selecione o módulo que deseja acessar para iniciar suas operações de produção.</p>\n    </div>\n\n    <div style='display: flex; gap: 40px;'>\n        \n        <!-- CARTÃO: Painel de Gestão -->\n        <div style='\n            width: 400px; height: 160px; padding: 0 30px;\n            background: rgba(30, 41, 59, 0.6); \n            border: 1px solid rgba(255, 255, 255, 0.15);\n            border-radius: 24px;\n            display: flex; align-items: center; gap: 25px;\n            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);\n        '>\n            <div style='\n                width: 70px; height: 70px; min-width: 70px;\n                background: rgba(59, 130, 246, 0.15); \n                border: 1px solid rgba(59, 130, 246, 0.3);\n                border-radius: 18px;\n                display: flex; align-items: center; justify-content: center;\n            '>\n                <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#60A5FA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\n                    <rect x='3' y='3' width='7' height='9' rx='1'></rect>\n                    <rect x='14' y='3' width='7' height='5' rx='1'></rect>\n                    <rect x='14' y='12' width='7' height='9' rx='1'></rect>\n                    <rect x='3' y='16' width='7' height='5' rx='1'></rect>\n                </svg>\n            </div>\n            <div>\n                <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Painel de Gestão</h3>\n                <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>KPIs, Relatórios e Visão Geral\n</p>\n            </div>\n        </div>\n\n        <!-- CARTÃO: Setores Mangueira -->\n        <div style='\n            width: 400px; height: 160px; padding: 0 30px;\n            background: rgba(30, 41, 59, 0.6); \n            border: 1px solid rgba(255, 255, 255, 0.15);\n            border-radius: 24px;\n            display: flex; align-items: center; gap: 25px;\n            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6);\n        '>\n            <div style='\n                width: 70px; height: 70px; min-width: 70px;\n                background: rgba(239, 68, 68, 0.15); \n                border: 1px solid rgba(239, 68, 68, 0.3);\n                border-radius: 18px;\n                display: flex; align-items: center; justify-content: center;\n            '>\n                <svg width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='#F87171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>\n                    <path d='M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z'></path>\n                    <path d='M17 18h1'></path>\n                    <path d='M12 18h1'></path>\n                    <path d='M7 18h1'></path>\n                </svg>\n            </div>\n            <div>\n                <h3 style='margin: 0; font-size: 24px; font-weight: 700; color: white;'>Setores Produtivos</h3>\n                <p style='margin: 5px 0 0 0; font-size: 14px; color: #94A3B8;'>Mandril, Tubo, Trançagem e mais\n</p>\n            </div>\n        </div>\n\n    </div>\n</div>\""
             Visible: =!varSomenteMontagem && !varAmbasAreas && !varSomenteGestao
@@ -45,7 +50,7 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             AutoHeight: =true
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =768
             HtmlText: |-
               ="<div style='
@@ -111,7 +116,7 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             AutoHeight: =true
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =768
             HtmlText: |-
               ="<div style='
@@ -173,7 +178,7 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             AutoHeight: =true
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =768
             HtmlText: |-
               ="<div style='
@@ -301,14 +306,14 @@ Screens:
       - btnPainelGestao:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(0, 0, 0, 0)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =Color.Transparent
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             Fill: =Color.Transparent
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =161
             HoverBorderColor: =RGBA(255, 255, 255, 0.5)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =RGBA(255, 255, 255, 0.1)
             OnSelect: =Navigate(scr_SelecaoGestao_1)
             PressedBorderColor: =Self.Fill
@@ -326,14 +331,14 @@ Screens:
       - btnSetoresMangueira:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(0, 0, 0, 0)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =Color.Transparent
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             Fill: =Color.Transparent
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =161
             HoverBorderColor: =RGBA(255, 255, 255, 0.5)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =RGBA(255, 255, 255, 0.1)
             OnSelect: =Navigate(scr_selecaosetor_1)
             PressedBorderColor: =Self.Fill
@@ -351,14 +356,14 @@ Screens:
       - btnSetoresMontagem:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(0, 0, 0, 0)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =Color.Transparent
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             Fill: =Color.Transparent
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =161
             HoverBorderColor: =RGBA(255, 255, 255, 0.5)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =RGBA(255, 255, 255, 0.1)
             OnSelect: =Navigate(scr_selecaosetor_Montagem)
             PressedBorderColor: =Self.Fill
@@ -376,7 +381,7 @@ Screens:
       - Image8_1:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =48
             Image: ='layout-dashboard'
             Visible: =!varSomenteMontagem
@@ -386,7 +391,7 @@ Screens:
       - Image8:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =48
             Image: ='factory (1)'
             Visible: =!varSomenteMontagem && !varSomenteGestao
@@ -396,7 +401,7 @@ Screens:
       - Image1_1:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =48
             Image: ='git-pull-request-draft (1)'
             Visible: =varSomenteMontagem || varAmbasAreas
@@ -407,39 +412,14 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             AutoHeight: =true
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =90
-            HtmlText: "=\"<div style='\r\n    width: 100%;\r\n    height: 100%;\r\n    display: flex;\r\n    justify-content: space-between;\r\n    align-items: center;\r\n    padding: 0 50px;\r\n    border-bottom: 1px solid rgba(255, 255, 255, 0.15);\r\n    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.0));\r\n    font-family: \"\"Segoe UI\"\", sans-serif;\r\n    color: white;\r\n    box-sizing: border-box;\r\n'>\r\n    <div style='display: flex; align-items: center; gap: 16px;'>\r\n        <div style='width: 6px; height: 38px; background-color: #D6001C; border-radius: 3px;'></div>\r\n        <span style='font-size: 32px; font-weight: 800; letter-spacing: 0.5px;'>Danfoss</span>\r\n    </div>\r\n\r\n    <div style='\r\n        font-size: 16px;\r\n        font-weight: 500; \r\n        color: #E2E8F0;\r\n        display: flex; \r\n        align-items: center; \r\n        gap: 25px;\r\n    '>\r\n        <span style='letter-spacing: 0.5px;'>Guaratinguetá Manufacturing System</span>\r\n        \r\n        <span style='height: 20px; border-left: 2px solid rgba(255,255,255,0.2);'></span>\r\n        \r\n        <span style='font-weight: 600; color: white;'>\" & Text(Today(), \"dd/mm/yyyy\") & \"</span>\r\n    </div>\r\n</div>\""
+            HtmlText: "=\"<div style='\r\n    width: 100%;\r\n    height: 100%;\r\n    display: flex;\r\n    justify-content: space-between;\r\n    align-items: center;\r\n    padding: 0 50px;\r\n    border-bottom: 1px solid rgba(255, 255, 255, 0.15);\r\n    background: linear-gradient(to bottom, rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.0));\r\n    font-family: \"\"Segoe UI\"\", sans-serif;\r\n    color: white;\r\n    box-sizing: border-box;\r\n'>\r\n    <div style='display: flex; align-items: center; gap: 16px;'>\r\n        <div style='width: 6px; height: 38px; background-color: #D6001C; border-radius: 3px;'></div>\r\n        <span style='font-size: 32px; font-weight: 800; letter-spacing: 0.5px;'>Danfoss</span>\r\n    </div>\r\n\r\n    <div style='\r\n        font-size: 16px;\r\n        font-weight: 500; \r\n        color: #E2E8F0;\r\n        display: flex; \r\n        align-items: center; \r\n        gap: 25px;\r\n    '>\r\n        <span style='letter-spacing: 0.5px;'>Guaratinguetá Manufacturing System</span>\r\n        \r\n        <span style='height: 20px; border-left: 2px solid rgba(255,255,255,0.2);'></span>\r\n        \r\n        <span style='font-weight: 600; color: white;'>\" & Text(ctxHoje, \"dd/mm/yyyy\") & \"</span>\r\n    </div>\r\n</div>\""
             Width: =1366
-      - btnSetoresMontagem_1:
-          Control: Classic/Button@2.2.0
-          Properties:
-            BorderColor: =RGBA(0, 0, 0, 0)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
-            Fill: =Color.Transparent
-            Font: =Font.'Open Sans'
-            Height: =161
-            HoverBorderColor: =RGBA(255, 255, 255, 0.5)
-            HoverColor: =RGBA(255, 255, 255, 1)
-            HoverFill: =RGBA(255, 255, 255, 0.1)
-            OnSelect: =Navigate(scr_selecaosetor_Montagem)
-            PressedBorderColor: =Self.Fill
-            PressedColor: =Self.Fill
-            PressedFill: =RGBA(0, 0, 0, 0.2)
-            RadiusBottomLeft: =24
-            RadiusBottomRight: =24
-            RadiusTopLeft: =24
-            RadiusTopRight: =24
-            Text: =
-            Visible: =varSomenteMontagem || varAmbasAreas
-            Width: =If(varAmbasAreas, 380, 460)
-            X: =If(varAmbasAreas, 910, 453)
-            Y: =383
       - html_FichaTecnicaMenu:
           Control: HtmlViewer@2.1.0
           Properties:
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =74
             HtmlText: |-
               ="<div style='
@@ -476,7 +456,7 @@ Screens:
       - img_FichaTecnicaMenu:
           Control: Image@2.2.3
           Properties:
-            BorderColor: =RGBA(0, 18, 107, 1)
+            BorderColor: =fx_CorBorda
             Height: =36
             Image: ='drafting-compass'
             Width: =30
@@ -485,14 +465,14 @@ Screens:
       - btn_FichaTecnicaMenu:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =RGBA(0, 0, 0, 0)
-            Color: =RGBA(255, 255, 255, 1)
-            DisabledBorderColor: =RGBA(166, 166, 166, 1)
+            BorderColor: =Color.Transparent
+            Color: =fx_CorSuperficie
+            DisabledBorderColor: =fx_CorBorda
             Fill: =Color.Transparent
-            Font: =Font.'Open Sans'
+            Font: =fx_FonteFamilia
             Height: =42
             HoverBorderColor: =RGBA(255, 255, 255, 0.5)
-            HoverColor: =RGBA(255, 255, 255, 1)
+            HoverColor: =fx_CorSuperficie
             HoverFill: =RGBA(255, 255, 255, 0.1)
             OnSelect: =Navigate(scr_FichaTecnica_1, ScreenTransition.Fade)
             PressedBorderColor: =Self.Fill
