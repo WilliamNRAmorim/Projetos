@@ -1,13 +1,15 @@
 # Semana 05–11/10: estreia
 
+> Estreia adiada de terça 06/10 para **quarta 07/10**: o GMS sai no LinkedIn de manhã e no Instagram e TikTok às 19h. O resto da semana não muda.
+
 **Ideia da semana:** apresentar o trabalho e o personagem. O GMS entra primeiro, como prova de que o trabalho é real. Depois aparece o Bit, que vai ser a cara de todos os próximos projetos.
 
 **Fio condutor:** "a fábrica não via o que acontecia, agora vê tudo ao vivo", e o Bit (que lembra de tudo) contra a Ficha (o papel, que esquece tudo).
 
 | # | Dia | Rede | Horário | O quê | Arquivo |
 |---|---|---|---|---|---|
-| 1 | Ter 06/10 | LinkedIn | 8h–10h | O projeto completo | `04_Videos/Publicar/GMS_Reel_PT_78s.mp4` + texto do LinkedIn em `posts_prontos.md` |
-| 1 | Ter 06/10 | Instagram | 12h | O projeto, versão curta | `04_Videos/Publicar/GMS_Reel_PT_30s.mp4` + texto do Instagram em `posts_prontos.md` |
+| 1 | Qua 07/10 | LinkedIn | 8h–10h | O projeto completo | `04_Videos/Publicar/GMS_Reel_PT_78s.mp4` + texto do LinkedIn em `posts_prontos.md` |
+| 1 | Qua 07/10 | Instagram | 19h | O projeto, versão curta | `04_Videos/Publicar/GMS_Reel_PT_30s.mp4` + texto do Instagram em `posts_prontos.md` |
 | 1 | Qua 07/10 | TikTok | 19h | O projeto, versão curta | `GMS_Reel_PT_30s.mp4` + texto do TikTok em `posts_prontos.md` |
 | 2 | Qui 08/10 | Instagram + TikTok | 19h | **Episódio 1 do Bit:** "POV: você é uma ficha de papel e a fábrica comprou um tablet" | vídeo novo (15–20 s), feito pela tarefa de sábado nesta pasta |
 | 3 | Sáb 10/10 | Instagram (carrossel) + TikTok | 11h / 19h | **Curiosidade de games apresentada pelo Bit:** o primeiro slide apresenta o Bit, e os seguintes trazem uma curiosidade real e verificada sobre videogames (tema em alta, que puxa o Will Station nas próximas semanas) | imagens 1080×1350 feitas pela tarefa nesta pasta |

@@ -2,8 +2,8 @@
 
 Os arquivos de postar já estão no Drive, em `Bit · Vídeos pra postar/semana-2026-10-05`, cada um com o seu `_texto.txt`.
 
-## Post 1 · projeto (GMS): Ter 06/10 (LinkedIn 8h, Instagram 12h) · Qua 07/10 (TikTok 19h)
-Textos em `04_Videos/Publicar/posts_prontos.md` (também nos `Ter06_*_texto.txt` do Drive).
+## Post 1 · projeto (GMS): Qua 07/10 (LinkedIn 8h, Instagram e TikTok 19h)
+Textos em `04_Videos/Publicar/posts_prontos.md` (também nos `Qua07_*_texto.txt` do Drive).
 
 ## Post 2 · dia a dia/humor: Qui 08/10, Instagram e TikTok às 19h
 Arquivo: `Qui08_Instagram_TikTok_Ep1_Bit.mp4` (capa: `_capa.jpg`)
