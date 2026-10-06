@@ -13,12 +13,18 @@ Screens:
             ctxCarregadoHHC: false,
             ctxFecharHHC: false,
             ctxTurnoCarregadoHHC: 0,
-            ctxDataCarregadaHHC: Today()
+            ctxDataCarregadaHHC: fx_DataRefEm(Now())
         });
         Set(varProcessando, false);
         Set(varTurnoHHC, fx_TurnoLabelEm(Now()));
         Reset(cmb_TurnoHHC);
-        If(IsEmpty(colSpecCob), ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA));
+        If(
+            IsEmpty(colSpecCob),
+            IfError(
+                ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA),
+                Notify("Não consegui carregar a velocidade das mangueiras. Sem ela a meta fica em branco — confira a rede e reabra a tela.", NotificationType.Error, 10000)
+            )
+        );
         Select(btn_CarregarHHC)
     Children:
       - rct_HeaderHHC:
@@ -51,7 +57,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteTitulo
@@ -706,7 +712,8 @@ Screens:
                   AccessibleLabel: ="Metros produzidos nesta janela"
                   BorderColor: |-
                     =If(
-                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_APONTAMENTO",
+                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_APONTAMENTO" ||
+                        (ThisItem.Meta > 0 && ThisItem.Real > ThisItem.Meta * (1 + fx_MargemMetragemPct / 100)),
                         fx_CorAlerta,
                         fx_CorBorda
                     )
@@ -1013,6 +1020,10 @@ Screens:
                   ctxAlteradoHHC,
                   "⚠ Alterações ainda NÃO gravadas. Nada vai para o SharePoint até você tocar em Salvar ou Fechar turno.",
 
+                  CountRows(Filter(colLinhasHHC As _q0, _q0.Meta > 0 && _q0.Real > _q0.Meta * (1 + fx_MargemMetragemPct / 100))) > 0,
+                  "⚠ " & Text(CountRows(Filter(colLinhasHHC As _q9, _q9.Meta > 0 && _q9.Real > _q9.Meta * (1 + fx_MargemMetragemPct / 100)))) &
+                  " janela(s) com Real acima da meta em mais de " & Text(fx_MargemMetragemPct) & "% (borda laranja). Confira se não foi digitação; se estiver certo, pode salvar.",
+
                   CountRows(Filter(colLinhasHHC As _q1, _q1.Ativa)) = 0 && ctxCarregadoHHC,
                   "Sem sinal de produção na Cobertura neste turno — nada está sendo cobrado. Se a extrusora ficou parada, registre o motivo ao lado; se ela rodou, lance a primeira janela.",
 
@@ -1048,7 +1059,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.1.0"
+            Text: ="Versão 0.2.0"
             Width: =140
             X: =1226
             Y: =728
@@ -1224,7 +1235,7 @@ Screens:
                                           'Motivo 2': _u.cMotivo2,
                                           'Comentário / Ação': _u.cComentario,
                                           Rendimento: fx_RendimentoHH(_u.cMeta, _u.cReal),
-                                          Status: If(ctxFecharHHC, "Finalizado", "Rascunho")
+                                          Status: If(ctxFecharHHC || Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
                                       }
                                   )
                               },
@@ -1793,8 +1804,13 @@ Screens:
             Height: =0
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =Refresh('Hora-Hora');
-              Refresh(ficha_producao);
+              =IfError(
+                  Concurrent(
+                      Refresh('Hora-Hora'),
+                      Refresh(ficha_producao)
+                  ),
+                  Notify("Não consegui atualizar os dados do servidor. O que aparece pode estar desatualizado — confira a rede e toque em Abrir de novo.", NotificationType.Warning, 10000)
+              );
               With(
                   {
                       _agora: Now(),

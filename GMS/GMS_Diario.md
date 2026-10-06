@@ -859,3 +859,6 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | scr_HoraHora_Trancagem_2 | v0.6.0 | MEL-221 | Salvar não rebaixa linha Finalizada; aviso de Real acima da meta em mais de 10%; Refresh concorrente com IfError; data inicial por fx_DataRefEm; é a tela-padrão dos Hora-Hora #F1 #esfM
 2026-10-06 | NORMA | HoraHora | — | MEL-221 | Todo Hora-Hora de etapa de mangueira segue o contrato de scr_HoraHora_Trancagem_2 (cabeçalho, grade, replicar, pendências, Fechar turno, falhas sem duplicar) #F1
 2026-10-06 | PENDÊNCIA | descarte de OP | — | MEL-222 | Descartar OP em todas as etapas (modelo: Mandril): status_processo Cancelado + evento + devolução do material da etapa anterior; começar pelas etapas cujo consumo já é conhecido #F1 #esfM
+2026-10-06 | ENTREGUE | scr_HoraHora_Cobertura_1 | v0.2.0 | MEL-223 | Mesmos ajustes da Trançagem (Finalizado preservado, aviso Real>meta, Refresh concorrente, spec com IfError); já seguia o padrão #F1 #esfM
+2026-10-06 | ENTREGUE | scr_Cobertura_2 | v0.3.3 | MEL-223 | Botão Hora a Hora no menu lateral: o Hora-Hora da Cobertura estava órfão #F1
+2026-10-06 | PENDÊNCIA | scrHoraHora_Mandril / scrHoraHora_Tubo | — | MEL-224 | Refazer no padrão Hora-Hora da Trançagem (hoje ~410 linhas, modelo antigo); meta por hora e lista de máquinas dependem de definição do William (amanhã) #F1
