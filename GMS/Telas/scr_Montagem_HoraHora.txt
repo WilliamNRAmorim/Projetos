@@ -14,9 +14,13 @@ Screens:
         Set(varPNAtivo, Blank());
         Set(varPopupFinalizar_M, false);
         UpdateContext({ctxPopExcesso: false});
-        Concurrent(
-            Refresh(Producao_Montagem),
-            Refresh(Paradas_Montagem)
+        Set(varFalhaM, false);
+        IfError(
+            Concurrent(
+                Refresh(Producao_Montagem),
+                Refresh(Paradas_Montagem)
+            ),
+            Set(varFalhaM, true)
         );
         ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
         Collect(colOPsAbertas,
@@ -37,7 +41,7 @@ Screens:
             ForAll(
                 Distinct(
                     Filter(colParadasM,
-                        Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                        Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                     ),
                     OPVinculada
                 ) As d,
@@ -45,7 +49,7 @@ Screens:
                     Chave: d.Value,
                     MinDesc: Sum(
                         Filter(colParadasM,
-                            OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                            OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                         ),
                         TempoParadoMin
                     )
@@ -61,8 +65,12 @@ Screens:
             Font: =fx_FonteFamilia
             OnTimerEnd: |-
               =Set(varAgora, Now());
-              Refresh(Producao_Montagem);
-              Refresh(Paradas_Montagem);
+              Set(varFalhaM, false);
+              IfError(
+                  Refresh(Producao_Montagem);
+                  Refresh(Paradas_Montagem),
+                  Set(varFalhaM, true)
+              );
               ClearCollect(colParadasM,
                   Filter(Paradas_Montagem,
                       Celula = varCelulaMontagem &&
@@ -73,7 +81,7 @@ Screens:
                   ForAll(
                       Distinct(
                           Filter(colParadasM,
-                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                              Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                           ),
                           OPVinculada
                       ) As d,
@@ -81,7 +89,7 @@ Screens:
                           Chave: d.Value,
                           MinDesc: Sum(
                               Filter(colParadasM,
-                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                  OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                               ),
                               TempoParadoMin
                           )
@@ -115,7 +123,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -135,7 +143,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteCorpo
-            Text: =varTurnoTela & "  •  " & Text(varDataTela, "dd/mm/yyyy")
+            Text: =If(varFalhaM, "⚠ sem conexão  •  ", "") & varTurnoTela & "  •  " & Text(varDataTela, "dd/mm/yyyy")
             Width: =260
             X: =1105
             Y: =4
@@ -147,8 +155,12 @@ Screens:
             Icon: =Icon.Reload
             OnSelect: |-
               =Set(varAgora, Now());
-              Refresh(Producao_Montagem);
-              Refresh(Paradas_Montagem);
+              Set(varFalhaM, false);
+              IfError(
+                  Refresh(Producao_Montagem);
+                  Refresh(Paradas_Montagem),
+                  Set(varFalhaM, true)
+              );
               ClearCollect(colParadasM,
                   Filter(Paradas_Montagem,
                       Celula = varCelulaMontagem &&
@@ -159,7 +171,7 @@ Screens:
                   ForAll(
                       Distinct(
                           Filter(colParadasM,
-                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                              Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                           ),
                           OPVinculada
                       ) As d,
@@ -167,7 +179,7 @@ Screens:
                           Chave: d.Value,
                           MinDesc: Sum(
                               Filter(colParadasM,
-                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                  OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                               ),
                               TempoParadoMin
                           )
@@ -468,7 +480,7 @@ Screens:
               =If(
                   !IsBlank(txt_prod_pn_m_1.Text) &&
                   !IsBlank(txt_prod_ot_m_1.Text) &&
-                  Coalesce(Value(txt_prod_qtd_m_1.Text), 0) > 0 &&
+                  fx_EhNum(txt_prod_qtd_m_1.Text) && fx_Num(txt_prod_qtd_m_1.Text) > 0 &&
                   !IsBlank(txt_prod_cracha_m.Text) &&
                   !varProcM,
                   DisplayMode.Edit,
@@ -499,7 +511,7 @@ Screens:
                               PN: Upper(Trim(txt_prod_pn_m_1.Text)),
                               Cracha: Trim(txt_prod_cracha_m.Text),
                               OT: Value(txt_prod_ot_m_1.Text),
-                              QtdOT: Value(txt_prod_qtd_m_1.Text),
+                              QtdOT: fx_Num(txt_prod_qtd_m_1.Text),
                               InicioEm: _agora,
                               QtdProduzida: 0,
                               MetaHora: With(
@@ -713,7 +725,7 @@ Screens:
                   Text: |-
                     =ThisItem.PN &
                      If(ThisItem.Data <> varDataTela || ThisItem.Turno <> varTurnoTela,
-                        "  · " & Left(ThisItem.Turno, 2), "") & "Turno"
+                        "  · " & ThisItem.Turno, "")
                   Width: =137
             - lbl_prow_ot_m_1:
                 Control: Label@2.5.1
@@ -756,16 +768,7 @@ Screens:
                     =With(
                         {
                             _real: If(ThisItem.Status = "EmAndamento",
-                                Max(
-                                    DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) -
-                                    Coalesce(
-                                        LookUp(colDescM,
-                                            Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
-                                        ).MinDesc,
-                                        0
-                                    ),
-                                    0
-                                ),
+                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(LookUp(colDescM, Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")").MinDesc, 0), varAgora),
                                 Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
                             _meta: With(
                                 {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
@@ -796,7 +799,7 @@ Screens:
                         With(
                             {
                                 _real: If(ThisItem.Status = "EmAndamento",
-                                    Max(DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) - _desc, 0),
+                                    fx_RealMontagemMin(ThisItem.InicioEm, _desc, varAgora),
                                     Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin))
                             },
                             Text(_real, "0") & " min" & If(_desc > 0, "*", "")
@@ -833,16 +836,7 @@ Screens:
                     =With(
                         {
                             _real: If(ThisItem.Status = "EmAndamento",
-                                Max(
-                                    DateDiff(ThisItem.InicioEm, varAgora, TimeUnit.Minutes) -
-                                    Coalesce(
-                                        LookUp(colDescM,
-                                            Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
-                                        ).MinDesc,
-                                        0
-                                    ),
-                                    0
-                                ),
+                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(LookUp(colDescM, Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")").MinDesc, 0), varAgora),
                                 Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
                             _meta: With(
                                 {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
@@ -892,7 +886,7 @@ Screens:
                         ForAll(
                             Distinct(
                                 Filter(colParadasM,
-                                    Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                                    Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                                 ),
                                 OPVinculada
                             ) As d,
@@ -900,7 +894,7 @@ Screens:
                                 Chave: d.Value,
                                 MinDesc: Sum(
                                     Filter(colParadasM,
-                                        OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                        OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                                     ),
                                     TempoParadoMin
                                 )
@@ -1011,7 +1005,7 @@ Screens:
                  "FI - Falta de Embalagem / Termoencolhível",
                  "TU - Troca de Turno",
                  "RF - Refeição",
-                 "TE - Tempo Excedido"
+                 fx_MotivoTempoExcedido
               ]
             Size: =0
             Width: =603
@@ -1061,7 +1055,7 @@ Screens:
                   cmb_par_op_m_1.Selected.Value = "— Sem OP —" ||
                   IsBlank(Trim(cmb_par_motivo_m_1.Selected.Value)),
                   "",
-                  cmb_par_motivo_m_1.Selected.Value = "TE - Tempo Excedido",
+                  cmb_par_motivo_m_1.Selected.Value = fx_MotivoTempoExcedido,
                   "Tempo excedido NÃO desconta do tempo real da OP.",
                   "Estes minutos serão descontados do tempo real da OP."
               )
@@ -1148,7 +1142,7 @@ Screens:
             DisplayMode: |-
               =If(
                   !IsBlank(Trim(cmb_par_motivo_m_1.Selected.Value)) &&
-                  Coalesce(Value(txt_par_tempo_m_1.Text), 0) > 0 &&
+                  fx_EhNum(txt_par_tempo_m_1.Text) && fx_Num(txt_par_tempo_m_1.Text) > 0 &&
                   !varProcM,
                   DisplayMode.Edit,
                   DisplayMode.Disabled
@@ -1170,7 +1164,7 @@ Screens:
                           Celula: varCelulaMontagem,
                           RegistradoEm: _agora,
                           Motivo: cmb_par_motivo_m_1.Selected.Value,
-                          TempoParadoMin: Value(txt_par_tempo_m_1.Text),
+                          TempoParadoMin: fx_Num(txt_par_tempo_m_1.Text),
                           Observacao: txt_par_obs_m_1.Text,
                           OPVinculada: If(
                               IsBlank(cmb_par_op_m_1.Selected.Value) || cmb_par_op_m_1.Selected.Value = "— Sem OP —",
@@ -1199,7 +1193,7 @@ Screens:
                       ForAll(
                           Distinct(
                               Filter(colParadasM,
-                                  Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                                  Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                               ),
                               OPVinculada
                           ) As d,
@@ -1207,7 +1201,7 @@ Screens:
                               Chave: d.Value,
                               MinDesc: Sum(
                                   Filter(colParadasM,
-                                      OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                      OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                                   ),
                                   TempoParadoMin
                               )
@@ -1358,7 +1352,7 @@ Screens:
                 Properties:
                   Color: |-
                     =If(
-                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> fx_MotivoTempoExcedido,
                         ColorFade(fx_CorInfo, -35%),
                         fx_CorTexto
                     )
@@ -1368,13 +1362,13 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =If(
-                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> fx_MotivoTempoExcedido,
                         "− " & ThisItem.TempoParadoMin & " min",
                         ThisItem.TempoParadoMin & " min"
                     )
                   Tooltip: |-
                     =If(
-                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> "TE - Tempo Excedido",
+                        !IsBlank(ThisItem.OPVinculada) && ThisItem.Motivo <> fx_MotivoTempoExcedido,
                         "Descontado do tempo real da OP " & ThisItem.OPVinculada,
                         ""
                     )
@@ -1472,7 +1466,7 @@ Screens:
                   ForAll(
                       Distinct(
                           Filter(colParadasM,
-                              Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                              Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                           ),
                           OPVinculada
                       ) As d,
@@ -1480,7 +1474,7 @@ Screens:
                           Chave: d.Value,
                           MinDesc: Sum(
                               Filter(colParadasM,
-                                  OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                  OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                               ),
                               TempoParadoMin
                           )
@@ -1694,7 +1688,7 @@ Screens:
             DisabledFill: =fx_CorBorda
             DisplayMode: |-
               =If(
-                  Coalesce(Value(txt_pop_qtd_m_1.Text), 0) <= 0 ||
+                  !(fx_EhNum(txt_pop_qtd_m_1.Text) && fx_Num(txt_pop_qtd_m_1.Text) > 0) ||
                   (ctxPopExcesso && IsBlank(Trim(txt_pop_obs_m_1.Text))) ||
                   varProcM,
                   DisplayMode.Disabled,
@@ -1707,6 +1701,15 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =Set(varProcM, true);
+              If(
+                  LookUp(Producao_Montagem, ID = varPNAtivo.ID).Status <> "EmAndamento",
+                  Notify("Esta OT já foi finalizada (outro tablet ou outra aba). Toque em atualizar.", NotificationType.Warning, 6000);
+                  Reset(txt_pop_qtd_m_1);
+                  Reset(txt_pop_obs_m_1);
+                  Set(varPopupFinalizar_M, false);
+                  Set(varPNAtivo, Blank());
+                  UpdateContext({ctxPopExcesso: false});
+                  Set(varProcM, false),
               Set(varFimM, Now());
               Set(varDuracaoFim, RoundDown(DateDiff(varPNAtivo.InicioEm, varFimM, TimeUnit.Minutes), 0));
               Set(varDescontoFim,
@@ -1728,7 +1731,7 @@ Screens:
               Patch(Producao_Montagem, varPNAtivo,
                   {
                       FimEm: varFimM,
-                      QtdProduzida: Value(txt_pop_qtd_m_1.Text),
+                      QtdProduzida: fx_Num(txt_pop_qtd_m_1.Text),
                       DuracaoMin: varDuracaoFim,
                       DuracaoSeg: DateDiff(varPNAtivo.InicioEm, varFimM, TimeUnit.Seconds),
                       DescontoMin: varDescontoFim,
@@ -1747,7 +1750,7 @@ Screens:
                               Turno: varTurnoTela,
                               Celula: varCelulaMontagem,
                               RegistradoEm: Now(),
-                              Motivo: "TE - Tempo Excedido",
+                              Motivo: fx_MotivoTempoExcedido,
                               TempoParadoMin: Max(varLiquidoFim - varMetaFim, 0),
                               Observacao: varObsFim,
                               OPVinculada: varPNAtivo.PN & " (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")"
@@ -1786,7 +1789,7 @@ Screens:
                       ForAll(
                           Distinct(
                               Filter(colParadasM,
-                                  Motivo <> "TE - Tempo Excedido" && !IsBlank(OPVinculada)
+                                  Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                               ),
                               OPVinculada
                           ) As d,
@@ -1794,7 +1797,7 @@ Screens:
                               Chave: d.Value,
                               MinDesc: Sum(
                                   Filter(colParadasM,
-                                      OPVinculada = d.Value && Motivo <> "TE - Tempo Excedido"
+                                      OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
                                   ),
                                   TempoParadoMin
                               )
@@ -1803,6 +1806,7 @@ Screens:
                   );
                   Set(varProcM, false);
                   Notify("Produção finalizada!", NotificationType.Success, 2500)
+              )
               )
             PressedFill: =ColorFade(Self.Fill, -30%)
             RadiusBottomLeft: =fx_Raio

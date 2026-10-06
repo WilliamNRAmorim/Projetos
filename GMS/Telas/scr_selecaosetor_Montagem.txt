@@ -22,8 +22,12 @@ Screens:
                           _data:  fx_DataRefEm(_agora),
                           _turno: fx_TurnoLabelEm(_agora)
                       },
-                      Refresh(Producao_Montagem);
-                      Refresh(Paradas_Montagem);
+                      UpdateContext({ctxFalhaSelM: false});
+                      IfError(
+                          Refresh(Producao_Montagem);
+                          Refresh(Paradas_Montagem),
+                          UpdateContext({ctxFalhaSelM: true})
+                      );
                       Concurrent(
                           ClearCollect(
                               colAbertasSelM,
@@ -130,7 +134,7 @@ Screens:
                               )
                           )
                       );
-                      UpdateContext({ ctxAgora: _agora, ctxDataSelM: _data, ctxTurnoSelM: _turno })
+                      UpdateContext({ ctxAgora: _agora, ctxDataSelM: _data, ctxTurnoSelM: _turno, ctxUltOkSelM: If(ctxFalhaSelM, ctxUltOkSelM, _agora) })
                   )
               )
             PressedFill: =Color.Transparent
@@ -222,7 +226,7 @@ Screens:
             Height: =20
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Estado das células ao vivo · atualiza sozinho a cada 2 minutos"
+            Text: =If(ctxFalhaSelM, "⚠ Sem conexão com o servidor — dados das " & Text(ctxUltOkSelM, "hh:mm") & " · tentando de novo a cada 2 minutos", "Estado das células ao vivo · atualiza sozinho a cada 2 minutos")
             Width: =560
             X: =104
             Y: =52

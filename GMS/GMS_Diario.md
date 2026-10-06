@@ -876,3 +876,7 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | scr_PainelCelula_1 | v0.10.3 | MEL-230 | Falha de Refresh deixa de parecer "sincronizado": rodapé laranja com a hora da última carga boa; fx_CorBatelada no lugar de 50 RGBA; versão legível; geometria intacta #F1 #esfM
 2026-10-06 | ENTREGUE | App.Formulas | v3.0.9 | MEL-230 | Só acrescenta fx_CorBatelada (§1); colar antes do scr_PainelCelula_1 v0.10.3 #F1
 2026-10-06 | PENDÊNCIA | scr_Monitor_Mandril | — | MEL-231 | Tirar o Power Automate que calcula "trançadeira parada" e fazer no app como o Painel da Célula (parada vem do Hora-Hora: janela atual sem produção + motivo); ler a tela e propor #F1 #esfM
+2026-10-06 | RESOLVIDO | scr_Montagem_HoraHora | v0.5.0 | MEL-195 | Literal de TE e conta do real líquido trocados por fx_MotivoTempoExcedido e fx_RealMontagemMin; menu e Hora-Hora usam a mesma conta #F1
+2026-10-06 | ENTREGUE | scr_Montagem_HoraHora | — | MEL-232 | Rótulo "…Turno" colado no P/N corrigido; Finalizar relê Status no servidor; números por fx_Num; IfError e aviso de sem conexão #F1 #esfM
+2026-10-06 | ENTREGUE | scr_selecaosetor_Montagem | — | MEL-232 | Aviso de sem conexão no subtítulo quando o Refresh falha #F1
+2026-10-06 | PENDÊNCIA | scr_Montagem_HoraHora | — | MEL-233 | Decidir se OT em andamento em OUTRA célula deve bloquear o início (hoje só bloqueia na mesma célula) #F1
