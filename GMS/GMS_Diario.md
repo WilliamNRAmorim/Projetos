@@ -880,3 +880,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | scr_Montagem_HoraHora | — | MEL-232 | Rótulo "…Turno" colado no P/N corrigido; Finalizar relê Status no servidor; números por fx_Num; IfError e aviso de sem conexão #F1 #esfM
 2026-10-06 | ENTREGUE | scr_selecaosetor_Montagem | — | MEL-232 | Aviso de sem conexão no subtítulo quando o Refresh falha #F1
 2026-10-06 | PENDÊNCIA | scr_Montagem_HoraHora | — | MEL-233 | Decidir se OT em andamento em OUTRA célula deve bloquear o início (hoje só bloqueia na mesma célula) #F1
+2026-10-06 | DECISÃO | scr_Montagem_HoraHora | — | MEL-233 | OT aberta em outra célula NÃO bloqueia o início (William); fica como está #F1
