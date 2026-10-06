@@ -3,6 +3,11 @@ Screens:
     Properties:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =Set(
+            varConfAbertasGest,
+            IfError(CountRows(Filter(Conferencia_SAP, Status = "Aberto")), Blank())
+        )
     Children:
       - rct_HeaderGest:
           Control: Rectangle@2.3.0
@@ -55,7 +60,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.2.0"
+            Text: ="Versão 0.3.0"
             Width: =180
             X: =1166
             Y: =21
@@ -429,6 +434,21 @@ Screens:
             Width: =1000
             X: =231
             Y: =662
+      - lbl_BadgeConfGest:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =If(varConfAbertasGest > 0, fx_CorErro, fx_CorOK)
+            Fill: =If(varConfAbertasGest > 0, fx_CorErroSuave, fx_CorOKSuave)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =32
+            Size: =fx_FonteCorpo
+            Text: =If(IsBlank(varConfAbertasGest), "—", If(varConfAbertasGest = 0, "Em dia", Text(varConfAbertasGest) & If(varConfAbertasGest = 1, " aberta", " abertas")))
+            Visible: =!IsBlank(varConfAbertasGest)
+            Width: =140
+            X: =1103
+            Y: =556
       - btn_NavConfGest:
           Control: Classic/Button@2.2.0
           Properties:

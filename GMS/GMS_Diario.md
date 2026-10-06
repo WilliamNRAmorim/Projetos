@@ -867,3 +867,6 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | Menu_1 | — | MEL-225 | Falha aberta do mapeamento de setor corrigida, botão duplicado removido, data sem Today() #F1
 2026-10-06 | ENTREGUE | scr_HistoricoTurno_Mandril | — | MEL-226 | Data de referência por ctxHistAgora (abria vazio), filtro de etapa no servidor, IfError, cores por fx_CorTipoEvento, janela T1 até 13:57 #F1
 2026-10-06 | ENTREGUE | scr_HistoricoTurno_Tubo | — | MEL-226 | Mesmos ajustes do Histórico do Mandril #F1
+2026-10-06 | ENTREGUE | scr_SelecaoGestao_1 | v0.3.0 | MEL-227 | Selo de pendências abertas no card da Conferência; nenhum X/Y/W/H mudou #F1
+2026-10-06 | ENTREGUE | scr_ConferenciaSAP | v0.1.2 | MEL-227 | Carga concorrente com IfError; Salvar e Justificar relêem o Status no servidor antes de gravar #F1
+2026-10-06 | PENDÊNCIA | Conferencia_SAP | — | MEL-228 | Tirar a conferência do Power Automate: exige Packing gravando em lista SharePoint e MB51 filtrado (101/102 GRT4) como lista; com as 3 fontes em lista a conta vira UDF e roda no app #F1 #esfG
