@@ -74,7 +74,7 @@
 | 4.6 | O Hora-Hora é **pré-preenchido** para janelas futuras. O painel lê a janela do horário atual, nunca a última salva | memória overview (Painel) |
 | 4.7 | Coluna **Choice**: a opção nova precisa ser cadastrada na lista **antes** do publish, senão o Patch falha | conversa 25/09 (Extrusora) |
 | 4.8 | Coluna nova que o Patch grava (ex.: `Minutos` no Hora-Hora) é pré-requisito duro. Sem ela, **todo** o Patch falha | COLAR HoraHora v0.5.0 |
-| 4.9 | O envio do Tubo sobrescreve `quantidade_mandril` e destrói o apontamento do Mandril (MEL-089, aberto) | Diário 18/08 |
+| 4.9 | O envio do Tubo grava `quantidade_mandril` = entrada − sobra no registro pai (split C38, de propósito: cada metro tem um dono só). O original continua em `Historico_Carretel.metros_entrada` (etapa Tubo) e o `sobra` no evento Fim. **Não remover** essa linha sem criar antes coluna própria para o original: o filho copia os campos do Mandril e o volume do Mandril passaria a contar a sobra duas vezes (MEL-089, resolvido como projeto) | Diário 06/10 |
 | 4.10 | `DM_FALTA_DE_FERRAMENTA` grava a OT na coluna `PARTNUMBER`. A ferramentaria não usa, e o fluxo saiu das telas | Diário 18/08; memória |
 | 4.11 | Mudou o tipo de uma coluna no SharePoint: auditar **todo Patch** que grava nela, não só as leituras. `Turno_Extr/Teste` passou de Text para Number e quebrou o Patch do timer da Finalização | memória legada |
 | 4.12 | Excel Online: o erro "Unable to match columns in the filtered view" vem de **colunas ocultas**. O contorno é `ClearCollect` com `ShowColumns`, sem predicado de `Filter`. Não confundir com a 2.14, onde o problema era `ShowColumns` com nome interno + Explicit Column Selection | memória legada |
