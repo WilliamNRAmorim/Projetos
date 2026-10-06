@@ -13,7 +13,7 @@ Screens:
             ctxOrdOrigemHHT: 0,
             ctxCelulaCarregadaHHT: "",
             ctxTurnoCarregadoHHT: 0,
-            ctxDataCarregadaHHT: Today()
+            ctxDataCarregadaHHT: fx_DataRefEm(Now())
         });
         Set(varProcessando, false);
         Set(varTurnoHHT, fx_TurnoLabelEm(Now()));
@@ -51,7 +51,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorSuperficie
-            Font: =Font.'Segoe UI'
+            Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteTitulo
@@ -674,7 +674,8 @@ Screens:
                   AccessibleLabel: ="Metros produzidos nesta janela"
                   BorderColor: |-
                     =If(
-                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_APONTAMENTO",
+                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_APONTAMENTO" ||
+                        (ThisItem.Meta > 0 && ThisItem.Real > ThisItem.Meta * (1 + fx_MargemMetragemPct / 100)),
                         fx_CorAlerta,
                         fx_CorBorda
                     )
@@ -1029,6 +1030,10 @@ Screens:
                   ctxAlteradoHHT,
                   "⚠ Alterações ainda NÃO gravadas. Nada vai para o SharePoint até você tocar em Salvar ou Fechar turno.",
 
+                  CountRows(Filter(colLinhasHHT As _q0, _q0.Meta > 0 && _q0.Real > _q0.Meta * (1 + fx_MargemMetragemPct / 100))) > 0,
+                  "⚠ " & Text(CountRows(Filter(colLinhasHHT As _q9, _q9.Meta > 0 && _q9.Real > _q9.Meta * (1 + fx_MargemMetragemPct / 100)))) &
+                  " janela(s) com Real acima da meta em mais de " & Text(fx_MargemMetragemPct) & "% (borda laranja). Confira se não foi digitação; se estiver certo, pode salvar.",
+
                   CountRows(Filter(colLinhasHHT As _q1, _q1.Ativa)) = 0 && !IsBlank(ctxCelulaCarregadaHHT),
                   "Sem sinal de produção nesta máquina neste turno — nada está sendo cobrado. Se ela ficou parada, registre o motivo ao lado; se ela rodou, lance a primeira janela.",
 
@@ -1064,7 +1069,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.5.8"
+            Text: ="Versão 0.6.0"
             Width: =140
             X: =1226
             Y: =728
@@ -1322,7 +1327,7 @@ Screens:
                                           'Motivo 2': _u.cMotivo2,
                                           'Comentário / Ação': _u.cComentario,
                                           Rendimento: fx_RendimentoHH(_u.cMeta, _u.cReal),
-                                          Status: "Rascunho"
+                                          Status: If(Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
                                       }
                                   )
                               },
@@ -1923,8 +1928,15 @@ Screens:
             Height: =0
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =Refresh('Hora-Hora');
-              Refresh(ficha_producao);
+              =IfError(
+                  Concurrent(
+                      Refresh('Hora-Hora'),
+                      Refresh(ficha_producao),
+                      Refresh(DM_TRANÇAGEM),
+                      Refresh(DM_ENGRENAGENS)
+                  ),
+                  Notify("Não consegui atualizar os dados do servidor. O que aparece pode estar desatualizado — confira a rede e toque em Abrir de novo.", NotificationType.Warning, 10000)
+              );
               With(
                   {
                       _agora: Now(),
@@ -1972,8 +1984,6 @@ Screens:
                               SortOrder.Descending
                           )
                       );
-                      Refresh(DM_TRANÇAGEM);
-                      Refresh(DM_ENGRENAGENS);
                       With(
                           { _maq: fx_MaquinaEngrenagens(_c) },
                           ClearCollect(
