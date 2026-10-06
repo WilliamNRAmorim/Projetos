@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>GMS reel PT</title>
+<script src="brand.js"></script><script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`)</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<style>
+body{margin:0;background:#05080f;color:#9aa;font:13px sans-serif}
+#wrap{display:grid;gap:6px;padding:6px}
+figure{margin:0}canvas{width:100%;display:block;background:#000}figcaption{padding:2px 4px}
+</style></head><body><div id="wrap"></div>
+<script>
+// GMS Reel PT-BR, 1080x1920, 30 fps, 30 s. Gancho: falta de visibilidade (ninguém sabia o que acontecia na produção).
+// Trilha: music.wav src 32–62 inteira; sfx recortados dos cues originais (ver AUDIO_EDL).
+// Cenas reaproveitadas rodam no relógio original com deslocamento (dst + OFF = src).
+const W = 1080, H = 1920, FPS = 30, DUR = 30, POSTER_T = 2.6;
+const C = { bg0: BRAND.ink, bg1: BRAND.ink2, info: '#222225', light: BRAND.paper, red: BRAND.accent, ok: '#16A34A', rot: BRAND.mute, soft: BRAND.mute }; // sistema visual do canal (brand.js); cores das etapas = cores reais do app
+const ST = ['#3B82F6', '#06B6D4', '#6366F1', '#8B5CF6', '#F59E0B', '#EF4444', '#F97316', '#10B981'];
+const STN = ['Mandril', 'Tubo', 'Trançagem', 'Cobertura', 'Bandagem', 'Vulcanização', 'Debandagem', 'Extr./Teste'];
+let ctx;
+
+// ---------- helpers ----------
+const EC = {}; const E = n => EC[n] || (EC[n] = gsap.parseEase(n));
+const cl = (x, a = 0, b = 1) => x < a ? a : x > b ? b : x;
+const P = (t, a, d) => cl((t - a) / d);
+const tw = (t, a, d, e = 'power3.out') => E(e)(P(t, a, d));
+const lerp = (a, b, p) => a + (b - a) * p;
+const D2R = Math.PI / 180;
+const br = n => n.toLocaleString('pt-BR');
+const font = (s, w) => `${Math.max(w, 700)} ${s}px "Geist"`;
+function measure(s, size, w, track = 0) { ctx.save(); ctx.font = font(size, w); ctx.letterSpacing = (track * size) + 'px'; const m = ctx.measureText(s).width; ctx.restore(); return m; }
+function T(s, x, y, o = {}) {
+  const { size = 72, w = 700, color = C.light, align = 'left', alpha = 1, track = (w >= 800 ? -0.03 : -0.01), maxW = 0 } = o;
+  if (alpha <= 0.001) return size;
+  ctx.save(); ctx.globalAlpha *= alpha; let sz = size;
+  if (maxW) { const m = measure(s, size, w, track); if (m > maxW) sz = size * maxW / m; }
+  ctx.font = font(sz, w); ctx.letterSpacing = (track * sz) + 'px';
+  ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'alphabetic'; ctx.fillText(s, x, y); ctx.restore(); return sz;
+}
+function R(s, x, y, t, a, o = {}, dist = 40) {
+  const p = tw(t, a, 0.6, 'expo.out'), al = tw(t, a, 0.28, 'power2.out');
+  if (al <= 0) return; ctx.save(); ctx.translate(0, (1 - p) * dist); T(s, x, y, { ...o, alpha: (o.alpha ?? 1) * al }); ctx.restore();
+}
+function bg(c) { ctx.fillStyle = c; ctx.fillRect(0, 0, W, H); }
+function rr(x, y, w, h, r, fill, stroke, lw = 2) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); } }
+function circ(x, y, r, fill) { if (r <= 0) return; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = fill; ctx.fill(); }
+function check(x, y, s, color, lw) { ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = lw || s * 0.18; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath(); ctx.moveTo(x - s * 0.45, y); ctx.lineTo(x - s * 0.12, y + s * 0.33); ctx.lineTo(x + s * 0.5, y - s * 0.35); ctx.stroke(); ctx.restore(); }
+function shadow(fn, blur = 40, oy = 16, col = 'rgba(0,0,0,.35)') { ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = blur; ctx.shadowOffsetY = oy; fn(); ctx.restore(); }
+function tap(x, y, t, a) {
+  const p = P(t, a, 0.45); if (p <= 0 || p >= 1) return;
+  ctx.save(); ctx.globalAlpha = 1 - p; ctx.strokeStyle = C.bg0; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.arc(x, y, 24 + 56 * E('power2.out')(p), 0, 7); ctx.stroke();
+  ctx.fillStyle = 'rgba(15,23,42,.28)'; ctx.beginPath(); ctx.arc(x, y, 26, 0, 7); ctx.fill(); ctx.restore();
+}
+function ring(cx, cy, r, prog = 1, { dot = true, lw = r * 18 / 82, alpha = 1 } = {}) {
+  if (alpha <= 0) return; ctx.save(); ctx.globalAlpha *= alpha; ctx.lineCap = 'round'; ctx.lineWidth = lw;
+  for (let k = 0; k < 8; k++) { const f = cl(prog * 8 - k); if (f <= 0) continue; const a0 = (-86 + 45 * k) * D2R; ctx.strokeStyle = ST[k]; ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + 37 * D2R * f); ctx.stroke(); }
+  if (dot) circ(cx, cy - r, r * 11.2 / 82, C.red);
+  ctx.restore();
+}
+function mark(t, a, col) { const al = tw(t, a, 0.4, 'power2.out'); if (al <= 0) return; ring(116, 268, 24, 1, { alpha: al }); T('GMS', 156, 284, { size: 40, w: 800, color: col, alpha: al, track: 0.017 }); }
+
+// ---------- A 0–4: gancho ----------
+function sA(t) {
+  const shock = P(t, 1.9, 0.6);
+  bg(C.bg0);
+  if (t >= 1.9) { ctx.save(); ctx.globalAlpha = 0.9 * (1 - shock * 0.6); ctx.fillStyle = '#2A1620'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  T('Ninguém sabia o que', 90, 440, { size: 80, w: 800, maxW: 900 });
+  T('acontecia na produção.', 90, 535, { size: 80, w: 800, maxW: 900 });
+  // os 8 postos apagados, cada um com "?" (aparecem nos ticks da contagem)
+  const sx = t >= 1.9 ? Math.sin(t * 90) * 8 * (1 - shock) : 0;
+  ctx.save(); ctx.translate(sx, 0);
+  for (let i = 0; i < 8; i++) {
+    const col = i % 2, row = Math.floor(i / 2), x = 90 + col * 460, y = 640 + row * 150;
+    const a = 0.08 + i * 0.1, p = E('back.out(1.8)')(P(t, a, 0.35)); if (t < a) continue;
+    ctx.save(); ctx.globalAlpha = P(t, a, 0.1); ctx.translate(x + 220, y + 65); ctx.scale(lerp(0.85, 1, p), lerp(0.85, 1, p)); ctx.translate(-220, -65);
+    rr(0, 0, 440, 130, 24, C.bg1, 'rgba(148,163,184,.25)', 2);
+    rr(0, 0, 12, 130, [24, 0, 0, 24], '#334155');
+    T(STN[i], 40, 58, { size: 38, w: 700, color: C.rot, maxW: 300 });
+    T('sem informação', 40, 104, { size: 28, w: 600, color: C.soft });
+    circ(390, 65, 30, '#334155'); T('?', 390, 80, { size: 42, w: 800, color: C.rot, align: 'center' });
+    ctx.restore();
+  }
+  ctx.restore();
+  // virada nos dois bipes
+  if (t >= 1.9) {
+    const p = E('back.out(2.2)')(P(t, 1.9, 0.35));
+    ctx.save(); ctx.translate(540, 1330); ctx.scale(lerp(0.7, 1, p), lerp(0.7, 1, p));
+    T('Só descobria', 0, 0, { size: 96, w: 800, align: 'center', alpha: P(t, 1.9, 0.1) });
+    T('no dia seguinte.', 0, 108, { size: 96, w: 800, align: 'center', alpha: P(t, 1.9, 0.1) }); ctx.restore();
+  }
+}
+
+// ---------- telas do app (PT), usadas no B e na C ----------
+function s4(t) {
+  bg(C.info);
+  const up = E('expo.out')(P(t, 20.55, 0.7)), oy = lerp(260, 0, up);
+  const X = 90, Y = 590, Wc = 900, Hc = 800;
+  ctx.save(); ctx.translate(0, oy); ctx.globalAlpha = P(t, 20.55, 0.2);
+  shadow(() => rr(X, Y, Wc, Hc, 36, C.light), 60, 24, 'rgba(15,23,42,.45)');
+  circ(X + 60, Y + 72, 14, ST[2]); T('Trançagem · ficha de produção', X + 90, Y + 86, { size: 38, w: 700, color: C.bg0, maxW: 620 });
+  T('Turno 2', X + Wc - 50, Y + 86, { size: 32, w: 600, color: C.bg1, align: 'right' });
+  ctx.fillStyle = 'rgba(148,163,184,.5)'; ctx.fillRect(X + 40, Y + 130, Wc - 80, 2);
+  let n = 0; for (let j = 0; j < 8; j++) if (t >= 21.4 + j * 0.09) n++;
+  const op = '40218837'.slice(0, n);
+  T('ORDEM (OP)', X + 50, Y + 195, { size: 28, w: 700, color: C.bg1, track: 0.05 });
+  rr(X + 50, Y + 220, Wc - 100, 110, 18, '#FFFFFF', '#94A3B8', 2.5);
+  T(op, X + 80, Y + 296, { size: 56, w: 700, color: C.bg0, track: 0.04 });
+  if (t >= 22.08) { circ(X + Wc - 110, Y + 275, 30, C.ok); check(X + Wc - 110, Y + 276, 30, C.light, 6); T('Mangueira HX-12 · 1.200 m', X + 50, Y + 380, { size: 32, w: 600, color: C.bg1 }); }
+  const sel = t >= 22.9;
+  T('CARRETEL DE SAÍDA', X + 50, Y + 455, { size: 28, w: 700, color: C.bg1, track: 0.05 });
+  rr(X + 50, Y + 480, Wc - 100, 110, 18, '#FFFFFF', '#94A3B8', 2.5);
+  T(sel ? 'Carretel B-14' : 'Selecione', X + 80, Y + 553, { size: 46, w: sel ? 700 : 600, color: sel ? C.bg0 : C.bg1 });
+  const started = t >= 23.95;
+  rr(X + 50, Y + 645, 800, 120, 26, started ? C.bg0 : C.ok);
+  if (started) { check(X + 330, Y + 705, 36, C.ok, 7); T('Produzindo', X + 480, Y + 723, { size: 50, w: 800, align: 'center' }); }
+  else T('Iniciar', 540, Y + 723, { size: 52, w: 800, color: C.bg0, align: 'center' });
+  ctx.restore();
+}
+const STAT = ['run', 'run', 'run', 'wait', 'run', 'run', 'wait', 'run'];
+const SCOL = { run: [C.ok, 'Produzindo'], wait: ['#F97316', 'Aguardando'], stop: ['#EF4444', 'Parada'] };
+const IDS = ['MD-1', 'EX-1', 'TH-07', 'EX-2', 'BD-1', 'AC-1', 'BD-2', 'FN-1'];
+const ALERT = 27.6;
+function s5(t) {
+  bg(C.bg0); mark(t, 26.2, C.light);
+  R('Agora a célula inteira', 90, 420, t, 26.28, { size: 70, w: 800, maxW: 900 });
+  R('aparece ao vivo.', 90, 506, t, 26.38, { size: 70, w: 800 });
+  let px = 90;
+  ['run', 'wait', 'stop'].forEach((k, i) => {
+    const w = measure(SCOL[k][1], 32, 600) + 84, al = tw(t, 26.6 + i * 0.1, 0.3, 'power2.out');
+    ctx.save(); ctx.globalAlpha = al; rr(px, 566, w, 64, 32, 'rgba(148,163,184,.12)'); circ(px + 34, 598, 10, SCOL[k][0]); T(SCOL[k][1], px + 56, 609, { size: 32, w: 600 }); ctx.restore(); px += w + 16;
+  });
+  for (let i = 0; i < 8; i++) {
+    const col = i % 2, row = Math.floor(i / 2), x = 90 + col * 460, y = 670 + row * 185;
+    const a = 26.55 + i * 0.045, p = E('expo.out')(P(t, a, 0.5)), al = P(t, a, 0.2); if (al <= 0) continue;
+    const st = i === 2 && t >= ALERT ? 'stop' : STAT[i], [sc] = SCOL[st];
+    ctx.save(); ctx.globalAlpha = al; ctx.translate(0, (1 - p) * 40);
+    rr(x, y, 440, 165, 24, C.bg1, st === 'stop' ? '#EF4444' : null, 4);
+    rr(x, y, 12, 165, [24, 0, 0, 24], ST[i]);
+    T(STN[i], x + 40, y + 64, { size: 40, w: 700, maxW: 330 });
+    const tm = st === 'run' ? t : (i === 2 ? Math.min(t, ALERT) : 26);
+    T(`${IDS[i]} · ${br(840 + i * 57 + Math.floor((tm - 26) * (5 + i)))} m`, x + 40, y + 120, { size: 30, w: 600, color: C.rot });
+    circ(x + 398, y + 52, 13, sc);
+    if (st === 'stop') { const q = ((t - ALERT) % 0.8) / 0.8; ctx.strokeStyle = sc; ctx.globalAlpha = al * (1 - q); ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(x + 398, y + 52, 13 + q * 28, 0, 7); ctx.stroke(); }
+    ctx.restore();
+  }
+  const ap = E('expo.out')(P(t, ALERT + 0.1, 0.45));
+  if (ap > 0) {
+    const y = lerp(1560, 1420, ap); ctx.save(); ctx.globalAlpha = P(t, ALERT + 0.1, 0.15);
+    rr(90, y, 900, 130, 26, '#2A1620', '#EF4444', 3);
+    ctx.fillStyle = '#EF4444'; ctx.beginPath(); ctx.moveTo(150, y + 40); ctx.lineTo(178, y + 90); ctx.lineTo(122, y + 90); ctx.closePath(); ctx.fill();
+    T('!', 150, y + 84, { size: 32, w: 800, color: C.bg0, align: 'center' });
+    T('TH-07 parou. Avisado na hora.', 210, y + 60, { size: 40, w: 700, maxW: 760 });
+    T('Sem motivo informado · olhe aqui primeiro', 210, y + 104, { size: 30, w: 600, color: C.rot, maxW: 760 });
+    ctx.restore();
+  }
+}
+const OPS = ['Op. A12', 'Op. B07', 'Op. C03', 'Op. A09', 'Op. D11', 'Op. B02', 'Op. C08', 'Op. A04'];
+const TIMES = ['06:14', '07:02', '08:40', '10:15', '11:30', '13:05', '15:40', '16:22'];
+function s6(t) {
+  bg(C.info);
+  const X = 90, Y = 590, Wc = 900, Hc = 900;
+  shadow(() => rr(X, Y, Wc, Hc, 36, C.light), 60, 24, 'rgba(15,23,42,.45)');
+  T('Ordem 40218837', X + 50, Y + 92, { size: 50, w: 800, color: C.bg0 });
+  T('Mangueira HX-12 · 1.200 m · lote de composto C-2291', X + 50, Y + 142, { size: 30, w: 600, color: C.bg1, maxW: Wc - 100 });
+  ctx.fillStyle = 'rgba(148,163,184,.5)'; ctx.fillRect(X + 40, Y + 178, Wc - 80, 2);
+  for (let i = 0; i < 8; i++) {
+    const y = Y + 210 + i * 82 + 41;
+    if (i < 7) { ctx.fillStyle = ST[i]; ctx.fillRect(X + 78, y + 16, 4, 50); }
+    circ(X + 80, y, 17, ST[i]);
+    T(STN[i], X + 125, y + 14, { size: 38, w: 700, color: C.bg0 });
+    T(`${OPS[i]} · ${IDS[i]} · ${TIMES[i]}`, X + Wc - 50, y + 13, { size: 30, w: 600, color: C.bg1, align: 'right' });
+  }
+}
+const VALS = [0.95, 1.02, 0.97, 0.34, 0.99, 1.03, 0.96, 0.92];
+function s7(t) {
+  bg(C.bg1);
+  const X = 90, Y = 590, Wc = 900, Hc = 580;
+  rr(X, Y, Wc, Hc, 32, C.bg0);
+  T('Trançadeira TH-07 · Turno 2', X + 40, Y + 70, { size: 36, w: 700 });
+  rr(X + 40, Y + 98, 26, 26, 6, ST[0]); T('Real', X + 78, Y + 121, { size: 28, w: 600, color: C.rot });
+  ctx.save(); ctx.strokeStyle = C.rot; ctx.lineWidth = 4; ctx.setLineDash([12, 8]); ctx.beginPath(); ctx.moveTo(X + 170, Y + 111); ctx.lineTo(X + 220, Y + 111); ctx.stroke(); ctx.restore();
+  T('Meta', X + 232, Y + 121, { size: 28, w: 600, color: C.rot });
+  const base = Y + Hc - 70, maxh = 300, slot = (Wc - 80) / 8;
+  for (let i = 0; i < 8; i++) { const bx = X + 40 + i * slot + (slot - 56) / 2; rr(bx, base - VALS[i] * maxh, 56, VALS[i] * maxh, [10, 10, 0, 0], ST[0]); T(String(6 + i).padStart(2, '0') + 'h', bx + 28, base + 44, { size: 26, w: 600, color: C.rot, align: 'center' }); }
+  ctx.save(); ctx.strokeStyle = C.rot; ctx.lineWidth = 4; ctx.setLineDash([14, 10]); ctx.beginPath(); ctx.moveTo(X + 40, base - maxh); ctx.lineTo(X + Wc - 40, base - maxh); ctx.stroke(); ctx.restore();
+  const bx3 = X + 40 + 3 * slot + slot / 2, by = base - VALS[3] * maxh - 70, label = 'Troca de carretel', w = measure(label, 30, 700) + 48;
+  rr(bx3 - w / 2, by - 32, w, 64, 32, C.bg1, C.rot, 3); T(label, bx3, by + 11, { size: 30, w: 700, align: 'center' });
+  rr(90, 1230, 900, 110, 28, C.bg0, C.ok, 3); check(420, 1285, 36, C.ok, 7); T('Turno fechado', 570, 1301, { size: 44, w: 800, align: 'center' });
+}
+
+// ---------- B 4–8: a virada + montagem nas batidas (4, 5, 6, 7) ----------
+let CARDS = null;
+function buildCards() {
+  const keep = ctx, out = [];
+  for (const [fn, tt, y0, y1] of [[s4, 25.3, 590, 1420], [s6, 37.2, 590, 1500], [s7, 43.6, 590, 1350]]) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; ctx = cv.getContext('2d'); fn(tt);
+    const c2 = document.createElement('canvas'); c2.width = 920; c2.height = y1 - y0 + 20; c2.getContext('2d').drawImage(cv, 80, y0 - 10, 920, c2.height, 0, 0, 920, c2.height);
+    out.push(c2);
+  }
+  ctx = keep; return out;
+}
+function sB(t) {
+  bg(C.info);
+  R('Então eu criei', 90, 400, t, 4.1, { size: 76, w: 800 });
+  R('um sistema que', 90, 492, t, 4.35, { size: 76, w: 800 });
+  R('mostra tudo ao vivo.', 90, 584, t, 4.6, { size: 76, w: 800, maxW: 900 });
+  const hits = [4.12, 5.0, 6.0];
+  CARDS.forEach((cv, i) => {
+    const a = hits[i]; if (t < a) return;
+    const p = E('expo.out')(P(t, a, 0.5)), depth = hits.filter(h => t >= h).length - 1 - i;
+    const s = 0.62 * Math.pow(0.92, depth), rot = [-3, 2.5, -1.5][i] * D2R;
+    const x = lerp(1400, 540 + depth * -30, p), y = 1080 - depth * 60;
+    ctx.save(); ctx.globalAlpha = P(t, a, 0.12) * (depth > 0 ? 0.75 : 1); ctx.translate(x, y); ctx.rotate(rot * (1 - 0.3 * p)); ctx.scale(s, s);
+    shadow(() => ctx.drawImage(cv, -cv.width / 2, -cv.height / 2), 50, 20, 'rgba(15,23,42,.5)');
+    ctx.restore();
+  });
+  // batida 4: o carimbo GMS
+  if (t >= 7.0) {
+    const p = E('back.out(2.5)')(P(t, 7.0, 0.35));
+    ctx.save(); ctx.translate(760, 1440); ctx.scale(p, p); ctx.rotate(-6 * D2R);
+    shadow(() => rr(-200, -70, 400, 140, 70, C.bg0), 30, 10, 'rgba(0,0,0,.4)');
+    ring(-110, 0, 38, 1); T('GMS', -50, 26, { size: 72, w: 800, track: 0.017 }); ctx.restore();
+  }
+}
+
+// ---------- F 12–20: prova (relógio original 44–52) ----------
+const NUM = [
+  { v: 0, f: () => 'Minutos', l: ['pra achar a causa', 'de uma reclamação'], sub: 'antes: dias' },
+  { v: 0, f: () => 'Sozinho', l: ['o relatório do turno', 'sai pronto'] },
+  { v: 0, f: () => 'Ao vivo', l: ['cada etapa,', 'cada máquina'] },
+  { v: 0, f: () => 'Zero', l: ['equipamento novo.', 'Só o que a fábrica já tinha.'] },
+];
+function s8(t) {
+  bg(C.light); mark(t, 44.1, C.bg0);
+  const k = cl(Math.floor((t - 44) / 2), 0, 3), a = 44 + 2 * k, N = NUM[k];
+  const ex = k < 3 ? E('power2.in')(P(t, a + 1.82, 0.16)) : 0;
+  const ip = E('back.out(1.6)')(P(t, a, 0.32)), al = P(t, a, 0.1) * (1 - ex);
+  const cnt = N.v ? Math.round(N.v * E('power2.out')(P(t, a + 0.12, 0.6))) : 0;
+  ctx.save(); ctx.globalAlpha = al; ctx.translate(540, 900 - ex * 40); const sc = lerp(0.82, 1, ip); ctx.scale(sc, sc);
+  T(N.f(cnt), 0, 0, { size: 320, w: 800, color: C.bg0, align: 'center', maxW: 900, track: -0.03 }); ctx.restore();
+  N.l.forEach((s, i) => R(s, 540, 1030 + i * 72, t, a + 0.15 + i * 0.07, { size: 58, w: 700, color: C.bg1, align: 'center', alpha: 1 - ex, maxW: 900 }));
+  if (N.sub) R(N.sub, 540, 1210, t, a + 0.5, { size: 40, w: 600, color: C.bg1, align: 'center', alpha: 1 - ex });
+  for (let i = 0; i < 4; i++) { const x = 540 + (i - 1.5) * 44; if (i === k) rr(x - 16, 1322, 32, 16, 8, C.bg0); else { ctx.strokeStyle = C.soft; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(x, 1330, 7, 0, 7); ctx.stroke(); } }
+}
+
+// ---------- H 20–30: fecho (relógio original 52–62) ----------
+function s9(t) {
+  bg(C.bg0);
+  const cx = 540, cy = 680, r = 210, lw = r * 18 / 82;
+  const sw = P(t, 52.0, 0.8); if (sw > 0 && sw < 1) { ctx.save(); ctx.globalAlpha = 1 - sw; ctx.strokeStyle = C.red; ctx.lineWidth = 6; ctx.beginPath(); ctx.arc(cx, cy - r, 30 + sw * 360, 0, 7); ctx.stroke(); ctx.restore(); }
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = lw;
+  for (let k = 0; k < 8; k++) { const f = E('power2.out')(P(t, 53 + k * 0.5, 0.42)); if (f <= 0) continue; const a0 = (-86 + 45 * k) * D2R; ctx.strokeStyle = ST[k]; ctx.beginPath(); ctx.arc(cx, cy, r, a0, a0 + 37 * D2R * f); ctx.stroke(); }
+  ctx.restore();
+  const beat = t > 52 ? Math.exp(-((t - 52) % 0.5) * 7) * 0.18 * (t < 57 ? 1 : 0) : 0;
+  circ(cx, cy - r, r * 11.2 / 82 * E('back.out(3)')(P(t, 52.02, 0.4)) * (1 + beat), C.red);
+  if (t >= 53 && t < 57) {
+    const k = cl(Math.floor((t - 53) / 0.5), 0, 7), a = 53 + k * 0.5, p = E('back.out(2)')(P(t, a, 0.25));
+    ctx.save(); ctx.globalAlpha = P(t, a, 0.1) * (1 - P(t, 56.8, 0.15)); ctx.translate(540, 1060); ctx.scale(lerp(0.85, 1, p), lerp(0.85, 1, p));
+    T(STN[k], 0, 0, { size: 72, w: 800, color: ST[k], align: 'center' }); ctx.restore();
+    T(`etapa ${k + 1} de 8`, 540, 1130, { size: 30, w: 700, color: C.rot, align: 'center', alpha: 1 - P(t, 56.8, 0.15) });
+  }
+  R('O papel esquece.', 540, 1060, t, 57.0, { size: 68, w: 700, color: C.rot, align: 'center' });
+  const size = 230, word = 'GMS', tr = 0.017, total = measure(word, size, 800, tr); let x = 540 - total / 2;
+  for (let j = 0; j < 3; j++) {
+    const ch = word[j], cw = measure(ch, size, 800, tr), a = 58 + j * 0.5, p = E('back.out(2)')(P(t, a, 0.45));
+    if (t >= a) { ctx.save(); ctx.translate(0, (1 - p) * 90); T(ch, x, 1330, { size, w: 800, alpha: P(t, a, 0.12), track: tr }); ctx.restore(); }
+    x += cw;
+  }
+  const rp = E('back.out(2.2)')(P(t, 59.5, 0.45));
+  if (t >= 59.5) { ctx.save(); ctx.translate(540, 1440); ctx.scale(lerp(0.7, 1, rp), lerp(0.7, 1, rp)); T('lembra.', 0, 0, { size: 88, w: 800, align: 'center', alpha: P(t, 59.5, 0.1) }); ctx.restore(); }
+}
+
+// ---------- montagem final ----------
+const B = [0, 4, 8, 12, 20, 30];
+const SCN = [sA, sB, t => s5(t + 18), t => s8(t + 32), t => s9(t + 32)];
+const TR = [{ type: 'flood' }, { type: 'iris', x: 540, y: 1080 }, { type: 'flood' }, { type: 'iris', x: 540, y: 470 }];
+function clipShape(tr, p) {
+  ctx.beginPath();
+  if (tr.type === 'flood') { const h = H * p; ctx.rect(0, H - h, W, h); }
+  else ctx.arc(tr.x, tr.y, p * Math.hypot(Math.max(tr.x, W - tr.x), Math.max(tr.y, H - tr.y)) + 1, 0, 7);
+  ctx.clip();
+}
+function frame(t) {
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1;
+  for (let j = 0; j < SCN.length - 1; j++) {
+    const b = B[j + 1];
+    if (t >= b - 0.12 && t < b + 0.32) {
+      const p = E('expo.inOut')(P(t, b - 0.12, 0.44));
+      bg('#020617');
+      ctx.save(); const s = lerp(1, 0.92, p); ctx.translate(540, 960); ctx.scale(s, s); ctx.translate(-540, -960); SCN[j](Math.min(t, b - 0.001)); ctx.restore();
+      ctx.fillStyle = `rgba(2,6,23,${0.5 * p})`; ctx.fillRect(0, 0, W, H);
+      ctx.save(); clipShape(TR[j], p); SCN[j + 1](t); ctx.restore(); grain(ctx, W, H); return;
+    }
+  }
+  let i = 0; while (i < SCN.length - 1 && t >= B[i + 1]) i++;
+  SCN[i](t); grain(ctx, W, H);
+}
+
+// ---------- áudio: [fonte, início na fonte, início no reel, duração] ----------
+const MUSIC_EDL = [[32, 0, 30]];
+const SFX_EDL = [
+  [44.0, 0.0, 1.0],    // impacto + ticks → os 8 postos "?" aparecendo
+  [28.95, 1.85, 0.65], // dois bipes graves → "Só descobria no dia seguinte."
+  [3.80, 3.80, 4.20],  // whoosh do corte + 4 batidas subindo → montagem
+  [25.80, 7.80, 0.95], // whoosh do corte + ping do título + tela sobe
+  [28.95, 9.55, 0.65], // bipes do alerta da TH-07
+  [43.80, 11.80, 18.20], // números + fecho inteiro
+];
+
+const q = new URLSearchParams(location.search);
+async function fontsReady() { await loadBrandFonts(); await document.fonts.ready; }
+function prep() { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; ctx = cv.getContext('2d', { alpha: false }); CARDS = buildCards(); return cv; }
+async function preview() {
+  const wrap = document.getElementById('wrap'); wrap.style.gridTemplateColumns = `repeat(${q.get('c') || 4},1fr)`;
+  let times;
+  if (q.has('t')) times = q.get('t').split(',').map(Number);
+  else { const a = +(q.get('a') || 0), b = +(q.get('b') || DUR), s = +(q.get('s') || 2); times = []; for (let x = a; x <= b + 1e-9; x += s) times.push(+x.toFixed(3)); }
+  prep();
+  for (const t of times) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; ctx = cv.getContext('2d', { alpha: false }); frame(t);
+    const f = document.createElement('figure'), cap = document.createElement('figcaption'); cap.textContent = t + ' s'; f.append(cv, cap); wrap.append(f);
+  }
+  document.title = 'ready';
+}
+function place(dst, src, s0, d0, dur, gain = 1) {
+  const SR = 48000, a = Math.round(s0 * SR), b = Math.round(d0 * SR), n = Math.round(dur * SR), fade = Math.round(0.006 * SR);
+  for (let c = 0; c < 2; c++) {
+    const S = src.getChannelData(Math.min(c, src.numberOfChannels - 1)), D = dst[c];
+    for (let i = 0; i < n; i++) { const k = b + i; if (k >= D.length) break; const g = Math.min(1, i / fade, (n - i) / fade) * gain; D[k] += (S[a + i] || 0) * g; }
+  }
+}
+async function render() {
+  const canvas = prep();
+  document.title = 'audio…';
+  const SR = 48000, len = SR * DUR, oac = new OfflineAudioContext(2, SR * 62, SR);
+  const [mu, fx] = await Promise.all(['music', 'sfx'].map(n => fetch(`/w/stems/${n}.wav`).then(r => r.arrayBuffer()).then(b => oac.decodeAudioData(b))));
+  const ch = [new Float32Array(len), new Float32Array(len)];
+  for (const [s, d, n] of MUSIC_EDL) place(ch, mu, s, d, n, 0.9);
+  for (const [s, d, n] of SFX_EDL) place(ch, fx, s, d, n, 0.9);
+  for (const c of ch) for (let i = 0; i < Math.round(0.03 * SR); i++) c[i] *= i / (0.03 * SR); // entrada sem clique
+  let peak = 0; for (const c of ch) for (let i = 0; i < len; i++) peak = Math.max(peak, Math.abs(c[i]));
+  const g = peak > 0.89 ? 0.89 / peak : 1; for (const c of ch) for (let i = 0; i < len; i++) c[i] *= g;
+  const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let err = null;
+  const ae = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => err = e });
+  ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
+  for (let i = 0; i < len; i += 1024) {
+    const n = Math.min(1024, len - i), d = new Float32Array(n * 2); d.set(ch[0].subarray(i, i + n), 0); d.set(ch[1].subarray(i, i + n), n);
+    const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close();
+  }
+  await ae.flush();
+  const ve = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => err = e });
+  ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 12e6, framerate: FPS, avc: { format: 'avc' } });
+  const NF = FPS * DUR;
+  for (let f = 0; f < NF; f++) {
+    if (err) throw err;
+    frame(f === 0 ? POSTER_T : f / FPS);
+    const vf = new VideoFrame(canvas, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+    ve.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
+    while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 2));
+    if (f % 30 === 0) { document.title = `render ${f}/${NF}`; await new Promise(r => setTimeout(r, 0)); }
+  }
+  await ve.flush(); if (err) throw err; muxer.finalize();
+  const buf = muxer.target.buffer;
+  document.title = 'upload…';
+  await fetch('/save?name=GMS_Reel_PT_30s.mp4', { method: 'POST', body: buf });
+  frame(POSTER_T); const jpg = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.92));
+  await fetch('/save?name=GMS_Reel_PT_30s_capa.jpg', { method: 'POST', body: jpg });
+  document.title = 'DONE ' + (buf.byteLength / 1e6).toFixed(1) + ' MB';
+}
+fontsReady().then(() => q.has('render') ? render() : preview()).catch(e => { document.title = 'ERROR ' + e.message; console.error(e); });
+</script></body></html>

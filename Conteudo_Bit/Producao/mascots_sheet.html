@@ -1,0 +1,27 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>mascotes</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@600;700;800&display=block" rel="stylesheet">
+<style>body{margin:0;background:#05080f}canvas{width:100%;display:block}</style></head><body>
+<canvas id="c" width="2400" height="1800"></canvas>
+<script src="mascots.js"></script>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+function label(s, x, y, size = 40, color = '#F5F7FA', w = 700, align = 'center') { ctx.font = `${w} ${size}px "Open Sans"`; ctx.fillStyle = color; ctx.textAlign = align; ctx.fillText(s, x, y); }
+function cell(x, y, w, h, bgc, fn, s) { ctx.fillStyle = bgc; ctx.beginPath(); ctx.roundRect(x, y, w, h, 28); ctx.fill(); ctx.save(); ctx.translate(x + w / 2 - 300 * s, y + 20); ctx.scale(s, s); fn(ctx); ctx.restore(); }
+document.fonts.load('800 40px "Open Sans"').then(async () => {
+  await document.fonts.ready;
+  ctx.fillStyle = '#0F172A'; ctx.fillRect(0, 0, cv.width, cv.height);
+  label('A Ficha', 80, 100, 64, '#F5F7FA', 800, 'left');
+  label('dramática, esquecida, odeia o tablet', 340, 100, 36, '#94A3B8', 600, 'left');
+  FICHA_EXPR.forEach((e, i) => { const x = 80 + i * 380; cell(x, 140, 360, 640, '#2C6FBF', c => drawFicha(c, e), 0.72); label(e === 'dramatica' ? 'dramática' : e, x + 180, 760, 34); });
+  label('O Carretel', 80, 900, 64, '#F5F7FA', 800, 'left');
+  label('o GMS em pessoa: tranquilo, lembra de tudo', 470, 900, 36, '#94A3B8', 600, 'left');
+  CARRETEL_EXPR.forEach((e, i) => { const x = 80 + i * 380; cell(x, 940, 360, 640, '#1E293B', c => drawCarretel(c, e), 0.72); label(e, x + 180, 1560, 34); });
+  // os dois juntos
+  ctx.fillStyle = '#F5F7FA'; ctx.beginPath(); ctx.roundRect(1600, 940, 720, 640, 28); ctx.fill();
+  ctx.save(); ctx.translate(1600 + 10, 980); ctx.scale(0.62, 0.62); drawFicha(ctx, 'brava'); ctx.restore();
+  ctx.save(); ctx.translate(1600 + 330, 990); ctx.scale(0.6, 0.6); drawCarretel(ctx, 'tranquilo'); ctx.restore();
+  label('a dupla', 1960, 1560, 34, '#0F172A');
+  const b = await new Promise(r => cv.toBlob(r, 'image/png')); await fetch('/save?name=mascotes_conceito.png', { method: 'POST', body: b });
+  document.title = 'ready';
+});
+</script></body></html>

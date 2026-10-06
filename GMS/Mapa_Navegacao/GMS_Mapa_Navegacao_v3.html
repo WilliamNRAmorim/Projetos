@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GMS · Mapa de Navegação v3.0</title>
+<style>
+  :root{
+    --primaria:#E2231A; --fundo:#F5F7FA; --superficie:#FFFFFF;
+    --texto:#0F172A; --suave:#64748B; --rotulo:#94A3B8;
+    --header:#1E293B; --borda:#E2E8F0; --linha:#CBD5E1;
+    --ok:#16A34A; --alerta:#E67E22; --erro:#C0392B; --info:#2C6FBF; --gelo:#0284C7;
+    --okS:#D1FAE5; --alertaS:#FEF3C7; --erroS:#FEE2E2; --infoS:#EFF6FF; --geloS:#E0F2FE;
+    --raio:12px; --raioS:8px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fundo);color:var(--texto);
+    font-family:"Open Sans","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.55}
+  header{background:var(--header);color:#fff;padding:20px 24px;border-bottom:4px solid var(--primaria)}
+  header h1{margin:0;font-size:21px;font-weight:700}
+  header h1 b{color:var(--primaria)}
+  header p{margin:6px 0 0;color:#CBD5E1;font-size:12.5px}
+  main{max-width:1500px;margin:0 auto;padding:20px 20px 60px}
+  section{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);
+    padding:16px 18px;margin-bottom:16px}
+  h2{font-size:14px;margin:0 0 12px;letter-spacing:.4px;color:var(--suave);font-weight:700}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+  .kpi{background:var(--superficie);border:1px solid var(--borda);border-radius:var(--raio);padding:12px 14px}
+  .kpi b{display:block;font-size:25px;line-height:1.15;font-variant-numeric:tabular-nums}
+  .kpi span{font-size:11.5px;color:var(--rotulo)}
+  .legenda{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--borda);
+    border-radius:999px;padding:4px 11px;font-size:12px;background:#fff}
+  .dot{width:11px;height:11px;border-radius:3px;border:2px solid}
+  .barra{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  button{font:inherit;font-size:12.5px;border:1px solid var(--borda);background:#fff;color:var(--texto);
+    border-radius:var(--raioS);padding:6px 12px;cursor:pointer}
+  button:hover{background:#F1F5F9}
+  button:focus-visible{outline:2px solid var(--info);outline-offset:2px}
+  button[aria-pressed="true"]{background:var(--header);color:#fff;border-color:var(--header)}
+  #box{overflow:auto;border:1px solid var(--borda);border-radius:var(--raioS);background:#FBFCFE}
+  #box svg{display:block}
+  .no{cursor:pointer}
+  .no:focus-visible rect{stroke-width:3}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--borda);vertical-align:top}
+  th{color:var(--rotulo);font-size:11.5px;font-weight:700;white-space:nowrap}
+  td.v{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--suave)}
+  .tag{display:inline-block;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:700}
+  .alertas li{margin-bottom:8px}
+  .alertas b{color:var(--erro)}
+  code{background:#F1F5F9;border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#0F172A;color:#E2E8F0;padding:14px;border-radius:var(--raioS);overflow:auto;font-size:12px;line-height:1.5}
+  details summary{cursor:pointer;font-weight:700;color:var(--suave);font-size:14px}
+  footer{color:var(--rotulo);font-size:12px;text-align:center;padding:8px 0 30px}
+  @media (max-width:640px){ main{padding:14px 12px 40px} header{padding:16px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>GMS <b>·</b> Mapa de Navegação entre Telas</h1>
+  <p id="sub"></p>
+</header>
+ 
+<main>
+  <div class="kpis" id="kpis"></div>
+ 
+  <section>
+    <h2>Legenda</h2>
+    <div class="legenda" id="legenda"></div>
+  </section>
+ 
+  <section>
+    <h2>Mapa</h2>
+    <div class="barra">
+      <button onclick="zoom(0.15)">Aumentar</button>
+      <button onclick="zoom(-0.15)">Diminuir</button>
+      <button onclick="ajustar()">Caber na tela</button>
+      <span style="color:var(--rotulo);font-size:12px">Toque num nó para ver os detalhes abaixo.</span>
+    </div>
+    <div id="box"></div>
+    <div id="detalhe" style="margin-top:12px"></div>
+  </section>
+ 
+  <section>
+    <h2>Atenção agora</h2>
+    <ul class="alertas" id="alertas"></ul>
+  </section>
+ 
+  <section>
+    <h2>Inventário de telas</h2>
+    <div class="barra" id="filtros"></div>
+    <table><thead><tr>
+      <th>Etapa / função</th><th>Tela em produção</th><th>Ver.</th><th>Estado</th><th>Legado a excluir</th><th>Em aberto</th>
+    </tr></thead><tbody id="tbody"></tbody></table>
+  </section>
+ 
+  <section>
+    <details>
+      <summary>Como manter este mapa (leia antes de editar)</summary>
+      <p style="margin-top:12px">O mapa não é desenhado à mão. Tudo que você vê sai do bloco
+      <code>DADOS</code> no topo do <code>&lt;script&gt;</code>. Para atualizar depois de uma entrega:</p>
+      <pre>1. Subiu versão de tela?      telas[] -> troque "ver" e, se mudou o estado, "estado".
+2. Tela nova?                 acrescente um objeto em telas[] com col/lin livres.
+3. Tela antiga excluída?      apague o objeto e as ligacoes[] que citam o id dela.
+4. Mudou navegação?           acrescente/remova em ligacoes[]: {de, para, tipo}.
+5. Bug/pendência da tela?     campo "pend" (string) -> vira alerta e coluna da tabela.
+6. Sempre: troque versao/data no topo e some +1 no changelog[].
+ 
+Estados válidos:  nova · viva · legado · orfa · semGms · externa
+Tipos de ligação: nav (Navigate) · fluxo (OP avança) · dado (insumo) · bug</pre>
+      <p>Coordenadas são de <b>grade</b>, não de pixel: <code>col</code> e <code>lin</code> aceitam
+      decimais (ex.: <code>col: 9.5</code>). O renderizador calcula caixas, setas e o tamanho do SVG sozinho.</p>
+    </details>
+  </section>
+ 
+  <section>
+    <h2>Histórico do mapa</h2>
+    <table><thead><tr><th>Data</th><th>Versão</th><th>O que mudou</th></tr></thead><tbody id="hist"></tbody></table>
+  </section>
+ 
+  <footer id="rodape"></footer>
+</main>
+ 
+<script>
+/* ==========================================================================
+   DADOS — única coisa que você edita. O desenho é derivado daqui.
+   ========================================================================== */
+const DADOS = {
+  versao: "3.0",
+  data: "2026-09-03",
+  fonte: "GMS_Diario.md (348 linhas) + pacotes claude_* de 19/08 a 03/09",
+ 
+  estados: {
+    nova:   {rot:"Padrão novo (v2+) em produção", cor:"#16A34A", fundo:"#D1FAE5"},
+    viva:   {rot:"Em produção, padrão antigo",    cor:"#2C6FBF", fundo:"#EFF6FF"},
+    legado: {rot:"Legado, marcada para excluir",  cor:"#E67E22", fundo:"#FEF3C7"},
+    orfa:   {rot:"Órfã ou quebrada",              cor:"#C0392B", fundo:"#FEE2E2"},
+    semGms: {rot:"Sem apontamento no GMS",        cor:"#94A3B8", fundo:"#F1F5F9"},
+    externa:{rot:"Fora do app (BI, lista, fluxo)",cor:"#0284C7", fundo:"#E0F2FE"}
+  },
+  tiposLigacao: {
+    nav:   {rot:"Navigate no código", cor:"#64748B", trac:"none"},
+    fluxo: {rot:"Fluxo do processo (a OP avança)", cor:"#0F172A", trac:"none"},
+    dado:  {rot:"Insumo / consumo de dado", cor:"#0284C7", trac:"6 4"},
+    bug:   {rot:"Navegação errada", cor:"#C0392B", trac:"5 4"}
+  },
+ 
+  telas: [
+    // --- entrada ---
+    {id:"splash", nome:"Splash", tela:"scr_Splash", ver:"", estado:"viva", col:5.0, lin:0, grupo:"Entrada"},
+    {id:"menu", nome:"Menu — Hub", tela:"scr_Menu", ver:"", estado:"viva", col:5.0, lin:1, grupo:"Entrada"},
+ 
+    // --- seleção de setor ---
+    {id:"selsetor", nome:"Seleção de setor", tela:"scr_SelecaoSetor_2", ver:"0.6.0", estado:"nova", col:2.0, lin:2,
+     grupo:"Mangueira", nota:"Menu vivo: 3 estados por posto (Em produção / Parada com fila / Livre), cadastro de máquina só em fx_LayoutBalizas, timer de dados a 120 s.",
+     pend:"MEL-111: colAguardMenu traz a fila inteira para contar por etapa — mente em silêncio quando ficha_producao passar de 2.000."},
+    {id:"selsetor1", nome:"selecaosetor (antiga)", tela:"scr_selecaosetor_1", ver:"0.5.x", estado:"legado", col:0.0, lin:2,
+     grupo:"Mangueira", substitui:"selsetor", nota:"Exibia FichaID com rótulo de OP. Substituída pela v0.6.0.", pend:"MEL-096: excluir e redirecionar."},
+ 
+    // --- linha mangueira ---
+    {id:"extrusora", nome:"Extrusora Mandril", tela:"—", ver:"", estado:"semGms", col:0.0, lin:4, grupo:"Mangueira",
+     nota:"Etapa física sem apontamento. O card do menu diz 'Sem apontamento no GMS', nunca 'Livre'."},
+    {id:"mandril", nome:"1 · Mandril", tela:"scr_Mandril_2", ver:"0.5.3", estado:"nova", col:1.0, lin:4, grupo:"Mangueira",
+     nota:"Multi-posto (Termofusão / Vibracional) + kanban de mandril com total por posto e turno."},
+    {id:"tubo", nome:"2 · Tubo", tela:"scr_Tubo_2", ver:"0.3.5", estado:"nova", col:2.0, lin:4, grupo:"Mangueira",
+     nota:"Sem Form. Delineamento reativo 100% local (DM_TUBE_EXTRUSION em coleção, LookUp por PN).",
+     pend:"MEL-088: excluir scr_tubo_1 e os botões duplicados do menu lateral. MEL-091: poka-yoke de diâmetro parado na unidade (polegada x mm)."},
+    {id:"tubo1", nome:"Tubo (antiga)", tela:"scr_tubo_1", ver:"", estado:"legado", col:1.0, lin:3, grupo:"Mangueira", substitui:"tubo",
+     pend:"MEL-088: excluir a tela, o modal morto de nova OP e os botões duplicados do menu lateral."},
+    {id:"trancagem", nome:"3 · Trançagem", tela:"scr_Trancagem_2", ver:"0.4.1", estado:"nova", col:3.0, lin:4, grupo:"Mangueira",
+     nota:"Consome bobina da FifoBobinadeira (Status CO + FichaID_Consumo). Conferência de fio por fx_ConfFio: SEM_FIO / OK / DIVERGE, avisa e não bloqueia.",
+     pend:"CRÍTICO: tmr_RelogioTranc e tmr_GuardaTranc estão Visible=false — cronômetro dos cards congelado desde 24/08 e cão de guarda nunca disparou. Patch pronto, falta colar."},
+    {id:"cobertura", nome:"4 · Cobertura", tela:"scr_Cobertura_2", ver:"0.3.0", estado:"nova", col:4.0, lin:4, grupo:"Mangueira",
+     nota:"Primeira tela sem Form/FormViewer/DataCards.",
+     pend:"MEL-090: cmb_OperadorCob ainda com IsSearchable false pela norma antiga."},
+    {id:"bandagem", nome:"5 · Bandagem", tela:"scr_Bandagem_2", ver:"0.3.0", estado:"nova", col:5.0, lin:4, grupo:"Mangueira"},
+    {id:"vulca", nome:"6 · Vulcanização", tela:"scr_Vulcanizacao_2", ver:"0.2.0", estado:"nova", col:6.0, lin:4, grupo:"Mangueira",
+     nota:"Batelada (C39): resfriamento é pré-requisito de fluxo, com barreira dupla.",
+     pend:"MEL-074: Diário de Bordo da autoclave travado na pergunta P9.2 (C1–C5 são posições de carga?)."},
+    {id:"deband", nome:"7 · Debandagem", tela:"scr_Debandagem_2", ver:"0.4.0", estado:"nova", col:7.0, lin:4, grupo:"Mangueira",
+     nota:"122 controles, QA 12/12. Campo Observação_Debandagem novo. Tensão de spec vem de DM_LAYLINE como faixa de texto ('50-60').",
+     pend:"Exibir Observação_Debandagem no card da Extração/Teste."},
+    {id:"extr", nome:"8 · Extração / Teste", tela:"scr_ExtracaoTeste_2", ver:"0.4.0", estado:"nova", col:8.0, lin:4, grupo:"Mangueira",
+     nota:"Medidas dimensionais por fx_NumMedida / fx_MedidaBR (3 casas) e delineamento de DM_TESTE_INSP em polegada.",
+     pend:"4 itens de acabamento (rótulos da galeria, AccessibleLabel, cabeçalho '(pol)', versão 0.4.0). MEL-101/102: colunas Texto e recuperação de ~1.454 células corrompidas."},
+    {id:"finaliz1", nome:"Finalização (antiga)", tela:"scr_Finalização_1", ver:"0.3.2", estado:"legado", col:9.2, lin:5, grupo:"Mangueira", substitui:"extr",
+     pend:"MEL-093: excluir após validação da scr_ExtracaoTeste_2."},
+ 
+    // --- preparação de fio ---
+    {id:"bobin", nome:"Bobinadeira", tela:"scr_Bobinadeira_2", ver:"0.3.0", estado:"nova", col:2.0, lin:6, grupo:"Fio"},
+    {id:"refugo", nome:"Refugo Bobinadeira", tela:"scr_RefugoBobinadeira_1", ver:"0.3.0", estado:"nova", col:3.2, lin:6, grupo:"Fio"},
+    {id:"caten", nome:"Catenária", tela:"scr_Catenaria_1", ver:"", estado:"viva", col:4.4, lin:6, grupo:"Fio"},
+ 
+    // --- hora-hora ---
+    {id:"hhMand", nome:"Hora-Hora Mandril", tela:"scrHoraHora_Mandril", ver:"", estado:"viva", col:1.0, lin:5.6, grupo:"Hora-Hora",
+     pend:"Ainda no padrão antigo: lê fonte própria e não usa a grade de fx_GradeHoraHora."},
+    {id:"hhTubo", nome:"Hora-Hora Tubo", tela:"scrHoraHora_Tubo", ver:"", estado:"orfa", col:2.0, lin:5.6, grupo:"Hora-Hora", substitui:"hhTranc",
+     nota:"Ninguém navega até ela, o voltar aponta para o Mandril e lê Hora_Hora_Mandril.",
+     pend:"Excluir na consolidação do Hora-Hora."},
+    {id:"hhTranc", nome:"Hora-Hora Trançagem", tela:"scr_HoraHora_Trancagem_2", ver:"0.5.3", estado:"nova", col:3.6, lin:5.6, grupo:"Hora-Hora",
+     nota:"Meta por janela (velocidade × minutos ÷ 60), grade de 9 janelas no 1º turno, alerta só de janela fechada, motivo obrigatório para fechar o turno, alerta só em máquina com sinal de vida no turno.",
+     pend:"MEL-103: excluir a scrHoraHora_Trancagem antiga após um turno de validação. MEL-104: 600 linhas duplicadas na chave Data+Turno+Célula+Hora."},
+    {id:"hhTrancOld", nome:"Hora-Hora Tranç. (antiga)", tela:"scrHoraHora_Trancagem", ver:"", estado:"legado", col:5.2, lin:5.6, grupo:"Hora-Hora", substitui:"hhTranc",
+     pend:"MEL-103: excluir."},
+ 
+    // --- gestão & bi ---
+    {id:"superv", nome:"Supervisão", tela:"scr_Supervisao_1", ver:"", estado:"viva", col:10.4, lin:2, grupo:"Gestão"},
+    {id:"consop", nome:"Consulta OP", tela:"scr_ConsultaOP_2", ver:"0.3.0", estado:"nova", col:9.8, lin:3, grupo:"Gestão"},
+    {id:"volume", nome:"Volume Diário", tela:"scr_VolumeDiario_1", ver:"", estado:"viva", col:11.2, lin:3, grupo:"Gestão"},
+    {id:"fichaImp", nome:"Ficha Impressão", tela:"scr_FichaImpressao_1", ver:"", estado:"viva", col:9.8, lin:4, grupo:"Gestão"},
+    {id:"telaImp", nome:"Tela Impressão", tela:"scr_TelaImpressao_1", ver:"", estado:"viva", col:11.2, lin:4, grupo:"Gestão"},
+    {id:"bi", nome:"Power BI", tela:"GMS_Operacao.pbip", ver:"", estado:"externa", col:11.2, lin:5.6, grupo:"Gestão",
+     nota:"fHoraHora, dOP, dPlanoMensal e a pasta Fechamento SAP entregues em 31/08. Tema vem de GMS_Tema_BI.json.",
+     pend:"MEL-118: separar em Operação / Gestão / Qualidade sobre um modelo só."},
+ 
+    // --- montagem ---
+    {id:"selMont", nome:"Seleção setor Montagem", tela:"scr_selecaosetorMontagem", ver:"", estado:"viva", col:7.4, lin:2, grupo:"Montagem"},
+    {id:"montHH", nome:"Montagem Hora-Hora", tela:"scr_Montagem_HoraHora", ver:"0.3.0", estado:"nova", col:7.4, lin:3, grupo:"Montagem",
+     nota:"Turno carimbado no OnVisible e trocado só por ação do operador. OP EmAndamento nunca sai da galeria na virada.",
+     pend:"MEL-113: encerramento parcial da OAP no penúltimo minuto do turno. Verificar delegação do Or aninhado no Items da galeria."}
+  ],
+ 
+  ligacoes: [
+    {de:"splash", para:"menu", tipo:"nav"},
+    {de:"menu", para:"selsetor", tipo:"nav"},
+    {de:"menu", para:"superv", tipo:"nav"},
+    {de:"menu", para:"selMont", tipo:"nav"},
+ 
+    {de:"selsetor", para:"mandril", tipo:"nav"},
+    {de:"selsetor", para:"tubo", tipo:"nav"},
+    {de:"selsetor", para:"trancagem", tipo:"nav"},
+    {de:"selsetor", para:"cobertura", tipo:"nav"},
+    {de:"selsetor", para:"bandagem", tipo:"nav"},
+    {de:"selsetor", para:"vulca", tipo:"nav"},
+    {de:"selsetor", para:"deband", tipo:"nav"},
+    {de:"selsetor", para:"extr", tipo:"nav"},
+    {de:"selsetor", para:"bobin", tipo:"nav"},
+ 
+    {de:"extrusora", para:"mandril", tipo:"fluxo"},
+    {de:"mandril", para:"tubo", tipo:"fluxo"},
+    {de:"tubo", para:"trancagem", tipo:"fluxo"},
+    {de:"trancagem", para:"cobertura", tipo:"fluxo"},
+    {de:"cobertura", para:"bandagem", tipo:"fluxo"},
+    {de:"bandagem", para:"vulca", tipo:"fluxo"},
+    {de:"vulca", para:"deband", tipo:"fluxo"},
+    {de:"deband", para:"extr", tipo:"fluxo"},
+ 
+    {de:"bobin", para:"refugo", tipo:"fluxo"},
+    {de:"bobin", para:"caten", tipo:"fluxo"},
+    {de:"bobin", para:"trancagem", tipo:"dado"},
+ 
+    {de:"mandril", para:"hhMand", tipo:"nav"},
+    {de:"trancagem", para:"hhTranc", tipo:"nav"},
+    {de:"tubo", para:"hhTrancOld", tipo:"nav"},
+    {de:"cobertura", para:"hhTrancOld", tipo:"nav"},
+    {de:"bandagem", para:"hhTrancOld", tipo:"nav"},
+    {de:"hhTubo", para:"mandril", tipo:"bug"},
+ 
+    {de:"superv", para:"consop", tipo:"nav"},
+    {de:"superv", para:"volume", tipo:"nav"},
+    {de:"consop", para:"fichaImp", tipo:"nav"},
+    {de:"extr", para:"telaImp", tipo:"nav"},
+    {de:"extr", para:"finaliz1", tipo:"nav"},
+    {de:"selMont", para:"montHH", tipo:"nav"}
+  ],
+ 
+  alertas: [
+    {grau:"erro", texto:"Trançagem v0.4.0 em produção com os dois timers Visible=false. Timer invisível não roda: o cronômetro de cada card da fila está congelado desde 24/08 e o cão de guarda de 45 s nunca disparou. O patch é o mesmo da Hora-Hora (1×1 px transparente, Visible=true)."},
+    {grau:"erro", texto:"Velocidades: 41 dos 118 pares mangueira×máquina divergem entre o App.OnStart e a planilha. 20,5% do histórico de apontamento (5.004 de 24.448 linhas) foi medido contra velocidade que a planilha não confirma. Regra combinada: onde diverge, o Excel manda."},
+    {grau:"alerta", texto:"Extração/Teste: ~1.454 células dimensionais gravadas ×1000 (0,254 virou 254) em 584 linhas desde 20/08. Recuperação depende da migração Texto→Número das colunas (MEL-101 antes de MEL-102)."},
+    {grau:"alerta", texto:"Hora-Hora anterior ao publish da v0.5.1 está em régua diferente (meta inflada +4,9% / +5,0% / +14,3% por turno). O BI compara maçã com laranja até MEL-106 decidir entre data de corte e recálculo."},
+    {grau:"alerta", texto:"3 telas legadas aguardam só um turno de validação para sair: scr_tubo_1, scr_Finalização_1 e scrHoraHora_Trancagem. Cada dia a mais é uma chance de o operador entrar pela porta errada."}
+  ],
+ 
+  changelog: [
+    {data:"2026-09-03", ver:"3.0", texto:"Mapa reescrito como artefato orientado a dados: o desenho passa a ser derivado do bloco DADOS, atualizar virou editar campo. Estado sincronizado com o diário consolidado (348 linhas)."},
+    {data:"2026-08-27", ver:"2.0", texto:"Mapa refeito à mão sobre o source de agosto: telas _2 do Tubo, Trançagem, Cobertura, Bandagem e Bobinadeira."},
+    {data:"2026-07-01", ver:"1.0", texto:"Primeiro mapeamento, extraído do .msapp v2026-06-22: 25 telas, 3 módulos, HoraHora_Tubo identificada como órfã."}
+  ]
+};
+ 
+/* ==========================================================================
+   RENDERIZADOR — não precisa mexer aqui.
+   ========================================================================== */
+const COL = 172, LIN = 108, LARG = 152, ALT = 62, MARG = 26;
+const px = t => ({x: MARG + t.col*COL, y: MARG + t.lin*LIN});
+const porId = {}; DADOS.telas.forEach(t => porId[t.id] = t);
+ 
+function esc(s){ return (s||"").replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+ 
+function desenha(){
+  const maxC = Math.max(...DADOS.telas.map(t=>t.col)), maxL = Math.max(...DADOS.telas.map(t=>t.lin));
+  const W = MARG*2 + maxC*COL + LARG, H = MARG*2 + maxL*LIN + ALT;
+  let defs = "", arestas = "", nos = "";
+ 
+  for (const k in DADOS.tiposLigacao){
+    defs += `<marker id="seta-${k}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+      <path d="M0,0 L10,5 L0,10 z" fill="${DADOS.tiposLigacao[k].cor}"/></marker>`;
+  }
+ 
+  DADOS.ligacoes.forEach(l => {
+    const a = porId[l.de], b = porId[l.para];
+    if (!a || !b) return;
+    const pa = px(a), pb = px(b), st = DADOS.tiposLigacao[l.tipo];
+    let d;
+    if (Math.abs(a.lin - b.lin) < 0.25){                    // mesma faixa: reta horizontal
+      const y = pa.y + ALT/2;
+      const x1 = a.col < b.col ? pa.x + LARG : pa.x, x2 = a.col < b.col ? pb.x : pb.x + LARG;
+      d = `M${x1},${y} L${x2},${y}`;
+    } else {                                                 // cotovelo vertical
+      const desce = a.lin < b.lin;
+      const y1 = desce ? pa.y + ALT : pa.y, y2 = desce ? pb.y : pb.y + ALT;
+      const ym = y1 + (y2 - y1)/2;
+      d = `M${pa.x+LARG/2},${y1} L${pa.x+LARG/2},${ym} L${pb.x+LARG/2},${ym} L${pb.x+LARG/2},${y2}`;
+    }
+    arestas += `<path d="${d}" fill="none" stroke="${st.cor}" stroke-width="${l.tipo==='fluxo'?2:1.5}"
+      stroke-dasharray="${st.trac}" marker-end="url(#seta-${l.tipo})" opacity="${l.tipo==='nav'?0.55:0.9}"/>`;
+  });
+ 
+  DADOS.telas.forEach(t => {
+    const p = px(t), e = DADOS.estados[t.estado];
+    const marca = t.pend ? `<circle cx="${p.x+LARG-13}" cy="${p.y+13}" r="5.5" fill="${DADOS.estados.orfa.cor}"/>` : "";
+    nos += `<g class="no" tabindex="0" role="button" aria-label="${esc(t.nome)}" onclick="abre('${t.id}')" onkeydown="if(event.key==='Enter')abre('${t.id}')">
+      <rect x="${p.x}" y="${p.y}" width="${LARG}" height="${ALT}" rx="9" fill="${e.fundo}" stroke="${e.cor}" stroke-width="2"/>
+      <text x="${p.x+12}" y="${p.y+24}" font-size="13" font-weight="700" fill="#0F172A">${esc(corta(t.nome,20))}</text>
+      <text x="${p.x+12}" y="${p.y+41}" font-size="10.5" fill="#64748B">${esc(corta(t.tela,24))}</text>
+      ${t.ver?`<text x="${p.x+12}" y="${p.y+55}" font-size="10.5" font-weight="700" fill="${e.cor}">v${t.ver}</text>`:""}
+      ${marca}</g>`;
+  });
+ 
+  document.getElementById("box").innerHTML =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+      <defs>${defs}</defs>${arestas}${nos}</svg>`;
+  base = W; ajustar();
+}
+function corta(s,n){ s = s||""; return s.length > n ? s.slice(0,n-1)+"…" : s; }
+ 
+let base = 1200, z = 1;
+function aplica(){
+  const svg = document.querySelector("#box svg"); if (!svg) return;
+  svg.setAttribute("width", Math.round(base*z));
+  svg.setAttribute("height", Math.round(parseFloat(svg.getAttribute("viewBox").split(" ")[3])*z));
+}
+function zoom(d){ z = Math.min(2, Math.max(0.35, z+d)); aplica(); }
+function ajustar(){ const w = document.getElementById("box").clientWidth - 4; z = Math.min(1, Math.max(0.3, w/base)); aplica(); }
+addEventListener("resize", ajustar);
+ 
+function abre(id){
+  const t = porId[id], e = DADOS.estados[t.estado];
+  const ent = DADOS.ligacoes.filter(l=>l.para===id).map(l=>porId[l.de]?.nome).filter(Boolean);
+  const sai = DADOS.ligacoes.filter(l=>l.de===id).map(l=>porId[l.para]?.nome).filter(Boolean);
+  document.getElementById("detalhe").innerHTML =
+    `<div style="border:1px solid ${e.cor};border-left-width:5px;border-radius:var(--raioS);padding:12px 14px;background:${e.fundo}22">
+      <div style="font-weight:700;font-size:15px">${esc(t.nome)} ${t.ver?`<span style="color:${e.cor}">v${t.ver}</span>`:""}</div>
+      <div style="color:var(--suave);font-size:12.5px;margin-bottom:8px"><code>${esc(t.tela)}</code> · ${e.rot} · ${esc(t.grupo||"")}</div>
+      ${t.nota?`<p style="margin:0 0 8px">${esc(t.nota)}</p>`:""}
+      ${t.pend?`<p style="margin:0 0 8px;color:var(--erro)"><b>Em aberto:</b> ${esc(t.pend)}</p>`:""}
+      <div style="font-size:12.5px;color:var(--suave)">Chega de: ${ent.length?esc(ent.join(", ")):"ninguém (órfã)"}<br>Leva para: ${sai.length?esc(sai.join(", ")):"nenhuma tela"}</div>
+    </div>`;
+  document.getElementById("detalhe").scrollIntoView({block:"nearest", behavior:"smooth"});
+}
+ 
+function monta(){
+  document.getElementById("sub").textContent =
+    `v${DADOS.versao} · ${DADOS.data} · ${DADOS.telas.length} nós · fonte: ${DADOS.fonte}`;
+  document.getElementById("rodape").textContent =
+    `GMS · Guaratinguetá Manufacturing System · mapa v${DADOS.versao} gerado do bloco DADOS`;
+ 
+  const c = e => DADOS.telas.filter(t=>t.estado===e).length;
+  const kpis = [
+    [DADOS.telas.length, "nós no mapa"],
+    [c("nova"), "no padrão novo"],
+    [c("legado")+c("orfa"), "para excluir"],
+    [DADOS.telas.filter(t=>t.pend).length, "com item aberto"],
+    [DADOS.ligacoes.length, "ligações"]
+  ];
+  document.getElementById("kpis").innerHTML = kpis.map(k=>`<div class="kpi"><b>${k[0]}</b><span>${k[1]}</span></div>`).join("");
+ 
+  document.getElementById("legenda").innerHTML =
+    Object.values(DADOS.estados).map(e=>`<span class="chip"><span class="dot" style="background:${e.fundo};border-color:${e.cor}"></span>${e.rot}</span>`).join("") +
+    Object.entries(DADOS.tiposLigacao).map(([,v])=>`<span class="chip"><svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="${v.cor}" stroke-width="2" stroke-dasharray="${v.trac}"/></svg>${v.rot}</span>`).join("") +
+    `<span class="chip"><span class="dot" style="background:${DADOS.estados.orfa.cor};border-color:${DADOS.estados.orfa.cor};border-radius:50%"></span>Tem item em aberto</span>`;
+ 
+  document.getElementById("alertas").innerHTML = DADOS.alertas.map(a=>
+    `<li><b style="color:${a.grau==='erro'?'var(--erro)':'var(--alerta)'}">${a.grau==='erro'?'Bloqueia':'Vigiar'}</b> · ${esc(a.texto)}</li>`).join("");
+ 
+  const grupos = [...new Set(DADOS.telas.map(t=>t.grupo).filter(Boolean))];
+  document.getElementById("filtros").innerHTML =
+    [`<button aria-pressed="true" onclick="filtra(this,null)">Tudo</button>`]
+    .concat(grupos.map(g=>`<button aria-pressed="false" onclick="filtra(this,'${g}')">${g}</button>`)).join("");
+  tabela(null);
+ 
+  document.getElementById("hist").innerHTML = DADOS.changelog.map(h=>
+    `<tr><td class="v">${h.data}</td><td class="v">v${h.ver}</td><td>${esc(h.texto)}</td></tr>`).join("");
+}
+ 
+function tabela(g){
+  document.getElementById("tbody").innerHTML = DADOS.telas
+    .filter(t=>!g || t.grupo===g)
+    .filter(t=>t.estado!=="legado" && t.estado!=="orfa")
+    .map(t=>{
+      const e = DADOS.estados[t.estado];
+      const leg = DADOS.telas.filter(x=>x.substitui===t.id).map(x=>x.tela);
+      return `<tr>
+        <td><b>${esc(t.nome)}</b></td>
+        <td><code>${esc(t.tela)}</code></td>
+        <td class="v">${t.ver?"v"+t.ver:"—"}</td>
+        <td><span class="tag" style="background:${e.fundo};color:${e.cor}">${e.rot}</span></td>
+        <td class="v">${leg.length?esc(leg.join(", ")):"—"}</td>
+        <td>${t.pend?esc(t.pend):"—"}</td></tr>`;
+    }).join("");
+}
+function filtra(btn, g){
+  document.querySelectorAll("#filtros button").forEach(b=>b.setAttribute("aria-pressed","false"));
+  btn.setAttribute("aria-pressed","true"); tabela(g);
+}
+ 
+monta(); desenha();
+</script>
+</body>
+</html>
+ 

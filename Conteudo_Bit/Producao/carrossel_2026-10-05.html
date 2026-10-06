@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Carrossel games</title>
+<script src="brand.js"></script>
+<script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`)</script>
+<script src="mascots.js"></script>
+<style>body{margin:0;background:#000}#wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px}canvas{width:100%}</style></head><body><div id="wrap"></div>
+<script>
+// Carrossel 1080x1350. Fatos conferidos: SMB = 40 KB (32 KB PRG + 8 KB CHR); nuvem = arbusto recolorido; RDR2 no PC = 150 GB.
+const W = 1080, H = 1350, OUTDIR = 'semana-2026-10-05', B = BRAND, RING = Array(8).fill(B.paper), X = 84;
+const q = new URLSearchParams(location.search);
+let ctx;
+function T(s, x, y, size, color, w = 900, align = 'left', track = -0.035, family = B.font) {
+  ctx.font = `${w} ${size}px "${family}"`; ctx.letterSpacing = (track * size) + 'px';
+  const m = ctx.measureText(s).width, max = W - 2 * X; if (m > max) { size *= max / m; ctx.font = `${w} ${size}px "${family}"`; ctx.letterSpacing = (track * size) + 'px'; }
+  ctx.fillStyle = color; ctx.textAlign = align; ctx.fillText(s, x, y);
+}
+const mono = (s, x, y, color, align = 'left') => T(s, x, y, 30, color, 700, align, 0.02, B.mono);
+function bit(expr, cx, feetY, s) { ctx.save(); ctx.translate(cx - 300 * s, feetY - 780 * s); ctx.scale(s, s); drawCarretel(ctx, expr, RING); ctx.restore(); }
+function bg(c) { ctx.fillStyle = c; ctx.fillRect(0, 0, W, H); }
+const NUM = [1, 2, 3, 4, 6, 7]; // o slide 5 é o vídeo 3D do Will Station (willstation3d.html)
+function foot(n, c) { mono(`${NUM[n - 1]}/7`, W - X, H - 70, c, 'right'); }
+function pixelShape(x, y, cell, color) { // a mesma silhueta em pixel: vira nuvem ou arbusto só trocando a cor
+  const map = ['....XXXX....', '..XXXXXXXX..', '.XXXXXXXXXXX', 'XXXXXXXXXXXX', 'XXXXXXXXXXXX', '.XXXXXXXXXX.'];
+  ctx.fillStyle = color; map.forEach((r, j) => [...r].forEach((c, i) => { if (c === 'X') ctx.fillRect(x + i * cell, y + j * cell, cell, cell); }));
+}
+const SLIDES = [
+  () => { bg(B.ink); T('Super Mario', X, 250, 128, B.paper); T('Bros. inteiro', X, 380, 128, B.paper); T('cabia em', X, 510, 128, B.paper); T('40 KB.', X, 720, 230, B.accent, 900); mono('NES, 1985', X, 800, B.mute); bit('lembra', 820, 1250, 0.62); foot(1, B.mute); },
+  () => { bg(B.paper); T('É menos', X, 300, 150, B.ink); T('do que esta', X, 450, 150, B.ink); T('imagem.', X, 600, 150, B.ink); ctx.fillStyle = B.accent; ctx.fillRect(X, 650, 260, 16); bit('tranquilo', 800, 1250, 0.7); foot(2, B.mute); },
+  () => { bg(B.ink); mono('DENTRO DO CARTUCHO', X, 200, B.mute);
+    T('32 KB', X, 400, 210, B.paper); T('o jogo inteiro: código, música e sons.', X, 470, 44, B.mute, 600, 'left', -0.01);
+    T('8 KB', X, 760, 210, B.accent); T('todos os gráficos.', X, 830, 44, B.mute, 600, 'left', -0.01);
+    bit('tranquilo', 860, 1250, 0.42); foot(3, B.mute); },
+  () => { bg(B.accent); T('A nuvem e', X, 240, 120, B.ink); T('o arbusto são', X, 360, 120, B.ink); T('o mesmo', X, 480, 120, B.ink); T('desenho.', X, 600, 120, B.ink);
+    pixelShape(X, 760, 30, B.paper); pixelShape(560, 980, 30, B.ink); mono('MUDA SÓ A COR', X, 1200, B.ink); foot(4, B.ink); },
+  () => { bg(B.ink); T('Hoje, Red Dead', X, 230, 110, B.paper); T('Redemption 2', X, 345, 110, B.paper); T('ocupa', X, 460, 110, B.paper); T('150 GB.', X, 690, 230, B.accent);
+    T('Quase 4 milhões de vezes o Mario.', X, 790, 48, B.mute, 600, 'left', -0.01); mono('NO PC', X, 860, B.mute); foot(5, B.mute); },
+  () => { bg(B.paper); T('Engenharia', X, 330, 150, B.ink); T('é fazer', X, 480, 150, B.ink); T('caber.', X, 630, 150, B.accent); bit('joinha', 780, 1250, 0.72); foot(6, B.mute); },
+];
+loadBrandFonts().then(async () => {
+  for (let i = 0; i < SLIDES.length; i++) {
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; ctx = cv.getContext('2d'); SLIDES[i](); grain(ctx, W, H); document.getElementById('wrap').append(cv);
+    if (q.has('save')) await fetch(`/save?dir=${OUTDIR}&name=Sab10_Carrossel_${NUM[i]}.png`, { method: 'POST', body: await new Promise(r => cv.toBlob(r, 'image/png')) });
+  }
+  document.title = 'ready';
+});
+</script></body></html>

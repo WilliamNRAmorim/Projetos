@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Will Station 3D</title>
+<script src="brand.js"></script>
+<script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`)</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<style>body{margin:0;background:#000}canvas{width:100%;max-width:540px;display:block}</style></head><body>
+<script>
+// Slide 5 do carrossel (vídeo em loop, 1080x1350, 8 s): o Will Station em 3D detalhado.
+// Tela: 2 s da foto real e depois um jogo ORIGINAL em pixel art (o Bit de boné W). Nada de personagem ou arte de terceiros.
+// Adesivos: recortes da foto real da pessoa + adesivos originais gerados aqui.
+const W = 1080, H = 1350, FPS = 30, DUR = 8, OUTDIR = 'semana-2026-10-05', B = BRAND, q = new URLSearchParams(location.search);
+const out = document.createElement('canvas'); out.width = W; out.height = H; const ctx = out.getContext('2d'); document.body.append(out);
+const glc = document.createElement('canvas'); glc.width = W; glc.height = H;
+const renderer = new THREE.WebGLRenderer({ canvas: glc, antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(1); renderer.setSize(W, H, false); renderer.outputEncoding = THREE.sRGBEncoding; renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene(), cam = new THREE.PerspectiveCamera(26, W / H, 0.1, 100);
+cam.position.set(0, 3.2, 12.4); cam.lookAt(0, 2.45, 0);
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const lin = c => { const col = new THREE.Color(c); col.convertSRGBToLinear(); return col; };
+const std = (c, rough = 0.5, metal = 0) => new THREE.MeshStandardMaterial({ color: lin(c), roughness: rough, metalness: metal });
+const canvasTex = (cv) => { const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 8; return t; };
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+// ---------- luzes ----------
+scene.add(new THREE.HemisphereLight(0xffffff, 0x222222, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(-4, 7, 6); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.radius = 6;
+Object.assign(key.shadow.camera, { left: -4, right: 4, top: 5, bottom: -2, near: 1, far: 25 }); scene.add(key);
+const rim = new THREE.PointLight(0xff3b1f, 2.2, 14); rim.position.set(3.5, 3.5, -3); scene.add(rim);
+const fill = new THREE.PointLight(0x88aaff, 0.4, 14); fill.position.set(-4, 2, 4); scene.add(fill);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.ShadowMaterial({ opacity: 0.45 })); floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+// ---------- gabinete: perfil lateral extrudado com chanfro ----------
+const PROF = [[0.8, 0.06], [0.8, 0.9], [0.2, 1.15], [0.35, 2.4], [-0.65, 2.48], [-0.65, 0.06]];
+const shape = new THREE.Shape(); PROF.forEach(([z, y], i) => i ? shape.lineTo(z, y) : shape.moveTo(z, y));
+const geo = new THREE.ExtrudeGeometry(shape, { depth: 2.3, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.05, bevelSegments: 6, curveSegments: 24 }); geo.translate(0, 0, -1.15);
+const mBlack = std('#151517', 0.55), mRed = std('#D6241B', 0.42);
+const cab = new THREE.Group(); scene.add(cab);
+const body = new THREE.Mesh(geo, [mBlack, mRed]); body.rotation.y = -Math.PI / 2; body.castShadow = true; cab.add(body);
+for (const sx of [-1.2, 1.2]) { // friso (T-molding) vermelho seguindo o perfil
+  const path = new THREE.CurvePath(); for (let i = 0; i < PROF.length; i++) { const [z1, y1] = PROF[i], [z2, y2] = PROF[(i + 1) % PROF.length]; path.add(new THREE.LineCurve3(new THREE.Vector3(sx, y1, z1), new THREE.Vector3(sx, y2, z2))); }
+  const tube = new THREE.Mesh(new THREE.TubeGeometry(path, 240, 0.032, 10, true), std('#E23A2E', 0.3)); tube.castShadow = true; cab.add(tube);
+}
+for (const [x, z] of [[-1, 0.6], [1, 0.6], [-1, -0.45], [1, -0.45]]) { const f = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.07, 20), std('#0A0A0A', 0.8)); f.position.set(x, 0.035, z); cab.add(f); }
+for (const [x, c] of [[0.5, '#111111'], [0.65, '#202020']]) { const cur = new THREE.CatmullRomCurve3([new THREE.Vector3(x, 0.5, -0.7), new THREE.Vector3(x + 0.1, 0.25, -1.0), new THREE.Vector3(x + 0.35, 0.02, -1.4), new THREE.Vector3(x + 0.9, 0.02, -1.9)]); const cb = new THREE.Mesh(new THREE.TubeGeometry(cur, 60, 0.025, 8), std(c, 0.6)); cb.castShadow = true; cab.add(cb); }
+// ---------- marquise iluminada "WILL STATION" ----------
+const [mqc, mq] = mk(1024, 200);
+function drawMarquee(t) {
+  const g0 = mq.createLinearGradient(0, 0, 0, 200); g0.addColorStop(0, '#1a0604'); g0.addColorStop(1, '#070707'); mq.fillStyle = g0; mq.fillRect(0, 0, 1024, 200);
+  mq.font = 'italic 900 118px "Geist"'; mq.textAlign = 'center'; mq.letterSpacing = '-3px';
+  mq.shadowColor = '#FF3B1F'; mq.shadowBlur = 30 + 6 * Math.sin(t * Math.PI * 2); mq.fillStyle = '#FF3B1F'; mq.fillText('WILL STATION', 512, 140);
+  mq.shadowBlur = 0; mq.fillStyle = '#FFF4E8'; mq.fillText('WILL STATION', 506, 134);
+  mq.fillStyle = 'rgba(255,255,255,.12)'; mq.fillRect(0, 18, 1024, 10);
+}
+const mqTex = canvasTex(mqc); drawMarquee(0);
+const hood = new THREE.Mesh(new THREE.BoxGeometry(2.42, 0.5, 0.95), mBlack); hood.position.set(0, 2.66, -0.05); hood.castShadow = true; cab.add(hood);
+const marquee = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 0.42), new THREE.MeshBasicMaterial({ map: mqTex, toneMapped: false })); marquee.position.set(0, 2.66, 0.43); cab.add(marquee);
+const mqLight = new THREE.PointLight(0xffd2b0, 0.9, 3); mqLight.position.set(0, 2.5, 1.0); cab.add(mqLight);
+// ---------- tela: moldura funda, tela, vidro ----------
+const a = Math.atan2(0.15, 1.25), mid = new THREE.Vector3(0, 1.775, 0.275), nrm = new THREE.Vector3(0, -Math.sin(a), Math.cos(a));
+const bz = new THREE.Shape(); bz.moveTo(-1.0, -0.67); bz.lineTo(1.0, -0.67); bz.lineTo(1.0, 0.67); bz.lineTo(-1.0, 0.67); bz.lineTo(-1.0, -0.67);
+const hole = new THREE.Path(); hole.moveTo(-0.86, -0.57); hole.lineTo(0.86, -0.57); hole.lineTo(0.86, 0.57); hole.lineTo(-0.86, 0.57); hole.lineTo(-0.86, -0.57); bz.holes.push(hole);
+const bezel = new THREE.Mesh(new THREE.ExtrudeGeometry(bz, { depth: 0.08, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 4 }), std('#E8301F', 0.35));
+bezel.position.copy(mid).addScaledVector(nrm, 0.05); bezel.rotation.x = a; bezel.castShadow = true; cab.add(bezel);
+const [scc, sc] = mk(800, 534); const scrTex = canvasTex(scc);
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.72, 1.14), new THREE.MeshBasicMaterial({ map: scrTex, toneMapped: false }));
+screen.position.copy(mid).addScaledVector(nrm, 0.09); screen.rotation.x = a; cab.add(screen);
+const [glc2, gl2] = mk(256, 256); const gg = gl2.createLinearGradient(0, 0, 256, 256); gg.addColorStop(0, 'rgba(255,255,255,.22)'); gg.addColorStop(0.35, 'rgba(255,255,255,0)'); gg.addColorStop(0.7, 'rgba(255,255,255,0)'); gg.addColorStop(1, 'rgba(255,255,255,.08)'); gl2.fillStyle = gg; gl2.fillRect(0, 0, 256, 256);
+const glass = new THREE.Mesh(new THREE.PlaneGeometry(1.72, 1.14), new THREE.MeshBasicMaterial({ map: canvasTex(glc2), transparent: true, depthWrite: false }));
+glass.position.copy(mid).addScaledVector(nrm, 0.12); glass.rotation.x = a; cab.add(glass);
+const scrLight = new THREE.PointLight(0x7fb0ff, 0.5, 2.5); scrLight.position.copy(mid).addScaledVector(nrm, 0.6); cab.add(scrLight);
+// ---------- painel: placa do Joystick Shield ----------
+const th = Math.atan2(0.25, 0.6), panel = new THREE.Group(); panel.position.set(0, 1.03, 0.5); panel.rotation.x = th; cab.add(panel);
+const pcb = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.035, 0.46), std('#C8231A', 0.4)); pcb.position.y = 0.02; pcb.castShadow = true; panel.add(pcb);
+for (let i = 0; i < 12; i++) { const pin = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.025), std('#D4A84A', 0.25, 0.8)); pin.position.set(-0.15 + i * 0.045, 0.06, -0.19); panel.add(pin); }
+const hdr = new THREE.Mesh(new THREE.BoxGeometry(0.56, 0.035, 0.05), std('#111111', 0.6)); hdr.position.set(0.1, 0.05, -0.19); panel.add(hdr);
+for (const [x, z] of [[-0.05, 0.12], [0.08, 0.15], [-0.18, 0.16]]) { const r = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.08, 12), std('#d8c39a', 0.5)); r.rotation.z = Math.PI / 2; r.position.set(x, 0.055, z); panel.add(r); }
+const cyl = (rt, rb, h, c, rough = 0.3, seg = 32) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), std(c, rough));
+const jbase = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.3), std('#101010', 0.5)); jbase.position.set(-0.5, 0.07, 0); panel.add(jbase);
+const jring = cyl(0.11, 0.12, 0.03, '#1c1c1c'); jring.position.set(-0.5, 0.115, 0); panel.add(jring);
+const stick = cyl(0.022, 0.026, 0.3, '#0e0e0e', 0.3); stick.position.set(-0.5, 0.26, 0); panel.add(stick);
+const ball = new THREE.Mesh(new THREE.SphereGeometry(0.085, 32, 24), new THREE.MeshStandardMaterial({ color: lin('#0d0d0d'), roughness: 0.12, metalness: 0.1 })); ball.position.set(-0.5, 0.43, 0); ball.castShadow = true; panel.add(ball);
+[[0.45, -0.11, '#F4C20D'], [0.45, 0.11, '#F4C20D'], [0.3, 0, '#1E6FE0'], [0.6, 0, '#1E6FE0']].forEach(([x, z, c]) => {
+  const ring2 = cyl(0.085, 0.085, 0.03, '#0b0b0b', 0.6); ring2.position.set(x, 0.045, z); panel.add(ring2);
+  const cap = cyl(0.068, 0.072, 0.06, c, 0.25); cap.position.set(x, 0.075, z); cap.castShadow = true; panel.add(cap);
+});
+// ---------- frente: grade de alto-falante, entrada de ficha, parafusos ----------
+const [grc, gr] = mk(256, 256); gr.fillStyle = '#0d0d0d'; gr.fillRect(0, 0, 256, 256); gr.fillStyle = '#2a2a2a'; for (let y = 16; y < 256; y += 22) for (let x = 16 + ((y / 22) % 2) * 11; x < 256; x += 22) { gr.beginPath(); gr.arc(x, y, 6, 0, 7); gr.fill(); }
+const grille = new THREE.Mesh(new THREE.CircleGeometry(0.17, 48), new THREE.MeshStandardMaterial({ map: canvasTex(grc), roughness: 0.7 })); grille.position.set(-0.75, 0.52, 0.857); cab.add(grille);
+const slot = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.32, 0.04), std('#1a1a1a', 0.3, 0.6)); slot.position.set(0.8, 0.52, 0.86); cab.add(slot);
+const slotLight = new THREE.Mesh(new THREE.PlaneGeometry(0.03, 0.16), new THREE.MeshBasicMaterial({ color: 0xff8a1f })); slotLight.position.set(0.8, 0.54, 0.882); cab.add(slotLight);
+for (const [x, y] of [[-1.08, 0.82], [1.08, 0.82], [-1.08, 0.16], [1.08, 0.16]]) { const s = cyl(0.025, 0.025, 0.02, '#9a9a9a', 0.25, 16); s.rotation.x = Math.PI / 2; s.position.set(x, y, 0.858); cab.add(s); }
+// ---------- adesivos ----------
+const photo1 = new Image(), photo2 = new Image(); photo1.src = '/08_Projeto_WillStation/fotos/willstation_1.webp'; photo2.src = '/08_Projeto_WillStation/fotos/willstation_2.webp';
+function dieCut(draw, w = 300, h = 300, round = 40) { // adesivo com borda branca e desgaste
+  const [c, x] = mk(w, h); x.fillStyle = '#FFFFFF'; x.beginPath(); x.roundRect(4, 4, w - 8, h - 8, round); x.fill();
+  x.save(); x.beginPath(); x.roundRect(16, 16, w - 32, h - 32, round * 0.7); x.clip(); draw(x, w, h); x.restore();
+  x.globalCompositeOperation = 'destination-out'; for (let i = 0; i < 160; i++) { x.globalAlpha = rnd() * 0.35; x.fillRect(rnd() * w, rnd() * h, 2 + rnd() * 5, 1 + rnd() * 3); }
+  return c;
+}
+function cropSticker(img, fx, fy, fw, fh, w = 300) { const h = Math.round(w * (fh * img.naturalHeight) / (fw * img.naturalWidth)); return dieCut((x, cw, ch) => x.drawImage(img, fx * img.naturalWidth, fy * img.naturalHeight, fw * img.naturalWidth, fh * img.naturalHeight, 0, 0, cw, ch), w, h, 18); }
+function pixelBit(x, ox, oy, s, frame = 0) { // o Bit de boné vermelho com W (pixel art original)
+  const P = { K: '#0B0B0C', R: '#E2231A', W: '#FFFFFF', D: '#1B1B1F', G: '#EEEDE8', F: '#FFF6EC', S: '#FF3B1F' };
+  const rows = ['....KKKKKKK.....', '...KRRRRRRRK....', '..KRRWRRRWRRK...', '..KRRWRWRWRRKK..', '..KKKKKKKKKKKKK.', '..KDGGGGGGGDK...', '.KDGFFFFFFFGDK..', '.KDGFKFFFKFGDK..', '.KDGFFFFFFFGDK..', '.KDGFFKKKFFGDK..', '..KDGFFFFFGDK...', '..KDDGGGGGDDK...', '...KKKKKKKKK....', frame ? '.....K...K......' : '....K.....K.....', frame ? '....SSS.SSS.....' : '...SSS...SSS....', frame ? '....KKK.KKK.....' : '...KKK...KKK....'];
+  rows.forEach((r, j) => [...r].forEach((c, i) => { if (c !== '.') { x.fillStyle = P[c]; x.fillRect(ox + i * s, oy + j * s, s, s); } }));
+}
+const STICKERS = {
+  bit: () => dieCut((x, w, h) => { x.fillStyle = '#F4C20D'; x.fillRect(0, 0, w, h); pixelBit(x, 54, 50, 12); }),
+  logo: () => dieCut((x, w, h) => { x.fillStyle = '#E2231A'; x.fillRect(0, 0, w, h); x.font = 'italic 900 64px "Geist"'; x.fillStyle = '#fff'; x.textAlign = 'center'; x.fillText('WILL', w / 2, 120); x.fillText('STATION', w / 2, 190); }, 340, 240, 30),
+  chip: () => dieCut((x, w, h) => { x.fillStyle = '#18C4D6'; x.fillRect(0, 0, w, h); x.fillStyle = '#111'; x.fillRect(90, 90, 120, 120); x.fillStyle = '#D4A84A'; for (let i = 0; i < 5; i++) { x.fillRect(100 + i * 22, 66, 10, 24); x.fillRect(100 + i * 22, 210, 10, 24); x.fillRect(66, 100 + i * 22, 24, 10); x.fillRect(210, 100 + i * 22, 24, 10); } }),
+  start: () => dieCut((x, w, h) => { x.fillStyle = '#0B0B0C'; x.fillRect(0, 0, w, h); x.font = '700 46px "Geist Mono"'; x.fillStyle = '#F4C20D'; x.textAlign = 'center'; x.fillText('PRESS', w / 2, 105); x.fillText('START', w / 2, 160); }, 300, 200, 24),
+  bolt: () => dieCut((x, w, h) => { x.fillStyle = '#111'; x.fillRect(0, 0, w, h); x.fillStyle = '#F4C20D'; x.beginPath(); x.moveTo(170, 40); x.lineTo(90, 165); x.lineTo(145, 165); x.lineTo(120, 260); x.lineTo(215, 120); x.lineTo(160, 120); x.closePath(); x.fill(); }, 300, 300, 150),
+  semi: () => dieCut((x, w, h) => { x.fillStyle = '#22B455'; x.fillRect(0, 0, w, h); x.font = '900 220px "Geist"'; x.fillStyle = '#fff'; x.textAlign = 'center'; x.fillText(';', w / 2, 225); x.fillStyle = '#111'; x.fillRect(70, 60, 26, 26); x.fillRect(200, 60, 26, 26); }, 300, 300, 150),
+};
+function sticker(cv, w, pos, rot, parent = cab) {
+  const h = w * cv.height / cv.width, m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: canvasTex(cv), transparent: true, roughness: 0.35, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+  m.position.set(...pos); m.rotation.set(...rot); parent.add(m); return m;
+}
+function sideArt(withStickers) { // lateral: preto com diagonal vermelha (como o gabinete real) + adesivos
+  const [c, x] = mk(600, 1026); x.fillStyle = '#141416'; x.fillRect(0, 0, 600, 1026);
+  x.fillStyle = '#D6241B'; x.beginPath(); x.moveTo(600, 760); x.lineTo(600, 1026); x.lineTo(330, 1026); x.lineTo(0, 300); x.lineTo(0, 120); x.closePath(); x.fill();
+  if (withStickers) {
+    const place = (cv, cx, cy, w, r) => { x.save(); x.translate(cx, cy); x.rotate(r); x.drawImage(cv, -w / 2, -w * cv.height / cv.width / 2, w, w * cv.height / cv.width); x.restore(); };
+    place(cropSticker(photo1, 0.075, 0.30, 0.13, 0.46, 220), 150, 330, 170, -0.06);
+    place(STICKERS.logo(), 420, 250, 230, 0.08); place(STICKERS.bit(), 430, 520, 180, -0.12); place(STICKERS.bolt(), 180, 720, 120, 0.2);
+    place(STICKERS.chip(), 470, 850, 130, -0.15); place(STICKERS.semi(), 300, 940, 110, 0.1);
+  }
+  const t = canvasTex(c); t.repeat.set(1 / 1.45, 1 / 2.48); t.offset.set(0.65 / 1.45, 0); return t;
+}
+function buildDecals() {
+  const sg = new THREE.ShapeGeometry(shape, 24);
+  const left = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ map: sideArt(true), roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -1 })); left.rotation.y = -Math.PI / 2; left.position.x = -1.205; cab.add(left);
+  const right = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ map: sideArt(false), roughness: 0.5, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1 })); right.rotation.y = Math.PI / 2; right.scale.x = -1; right.position.x = 1.205; cab.add(right);
+  // adesivos reais recortados da foto (painel da tela e painel de controle) + originais na frente
+  sticker(cropSticker(photo1, 0.146, 0.316, 0.151, 0.107), 0.36, [-0.98, 2.15, 0.36], [a, 0, 0.06]);
+  sticker(cropSticker(photo1, 0.587, 0.554, 0.184, 0.062), 0.42, [0.95, 0.045, 0.05], [-Math.PI / 2, 0, -0.05], panel);
+  sticker(cropSticker(photo1, 0.246, 0.602, 0.244, 0.065), 0.42, [-0.98, 0.045, 0.05], [-Math.PI / 2, 0, 0.07], panel);
+  sticker(STICKERS.start(), 0.36, [-0.2, 0.62, 0.86], [0, 0, -0.05]); sticker(STICKERS.chip(), 0.22, [0.32, 0.32, 0.86], [0, 0, 0.12]); sticker(STICKERS.semi(), 0.2, [-0.38, 0.22, 0.86], [0, 0, -0.1]);
+}
+// ---------- tela: foto real (0-2 s) e depois o jogo original do Bit ----------
+const [gc, g] = mk(134, 90); g.imageSmoothingEnabled = false; // resolução baixa = pixels grandes e legíveis
+// LOOP PERFEITO: tudo abaixo é periódico em DUR (8 s). Mundo circular de L px; a música tem 4 compassos exatos a 120 BPM.
+const SPEED = 44, L = SPEED * DUR, PX = 30, GY = 74, ENEM = [100, 178, 256, 334];   // L = 352 = 22 blocos de chão de 16 px
+const coinsAt = []; ENEM.forEach(e => { coinsAt.push([e, GY - 28]); coinsAt.push([(e + 38) % L, GY - 8]); });
+const TAU = Math.PI * 2, wrap = v => ((v % L) + L) % L;
+function chipCoin(x, y, s) { g.fillStyle = '#111'; g.fillRect(x - 3 * s, y - 3, 6 * s, 6); g.fillStyle = '#F4C20D'; for (let i = -2; i <= 2; i += 2) { g.fillRect(x + i * s - 0.5, y - 5, 1, 2); g.fillRect(x + i * s - 0.5, y + 3, 1, 2); } }
+function enemy(x, y, kind, t) {
+  if (kind) { g.fillStyle = '#7B3FE4'; g.fillRect(x - 6, y - 10, 12, 10); g.fillStyle = '#fff'; g.font = '900 10px "Geist"'; g.fillText(';', x - 2, y - 2); g.fillStyle = '#000'; g.fillRect(x - 4, y - 8, 2, 2); g.fillRect(x + 2, y - 8, 2, 2); }
+  else { g.fillStyle = '#22B455'; g.fillRect(x - 6, y - 7, 12, 6); g.fillRect(x - 4, y - 9, 8, 2); g.fillStyle = '#0a0a0a'; const k = Math.floor(t * 8) % 2; for (let i = -5; i <= 3; i += 4) g.fillRect(x + i + k, y - 1, 2, 1); g.fillStyle = '#fff'; g.fillRect(x + 2, y - 6, 2, 2); }
+}
+const jumpT = ENEM.map(e => ((e - PX - 18) / SPEED + DUR) % DUR);           // instante de cada pulo dentro do ciclo
+function game(t) {
+  const sx = wrap(t * SPEED), px = sx * 0.25;                                  // paralaxe: 352*0.25 = 88 = 4 prédios de 22 px
+  const sky = g.createLinearGradient(0, 0, 0, 90); sky.addColorStop(0, '#1b1446'); sky.addColorStop(1, '#3a1d5c'); g.fillStyle = sky; g.fillRect(0, 0, 134, 90);
+  g.fillStyle = '#291f5e'; const off = px % 22, base = Math.floor(px / 22); for (let i = -1; i < 8; i++) g.fillRect(Math.floor(i * 22 - off), GY - [26, 38, 22, 44][((i + base) % 4 + 4) % 4], 18, 60);
+  g.fillStyle = '#F4C20D'; const blink = Math.floor(t * 2.5) % 5; for (let k = 0; k < 3; k++) for (let i = 0; i < 9; i++) { if ((i + blink) % 3 === 0) continue; g.fillRect(Math.floor((i * 37) % 88 - (px % 88) + k * 88), GY - 22 - (i % 4) * 5, 2, 2); }
+  for (let x = -(sx % 16); x < 134; x += 16) { g.fillStyle = '#1E7A3A'; g.fillRect(x, GY, 16, 22); g.fillStyle = '#D4A84A'; g.fillRect(x + 2, GY + 5, 10, 1); g.fillRect(x + 11, GY + 5, 1, 9); g.fillRect(x + 4, GY + 14, 8, 1); g.fillStyle = '#145a2a'; g.fillRect(x, GY, 16, 2); }
+  let py = GY, air = false; for (const tj of jumpT) for (const k of [-1, 0, 1]) { const p = (t - tj - k * DUR) / 0.62; if (p > 0 && p < 1) { py = GY - 27 * 4 * p * (1 - p); air = true; } }
+  coinsAt.forEach(([cx, cy]) => { for (const k of [0, 1]) { const x = cx - sx + k * L; if (x > 140) continue; if (x < PX + 4) { if (x > PX - 14) { g.fillStyle = '#fff'; g.font = '700 7px "Geist Mono"'; g.fillText('+1', PX + 2, cy - 6 - (PX + 4 - x)); } continue; } chipCoin(x, cy + Math.sin(TAU * t + cx) * 1.5, Math.max(0.3, Math.abs(Math.cos(TAU * t / 0.8 + cx)))); } });
+  ENEM.forEach((e, i) => { for (const k of [0, 1]) { const x = e - sx + k * L; if (x > -10 && x < 144) enemy(x + Math.sin(TAU * t / 2 + i) * 3, GY, i % 2, t); } });
+  pixelBit(g, PX - 8, Math.round(py) - 16, 1, air ? 1 : Math.floor(t * 10) % 2);
+  g.fillStyle = '#fff'; g.font = '700 6px "Geist Mono"'; g.textAlign = 'left'; g.fillText('1UP', 4, 8); g.textAlign = 'right'; g.fillText('WILL STATION', 130, 8); g.textAlign = 'left';
+}
+function drawScreen(t) {
+  game(t); sc.imageSmoothingEnabled = false; sc.drawImage(gc, 0, 0, 800, 534);
+  sc.fillStyle = 'rgba(0,0,0,.2)'; for (let y = 0; y < 534; y += 4) sc.fillRect(0, y, 800, 2);
+  const by = ((t / DUR) * 3 % 1) * 700 - 80, lg = sc.createLinearGradient(0, by, 0, by + 80); lg.addColorStop(0, 'rgba(255,255,255,0)'); lg.addColorStop(0.5, 'rgba(255,255,255,.07)'); lg.addColorStop(1, 'rgba(255,255,255,0)'); sc.fillStyle = lg; sc.fillRect(0, by, 800, 80);
+  scrTex.needsUpdate = true;
+}
+// ---------- composição do slide ----------
+function T(s, x, y, size, color, w = 900, track = -0.035, family = B.font) { ctx.font = `${w} ${size}px "${family}"`; ctx.letterSpacing = (track * size) + 'px'; ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.fillText(s, x, y); }
+function frame(t) {
+  const loop = TAU * t / DUR;
+  cab.rotation.y = 0.5 * Math.sin(loop); cab.position.y = 0.03 * Math.sin(loop * 2);
+  drawMarquee(t); mqTex.needsUpdate = true; drawScreen(t); renderer.render(scene, cam);
+  ctx.fillStyle = B.ink; ctx.fillRect(0, 0, W, H);
+  const glow = ctx.createRadialGradient(540, 760, 50, 540, 760, 620); glow.addColorStop(0, 'rgba(255,59,31,.16)'); glow.addColorStop(1, 'rgba(255,59,31,0)'); ctx.fillStyle = glow; ctx.fillRect(0, 300, W, 1050);
+  T('E eu montei um', 84, 190, 100, B.paper); T('fliperama de', 84, 296, 100, B.accent); T('verdade.', 84, 402, 100, B.paper);
+  ctx.drawImage(glc, 0, 0);
+  T('RASPBERRY PI · RETROPIE · ARDUINO', 84, 1300, 28, B.mute, 700, 0.02, B.mono); T('5/7', W - 84 - 46, 1300, 30, B.mute, 700, 0.02, B.mono);
+  grain(ctx, W, H);
+}
+// ---------- som original: renderiza 2 ciclos (16 s) e usa o segundo, que já traz o eco do anterior no começo = emenda invisível ----------
+async function soundtrack() {
+  const SR = 48000, oac = new OfflineAudioContext(2, SR * DUR * 2, SR), master = oac.createGain(); master.gain.value = 0.5; master.connect(oac.destination);
+  const tone = (type, f, t0, d, v, f2) => { const o = oac.createOscillator(), gn = oac.createGain(); o.type = type; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d); gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(v, t0 + 0.005); gn.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(gn).connect(master); o.start(t0); o.stop(t0 + d + 0.02); };
+  const hz = n => 440 * Math.pow(2, (n - 69) / 12), e8 = 0.25;                 // 120 BPM: colcheia = 0,25 s, 8 s = 32 colcheias = 2 voltas da melodia
+  const lead = [72, 76, 79, 76, 81, 79, 76, 74, 72, 76, 79, 84, 83, 79, 76, 79], bass = [48, 48, 55, 55, 53, 53, 55, 55];
+  for (let i = 0; i < 64; i++) {
+    const t = i * e8; tone('square', hz(lead[i % 16]), t, e8 * 0.9, 0.045);
+    if (i % 2 === 0) tone('triangle', hz(bass[(i / 2) % 8]), t, e8 * 1.8, 0.11);
+    if (i % 2 === 1) tone('square', 2200, t, 0.03, 0.02);                       // chimbal de 8 bits
+  }
+  for (const k of [0, 1]) {
+    jumpT.forEach(tj => tone('square', 300, tj + k * DUR, 0.18, 0.06, 900));   // pulo do Bit
+    coinsAt.forEach(([cx]) => { const tc = ((cx - PX - 4) / SPEED + DUR) % DUR + k * DUR; tone('square', hz(88), tc, 0.06, 0.05); tone('square', hz(93), tc + 0.06, 0.16, 0.05); }); // chip
+  }
+  const full = await oac.startRendering(), n = SR * DUR, outBuf = new AudioBuffer({ length: n, numberOfChannels: 2, sampleRate: SR });
+  for (let c = 0; c < 2; c++) outBuf.copyToChannel(full.getChannelData(c).subarray(n, 2 * n), c);
+  return outBuf;
+}
+async function render() {
+  const buf = await soundtrack(), SR = 48000, len = buf.length;
+  let pk = 0; for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i])); }
+  const gain = pk > 0 ? 0.85 / pk : 1; for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < len; i++) d[i] *= gain; } // normaliza (pico -1,4 dB)
+  const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let err = null; const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 160000 });
+  for (let i = 0; i < len; i += 1024) { const n = Math.min(1024, len - i), d = new Float32Array(n * 2); d.set(buf.getChannelData(0).subarray(i, i + n), 0); d.set(buf.getChannelData(1).subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
+  await ae.flush();
+  const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e });
+  ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 10e6, framerate: FPS, avc: { format: 'avc' } });
+  for (let f = 0; f < FPS * DUR; f++) { if (err) throw err; frame(f / FPS); const vf = new VideoFrame(out, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) }); ve.encode(vf, { keyFrame: f % 60 === 0 }); vf.close(); while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 2)); if (f % 30 === 0) document.title = `render ${f}`; }
+  await ve.flush(); mux.finalize();
+  await fetch(`/save?dir=${OUTDIR}&name=Sab10_Carrossel_5.mp4`, { method: 'POST', body: mux.target.buffer });
+  frame(4.2); await fetch(`/save?dir=${OUTDIR}&name=Sab10_Carrossel_5_capa.jpg`, { method: 'POST', body: await new Promise(r => out.toBlob(r, 'image/jpeg', 0.92)) });
+  document.title = 'DONE ' + (mux.target.buffer.byteLength / 1e6).toFixed(1) + ' MB';
+}
+const loaded = img => new Promise((r, j) => { if (img.complete && img.naturalWidth) r(); else { img.onload = r; img.onerror = () => j(new Error('foto')); } });
+Promise.all([loadBrandFonts(), loaded(photo1), loaded(photo2)]).then(() => { buildDecals(); if (q.has('render')) return render(); frame(+(q.get('t') || 4.2)); document.title = 'ready'; }).catch(e => { document.title = 'ERROR ' + e.message; console.error(e); });
+</script></body></html>
