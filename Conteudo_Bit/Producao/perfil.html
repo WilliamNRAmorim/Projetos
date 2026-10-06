@@ -1,0 +1,23 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>perfil</title>
+<script src="brand.js"></script><script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`)</script>
+<script src="mascots.js"></script>
+<style>body{margin:0;background:#000;display:flex;flex-wrap:wrap;gap:8px;padding:8px}canvas{width:220px;border-radius:50%}</style></head><body>
+<script>
+// Foto de perfil e capas dos destaques do @uiu.engenharia, no sistema visual do canal.
+const B = BRAND, MONO = Array(8).fill(B.paper), GMS = ['#3B82F6', '#06B6D4', '#6366F1', '#8B5CF6', '#F59E0B', '#EF4444', '#F97316', '#10B981'];
+function cv(n) { const c = document.createElement('canvas'); c.width = c.height = n; document.body.append(c); return [c, c.getContext('2d')]; }
+function bit(x, expr, cx, top, s, ring = MONO) { x.save(); x.translate(cx - 300 * s, top); x.scale(s, s); drawCarretel(x, expr, ring); x.restore(); }
+async function save(c, name) { await fetch(`/save?dir=perfil&name=${name}`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) }); }
+loadBrandFonts().then(async () => {
+  // foto de perfil: o rosto do Bit grande, fundo vermelho de destaque (lê bem até em 40 px)
+  const [p, x] = cv(1080); x.fillStyle = B.accent; x.fillRect(0, 0, 1080, 1080); bit(x, 'joinha', 540, 30, 2.1); grain(x, 1080, 1080, 0.07); await save(p, 'foto_perfil.png');
+  // capas dos destaques: fundo off-black, ícone + palavra
+  const covers = [['GMS', c => bit(c, 'lembra', 540, 170, 1.15, GMS)], ['WILL STATION', c => bit(c, 'comemora', 540, 170, 1.15)], ['BIT', c => bit(c, 'tranquilo', 540, 170, 1.15)], ['BASTIDORES', c => bit(c, 'joinha', 540, 170, 1.15)]];
+  for (const [label, draw] of covers) {
+    const [c, y] = cv(1080); y.fillStyle = B.ink; y.fillRect(0, 0, 1080, 1080); draw(y);
+    y.font = `900 ${label.length > 8 ? 92 : 120}px "Geist"`; y.letterSpacing = '-3px'; y.fillStyle = B.paper; y.textAlign = 'center'; y.fillText(label, 540, 1010);
+    grain(y, 1080, 1080, 0.07); await save(c, `destaque_${label.toLowerCase().replace(' ', '_')}.png`);
+  }
+  document.title = 'ready';
+});
+</script></body></html>
