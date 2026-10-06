@@ -1,0 +1,31 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>foto perfil</title>
+<script src="brand.js"></script>
+<style>body{margin:0;background:#222;display:flex;gap:16px;padding:16px;align-items:center}canvas{width:320px}.c{border-radius:50%}.mini{width:56px;border-radius:50%}</style></head><body>
+<script>
+// Foto de perfil a partir da arte do Gemini (bit_acenando.png): recorta o fundo branco,
+// enquadra do peito pra cima (antena inteira dentro do círculo) num fundo escuro com brilho vermelho.
+const q = new URLSearchParams(location.search);
+function cutout(img) {
+  const W = img.naturalWidth, H = img.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const id = x.getImageData(0, 0, W, H), d = id.data, seen = new Uint8Array(W * H), st = [], white = i => d[i] > 228 && d[i + 1] > 228 && d[i + 2] > 228;
+  for (let i = 0; i < W; i++) st.push(i, (H - 1) * W + i); for (let j = 0; j < H; j++) st.push(j * W, j * W + W - 1);
+  while (st.length) { const p = st.pop(); if (seen[p]) continue; const i = p * 4; if (!white(i)) continue; seen[p] = 1; d[i + 3] = 0; const px = p % W, py = (p / W) | 0; if (px) st.push(p - 1); if (px < W - 1) st.push(p + 1); if (py) st.push(p - W); if (py < H - 1) st.push(p + W); }
+  let x0 = W, y0 = H, x1 = 0, y1 = 0;
+  for (let p = 0; p < W * H; p++) { const i = p * 4; if (!d[i + 3]) continue; const px = p % W, py = (p / W) | 0; if ((px && seen[p - 1]) || (px < W - 1 && seen[p + 1]) || (py && seen[p - W]) || (py < H - 1 && seen[p + W])) { const l = (d[i] + d[i + 1] + d[i + 2]) / 3; d[i + 3] = Math.max(0, Math.min(255, (255 - l) * 3)); } if (d[i + 3] > 20) { x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); } }
+  x.putImageData(id, 0, 0); return { c, box: [x0, y0, x1, y1] };
+}
+(async () => {
+  const img = new Image(); img.src = '/Marca/bit/bit_acenando.png'; await img.decode();
+  const { c, box: [x0, y0, x1, y1] } = cutout(img), S = 1080;
+  const out = document.createElement('canvas'); out.width = out.height = S; const g = out.getContext('2d');
+  g.fillStyle = BRAND.ink; g.fillRect(0, 0, S, S);
+  const glow = g.createRadialGradient(S / 2, S * 0.55, 40, S / 2, S * 0.55, S * 0.55); glow.addColorStop(0, 'rgba(255,59,31,.45)'); glow.addColorStop(1, 'rgba(255,59,31,0)'); g.fillStyle = glow; g.fillRect(0, 0, S, S);
+  // enquadramento: do topo da antena até ~62% da altura do personagem (peito), centrado no corpo
+  const h = (y1 - y0) * 0.8, scale = (S * 0.8) / h, cx = (x0 + x1) / 2;
+  g.imageSmoothingQuality = 'high'; g.drawImage(c, S / 2 - cx * scale, S * 0.14 - y0 * scale, c.width * scale, c.height * scale);
+  grain(g, S, S, 0.05);
+  for (const cls of ['', 'c', 'mini']) { const v = document.createElement('img'); v.src = out.toDataURL(); if (cls) v.className = cls; v.style.width = cls === 'mini' ? '56px' : '320px'; if (cls === 'c' || cls === 'mini') v.style.borderRadius = '50%'; document.body.append(v); }
+  if (q.has('save')) await fetch('/save?dir=perfil&name=foto_perfil.png', { method: 'POST', body: await new Promise(r => out.toBlob(r, 'image/png')) });
+  document.title = 'ready';
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
