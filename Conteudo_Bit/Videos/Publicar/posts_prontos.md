@@ -37,21 +37,28 @@ a fábrica só descobria o que tinha acontecido no dia seguinte 👀 então eu f
 ## LinkedIn: vídeo longo (1min18)
 **Texto:**
 
-Em 9 meses, construí e implantei o GMS: um sistema que tirou a produção do papel e colocou cada etapa ao vivo numa tela.
+2 meses programando.
+7 meses fazendo as pessoas usarem.
 
-Antes, os dados ficavam espalhados entre fichas de papel, planilhas, quadro branco e a memória das pessoas. Nenhum número batia, e a supervisão só via o turno no dia seguinte.
+Essa foi a proporção real do GMS, o sistema de execução da manufatura (MES) que construí e implantei numa fábrica e que virou meu TCC em Engenharia de Computação.
 
-Hoje:
-→ o operador registra na fonte, uma vez só
-→ a supervisão vê a célula inteira ao vivo e é avisada de cada parada sem motivo
-→ qualquer ordem é rastreada nas 8 etapas numa tela só
-→ a gestão decide olhando dado, não achismo
+O problema não era falta de dado. Cada etapa da produção já era anotada numa ficha de papel. Só que essa ficha era redigitada no turno seguinte pro Excel e depois pro SAP, e a informação chegava com 1 a 2 dias de atraso. A fábrica produzia sem enxergar o que estava acontecendo.
 
-Tudo com Power Platform e o que a fábrica já tinha. Nenhum equipamento novo.
+A frase que resume o projeto:
+"Não criamos o dado. Zeramos o custo de acessá-lo."
 
-A maior lição: foram 2 meses de desenvolvimento e 7 de implantação. O difícil nunca foi construir telas, foi a adoção nos três turnos. E o time só confiou no sistema quando o número da tela bateu com o chão de fábrica.
+Como foi feito:
+→ 2 semanas de Gemba Walk nos 3 turnos antes de desenhar qualquer tela
+→ ciclo diário: de manhã na estação, à tarde desenvolvendo, versão nova no turno seguinte
+→ Power Apps na coleta, Microsoft Lists nos dados, Power Automate na orquestração e Power BI na análise
+→ low-code por restrição, não por preferência: era o que a governança de TI permitia
+→ nenhum equipamento novo
 
-#EngenhariaDeComputação #PowerPlatform #PowerApps #Indústria40 #Manufatura
+O resultado: o operador registra uma vez, na fonte. A supervisão vê a célula ao vivo e é avisada de cada parada sem motivo. Qualquer ordem é rastreada nas 8 etapas numa tela só.
+
+A lição que levo pra qualquer projeto: a tecnologia é a parte rápida. O sistema só passou a ser usado quando o número da tela bateu com o chão de fábrica, e isso não se resolve com código. Se resolve ao lado do operador.
+
+#EngenhariaDeComputação #MES #PowerPlatform #Indústria40 #Manufatura
 
 ---
 
