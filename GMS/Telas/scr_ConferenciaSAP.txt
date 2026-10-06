@@ -17,9 +17,7 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =IfError(
-              Concurrent(
-              ClearCollect(
+              =ClearCollect(
                   // v0.1.1 · MEL-196 · C29. Filhos da galeria com Select(Parent) (v0.1.0 não selecionava); Justificada trava tratativa até Reabrir. A conta é do fluxo GMS_Conferencia_Diaria; a tela só lê a lista
                   // Conferencia_SAP (Status é texto: filtro delegável) e grava a tratativa.
                   // DifAbs entra na carga para os dois lados (galeria e ctxConfSel) terem o MESMO schema.
@@ -28,16 +26,13 @@ Screens:
                       Filter(Conferencia_SAP, Status = "Aberto" || Status = "Justificado"),
                       DifAbs, Abs(Dif_m)
                   )
-              ),
+              );
               ClearCollect(
                   colConfResolvSAP,
                   AddColumns(
                       FirstN(Sort(Filter(Conferencia_SAP, Status = "Resolvido"), ID, SortOrder.Descending), 60),
                       DifAbs, Abs(Dif_m)
                   )
-              )
-              ),
-              Notify("Não consegui carregar a conferência. Confira a rede e toque em recarregar.", NotificationType.Error, 8000)
               );
               UpdateContext({ctxConfSel: LookUp(colConfSAP, ID = ctxConfSel.ID)});
               If(
@@ -138,7 +133,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.1.2"
+            Text: ="Versão 0.1.1"
             Width: =180
             X: =1166
             Y: =21
@@ -1039,9 +1034,6 @@ Screens:
                   ),
                   IsBlank(Trim(inp_TratativaConf.Text)),
                   Notify("Escreva a tratativa antes de salvar.", NotificationType.Warning),
-                  LookUp(Conferencia_SAP, ID = ctxConfSel.ID).Status <> "Aberto",
-                  Notify("Esta pendência mudou enquanto você escrevia (justificada ou fechada pela conferência). Recarregando.", NotificationType.Warning);
-                  Select(btn_CarregarConf),
                   IfError(
                       Patch(
                           Conferencia_SAP,
@@ -1088,9 +1080,6 @@ Screens:
                   Notify("Pendência já fechada pela conferência.", NotificationType.Warning),
                   ctxConfSel.Status <> "Justificado" && IsBlank(Trim(inp_TratativaConf.Text)),
                   Notify("Para justificar, escreva o motivo na tratativa.", NotificationType.Warning),
-                  LookUp(Conferencia_SAP, ID = ctxConfSel.ID).Status <> ctxConfSel.Status,
-                  Notify("Esta pendência mudou enquanto você olhava (outra pessoa alterou ou a conferência fechou). Recarregando.", NotificationType.Warning);
-                  Select(btn_CarregarConf),
                   IfError(
                       // Reabrir só destrava (Status volta a Aberto); a tratativa gravada fica como está.
                       If(

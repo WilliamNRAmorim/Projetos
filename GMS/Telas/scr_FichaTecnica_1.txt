@@ -12,6 +12,7 @@ Screens:
             ctxConstrFT: "",
             ctxEngrFT: ""
         });
+        IfError(
         Concurrent(
             If(IsEmpty(colSpecMandrilFT), ClearCollect(colSpecMandrilFT, DM_MANDREL)),
             If(IsEmpty(colSpecBobFT), ClearCollect(colSpecBobFT, DM_WIREWINDING)),
@@ -26,6 +27,8 @@ Screens:
             If(IsEmpty(colSpecTesteFT), ClearCollect(colSpecTesteFT, DM_EXTRA_TESTE_INSP)),
             If(IsEmpty(colTesteInspFT), ClearCollect(colTesteInspFT, DM_TESTE_INSP)),
             If(IsEmpty(colFitasFT), ClearCollect(colFitasFT, 'Imagens Fitas'))
+        ),
+        Notify("Não consegui carregar todo o delineamento. Algumas etapas podem aparecer sem dados — confira a rede e reabra a tela.", NotificationType.Error, 10000)
         )
     Children:
       - rct_FundoFT:
@@ -138,7 +141,7 @@ Screens:
             Height: =18
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 1.2.1"
+            Text: ="Versão 1.2.2"
             Width: =240
             X: =1040
             Y: =52

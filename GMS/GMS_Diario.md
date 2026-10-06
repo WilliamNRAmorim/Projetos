@@ -870,3 +870,6 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-06 | ENTREGUE | scr_SelecaoGestao_1 | v0.3.0 | MEL-227 | Selo de pendências abertas no card da Conferência; nenhum X/Y/W/H mudou #F1
 2026-10-06 | ENTREGUE | scr_ConferenciaSAP | v0.1.2 | MEL-227 | Carga concorrente com IfError; Salvar e Justificar relêem o Status no servidor antes de gravar #F1
 2026-10-06 | PENDÊNCIA | Conferencia_SAP | — | MEL-228 | Tirar a conferência do Power Automate: exige Packing gravando em lista SharePoint e MB51 filtrado (101/102 GRT4) como lista; com as 3 fontes em lista a conta vira UDF e roda no app #F1 #esfG
+2026-10-06 | REVERTIDO | scr_ConferenciaSAP | v0.1.2 | MEL-227 | Voltou à v0.1.1: William não quer mexer na lógica dessa tela. Mantido só o selo na scr_SelecaoGestao_1 #F1
+2026-10-06 | DESCARTADO | Conferencia_SAP | — | MEL-228 | A conferência SAP continua no Power Automate; a ideia de tirar o fluxo era do scr_Monitor_Mandril, não dela #F1
+2026-10-06 | ENTREGUE | scr_FichaTecnica_1 | v1.2.2 | MEL-229 | Carga das 13 tabelas com IfError e aviso (falha de rede não vira "sem delineamento") #F1
