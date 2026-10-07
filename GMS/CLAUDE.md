@@ -79,6 +79,12 @@ python gms_qa_yaml.py Telas\scr_X.txt    # bateria de QA de YAML (obrigatória a
 
 `gms.py` lê o `GMS_Diario.md` que estiver **na mesma pasta**. Precisa de PyYAML para o QA (`pip install pyyaml`).
 
+## CONFERÊNCIA SAP x GMS (refugo, produção boa, PPM)
+
+Antes de mexer em números de MB51/refugo/packlist, leia `Analises/Refugo_por_Material/COMO_USAR_OS_DADOS.md`
+(fontes, regras, pegadinhas, receitas e números de referência) e use `gms_dados.py` da mesma pasta. Regra
+central: SAP é a verdade, e faltou/sobrou se somam separados por material, nunca entre materiais.
+
 ## ⚠ DIÁRIO — LEIA
 
 O `GMS_Diario.md` desta pasta é uma **RECONSTRUÇÃO de 01/10/2026** (o original de 359 linhas / MEL-140 foi
