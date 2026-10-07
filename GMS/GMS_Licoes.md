@@ -118,3 +118,15 @@
 | 7.8 | Antes de mandar arquivo visual, **renderizar e olhar**. O deck saiu uma vez com prints sobrepostos e tela achatada | conversa 25/09 |
 | 7.10 | Representação visual do app (mapa, estado da célula) é **render de dado**, nunca desenho à mão. É a mesma lógica do delineamento (B §5.9) | memória legada; conversa 03/09 |
 | 7.9 | Conversa de GMS fora do Projeto perde o contexto (resumos chamaram o GMS de "Gestão de Manufatura") e depois precisa ser importada à mão. Abrir sempre dentro do Projeto | conversas 22–24/09 |
+
+## 8. Conferência SAP x GMS (refugo e produção boa)
+
+| # | Lição | Fonte |
+|---|---|---|
+| 8.1 | SAP é a verdade; diferença = SAP − GMS (negativa = faltou lançar no SAP, positiva = sobrou/duplicado). **Material não compensa com material**: inventário é por material, então faltou e sobrou são somados separados e só se compensam dentro do mesmo material. Citar "saldo líquido" geral foi erro e foi corrigido | conversa 07/10 |
+| 8.2 | Refugo no SAP = lançamento 101 dos usuários U445131 e U452021 (sem tipo de defeito); produção boa no SAP = 101 menos 102, só unidade M, sem esses usuários. Base de PPM = produção boa do SAP, porque cobre OPs que o GMS não tem | conversa 07/10; `Analises/Refugo_por_Material/gms_dados.py` |
+| 8.3 | A fábrica costuma mandar lance em outra OP: falta numa OP e sobra igual na vizinha (GH781-4: 63,23 / 62,5 / 19,6 m). Dentro do mesmo material se anula. A divergência de produção boa é tratada como justificada; a análise de refugo não a usa | conversa 07/10 |
+| 8.4 | Nome de material não é padrão (`GH781-6` = `HOSE-AER, GH781, -6, R2/2SC`). Agrupar por `norm_material()` e confirmar com o código SAP; seis materiais não têm produção casada na MB51 e ficam sem PPM | conversa 07/10 |
+| 8.5 | PPM por mês e por dia: dia sem produção soma no próximo dia de produção; usar média dos 7 últimos dias de produção (a janela de 7 dias corridos disparou no retorno da parada de julho). Meses somados (661 m) passam do período inteiro (581 m) por causa de trocas de OP entre meses | conversa 07/10 |
+| 8.6 | `ficha_producao` dá o lote por etapa e ajuda a testar se refugo é plausível (boa + refugo contra `quantidade_debandagem`), mas a debandagem não é teto exato. Números vêm com vírgula de milhar (`"1,050"`) e datas `MM/DD/AAAA` | conversa 07/10 |
+| 8.7 | PPM de refugo é de uso interno (ver 7.6); o guia completo, com receitas e números de referência, está em `Analises/Refugo_por_Material/COMO_USAR_OS_DADOS.md` | conversa 07/10 |
