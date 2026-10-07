@@ -2,6 +2,14 @@ Screens:
   TelaImpressao:
     Properties:
       Fill: =RGBA(255, 255, 255, 1)
+      OnVisible: |-
+        =If(
+            varPackingManual,
+            Reset(inp_OPManualImp);
+            Reset(inp_PNManualImp);
+            Reset(cmb_OperadorManualImp);
+            Reset(cmb_MotivoManualImp)
+        )
     Children:
       - rct_fundo_impressao_1:
           Control: Rectangle@2.3.0
@@ -101,7 +109,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteNumero
-            Text: =varMangueiraImp
+            Text: =If(varPackingManual, Upper(Trim(inp_PNManualImp.Text)), varMangueiraImp)
             Width: =360
             X: =228
             Y: =160
@@ -111,10 +119,13 @@ Screens:
             BorderColor: =RGBA(0, 0, 0, 0)
             Height: =120
             Image: |-
-              =If(
-                  IsBlank(varMangueiraImp),
-                  "",
-                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(varMangueiraImp, 120))
+              =With(
+                  { _pn: If(varPackingManual, Upper(Trim(inp_PNManualImp.Text)), varMangueiraImp) },
+                  If(
+                      IsBlank(_pn),
+                      "",
+                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(_pn, 120))
+                  )
               )
             Width: =560
             X: =28
@@ -138,7 +149,33 @@ Screens:
           Control: HtmlViewer@2.1.0
           Properties:
             Height: =668
-            HtmlText: =varHTMLLances
+            HtmlText: |-
+              =If(
+                  varPackingManual,
+                  "<table style='border-collapse:collapse;width:100%'>"
+                  & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                  & Concat(
+                      ForAll(
+                          Sequence(13) As _i,
+                          {
+                              linha:
+                                  "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                  & Text(_i.Value, "[$-en-US]0")
+                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                  & fx_QtdBR(Coalesce(fx_Num(LookUp(colLancesMan, Idx = _i.Value).Txt), 0))
+                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                  & Text(_i.Value + 13, "[$-en-US]0")
+                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                  & fx_QtdBR(Coalesce(fx_Num(LookUp(colLancesMan, Idx = _i.Value + 13).Txt), 0))
+                                  & "</td></tr>"
+                          }
+                      ),
+                      linha
+                  )
+                  & "</table>",
+                  varHTMLLances
+              )
+            Visible: =!(varPackingManual && !Parent.Printing)
             Width: =730
             X: =608
             Y: =72
@@ -168,7 +205,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =90
             Size: =fx_FonteCrono
-            Text: =varTotalImp
+            Text: =If(varPackingManual, fx_QtdBR(Sum(colLancesMan, Coalesce(fx_Num(Txt), 0))), varTotalImp)
             Width: =560
             X: =28
             Y: =410
@@ -179,9 +216,17 @@ Screens:
             Height: =130
             Image: |-
               =If(
-                  IsBlank(varTotalImp),
-                  "",
-                  "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(varTotalImp, "[$-en-US]0"), 130))
+                  varPackingManual,
+                  If(
+                      Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)) <= 0,
+                      "",
+                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)), "[$-en-US]0"), 130))
+                  ),
+                  If(
+                      IsBlank(varTotalImp),
+                      "",
+                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(varTotalImp, "[$-en-US]0"), 130))
+                  )
               )
             Width: =560
             X: =28
@@ -197,7 +242,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =48
             Size: =fx_FonteTitulo
-            Text: ="PACKING MANUAL — SEM OP NO SISTEMA"
+            Text: =If(IsBlank(varManualFicha.ID), "PACKING MANUAL — SEM OP NO SISTEMA", "PACKING MANUAL")
             Visible: =varPackingManual
             Width: =560
             X: =28
@@ -206,7 +251,51 @@ Screens:
           Control: Button@0.0.45
           Properties:
             Height: =46
-            OnSelect: =Print()
+            DisplayMode: |-
+              =If(
+                  varPackingManual
+                  && (
+                      varProcessando
+                      || !IsMatch(inp_OPManualImp.Text, "^\d{8}$")
+                      || IsBlank(Trim(inp_PNManualImp.Text))
+                      || Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)) <= 0
+                      || CountRows(Filter(colLancesMan, !IsBlank(Trim(Txt)) && !fx_EhNum(Txt))) > 0
+                      || IsBlank(cmb_OperadorManualImp.Selected.Nome)
+                      || IsBlank(cmb_MotivoManualImp.Selected.Value)
+                  ),
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            OnSelect: |-
+              =If(
+                  varPackingManual,
+                  Set(varProcessando, true);
+                  Set(varFalhaRegManual, false);
+                  IfError(
+                      Set(
+                          varManualReg,
+                          Patch(
+                              Packing_Manual,
+                              If(IsBlank(varManualReg.ID), Defaults(Packing_Manual), varManualReg),
+                              {
+                                  Title: inp_OPManualImp.Text,
+                                  Mangueira: Upper(Trim(inp_PNManualImp.Text)),
+                                  Lances: Concat(Filter(colLancesMan, Coalesce(fx_Num(Txt), 0) > 0), Text(fx_Num(Txt), "[$-en-US]0.00"), ";"),
+                                  TotalM: Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)),
+                                  Motivo: cmb_MotivoManualImp.Selected.Value,
+                                  Responsavel: cmb_OperadorManualImp.Selected.Nome,
+                                  Turno: fx_TurnoEm(Now()),
+                                  Status: {Value: "Pendente"},
+                                  DataHoraImp: Now()
+                              }
+                          )
+                      );
+                      true,
+                      Set(varFalhaRegManual, true)
+                  );
+                  Set(varProcessando, false)
+              );
+              Print()
             Text: |-
               ="Confirmar Impressão 🖨️"
             Visible: =!Parent.Printing
@@ -235,7 +324,292 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
-            Text: =VarMangueiraOP & Coalesce(varPalletTxt, "")
+            Text: =If(varPackingManual, inp_OPManualImp.Text, VarMangueiraOP & Coalesce(varPalletTxt, ""))
             Width: =360
             X: =228
             Y: =116
+      - inp_OPManualImp:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Número da OP com 8 dígitos"
+            BorderColor: =If(IsBlank(Self.Text) || IsMatch(Self.Text, "^\d{8}$"), RGBA(0, 0, 0, 1), RGBA(192, 57, 43, 1))
+            DelayOutput: =true
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HintText: ="OP (8 dígitos)"
+            MaxLength: =8
+            OnChange: |-
+              =Set(
+                  varManualFicha,
+                  If(IsMatch(Self.Text, "^\d{8}$"), LookUp(ficha_producao, OP = Value(Self.Text)), Blank())
+              )
+            PaddingLeft: =10
+            Size: =fx_FonteTitulo
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =360
+            X: =228
+            Y: =116
+      - inp_PNManualImp:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Part-number da mangueira"
+            BorderColor: =If(IsBlank(Trim(Self.Text)), RGBA(192, 57, 43, 1), RGBA(0, 0, 0, 1))
+            DelayOutput: =true
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            HintText: ="Ex. GH781-8"
+            MaxLength: =30
+            PaddingLeft: =10
+            Size: =fx_FonteNumero
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =360
+            X: =228
+            Y: =160
+      - lbl_hdrN1ManualImp:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteDestaque
+            Text: ="N°"
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =60
+            X: =608
+            Y: =72
+      - lbl_hdrQ1ManualImp:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteDestaque
+            Text: ="QTY (m)"
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =305
+            X: =668
+            Y: =72
+      - lbl_hdrN2ManualImp:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteDestaque
+            Text: ="N°"
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =60
+            X: =973
+            Y: =72
+      - lbl_hdrQ2ManualImp:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            Size: =fx_FonteDestaque
+            Text: ="QTY (m)"
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =305
+            X: =1033
+            Y: =72
+      - gal_LancesManualImp:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 0)
+            Fill: =RGBA(255, 255, 255, 1)
+            Height: =559
+            Items: =Filter(colLancesMan, Idx <= 13)
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplateSize: =43
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =730
+            X: =608
+            Y: =108
+          Children:
+            - lbl_N1ManualImp:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderThickness: =1
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Bold
+                  Height: =43
+                  Size: =fx_FonteDestaque
+                  Text: =Text(ThisItem.Idx, "[$-en-US]0")
+                  Width: =60
+                  X: =0
+                  Y: =0
+            - inp_L1ManualImp:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Metragem do lance " & Text(ThisItem.Idx)
+                  BorderColor: =If(IsBlank(Trim(Self.Text)) || fx_EhNum(Self.Text), RGBA(0, 0, 0, 1), RGBA(192, 57, 43, 1))
+                  Default: =LookUp(colLancesMan, Idx = ThisItem.Idx).Txt
+                  DelayOutput: =true
+                  Font: =Font.'Open Sans'
+                  Height: =43
+                  HintText: ="0,00"
+                  MaxLength: =10
+                  OnChange: |-
+                    =Patch(colLancesMan, LookUp(colLancesMan, Idx = ThisItem.Idx), {Txt: Self.Text})
+                  PaddingLeft: =10
+                  Size: =fx_FonteDestaque
+                  Width: =305
+                  X: =60
+                  Y: =0
+            - lbl_N2ManualImp:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  BorderColor: =RGBA(0, 0, 0, 1)
+                  BorderThickness: =1
+                  Font: =Font.'Open Sans'
+                  FontWeight: =FontWeight.Bold
+                  Height: =43
+                  Size: =fx_FonteDestaque
+                  Text: =Text(ThisItem.Idx + 13, "[$-en-US]0")
+                  Width: =60
+                  X: =365
+                  Y: =0
+            - inp_L2ManualImp:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Metragem do lance " & Text(ThisItem.Idx + 13)
+                  BorderColor: =If(IsBlank(Trim(Self.Text)) || fx_EhNum(Self.Text), RGBA(0, 0, 0, 1), RGBA(192, 57, 43, 1))
+                  Default: =LookUp(colLancesMan, Idx = ThisItem.Idx + 13).Txt
+                  DelayOutput: =true
+                  Font: =Font.'Open Sans'
+                  Height: =43
+                  HintText: ="0,00"
+                  MaxLength: =10
+                  OnChange: |-
+                    =Patch(colLancesMan, LookUp(colLancesMan, Idx = ThisItem.Idx + 13), {Txt: Self.Text})
+                  PaddingLeft: =10
+                  Size: =fx_FonteDestaque
+                  Width: =305
+                  X: =425
+                  Y: =0
+      - lbl_rotOperadorManualImp:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =fx_FonteDestaque
+            Text: ="OPERADOR"
+            Visible: =varPackingManual
+            Width: =120
+            X: =608
+            Y: =688
+      - lbl_valOperadorManualImp:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =fx_FonteDestaque
+            Text: =cmb_OperadorManualImp.Selected.Nome
+            Visible: =varPackingManual
+            Width: =260
+            X: =728
+            Y: =688
+      - lbl_rotMotivoManualImp:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Fill: =RGBA(208, 208, 208, 1)
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =fx_FonteDestaque
+            Text: ="MOTIVO"
+            Visible: =varPackingManual
+            Width: =90
+            X: =998
+            Y: =688
+      - lbl_valMotivoManualImp:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =RGBA(0, 0, 0, 1)
+            BorderThickness: =2
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =fx_FonteDestaque
+            Text: =cmb_MotivoManualImp.Selected.Value
+            Visible: =varPackingManual
+            Width: =250
+            X: =1088
+            Y: =688
+      - cmb_OperadorManualImp:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador responsável pelo packing manual"
+            BorderColor: =If(IsBlank(Self.Selected.Nome), RGBA(192, 57, 43, 1), RGBA(0, 0, 0, 1))
+            DisplayFields: =["field_1"]
+            Font: =Font.'Open Sans'
+            Height: =44
+            InputTextPlaceholder: ="Selecione o operador"
+            IsSearchable: =false
+            Items: =colColabExt
+            SearchFields: =["field_1"]
+            SelectMultiple: =false
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =260
+            X: =728
+            Y: =688
+      - cmb_MotivoManualImp:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            AccessibleLabel: ="Motivo do packing manual"
+            AllowEmptySelection: =true
+            BorderColor: =If(IsBlank(Self.Selected.Value), RGBA(192, 57, 43, 1), RGBA(0, 0, 0, 1))
+            Font: =Font.'Open Sans'
+            Height: =44
+            Items: =["OP não chegou ao sistema", "Ficha extraviada", "Outro"]
+            Items.Value: =Value
+            Visible: =varPackingManual && !Parent.Printing
+            Width: =250
+            X: =1088
+            Y: =688
+      - lbl_avisoOPExisteImp:
+          Control: Label@2.5.1
+          Properties:
+            Color: =If(varFalhaRegManual, RGBA(192, 57, 43, 1), RGBA(180, 83, 9, 1))
+            Font: =Font.'Open Sans'
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            Size: =fx_FonteApoio
+            Text: =If(varFalhaRegManual, "Não registrou no sistema (sem rede?). Imprima mesmo assim e avise a supervisão.", "Esta OP já existe no sistema. Pode imprimir, fica registrado para conferência.")
+            Visible: =!Parent.Printing && (varFalhaRegManual || (varPackingManual && !IsBlank(varManualFicha.ID)))
+            Width: =196
+            X: =398
+            Y: =696
