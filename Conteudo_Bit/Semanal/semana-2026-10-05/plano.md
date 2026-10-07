@@ -1,6 +1,11 @@
 # Semana 05–11/10: estreia
 
-> Estreia adiada de terça 06/10 para **quarta 07/10**: o GMS sai no LinkedIn de manhã e no Instagram e TikTok às 19h. O resto da semana não muda.
+> Estreia adiada de terça 06/10 para **quarta 07/10**: o GMS sai no LinkedIn de manhã e no Instagram e TikTok às 19h.
+
+## Situação em 06/10 à noite
+- **Quarta 07/10, tudo agendado:** LinkedIn 08:30 (texto MESA-11), story-teaser 12:00 (Meta Business Suite), Reel 19:00 (Meta Business Suite), TikTok @uiloumusk 19:00 (TikTok Studio). Manual: às 19h, compartilhar o Reel no story pelo app.
+- **Quinta 08/10 (Episódio 1): NÃO agendado.** Vai ser refeito com o Bit e a Ficha do Gemini (prompts 5 e 6 do `Marca/bit/PROMPTS_GEMINI.md`) e com as vozes do ElevenLabs (`Producao/tts.ps1`). Faltam as artes; a geração no Gemini web travou no modo Pro. Se não sair a tempo, o episódio vai pra semana seguinte.
+- **Sábado 10/10:** carrossel ainda não agendado; teaser `Sab10_Story_Mario.mp4` pronto (story às 09:00). O carrossel usa o Bit antigo nos slides.
 
 **Ideia da semana:** apresentar o trabalho e o personagem. O GMS entra primeiro, como prova de que o trabalho é real. Depois aparece o Bit, que vai ser a cara de todos os próximos projetos.
 

@@ -1,0 +1,14 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Bit rostos</title>
+<script src="brand.js"></script><script src="bit_rig.js"></script>
+<style>body{margin:0;background:#F2F2F0}canvas{width:100%;display:block}</style></head><body>
+<script>
+// Folha de conferência: as 6 expressões no estilo da folha v1, lado a lado.
+(async () => {
+  await BitRig.load('/Marca/bit/bit_corpo.jpg');
+  const c = document.createElement('canvas'); c.width = 2400; c.height = 2100; document.body.append(c); const x = c.getContext('2d');
+  x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, 2400, 2100);
+  const poses = ['tchau', 'comemora', 'tranquilo', 'tranquilo', 'comemora', 'tranquilo'];
+  BitRig.EXPRS.forEach((e, i) => { const cx = 400 + (i % 3) * 800, by = 960 + Math.floor(i / 3) * 1050; BitRig.draw(x, 0.1, { x: cx, y: by, s: 1.2, pose: poses[i], face: { expr: e } }); x.font = '700 44px monospace'; x.fillStyle = '#333'; x.textAlign = 'center'; x.fillText(e, cx, by + 70); });
+  await fetch('/save?dir=testes&name=bit_rostos.png', { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) }); document.title = 'ready';
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>

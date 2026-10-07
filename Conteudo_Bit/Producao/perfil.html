@@ -1,23 +1,33 @@
 <!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>perfil</title>
 <script src="brand.js"></script><script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`)</script>
 <script src="mascots.js"></script>
-<style>body{margin:0;background:#000;display:flex;flex-wrap:wrap;gap:8px;padding:8px}canvas{width:220px;border-radius:50%}</style></head><body>
+<style>body{margin:0;background:#000;display:flex;flex-wrap:wrap;gap:8px;padding:8px}canvas{width:230px;border-radius:50%}canvas.sheet{width:100%;border-radius:0}</style></head><body>
 <script>
-// Foto de perfil e capas dos destaques do @uiu.engenharia, no sistema visual do canal.
-const B = BRAND, MONO = Array(8).fill(B.paper), GMS = ['#3B82F6', '#06B6D4', '#6366F1', '#8B5CF6', '#F59E0B', '#EF4444', '#F97316', '#10B981'];
-function cv(n) { const c = document.createElement('canvas'); c.width = c.height = n; document.body.append(c); return [c, c.getContext('2d')]; }
-function bit(x, expr, cx, top, s, ring = MONO) { x.save(); x.translate(cx - 300 * s, top); x.scale(s, s); drawCarretel(x, expr, ring); x.restore(); }
-async function save(c, name) { await fetch(`/save?dir=perfil&name=${name}`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) }); }
+// Foto de perfil, capas dos destaques e folha de expressões do Bit v2 (@uiu.engenharia).
+const B = BRAND, Q = new URLSearchParams(location.search), GMS = ['#3B82F6', '#06B6D4', '#6366F1', '#8B5CF6', '#F59E0B', '#EF4444', '#F97316', '#10B981'];
+function cv(w, h = w, cls) { const c = document.createElement('canvas'); c.width = w; c.height = h; if (cls) c.className = cls; document.body.append(c); return [c, c.getContext('2d')]; }
+function bit(x, opts, cx, top, s) { x.save(); x.translate(cx - 300 * s, top); x.scale(s, s); drawBit(x, opts); x.restore(); }
+async function save(c, name) { if (Q.has('save')) await fetch(`/save?dir=perfil&name=${name}`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) }); }
+function label(y, text, color, size) { y.font = `900 ${size}px "Geist"`; y.letterSpacing = '-3px'; y.fillStyle = color; y.textAlign = 'center'; y.fillText(text, 540, 1000); }
+function stripes(y) { y.fillStyle = '#F4C20D'; y.fillRect(0, 0, 1080, 1080); y.save(); y.translate(540, 540); y.rotate(-Math.PI / 4); y.fillStyle = '#141416'; for (let i = -12; i < 12; i++) y.fillRect(i * 140, -1000, 70, 2000); y.restore(); y.fillStyle = 'rgba(244,194,13,.0)'; }
 loadBrandFonts().then(async () => {
-  // foto de perfil: o rosto do Bit grande, fundo vermelho de destaque (lê bem até em 40 px)
-  const [p, x] = cv(1080); x.fillStyle = B.accent; x.fillRect(0, 0, 1080, 1080); bit(x, 'joinha', 540, 30, 2.1); grain(x, 1080, 1080, 0.07); await save(p, 'foto_perfil.png');
-  // capas dos destaques: fundo off-black, ícone + palavra
-  const covers = [['GMS', c => bit(c, 'lembra', 540, 170, 1.15, GMS)], ['WILL STATION', c => bit(c, 'comemora', 540, 170, 1.15)], ['BIT', c => bit(c, 'tranquilo', 540, 170, 1.15)], ['BASTIDORES', c => bit(c, 'joinha', 540, 170, 1.15)]];
-  for (const [label, draw] of covers) {
-    const [c, y] = cv(1080); y.fillStyle = B.ink; y.fillRect(0, 0, 1080, 1080); draw(y);
-    y.font = `900 ${label.length > 8 ? 92 : 120}px "Geist"`; y.letterSpacing = '-3px'; y.fillStyle = B.paper; y.textAlign = 'center'; y.fillText(label, 540, 1010);
-    grain(y, 1080, 1080, 0.07); await save(c, `destaque_${label.toLowerCase().replace(' ', '_')}.png`);
+  // foto de perfil: o Bit acenando, fundo escuro com brilho vermelho (o corpo vermelho salta na miniatura)
+  { const [p, x] = cv(1080); x.fillStyle = B.ink; x.fillRect(0, 0, 1080, 1080); const g = x.createRadialGradient(540, 560, 60, 540, 560, 560); g.addColorStop(0, 'rgba(255,59,31,.35)'); g.addColorStop(1, 'rgba(255,59,31,0)'); x.fillStyle = g; x.fillRect(0, 0, 1080, 1080);
+    bit(x, { pose: 'tchau', eyes: 'feliz', mouth: 'aberta' }, 540, 30, 1.32); grain(x, 1080, 1080, 0.06); await save(p, 'foto_perfil.png'); }
+  // capas dos destaques: cada uma com a sua identidade
+  const covers = [
+    ['GMS', y => { y.fillStyle = B.ink; y.fillRect(0, 0, 1080, 1080); }, { pose: 'tranquilo', eyes: 'normal', ring: GMS }, B.paper],
+    ['WILL STATION', y => { y.fillStyle = '#F4C20D'; y.fillRect(0, 0, 1080, 1080); y.fillStyle = '#1E6FE0'; for (const [cx, cy] of [[150, 160], [930, 160], [150, 860], [930, 860]]) { y.beginPath(); y.arc(cx, cy, 46, 0, 7); y.fill(); } }, { pose: 'comemora', eyes: 'feliz', mouth: 'aberta', hat: 'bone' }, '#141416'],
+    ['BIT', y => { y.fillStyle = '#7CFFCB'; y.fillRect(0, 0, 1080, 1080); }, { pose: 'tchau', eyes: 'coracao', mouth: 'sorriso' }, '#141416'],
+    ['BASTIDORES', y => stripes(y), { pose: 'pensa', eyes: 'espiral', mouth: 'reta', hat: 'capacete' }, '#141416'],
+  ];
+  for (const [name, bg, opts, color] of covers) {
+    const [c, y] = cv(1080); bg(y); // sem texto: o Instagram já escreve o nome embaixo da capa
+    bit(y, opts, 540, 60, 1.18); grain(y, 1080, 1080, 0.06);
+    await save(c, `destaque_${name.toLowerCase().replace(' ', '_')}.png`);
   }
+  // folha de expressões (pra conferência)
+  if (Q.has('sheet')) { const [s, z] = cv(2400, 900, 'sheet'); z.fillStyle = '#18181A'; z.fillRect(0, 0, 2400, 900); BIT_EYES.forEach((e, i) => { bit(z, { pose: BIT_POSES[i % 4], eyes: e, mouth: ['sorriso', 'aberta', 'reta', 'o'][i % 4] }, 200 + i * 400, 20, 0.95); z.font = '700 36px "Geist Mono"'; z.fillStyle = '#EEEDE8'; z.textAlign = 'center'; z.fillText(e, 200 + i * 400, 880); }); }
   document.title = 'ready';
 });
 </script></body></html>

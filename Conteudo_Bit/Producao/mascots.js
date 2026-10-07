@@ -117,6 +117,63 @@
     }
     ctx.restore();
   }
+  // ================= O BIT (v2, 06/10/2026) =================
+  // Identidade: corpo VERMELHO (cor-assinatura, como o verde do Duo), rosto de TELA com olhos em pixel acesos (menta),
+  // antena com o ponto vermelho. Sem gestos de um dedo só (nada de dedo erguido isolado). Caixa 600x800, pés em y≈780.
+  const BIT = { body: '#FF3B1F', shade: '#C9260F', screen: '#0E0F12', glow: '#7CFFCB', dot: '#E2231A', glove: '#FFFFFF', shoe: '#F2F1EC', sole: '#E2231A' };
+  const EYES = { // olhos 7x7 em pixel
+    normal: ['..XXX..', '.XXXXX.', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..'],
+    feliz: ['.......', '..XXX..', '.X...X.', 'X.....X', '.......', '.......', '.......'],
+    espiral: ['XXXXXXX', 'X.....X', 'X.XXX.X', 'X.X.X.X', 'X.X...X', 'X.XXXXX', 'X......'],
+    x: ['X.....X', '.X...X.', '..X.X..', '...X...', '..X.X..', '.X...X.', 'X.....X'],
+    coracao: ['.XX.XX.', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX', '.XXXXX.', '..XXX..', '...X...'],
+    surpreso: ['..XXX..', '.X...X.', 'X.....X', 'X.....X', 'X.....X', '.X...X.', '..XXX..'],
+  };
+  const MOUTH = { sorriso: ['X.....X', '.XXXXX.'], aberta: ['.XXXXX.', 'X.....X', '.XXXXX.'], reta: ['XXXXXXX'], o: ['.XXX.', 'X...X', '.XXX.'] };
+  function pix(ctx, map, cx, cy, cell, color) { const w = map[0].length, h = map.length; ctx.fillStyle = color; map.forEach((r, j) => [...r].forEach((c, i) => { if (c === 'X') ctx.fillRect(cx + (i - w / 2) * cell, cy + (j - h / 2) * cell, cell - 1, cell - 1); })); }
+  function glove(ctx, x, y, open) { // luva de 4 dedos arredondados (mão aberta) ou punho, nunca um dedo isolado
+    if (open) { for (const [dx, dy] of [[-26, -30], [-9, -40], [9, -40], [26, -30]]) { ctx.beginPath(); ctx.ellipse(x + dx, y + dy, 11, 17, 0, 0, 7); ink(ctx, BIT.glove); } }
+    ctx.beginPath(); ctx.arc(x, y, 34, 0, 7); ink(ctx, BIT.glove);
+    ctx.beginPath(); ctx.arc(x + (open ? 0 : 6), y - 2, 20, Math.PI * 1.1, Math.PI * 1.7); ctx.strokeStyle = 'rgba(26,20,16,.35)'; ctx.lineWidth = 4; ctx.stroke();
+  }
+  const POSE = {
+    tranquilo: { L: [[95, 470], [50, 560], [70, 640]], R: [[505, 470], [550, 560], [530, 640]] },
+    tchau: { L: [[95, 470], [50, 560], [70, 640]], R: [[505, 440], [600, 380], [560, 230]], openR: true },
+    comemora: { L: [[95, 440], [10, 330], [70, 200]], R: [[505, 440], [590, 330], [530, 200]], openL: true, openR: true },
+    pensa: { L: [[95, 470], [50, 560], [70, 640]], R: [[505, 470], [560, 600], [420, 590]] },
+  };
+  function bit2(ctx, { pose = 'tranquilo', eyes = 'normal', mouth = 'sorriso', ring = null, hat = null, glow = BIT.glow } = {}) {
+    const P = POSE[pose] || POSE.tranquilo;
+    ctx.save();
+    // pernas + tênis
+    hose(ctx, [[250, 640], [245, 700], [235, 745]], 16); hose(ctx, [[350, 640], [355, 700], [365, 745]], 16);
+    for (const [x, d] of [[222, -1], [378, 1]]) { ctx.beginPath(); ctx.ellipse(x + d * 14, 758, 54, 28, 0, 0, 7); ink(ctx, BIT.shoe); ctx.fillStyle = BIT.sole; ctx.fillRect(x + d * 14 - 50, 770, 100, 9); }
+    // anel de LED do projeto (opcional): segmentos em volta do corpo
+    if (ring) { ctx.save(); ctx.lineCap = 'round'; ctx.lineWidth = 26; const n = ring.length, step = 360 / n; ring.forEach((c, k) => { const a0 = (-90 + step * k + step * 0.09) * Math.PI / 180; ctx.strokeStyle = c; ctx.beginPath(); ctx.arc(300, 420, 262, a0, a0 + step * 0.82 * Math.PI / 180); ctx.stroke(); }); ctx.restore(); }
+    // antena
+    ctx.strokeStyle = L; ctx.lineWidth = 12; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(300, 200); ctx.lineTo(300, 128); ctx.stroke();
+    ctx.beginPath(); ctx.arc(300, 112, 30, 0, 7); ink(ctx, BIT.dot); ctx.fillStyle = 'rgba(255,255,255,.55)'; ctx.beginPath(); ctx.arc(290, 102, 9, 0, 7); ctx.fill();
+    // corpo vermelho com sombra e brilho
+    ctx.beginPath(); ctx.arc(300, 420, 230, 0, 7); ink(ctx, BIT.body);
+    ctx.save(); ctx.beginPath(); ctx.arc(300, 420, 226, 0, 7); ctx.clip(); ctx.fillStyle = BIT.shade; ctx.beginPath(); ctx.arc(330, 470, 226, 0, 7); ctx.arc(300, 420, 226, 0, 7, true); ctx.fill('evenodd');
+    ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.beginPath(); ctx.ellipse(205, 285, 52, 30, -0.6, 0, 7); ctx.fill(); ctx.restore();
+    // chapéu
+    if (hat === 'bone') { ctx.beginPath(); ctx.moveTo(110, 300); ctx.quadraticCurveTo(300, 120, 490, 300); ctx.lineTo(110, 300); ink(ctx, '#1E6FE0'); ctx.beginPath(); ctx.ellipse(470, 300, 110, 22, 0.1, 0, 7); ink(ctx, '#1E6FE0'); ctx.font = '900 120px "Geist", sans-serif'; ctx.fillStyle = '#F4C20D'; ctx.textAlign = 'center'; ctx.fillText('W', 300, 285); }
+    if (hat === 'capacete') { ctx.beginPath(); ctx.moveTo(95, 300); ctx.quadraticCurveTo(300, 100, 505, 300); ctx.closePath(); ink(ctx, '#F4C20D'); ctx.beginPath(); ctx.roundRect(70, 288, 460, 30, 15); ink(ctx, '#F4C20D'); ctx.fillStyle = 'rgba(26,20,16,.25)'; ctx.fillRect(285, 170, 30, 118); }
+    // rosto de tela
+    ctx.beginPath(); ctx.roundRect(150, 300, 300, 230, 64); ink(ctx, '#2A2B30');
+    ctx.beginPath(); ctx.roundRect(166, 316, 268, 198, 52); ctx.fillStyle = BIT.screen; ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.roundRect(166, 316, 268, 198, 52); ctx.clip();
+    const gl = ctx.createRadialGradient(300, 415, 10, 300, 415, 170); gl.addColorStop(0, 'rgba(124,255,203,.10)'); gl.addColorStop(1, 'rgba(124,255,203,0)'); ctx.fillStyle = gl; ctx.fillRect(166, 316, 268, 198);
+    ctx.shadowColor = glow; ctx.shadowBlur = 18; const e = EYES[eyes] || EYES.normal; pix(ctx, e, 240, 395, 11, glow); pix(ctx, e, 360, 395, 11, glow);
+    pix(ctx, MOUTH[mouth] || MOUTH.sorriso, 300, 470, 9, glow); ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,255,255,.06)'; for (let y = 316; y < 514; y += 6) ctx.fillRect(166, y, 268, 2);
+    ctx.fillStyle = 'rgba(255,255,255,.09)'; ctx.beginPath(); ctx.ellipse(220, 340, 60, 14, -0.25, 0, 7); ctx.fill(); ctx.restore();
+    // braços + luvas
+    hose(ctx, P.L, 16); hose(ctx, P.R, 16); glove(ctx, ...P.L[2], P.openL); glove(ctx, ...P.R[2], P.openR);
+    ctx.restore();
+  }
   window.FICHA_EXPR = Object.keys(FICHA); window.CARRETEL_EXPR = Object.keys(CARRETEL);
   window.drawFicha = ficha; window.drawCarretel = carretel;
+  window.drawBit = bit2; window.BIT_POSES = Object.keys(POSE); window.BIT_EYES = Object.keys(EYES); window.BIT_COLORS = BIT;
 })();
