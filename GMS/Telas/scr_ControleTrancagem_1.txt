@@ -1,0 +1,1136 @@
+Screens:
+  scr_ControleTrancagem_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({
+            ctxDataCTR: Today(),
+            ctxAlteradoCTR: false,
+            ctxObsCTR: "",
+            ctxSpecCTR: {Tem: false, Tem2: false, Lie: 0, Med: 0, Lse: 0, PkMin: 0, PkMax: 0},
+            ctxEscCTR: {XLo: 0, XHi: 1, RHi: 0.01}
+        });
+        Set(varProcessando, false);
+        ClearCollect(
+            colColabCTR,
+            Sort(
+                Filter(
+                    ForAll(
+                        Colaboradores As _c2,
+                        { Nome: Trim(Text(_c2.Nome)) }
+                    ) As _n,
+                    !IsBlank(_n.Nome)
+                ),
+                Nome,
+                SortOrder.Ascending
+            )
+        );
+        If(
+            IsEmpty(colSpecCTR),
+            IfError(
+                ClearCollect(colSpecCTR, DM_TRANÇAGEM),
+                Notify("Não consegui ler o delineamento (DM_TRANÇAGEM). Troque a máquina para tentar de novo.", NotificationType.Error, 8000)
+            )
+        );
+        Reset(cmb_MaquinaCTR);
+        Reset(cmb_MangueiraCTR);
+        Reset(cmb_TramaCTR);
+        Reset(cmb_OperadorCTR);
+        Select(btn_CarregarCTR)
+    Children:
+      - rct_HeaderCTR:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =96
+            Width: =1366
+      - ico_VoltarCTR:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar para a ficha da Trançagem"
+            Color: =fx_CorSuperficie
+            Height: =44
+            Icon: =Icon.ArrowLeft
+            OnSelect: |-
+              =If(
+                  ctxAlteradoCTR,
+                  Notify("Há medidas não salvas. Toque em Salvar ou Descartar antes de sair.", NotificationType.Warning, 6000),
+                  Navigate(scr_Trancagem_3)
+              )
+            Width: =44
+            X: =16
+            Y: =26
+      - lbl_TituloCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            Size: =fx_FonteTitulo
+            Text: ="Controle de Trançagem · Diâmetro"
+            Width: =560
+            X: =60
+      - lbl_SubCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =46
+            Size: =fx_FonteCorpo
+            Text: ="Substitui a folha AM-DM-02 (REV. 5). Cada medida fica guardada no SharePoint."
+            Width: =760
+            X: =72
+            Y: =50
+      - lbl_AlteradoCTR:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            Color: =fx_CorAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            Size: =fx_FonteCorpo
+            Text: ="● Medidas não salvas"
+            Visible: =ctxAlteradoCTR
+            Width: =300
+            X: =1050
+            Y: =32
+      - lbl_RotDataCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="DIA"
+            Width: =200
+            X: =16
+            Y: =104
+      - ico_DiaAntCTR:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Dia anterior"
+            Color: =fx_CorInfo
+            DisplayMode: =If(varProcessando || ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =fx_AlturaCampo
+            Icon: =Icon.ChevronLeft
+            OnSelect: |-
+              =UpdateContext({ctxDataCTR: DateAdd(ctxDataCTR, -1, TimeUnit.Days)});
+              Select(btn_CarregarCTR)
+            Width: =44
+            X: =16
+            Y: =122
+      - lbl_DataCTR:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaCampo
+            Size: =fx_FonteCorpo
+            Text: =Text(ctxDataCTR, "[$-pt-BR]dd/mm/yyyy")
+            Width: =120
+            X: =60
+            Y: =122
+      - ico_DiaProxCTR:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Próximo dia"
+            Color: =fx_CorInfo
+            DisplayMode: =If(varProcessando || ctxAlteradoCTR || ctxDataCTR >= Today(), DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =fx_AlturaCampo
+            Icon: =Icon.ChevronRight
+            OnSelect: |-
+              =UpdateContext({ctxDataCTR: DateAdd(ctxDataCTR, 1, TimeUnit.Days)});
+              Select(btn_CarregarCTR)
+            Width: =44
+            X: =180
+            Y: =122
+      - lbl_RotMaquinaCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="MÁQUINA"
+            Width: =130
+            X: =244
+            Y: =104
+      - cmb_MaquinaCTR:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            AccessibleLabel: ="Trançadeira"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DisplayMode: =If(varProcessando || ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            Items: =["Selecione", "TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TM01", "TM02", "TM04", "TO04"]
+            OnChange: =Select(btn_CarregarCTR)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =130
+            X: =244
+            Y: =122
+      - lbl_RotMangueiraCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =280
+            X: =390
+            Y: =104
+      - cmb_MangueiraCTR:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Mangueira medida"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DisplayFields: =["NomeMangueira"]
+            DisplayMode: =If(varProcessando || ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Buscar mangueira..."
+            Items: =colMangueiras
+            OnChange: =Select(btn_CarregarCTR)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["NomeMangueira"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =280
+            X: =390
+            Y: =122
+      - lbl_RotTramaCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="TRAMA"
+            Width: =150
+            X: =686
+            Y: =104
+      - cmb_TramaCTR:
+          Control: Classic/DropDown@2.3.1
+          Properties:
+            AccessibleLabel: ="Trama medida"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DisplayMode: =If(varProcessando || ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            Items: =["1ª Trama", "2ª Trama"]
+            OnChange: =Select(btn_CarregarCTR)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =150
+            X: =686
+            Y: =122
+      - lbl_RotOperadorCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR *"
+            Width: =300
+            X: =852
+            Y: =104
+      - cmb_OperadorCTR:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador que mediu"
+            BorderColor: =fx_CorBorda
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DisplayFields: =["Nome"]
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Buscar operador..."
+            Items: =colColabCTR
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Nome"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =300
+            X: =852
+            Y: =122
+      - rct_SpecCTR:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Fill: =If(ctxSpecCTR.Tem, fx_CorInfoSuave, fx_CorAlertaSuave)
+            Height: =42
+            Width: =1334
+            X: =16
+            Y: =174
+      - lbl_SpecCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =42
+            Size: =fx_FonteCorpo
+            Text: |-
+              =If(
+                  ctxSpecCTR.Tem,
+                  "Delineamento · Ø ext. da trança (pol)   LIE " & fx_MedidaBR(ctxSpecCTR.Lie) &
+                  "   ·   Média " & fx_MedidaBR(ctxSpecCTR.Med) &
+                  "   ·   LSE " & fx_MedidaBR(ctxSpecCTR.Lse) &
+                  If(ctxSpecCTR.PkMax > 0, "   ·   Picks " & Text(ctxSpecCTR.PkMin) & " a " & Text(ctxSpecCTR.PkMax), "") &
+                  If(cmb_TramaCTR.Selected.Value = "2ª Trama" && !ctxSpecCTR.Tem2, "   ·   ⚠ esta mangueira não tem 2ª trama no delineamento", ""),
+                  If(
+                      IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira),
+                      "Escolha a máquina e a mangueira para carregar os limites do delineamento.",
+                      "⚠ Mangueira sem delineamento em DM_TRANÇAGEM (amostra ou nova): sem limites. Pode medir e salvar mesmo assim."
+                  )
+              )
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =1310
+            X: =28
+            Y: =174
+      - lbl_RotHoraCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =26
+            Size: =fx_FonteApoio
+            Text: ="HORA"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =224
+      - lbl_RotA1CTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="AMOSTRA 1"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =254
+      - lbl_RotA2CTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="AMOSTRA 2"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =290
+      - lbl_RotA3CTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="AMOSTRA 3"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =326
+      - lbl_RotA4CTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="AMOSTRA 4"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =362
+      - lbl_RotA5CTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =32
+            Size: =fx_FonteApoio
+            Text: ="AMOSTRA 5"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =398
+      - lbl_RotXBCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =28
+            Size: =fx_FonteApoio
+            Text: ="MÉDIA (X̄)"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =438
+      - lbl_RotRCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =28
+            Size: =fx_FonteApoio
+            Text: ="AMPLITUDE (R)"
+            VerticalAlign: =VerticalAlign.Middle
+            Width: =110
+            X: =16
+            Y: =470
+      - gal_AmostrasCTR:
+          Control: Gallery@2.15.0
+          Variant: Horizontal
+          Properties:
+            BorderColor: =fx_CorBorda
+            Fill: =Color.Transparent
+            Height: =276
+            Items: =colCTR
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =0
+            TemplateSize: =101
+            Width: =1220
+            X: =130
+            Y: =224
+          Children:
+            - lbl_HoraItemCTR:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorSuperficie
+                  Fill: =fx_CorHeader
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  Size: =fx_FonteCorpo
+                  Text: =ThisItem.Rot
+                  VerticalAlign: =VerticalAlign.Middle
+                  Width: =93
+                  X: =4
+            - inp_A1CTR:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Amostra 1 do horário"
+                  Align: =Align.Center
+                  BorderColor: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(
+                            !IsBlank(Trim(Self.Text)) && IsBlank(_v),
+                            fx_CorErro,
+                            !IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse),
+                            fx_CorErro,
+                            fx_CorBorda
+                        )
+                    )
+                  Default: =ThisItem.A1
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando || IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira) || cmb_MaquinaCTR.Selected.Value = "Selecione", DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(!IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse), fx_CorErroSuave, fx_CorSuperficie)
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =32
+                  HintText: ="0,000"
+                  HoverFill: =fx_CorInfoSuave
+                  OnChange: |-
+                    =If(
+                        Self.Text <> ThisItem.A1,
+                        UpdateIf(colCTR, H = ThisItem.H, { A1: Self.Text });
+                        UpdateContext({ctxAlteradoCTR: true});
+                        Select(btn_RecalcCTR)
+                    )
+                  Size: =fx_FonteCorpo
+                  Width: =93
+                  X: =4
+                  Y: =30
+            - inp_A2CTR:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Amostra 2 do horário"
+                  Align: =Align.Center
+                  BorderColor: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(
+                            !IsBlank(Trim(Self.Text)) && IsBlank(_v),
+                            fx_CorErro,
+                            !IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse),
+                            fx_CorErro,
+                            fx_CorBorda
+                        )
+                    )
+                  Default: =ThisItem.A2
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando || IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira) || cmb_MaquinaCTR.Selected.Value = "Selecione", DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(!IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse), fx_CorErroSuave, fx_CorSuperficie)
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =32
+                  HintText: ="0,000"
+                  HoverFill: =fx_CorInfoSuave
+                  OnChange: |-
+                    =If(
+                        Self.Text <> ThisItem.A2,
+                        UpdateIf(colCTR, H = ThisItem.H, { A2: Self.Text });
+                        UpdateContext({ctxAlteradoCTR: true});
+                        Select(btn_RecalcCTR)
+                    )
+                  Size: =fx_FonteCorpo
+                  Width: =93
+                  X: =4
+                  Y: =66
+            - inp_A3CTR:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Amostra 3 do horário"
+                  Align: =Align.Center
+                  BorderColor: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(
+                            !IsBlank(Trim(Self.Text)) && IsBlank(_v),
+                            fx_CorErro,
+                            !IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse),
+                            fx_CorErro,
+                            fx_CorBorda
+                        )
+                    )
+                  Default: =ThisItem.A3
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando || IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira) || cmb_MaquinaCTR.Selected.Value = "Selecione", DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(!IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse), fx_CorErroSuave, fx_CorSuperficie)
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =32
+                  HintText: ="0,000"
+                  HoverFill: =fx_CorInfoSuave
+                  OnChange: |-
+                    =If(
+                        Self.Text <> ThisItem.A3,
+                        UpdateIf(colCTR, H = ThisItem.H, { A3: Self.Text });
+                        UpdateContext({ctxAlteradoCTR: true});
+                        Select(btn_RecalcCTR)
+                    )
+                  Size: =fx_FonteCorpo
+                  Width: =93
+                  X: =4
+                  Y: =102
+            - inp_A4CTR:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Amostra 4 do horário"
+                  Align: =Align.Center
+                  BorderColor: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(
+                            !IsBlank(Trim(Self.Text)) && IsBlank(_v),
+                            fx_CorErro,
+                            !IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse),
+                            fx_CorErro,
+                            fx_CorBorda
+                        )
+                    )
+                  Default: =ThisItem.A4
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando || IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira) || cmb_MaquinaCTR.Selected.Value = "Selecione", DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(!IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse), fx_CorErroSuave, fx_CorSuperficie)
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =32
+                  HintText: ="0,000"
+                  HoverFill: =fx_CorInfoSuave
+                  OnChange: |-
+                    =If(
+                        Self.Text <> ThisItem.A4,
+                        UpdateIf(colCTR, H = ThisItem.H, { A4: Self.Text });
+                        UpdateContext({ctxAlteradoCTR: true});
+                        Select(btn_RecalcCTR)
+                    )
+                  Size: =fx_FonteCorpo
+                  Width: =93
+                  X: =4
+                  Y: =138
+            - inp_A5CTR:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Amostra 5 do horário"
+                  Align: =Align.Center
+                  BorderColor: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(
+                            !IsBlank(Trim(Self.Text)) && IsBlank(_v),
+                            fx_CorErro,
+                            !IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse),
+                            fx_CorErro,
+                            fx_CorBorda
+                        )
+                    )
+                  Default: =ThisItem.A5
+                  DelayOutput: =true
+                  DisplayMode: =If(varProcessando || IsBlank(cmb_MangueiraCTR.Selected.NomeMangueira) || cmb_MaquinaCTR.Selected.Value = "Selecione", DisplayMode.Disabled, DisplayMode.Edit)
+                  Fill: |-
+                    =With(
+                        { _v: fx_DiametroPol(Self.Text) },
+                        If(!IsBlank(_v) && fx_ForaDaFaixa(_v, ctxSpecCTR.Lie, ctxSpecCTR.Lse), fx_CorErroSuave, fx_CorSuperficie)
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =32
+                  HintText: ="0,000"
+                  HoverFill: =fx_CorInfoSuave
+                  OnChange: |-
+                    =If(
+                        Self.Text <> ThisItem.A5,
+                        UpdateIf(colCTR, H = ThisItem.H, { A5: Self.Text });
+                        UpdateContext({ctxAlteradoCTR: true});
+                        Select(btn_RecalcCTR)
+                    )
+                  Size: =fx_FonteCorpo
+                  Width: =93
+                  X: =4
+                  Y: =174
+            - lbl_XBItemCTR:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: |-
+                    =With(
+                        { _k: LookUp(ctxCalcCTR, H = ThisItem.H) },
+                        If(_k.Fora, fx_CorErro, fx_CorTexto)
+                    )
+                  Fill: |-
+                    =With(
+                        { _k: LookUp(ctxCalcCTR, H = ThisItem.H) },
+                        If(_k.Fora, fx_CorErroSuave, fx_CorInfoSuave)
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _k: LookUp(ctxCalcCTR, H = ThisItem.H) },
+                        If(IsBlank(_k.XB), "—", fx_MedidaBR(_k.XB))
+                    )
+                  VerticalAlign: =VerticalAlign.Middle
+                  Width: =93
+                  X: =4
+                  Y: =214
+            - lbl_RItemCTR:
+                Control: Label@2.5.1
+                Properties:
+                  Align: =Align.Center
+                  Color: =fx_CorTexto
+                  Fill: =fx_CorInfoSuave
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =28
+                  Size: =fx_FonteCorpo
+                  Text: |-
+                    =With(
+                        { _k: LookUp(ctxCalcCTR, H = ThisItem.H) },
+                        If(IsBlank(_k.R), "—", fx_MedidaBR(_k.R))
+                    )
+                  VerticalAlign: =VerticalAlign.Middle
+                  Width: =93
+                  X: =4
+                  Y: =246
+      - rct_CardXBCTR:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Fill: =fx_CorSuperficie
+            Height: =194
+            Width: =770
+            X: =16
+            Y: =508
+      - img_XBCTR:
+          Control: Image@2.2.3
+          Properties:
+            Height: =190
+            Image: |-
+              ="data:image/svg+xml;utf8," & EncodeUrl(
+                  With(
+                      {
+                          _k: (190 - 28 - 30) / (ctxEscCTR.XHi - ctxEscCTR.XLo),
+                          _kx: (760 - 64 - 16) / 22,
+                          _tem: ctxSpecCTR.Lie > 0 && ctxSpecCTR.Lse > 0,
+                          _p: Filter(ctxCalcCTR, !IsBlank(XB))
+                      },
+                      "<svg xmlns='http://www.w3.org/2000/svg' width='760' height='190' viewBox='0 0 760 190'>" &
+                      "<text x='64' y='16' font-family='sans-serif' font-size='13' font-weight='bold' fill='#0F172A'>Média das amostras (X̄) por horário · pol</text>" &
+                      Concat(
+                          colCTR,
+                          "<line x1='" & Text(64 + H * _kx, "[$-en-US]0.0") & "' x2='" & Text(64 + H * _kx, "[$-en-US]0.0") & "' y1='28' y2='160' stroke='#E2E8F0' stroke-width='1'/>" &
+                          "<text x='" & Text(64 + H * _kx, "[$-en-US]0.0") & "' y='178' text-anchor='middle' font-family='sans-serif' font-size='11' fill='#64748B'>" & Text(H) & "h</text>"
+                      ) &
+                      If(
+                          _tem,
+                          "<line x1='64' x2='744' y1='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Lse) * _k, "[$-en-US]0.0") & "' y2='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Lse) * _k, "[$-en-US]0.0") & "' stroke='#C0392B' stroke-width='2' stroke-dasharray='6 4'/>" &
+                          "<line x1='64' x2='744' y1='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Lie) * _k, "[$-en-US]0.0") & "' y2='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Lie) * _k, "[$-en-US]0.0") & "' stroke='#C0392B' stroke-width='2' stroke-dasharray='6 4'/>" &
+                          "<line x1='64' x2='744' y1='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Med) * _k, "[$-en-US]0.0") & "' y2='" & Text(28 + (ctxEscCTR.XHi - ctxSpecCTR.Med) * _k, "[$-en-US]0.0") & "' stroke='#16A34A' stroke-width='2'/>" &
+                          "<text x='58' y='" & Text(32 + (ctxEscCTR.XHi - ctxSpecCTR.Lse) * _k, "[$-en-US]0.0") & "' text-anchor='end' font-family='sans-serif' font-size='11' fill='#C0392B'>" & fx_MedidaBR(ctxSpecCTR.Lse) & "</text>" &
+                          "<text x='58' y='" & Text(32 + (ctxEscCTR.XHi - ctxSpecCTR.Med) * _k, "[$-en-US]0.0") & "' text-anchor='end' font-family='sans-serif' font-size='11' fill='#16A34A'>" & fx_MedidaBR(ctxSpecCTR.Med) & "</text>" &
+                          "<text x='58' y='" & Text(32 + (ctxEscCTR.XHi - ctxSpecCTR.Lie) * _k, "[$-en-US]0.0") & "' text-anchor='end' font-family='sans-serif' font-size='11' fill='#C0392B'>" & fx_MedidaBR(ctxSpecCTR.Lie) & "</text>",
+                          ""
+                      ) &
+                      If(
+                          IsEmpty(_p),
+                          "<text x='404' y='100' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#64748B'>Sem medições neste dia</text>",
+                          "<polyline fill='none' stroke='#2C6FBF' stroke-width='2.5' points='" &
+                          Concat(_p, Text(64 + H * _kx, "[$-en-US]0.0") & "," & Text(28 + (ctxEscCTR.XHi - XB) * _k, "[$-en-US]0.0") & " ") & "'/>" &
+                          Concat(
+                              _p,
+                              "<circle cx='" & Text(64 + H * _kx, "[$-en-US]0.0") & "' cy='" & Text(28 + (ctxEscCTR.XHi - XB) * _k, "[$-en-US]0.0") & "' r='4.5' fill='" & If(Fora, "#C0392B", "#2C6FBF") & "'/>"
+                          )
+                      ) &
+                      "</svg>"
+                  )
+              )
+            Width: =760
+            X: =21
+            Y: =510
+      - rct_CardRCTR:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Fill: =fx_CorSuperficie
+            Height: =194
+            Width: =550
+            X: =800
+            Y: =508
+      - img_RCTR:
+          Control: Image@2.2.3
+          Properties:
+            Height: =190
+            Image: |-
+              ="data:image/svg+xml;utf8," & EncodeUrl(
+                  With(
+                      {
+                          _k: (190 - 28 - 30) / ctxEscCTR.RHi,
+                          _kx: (540 - 54 - 14) / 22,
+                          _p: Filter(ctxCalcCTR, !IsBlank(R))
+                      },
+                      "<svg xmlns='http://www.w3.org/2000/svg' width='540' height='190' viewBox='0 0 540 190'>" &
+                      "<text x='54' y='16' font-family='sans-serif' font-size='13' font-weight='bold' fill='#0F172A'>Amplitude (R) por horário · pol</text>" &
+                      Concat(
+                          colCTR,
+                          "<line x1='" & Text(54 + H * _kx, "[$-en-US]0.0") & "' x2='" & Text(54 + H * _kx, "[$-en-US]0.0") & "' y1='28' y2='160' stroke='#E2E8F0' stroke-width='1'/>" &
+                          "<text x='" & Text(54 + H * _kx, "[$-en-US]0.0") & "' y='178' text-anchor='middle' font-family='sans-serif' font-size='11' fill='#64748B'>" & Text(H) & "h</text>"
+                      ) &
+                      "<line x1='54' x2='526' y1='160' y2='160' stroke='#94A3B8' stroke-width='1'/>" &
+                      "<text x='48' y='164' text-anchor='end' font-family='sans-serif' font-size='11' fill='#64748B'>0,000</text>" &
+                      "<text x='48' y='32' text-anchor='end' font-family='sans-serif' font-size='11' fill='#64748B'>" & Substitute(Text(ctxEscCTR.RHi, "[$-en-US]0.000"), ".", ",") & "</text>" &
+                      If(
+                          IsEmpty(_p),
+                          "<text x='290' y='100' text-anchor='middle' font-family='sans-serif' font-size='13' fill='#64748B'>Sem medições neste dia</text>",
+                          "<polyline fill='none' stroke='#E67E22' stroke-width='2.5' points='" &
+                          Concat(_p, Text(54 + H * _kx, "[$-en-US]0.0") & "," & Text(28 + (ctxEscCTR.RHi - R) * _k, "[$-en-US]0.0") & " ") & "'/>" &
+                          Concat(
+                              _p,
+                              "<circle cx='" & Text(54 + H * _kx, "[$-en-US]0.0") & "' cy='" & Text(28 + (ctxEscCTR.RHi - R) * _k, "[$-en-US]0.0") & "' r='4.5' fill='#E67E22'/>"
+                          )
+                      ) &
+                      "</svg>"
+                  )
+              )
+            Width: =540
+            X: =805
+            Y: =510
+      - lbl_RotObsCTR:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="OBSERVAÇÕES GERAIS"
+            Width: =300
+            X: =16
+            Y: =708
+      - inp_ObsCTR:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Observações gerais da folha"
+            BorderColor: =fx_CorBorda
+            Default: =ctxObsCTR
+            DelayOutput: =true
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HintText: ="Opcional"
+            HoverFill: =fx_CorInfoSuave
+            OnChange: |-
+              =If(
+                  Self.Text <> ctxObsCTR,
+                  UpdateContext({ctxObsCTR: Self.Text, ctxAlteradoCTR: true})
+              )
+            Size: =fx_FonteCorpo
+            Width: =760
+            X: =16
+            Y: =722
+      - btn_DescartarCTR:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            Color: =fx_CorTexto
+            DisplayMode: =If(varProcessando || !ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =48
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =Select(btn_CarregarCTR);
+              Notify("Alterações descartadas. Medidas recarregadas do SharePoint.", NotificationType.Information, 3000)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Descartar"
+            Width: =170
+            X: =800
+            Y: =716
+      - btn_SalvarCTR:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Color: =fx_CorSuperficie
+            DisplayMode: =If(varProcessando || !ctxAlteradoCTR, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =48
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =With(
+                  {
+                      _maq: If(cmb_MaquinaCTR.Selected.Value = "Selecione", "", cmb_MaquinaCTR.Selected.Value),
+                      _man: Coalesce(cmb_MangueiraCTR.Selected.NomeMangueira, ""),
+                      _tr: cmb_TramaCTR.Selected.Value,
+                      _op: Coalesce(cmb_OperadorCTR.Selected.Nome, "")
+                  },
+                  If(
+                      IsBlank(_maq) || IsBlank(_man),
+                      Notify("Escolha a máquina e a mangueira.", NotificationType.Warning, 6000),
+                      IsBlank(_op),
+                      Notify("Escolha o operador que mediu.", NotificationType.Warning, 6000),
+                      !IsEmpty(Filter(ctxCalcCTR, Inv)),
+                      Notify("Há medida inválida (borda vermelha forte). Corrija o número antes de salvar.", NotificationType.Warning, 7000),
+                      Set(varProcessando, true);
+                      ForAll(
+                          Filter(ctxCalcCTR, N > 0) As _k,
+                          With(
+                              { _c: LookUp(colCTR, H = _k.H) },
+                              With(
+                                  {
+                                      _n: Patch(
+                                          Controle_Medicao,
+                                          If(_c.IdSP > 0, LookUp(Controle_Medicao, ID = _c.IdSP), Defaults(Controle_Medicao)),
+                                          {
+                                              Title: _maq & "|" & _man & "|" & _tr & "|" & Text(ctxDataCTR, "yyyymmdd") & "|" & Text(_k.H, "00"),
+                                              Processo: "Trançagem",
+                                              Maquina: _maq,
+                                              Mangueira: _man,
+                                              Trama: _tr,
+                                              DataHora: DateAdd(ctxDataCTR, _k.H, TimeUnit.Hours),
+                                              Turno: fx_Turno(_k.H * 60),
+                                              Horario: _k.H,
+                                              Amostra1: fx_DiametroPol(_c.A1),
+                                              Amostra2: fx_DiametroPol(_c.A2),
+                                              Amostra3: fx_DiametroPol(_c.A3),
+                                              Amostra4: fx_DiametroPol(_c.A4),
+                                              Amostra5: fx_DiametroPol(_c.A5),
+                                              LimInf: If(ctxSpecCTR.Lie > 0, ctxSpecCTR.Lie, Blank()),
+                                              Nominal: If(ctxSpecCTR.Med > 0, ctxSpecCTR.Med, Blank()),
+                                              LimSup: If(ctxSpecCTR.Lse > 0, ctxSpecCTR.Lse, Blank()),
+                                              XBarra: _k.XB,
+                                              Amplitude: _k.R,
+                                              ForaFaixa: _k.Fora,
+                                              Operador: _op,
+                                              Observacao: Trim(inp_ObsCTR.Text)
+                                          }
+                                      )
+                                  },
+                                  Patch(colCTR, LookUp(colCTR, H = _k.H), { IdSP: _n.ID })
+                              )
+                          )
+                      );
+                      ForAll(
+                          Filter(ctxCalcCTR, N = 0) As _z,
+                          With(
+                              { _c: LookUp(colCTR, H = _z.H) },
+                              If(
+                                  _c.IdSP > 0,
+                                  Remove(Controle_Medicao, LookUp(Controle_Medicao, ID = _c.IdSP));
+                                  Patch(colCTR, _c, { IdSP: 0 })
+                              )
+                          )
+                      );
+                      If(
+                          !IsEmpty(Errors(Controle_Medicao)),
+                          Notify("Erro ao salvar: " & First(Errors(Controle_Medicao)).Message, NotificationType.Error, 10000),
+                          UpdateContext({ctxAlteradoCTR: false});
+                          Notify(
+                              "Medidas salvas." & If(!IsEmpty(Filter(ctxCalcCTR, Fora)), " Atenção: há amostra fora do LIE/LSE.", ""),
+                              If(!IsEmpty(Filter(ctxCalcCTR, Fora)), NotificationType.Warning, NotificationType.Success),
+                              5000
+                          )
+                      );
+                      Set(varProcessando, false)
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Salvar medidas"
+            Width: =360
+            X: =990
+            Y: =716
+      - btn_CarregarCTR:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Height: =10
+            OnSelect: |-
+              =Set(varProcessando, true);
+              With(
+                  {
+                      _maq: If(cmb_MaquinaCTR.Selected.Value = "Selecione", "", cmb_MaquinaCTR.Selected.Value),
+                      _man: Coalesce(cmb_MangueiraCTR.Selected.NomeMangueira, ""),
+                      _tr: cmb_TramaCTR.Selected.Value
+                  },
+                  UpdateContext({
+                      ctxSpecCTR: With(
+                          {
+                              _s: LookUp(colSpecCTR, fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(_man)),
+                              _t2: _tr = "2ª Trama"
+                          },
+                          {
+                              Tem: !IsBlank(_s) && !IsBlank(_man),
+                              Tem2: !IsBlank(Trim(Text(_s._30WIRE_PN_2ST))),
+                              Lie: fx_NumSpec(Text(If(_t2, _s._32OD_2ST_MIN_in, _s._12OD_1ST_MIN_in))),
+                              Med: fx_NumSpec(Text(If(_t2, _s._33OD_2ST_MED_in, _s._13OD_1ST_MED_in))),
+                              Lse: fx_NumSpec(Text(If(_t2, _s._34OD_2ST_MAX_in, _s._14OD_1ST_MAX_in))),
+                              PkMin: fx_NumSpec(Text(If(_t2, _s._35PICKS_2ST_MIN_5, _s._15PICKS_1ST_MIN_5))),
+                              PkMax: fx_NumSpec(Text(If(_t2, _s._37PICKS_2ST_MAX_5, _s._17PICKS_1ST_MAX_5)))
+                          }
+                      )
+                  });
+                  If(
+                      !IsBlank(_maq) && !IsBlank(_man),
+                      IfError(
+                          ClearCollect(
+                              colRowsCTR,
+                              Filter(
+                                  Controle_Medicao,
+                                  Processo = "Trançagem",
+                                  Maquina = _maq,
+                                  Mangueira = _man,
+                                  Trama = _tr,
+                                  DataHora >= ctxDataCTR,
+                                  DataHora < DateAdd(ctxDataCTR, 1, TimeUnit.Days)
+                              )
+                          ),
+                          Notify("Não consegui ler o Controle_Medicao. Confira a conexão e tente de novo.", NotificationType.Error, 8000)
+                      ),
+                      Clear(colRowsCTR)
+                  )
+              );
+              ClearCollect(
+                  colCTR,
+                  ForAll(
+                      Sequence(12) As _q,
+                      With(
+                          { _r: LookUp(colRowsCTR As _x, _x.Horario = (_q.Value - 1) * 2) },
+                          {
+                              H: (_q.Value - 1) * 2,
+                              Rot: Text((_q.Value - 1) * 2, "00") & "h",
+                              A1: If(IsBlank(_r.Amostra1), "", fx_MedidaBR(_r.Amostra1)),
+                              A2: If(IsBlank(_r.Amostra2), "", fx_MedidaBR(_r.Amostra2)),
+                              A3: If(IsBlank(_r.Amostra3), "", fx_MedidaBR(_r.Amostra3)),
+                              A4: If(IsBlank(_r.Amostra4), "", fx_MedidaBR(_r.Amostra4)),
+                              A5: If(IsBlank(_r.Amostra5), "", fx_MedidaBR(_r.Amostra5)),
+                              IdSP: Coalesce(_r.ID, 0)
+                          }
+                      )
+                  )
+              );
+              UpdateContext({
+                  ctxAlteradoCTR: false,
+                  ctxObsCTR: Coalesce(First(colRowsCTR).Observacao, "")
+              });
+              Reset(inp_ObsCTR);
+              Select(btn_RecalcCTR);
+              Set(varProcessando, false)
+            Visible: =false
+            Width: =10
+      - btn_RecalcCTR:
+          Control: Classic/Button@2.2.0
+          Properties:
+            Height: =10
+            OnSelect: |-
+              =With(
+                  {
+                      _c: ForAll(
+                          colCTR As _q,
+                          With(
+                              {
+                                  _v: Filter(
+                                      Table(
+                                          { v: fx_DiametroPol(_q.A1) },
+                                          { v: fx_DiametroPol(_q.A2) },
+                                          { v: fx_DiametroPol(_q.A3) },
+                                          { v: fx_DiametroPol(_q.A4) },
+                                          { v: fx_DiametroPol(_q.A5) }
+                                      ),
+                                      !IsBlank(v)
+                                  ),
+                                  _nt: CountRows(
+                                      Filter(
+                                          Table({ t: _q.A1 }, { t: _q.A2 }, { t: _q.A3 }, { t: _q.A4 }, { t: _q.A5 }),
+                                          !IsBlank(Trim(t))
+                                      )
+                                  )
+                              },
+                              {
+                                  H: _q.H,
+                                  N: CountRows(_v),
+                                  Inv: _nt > CountRows(_v),
+                                  XB: If(CountRows(_v) = 0, Blank(), Average(_v, v)),
+                                  R: If(CountRows(_v) = 0, Blank(), Max(_v, v) - Min(_v, v)),
+                                  Fora: !IsEmpty(Filter(_v, fx_ForaDaFaixa(v, ctxSpecCTR.Lie, ctxSpecCTR.Lse)))
+                              }
+                          )
+                      )
+                  },
+                  With(
+                      {
+                          _p: Filter(_c, !IsBlank(XB)),
+                          _tem: ctxSpecCTR.Lie > 0 && ctxSpecCTR.Lse > 0
+                      },
+                      With(
+                          {
+                              _lo: If(
+                                  _tem,
+                                  If(IsEmpty(_p), ctxSpecCTR.Lie, Min(ctxSpecCTR.Lie, Min(_p, XB))),
+                                  If(IsEmpty(_p), 0, Min(_p, XB))
+                              ),
+                              _hi: If(
+                                  _tem,
+                                  If(IsEmpty(_p), ctxSpecCTR.Lse, Max(ctxSpecCTR.Lse, Max(_p, XB))),
+                                  If(IsEmpty(_p), 1, Max(_p, XB))
+                              )
+                          },
+                          With(
+                              { _sp: Max(_hi - _lo, 0.002) },
+                              UpdateContext({
+                                  ctxCalcCTR: _c,
+                                  ctxEscCTR: {
+                                      XLo: _lo - _sp * 0.2,
+                                      XHi: _hi + _sp * 0.2,
+                                      RHi: Max(0.004, Max(_c, R) * 1.3)
+                                  }
+                              })
+                          )
+                      )
+                  )
+              )
+            Visible: =false
+            Width: =10
+      - rct_overlay_spinner_ctr:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - spr_carregando_ctr:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366
