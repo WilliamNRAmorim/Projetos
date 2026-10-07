@@ -1,0 +1,74 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>stories semana</title>
+<script src="brand.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;display:flex;gap:16px;padding:16px}img{width:270px}</style></head><body>
+<script>
+// Stories de chamada da semana 05–11/10 (1080×1920), com o Bit do Gemini. ?save=1 grava na pasta da semana.
+const q = new URLSearchParams(location.search), S = { w: 1080, h: 1920 }, DIR = 'semana-2026-10-05';
+function cutout(img) { // mesmo recorte da foto de perfil: tira o fundo branco e escurece a franja do contorno
+  const W = img.naturalWidth, H = img.naturalHeight, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(img, 0, 0);
+  const id = x.getImageData(0, 0, W, H), d = id.data, seen = new Uint8Array(W * H), st = [], white = i => d[i] > 228 && d[i + 1] > 228 && d[i + 2] > 228;
+  for (let i = 0; i < W; i++) st.push(i, (H - 1) * W + i); for (let j = 0; j < H; j++) st.push(j * W, j * W + W - 1);
+  while (st.length) { const p = st.pop(); if (seen[p]) continue; const i = p * 4; if (!white(i)) continue; seen[p] = 1; d[i + 3] = 0; const px = p % W, py = (p / W) | 0; if (px) st.push(p - 1); if (px < W - 1) st.push(p + 1); if (py) st.push(p - W); if (py < H - 1) st.push(p + W); }
+  for (let pass = 0; pass < 3; pass++) { const kill = [];
+    for (let p = 0; p < W * H; p++) { const i = p * 4; if (!d[i + 3]) continue; const px = p % W, py = (p / W) | 0; const edge = (px && seen[p - 1]) || (px < W - 1 && seen[p + 1]) || (py && seen[p - W]) || (py < H - 1 && seen[p + W]); if (edge && (d[i] + d[i + 1] + d[i + 2]) / 3 > 150) kill.push(p); }
+    for (const p of kill) { d[p * 4 + 3] = 0; seen[p] = 1; } }
+  let x0 = W, y0 = H, x1 = 0, y1 = 0;
+  for (let p = 0; p < W * H; p++) { const i = p * 4; if (!d[i + 3]) continue; const px = p % W, py = (p / W) | 0; if ((px && seen[p - 1]) || (px < W - 1 && seen[p + 1]) || (py && seen[p - W]) || (py < H - 1 && seen[p + W])) { const l = (d[i] + d[i + 1] + d[i + 2]) / 3; d[i + 3] = Math.max(0, Math.min(255, (255 - l) * 3)); d[i] = 42; d[i + 1] = 15; d[i + 2] = 10; } if (d[i + 3] > 20) { x0 = Math.min(x0, px); x1 = Math.max(x1, px); y0 = Math.min(y0, py); y1 = Math.max(y1, py); } }
+  x.putImageData(id, 0, 0);
+  const t = document.createElement('canvas'); t.width = x1 - x0 + 1; t.height = y1 - y0 + 1; t.getContext('2d').drawImage(c, -x0, -y0); return t; // já recortado no tamanho do personagem
+}
+const load = src => { const i = new Image(); i.src = src; return i.decode().then(() => i); };
+function bit(g, art, cx, bottom, h) { // personagem com contorno escuro por trás, altura h, centrado em cx, pé em bottom
+  const s = h / art.height, w = art.width * s, x = cx - w / 2, y = bottom - h;
+  const sil = document.createElement('canvas'); sil.width = art.width; sil.height = art.height; const sx = sil.getContext('2d'); sx.drawImage(art, 0, 0); sx.globalCompositeOperation = 'source-in'; sx.fillStyle = '#2A0F0A'; sx.fillRect(0, 0, sil.width, sil.height);
+  g.imageSmoothingQuality = 'high'; for (let a = 0; a < 16; a++) g.drawImage(sil, x + Math.cos(a / 16 * 6.283) * 3, y + Math.sin(a / 16 * 6.283) * 3, w, h);
+  g.drawImage(art, x, y, w, h);
+}
+function lines(g, parts, x, y, size, lh) { // parts: [[texto, cor], ...], quebra por linha explícita (\n)
+  g.font = `900 ${size}px Geist`; g.textBaseline = 'alphabetic'; g.letterSpacing = `${-0.035 * size}px`;
+  let cx = x, cy = y;
+  for (const [t, col] of parts) t.split(/(\n)/).forEach(seg => { if (seg === '\n') { cx = x; cy += lh; return; } g.fillStyle = col; g.fillText(seg, cx, cy); cx += g.measureText(seg).width; });
+  return cy;
+}
+function label(g, t, x, y, col) { g.font = '700 34px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = col; g.fillText(t, x, y); }
+function base(g, dark) {
+  g.fillStyle = dark ? BRAND.ink : BRAND.paper; g.fillRect(0, 0, S.w, S.h);
+  if (dark) { const gl = g.createRadialGradient(S.w / 2, S.h * 0.74, 40, S.w / 2, S.h * 0.74, S.w * 0.75); gl.addColorStop(0, 'rgba(255,59,31,.38)'); gl.addColorStop(1, 'rgba(255,59,31,0)'); g.fillStyle = gl; g.fillRect(0, 0, S.w, S.h); }
+}
+const M = 96; // margem lateral; o topo (~250 px) e a base (~300 px) ficam livres pra interface do story
+(async () => {
+  await loadBrandFonts();
+  const [pens, feliz, acen, capa] = await Promise.all(['bit_pensando', 'bit_feliz', 'bit_acenando'].map(n => load(`/Marca/bit/${n}.png`)).concat(load(`/Semanal/${DIR}/Qui08_Instagram_TikTok_Ep1_Bit_capa.jpg`)));
+  const B = { pens: cutout(pens), feliz: cutout(feliz), acen: cutout(acen) };
+  const stories = [
+    ['Qua07_Story_GMS.png', g => {
+      base(g, true); label(g, 'REEL NOVO · GMS', M, 330, BRAND.accent);
+      lines(g, [['Ninguém sabia\no que acontecia\nna produção.\n', BRAND.paper], ['Só no dia\nseguinte.', BRAND.accent]], M, 470, 104, 112);
+      bit(g, B.pens, S.w * 0.62, 1640, 640);
+      label(g, 'TÁ NO PERFIL', M, 1660, BRAND.mute);
+    }],
+    ['Qui08_Story_Ep1.png', g => {
+      base(g, false); label(g, 'EPISÓDIO 1 · HOJE 19H', M, 330, BRAND.accent);
+      lines(g, [['A Ficha\ncontra o ', BRAND.ink], ['Bit.', BRAND.accent]], M, 470, 120, 128);
+      // a capa do episódio como um "quadro" inclinado, com sombra seca vermelha
+      g.save(); g.translate(S.w * 0.36, 1150); g.rotate(-0.05); const cw = 470, ch = cw * 1920 / 1080;
+      g.fillStyle = BRAND.accent; g.fillRect(-cw / 2 + 16, -ch / 2 + 16, cw, ch); g.drawImage(capa, -cw / 2, -ch / 2, cw, ch); g.lineWidth = 6; g.strokeStyle = BRAND.ink; g.strokeRect(-cw / 2, -ch / 2, cw, ch); g.restore();
+      bit(g, B.acen, S.w * 0.76, 1640, 470);
+    }],
+    ['Sab10_Story_Mario.png', g => {
+      base(g, true); label(g, 'CARROSSEL NOVO · GAMES', M, 330, BRAND.accent);
+      lines(g, [['Quanto espaço\no Super Mario\ninteiro ocupava?', BRAND.paper]], M, 470, 104, 112);
+      g.font = '900 150px Geist'; g.letterSpacing = '-5px'; g.fillStyle = BRAND.accent; g.fillText('?? KB', M, 940);
+      bit(g, B.feliz, S.w * 0.6, 1640, 560);
+      label(g, 'A RESPOSTA TÁ NO POST', M, 1660, BRAND.mute);
+    }],
+  ];
+  for (const [name, draw] of stories) {
+    const c = document.createElement('canvas'); c.width = S.w; c.height = S.h; const g = c.getContext('2d'); draw(g);
+    const v = document.createElement('img'); v.src = c.toDataURL(); document.body.append(v);
+    if (q.has('save')) await fetch(`/save?dir=${DIR}&name=${name}`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) });
+  }
+  document.title = 'ready';
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
