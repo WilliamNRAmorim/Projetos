@@ -1916,7 +1916,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.5.2"
+            Text: ="Versão 0.5.3"
             Width: =183
             X: =1168
             Y: =738
@@ -2192,6 +2192,15 @@ Screens:
                                             etapa_processo: Blank(),
                                             mangueira_atual: Blank()
                                         }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(lista_carreteis)),
+                                        Notify(
+                                            "A sobra do carretel " & _sobra.Title & " NÃO foi zerada — ajuste na tela de carretéis: " &
+                                            First(Errors(lista_carreteis)).Message,
+                                            NotificationType.Error,
+                                            12000
+                                        )
                                     )
                                 );
                                 Patch(
