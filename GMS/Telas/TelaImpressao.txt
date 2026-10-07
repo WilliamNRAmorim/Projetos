@@ -215,17 +215,12 @@ Screens:
             BorderColor: =RGBA(0, 0, 0, 0)
             Height: =130
             Image: |-
-              =If(
-                  varPackingManual,
+              =With(
+                  { _t: If(varPackingManual, Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)), If(IsBlank(varTotalImp), 0, fx_Num(varTotalImp))) },
                   If(
-                      Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)) <= 0,
+                      _t <= 0,
                       "",
-                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(Sum(colLancesMan, Coalesce(fx_Num(Txt), 0)), "[$-en-US]0"), 130))
-                  ),
-                  If(
-                      IsBlank(varTotalImp),
-                      "",
-                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras39(Text(varTotalImp, "[$-en-US]0"), 130))
+                      "data:image/svg+xml," & EncodeUrl(fx_CodigoBarras128A(fx_TotalBarras(_t), 130))
                   )
               )
             Width: =560
@@ -246,7 +241,7 @@ Screens:
             Visible: =varPackingManual
             Width: =560
             X: =28
-            Y: =646
+            Y: =664
       - ButtonCanvas2:
           Control: Button@0.0.45
           Properties:
@@ -522,23 +517,9 @@ Screens:
             Height: =44
             Size: =fx_FonteDestaque
             Text: ="OPERADOR"
-            Visible: =varPackingManual
+            Visible: =varPackingManual && !Parent.Printing
             Width: =120
             X: =608
-            Y: =688
-      - lbl_valOperadorManualImp:
-          Control: Label@2.5.1
-          Properties:
-            BorderColor: =RGBA(0, 0, 0, 1)
-            BorderThickness: =2
-            Font: =Font.'Open Sans'
-            FontWeight: =FontWeight.Bold
-            Height: =44
-            Size: =fx_FonteDestaque
-            Text: =cmb_OperadorManualImp.Selected.Nome
-            Visible: =varPackingManual
-            Width: =260
-            X: =728
             Y: =688
       - lbl_rotMotivoManualImp:
           Control: Label@2.5.1
@@ -551,23 +532,9 @@ Screens:
             Height: =44
             Size: =fx_FonteDestaque
             Text: ="MOTIVO"
-            Visible: =varPackingManual
+            Visible: =varPackingManual && !Parent.Printing
             Width: =90
             X: =998
-            Y: =688
-      - lbl_valMotivoManualImp:
-          Control: Label@2.5.1
-          Properties:
-            BorderColor: =RGBA(0, 0, 0, 1)
-            BorderThickness: =2
-            Font: =Font.'Open Sans'
-            FontWeight: =FontWeight.Bold
-            Height: =44
-            Size: =fx_FonteDestaque
-            Text: =cmb_MotivoManualImp.Selected.Value
-            Visible: =varPackingManual
-            Width: =250
-            X: =1088
             Y: =688
       - cmb_OperadorManualImp:
           Control: Classic/ComboBox@2.4.0
