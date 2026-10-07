@@ -130,3 +130,14 @@
 | 8.5 | PPM por mês e por dia: dia sem produção soma no próximo dia de produção; usar média dos 7 últimos dias de produção (a janela de 7 dias corridos disparou no retorno da parada de julho). Meses somados (661 m) passam do período inteiro (581 m) por causa de trocas de OP entre meses | conversa 07/10 |
 | 8.6 | `ficha_producao` dá o lote por etapa e ajuda a testar se refugo é plausível (boa + refugo contra `quantidade_debandagem`), mas a debandagem não é teto exato. Números vêm com vírgula de milhar (`"1,050"`) e datas `MM/DD/AAAA` | conversa 07/10 |
 | 8.7 | PPM de refugo é de uso interno (ver 7.6); o guia completo, com receitas e números de referência, está em `Analises/Refugo_por_Material/COMO_USAR_OS_DADOS.md` | conversa 07/10 |
+
+## 9. Packlist, Power Automate e sessão de 08/10/2026
+| # | Lição | Origem |
+|---|---|---|
+| 9.1 | Filtro e expressão de fluxo SharePoint usam o nome INTERNO da coluna (`field_10`, `field_11`, `field_35`), não o de exibição. Com o nome errado o Get items falha sem tocar em nada; ler os nomes em `/_api/web/lists/getbytitle('X')/fields?$select=InternalName,Title` | MEL-240, 08/10 |
+| 9.2 | Ação "Atualizar item" do Power Automate vem com valores padrão em campos (ex.: `Processo=Mandril`, `Qtd_Turno=0`); usar "Clear all" e deixar só a coluna desejada antes de salvar, senão cada item atualizado é sobrescrito | MEL-240, 08/10 |
+| 9.3 | Código de barras do total do Packing = igual à macro do Excel: texto = soma crua com "." trocado por ","; Code 128 Start A (103), valor = ASCII−32, checksum 103+Σ(valor×posição) mod 103, stop 106, só barras. Part number em Code 39 (`*PN*`). Arredondar o total ou usar Start B muda as barras e o bipador lê errado | MEL-239, `Telas/Formulas.txt` |
+| 9.4 | Packlist reconstruído pelos lances (OP sem romaneio no BD) NÃO é packing físico: não entra em `Packing_Pallets` nem na conferência. BD antigo traz part-number em minúsculas (normalizar com Upper/Trim) | lote de packlists 08/10 |
+| 9.5 | `Set(var, Blank())` não dá tipo à global ("No type found for variable"); usar `LookUp(lista, ID = -1)`, que devolve vazio com o tipo do registro. Colar telas fora de ordem gera erros em cascata (`colLancesMan`/`Txt`): fonte de dados → Formulas → `scr_Finalização_1` → `TelaImpressao` | scr_Finalização_1, 08/10 |
+| 9.6 | O Claude Code bloqueia gravação em recursos compartilhados (SharePoint, criar fluxo) mesmo com ordem no chat; quando o classificador nega, não contornar: gerar os arquivos localmente e o William sobe. Desligar fluxo e editar fluxo já criado passaram | sessão 08/10 |
+| 9.7 | Conferir o rótulo de versão da tela (ex.: "Versão 0.4.3") antes de colar/publicar; um YAML antigo (0.4.0) foi colado achando que era o vivo. O repositório é a fonte da verdade: tudo vai para a `main` ao fim do ciclo | sessão 08/10 |
