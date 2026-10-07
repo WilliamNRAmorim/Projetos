@@ -259,6 +259,7 @@ Screens:
       - ico_VoltarDeband:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Voltar"
             Color: =fx_CorInfo
             DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
             Height: =59
@@ -982,6 +983,7 @@ Screens:
       - ico_RefreshDeband:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Atualizar a tela"
             Color: =fx_CorRotulo
             Height: =60
             Icon: =Icon.Reload
@@ -1253,7 +1255,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.3.1"
+            Text: ="Versão 0.3.2"
             Width: =183
             X: =1168
             Y: =710
@@ -2399,3 +2401,30 @@ Screens:
             SpinnerSize: ='Spinner.SpinnerSize'.Huge
             Visible: =varProcessando
             Width: =1366
+      - btn_DescartarOPDeband:
+          Control: Classic/Button@2.2.0
+          Properties:
+            AccessibleLabel: ="Descartar a OP selecionada"
+            BorderColor: =fx_CorErro
+            BorderThickness: =1
+            Color: =fx_CorErro
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorErroSuave
+            OnSelect: |-
+              =Set(varDescarteID, gal_FilaDeband.Selected.ID);
+              Set(varDescarteEtapa, "Debandagem");
+              Navigate(scr_DescartarOP_1)
+            PressedFill: =fx_CorErroSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Descartar OP"
+            Visible: =!varProcessando && !IsBlank(gal_FilaDeband.Selected.ID) && gal_FilaDeband.Selected.status_processo = "Em processo"
+            Width: =200
+            X: =660
+            Y: =88

@@ -495,10 +495,10 @@ Aplicação direta no GMS — os turnos, hoje `Set()` no OnStart, viram fórmula
 
 ```powerfx
 // App.Formulas — ✅ CERTO: puras, parametrizadas, sem volátil
-// Fronteiras reais do GMS: T1 320–827 min (05:20–13:47) · T2 828–1360 (13:48–22:40) · T3 resto
+// Fronteiras reais do GMS (alinhadas ao Formulas.txt v3.0.5): T1 320–836 min (05:20–13:56) · T2 837–1360 (13:57–22:40) · T3 1361–319 (22:41–05:19)
 fx_Turno(minutosDoDia: Number): Number =
-    If(minutosDoDia >= 320 && minutosDoDia < 828, 1,
-       minutosDoDia >= 828 && minutosDoDia < 1361, 2, 3);
+    If(minutosDoDia >= 320 && minutosDoDia < 837, 1,
+       minutosDoDia >= 837 && minutosDoDia < 1361, 2, 3);
 
 fx_DataRefDe(minutosDoDia: Number): Date =
     DateAdd(Today(), If(minutosDoDia < 320, -1, 0), TimeUnit.Days);

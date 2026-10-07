@@ -227,8 +227,8 @@ Três linhas, e as fronteiras reais do GMS escritas **uma vez**:
 
 | Turno | Rótulo | Início | Fim | Minuto inicial | Minuto final |
 |---|---|---|---|---|---|
-| 1 | 1º Turno | 05:20 | 13:47 | 320 | 827 |
-| 2 | 2º Turno | 13:48 | 22:40 | 828 | 1360 |
+| 1 | 1º Turno | 05:20 | 13:56 | 320 | 836 |
+| 2 | 2º Turno | 13:57 | 22:40 | 837 | 1360 |
 | 3 | 3º Turno | 22:41 | 05:19 | 1361 | 319 |
 
 ### 2.4 Norma ⛔ — Ocultar tudo que não é para o usuário
@@ -282,8 +282,8 @@ duas colunas materializadas em todo fato. Nunca em medida, nunca no visual.
 // fn_Turno — fronteiras reais do GMS (B§2.3)
 (minutos as nullable number) as nullable number =>
     if minutos = null then null
-    else if minutos >= 320 and minutos < 828 then 1
-    else if minutos >= 828 and minutos < 1361 then 2
+    else if minutos >= 320 and minutos < 837 then 1
+    else if minutos >= 837 and minutos < 1361 then 2
     else 3
 
 // fn_DataRef — antes das 05:20 o dia de produção ainda é o anterior
@@ -408,8 +408,8 @@ Turno Agora =
 VAR Min = HOUR( NOW() ) * 60 + MINUTE( NOW() )
 RETURN
     SWITCH( TRUE(),
-        Min >= 320  && Min < 828,  1,
-        Min >= 828  && Min < 1361, 2,
+        Min >= 320  && Min < 837,  1,
+        Min >= 837  && Min < 1361, 2,
         3
     )
 ```

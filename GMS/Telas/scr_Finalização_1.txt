@@ -144,6 +144,7 @@ Screens:
       - ico_VoltarExt:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Voltar"
             Color: =fx_CorInfo
             DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
             Height: =59
@@ -1253,6 +1254,7 @@ Screens:
       - ico_RefreshExt:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Atualizar a tela"
             Color: =fx_CorRotulo
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
             Height: =60
@@ -1746,7 +1748,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.4.3"
+            Text: ="Versão 0.4.4"
             Width: =183
             X: =1168
             Y: =710
@@ -3526,3 +3528,30 @@ Screens:
             SpinnerSize: ='Spinner.SpinnerSize'.Huge
             Visible: =varProcessando
             Width: =1366
+      - btn_DescartarOPExt:
+          Control: Classic/Button@2.2.0
+          Properties:
+            AccessibleLabel: ="Descartar a OP selecionada"
+            BorderColor: =fx_CorErro
+            BorderThickness: =1
+            Color: =fx_CorErro
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorErroSuave
+            OnSelect: |-
+              =Set(varDescarteID, gal_FilaExt.Selected.ID);
+              Set(varDescarteEtapa, "Extração");
+              Navigate(scr_DescartarOP_1)
+            PressedFill: =fx_CorErroSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Descartar OP"
+            Visible: =!varProcessando && !IsBlank(gal_FilaExt.Selected.ID) && gal_FilaExt.Selected.status_processo = "Em processo"
+            Width: =200
+            X: =660
+            Y: =88

@@ -283,6 +283,7 @@ Screens:
       - ico_VoltarTubo_1:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Voltar"
             Color: =fx_CorInfo
             DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
             Height: =59
@@ -1423,6 +1424,7 @@ Screens:
       - ico_RefreshTubo_1:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Atualizar a tela"
             Color: =fx_CorRotulo
             Height: =60
             Icon: =Icon.Reload
@@ -1914,7 +1916,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.5.0"
+            Text: ="Versão 0.5.1"
             Width: =183
             X: =1168
             Y: =738
@@ -3098,6 +3100,7 @@ Screens:
             - ico_FecharDelinTubo:
                 Control: Classic/Icon@2.5.0
                 Properties:
+                  AccessibleLabel: ="Fechar"
                   Color: =fx_CorTextoSuave
                   Height: =40
                   Icon: =Icon.Cancel
@@ -3878,3 +3881,30 @@ Screens:
             Width: =40
             X: =1206
             Y: =60
+      - btn_DescartarOPTubo:
+          Control: Classic/Button@2.2.0
+          Properties:
+            AccessibleLabel: ="Descartar a OP selecionada"
+            BorderColor: =fx_CorErro
+            BorderThickness: =1
+            Color: =fx_CorErro
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorErroSuave
+            OnSelect: |-
+              =Set(varDescarteID, gal_FilaTubo_1.Selected.ID);
+              Set(varDescarteEtapa, "Tubo");
+              Navigate(scr_DescartarOP_1)
+            PressedFill: =fx_CorErroSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Descartar OP"
+            Visible: =!varProcessando && !IsBlank(gal_FilaTubo_1.Selected.ID) && gal_FilaTubo_1.Selected.status_processo = "Em processo"
+            Width: =200
+            X: =660
+            Y: =88

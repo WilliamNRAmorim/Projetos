@@ -1,0 +1,654 @@
+Screens:
+  scr_DescartarOP_1:
+    Properties:
+      Fill: =fx_CorFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =Set(varProcessando, false);
+        UpdateContext({ctxMotivoDesc: "", ctxQtdDesc: 0});
+        ClearCollect(colDescOP, Filter(ficha_producao, ID = varDescarteID));
+        ClearCollect(
+            colColabDesc,
+            Sort(
+                Filter(
+                    ForAll(
+                        Colaboradores As _c2,
+                        { Nome: Trim(Text(_c2.Nome)) }
+                    ) As _n,
+                    !IsBlank(_n.Nome)
+                ),
+                Nome,
+                SortOrder.Ascending
+            )
+        );
+        UpdateContext({ctxQtdDesc: With({_r: First(colDescOP)}, Switch(varDescarteEtapa, "Tubo", Coalesce(_r.quantidade_tubo, 0), "Trançagem", Coalesce(_r.quantidade_trancagem, 0), "Cobertura", Coalesce(_r.quantidade_cobertura, 0), "Bandagem", Coalesce(_r.quantidade_bandagem, 0), "Vulcanização", Coalesce(_r.quantidade_vulcanizacao, 0), "Debandagem", Coalesce(_r.quantidade_debandagem, 0), "Extração", Coalesce(_r.quantidade_extracao, 0), 0))});
+        Reset(inp_DetalheDesc);
+        Reset(cmb_OperadorDesc)
+    Children:
+      - rct_HeaderDesc:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorHeader
+            Height: =96
+            Width: =1366
+      - ico_VoltarDesc:
+          Control: Classic/Icon@2.5.0
+          Properties:
+            AccessibleLabel: ="Voltar sem descartar a OP"
+            Color: =fx_CorSuperficie
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Height: =44
+            Icon: =Icon.ArrowLeft
+            OnSelect: |-
+              =Switch(varDescarteEtapa, "Tubo", Navigate(scr_tubo_1), "Trançagem", Navigate(scr_Trancagem_3), "Cobertura", Navigate(scr_Cobertura_2), "Bandagem", Navigate(scr_Bandagem_1), "Vulcanização", Navigate(scr_Vulcanizacao_1), "Debandagem", Navigate(scr_Debandagem_2), "Extração", Navigate(scr_Finalização_1))
+            Width: =44
+            X: =16
+            Y: =26
+      - lbl_TituloDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            Size: =fx_FonteTitulo
+            Text: ="Descartar OP · " & varDescarteEtapa
+            Width: =700
+            X: =60
+      - lbl_SubDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            Height: =46
+            Size: =fx_FonteCorpo
+            Text: ="Tira a OP do processo. O registro fica guardado com status Cancelado."
+            Width: =900
+            X: =72
+            Y: =50
+      - rct_CardOPDesc:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Fill: =fx_CorSuperficie
+            Height: =330
+            Width: =600
+            X: =16
+            Y: =116
+      - lbl_RotOPDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OP"
+            Width: =540
+            X: =40
+            Y: =130
+      - lbl_ValOPDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: |-
+              ="ID " & Text(First(colDescOP).ID) & "  ·  OP " & Coalesce(Text(First(colDescOP).OP), "—")
+            Width: =540
+            X: =40
+            Y: =148
+      - lbl_RotMangueiraDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="MANGUEIRA"
+            Width: =540
+            X: =40
+            Y: =186
+      - lbl_ValMangueiraDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(Text(First(colDescOP).Mangueira), "—")
+            Width: =540
+            X: =40
+            Y: =204
+      - lbl_RotQtdDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="APONTADO NESTA ETAPA"
+            Width: =540
+            X: =40
+            Y: =242
+      - lbl_ValQtdDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: |-
+              =If(ctxQtdDesc > 0, Text(ctxQtdDesc, "[$-pt-BR]#.##0") & " m (viram refugo)", "Nada apontado ainda")
+            Width: =540
+            X: =40
+            Y: =260
+      - lbl_RotOperDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="OPERADOR DA ETAPA"
+            Width: =540
+            X: =40
+            Y: =298
+      - lbl_ValOperDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: |-
+              =Coalesce(Switch(varDescarteEtapa, "Tubo", Text(First(colDescOP).operador_tubo), "Trançagem", Text(First(colDescOP).operador_trancagem), "Cobertura", Text(First(colDescOP).operador_cobertura), "Bandagem", Text(First(colDescOP).operador_bandagem), "Vulcanização", Text(First(colDescOP).operador_vulcanizacao), "Debandagem", Text(First(colDescOP).operador_debandagem), "Extração", Text(First(colDescOP).operador_extracao), ""), "—")
+            Width: =540
+            X: =40
+            Y: =316
+      - lbl_RotStatusDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            Size: =fx_FonteApoio
+            Text: ="SITUAÇÃO"
+            Width: =540
+            X: =40
+            Y: =354
+      - lbl_ValStatusDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteDestaque
+            Text: |-
+              ="Em processo na " & varDescarteEtapa
+            Width: =540
+            X: =40
+            Y: =372
+      - rct_AvisoDesc:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorAlerta
+            BorderThickness: =1
+            Fill: =fx_CorAlertaSuave
+            Height: =150
+            Width: =600
+            X: =16
+            Y: =462
+      - lbl_AvisoDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            Height: =130
+            Size: =fx_FonteCorpo
+            Text: |-
+              ="Descartar não apaga a OP. O material apontado vira não conforme e sai: não volta para a etapa anterior. Os carretéis da OP são liberados. Se foi só engano de digitação, volte e use Editar a OP."
+            Width: =570
+            X: =31
+            Y: =472
+      - lbl_SecaoMotivoDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            Size: =fx_FonteSecao
+            Text: ="MOTIVO DO DESCARTE *"
+            Width: =700
+            X: =650
+            Y: =124
+      - btn_MotEnganoDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxMotivoDesc = "OP aberta por engano", fx_CorErro, fx_CorBorda)
+            BorderThickness: =If(ctxMotivoDesc = "OP aberta por engano", 3, 1)
+            Color: =If(ctxMotivoDesc = "OP aberta por engano", fx_CorSuperficie, fx_CorTexto)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxMotivoDesc = "OP aberta por engano", fx_CorErro, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =48
+            HoverFill: =If(ctxMotivoDesc = "OP aberta por engano", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+            OnSelect: |-
+              =UpdateContext({ctxMotivoDesc: "OP aberta por engano"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="OP aberta por engano"
+            Width: =330
+            X: =650
+            Y: =160
+      - btn_MotPlanoDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxMotivoDesc = "Mudança de plano", fx_CorErro, fx_CorBorda)
+            BorderThickness: =If(ctxMotivoDesc = "Mudança de plano", 3, 1)
+            Color: =If(ctxMotivoDesc = "Mudança de plano", fx_CorSuperficie, fx_CorTexto)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxMotivoDesc = "Mudança de plano", fx_CorErro, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =48
+            HoverFill: =If(ctxMotivoDesc = "Mudança de plano", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+            OnSelect: |-
+              =UpdateContext({ctxMotivoDesc: "Mudança de plano"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Mudança de plano"
+            Width: =330
+            X: =996
+            Y: =160
+      - btn_MotMaterialDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxMotivoDesc = "Material não conforme", fx_CorErro, fx_CorBorda)
+            BorderThickness: =If(ctxMotivoDesc = "Material não conforme", 3, 1)
+            Color: =If(ctxMotivoDesc = "Material não conforme", fx_CorSuperficie, fx_CorTexto)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxMotivoDesc = "Material não conforme", fx_CorErro, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =48
+            HoverFill: =If(ctxMotivoDesc = "Material não conforme", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+            OnSelect: |-
+              =UpdateContext({ctxMotivoDesc: "Material não conforme"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Material não conforme"
+            Width: =330
+            X: =650
+            Y: =216
+      - btn_MotOutroDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxMotivoDesc = "Outro", fx_CorErro, fx_CorBorda)
+            BorderThickness: =If(ctxMotivoDesc = "Outro", 3, 1)
+            Color: =If(ctxMotivoDesc = "Outro", fx_CorSuperficie, fx_CorTexto)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxMotivoDesc = "Outro", fx_CorErro, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            Height: =48
+            HoverFill: =If(ctxMotivoDesc = "Outro", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+            OnSelect: |-
+              =UpdateContext({ctxMotivoDesc: "Outro"})
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Outro"
+            Width: =330
+            X: =996
+            Y: =216
+      - inp_DetalheDesc:
+          Control: Classic/TextInput@2.3.2
+          Properties:
+            AccessibleLabel: ="Detalhe do motivo do descarte"
+            BorderColor: =If(ctxMotivoDesc = "Outro" && IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+            Default: =""
+            DelayOutput: =true
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HintText: ="Detalhe (obrigatório quando o motivo é Outro)"
+            HoverFill: =fx_CorInfoSuave
+            PaddingLeft: =10
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Width: =676
+            X: =650
+            Y: =280
+      - lbl_RotOperadorDesc:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =26
+            Size: =fx_FonteSecao
+            Text: ="QUEM ESTÁ DESCARTANDO *"
+            Width: =700
+            X: =650
+            Y: =344
+      - cmb_OperadorDesc:
+          Control: Classic/ComboBox@2.4.0
+          Properties:
+            AccessibleLabel: ="Operador que está descartando a OP"
+            BorderColor: =If(IsBlank(Self.Selected.Nome), fx_CorErro, fx_CorBorda)
+            ChevronBackground: =Color.Transparent
+            ChevronFill: =fx_CorRotulo
+            ChevronHoverBackground: =fx_CorFundo
+            ChevronHoverFill: =fx_CorRotulo
+            DisplayFields: =["Nome"]
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaCampo
+            HoverFill: =fx_CorInfoSuave
+            InputTextPlaceholder: ="Buscar operador..."
+            Items: =colColabDesc
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Nome"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
+            Size: =fx_FonteCorpo
+            Width: =676
+            X: =650
+            Y: =378
+      - btn_CancelarDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTextoSuave
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Switch(varDescarteEtapa, "Tubo", Navigate(scr_tubo_1), "Trançagem", Navigate(scr_Trancagem_3), "Cobertura", Navigate(scr_Cobertura_2), "Bandagem", Navigate(scr_Bandagem_1), "Vulcanização", Navigate(scr_Vulcanizacao_1), "Debandagem", Navigate(scr_Debandagem_2), "Extração", Navigate(scr_Finalização_1))
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Voltar sem descartar"
+            Width: =320
+            X: =650
+            Y: =456
+      - btn_ConfirmarDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !varProcessando &&
+                  !IsBlank(ctxMotivoDesc) &&
+                  (ctxMotivoDesc <> "Outro" || !IsBlank(Trim(inp_DetalheDesc.Text))) &&
+                  !IsBlank(cmb_OperadorDesc.Selected.Nome),
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorErro, -20%)
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              Refresh(lista_carreteis);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = varDescarteID),
+                      _agora: Now(),
+                      _et: varDescarteEtapa,
+                      _quem: Coalesce(cmb_OperadorDesc.Selected.Nome, ""),
+                      _motivo: Trim(
+                          ctxMotivoDesc &
+                          If(!IsBlank(Trim(inp_DetalheDesc.Text)), " - " & Trim(inp_DetalheDesc.Text), "")
+                      )
+                  },
+                  With(
+                      {
+                          _turno: fx_TurnoEm(_agora),
+                          _nota: "  [OP DESCARTADA " & Text(_agora, "[$-pt-BR]dd/mm hh:mm") & " na " & _et &
+                              " por " & _quem & " - " & _motivo &
+                              If(ctxQtdDesc > 0, " - " & Text(ctxQtdDesc, "[$-pt-BR]#.##0") & " m viraram refugo", "") & "]"
+                      },
+                      If(
+                          IsBlank(_r.ID),
+                          Notify("Esta OP não existe mais no servidor. Volte e atualize a tela.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          _r.Modified <> First(colDescOP).Modified,
+                          Notify("Este registro foi alterado por outro usuário. Volte, atualize e tente de novo.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          _r.status_processo <> "Em processo",
+                          Notify("Esta OP não está mais em processo. Volte e atualize a tela.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          IsBlank(_motivo) || IsBlank(_quem),
+                          Notify("Escolha o motivo e quem está descartando.", NotificationType.Warning, 6000);
+                          Set(varProcessando, false),
+                          Switch(
+                              _et,
+                      "Tubo",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_tubo: _agora,
+                              Turno_Tubo: Text(_turno),
+                              operador_tubo: _quem,
+                              Observação_tubo: Trim(Coalesce(_r.Observação_tubo, "") & _nota)
+                          }
+                      ),
+                      "Trançagem",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_trancadeira: _agora,
+                              Turno_Trançagem: Text(_turno),
+                              operador_trancagem: _quem,
+                              Observação_Trançagem: Trim(Coalesce(_r.Observação_Trançagem, "") & _nota)
+                          }
+                      ),
+                      "Cobertura",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_cobertura: _agora,
+                              Turno_Cobertura: Text(_turno),
+                              operador_cobertura: _quem,
+                              Observação_Cobertura: Trim(Coalesce(_r.Observação_Cobertura, "") & _nota)
+                          }
+                      ),
+                      "Bandagem",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_bandagem: _agora,
+                              Turno_Bandagem: Text(_turno),
+                              operador_bandagem: _quem,
+                              Observação_Bandagem: Trim(Coalesce(_r.Observação_Bandagem, "") & _nota)
+                          }
+                      ),
+                      "Vulcanização",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_vulcanizacao: _agora,
+                              Turno_Vulcanização: Text(_turno),
+                              operador_vulcanizacao: _quem,
+                              Observação_Bandagem: Trim(Coalesce(_r.Observação_Bandagem, "") & _nota)
+                          }
+                      ),
+                      "Debandagem",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_debandagem: _agora,
+                              Turno_Debandagem: Text(_turno),
+                              operador_debandagem: _quem,
+                              Observação_Debandagem: Trim(Coalesce(_r.Observação_Debandagem, "") & _nota)
+                          }
+                      ),
+                      "Extração",
+                      Patch(
+                          ficha_producao,
+                          _r,
+                          {
+                              status_processo: "Cancelado",
+                              processo: "Cancelado",
+                              data_hora_final_extracao: _agora,
+                              operador_extracao: _quem,
+                              Observação_Debandagem: Trim(Coalesce(_r.Observação_Debandagem, "") & _nota)
+                          }
+                      )
+                          );
+                          If(
+                              !IsEmpty(Errors(ficha_producao)),
+                              Notify("Não descartou a OP: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 15000);
+                              Set(varProcessando, false),
+                              ForAll(
+                                  Filter(lista_carreteis, op = _r.ID) As _c,
+                                  Patch(
+                                      lista_carreteis,
+                                      _c,
+                                      {
+                                          metros_restantes: 0,
+                                          op: Blank(),
+                                          etapa_processo: Blank(),
+                                          mangueira_atual: Blank()
+                                      }
+                                  )
+                              );
+                              If(
+                                  !IsEmpty(Errors(lista_carreteis)),
+                                  Notify(
+                                      "OP descartada, mas algum carretel NÃO foi liberado — libere na tela de carretéis: " &
+                                      First(Errors(lista_carreteis)).Message,
+                                      NotificationType.Error,
+                                      15000
+                                  )
+                              );
+                              Patch(
+                                  Eventos_Producao,
+                                  Defaults(Eventos_Producao),
+                                  {
+                                      Title: Text(_r.ID) & "-" & Switch(_et, "Trançagem", "Trancagem", "Vulcanização", "Vulcanizacao", "Extração", "Extracao", _et) & "-Cancelado",
+                                      origem: {Value: "ficha_producao"},
+                                      origem_ID: _r.ID,
+                                      etapa: {Value: _et},
+                                      tipo: {Value: "Cancelado"},
+                                      data_hora: _agora,
+                                      data_ref: fx_DataRefEm(_agora),
+                                      turno: _turno,
+                                      bitola: Coalesce(_r.Bitola, 0),
+                                      metros: 0,
+                                      sobra: ctxQtdDesc,
+                                      carretel: _r.'Carretel Saida',
+                                      operador: _quem
+                                  }
+                              );
+                              If(
+                                  !IsEmpty(Errors(Eventos_Producao)),
+                                  Notify(
+                                      "OP descartada, mas o evento de cancelamento NÃO gravou — o histórico vai ficar sem o motivo: " &
+                                      First(Errors(Eventos_Producao)).Message,
+                                      NotificationType.Error,
+                                      15000
+                                  )
+                              );
+                              UpdateContext({ctxMotivoDesc: ""});
+                              Reset(inp_DetalheDesc);
+                              Reset(cmb_OperadorDesc);
+                              Set(varProcessando, false);
+                              Notify(
+                                  "OP " & Text(_r.ID) & " descartada na " & _et & " (" & _motivo & ")." &
+                                  If(ctxQtdDesc > 0, " " & Text(ctxQtdDesc, "[$-pt-BR]#.##0") & " m registrados como refugo.", ""),
+                                  NotificationType.Success,
+                                  10000
+                              );
+                              Switch(varDescarteEtapa, "Tubo", Navigate(scr_tubo_1), "Trançagem", Navigate(scr_Trancagem_3), "Cobertura", Navigate(scr_Cobertura_2), "Bandagem", Navigate(scr_Bandagem_1), "Vulcanização", Navigate(scr_Vulcanizacao_1), "Debandagem", Navigate(scr_Debandagem_2), "Extração", Navigate(scr_Finalização_1))
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorErro, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Descartar a OP"
+            Width: =340
+            X: =986
+            Y: =456
+      - rct_overlay_spinner_desc:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =varProcessando
+            Width: =1366
+      - spr_carregando_desc:
+          Control: Spinner@1.4.6
+          Properties:
+            Height: =768
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
+            Visible: =varProcessando
+            Width: =1366

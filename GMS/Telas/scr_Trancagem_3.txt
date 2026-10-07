@@ -2032,6 +2032,7 @@ Screens:
       - ico_EditarOpTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Editar a OP"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.Edit
@@ -2113,6 +2114,7 @@ Screens:
       - ico_HoraHoraTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Abrir o Hora-Hora da Trançagem"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.Clock
@@ -2191,6 +2193,7 @@ Screens:
       - ico_PedidoTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Fazer pedido de bobina"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.Add
@@ -2249,6 +2252,7 @@ Screens:
       - ico_BobinadeiraTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Ir para a Bobinadeira"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.ChevronRight
@@ -2281,6 +2285,7 @@ Screens:
       - ico_RefugoTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Registrar refugo da Trançagem"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.Trash
@@ -2359,6 +2364,7 @@ Screens:
       - ico_ConsultaDelinTr3:
           Control: Classic/Icon@2.5.0
           Properties:
+            AccessibleLabel: ="Consultar o delineamento"
             Color: =fx_CorInfo
             Height: =24
             Icon: =Icon.Document
@@ -2374,7 +2380,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.4.1"
+            Text: ="Versão 0.4.2"
             Width: =183
             X: =1163
             Y: =715
@@ -5403,14 +5409,10 @@ Screens:
             X: =483
             Y: =403
       - spr_ProcessandoTr3:
-          Control: ModernSpinner@1.1.0
+          Control: Spinner@1.4.6
           Properties:
-            FontWeight: =""
             Height: =768
-            PaddingBottom: =362
-            PaddingLeft: =362
-            PaddingRight: =362
-            PaddingTop: =362
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
             Visible: =varProcessando
             Width: =1366
       - btn_RecarregarTr3:
@@ -5520,3 +5522,30 @@ Screens:
             Width: =1
             X: =1364
             Y: =766
+      - btn_DescartarOPTr3:
+          Control: Classic/Button@2.2.0
+          Properties:
+            AccessibleLabel: ="Descartar a OP selecionada"
+            BorderColor: =fx_CorErro
+            BorderThickness: =1
+            Color: =fx_CorErro
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            Height: =30
+            HoverFill: =fx_CorErroSuave
+            OnSelect: |-
+              =Set(varDescarteID, gal_FilaTr3.Selected.ID);
+              Set(varDescarteEtapa, "Trançagem");
+              Navigate(scr_DescartarOP_1)
+            PressedFill: =fx_CorErroSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Descartar OP"
+            Visible: =!varProcessando && !IsBlank(gal_FilaTr3.Selected.ID) && gal_FilaTr3.Selected.status_processo = "Em processo"
+            Width: =200
+            X: =660
+            Y: =88
