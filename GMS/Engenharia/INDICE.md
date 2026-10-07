@@ -29,3 +29,5 @@ Listas do site (CSV em `listas/`): `DM_MANDREL` (13 itens) e `AdminConsole` (7 i
 Não copiados (não são DM_ e são grandes): `Hose_Assembly_Database.xlsx` (9 MB), `Banco_de_Datos.xlsx` (1,2 MB), `Conexoes.xlsx`, `Dados_Prensagem.xlsx`, `PressaoeProjetil.xlsx`.
 
 Atenção: `DM_LISTA_ID.xlsx` tem nome, U-Number, E-Number e ID de crachá de funcionários. O repositório é privado; não torná-lo público nem copiar esse arquivo para fora sem tratar os dados.
+
+Outros materiais da Engenharia: `Catenaria/` (tabela oficial de catenária, divergente do delineamento de bobinagem) e `Trancagem/` (planilha AM-DM-02 de controle de trançagem).
