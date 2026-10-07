@@ -3108,8 +3108,9 @@ Screens:
               Set(varFalhaRegManual, false);
               Set(varFichaIDImp, Blank());
               Set(varPalletTxt, "");
-              Set(varManualFicha, Blank());
-              Set(varManualReg, Blank());
+              // Blank() sozinho não dá tipo à variável (Studio: "No type found for variable"). LookUp que nunca acha devolve vazio COM o tipo do registro.
+              Set(varManualFicha, LookUp(ficha_producao, ID = -1));
+              Set(varManualReg, LookUp(Packing_Manual, ID = -1));
               Set(VarMangueiraOP, Blank());
               Set(varMangueiraImp, "");
               Set(varTotalImp, "");
