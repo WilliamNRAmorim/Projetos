@@ -39,3 +39,9 @@ Nenhum nº de fios do DM fica fora da faixa da tabela (3–22).
 ## Próximos passos
 - William/Engenharia: confirmar o D oficial dos 8 PNs (metade é regra ou erro?) e o valor 114,3 da Tabela 1.
 - Corrigir no SharePoint (`DM_WIREWINDING`) apenas depois dessa confirmação. Nada foi alterado no app nem nos dados.
+
+## Decisão do William (08/10/2026)
+1. D pela metade nos IDs 47-50 e 56-59: **erro**, corrigir para o valor da Tabela 1.
+2. Valor correto é o que está na imagem da Tabela 1: **114,13** para 10 fios (vale também para os IDs 27 e 32, hoje 114,1). A hipótese de 114,3 fica descartada.
+
+Lista pronta para aplicar no SharePoint: `Catenaria_correcoes_DM_WIREWINDING.csv` (ID, PN, D atual, D correto). Falta só aplicar na lista `DM_WIREWINDING` (e decidir o que fazer com a linha duplicada THW0000210, IDs 58 e 59).
