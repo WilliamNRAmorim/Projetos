@@ -59,11 +59,14 @@ salvo emenda explícita ("isso emenda o Mestre, seção X") entregue como linha 
    `UpdateContext` quando a lógica depende do dado (usar `ClearCollect`); fonte Excel nova;
    rótulo de schema visível ao operador; hardcode de cor/tamanho; `Coalesce(x, 0)` em exibição (usar `Blank()`).
 7. Em dúvida: UMA pergunta diagnóstica.
-8. Todo ciclo termina em linhas de diário (`DATA | TIPO | ALVO | VER | REF | TEXTO`), só com os 13 TIPOs
+8. **Banco de dados (norma do William, 08/10/2026):** toda análise que crie ou altere lista/banco declara se dá para
+   mesclar com uma existente e, se não der, por quê (formato, volume, permissão), mais o impacto na carga do app e no
+   limite de 5.000 itens. Nunca propor lista nova por reflexo.
+9. Todo ciclo termina em linhas de diário (`DATA | TIPO | ALVO | VER | REF | TEXTO`), só com os 13 TIPOs
    da gramática: ABERTO, ENTREGUE, PUBLICADO, VALIDADO, FEITO, BLOQUEADO, RESOLVIDO, PENDÊNCIA, LIÇÃO,
    NORMA, DECISÃO, REVERTIDO, DESCARTADO.
-9. Entrega visual: PNG ou arquivo `.html` — a rede da Danfoss bloqueia links de artifact.
-10. Knowledge do Project no limite (2 MB): salvar só a versão vigente de cada tela; atualizar `GMS_Indice.md`
+10. Entrega visual: PNG ou arquivo `.html` — a rede da Danfoss bloqueia links de artifact.
+11. Knowledge do Project no limite (2 MB): salvar só a versão vigente de cada tela; atualizar `GMS_Indice.md`
     e apagar a YAML anterior ao entregar versão nova.
 
 ## FERRAMENTAS (rodar dentro desta pasta)
