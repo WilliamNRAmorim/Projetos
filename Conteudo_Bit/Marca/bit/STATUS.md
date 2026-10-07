@@ -25,6 +25,12 @@ Os prompts estão em `PROMPTS_GEMINI.md` (numerados de 1 a 16).
 | 14 | `capa_will_station.png` |
 | 15 | `capa_bit.png` |
 | 16 | `capa_bastidores.png` |
+| 17–22 | Ficha: `ficha_feliz`, `ficha_chocada`, `ficha_confusa`, `ficha_brava`, `ficha_amassada`, `ficha_correndo` (**prioridade**: refazer o Episódio 1) |
+| 23–24 | Bit do Episódio 1: `bit_tablet`, `bit_joinha` (**prioridade**) |
+| 25–26 | Uniformes: `bit_willstation`, `bit_bastidores` |
+
+## Vozes (ElevenLabs, Voice Design)
+Bit e Ficha já escolhidas pela pessoa na conta dela (Minhas Vozes). Para gerar narração pela API falta o arquivo `C:\Users\willi\.elevenlabs` com `ELEVEN_API_KEY`, `ELEVEN_VOICE_BIT` e `ELEVEN_VOICE_FICHA` (feito pela pessoa, nunca no repositório).
 
 ## Pra manter igual às 3 prontas
 O Gemini colocou uma **faixa arco-íris no peito** do Bit, que não existia na folha v1. Ela fica bem e lembra as 8 cores do GMS. Pra as próximas saírem com a faixa, **use `bit_acenando.png` como referência** (no lugar da folha v1) e acrescente ao prompt: "com a mesma faixa colorida arco-íris no peito".

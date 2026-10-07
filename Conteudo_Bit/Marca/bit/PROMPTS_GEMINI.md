@@ -53,3 +53,32 @@ Complemento de cada capa:
 > Mesmo estilo cartoon 2D da referência, sem personagens, sem texto, formato vertical 9:16, alta resolução: **[cenário]**.
 
 Ideias de cenário: chão de fábrica com máquinas e um tablet numa estação, sala de aula de engenharia com quadro, quarto gamer com o fliperama vermelho e preto, bancada de eletrônica com Arduino e fios.
+
+---
+
+## 5. A Ficha (vilã/parceira de humor do GMS), uma imagem por prompt
+
+Anexe `bit_acenando.png` como referência. Prefixo:
+> Use a imagem de referência (o robô Bit) só como referência de ESTILO: mesmo traço cartoon 2D, mesmo contorno marrom-escuro grosso, mesmo sombreado suave e as mesmas proporções fofas. Crie uma personagem nova, a Ficha: uma folha de papel de fábrica viva, retangular e em pé, papel creme levemente amarelado com linhas azuis de formulário, uma faixa de cabeçalho cinza-escuro no topo, o canto superior direito dobrado, uma mancha redonda de café marrom-clara e rabiscos de caneta azul com um risco vermelho. Olhos grandes brancos com pupila preta na parte de cima da folha, boca expressiva, bracinhos e perninhas finos pretos, mãos-luva brancas e sapatinhos pretos. Corpo inteiro, centralizada, ocupando cerca de 70% da altura, fundo branco liso, sem sombra no chão, sem texto, sem o Bit, alta resolução.
+
+| Arquivo | Complemento |
+|---|---|
+| `ficha_feliz.png` | Ela sorri orgulhosa, segurando uma prancheta com uma mão e acenando com a outra. |
+| `ficha_chocada.png` | Olhos arregalados, boca aberta em pânico, as duas mãos no rosto. |
+| `ficha_confusa.png` | Olhos em espiral, boca em zigue-zague, um ponto de interrogação flutuando acima da cabeça. |
+| `ficha_brava.png` | Braços cruzados, sobrancelhas franzidas, bico de birra. |
+| `ficha_amassada.png` | Toda amassada e enrugada, sentada no chão, cabisbaixa e triste. |
+| `ficha_correndo.png` | Correndo desesperada para a direita, com folhinhas de papel voando atrás dela. |
+
+## 6. Bit: poses do Episódio 1 e uniformes dos projetos
+
+Mesmo prefixo do item 1, com `bit_acenando.png` como referência e "com a mesma faixa colorida arco-íris no peito".
+
+| Arquivo | Complemento |
+|---|---|
+| `bit_tablet.png` | Ele segura um tablet virado para a câmera mostrando um gráfico de barras, tranquilo e confiante, meio sorriso. |
+| `bit_joinha.png` | Ele faz joinha com uma mão e pisca um olho. |
+| `bit_willstation.png` | **Uniforme Will Station:** boné vermelho com a letra W branca na frente; ele segura um joystick de fliperama preto com a bolinha vermelha e comemora. |
+| `bit_bastidores.png` | **Uniforme Bastidores:** capacete de obra amarelo; ele segura uma chave de boca e coça a cabeça, pensativo. |
+
+O uniforme do **GMS** (anel de 8 cores em volta da bolinha da antena) é desenhado no código por cima de qualquer pose, não precisa pedir ao Gemini.
