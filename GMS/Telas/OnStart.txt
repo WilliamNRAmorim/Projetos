@@ -10,23 +10,9 @@ Concurrent(
         ]
     ),
     ClearCollect(
-        colMangueiras,
-        ForAll(
-            [
-                "2583-12", "2556-10", "2556-12", "2556-16", "2556-3", "2556-4", "2807-10", "2807-12",
-                "2556-5", "2556-6", "2556-8", "EC115-04L", "EC115-06L", "EC115-08L", "EC115-10L", "EC115-12L",
-                "EC115-16L", "EC118-04L", "EC118-06L", "EC118-08L", "EC118-10L", "EC600-16", "EC118-12L",
-                "EC118-16L", "EC215-06L", "EC215-08L", "EC215-04", "EC215-08LRL", "EC215-10L",
-                "EC215-12L", "EC215-16L", "EC415-12", "EC415-16", "FC598-08", "FC598-10",
-                "FC598-12", "FC735-04", "FC735-06", "FC735-08", "FC735-10", "FC735-12",
-                "FC839B-04", "FC839B-06", "FC839B-08", "FC849-08", "GH493-10", "GH493-12",
-                "GH493-16", "GH493-6", "GH493-8", "GH681-12", "GH681-16", "GH681-4",
-                "GH681-6", "GH681-8", "GH681-10", "GH781-10", "GH781-12", "GH781-16", "GH781-4",
-                "GH781-6", "GH781-8", "H28004-250R", "H28006-250R", "H28008-250R",
-                "HC101-4", "HC101-6", "HC101-8", "HC139-7", "HC139-7_S-GX"
-            ],
-            { NomeMangueira: Value }
-        )
+        colMangDM,
+        ForAll(DM_TRANÇAGEM As _mt, { N: Trim(Text(_mt.PARTNUMBER)) }),
+        ForAll(DM_TUBE_EXTRUSION As _mu, { N: Trim(Text(_mu.PARTNUMBER)) })
     ),
     ClearCollect(
         Turno,
@@ -35,4 +21,23 @@ Concurrent(
     ClearCollect(colDM_MANDREL, DM_MANDREL),
     ClearCollect(colDM_BANDAGEM, DM_BANDAGEM),
     ClearCollect(colDM_LAYLINE, DM_LAYLINE)
+);
+ClearCollect(
+    colMangueiras,
+    ForAll(fx_MangueirasBase As _b, { NomeMangueira: _b.Value })
+);
+Collect(
+    colMangueiras,
+    ForAll(
+        Sort(
+            Filter(
+                Distinct(colMangDM, N) As _d,
+                !IsBlank(_d.Value) &&
+                !fx_EhVersaoMang(_d.Value) &&
+                IsBlank(LookUp(colMangueiras, fx_NormCodigo(NomeMangueira) = fx_NormCodigo(_d.Value)))
+            ),
+            Value
+        ) As _e,
+        { NomeMangueira: _e.Value }
+    )
 )

@@ -58,6 +58,7 @@
 | Controle de Trançagem (AM-DM-02 digital) | `scr_ControleTrancagem_1` | **v0.1.0** (08/10, `Telas/`, ainda NÃO colada no Studio) | — | — |
 | Descartar OP / Desfazer início (qualquer etapa, exceto Mandril) | `scr_DescartarOP_1` | **v0.2.0** (08/10, `Telas/`, ainda NÃO colada no Studio) | — | — |
 | Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | v0.5.8 | COLAR v0.5.9 VelocidadeViva | — |
+| Hora-Hora Mandril / Tubo (padrão Trançagem) | `scr_HoraHora_Mandril_2` e `scr_HoraHora_Tubo_2` | **v0.1.0** (08/10, `Telas/`, ainda NÃO coladas no Studio; substituem `scrHoraHora_Mandril/Tubo`) | — | — |
 | Hora-Hora Cobertura | `scr_HoraHora_Cobertura_1` (manual) e `scr_HoraHora_CoberturaGMS_1` (derivada) | v0.1.0 | — | — |
 | Cobertura | `scr_Cobertura_2` | v0.3.0 | COLAR v0.4.0 Delineamento | — |
 | Bandagem | `scr_Bandagem_2` | v0.3.0 | — | — |

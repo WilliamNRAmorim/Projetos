@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.9 · 2026-10-06
+//  GMS · App.Formulas · v3.0.10 · 2026-10-08
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -1477,3 +1477,37 @@ fx_CorConf(prioridade: Number): Color =
 
 fx_CorConfSuave(prioridade: Number): Color =
     If(prioridade <= 5, fx_CorErroSuave, prioridade <= 10, fx_CorAlertaSuave, prioridade <= 13, fx_CorInfoSuave, fx_CorOKSuave);
+
+// =============================================================================
+//  §17 · CADASTRO DE MANGUEIRAS  [v3.0.10 · MEL-201]
+//  colMangueiras (combos de mangueira de todas as telas) era uma lista de 70 códigos escrita
+//  à mão no OnStart: mangueira nova só entrava depois de republicar o app (até lá, pela opção
+//  OUTRA). Agora o OnStart monta colMangueiras assim:
+//    1) fx_MangueirasBase (abaixo): os 70 códigos de antes, SEM mudar nenhum nome, para
+//       nenhuma ficha existente perder o par com a lista;
+//    2) mais todo PARTNUMBER de DM_TRANÇAGEM e DM_TUBE_EXTRUSION que ainda não esteja na base
+//       (comparado por fx_NormCodigo), exceto as versões alternativas do delineamento
+//       (código terminado em -2 ou -02, ver fx_EhVersaoMang).
+//  Mangueira nova passa a aparecer quando a Engenharia a cadastra no DM, sem republicar.
+//  fx_MangueirasBase só encolhe: quando o William confirmar os nomes dos 7 que não existem
+//  no DM (2807-10, 2807-12, EC215-04, EC600-16 e as três H28xxx-250R), eles saem daqui.
+// =============================================================================
+fx_MangueirasBase = [
+    "2583-12", "2556-10", "2556-12", "2556-16", "2556-3", "2556-4",
+    "2807-10", "2807-12", "2556-5", "2556-6", "2556-8", "EC115-04L",
+    "EC115-06L", "EC115-08L", "EC115-10L", "EC115-12L", "EC115-16L", "EC118-04L",
+    "EC118-06L", "EC118-08L", "EC118-10L", "EC600-16", "EC118-12L", "EC118-16L",
+    "EC215-06L", "EC215-08L", "EC215-04", "EC215-08LRL", "EC215-10L", "EC215-12L",
+    "EC215-16L", "EC415-12", "EC415-16", "FC598-08", "FC598-10", "FC598-12",
+    "FC735-04", "FC735-06", "FC735-08", "FC735-10", "FC735-12", "FC839B-04",
+    "FC839B-06", "FC839B-08", "FC849-08", "GH493-10", "GH493-12", "GH493-16",
+    "GH493-6", "GH493-8", "GH681-12", "GH681-16", "GH681-4", "GH681-6",
+    "GH681-8", "GH681-10", "GH781-10", "GH781-12", "GH781-16", "GH781-4",
+    "GH781-6", "GH781-8", "H28004-250R", "H28006-250R", "H28008-250R", "HC101-4",
+    "HC101-6", "HC101-8", "HC139-7", "HC139-7_S-GX"
+];
+
+// Versão alternativa de uma mangueira no delineamento (2ª construção/ferramental), não é outra
+// mangueira: EC118-04L-2, GH781-6-2, H28006-2, FC839B-04-02. Fica fora do combo.
+fx_EhVersaoMang(codigo: Text): Boolean =
+    IsMatch(Trim(codigo), "-0?2$");

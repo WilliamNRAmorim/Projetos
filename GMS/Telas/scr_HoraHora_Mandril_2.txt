@@ -1,52 +1,52 @@
 Screens:
-  scr_HoraHora_Tubo_2:
+  scr_HoraHora_Mandril_2:
     Properties:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
         =UpdateContext({
-            ctxAgoraHHU: Now(),
-            ctxAlteradoHHU: false,
-            ctxModalReplicaHHU: false,
-            ctxSobrescreverHHU: false,
-            ctxOrdOrigemHHU: 0,
-            ctxCarregadoHHU: false,
-            ctxFecharHHU: false,
-            ctxTurnoCarregadoHHU: 0,
-            ctxDataCarregadaHHU: fx_DataRefEm(Now())
+            ctxAgoraHHM: Now(),
+            ctxAlteradoHHM: false,
+            ctxModalReplicaHHM: false,
+            ctxSobrescreverHHM: false,
+            ctxOrdOrigemHHM: 0,
+            ctxCarregadoHHM: false,
+            ctxFecharHHM: false,
+            ctxTurnoCarregadoHHM: 0,
+            ctxDataCarregadaHHM: fx_DataRefEm(Now())
         });
         Set(varProcessando, false);
-        Set(varTurnoHHU, fx_TurnoLabelEm(Now()));
-        Reset(cmb_TurnoHHU);
-        Select(btn_CarregarHHU)
+        Set(varTurnoHHM, fx_TurnoLabelEm(Now()));
+        Reset(cmb_TurnoHHM);
+        Select(btn_CarregarHHM)
     Children:
-      - rct_HeaderHHU:
+      - rct_HeaderHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: =fx_CorHeader
             Height: =96
             Width: =1366
-      - ico_VoltarHHU:
+      - ico_VoltarHHM:
           Control: Classic/Icon@2.5.0
           Properties:
-            AccessibleLabel: ="Voltar para a ficha do Tubo"
+            AccessibleLabel: ="Voltar para a ficha do Mandril"
             Color: =fx_CorSuperficie
             Height: =44
             Icon: =Icon.ArrowLeft
             OnSelect: |-
               =If(
-                  ctxAlteradoHHU,
+                  ctxAlteradoHHM,
                   Notify(
                       "Há alterações não salvas. Toque em Salvar antes de sair.",
                       NotificationType.Warning,
                       6000
                   ),
-                  Navigate(scr_tubo_1)
+                  Navigate(scr_mandril_1)
               )
             Width: =44
             X: =16
             Y: =26
-      - lbl_TituloHHU:
+      - lbl_TituloHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorSuperficie
@@ -54,10 +54,10 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteTitulo
-            Text: ="Hora-Hora · Tubo"
+            Text: ="Hora-Hora · Mandril"
             Width: =340
             X: =60
-      - lbl_SubHHU:
+      - lbl_SubHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -65,12 +65,12 @@ Screens:
             Height: =46
             Size: =fx_FonteCorpo
             Text: |-
-              =Text(ctxDataCarregadaHHU, "[$-pt-BR]dd/mm/yyyy") & "   ·   " &
-              "Tubo" & "   ·   agora " & Text(ctxAgoraHHU, "[$-pt-BR]hh:mm")
+              =Text(ctxDataCarregadaHHM, "[$-pt-BR]dd/mm/yyyy") & "   ·   " &
+              "Mandril" & "   ·   agora " & Text(ctxAgoraHHM, "[$-pt-BR]hh:mm")
             Width: =371
             X: =40
             Y: =50
-      - lbl_TurnoVirouHHU:
+      - lbl_TurnoVirouHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -81,14 +81,14 @@ Screens:
             Size: =fx_FonteApoio
             Text: |-
               =With(
-                  { _ta: fx_TurnoEm(ctxAgoraHHU) },
+                  { _ta: fx_TurnoEm(ctxAgoraHHM) },
                   "O relógio virou para o " & Text(_ta) & "º turno — você continua apontando o " &
-                  Text(ctxTurnoCarregadoHHU) & "º. Troque acima quando fechar este."
+                  Text(ctxTurnoCarregadoHHM) & "º. Troque acima quando fechar este."
               )
-            Visible: =ctxTurnoCarregadoHHU > 0 && ctxTurnoCarregadoHHU <> fx_TurnoEm(ctxAgoraHHU)
+            Visible: =ctxTurnoCarregadoHHM > 0 && ctxTurnoCarregadoHHM <> fx_TurnoEm(ctxAgoraHHM)
             Width: =735
             X: =323
-      - lbl_RotTurnoHHU:
+      - lbl_RotTurnoHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -100,7 +100,7 @@ Screens:
             Width: =160
             X: =420
             Y: =26
-      - cmb_TurnoHHU:
+      - cmb_TurnoHHM:
           Control: Classic/DropDown@2.3.1
           Properties:
             AccessibleLabel: ="Turno do apontamento"
@@ -109,7 +109,7 @@ Screens:
             ChevronFill: =fx_CorRotulo
             ChevronHoverBackground: =fx_CorFundo
             ChevronHoverFill: =fx_CorRotulo
-            Default: =varTurnoHHU
+            Default: =varTurnoHHM
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
             Fill: =fx_CorSuperficie
             Font: =fx_FonteFamilia
@@ -125,7 +125,7 @@ Screens:
             Width: =160
             X: =420
             Y: =44
-      - btn_AbrirHHU:
+      - btn_AbrirHHM:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =Color.Transparent
@@ -135,7 +135,7 @@ Screens:
             DisplayMode: |-
               =If(
                   varProcessando ||
-                  (ctxCarregadoHHU && cmb_TurnoHHU.Selected.Value = varTurnoHHU),
+                  (ctxCarregadoHHM && cmb_TurnoHHM.Selected.Value = varTurnoHHM),
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
@@ -146,15 +146,15 @@ Screens:
             HoverFill: =ColorFade(fx_CorInfo, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoHHU,
+                  ctxAlteradoHHM,
                   Notify(
-                      "Há alterações não salvas no " & Text(ctxTurnoCarregadoHHU) &
+                      "Há alterações não salvas no " & Text(ctxTurnoCarregadoHHM) &
                       "º turno. Toque em Salvar antes de trocar de turno.",
                       NotificationType.Warning,
                       6000
                   ),
-                  Set(varTurnoHHU, cmb_TurnoHHU.Selected.Value);
-                  Select(btn_CarregarHHU)
+                  Set(varTurnoHHM, cmb_TurnoHHM.Selected.Value);
+                  Select(btn_CarregarHHM)
               )
             PressedFill: =ColorFade(fx_CorInfo, -30%)
             RadiusBottomLeft: =fx_RaioS
@@ -166,7 +166,7 @@ Screens:
             Width: =110
             X: =596
             Y: =44
-      - lbl_RotPlacarHHU:
+      - lbl_RotPlacarHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -178,19 +178,19 @@ Screens:
             Text: ="SITUAÇÃO DO TURNO"
             Width: =270
             X: =1080
-      - rct_PlacarHHU:
+      - rct_PlacarHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: |-
               =If(
-                  !ctxCarregadoHHU,                                      fx_CorChip,
-                  CountRows(Filter(colLinhasHHU As _q3, _q3.Ativa)) = 0,  fx_CorChip,
+                  !ctxCarregadoHHM,                                      fx_CorChip,
+                  CountRows(Filter(colLinhasHHM As _q3, _q3.Ativa)) = 0,  fx_CorChip,
                   CountRows(
                       Filter(
-                          colLinhasHHU As _q1,
+                          colLinhasHHM As _q1,
                           fx_PendenciaMaqHH(
                               _q1.Ativa,
-                              fx_FaixaVencida(_q1.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                              fx_FaixaVencida(_q1.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                               _q1.Mangueira, _q1.Meta, _q1.Real, _q1.Motivo
                           ) <> ""
                       )
@@ -202,7 +202,7 @@ Screens:
             Width: =270
             X: =1080
             Y: =44
-      - lbl_PlacarHHU:
+      - lbl_PlacarHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -216,28 +216,28 @@ Screens:
                   {
                       _f: CountRows(
                           Filter(
-                              colLinhasHHU As _p1,
+                              colLinhasHHM As _p1,
                               fx_PendenciaMaqHH(
                                   _p1.Ativa,
-                                  fx_FaixaVencida(_p1.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                                  fx_FaixaVencida(_p1.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                                   _p1.Mangueira, _p1.Meta, _p1.Real, _p1.Motivo
                               ) = "SEM_APONTAMENTO"
                           )
                       ),
                       _m: CountRows(
                           Filter(
-                              colLinhasHHU As _p2,
+                              colLinhasHHM As _p2,
                               fx_PendenciaMaqHH(
                                   _p2.Ativa,
-                                  fx_FaixaVencida(_p2.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                                  fx_FaixaVencida(_p2.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                                   _p2.Mangueira, _p2.Meta, _p2.Real, _p2.Motivo
                               ) = "SEM_MOTIVO"
                           )
                       )
                   },
                   If(
-                      !ctxCarregadoHHU,                                      "—",
-                      CountRows(Filter(colLinhasHHU As _p3, _p3.Ativa)) = 0,  "Sem produção no turno",
+                      !ctxCarregadoHHM,                                      "—",
+                      CountRows(Filter(colLinhasHHM As _p3, _p3.Ativa)) = 0,  "Sem produção no turno",
                       _f + _m = 0,                                           "Turno em dia",
                       Text(_f) & " sem apontar  ·  " & Text(_m) & " sem motivo"
                   )
@@ -245,17 +245,17 @@ Screens:
             Width: =270
             X: =1080
             Y: =44
-      - rct_FaixaAlertaHHU:
+      - rct_FaixaAlertaHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: |-
               =If(
                   CountRows(
                       Filter(
-                          colLinhasHHU As _l1,
+                          colLinhasHHM As _l1,
                           fx_PendenciaMaqHH(
                               _l1.Ativa,
-                              fx_FaixaVencida(_l1.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                              fx_FaixaVencida(_l1.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                               _l1.Mangueira, _l1.Meta, _l1.Real, _l1.Motivo
                           ) = "SEM_MOTIVO"
                       )
@@ -265,30 +265,30 @@ Screens:
               )
             Height: =40
             Visible: |-
-              =ctxCarregadoHHU &&
+              =ctxCarregadoHHM &&
               CountRows(
                   Filter(
-                      colLinhasHHU As _l2,
+                      colLinhasHHM As _l2,
                       fx_PendenciaMaqHH(
                           _l2.Ativa,
-                          fx_FaixaVencida(_l2.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                          fx_FaixaVencida(_l2.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                           _l2.Mangueira, _l2.Meta, _l2.Real, _l2.Motivo
                       ) <> ""
                   )
               ) > 0
             Width: =1366
             Y: =96
-      - lbl_AlertaHHU:
+      - lbl_AlertaHHM:
           Control: Label@2.5.1
           Properties:
             Color: |-
               =If(
                   CountRows(
                       Filter(
-                          colLinhasHHU As _l3,
+                          colLinhasHHM As _l3,
                           fx_PendenciaMaqHH(
                               _l3.Ativa,
-                              fx_FaixaVencida(_l3.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                              fx_FaixaVencida(_l3.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                               _l3.Mangueira, _l3.Meta, _l3.Real, _l3.Motivo
                           ) = "SEM_MOTIVO"
                       )
@@ -305,20 +305,20 @@ Screens:
                   {
                       _f: CountRows(
                           Filter(
-                              colLinhasHHU As _a,
+                              colLinhasHHM As _a,
                               fx_PendenciaMaqHH(
                                   _a.Ativa,
-                                  fx_FaixaVencida(_a.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                                  fx_FaixaVencida(_a.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                                   _a.Mangueira, _a.Meta, _a.Real, _a.Motivo
                               ) = "SEM_APONTAMENTO"
                           )
                       ),
                       _m: CountRows(
                           Filter(
-                              colLinhasHHU As _b,
+                              colLinhasHHM As _b,
                               fx_PendenciaMaqHH(
                                   _b.Ativa,
-                                  fx_FaixaVencida(_b.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                                  fx_FaixaVencida(_b.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                                   _b.Mangueira, _b.Meta, _b.Real, _b.Motivo
                               ) = "SEM_MOTIVO"
                           )
@@ -327,19 +327,19 @@ Screens:
                   If(_f > 0, "⚠ " & Text(_f) & " janela(s) já fechada(s) sem apontamento.   ", "") &
                   If(_m > 0, "⛔ " & Text(_m) & " janela(s) abaixo da meta sem motivo de parada — o turno não fecha assim.", "")
               )
-            Visible: =rct_FaixaAlertaHHU.Visible
+            Visible: =rct_FaixaAlertaHHM.Visible
             Width: =1330
             X: =18
             Y: =96
-      - rct_CabecalhoHHU:
+      - rct_CabecalhoHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: =fx_CorSuperficie
             Height: =34
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =1366
             Y: =140
-      - lbl_ColHoraHHU:
+      - lbl_ColHoraHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -349,10 +349,10 @@ Screens:
             PaddingLeft: =10
             Size: =fx_FonteApoio
             Text: ="JANELA"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             X: =8
             Y: =140
-      - lbl_ColMangHHU:
+      - lbl_ColMangHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -361,11 +361,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="MANGUEIRA          ↓"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =190
             X: =162
             Y: =140
-      - lbl_ColMinutosHHU:
+      - lbl_ColMinutosHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -375,11 +375,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="MIN"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =52
             X: =356
             Y: =140
-      - lbl_ColMetaHHU:
+      - lbl_ColMetaHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -389,11 +389,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="META"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =64
             X: =412
             Y: =140
-      - lbl_ColMetaAcHHU:
+      - lbl_ColMetaAcHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -403,11 +403,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="META ACUM"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =76
             X: =480
             Y: =140
-      - lbl_ColRealHHU:
+      - lbl_ColRealHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -417,11 +417,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="REAL"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =76
             X: =560
             Y: =140
-      - lbl_ColRealAcHHU:
+      - lbl_ColRealAcHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -431,11 +431,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="REAL ACUM"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =76
             X: =640
             Y: =140
-      - lbl_ColDifHHU:
+      - lbl_ColDifHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -445,11 +445,11 @@ Screens:
             Height: =36
             Size: =fx_FonteApoio
             Text: ="FALTOU"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =68
             X: =716
             Y: =140
-      - lbl_ColParadoHHU:
+      - lbl_ColParadoHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -459,11 +459,11 @@ Screens:
             Height: =36
             Size: =fx_FonteApoio
             Text: ="PARADO"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =77
             X: =782
             Y: =140
-      - lbl_ColMotivoHHU:
+      - lbl_ColMotivoHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -472,11 +472,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="MOTIVO DA PARADA"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =200
             X: =859
             Y: =140
-      - lbl_ColMotivo2HHU:
+      - lbl_ColMotivo2HHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -485,10 +485,10 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="2º MOTIVO"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             X: =1056
             Y: =140
-      - lbl_ColComentHHU:
+      - lbl_ColComentHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -497,11 +497,11 @@ Screens:
             Height: =34
             Size: =fx_FonteApoio
             Text: ="AÇÃO TOMADA"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =148
             X: =1210
             Y: =140
-      - gal_LinhasHHU:
+      - gal_LinhasHHM:
           Control: Gallery@2.15.0
           Variant: Vertical
           Properties:
@@ -510,22 +510,22 @@ Screens:
             Height: =450
             Items: |-
               =AddColumns(
-                  DropColumns(colLinhasHHU, Vencida),
+                  DropColumns(colLinhasHHM, Vencida),
                   Vencida,
-                  fx_FaixaVencida(Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU)
+                  fx_FaixaVencida(Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM)
               )
             TemplateFill: =Color.Transparent
             TemplateSize: =44
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =1366
             Y: =176
           Children:
-            - btn_LinhaHHU:
+            - btn_LinhaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: |-
                     =If(
-                        !IsBlank(LookUp(colFalhasHHU As _fl, _fl.fRotulo = ThisItem.Rotulo)),
+                        !IsBlank(LookUp(colFalhasHHM As _fl, _fl.fRotulo = ThisItem.Rotulo)),
                         fx_CorErro,
                         Switch(
                             fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo),
@@ -536,7 +536,7 @@ Screens:
                     )
                   BorderThickness: |-
                     =If(
-                        !IsBlank(LookUp(colFalhasHHU As _fb, _fb.fRotulo = ThisItem.Rotulo)),
+                        !IsBlank(LookUp(colFalhasHHM As _fb, _fb.fRotulo = ThisItem.Rotulo)),
                         3,
                         fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "",
                         1,
@@ -562,7 +562,7 @@ Screens:
                   Width: =1350
                   X: =6
                   Y: =2
-            - lbl_HoraHHU:
+            - lbl_HoraHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =If(ThisItem.Vencida, fx_CorTexto, fx_CorTextoSuave)
@@ -573,7 +573,7 @@ Screens:
                   Text: =ThisItem.Rotulo
                   X: =8
                   Y: =2
-            - cmb_MangHHU:
+            - cmb_MangHHM:
                 Control: Classic/ComboBox@2.4.0
                 Properties:
                   AccessibleLabel: ="Mangueira produzida nesta janela"
@@ -582,7 +582,7 @@ Screens:
                   ChevronFill: =fx_CorRotulo
                   ChevronHoverBackground: =fx_CorFundo
                   ChevronHoverFill: =fx_CorRotulo
-                  DefaultSelectedItems: =LookUp(colMangTuboHHU As _cm, _cm.Chave = fx_MangCanon(ThisItem.Mangueira))
+                  DefaultSelectedItems: =LookUp(colMangMandHHM As _cm, _cm.Chave = fx_MangCanon(ThisItem.Mangueira))
                   DisplayFields: =["Mangueira"]
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
@@ -590,7 +590,7 @@ Screens:
                   HoverFill: =fx_CorInfoSuave
                   InputTextPlaceholder: ="Mangueira..."
                   IsSearchable: =false
-                  Items: =colMangTuboHHU
+                  Items: =colMangMandHHM
                   OnChange: |-
                     =With(
                         {
@@ -600,16 +600,16 @@ Screens:
                         If(
                             !IsBlank(_m) && _m <> ThisItem.Mangueira,
                             Patch(
-                                colLinhasHHU,
-                                LookUp(colLinhasHHU As _lp3, _lp3.Ord = ThisItem.Ord),
+                                colLinhasHHM,
+                                LookUp(colLinhasHHM As _lp3, _lp3.Ord = ThisItem.Ord),
                                 {
                                     Mangueira: _m,
                                     MFG: _f,
                                     Meta: If(_f > 0, fx_MetaFaixa(_f, ThisItem.Minutos), 0)
                                 }
                             );
-                            UpdateIf(colLinhasHHU, Ord > 0, { Ativa: true });
-                            UpdateContext({ctxAlteradoHHU: true})
+                            UpdateIf(colLinhasHHM, Ord > 0, { Ativa: true });
+                            UpdateContext({ctxAlteradoHHM: true})
                         )
                     )
                   PressedColor: =fx_CorSuperficie
@@ -622,7 +622,7 @@ Screens:
                   Width: =160
                   X: =158
                   Y: =6
-            - btn_ReplicarLinhaHHU:
+            - btn_ReplicarLinhaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: =fx_CorBorda
@@ -633,7 +633,7 @@ Screens:
                     =If(
                         varProcessando ||
                         IsBlank(ThisItem.Mangueira) ||
-                        ThisItem.Ord >= CountRows(colLinhasHHU),
+                        ThisItem.Ord >= CountRows(colLinhasHHM),
                         DisplayMode.Disabled,
                         DisplayMode.Edit
                     )
@@ -644,11 +644,11 @@ Screens:
                   HoverFill: =ColorFade(fx_CorInfoSuave, -15%)
                   OnSelect: |-
                     =UpdateContext({
-                        ctxOrdOrigemHHU: ThisItem.Ord,
-                        ctxSobrescreverHHU: false,
-                        ctxModalReplicaHHU: true
+                        ctxOrdOrigemHHM: ThisItem.Ord,
+                        ctxSobrescreverHHM: false,
+                        ctxModalReplicaHHM: true
                     });
-                    Reset(cmb_AteHHU)
+                    Reset(cmb_AteHHM)
                   PressedFill: =fx_CorInfoSuave
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -659,7 +659,7 @@ Screens:
                   Width: =26
                   X: =326
                   Y: =3
-            - lbl_MinutosHHU:
+            - lbl_MinutosHHM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
@@ -672,7 +672,7 @@ Screens:
                   Width: =52
                   X: =356
                   Y: =2
-            - lbl_MetaHHU:
+            - lbl_MetaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
@@ -684,7 +684,7 @@ Screens:
                   Width: =64
                   X: =412
                   Y: =2
-            - lbl_MetaAcHHU:
+            - lbl_MetaAcHHM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
@@ -693,13 +693,13 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =Text(
-                        Sum(Filter(colLinhasHHU As _ma, _ma.Ord <= ThisItem.Ord), Meta),
+                        Sum(Filter(colLinhasHHM As _ma, _ma.Ord <= ThisItem.Ord), Meta),
                         "[$-pt-BR]#.##0"
                     )
                   Width: =76
                   X: =480
                   Y: =2
-            - inp_RealHHU:
+            - inp_RealHHM:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Metros produzidos nesta janela"
@@ -724,12 +724,12 @@ Screens:
                         If(
                             _v <> ThisItem.Real,
                             Patch(
-                                colLinhasHHU,
-                                LookUp(colLinhasHHU As _lp, _lp.Ord = ThisItem.Ord),
+                                colLinhasHHM,
+                                LookUp(colLinhasHHM As _lp, _lp.Ord = ThisItem.Ord),
                                 { Real: _v }
                             );
-                            If(_v > 0, UpdateIf(colLinhasHHU, Ord > 0, { Ativa: true }));
-                            UpdateContext({ctxAlteradoHHU: true})
+                            If(_v > 0, UpdateIf(colLinhasHHM, Ord > 0, { Ativa: true }));
+                            UpdateContext({ctxAlteradoHHM: true})
                         )
                     )
                   RadiusBottomLeft: =fx_RaioS
@@ -740,7 +740,7 @@ Screens:
                   Width: =76
                   X: =560
                   Y: =3
-            - lbl_RealAcHHU:
+            - lbl_RealAcHHM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
@@ -749,13 +749,13 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =Text(
-                        Sum(Filter(colLinhasHHU As _ra, _ra.Ord <= ThisItem.Ord), Real),
+                        Sum(Filter(colLinhasHHM As _ra, _ra.Ord <= ThisItem.Ord), Real),
                         "[$-pt-BR]#.##0"
                     )
                   Width: =76
                   X: =640
                   Y: =2
-            - lbl_DifHHU:
+            - lbl_DifHHM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Center
@@ -772,7 +772,7 @@ Screens:
                   Width: =64
                   X: =720
                   Y: =2
-            - inp_ParadoHHU:
+            - inp_ParadoHHM:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Minutos de máquina parada nesta janela"
@@ -799,11 +799,11 @@ Screens:
 
                             _v <> ThisItem.TempoParado,
                             Patch(
-                                colLinhasHHU,
-                                LookUp(colLinhasHHU As _lp2, _lp2.Ord = ThisItem.Ord),
+                                colLinhasHHM,
+                                LookUp(colLinhasHHM As _lp2, _lp2.Ord = ThisItem.Ord),
                                 { TempoParado: _v }
                             );
-                            UpdateContext({ctxAlteradoHHU: true})
+                            UpdateContext({ctxAlteradoHHM: true})
                         )
                     )
                   RadiusBottomLeft: =fx_RaioS
@@ -814,7 +814,7 @@ Screens:
                   Width: =60
                   X: =788
                   Y: =3
-            - cmb_MotivoHHU:
+            - cmb_MotivoHHM:
                 Control: Classic/DropDown@2.3.1
                 Properties:
                   AccessibleLabel: ="Motivo da parada nesta janela"
@@ -843,11 +843,11 @@ Screens:
                         If(
                             _v <> ThisItem.Motivo,
                             Patch(
-                                colLinhasHHU,
-                                LookUp(colLinhasHHU As _lp4, _lp4.Ord = ThisItem.Ord),
+                                colLinhasHHM,
+                                LookUp(colLinhasHHM As _lp4, _lp4.Ord = ThisItem.Ord),
                                 { Motivo: _v }
                             );
-                            UpdateContext({ctxAlteradoHHU: true})
+                            UpdateContext({ctxAlteradoHHM: true})
                         )
                     )
                   PressedColor: =fx_CorSuperficie
@@ -858,7 +858,7 @@ Screens:
                   Width: =200
                   X: =852
                   Y: =3
-            - cmb_Motivo2HHU:
+            - cmb_Motivo2HHM:
                 Control: Classic/DropDown@2.3.1
                 Properties:
                   AccessibleLabel: ="Segundo motivo de parada, se houver"
@@ -882,11 +882,11 @@ Screens:
                         If(
                             _v <> ThisItem.Motivo2,
                             Patch(
-                                colLinhasHHU,
-                                LookUp(colLinhasHHU As _lp5, _lp5.Ord = ThisItem.Ord),
+                                colLinhasHHM,
+                                LookUp(colLinhasHHM As _lp5, _lp5.Ord = ThisItem.Ord),
                                 { Motivo2: _v }
                             );
-                            UpdateContext({ctxAlteradoHHU: true})
+                            UpdateContext({ctxAlteradoHHM: true})
                         )
                     )
                   PressedColor: =fx_CorSuperficie
@@ -897,7 +897,7 @@ Screens:
                   Width: =150
                   X: =1056
                   Y: =3
-            - inp_ComentHHU:
+            - inp_ComentHHM:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Ação tomada nesta janela"
@@ -913,11 +913,11 @@ Screens:
                     =If(
                         Self.Text <> ThisItem.Comentario,
                         Patch(
-                            colLinhasHHU,
-                            LookUp(colLinhasHHU As _lp6, _lp6.Ord = ThisItem.Ord),
+                            colLinhasHHM,
+                            LookUp(colLinhasHHM As _lp6, _lp6.Ord = ThisItem.Ord),
                             { Comentario: Self.Text }
                         );
-                        UpdateContext({ctxAlteradoHHU: true})
+                        UpdateContext({ctxAlteradoHHM: true})
                     )
                   PaddingLeft: =8
                   RadiusBottomLeft: =fx_RaioS
@@ -928,7 +928,7 @@ Screens:
                   Width: =148
                   X: =1208
                   Y: =3
-      - lbl_SemCarregarHHU:
+      - lbl_SemCarregarHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -938,25 +938,25 @@ Screens:
             Height: =60
             Size: =fx_FonteTitulo
             Text: ="Escolha o turno no topo e toque em Abrir."
-            Visible: =!ctxCarregadoHHU
+            Visible: =!ctxCarregadoHHM
             Width: =900
             X: =233
             Y: =340
-      - rct_RodapeHHU:
+      - rct_RodapeHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: =fx_CorSuperficie
             Height: =140
             Width: =1366
             Y: =628
-      - rct_LinhaRodapeHHU:
+      - rct_LinhaRodapeHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: =fx_CorBorda
             Height: =1
             Width: =1366
             Y: =628
-      - lbl_RotResumoHHU:
+      - lbl_RotResumoHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorRotulo
@@ -965,11 +965,11 @@ Screens:
             Height: =20
             Size: =fx_FonteApoio
             Text: ="RESUMO DO TURNO NA COBERTURA"
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =340
             X: =20
             Y: =644
-      - lbl_ResumoHHU:
+      - lbl_ResumoHHM:
           Control: Label@2.5.1
           Properties:
             Color: =fx_CorTexto
@@ -980,56 +980,56 @@ Screens:
             Text: |-
               =With(
                   {
-                      _meta: Sum(colLinhasHHU, Meta),
-                      _real: Sum(colLinhasHHU, Real),
-                      _par: Sum(colLinhasHHU, TempoParado)
+                      _meta: Sum(colLinhasHHM, Meta),
+                      _real: Sum(colLinhasHHM, Real),
+                      _par: Sum(colLinhasHHM, TempoParado)
                   },
                   "Meta " & Text(_meta, "[$-pt-BR]#.##0") & " m      Real " & Text(_real, "[$-pt-BR]#.##0") &
                   " m      Aderência " & Text(fx_RendimentoHH(_meta, _real), "[$-pt-BR]#0.0") & "%      Parado " &
                   Text(_par, "[$-pt-BR]#.##0") & " min"
               )
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =716
             Y: =664
-      - lbl_MinutosTurnoHHU:
+      - lbl_MinutosTurnoHHM:
           Control: Label@2.5.1
           Properties:
             Color: |-
               =If(
-                  !IsEmpty(colFalhasHHU), fx_CorErro,
-                  ctxAlteradoHHU,         fx_CorAlerta,
+                  !IsEmpty(colFalhasHHM), fx_CorErro,
+                  ctxAlteradoHHM,         fx_CorAlerta,
                   fx_CorTextoSuave
               )
             Font: =fx_FonteFamilia
-            FontWeight: =If(!IsEmpty(colFalhasHHU) || ctxAlteradoHHU, FontWeight.Bold, FontWeight.Normal)
+            FontWeight: =If(!IsEmpty(colFalhasHHM) || ctxAlteradoHHM, FontWeight.Bold, FontWeight.Normal)
             Height: =50
             Size: =fx_FonteApoio
             Text: |-
               =If(
-                  !IsEmpty(colFalhasHHU),
-                  "⛔ Não gravou: " & Concat(colFalhasHHU, fRotulo, ", ") &
+                  !IsEmpty(colFalhasHHM),
+                  "⛔ Não gravou: " & Concat(colFalhasHHM, fRotulo, ", ") &
                   ".  Toque em Salvar de novo. O que já entrou não duplica.",
 
-                  ctxAlteradoHHU,
+                  ctxAlteradoHHM,
                   "⚠ Alterações ainda NÃO gravadas. Nada vai para o SharePoint até você tocar em Salvar ou Fechar turno.",
 
-                  CountRows(Filter(colLinhasHHU As _q0, _q0.Meta > 0 && _q0.Real > _q0.Meta * (1 + fx_MargemMetragemPct / 100))) > 0,
-                  "⚠ " & Text(CountRows(Filter(colLinhasHHU As _q9, _q9.Meta > 0 && _q9.Real > _q9.Meta * (1 + fx_MargemMetragemPct / 100)))) &
+                  CountRows(Filter(colLinhasHHM As _q0, _q0.Meta > 0 && _q0.Real > _q0.Meta * (1 + fx_MargemMetragemPct / 100))) > 0,
+                  "⚠ " & Text(CountRows(Filter(colLinhasHHM As _q9, _q9.Meta > 0 && _q9.Real > _q9.Meta * (1 + fx_MargemMetragemPct / 100)))) &
                   " janela(s) com Real acima da meta em mais de " & Text(fx_MargemMetragemPct) & "% (borda laranja). Confira se não foi digitação; se estiver certo, pode salvar.",
 
-                  CountRows(Filter(colLinhasHHU As _q1, _q1.Ativa)) = 0 && ctxCarregadoHHU,
-                  "Sem sinal de produção no Tubo neste turno — nada está sendo cobrado. Se a extrusora ficou parada, registre o motivo ao lado; se ela rodou, lance a primeira janela.",
+                  CountRows(Filter(colLinhasHHM As _q1, _q1.Ativa)) = 0 && ctxCarregadoHHM,
+                  "Sem sinal de produção no Mandril neste turno — nada está sendo cobrado. Se a extrusora ficou parada, registre o motivo ao lado; se ela rodou, lance a primeira janela.",
 
                   With(
-                      { _m: Sum(colLinhasHHU, Minutos) },
-                      "Este turno tem " & Text(_m) & " minutos de janela em " & Text(CountRows(colLinhasHHU)) &
+                      { _m: Sum(colLinhasHHM, Minutos) },
+                      "Este turno tem " & Text(_m) & " minutos de janela em " & Text(CountRows(colLinhasHHM)) &
                       " linhas. O botão ↓ repete a mangueira nas janelas seguintes."
                   )
               )
-            Visible: =ctxCarregadoHHU
+            Visible: =ctxCarregadoHHM
             Width: =709
             Y: =718
-      - lbl_AjudaFecharHHU:
+      - lbl_AjudaFecharHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -1039,12 +1039,12 @@ Screens:
             Size: =fx_FonteApoio
             Text: ="Só Salvar e Fechar turno gravam no sistema. Digitar na tela não grava nada sozinho."
             Visible: |-
-              =ctxCarregadoHHU &&
-              CountRows(Filter(colLinhasHHU As _v4, _v4.Ativa)) > 0
+              =ctxCarregadoHHM &&
+              CountRows(Filter(colLinhasHHM As _v4, _v4.Ativa)) > 0
             Width: =521
             X: =709
             Y: =726
-      - lbl_VersaoHHU:
+      - lbl_VersaoHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -1056,7 +1056,7 @@ Screens:
             Width: =140
             X: =1226
             Y: =728
-      - btn_FecharTurnoHHU:
+      - btn_FecharTurnoHHM:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =Color.Transparent
@@ -1066,13 +1066,13 @@ Screens:
             DisplayMode: |-
               =If(
                   varProcessando ||
-                  !ctxCarregadoHHU ||
+                  !ctxCarregadoHHM ||
                   CountRows(
                       Filter(
-                          colLinhasHHU As _f1,
+                          colLinhasHHM As _f1,
                           fx_PendenciaMaqHH(
                               _f1.Ativa,
-                              fx_FaixaVencida(_f1.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                              fx_FaixaVencida(_f1.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                               _f1.Mangueira, _f1.Meta, _f1.Real, _f1.Motivo
                           ) <> ""
                       )
@@ -1090,10 +1090,10 @@ Screens:
                   {
                       _pend: CountRows(
                           Filter(
-                              colLinhasHHU As _f2,
+                              colLinhasHHM As _f2,
                               fx_PendenciaMaqHH(
                                   _f2.Ativa,
-                                  fx_FaixaVencida(_f2.Fim, ctxTurnoCarregadoHHU, ctxAgoraHHU),
+                                  fx_FaixaVencida(_f2.Fim, ctxTurnoCarregadoHHM, ctxAgoraHHM),
                                   _f2.Mangueira, _f2.Meta, _f2.Real, _f2.Motivo
                               ) <> ""
                           )
@@ -1107,10 +1107,10 @@ Screens:
                           10000
                       ),
 
-                      UpdateContext({ctxFecharHHU: true});
+                      UpdateContext({ctxFecharHHM: true});
                       Set(varProcessando, true);
-                      Clear(colFalhasHHU);
-                      Select(btn_GravarHHU)
+                      Clear(colFalhasHHM);
+                      Select(btn_GravarHHM)
                   )
               )
             PressedFill: =ColorFade(fx_CorOK, -30%)
@@ -1121,45 +1121,45 @@ Screens:
             Size: =fx_FonteDestaque
             Text: ="Fechar turno"
             Visible: |-
-              =ctxCarregadoHHU &&
-              CountRows(Filter(colLinhasHHU As _v0, _v0.Ativa)) > 0
+              =ctxCarregadoHHM &&
+              CountRows(Filter(colLinhasHHM As _v0, _v0.Ativa)) > 0
             Width: =240
             X: =995
             Y: =664
-      - btn_SalvarHHU:
+      - btn_SalvarHHM:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =If(ctxAlteradoHHU, fx_CorAlerta, fx_CorBorda)
-            BorderThickness: =If(ctxAlteradoHHU, 3, 1)
+            BorderColor: =If(ctxAlteradoHHM, fx_CorAlerta, fx_CorBorda)
+            BorderThickness: =If(ctxAlteradoHHM, 3, 1)
             Color: =fx_CorTexto
             DisabledFill: =fx_CorBorda
             DisplayMode: |-
               =If(
-                  varProcessando || !ctxCarregadoHHU,
+                  varProcessando || !ctxCarregadoHHM,
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
-            Fill: =If(ctxAlteradoHHU, fx_CorAlertaSuave, fx_CorSuperficie)
+            Fill: =If(ctxAlteradoHHM, fx_CorAlertaSuave, fx_CorSuperficie)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Normal
             Height: =fx_AlturaAcao
             HoverFill: =fx_CorFundo
             OnSelect: |-
               =Set(varProcessando, true);
-              Clear(colFalhasHHU);
-              UpdateContext({ctxFecharHHU: false});
-              Select(btn_GravarHHU)
+              Clear(colFalhasHHM);
+              UpdateContext({ctxFecharHHM: false});
+              Select(btn_GravarHHM)
             PressedFill: =fx_CorFundo
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            Text: =If(ctxAlteradoHHU, "Salvar alterações", "Salvar")
+            Text: =If(ctxAlteradoHHM, "Salvar alterações", "Salvar")
             Width: =240
             X: =721
             Y: =664
-      - btn_GravarHHU:
+      - btn_GravarHHM:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =Color.Transparent
@@ -1170,10 +1170,10 @@ Screens:
             HoverFill: =Color.Transparent
             OnSelect: |-
               =ClearCollect(
-                  colGravarHHU,
+                  colGravarHHM,
                   ForAll(
                       Filter(
-                          colLinhasHHU As _p,
+                          colLinhasHHM As _p,
                           _p.IDsp > 0 || !IsBlank(_p.Mangueira) || _p.Real > 0 || _p.TempoParado > 0
                       ) As _q,
                       {
@@ -1184,8 +1184,8 @@ Screens:
                           cMangueira:  _q.Mangueira,
                           cMeta:       _q.Meta,
                           cReal:       _q.Real,
-                          cMetaAc:     Sum(Filter(colLinhasHHU As _c1, _c1.Ord <= _q.Ord), Meta),
-                          cRealAc:     Sum(Filter(colLinhasHHU As _c2, _c2.Ord <= _q.Ord), Real),
+                          cMetaAc:     Sum(Filter(colLinhasHHM As _c1, _c1.Ord <= _q.Ord), Meta),
+                          cRealAc:     Sum(Filter(colLinhasHHM As _c2, _c2.Ord <= _q.Ord), Real),
                           cParado:     Min(_q.TempoParado, _q.Minutos),
                           cMotivo:     _q.Motivo,
                           cMotivo2:    _q.Motivo2,
@@ -1195,7 +1195,7 @@ Screens:
               );
 
               ForAll(
-                  colGravarHHU As _u,
+                  colGravarHHM As _u,
                   With(
                       {
                           _base: If(
@@ -1211,10 +1211,10 @@ Screens:
                                       'Hora-Hora',
                                       If(IsBlank(_base), Defaults('Hora-Hora'), _base),
                                       {
-                                          Title: Text(ctxDataCarregadaHHU, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHU & " - " & "Tubo",
-                                          Data: ctxDataCarregadaHHU,
-                                          Turno: varTurnoHHU,
-                                          Célula: "Tubo",
+                                          Title: Text(ctxDataCarregadaHHM, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHM & " - " & "Mandril",
+                                          Data: ctxDataCarregadaHHM,
+                                          Turno: varTurnoHHM,
+                                          Célula: "Mandril",
                                           Hora: _u.cHora,
                                           Minutos: _u.cMinutos,
                                           Mangueira: _u.cMangueira,
@@ -1228,14 +1228,14 @@ Screens:
                                           'Motivo 2': _u.cMotivo2,
                                           'Comentário / Ação': _u.cComentario,
                                           Rendimento: fx_RendimentoHH(_u.cMeta, _u.cReal),
-                                          Status: If(ctxFecharHHU || Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
+                                          Status: If(ctxFecharHHM || Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
                                       }
                                   )
                               },
-                              UpdateIf(colLinhasHHU, Hora = _u.cHora, { IDsp: _res.ID })
+                              UpdateIf(colLinhasHHM, Hora = _u.cHora, { IDsp: _res.ID })
                           ),
                           Collect(
-                              colFalhasHHU,
+                              colFalhasHHM,
                               {
                                   fRotulo: _u.cRotulo,
                                   fMsg: FirstError.Message
@@ -1248,22 +1248,22 @@ Screens:
               Set(varProcessando, false);
 
               If(
-                  IsEmpty(colFalhasHHU),
-                  UpdateContext({ctxAlteradoHHU: false});
+                  IsEmpty(colFalhasHHM),
+                  UpdateContext({ctxAlteradoHHM: false});
                   Notify(
                       If(
-                          ctxFecharHHU,
-                          "Turno fechado no Tubo: todas as janelas vencidas estão apontadas e justificadas.",
+                          ctxFecharHHM,
+                          "Turno fechado no Mandril: todas as janelas vencidas estão apontadas e justificadas.",
                           "Apontamento salvo. As linhas continuam na tela para conferência."
                       ),
                       NotificationType.Success,
                       5000
                   ),
                   Notify(
-                      "⚠ " & Text(CountRows(colFalhasHHU)) & " janela(s) não gravaram: " &
-                      Concat(colFalhasHHU, fRotulo, ", ") &
+                      "⚠ " & Text(CountRows(colFalhasHHM)) & " janela(s) não gravaram: " &
+                      Concat(colFalhasHHM, fRotulo, ", ") &
                       ".  O resto entrou. Toque de novo — o que já gravou NÃO duplica.  (" &
-                      First(colFalhasHHU).fMsg & ")",
+                      First(colFalhasHHM).fMsg & ")",
                       NotificationType.Error,
                       20000
                   )
@@ -1273,10 +1273,10 @@ Screens:
             Width: =0
             X: =1366
             Y: =768
-      - cmb_MotivoSemProdHHU:
+      - cmb_MotivoSemProdHHM:
           Control: Classic/DropDown@2.3.1
           Properties:
-            AccessibleLabel: ="Motivo de o Tubo não ter produzido no turno"
+            AccessibleLabel: ="Motivo de o Mandril não ter produzido no turno"
             AllowEmptySelection: =true
             BorderColor: =fx_CorAlerta
             ChevronBackground: =Color.Transparent
@@ -1295,12 +1295,12 @@ Screens:
             SelectionFill: =fx_CorInfoSuave
             Size: =fx_FonteCorpo
             Visible: |-
-              =ctxCarregadoHHU &&
-              CountRows(Filter(colLinhasHHU As _v1, _v1.Ativa)) = 0
+              =ctxCarregadoHHM &&
+              CountRows(Filter(colLinhasHHM As _v1, _v1.Ativa)) = 0
             Width: =230
             X: =995
             Y: =644
-      - btn_SemProducaoHHU:
+      - btn_SemProducaoHHM:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =Color.Transparent
@@ -1310,8 +1310,8 @@ Screens:
             DisplayMode: |-
               =If(
                   varProcessando ||
-                  IsBlank(cmb_MotivoSemProdHHU.Selected.Motivo) ||
-                  IsEmpty(Filter(colLinhasHHU As _j1, _j1.Vencida && IsBlank(Trim(_j1.Motivo)))),
+                  IsBlank(cmb_MotivoSemProdHHM.Selected.Motivo) ||
+                  IsEmpty(Filter(colLinhasHHM As _j1, _j1.Vencida && IsBlank(Trim(_j1.Motivo)))),
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
@@ -1322,12 +1322,12 @@ Screens:
             HoverFill: =ColorFade(fx_CorAlerta, -20%)
             OnSelect: |-
               =Set(varProcessando, true);
-              Clear(colFalhasHHU);
+              Clear(colFalhasHHM);
 
               ClearCollect(
-                  colGravarSemProdHHU,
+                  colGravarSemProdHHM,
                   ForAll(
-                      Filter(colLinhasHHU As _s1, _s1.Vencida) As _s2,
+                      Filter(colLinhasHHM As _s1, _s1.Vencida) As _s2,
                       {
                           cIDsp:    _s2.IDsp,
                           cHora:    _s2.Hora,
@@ -1338,7 +1338,7 @@ Screens:
               );
 
               ForAll(
-                  colGravarSemProdHHU As _s,
+                  colGravarSemProdHHM As _s,
                   With(
                       {
                           _base: If(
@@ -1354,10 +1354,10 @@ Screens:
                                       'Hora-Hora',
                                       If(IsBlank(_base), Defaults('Hora-Hora'), _base),
                                       {
-                                          Title: Text(ctxDataCarregadaHHU, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHU & " - " & "Tubo",
-                                          Data: ctxDataCarregadaHHU,
-                                          Turno: varTurnoHHU,
-                                          Célula: "Tubo",
+                                          Title: Text(ctxDataCarregadaHHM, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHM & " - " & "Mandril",
+                                          Data: ctxDataCarregadaHHM,
+                                          Turno: varTurnoHHM,
+                                          Célula: "Mandril",
                                           Hora: _s.cHora,
                                           Minutos: _s.cMinutos,
                                           Mangueira: "",
@@ -1367,18 +1367,18 @@ Screens:
                                           'Real. Acum': 0,
                                           Diferença: 0,
                                           'Tempo Parado (min)': _s.cMinutos,
-                                          Motivo: cmb_MotivoSemProdHHU.Selected.Motivo,
+                                          Motivo: cmb_MotivoSemProdHHM.Selected.Motivo,
                                           'Motivo 2': "",
-                                          'Comentário / Ação': "Tubo sem produção no turno",
+                                          'Comentário / Ação': "Mandril sem produção no turno",
                                           Rendimento: 0,
                                           Status: "Finalizado"
                                       }
                                   )
                               },
-                              UpdateIf(colLinhasHHU, Hora = _s.cHora, { IDsp: _res.ID })
+                              UpdateIf(colLinhasHHM, Hora = _s.cHora, { IDsp: _res.ID })
                           ),
                           Collect(
-                              colFalhasHHU,
+                              colFalhasHHM,
                               {
                                   fRotulo: _s.cRotulo,
                                   fMsg: FirstError.Message
@@ -1391,16 +1391,16 @@ Screens:
               Set(varProcessando, false);
 
               If(
-                  IsEmpty(colFalhasHHU),
+                  IsEmpty(colFalhasHHM),
                   Notify(
-                      "Turno registrado sem produção no Tubo: motivo lançado em todas as janelas já vencidas.",
+                      "Turno registrado sem produção no Mandril: motivo lançado em todas as janelas já vencidas.",
                       NotificationType.Success,
                       6000
                   ),
                   Notify(
-                      "⚠ " & Text(CountRows(colFalhasHHU)) & " janela(s) não receberam o motivo: " &
-                      Concat(colFalhasHHU, fRotulo, ", ") & ".  Toque de novo — não duplica.  (" &
-                      First(colFalhasHHU).fMsg & ")",
+                      "⚠ " & Text(CountRows(colFalhasHHM)) & " janela(s) não receberam o motivo: " &
+                      Concat(colFalhasHHM, fRotulo, ", ") & ".  Toque de novo — não duplica.  (" &
+                      First(colFalhasHHM).fMsg & ")",
                       NotificationType.Error,
                       20000
                   )
@@ -1413,26 +1413,26 @@ Screens:
             Size: =fx_FonteCorpo
             Text: |-
               =If(
-                  IsEmpty(Filter(colLinhasHHU As _j2, _j2.Vencida && IsBlank(Trim(_j2.Motivo)))),
+                  IsEmpty(Filter(colLinhasHHM As _j2, _j2.Vencida && IsBlank(Trim(_j2.Motivo)))),
                   "Sem produção já registrado",
                   "Registrar turno sem produção"
               )
             Visible: |-
-              =ctxCarregadoHHU &&
-              CountRows(Filter(colLinhasHHU As _v3, _v3.Ativa)) = 0
+              =ctxCarregadoHHM &&
+              CountRows(Filter(colLinhasHHM As _v3, _v3.Ativa)) = 0
             Width: =230
             X: =995
             Y: =694
-      - cntr_ReplicaHHU:
+      - cntr_ReplicaHHM:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
           Properties:
             Fill: =fx_CorOverlay
             Height: =768
-            Visible: =ctxModalReplicaHHU
+            Visible: =ctxModalReplicaHHM
             Width: =1366
           Children:
-            - btn_BgReplicaHHU:
+            - btn_BgReplicaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: =Color.Transparent
@@ -1442,11 +1442,11 @@ Screens:
                   Height: =768
                   HoverFill: =Color.Transparent
                   OnSelect: |-
-                    =UpdateContext({ctxModalReplicaHHU: false})
+                    =UpdateContext({ctxModalReplicaHHM: false})
                   PressedFill: =Color.Transparent
                   Text: =""
                   Width: =1366
-            - btn_CardReplicaHHU:
+            - btn_CardReplicaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: =fx_CorBorda
@@ -1465,7 +1465,7 @@ Screens:
                   Width: =620
                   X: =373
                   Y: =170
-            - lbl_TituloReplicaHHU:
+            - lbl_TituloReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
@@ -1477,7 +1477,7 @@ Screens:
                   Width: =560
                   X: =403
                   Y: =170
-            - lbl_SubReplicaHHU:
+            - lbl_SubReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTextoSuave
@@ -1486,14 +1486,14 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =With(
-                        { _o: LookUp(colLinhasHHU As _s1, _s1.Ord = ctxOrdOrigemHHU) },
+                        { _o: LookUp(colLinhasHHM As _s1, _s1.Ord = ctxOrdOrigemHHM) },
                         "A partir da janela " & Coalesce(_o.Rotulo, "—") & ", com a mangueira " &
                         Coalesce(_o.Mangueira, "—") & "."
                     )
                   Width: =560
                   X: =403
                   Y: =235
-            - lbl_RotAteReplicaHHU:
+            - lbl_RotAteReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorRotulo
@@ -1505,7 +1505,7 @@ Screens:
                   Width: =280
                   X: =403
                   Y: =282
-            - cmb_AteHHU:
+            - cmb_AteHHM:
                 Control: Classic/DropDown@2.3.1
                 Properties:
                   AccessibleLabel: ="Última janela que recebe a mangueira"
@@ -1514,12 +1514,12 @@ Screens:
                   ChevronFill: =fx_CorRotulo
                   ChevronHoverBackground: =fx_CorFundo
                   ChevronHoverFill: =fx_CorRotulo
-                  Default: =Last(colLinhasHHU).Rotulo
+                  Default: =Last(colLinhasHHM).Rotulo
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   Height: =fx_AlturaCampo
                   HoverFill: =fx_CorInfoSuave
-                  Items: =Sort(Filter(colLinhasHHU As _f3, _f3.Ord > ctxOrdOrigemHHU), Ord)
+                  Items: =Sort(Filter(colLinhasHHM As _f3, _f3.Ord > ctxOrdOrigemHHM), Ord)
                   Items.Value: =Rotulo
                   PressedColor: =fx_CorSuperficie
                   PressedFill: =fx_CorInfo
@@ -1529,7 +1529,7 @@ Screens:
                   Width: =280
                   X: =403
                   Y: =302
-            - lbl_RotModoReplicaHHU:
+            - lbl_RotModoReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorRotulo
@@ -1541,19 +1541,19 @@ Screens:
                   Width: =280
                   X: =703
                   Y: =272
-            - btn_SoVaziasHHU:
+            - btn_SoVaziasHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =If(!ctxSobrescreverHHU, fx_CorInfo, fx_CorBorda)
-                  BorderThickness: =If(!ctxSobrescreverHHU, 3, 1)
-                  Color: =If(!ctxSobrescreverHHU, fx_CorSuperficie, fx_CorInfo)
-                  Fill: =If(!ctxSobrescreverHHU, fx_CorInfo, fx_CorSuperficie)
+                  BorderColor: =If(!ctxSobrescreverHHM, fx_CorInfo, fx_CorBorda)
+                  BorderThickness: =If(!ctxSobrescreverHHM, 3, 1)
+                  Color: =If(!ctxSobrescreverHHM, fx_CorSuperficie, fx_CorInfo)
+                  Fill: =If(!ctxSobrescreverHHM, fx_CorInfo, fx_CorSuperficie)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =fx_AlturaCampo
-                  HoverFill: =If(!ctxSobrescreverHHU, ColorFade(fx_CorInfo, -20%), fx_CorInfoSuave)
+                  HoverFill: =If(!ctxSobrescreverHHM, ColorFade(fx_CorInfo, -20%), fx_CorInfoSuave)
                   OnSelect: |-
-                    =UpdateContext({ctxSobrescreverHHU: false})
+                    =UpdateContext({ctxSobrescreverHHM: false})
                   PressedFill: =Self.Fill
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -1564,19 +1564,19 @@ Screens:
                   Width: =136
                   X: =703
                   Y: =309
-            - btn_SobrescreverHHU:
+            - btn_SobrescreverHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =If(ctxSobrescreverHHU, fx_CorAlerta, fx_CorBorda)
-                  BorderThickness: =If(ctxSobrescreverHHU, 3, 1)
-                  Color: =If(ctxSobrescreverHHU, fx_CorSuperficie, fx_CorAlerta)
-                  Fill: =If(ctxSobrescreverHHU, fx_CorAlerta, fx_CorSuperficie)
+                  BorderColor: =If(ctxSobrescreverHHM, fx_CorAlerta, fx_CorBorda)
+                  BorderThickness: =If(ctxSobrescreverHHM, 3, 1)
+                  Color: =If(ctxSobrescreverHHM, fx_CorSuperficie, fx_CorAlerta)
+                  Fill: =If(ctxSobrescreverHHM, fx_CorAlerta, fx_CorSuperficie)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =fx_AlturaCampo
-                  HoverFill: =If(ctxSobrescreverHHU, ColorFade(fx_CorAlerta, -20%), fx_CorAlertaSuave)
+                  HoverFill: =If(ctxSobrescreverHHM, ColorFade(fx_CorAlerta, -20%), fx_CorAlertaSuave)
                   OnSelect: |-
-                    =UpdateContext({ctxSobrescreverHHU: true})
+                    =UpdateContext({ctxSobrescreverHHM: true})
                   PressedFill: =Self.Fill
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -1587,7 +1587,7 @@ Screens:
                   Width: =136
                   X: =847
                   Y: =309
-            - lbl_PreviaReplicaHHU:
+            - lbl_PreviaReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorInfo
@@ -1599,7 +1599,7 @@ Screens:
                     =With(
                         {
                             _ate: Coalesce(
-                                LookUp(colLinhasHHU As _a1, _a1.Rotulo = cmb_AteHHU.Selected.Rotulo).Ord,
+                                LookUp(colLinhasHHM As _a1, _a1.Rotulo = cmb_AteHHM.Selected.Rotulo).Ord,
                                 0
                             )
                         },
@@ -1607,10 +1607,10 @@ Screens:
                             {
                                 _n: CountRows(
                                     Filter(
-                                        colLinhasHHU As _c5,
-                                        _c5.Ord > ctxOrdOrigemHHU &&
+                                        colLinhasHHM As _c5,
+                                        _c5.Ord > ctxOrdOrigemHHM &&
                                         _c5.Ord <= _ate &&
-                                        (ctxSobrescreverHHU || IsBlank(_c5.Mangueira))
+                                        (ctxSobrescreverHHM || IsBlank(_c5.Mangueira))
                                     )
                                 )
                             },
@@ -1624,7 +1624,7 @@ Screens:
                   Width: =580
                   X: =403
                   Y: =366
-            - lbl_AvisoReplicaHHU:
+            - lbl_AvisoReplicaHHM:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTextoSuave
@@ -1634,7 +1634,7 @@ Screens:
                   Width: =580
                   X: =403
                   Y: =428
-            - btn_CancelarReplicaHHU:
+            - btn_CancelarReplicaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: =fx_CorBorda
@@ -1645,7 +1645,7 @@ Screens:
                   Height: =fx_AlturaAcaoS
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =UpdateContext({ctxModalReplicaHHU: false})
+                    =UpdateContext({ctxModalReplicaHHM: false})
                   PressedFill: =fx_CorFundo
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -1656,7 +1656,7 @@ Screens:
                   Width: =180
                   X: =533
                   Y: =520
-            - btn_ConfirmarReplicaHHU:
+            - btn_ConfirmarReplicaHHM:
                 Control: Classic/Button@2.2.0
                 Properties:
                   BorderColor: =Color.Transparent
@@ -1666,8 +1666,8 @@ Screens:
                   DisplayMode: |-
                     =If(
                         varProcessando ||
-                        IsBlank(cmb_AteHHU.Selected.Rotulo) ||
-                        IsBlank(LookUp(colLinhasHHU As _d1, _d1.Ord = ctxOrdOrigemHHU).Mangueira),
+                        IsBlank(cmb_AteHHM.Selected.Rotulo) ||
+                        IsBlank(LookUp(colLinhasHHM As _d1, _d1.Ord = ctxOrdOrigemHHM).Mangueira),
                         DisplayMode.Disabled,
                         DisplayMode.Edit
                     )
@@ -1679,28 +1679,28 @@ Screens:
                   OnSelect: |-
                     =With(
                         {
-                            _o: LookUp(colLinhasHHU As _r1, _r1.Ord = ctxOrdOrigemHHU),
+                            _o: LookUp(colLinhasHHM As _r1, _r1.Ord = ctxOrdOrigemHHM),
                             _ate: Coalesce(
-                                LookUp(colLinhasHHU As _r2, _r2.Rotulo = cmb_AteHHU.Selected.Rotulo).Ord,
+                                LookUp(colLinhasHHM As _r2, _r2.Rotulo = cmb_AteHHM.Selected.Rotulo).Ord,
                                 0
                             )
                         },
                         If(
-                            IsBlank(_o.Mangueira) || _ate <= ctxOrdOrigemHHU,
+                            IsBlank(_o.Mangueira) || _ate <= ctxOrdOrigemHHM,
                             Notify("Escolha a mangueira na janela de origem e uma janela final depois dela.", NotificationType.Warning, 6000),
                             UpdateIf(
-                                colLinhasHHU,
-                                Ord > ctxOrdOrigemHHU &&
+                                colLinhasHHM,
+                                Ord > ctxOrdOrigemHHM &&
                                 Ord <= _ate &&
-                                (ctxSobrescreverHHU || IsBlank(Mangueira)),
+                                (ctxSobrescreverHHM || IsBlank(Mangueira)),
                                 {
                                     Mangueira: _o.Mangueira,
                                     MFG: _o.MFG,
                                     Meta: fx_MetaFaixa(_o.MFG, Minutos)
                                 }
                             );
-                            UpdateContext({ctxModalReplicaHHU: false, ctxAlteradoHHU: true});
-                            Notify("Mangueira " & _o.Mangueira & " repetida até " & cmb_AteHHU.Selected.Rotulo & ". Toque em Salvar para gravar.", NotificationType.Success, 5000)
+                            UpdateContext({ctxModalReplicaHHM: false, ctxAlteradoHHM: true});
+                            Notify("Mangueira " & _o.Mangueira & " repetida até " & cmb_AteHHM.Selected.Rotulo & ". Toque em Salvar para gravar.", NotificationType.Success, 5000)
                         )
                     )
                   PressedFill: =ColorFade(fx_CorInfo, -30%)
@@ -1713,14 +1713,14 @@ Screens:
                   Width: =220
                   X: =733
                   Y: =520
-      - rct_OverlayHHU:
+      - rct_OverlayHHM:
           Control: Rectangle@2.3.0
           Properties:
             Fill: =fx_CorOverlayForte
             Height: =768
             Visible: =varProcessando
             Width: =1366
-      - lbl_ProcessandoHHU:
+      - lbl_ProcessandoHHM:
           Control: Label@2.5.1
           Properties:
             Align: =Align.Center
@@ -1734,18 +1734,14 @@ Screens:
             Width: =409
             X: =483
             Y: =403
-      - spr_ProcessandoHHU:
-          Control: ModernSpinner@1.1.0
+      - spr_ProcessandoHHM:
+          Control: Spinner@1.4.6
           Properties:
-            FontWeight: =""
             Height: =768
-            PaddingBottom: =362
-            PaddingLeft: =362
-            PaddingRight: =362
-            PaddingTop: =362
+            SpinnerSize: ='Spinner.SpinnerSize'.Huge
             Visible: =varProcessando
             Width: =1366
-      - tmr_RelogioHHU:
+      - tmr_RelogioHHM:
           Control: Timer@2.1.0
           Properties:
             AutoStart: =true
@@ -1757,14 +1753,14 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnTimerEnd: |-
-              =UpdateContext({ctxAgoraHHU: Now()})
+              =UpdateContext({ctxAgoraHHM: Now()})
             PressedFill: =Color.Transparent
             Repeat: =true
             Text: =""
             Width: =1
             X: =1360
             Y: =760
-      - tmr_GuardaHHU:
+      - tmr_GuardaHHM:
           Control: Timer@2.1.0
           Properties:
             BorderColor: =Color.Transparent
@@ -1787,7 +1783,7 @@ Screens:
             Width: =1
             X: =1362
             Y: =760
-      - btn_CarregarHHU:
+      - btn_CarregarHHM:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =Color.Transparent
@@ -1807,7 +1803,7 @@ Screens:
               With(
                   {
                       _agora: Now(),
-                      _tl: varTurnoHHU
+                      _tl: varTurnoHHM
                   },
                   With(
                       {
@@ -1816,41 +1812,42 @@ Screens:
                       },
                       UpdateContext(
                           {
-                              ctxAgoraHHU: _agora,
-                              ctxTurnoCarregadoHHU: _t,
-                              ctxDataCarregadaHHU: _d,
-                              ctxCarregadoHHU: true,
-                              ctxAlteradoHHU: false,
-                              ctxFecharHHU: false
+                              ctxAgoraHHM: _agora,
+                              ctxTurnoCarregadoHHM: _t,
+                              ctxDataCarregadaHHM: _d,
+                              ctxCarregadoHHM: true,
+                              ctxAlteradoHHM: false,
+                              ctxFecharHHM: false
                           }
                       );
                       ClearCollect(
-                          colSalvasHHU,
+                          colSalvasHHM,
                           Sort(
                               Filter(
                                   'Hora-Hora',
                                   Data = _d,
                                   Turno = _tl,
-                                  Célula = "Tubo"
+                                  Célula = "Mandril"
                               ),
                               ID,
                               SortOrder.Descending
                           )
                       );
                       ClearCollect(
-                          colOpsTuboHHU,
+                          colOpsMandHHM,
                           Filter(
                               ficha_producao,
-                              processo = "Tubo",
+                              processo = "Mandril",
                               status_processo = "Em processo"
                           )
                       );
-                      // MOLDE: sem fonte de velocidade por hora ainda (William valida). Meta fica 0 e a lista de
-                      // mangueiras vem das OPs em processo desta etapa. Quando a fonte existir, troque MFG: 0.
+                      // Mandril (solda): o DM_MANDREL ainda não tem velocidade da linha de solda preenchida, então a
+                      // meta por hora fica em branco para o operador digitar. A lista de mangueiras vem das OPs em
+                      // processo da etapa. Quando a Engenharia preencher a velocidade, troque MFG: 0.
                       ClearCollect(
-                          colMangTuboHHU,
+                          colMangMandHHM,
                           ForAll(
-                              Distinct(colOpsTuboHHU, Mangueira) As _dm,
+                              Distinct(colOpsMandHHM, Mangueira) As _dm,
                               {
                                   Mangueira: Text(_dm.Value),
                                   MFG: 0,
@@ -1863,14 +1860,14 @@ Screens:
                               _ativa:
                                   CountRows(
                                       Filter(
-                                          colSalvasHHU As _a1,
+                                          colSalvasHHM As _a1,
                                           Coalesce(_a1.'Real. Hora', 0) > 0 || !IsBlank(_a1.Mangueira)
                                       )
                                   ) > 0 ||
-                                  CountRows(colOpsTuboHHU) > 0
+                                  CountRows(colOpsMandHHM) > 0
                           },
                           ClearCollect(
-                              colLinhasHHU,
+                              colLinhasHHM,
                               ForAll(
                                   Sort(
                                       Filter(fx_GradeHoraHora, Turno = _t),
@@ -1878,14 +1875,14 @@ Screens:
                                   ) As _g,
                                   With(
                                       {
-                                          _r: LookUp(colSalvasHHU As _x, _x.Hora = _g.Hora),
+                                          _r: LookUp(colSalvasHHM As _x, _x.Hora = _g.Hora),
                                           _venc: fx_FaixaVencida(_g.Fim, _g.Turno, _agora)
                                       },
                                       With(
                                           {
                                               _mfg: Coalesce(
                                                   LookUp(
-                                                      colMangTuboHHU As _v,
+                                                      colMangMandHHM As _v,
                                                       _v.Chave = fx_MangCanon(Text(_r.Mangueira)),
                                                       _v.MFG
                                                   ),
@@ -1919,14 +1916,14 @@ Screens:
                               )
                           )
                       );
-                      Reset(cmb_MotivoSemProdHHU);
-                      ClearCollect(colFalhasHHU, { fRotulo: "", fMsg: "" });
-                      Clear(colFalhasHHU);
+                      Reset(cmb_MotivoSemProdHHM);
+                      ClearCollect(colFalhasHHM, { fRotulo: "", fMsg: "" });
+                      Clear(colFalhasHHM);
                       If(
-                          CountRows(colSalvasHHU) > CountRows(Distinct(colSalvasHHU, Hora)),
+                          CountRows(colSalvasHHM) > CountRows(Distinct(colSalvasHHM, Hora)),
                           Notify(
-                              "ATENÇÃO: o Tubo tem " &
-                              Text(CountRows(colSalvasHHU) - CountRows(Distinct(colSalvasHHU, Hora))) &
+                              "ATENÇÃO: o Mandril tem " &
+                              Text(CountRows(colSalvasHHM) - CountRows(Distinct(colSalvasHHM, Hora))) &
                               " registro(s) duplicado(s) neste turno. O placar vai mentir até a lista ser limpa — avise o desenvolvimento.",
                               NotificationType.Error,
                               20000
