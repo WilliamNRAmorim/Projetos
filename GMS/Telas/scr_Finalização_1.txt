@@ -1746,7 +1746,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.4.2"
+            Text: ="Versão 0.4.3"
             Width: =183
             X: =1168
             Y: =710
@@ -3097,11 +3097,11 @@ Screens:
           Properties:
             BorderColor: =fx_CorBorda
             BorderThickness: =1
-            Color: =fx_CorTextoSuave
+            Color: =fx_CorTexto
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
             Fill: =fx_CorSuperficie
             Font: =fx_FonteFamilia
-            Height: =30
+            Height: =44
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
               =Set(varPackingManual, true);
@@ -3117,21 +3117,32 @@ Screens:
               ClearCollect(colLancesMan, ForAll(Sequence(26), {Idx: Value, Txt: ""}));
               Navigate(TelaImpressao, ScreenTransition.None)
             PressedFill: =fx_CorInfoSuave
-            RadiusBottomLeft: =fx_RaioS
-            RadiusBottomRight: =fx_RaioS
-            RadiusTopLeft: =fx_RaioS
-            RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteApoio
-            Text: ="Pack manual"
-            Width: =89
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤPacking manual"
+            Width: =183
             X: =1168
-            Y: =676
+            Y: =690
+      - ico_PackingManualExt:
+          Control: ModernIcon@1.1.1
+          Properties:
+            DisplayMode: =btn_PackingManualExt.DisplayMode
+            Height: =24
+            Icon: ="Add"
+            IconColor: =fx_CorInfo
+            OnSelect: =Select(btn_PackingManualExt)
+            Width: =24
+            X: =1186
+            Y: =700
       - btn_DividirPalletExt:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =fx_CorBorda
+            BorderColor: =If(Self.DisplayMode = DisplayMode.Edit, fx_CorInfo, fx_CorBorda)
             BorderThickness: =1
-            Color: =fx_CorTextoSuave
+            Color: =If(Self.DisplayMode = DisplayMode.Edit, fx_CorInfo, fx_CorRotulo)
             DisplayMode: |-
               =If(
                   IsBlank(gal_FilaExt.Selected.ID) || IsEmpty(colLancesExt) || varProcessando,
@@ -3140,7 +3151,8 @@ Screens:
               )
             Fill: =fx_CorSuperficie
             Font: =fx_FonteFamilia
-            Height: =30
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcao
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
               =IfError(
@@ -3174,11 +3186,22 @@ Screens:
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteApoio
-            Text: ="Dividir pallet"
-            Width: =89
-            X: =1262
-            Y: =676
+            Size: =fx_FonteCorpo
+            Text: ="ㅤㅤDividir pallet"
+            Width: =165
+            X: =961
+            Y: =700
+      - ico_DividirPalletExt:
+          Control: ModernIcon@1.1.1
+          Properties:
+            DisplayMode: =btn_DividirPalletExt.DisplayMode
+            Height: =24
+            Icon: ="Cut"
+            IconColor: =If(btn_DividirPalletExt.DisplayMode = DisplayMode.Edit, fx_CorInfo, fx_CorRotulo)
+            OnSelect: =Select(btn_DividirPalletExt)
+            Width: =24
+            X: =977
+            Y: =716
       - cntr_PalletExt:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout

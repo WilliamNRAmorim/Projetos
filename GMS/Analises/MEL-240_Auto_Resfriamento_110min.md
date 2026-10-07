@@ -12,7 +12,7 @@ Então o jeito certo é **gravar esse campo sozinho** aos 110 min, não criar um
 ## Fluxo `GMS_AutoResfriamentoVulca` (Power Automate, nuvem, agendado)
 1. **Recurrence**: a cada 5 min (24 h).
 2. **Get items** (`ficha_producao`), Filter Query:
-   `processo eq 'Vulcanização' and status_processo eq 'Em processo' and InicioResfriamento_Vulcanizacao eq null and data_hora_inicio_vulcanizacao ne null and data_hora_inicio_vulcanizacao le '@{addMinutes(utcNow(), -110)}'`
+   `field_10 eq 'Vulcanização' and field_11 eq 'Em processo' and InicioResfriamento_Vulcanizacao eq null and field_35 ne null and field_35 le '@{addMinutes(utcNow(), -110)}'`
    - Top Count 50. Se o Studio reclamar de coluna não indexada, indexar `status_processo`.
 3. **Apply to each** → **Update item** (mesma lista, Id do item):
    - `InicioResfriamento_Vulcanizacao` = `addMinutes(items('Apply_to_each')?['data_hora_inicio_vulcanizacao'], 110)`

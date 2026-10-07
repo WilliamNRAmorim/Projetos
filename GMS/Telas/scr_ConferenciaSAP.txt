@@ -18,19 +18,20 @@ Screens:
             HoverFill: =Color.Transparent
             OnSelect: |-
               =ClearCollect(
+                  // v0.1.2 · só mostra pendência detectada a partir de 09/10/2026 (William 08/10: "de amanhã pra frente, de hoje pra trás não"). Para mudar o corte, troque Date(2026, 10, 9) nas 2 consultas abaixo.
                   // v0.1.1 · MEL-196 · C29. Filhos da galeria com Select(Parent) (v0.1.0 não selecionava); Justificada trava tratativa até Reabrir. A conta é do fluxo GMS_Conferencia_Diaria; a tela só lê a lista
                   // Conferencia_SAP (Status é texto: filtro delegável) e grava a tratativa.
                   // DifAbs entra na carga para os dois lados (galeria e ctxConfSel) terem o MESMO schema.
                   colConfSAP,
                   AddColumns(
-                      Filter(Conferencia_SAP, Status = "Aberto" || Status = "Justificado"),
+                      Filter(Conferencia_SAP, (Status = "Aberto" || Status = "Justificado") && DataDeteccao >= Date(2026, 10, 9)),
                       DifAbs, Abs(Dif_m)
                   )
               );
               ClearCollect(
                   colConfResolvSAP,
                   AddColumns(
-                      FirstN(Sort(Filter(Conferencia_SAP, Status = "Resolvido"), ID, SortOrder.Descending), 60),
+                      FirstN(Sort(Filter(Conferencia_SAP, Status = "Resolvido" && DataDeteccao >= Date(2026, 10, 9)), ID, SortOrder.Descending), 60),
                       DifAbs, Abs(Dif_m)
                   )
               );
@@ -133,7 +134,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.1.1"
+            Text: ="Versão 0.1.2"
             Width: =180
             X: =1166
             Y: =21

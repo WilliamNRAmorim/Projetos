@@ -632,6 +632,86 @@ fx_CodigoBarras39(txt: Text, alt: Number): Text =
 
 
 
+//  Código de barras do TOTAL do Packing List, IGUAL ao do Excel antigo (macro GerarBarcodeImprimir):
+//  texto = CStr(SOMA) com "." trocado por ","  (15 -> "15", 15,5 -> "15,5"); Code 128 com START A (103),
+//  valor do caractere = ASCII - 32, checksum = 103 + soma(valor x posição) mod 103, STOP 106; só barras, sem legenda.
+//  O bipador da logística lê esse formato; arredondar o total ou usar START B muda as barras.
+fx_TotalBarras(n: Number): Text =
+    With(
+        { _s: Text(Round(n, 6), "[$-en-US]0.######") },
+        Substitute(If(Right(_s, 1) = ".", Left(_s, Len(_s) - 1), _s), ".", ",")
+    );
+
+fx_C128BitsA(txt: Text): Text =
+    If(
+        IsBlank(txt),
+        "",
+        With(
+            { _n: Len(txt) },
+            With(
+                {
+                    _chk: Mod(
+                        103 + Sum(
+                            ForAll(
+                                Sequence(_n) As _i,
+                                fx_C128Val(Mid(txt, _i.Value, 1)) * _i.Value
+                            ),
+                            Value
+                        ),
+                        103
+                    )
+                },
+                fx_C128Pat(103)
+                & Concat(
+                    ForAll(
+                        Sequence(_n) As _i,
+                        fx_C128Pat(fx_C128Val(Mid(txt, _i.Value, 1)))
+                    ),
+                    Value
+                )
+                & fx_C128Pat(_chk)
+                & fx_C128Pat(106)
+            )
+        )
+    );
+
+// SVG de 560 px x `alt`, módulo inteiro, barras centralizadas, sem texto embaixo (como a macro do Excel).
+fx_CodigoBarras128A(txt: Text, alt: Number): Text =
+    If(
+        IsBlank(Trim(txt)),
+        "",
+        With(
+            { _bits: fx_C128BitsA(txt) },
+            With(
+                { _n: Max(1, RoundDown(520 / Len(_bits), 0)) },
+                With(
+                    { _x0: RoundDown((560 - Len(_bits) * _n) / 2, 0) },
+                    "<svg xmlns='http://www.w3.org/2000/svg' width='560' height='" & Text(alt, "[$-en-US]0")
+                    & "' viewBox='0 0 560 " & Text(alt, "[$-en-US]0") & "' shape-rendering='crispEdges'>"
+                    & "<rect width='100%' height='100%' fill='white'/>"
+                    & "<path fill='black' d='"
+                    & Concat(
+                        ForAll(
+                            Sequence(Len(_bits)) As _i,
+                            If(
+                                Mid(_bits, _i.Value, 1) = "1",
+                                "M" & Text(_x0 + (_i.Value - 1) * _n, "[$-en-US]0")
+                                & " 6h" & Text(_n, "[$-en-US]0")
+                                & "v" & Text(alt - 12, "[$-en-US]0")
+                                & "h-" & Text(_n, "[$-en-US]0") & "z",
+                                ""
+                            )
+                        ),
+                        Value
+                    )
+                    & "'/></svg>"
+                )
+            )
+        )
+    );
+
+
+
 //  §9 · LAYOUT  ═══════════════════════════════════════════════════════
 //  Posição de elemento é DADO, não coordenada dentro do controle.
 
