@@ -1,4 +1,4 @@
-# Descartar OP em qualquer etapa (MEL-222): como ficou
+# Descartar OP e desfazer início em qualquer etapa (MEL-222): como ficou
 
 Tela nova `Telas/scr_DescartarOP_1.txt` (v0.1.0, 08/10/2026) + botão "Descartar OP" nas 7 telas de etapa. O Mandril continua com o fluxo dele (lápis da bitola).
 **Status: escrito e passou na bateria `gms_qa_yaml.py`; NÃO foi aberto nem testado no Studio.**
@@ -37,3 +37,16 @@ Descartar = tirar do processo. O material apontado vira não conforme e sai (nã
 - Só descarta OP **Em processo**. OP na fila (Aguardando) ainda não tem o botão; para engano de plano use Editar a OP.
 - Mandril não usa esta tela.
 - A liberação de carretel de mandril (`CarreteisMandril`) continua só no fluxo do Mandril.
+
+## Desfazer o início (v0.2.0)
+Na mesma tela (`scr_DescartarOP_1`) há duas abas no cabeçalho: **Descartar a OP** e **Desfazer o início**. O botão nas telas de etapa agora se chama "Descartar / desfazer início".
+Serve para quando o operador apertou Iniciar por engano: a OP volta para **Aguardando** (fila da etapa), como se nada tivesse acontecido.
+
+O que o "Desfazer o início" faz, na ordem:
+1. Só vale com OP **Em processo** e **sem metros apontados** na etapa. Com metros apontados a tela manda usar Descartar.
+2. `ficha_producao`: `status_processo = "Aguardando"`, apaga data/hora de início, início em processo, turno e `Carretel Saida` da etapa (na Trançagem só apaga o início se foi este Iniciar que o gravou, porque ali um segundo Iniciar preserva o primeiro) e acrescenta a nota "[INÍCIO DESFEITO ...]" na observação da etapa.
+3. `lista_carreteis`: libera o carretel reservado por esta etapa (`op` e `etapa_processo` em branco).
+4. `Historico_Carretel`: apaga a linha de custódia criada por este início (mesma OP, etapa e hora de entrada do evento).
+5. `Eventos_Producao`: apaga o evento "Início" da OP nesta etapa, para o Hora-Hora e o painel não contarem dois inícios quando a OP for iniciada de novo.
+
+**Não volta sozinho:** se ao iniciar o operador usou a **sobra de um carretel** (Tubo, Trançagem, Cobertura), os metros dessa sobra foram zerados naquele momento. A tela avisa o carretel e os metros (guardados no evento de início) para ajustar na tela de carretéis.

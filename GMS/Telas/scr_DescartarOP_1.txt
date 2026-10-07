@@ -5,7 +5,7 @@ Screens:
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
         =Set(varProcessando, false);
-        UpdateContext({ctxMotivoDesc: "", ctxQtdDesc: 0});
+        UpdateContext({ctxMotivoDesc: "", ctxQtdDesc: 0, ctxModoDesc: "Descartar"});
         ClearCollect(colDescOP, Filter(ficha_producao, ID = varDescarteID));
         ClearCollect(
             colColabDesc,
@@ -52,8 +52,8 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =56
             Size: =fx_FonteTitulo
-            Text: ="Descartar OP · " & varDescarteEtapa
-            Width: =700
+            Text: =If(ctxModoDesc = "Desfazer", "Desfazer início · ", "Descartar OP · ") & varDescarteEtapa
+            Width: =560
             X: =60
       - lbl_SubDesc:
           Control: Label@2.5.1
@@ -62,10 +62,65 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =46
             Size: =fx_FonteCorpo
-            Text: ="Tira a OP do processo. O registro fica guardado com status Cancelado."
-            Width: =900
+            Text: |-
+              =If(
+                  ctxModoDesc = "Desfazer",
+                  "Volta a OP para a fila da etapa, como se não tivesse sido iniciada.",
+                  "Tira a OP do processo. O registro fica guardado com status Cancelado."
+              )
+            Width: =640
             X: =72
             Y: =50
+      - btn_ModoDescartarDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoDesc = "Descartar", fx_CorSuperficie, fx_CorRotulo)
+            BorderThickness: =If(ctxModoDesc = "Descartar", 3, 1)
+            Color: =If(ctxModoDesc = "Descartar", fx_CorTexto, fx_CorSuperficie)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxModoDesc = "Descartar", fx_CorSuperficie, fx_CorHeader)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoDesc = "Descartar", fx_CorSuperficie, ColorFade(fx_CorHeader, 20%))
+            OnSelect: |-
+              =UpdateContext({ctxModoDesc: "Descartar", ctxMotivoDesc: ""});
+              Reset(inp_DetalheDesc)
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Descartar a OP"
+            Width: =320
+            X: =700
+            Y: =26
+      - btn_ModoDesfazerDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoDesc = "Desfazer", fx_CorSuperficie, fx_CorRotulo)
+            BorderThickness: =If(ctxModoDesc = "Desfazer", 3, 1)
+            Color: =If(ctxModoDesc = "Desfazer", fx_CorTexto, fx_CorSuperficie)
+            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxModoDesc = "Desfazer", fx_CorSuperficie, fx_CorHeader)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoDesc = "Desfazer", fx_CorSuperficie, ColorFade(fx_CorHeader, 20%))
+            OnSelect: |-
+              =UpdateContext({ctxModoDesc: "Desfazer", ctxMotivoDesc: ""});
+              Reset(inp_DetalheDesc)
+            PressedFill: =Self.Fill
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Desfazer o início"
+            Width: =320
+            X: =1030
+            Y: =26
       - rct_CardOPDesc:
           Control: Rectangle@2.3.0
           Properties:
@@ -219,7 +274,15 @@ Screens:
             Height: =130
             Size: =fx_FonteCorpo
             Text: |-
-              ="Descartar não apaga a OP. O material apontado vira não conforme e sai: não volta para a etapa anterior. Os carretéis da OP são liberados. Se foi só engano de digitação, volte e use Editar a OP."
+              =If(
+                  ctxModoDesc = "Desfazer",
+                  If(
+                      ctxQtdDesc > 0,
+                      "Já há metros apontados nesta etapa, então não dá para desfazer o início. Use Descartar a OP.",
+                      "A OP volta para Aguardando: o início, o carretel reservado e o registro de início são apagados. Se você usou a sobra de um carretel ao iniciar, os metros dela não voltam sozinhos."
+                  ),
+                  "Descartar não apaga a OP. O material apontado vira não conforme e sai: não volta para a etapa anterior. Os carretéis da OP são liberados. Se foi só engano de digitação, volte e use Editar a OP."
+              )
             Width: =570
             X: =31
             Y: =472
@@ -284,23 +347,23 @@ Screens:
       - btn_MotMaterialDesc:
           Control: Classic/Button@2.2.0
           Properties:
-            BorderColor: =If(ctxMotivoDesc = "Material não conforme", fx_CorErro, fx_CorBorda)
-            BorderThickness: =If(ctxMotivoDesc = "Material não conforme", 3, 1)
-            Color: =If(ctxMotivoDesc = "Material não conforme", fx_CorSuperficie, fx_CorTexto)
+            BorderColor: =If(ctxMotivoDesc = Self.Text, fx_CorErro, fx_CorBorda)
+            BorderThickness: =If(ctxMotivoDesc = Self.Text, 3, 1)
+            Color: =If(ctxMotivoDesc = Self.Text, fx_CorSuperficie, fx_CorTexto)
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-            Fill: =If(ctxMotivoDesc = "Material não conforme", fx_CorErro, fx_CorSuperficie)
+            Fill: =If(ctxMotivoDesc = Self.Text, fx_CorErro, fx_CorSuperficie)
             Font: =fx_FonteFamilia
             Height: =48
-            HoverFill: =If(ctxMotivoDesc = "Material não conforme", ColorFade(fx_CorErro, -20%), fx_CorFundo)
+            HoverFill: =If(ctxMotivoDesc = Self.Text, ColorFade(fx_CorErro, -20%), fx_CorFundo)
             OnSelect: |-
-              =UpdateContext({ctxMotivoDesc: "Material não conforme"})
+              =UpdateContext({ctxMotivoDesc: Self.Text})
             PressedFill: =Self.Fill
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteCorpo
-            Text: ="Material não conforme"
+            Text: =If(ctxModoDesc = "Desfazer", "Iniciei antes da hora", "Material não conforme")
             Width: =330
             X: =650
             Y: =216
@@ -635,6 +698,242 @@ Screens:
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteCorpo
             Text: ="Descartar a OP"
+            Visible: =ctxModoDesc = "Descartar"
+            Width: =340
+            X: =986
+            Y: =456
+      - btn_ConfirmarDesfazerDesc:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  !varProcessando &&
+                  ctxQtdDesc = 0 &&
+                  !IsBlank(ctxMotivoDesc) &&
+                  (ctxMotivoDesc <> "Outro" || !IsBlank(Trim(inp_DetalheDesc.Text))) &&
+                  !IsBlank(cmb_OperadorDesc.Selected.Nome),
+                  DisplayMode.Edit,
+                  DisplayMode.Disabled
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorInfo, -20%)
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              Refresh(lista_carreteis);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = varDescarteID),
+                      _agora: Now(),
+                      _et: varDescarteEtapa,
+                      _quem: Coalesce(cmb_OperadorDesc.Selected.Nome, ""),
+                      _motivo: Trim(
+                          ctxMotivoDesc &
+                          If(!IsBlank(Trim(inp_DetalheDesc.Text)), " - " & Trim(inp_DetalheDesc.Text), "")
+                      ),
+                      _ev: First(
+                          Sort(
+                              Filter(
+                                  Filter(Eventos_Producao, origem_ID = varDescarteID),
+                                  etapa.Value = varDescarteEtapa && tipo.Value = "Início"
+                              ),
+                              data_hora,
+                              SortOrder.Descending
+                          )
+                      )
+                  },
+                  With(
+                      {
+                          _nota: "  [INÍCIO DESFEITO " & Text(_agora, "[$-pt-BR]dd/mm hh:mm") & " na " & _et &
+                              " por " & _quem & " - " & _motivo & "]"
+                      },
+                      If(
+                          IsBlank(_r.ID),
+                          Notify("Esta OP não existe mais no servidor. Volte e atualize a tela.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          _r.Modified <> First(colDescOP).Modified,
+                          Notify("Este registro foi alterado por outro usuário. Volte, atualize e tente de novo.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          _r.status_processo <> "Em processo",
+                          Notify("Esta OP não está em processo. Volte e atualize a tela.", NotificationType.Error, 8000);
+                          Set(varProcessando, false),
+                          ctxQtdDesc > 0,
+                          Notify("Já há metros apontados nesta etapa. Use Descartar a OP.", NotificationType.Warning, 8000);
+                          Set(varProcessando, false),
+                          IsBlank(_motivo) || IsBlank(_quem),
+                          Notify("Escolha o motivo e quem está desfazendo.", NotificationType.Warning, 6000);
+                          Set(varProcessando, false),
+                          Switch(
+                              _et,
+                              "Tubo",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_tubo: Blank(),
+                              InicioEmProcesso_Tubo: Blank(),
+                              Turno_Tubo: Blank(),
+                              'Carretel Saida': Blank(),
+                              Observação_tubo: Trim(Coalesce(_r.Observação_tubo, "") & _nota)
+                                  }
+                              ),
+                              "Trançagem",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_trancadeira: If(_r.data_hora_inicio_trancadeira = _ev.data_hora, Blank(), _r.data_hora_inicio_trancadeira),
+                              InicioEmProcesso_Trançagem: If(_r.InicioEmProcesso_Trançagem = _ev.data_hora, Blank(), _r.InicioEmProcesso_Trançagem),
+                              Turno_Trançagem: If(_r.InicioEmProcesso_Trançagem = _ev.data_hora, Blank(), _r.Turno_Trançagem),
+                              'Carretel Saida': Blank(),
+                              Observação_Trançagem: Trim(Coalesce(_r.Observação_Trançagem, "") & _nota)
+                                  }
+                              ),
+                              "Cobertura",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_cobertura: Blank(),
+                              InicioEmProcesso_Cobertura: Blank(),
+                              Turno_Cobertura: Blank(),
+                              'Carretel Saida': Blank(),
+                              Observação_Cobertura: Trim(Coalesce(_r.Observação_Cobertura, "") & _nota)
+                                  }
+                              ),
+                              "Bandagem",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_bandagem: Blank(),
+                              InicioEmProcesso_Bandagem: Blank(),
+                              Turno_Bandagem: Blank(),
+                              Observação_Bandagem: Trim(Coalesce(_r.Observação_Bandagem, "") & _nota)
+                                  }
+                              ),
+                              "Vulcanização",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_vulcanizacao: Blank(),
+                              InicioEmProcesso_Vulcanização: Blank(),
+                              Turno_Vulcanização: Blank(),
+                              Observação_Bandagem: Trim(Coalesce(_r.Observação_Bandagem, "") & _nota)
+                                  }
+                              ),
+                              "Debandagem",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_debandagem: Blank(),
+                              InicioEmProcesso_Debandagem: Blank(),
+                              Turno_Debandagem: Blank(),
+                              'Carretel Saida': Blank(),
+                              Observação_Debandagem: Trim(Coalesce(_r.Observação_Debandagem, "") & _nota)
+                                  }
+                              ),
+                              "Extração",
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                              status_processo: "Aguardando",
+                              data_hora_inicio_extracao: Blank(),
+                              'InicioEmProcesso_Extr./Teste': Blank(),
+                              'Turno_Extr/Teste': Blank(),
+                              cabine_teste: Blank(),
+                              Observação_Debandagem: Trim(Coalesce(_r.Observação_Debandagem, "") & _nota)
+                                  }
+                              )
+                          );
+                          If(
+                              !IsEmpty(Errors(ficha_producao)),
+                              Notify("Não desfez o início: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 15000);
+                              Set(varProcessando, false),
+                              ForAll(
+                                  Filter(lista_carreteis, op = _r.ID && etapa_processo = _et) As _c,
+                                  Patch(lista_carreteis, _c, {op: Blank(), etapa_processo: Blank()})
+                              );
+                              If(
+                                  !IsEmpty(Errors(lista_carreteis)),
+                                  Notify(
+                                      "Início desfeito, mas o carretel NÃO foi liberado — libere na tela de carretéis: " &
+                                      First(Errors(lista_carreteis)).Message,
+                                      NotificationType.Error,
+                                      15000
+                                  )
+                              );
+                              If(
+                                  !IsBlank(_ev.ID),
+                                  ForAll(
+                                      Filter(
+                                          Filter(Historico_Carretel, OP_ID = _r.OP),
+                                          etapa = _et && data_hora_entrada = _ev.data_hora
+                                      ) As _h,
+                                      Remove(Historico_Carretel, _h)
+                                  );
+                                  Remove(Eventos_Producao, _ev);
+                                  If(
+                                      !IsEmpty(Errors(Historico_Carretel)) || !IsEmpty(Errors(Eventos_Producao)),
+                                      Notify(
+                                          "Início desfeito, mas o registro de início ou a custódia do carretel NÃO foram apagados — avise a supervisão.",
+                                          NotificationType.Error,
+                                          15000
+                                      )
+                                  ),
+                                  Notify(
+                                      "Início desfeito, mas não achei o registro de início da OP para apagar do histórico — avise a supervisão.",
+                                      NotificationType.Warning,
+                                      12000
+                                  )
+                              );
+                              If(
+                                  !IsBlank(_ev.carretel) && _ev.carretel <> Coalesce(_r.'Carretel Entrada', ""),
+                                  Notify(
+                                      "Atenção: ao iniciar foi usada a sobra do carretel " & _ev.carretel &
+                                      " (" & Text(_ev.metros, "[$-pt-BR]#.##0") & " m). Os metros dela foram zerados no início e não voltam sozinhos: ajuste na tela de carretéis.",
+                                      NotificationType.Warning,
+                                      15000
+                                  )
+                              );
+                              UpdateContext({ctxMotivoDesc: ""});
+                              Reset(inp_DetalheDesc);
+                              Reset(cmb_OperadorDesc);
+                              Set(varProcessando, false);
+                              Notify(
+                                  "Início da OP " & Text(_r.ID) & " desfeito na " & _et & ". Ela voltou para a fila (Aguardando).",
+                                  NotificationType.Success,
+                                  8000
+                              );
+                              Switch(varDescarteEtapa, "Tubo", Navigate(scr_tubo_1), "Trançagem", Navigate(scr_Trancagem_3), "Cobertura", Navigate(scr_Cobertura_2), "Bandagem", Navigate(scr_Bandagem_1), "Vulcanização", Navigate(scr_Vulcanizacao_1), "Debandagem", Navigate(scr_Debandagem_2), "Extração", Navigate(scr_Finalização_1))
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorInfo, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Desfazer o início"
+            Visible: =ctxModoDesc = "Desfazer"
             Width: =340
             X: =986
             Y: =456
