@@ -1618,13 +1618,13 @@ Screens:
                         ClearCollect(
                             colPalletImp,
                             ForAll(
-                                MatchAll(ThisItem.LanceIDs, "\d+") As _l,
-                                { ID: Value(_l.FullMatch), Qtd: LookUp(colInspPackCOP, ID = Value(_l.FullMatch)).Quantidade }
+                                MatchAll(";" & ThisItem.LanceIDs, "[>;](?<id>\d+)") As _l,
+                                { ID: Value(_l.id), Qtd: LookUp(colInspPackCOP, ID = Value(_l.id)).Quantidade }
                             )
                         );
                         If(
-                            CountRows(Filter(colPalletImp, IsBlank(Qtd))) > 0,
-                            Notify("Não achei " & CountRows(Filter(colPalletImp, IsBlank(Qtd))) & " lance(s) deste pallet. Avise a supervisão.", NotificationType.Error, 8000),
+                            CountRows(Filter(colPalletImp, IsBlank(Qtd))) > 0 || CountRows(colPalletImp) <> ThisItem.QtdLances,
+                            Notify("Não achei todos os lances deste pallet (" & CountRows(Filter(colPalletImp, !IsBlank(Qtd))) & " de " & Text(ThisItem.QtdLances, "[$-en-US]0") & "). Avise a supervisão.", NotificationType.Error, 8000),
                             Set(varFichaIDImp, gal_FilaCOP.Selected.ID);
                             Set(varFalhaRegManual, false);
                             Set(varPackingManual, false);
