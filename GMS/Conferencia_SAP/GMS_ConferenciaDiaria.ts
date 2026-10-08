@@ -1,5 +1,7 @@
 /**
- * GMS_ConferenciaDiaria  v1.1.0  (08/10/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.1.1  (08/10/2026)  MEL-196  C29
+ * v1.1.1: packing so e cobrado de OP Finalizada (OP ainda em Extr./Teste nao gera pendencia de packing); OP com lancamento no SAP
+ *   e processo no GMS diferente de Finalizado/Extr./Teste vira "SAP lancou antes da Extracao/Teste". fichaJson passa a trazer "processo".
  * v1.1.0: o packing passa a vir do GMS (listas Packing_Pallets e Packing_Manual), nao mais do BD Packing List (apagado
  *   em 08/10). Casamento EXATO por ID de lance (LanceIDs do pallet = ID de RegistrosInspecao). Categorias novas:
  *   pallet com lance inexistente / de outra OP / repetido em outro pallet / total diferente da soma dos lances, e
@@ -72,7 +74,7 @@ interface InspIn { id?: Val; op?: Val; q?: Val; dt?: Val; cab?: Val;
   ID?: Val; OP_ID?: Val; Quantidade_Inspe_x00e7__x00e3_o?: Val; DataHoraInspecao?: Val; cabine_teste?: Val; }
 interface RefIn { id?: Val; op?: Val; q?: Val; dt?: Val; cod?: Val; cab?: Val;
   ID?: Val; OP_ID?: Val; _x0043_?: Val; Created?: Val; A?: Val; cabine_teste?: Val; }
-interface FichaIn { op?: Val; pn?: Val; OP?: Val; Mangueira?: Val; }
+interface FichaIn { op?: Val; pn?: Val; proc?: Val; OP?: Val; Mangueira?: Val; processo?: Val; }
 interface PackIn { id: number; sl: number; pn: string; q: number; ts: string; c: boolean; }
 // Packing_Pallets e Packing_Manual (corpo CRU do SharePoint, nomes internos) ou formato curto
 interface PalletIn { id?: Val; ficha?: Val; pallet?: Val; op?: Val; lances?: Val; qtd?: Val; total?: Val; imp?: Val;
@@ -121,6 +123,7 @@ const CAT: { [k: string]: Categoria } = {
   PACK_DUP: { nome: "Romaneio duplicado no Packing", prio: 12, acao: "Cancelar o romaneio duplicado no Packing List", quem: "Logística / Cabine" },
   PACK_ID: { nome: "ID de romaneio repetido no Packing", prio: 12, acao: "Corrigir o ID do romaneio no Packing List (um ID por romaneio)", quem: "Logística / Cabine" },
   SEM_PACK: { nome: "Lance aprovado sem packing", prio: 13, acao: "Imprimir o packlist pelo GMS (Finalização) ou confirmar onde está o material", quem: "Logística / Cabine" },
+  SAP_CEDO: { nome: "SAP lançou antes da Extração/Teste", prio: 2, acao: "Estornar o lançamento no SAP ou corrigir a etapa da OP no GMS: o SAP só lança depois do apontamento na cabine (Extr./Teste)", quem: "SAP / Supervisão" },
   PP_LANCE: { nome: "Pallet com lance que não existe no GMS", prio: 14, acao: "Conferir o pallet em Packing_Pallets: ID de lance apagado ou digitado errado", quem: "Supervisão / Cabine" },
   PP_OP: { nome: "Pallet com lance de outra OP", prio: 14, acao: "Conferir qual OP é a certa: lance do pallet pertence a outra OP no GMS", quem: "Supervisão / Cabine" },
   PP_DUP: { nome: "Lance em mais de um pallet", prio: 15, acao: "Corrigir os pallets: cada lance só pode sair em um pallet", quem: "Supervisão / Cabine" },
@@ -265,6 +268,8 @@ function conferir(
   const pnPorOP = new Map<string, string>();
   for (const f of fichaIn) { const o = textoOP(pega(f.op, f.OP)); const pn = txt(pega(f.pn, f.Mangueira)); if (o && pn) { pnPorOP.set(o, normPN(pn)); } }
   for (const s of sap) { if (s.pn) { pnPorOP.set(s.op, s.pn); } }   // SAP manda no PN
+  const procPorOP = new Map<string, string>();
+  for (const f of fichaIn) { const o = textoOP(pega(f.op, f.OP)); const pr = limpo(txt(pega(f.proc, f.processo))); if (o && pr) { procPorOP.set(o, pr); } }
 
   const lancesOP = agruparPorOP(lances);
   const refOP = agruparPorOP(refugos);
@@ -352,9 +357,15 @@ function conferir(
     const pack = packingPorOP.get(op) || 0;
     let catFinal = cat;
     let detalhe = cat ? detalharOP(a, cat) : "";
+    const procOP = procPorOP.get(op) || "";
+    if (procOP !== "" && !ehFinalizada(procOP) && !ehExtracao(procOP) && a.sap > 0) {
+      // SAP so lanca depois do apontamento na cabine (Extr./Teste): lancamento com a OP em etapa anterior e erro
+      catFinal = CAT.SAP_CEDO;
+      detalhe = "No GMS a OP está em " + procOP + " (ainda não chegou à Extração/Teste), mas o SAP já lançou " + fmt(a.sap) + " m" + (cat ? " | " + detalharOP(a, cat) : "");
+    }
     if (!cat) {
       // GMS x SAP ok: cobra packing de lance cujo dia de cobranca ja chegou
-      const semPack = (lancesOP.get(op) || []).filter(l => !l.slice && l.dia >= diaMinPack && l.dia >= PACK_GMS_DESDE && diaCobranca(l.dia) <= d);
+      const semPack = (!procPorOP.has(op) || ehFinalizada(procPorOP.get(op) || "") ? (lancesOP.get(op) || []) : []).filter(l => !l.slice && l.dia >= diaMinPack && l.dia >= PACK_GMS_DESDE && diaCobranca(l.dia) <= d);
       if (semPack.length) {
         catFinal = CAT.SEM_PACK;
         detalhe = "Lances sem packing: " + listar(semPack.map(l => fmt(l.q) + " m (" + dm(l.dia) + " " + hm(l.t) + ", Id " + l.id + ")"), 6);
@@ -622,6 +633,11 @@ function montarItem(op: string, ab: Aberto | undefined, a: AnaliseOP, c: Categor
     detalhe: detalhe, acao: c.acao, quemResolve: c.quem, cabine: a.cab, dataRef: d, corpoSP: "", corpoSPNovo: ""
   };
 }
+
+/** Processo da ficha sem acento/caixa: "Finalizado" e "Extr./Teste" sao as unicas etapas em que o SAP pode ter lancamento. */
+function semAcento(s: string): string { return String(s).toLowerCase().replace(/[áàâã]/g, "a").replace(/[éê]/g, "e").replace(/í/g, "i").replace(/[óôõ]/g, "o").replace(/ú/g, "u").replace(/ç/g, "c").trim(); }
+function ehFinalizada(p: string): boolean { return semAcento(p) === "finalizado"; }
+function ehExtracao(p: string): boolean { return semAcento(p).indexOf("extr") === 0; }
 
 function itemPallet(chave: string, ab: Aberto | undefined, op: string, pn: string, totalM: number, c: Categoria, detalhe: string, d: string, status: string = "Aberto"): ItemConferencia {
   const st = status === "Resolvido" ? "Resolvido" : (ab && ab.status === "Justificado" ? "Justificado" : "Aberto");
