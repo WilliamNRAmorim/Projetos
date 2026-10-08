@@ -10,22 +10,30 @@ const q = new URLSearchParams(location.search), W = 1080, H = 1350, M = 80;
 const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2;
 const NEWS = {
   satelite: {
-    out: 'Qui08_D_Instagram_BitNews_SateliteIA.png', dir: 'semana-2026-10-05', tag: 'ESPAÇO · IA',
+    out: 'Qui08_D_Instagram_BitNews_SateliteIA.png', dir: 'semana-2026-10-05', tag: 'ESPAÇO · IA', bit: 'bit_astronauta',
     head: [['"Data center no espaço": ', A], ['a IA do Google já roda em órbita', P]],
     sub: 'E o maior problema lá em cima não é a radiação. É o calor.',
-    arte(g, bit) { // espaço, arco da Terra, satélite em traço com 4 chips e ondas de calor; o Bit observando
-      g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, 760);
-      for (let i = 0; i < 90; i++) { const x = (i * 397) % W, y = (i * 263) % 700, r = (i % 3) * 0.8 + 0.8; g.fillStyle = `rgba(238,237,232,${0.15 + (i % 5) * 0.08})`; g.fillRect(x, y, r, r); }
-      const gl = g.createRadialGradient(W / 2, 1400, 600, W / 2, 1400, 1000); gl.addColorStop(0, 'rgba(255,59,31,0.0)'); gl.addColorStop(0.62, 'rgba(255,59,31,0.0)'); gl.addColorStop(0.64, 'rgba(255,59,31,0.35)'); gl.addColorStop(1, 'rgba(255,59,31,0)'); g.fillStyle = gl; g.fillRect(0, 0, W, 760);
-      g.strokeStyle = P; g.lineWidth = 4; g.beginPath(); g.arc(W / 2, 1400, 820, Math.PI * 1.2, Math.PI * 1.8); g.stroke();
-      g.save(); g.translate(560, 300); g.rotate(-0.18); g.lineWidth = 5; g.strokeStyle = P;
-      g.fillStyle = I2; g.fillRect(-70, -90, 140, 180); g.strokeRect(-70, -90, 140, 180); // corpo do tamanho de uma geladeira
-      for (let k = 0; k < 4; k++) { g.fillStyle = A; g.fillRect(-46 + (k % 2) * 52, -60 + Math.floor(k / 2) * 66, 40, 40); } // as 4 TPUs
-      for (const s of [-1, 1]) { g.strokeRect(s > 0 ? 90 : -330, -55, 240, 110); for (let c = 1; c < 6; c++) { const x0 = s > 0 ? 90 : -330; g.beginPath(); g.moveTo(x0 + c * 40, -55); g.lineTo(x0 + c * 40, 55); g.stroke(); } g.beginPath(); g.moveTo(s * 70, 0); g.lineTo(s * 90, 0); g.stroke(); }
-      g.strokeStyle = A; g.lineWidth = 6; for (let w = 0; w < 3; w++) { g.beginPath(); for (let y = 0; y <= 120; y += 6) { const x = -30 + w * 30 + Math.sin(y / 14) * 9; y ? g.lineTo(x, 110 + y) : g.moveTo(x, 110); } g.stroke(); } // calor saindo
+    arte(g, bit, sat) { // espaço de verdade: nebulosa, Terra azul com atmosfera e nascer do sol, satélite dourado esquentando; o Bit astronauta
+      const R = (a, b) => { let s = Math.sin(a * 91.7 + b * 13.1) * 43758.5; return s - Math.floor(s); };
+      g.fillStyle = '#05060C'; g.fillRect(0, 0, W, 760);
+      for (const [x, y, r, c] of [[220, 160, 420, 'rgba(110,60,190,0.30)'], [820, 120, 360, 'rgba(40,90,200,0.28)'], [560, 330, 300, 'rgba(200,60,120,0.14)']]) { const n = g.createRadialGradient(x, y, 0, x, y, r); n.addColorStop(0, c); n.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = n; g.fillRect(0, 0, W, 760); } // nebulosa
+      for (let i = 0; i < 260; i++) { const x = R(i, 1) * W, y = R(i, 2) * 620, s = R(i, 3) < 0.92 ? 1.2 : 2.6; g.globalAlpha = 0.35 + R(i, 4) * 0.65; g.fillStyle = R(i, 5) < 0.15 ? '#BFD4FF' : '#FFFFFF'; g.fillRect(x, y, s, s); } g.globalAlpha = 1;
+      // Terra: disco grande saindo por baixo, oceano em gradiente, nuvens, lado noturno com luzes de cidade
+      const cx = W / 2, cy = 1460, r = 900;
+      g.save(); g.beginPath(); g.arc(cx, cy, r, 0, 7); g.clip();
+      const oc = g.createLinearGradient(0, cy - r, W, cy - r + 500); oc.addColorStop(0, '#0B3D91'); oc.addColorStop(0.5, '#1A6FD1'); oc.addColorStop(1, '#0A2A66'); g.fillStyle = oc; g.fillRect(0, 0, W, 760);
+      g.fillStyle = 'rgba(46,140,90,0.55)'; for (let i = 0; i < 9; i++) { g.beginPath(); g.ellipse(80 + i * 120, 610 + R(i, 7) * 90, 70 + R(i, 8) * 60, 22 + R(i, 9) * 18, R(i, 10), 0, 7); g.fill(); } // continentes
+      g.fillStyle = 'rgba(255,255,255,0.55)'; for (let i = 0; i < 22; i++) { g.beginPath(); g.ellipse(R(i, 11) * W, 570 + R(i, 12) * 170, 40 + R(i, 13) * 110, 6 + R(i, 14) * 10, -0.08, 0, 7); g.fill(); } // nuvens
+      const night = g.createLinearGradient(0, 0, W, 0); night.addColorStop(0, 'rgba(2,4,14,0.0)'); night.addColorStop(0.55, 'rgba(2,4,14,0.15)'); night.addColorStop(1, 'rgba(2,4,14,0.85)'); g.fillStyle = night; g.fillRect(0, 0, W, 760);
+      g.fillStyle = '#FFB547'; for (let i = 0; i < 70; i++) { const x = 700 + R(i, 15) * 380, y = 600 + R(i, 16) * 160; g.globalAlpha = 0.5 + R(i, 17) * 0.5; g.fillRect(x, y, 2, 2); } g.globalAlpha = 1; // luzes de cidade
       g.restore();
-      g.font = '700 26px "Geist Mono"'; g.fillStyle = MU; g.fillText('4 CHIPS DE IA · 650 KM DE ALTURA', 90, 110);
-      BitArt.draw(g, bit, 930, 745, 300);
+      const atm = g.createRadialGradient(cx, cy, r - 10, cx, cy, r + 70); atm.addColorStop(0, 'rgba(120,200,255,0.75)'); atm.addColorStop(0.3, 'rgba(70,150,255,0.35)'); atm.addColorStop(1, 'rgba(70,150,255,0)'); g.fillStyle = atm; g.beginPath(); g.arc(cx, cy, r + 70, 0, 7); g.arc(cx, cy, r - 10, 0, 7, true); g.fill(); // atmosfera
+      const sun = g.createRadialGradient(150, 575, 0, 150, 575, 260); sun.addColorStop(0, 'rgba(255,250,235,1)'); sun.addColorStop(0.08, 'rgba(255,220,160,0.9)'); sun.addColorStop(0.35, 'rgba(255,170,90,0.25)'); sun.addColorStop(1, 'rgba(255,170,90,0)'); g.fillStyle = sun; g.fillRect(0, 300, 520, 460); // nascer do sol na borda
+      // satélite desenhado no Gemini no mesmo traço do Bit (Marca/cenas/satelite_ia.png), recortado do fundo branco
+      g.save(); g.translate(560, 300); g.rotate(-0.12); const sw = 760, sh = sw * sat.height / sat.width; g.drawImage(sat.sil, -sw / 2 + 4, -sh / 2 + 4, sw, sh); g.drawImage(sat, -sw / 2, -sh / 2, sw, sh); g.restore();
+      g.save(); g.globalCompositeOperation = 'multiply'; const hot = g.createRadialGradient(600, 440, 0, 600, 440, 130); hot.addColorStop(0, '#FF8A3D'); hot.addColorStop(1, '#FFFFFF'); g.fillStyle = hot; g.fillRect(470, 330, 260, 220); g.restore(); // a sobra branca do brilho vira calor laranja
+      g.font = '700 26px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = 'rgba(238,237,232,0.75)'; g.fillText('4 CHIPS DE IA · 650 KM DE ALTURA', 90, 110);
+      BitArt.draw(g, bit, 900, 760, 380);
     },
   },
 };
@@ -35,9 +43,11 @@ function wrap(g, parts, maxW) { // quebra preservando a cor de cada trecho
   const lines = [[]]; let w = 0; for (const [t, col] of words) { const ww = g.measureText(t).width; if (w + ww > maxW && t.trim() && lines.at(-1).length) { lines.push([]); w = 0; } if (!lines.at(-1).length && !t.trim()) continue; lines.at(-1).push([t, col]); w += ww; } return lines;
 }
 (async () => {
-  await loadBrandFonts(); const bit = await BitArt.load('/Marca/bit/bit_pensando.png');
+  await loadBrandFonts(); // o Bit fantasiado do tema, se a arte já existir; senão o pensativo
+  const bit = await BitArt.load(`/Marca/bit/${N.bit || 'bit_pensando'}.png`).catch(() => BitArt.load('/Marca/bit/bit_pensando.png'));
+  const sat = await BitArt.load('/Marca/cenas/satelite_ia.png'); // objeto de cena no traço do Bit (Gemini)
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.textBaseline = 'alphabetic';
-  g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H); N.arte(g, bit);
+  g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H); N.arte(g, bit, sat);
   g.fillStyle = BRAND.ink; g.fillRect(0, 760, W, H - 760);
   g.font = '800 30px "Geist Mono"'; g.letterSpacing = '2px'; const tw = g.measureText(N.tag).width + 40; g.fillStyle = A; g.fillRect(M, 730, tw, 60); g.fillStyle = BRAND.ink; g.fillText(N.tag, M + 20, 771);
   g.font = '900 76px Geist'; g.letterSpacing = '-3px'; let y = 880; for (const ln of wrap(g, N.head, W - 2 * M)) { let x = M; for (const [t, col] of ln) { g.fillStyle = col; g.fillText(t, x, y); x += g.measureText(t).width; } y += 84; }
