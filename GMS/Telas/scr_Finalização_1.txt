@@ -1465,6 +1465,32 @@ Screens:
               Set(varFalhaRegManual, false);
               Set(varPackingManual, false);
               Set(varPalletTxt, "");
+              If(
+                  CountRows(colLancesExt) > 0
+                  && CountRows(colLancesExt) <= 26
+                  && IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID),
+                  Set(varProcessando, true);
+                  IfError(
+                      Patch(
+                          Packing_Pallets,
+                          Defaults(Packing_Pallets),
+                          {
+                              Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
+                              FichaID: gal_FilaExt.Selected.ID,
+                              Pallet: 1,
+                              LanceIDs: Concat(colLancesExt, Text(ID, "[$-en-US]0"), ";"),
+                              QtdLances: CountRows(colLancesExt),
+                              TotalM: Sum(colLancesExt, Quantidade),
+                              Turno: fx_TurnoEm(Now()),
+                              DataHoraImp: Now()
+                          }
+                      );
+                      true,
+                      Set(varFalhaRegManual, true);
+                      true
+                  );
+                  Set(varProcessando, false)
+              );
               Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
               Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
               Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colLancesExt, Quantidade), 0)));
