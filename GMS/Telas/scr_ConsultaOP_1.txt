@@ -80,7 +80,16 @@ Screens:
             OnSelect: |-
               =Refresh(ficha_producao);
               IfError(
-                  ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                  With(
+                      { _q: Trim(txt_BuscaCOP.Text) },
+                      If(
+                          Len(_q) < 6,
+                          ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                          IsNumeric(_q),
+                          ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(_q))),
+                          ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, _q)))
+                      )
+                  ),
                   Notify("Não consegui ler a lista de OPs. Tente de novo.", NotificationType.Error, 8000)
               )
             Tooltip: ="Recarregar"
@@ -128,6 +137,16 @@ Screens:
             HoverFill: =fx_CorInfoSuave
             OnChange: |-
               =With(
+                  { _q: Trim(Self.Text) },
+                  If(
+                      Len(_q) < 6,
+                      ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                      IsNumeric(_q),
+                      ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Value(_q))),
+                      ClearCollect(colConsultaOP, Filter(ficha_producao, StartsWith(Mangueira, _q)))
+                  )
+              );
+              With(
                   { _r: If(IsNumeric(Trim(Self.Text)), LookUp(ficha_producao, OP = Value(Trim(Self.Text)))) },
                   If(
                       !IsBlank(_r.OP),
@@ -153,7 +172,11 @@ Screens:
             Icon: =Icon.Cancel
             OnSelect: |-
               =UpdateContext({ctxBuscaCOP: ""});
-              Reset(txt_BuscaCOP)
+              Reset(txt_BuscaCOP);
+              IfError(
+                  ClearCollect(colConsultaOP, fx_ConsultaOP_Ativas),
+                  Notify("Não consegui ler a lista de OPs. Tente de novo.", NotificationType.Error, 8000)
+              )
             Tooltip: ="Limpar busca"
             Width: =44
             X: =260
@@ -184,7 +207,8 @@ Screens:
             HoverFill: =fx_CorSuperficie
             OnSelect: |-
               =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0")});
-              Reset(txt_BuscaCOP)
+              Reset(txt_BuscaCOP);
+              ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP))
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -209,7 +233,8 @@ Screens:
             HoverFill: =fx_CorSuperficie
             OnSelect: |-
               =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP, "0")});
-              Reset(txt_BuscaCOP)
+              Reset(txt_BuscaCOP);
+              ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP))
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -234,7 +259,8 @@ Screens:
             HoverFill: =fx_CorSuperficie
             OnSelect: |-
               =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP, "0")});
-              Reset(txt_BuscaCOP)
+              Reset(txt_BuscaCOP);
+              ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP))
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -259,7 +285,8 @@ Screens:
             HoverFill: =fx_CorSuperficie
             OnSelect: |-
               =UpdateContext({ctxBuscaCOP: Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP, "0")});
-              Reset(txt_BuscaCOP)
+              Reset(txt_BuscaCOP);
+              ClearCollect(colConsultaOP, Filter(ficha_producao, OP = Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP))
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -281,8 +308,8 @@ Screens:
             Text: |-
               =If(
                   Len(Trim(txt_BuscaCOP.Text)) < 6,
-                  CountRows(gal_FilaCOP.AllItems) & " OPs em andamento",
-                  CountRows(gal_FilaCOP.AllItems) & " OPs encontradas"
+                  CountRows(colConsultaOP) & " OPs em andamento",
+                  CountRows(colConsultaOP) & " OPs encontradas"
               )
             Width: =288
             X: =16
@@ -296,7 +323,7 @@ Screens:
             Height: =80
             Size: =fx_FonteCorpo
             Text: ="Nenhuma OP encontrada. Confira o número ou digite o início do código da mangueira."
-            Visible: =IsEmpty(gal_FilaCOP.AllItems)
+            Visible: =IsEmpty(colConsultaOP)
             Width: =288
             X: =16
             Y: =If(CountRows(colRecentesCOP) > 0, 280, 220)
@@ -306,21 +333,7 @@ Screens:
           Properties:
             Fill: =Color.Transparent
             Height: =768 - Self.Y
-            Items: |-
-              =Sort(
-                  With(
-                      { _q: Trim(txt_BuscaCOP.Text) },
-                      If(
-                          Len(_q) < 6,
-                          colConsultaOP,
-                          IsNumeric(_q),
-                          Filter(ficha_producao, OP = Value(_q)),
-                          Filter(ficha_producao, StartsWith(Mangueira, _q))
-                      )
-                  ),
-                  OP,
-                  SortOrder.Descending
-              )
+            Items: =Sort(colConsultaOP, OP, SortOrder.Descending)
             OnSelect: |-
               =With(
                   { _r: gal_FilaCOP.Selected },

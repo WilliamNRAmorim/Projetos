@@ -5,6 +5,9 @@ Não reconstrói nada pelo registro de inspeção: os metros vêm só dos IDs de
 
 Base: `Telas/scr_ConsultaOP_1.txt` v0.3.1 (a do repositório, com os chips de recentes). Fonte de dados `Packing_Pallets` já está no app.
 
+## ATENÇÃO (09/10): a busca da v0.3.1 foi trocada
+A v0.3.1 buscava a OP dentro do `Items` da galeria e devolvia "0 OPs" para a 30424231 (a 0.3.0 achava). A lista voltou ao padrão que funcionava: o `OnChange` do campo, os chips de recentes, o X e o recarregar carregam `colConsultaOP`, e a galeria só lê essa coleção. **Por isso o caminho mais seguro é colar o arquivo inteiro `Telas/scr_ConsultaOP_1.txt`** (os blocos A1–A5 abaixo ficam como referência do botão de packlist).
+
 ## Ordem de colagem (importa)
 1. **scr_ConsultaOP_1** (ela define `varReimpressaoImp` e `varDataImp`).
 2. **TelaImpressao**.
