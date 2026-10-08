@@ -28,6 +28,17 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | | | |
 | 7 | 10/10 11:00 | Instagram | Carrossel Mario 40 KB (7 itens) | carrossel história | carrossel com gancho meta ("menos que esta imagem") gera salvamentos | | | |
 
+## Benchmarks (amostra de ~20 vídeos do mesmo tema antes de postar)
+### Wi-Fi não significa nada · 08/10/2026 · 24 vídeos (12 PT, 12 EN) no TikTok
+| Faixa | Quem | Curtidas | Como tratou |
+|---|---|---|---|
+| Topo | Stupid Little Genius (EN) | 18K (1.849 salvos, 854 compart.) | rosto + atuação exagerada, placa escrita na mão, 135 s, conta o PORQUÊ (o nome técnico IEEE 802.11b assustava o cliente) |
+| Topo | Vin Explains (EN) | 10,2K (1.491 salvos) | rosto, "professor" em sala de aula (fundo de lousa), 38 s, gancho "people think…" |
+| Meio | Eric Guidry, Doxael, Andrew Grant (EN) | 925–1.358 | rosto falando para a câmera, 36 s, tom "odeio te dizer" |
+| Base | maioria dos vídeos em PT (Tech Oculto, Universo Tech, Fatos Surpreendentes, TechLab…) | 1–103 | sem rosto e sem voz: texto genérico "você sabia?", sem história, sem o porquê |
+**Leitura:** o tema funciona (até 18K), mas quem ganha tem (1) uma PESSOA/personagem com voz e expressão, (2) o porquê por trás (802.11b feio → marketing), (3) duração maior (36–135 s) com tensão, (4) humor de reação. Os vídeos mudos em PT, só com texto, quase não saem do zero. **Risco do nosso vídeo B (mudo, 25 s): cair na faixa de baixo.** Ajuste: narração do Bit + o porquê do 802.11b + o Bit reagindo em cena.
+
 ## Como atualizar (rotina diária e conversas de análise)
+- Antes de produzir cada tema: busque o tema no TikTok (PT e EN), anote ~20 vídeos (curtidas, salvos, duração, rosto/voz/texto, gancho, se conta o porquê) numa tabela de benchmark aqui, e decida o que o nosso precisa ter para ficar no topo. Depois de 24/72 h, compare o nosso com a amostra.
 - Todo dia, antes de produzir: puxe as métricas dos posts de 24 h e 72 h atrás (TikTok Studio → Publicações/Análise; Meta Business Suite → Conteúdo/Insights; LinkedIn → Ver análise), preencha a tabela e escreva 1 linha de aprendizado.
 - Uma vez por semana (sábado): releia a tabela, promova padrões confirmados a "Regras da receita" e ajuste o plano da semana.
