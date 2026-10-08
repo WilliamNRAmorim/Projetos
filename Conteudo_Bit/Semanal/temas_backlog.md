@@ -12,6 +12,18 @@ Levantado em 07/10/2026. Fatos com fonte precisam ser reconferidos com WebSearch
 | Google pôs satélite de IA em órbita (Project Suncatcher) | "por que estão mandando data center pro espaço" | fato rápido | outubro |
 | AI Brasil Experience (28–29/10, SP) | gancho de IA no Brasil | fato rápido | fim de outubro |
 
+## Formatos da gringa para tropicalizar (com o Bit e a nossa cara)
+Pesquisado em 07/10/2026 (EUA/global). A ideia: pegar o FORMATO que viraliza lá fora e trazer pro Brasil antes de chegar aqui.
+| Formato lá fora | Como fica com o Bit | Pilar |
+|---|---|---|
+| **Myth-busting** ("você foi enganado sobre X"); tem ~2,3× mais visualização completa que vlog | "Wi-Fi NÃO significa Wireless Fidelity", "Seu celular não precisa descarregar até 0%"; gancho "você acreditou nisso a vida toda" | fato rápido |
+| **Storytelling sem rosto com voz fixa** (mini-narrativa com tensão e resolução; retenção ~58% maior com voz consistente) | o nosso vídeo A, já no formato da vírgula | história A |
+| **AI tool demo** (uma função impressionante de IA em menos de 60 s) | o Bit testa uma IA nova e reage seco ("ela fez em 3 s o que eu levei uma semana") | fato rápido |
+| **Rock, paper, scissors** (contrasta escolhas e dores) | "Excel, Power BI ou Python?" e o Bit escolhendo com argumento | fato rápido, interativo |
+| **"Be OK"** (dancinha feliz + texto revelando a realidade) | o Bit dançando + "eu quando o deploy passou" / "o servidor: 🔥" | humor dia a dia |
+| **"Two Fishes"** (voz calma explicando uma briga que ninguém pediu) | o Bit explicando com calma por que tab é melhor que espaço | humor dia a dia |
+Observação: os trends que dependem de um áudio famoso (Be OK, Two Fishes) precisam do som adicionado **dentro do app** na hora de postar (o render não pode usar música com direitos). O vídeo sai com o texto e a animação no tempo do áudio, e o `_texto.txt` diz qual som escolher no TikTok/Instagram.
+
 ## Histórias com arco (vídeo A)
 - **QR Code:** inventado em 1994 pra rastrear peça de carro, tratado como modismo, salvo pela câmera do celular. Fracasso → volta por cima.
 - **O bug do fuso horário** (dramatizado, universo GMS): o registro que chegou "amanhã".
