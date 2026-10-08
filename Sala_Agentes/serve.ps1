@@ -75,12 +75,13 @@ while ($l.IsListening) {
           $b = Body $req; $ag = [string]$b.agente
           if ($ag -notmatch $nomeOk -or @('up', 'down') -notcontains [string]$b.nota) { Send $res @{ erro = 'dados inválidos' } 400; break }
           $com = [string]$b.comentario; if ($com.Length -gt 500) { $com = $com.Substring(0, 500) }
-          $reg = [ordered]@{ t = (Get-Date).ToUniversalTime().ToString('o'); agente = $ag; run = [string]$b.run; arquivo = [string]$b.arquivo; nota = [string]$b.nota; comentario = $com }
+          $tagsOk = @('atendeu', 'sem_problemas', 'retrabalho', 'errou', 'nao_atendeu'); $tags = @(@($b.tags) | Where-Object { $tagsOk -contains [string]$_ } | ForEach-Object { [string]$_ }); $ctx = [string]$b.contexto; if ($ctx.Length -gt 200) { $ctx = $ctx.Substring(0, 200) }
+          $reg = [ordered]@{ t = (Get-Date).ToUniversalTime().ToString('o'); agente = $ag; run = [string]$b.run; arquivo = [string]$b.arquivo; nota = [string]$b.nota; tags = $tags; comentario = $com; contexto = $ctx }
           AppendLinha $avalFile (ConvertTo-Json -InputObject $reg -Compress)
           # a avaliação vira lição na memória do agente (ele lê isso ao começar)
           New-Item -ItemType Directory -Force $memDir | Out-Null
           $marca = if ($b.nota -eq 'up') { 'APROVADO' } else { 'REPROVADO' }
-          $linha = "- [$((Get-Date).ToString('yyyy-MM-dd'))] $marca" + $(if ($b.arquivo) { " ($($b.arquivo))" } else { '' }) + $(if ($com) { ": $com" } else { '' })
+          $linha = "- [$((Get-Date).ToString('yyyy-MM-dd'))] $marca" + $(if ($ctx) { " em '$ctx'" } else { '' }) + $(if ($tags.Count) { " [" + ($tags -join ', ') + "]" } else { '' }) + $(if ($com) { ": $com" } else { '' })
           if (-not (Test-Path (MemFile $ag))) { [IO.File]::WriteAllText((MemFile $ag), "# Memória do agente $ag`n`n## Lições (avaliações do William)`n", $enc) }
           [IO.File]::AppendAllText((MemFile $ag), $linha + "`n", $enc)
           Send $res @{ ok = $true }
