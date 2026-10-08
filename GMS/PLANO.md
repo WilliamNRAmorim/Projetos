@@ -15,7 +15,7 @@ Concluído quando: os dois IDs confirmados. Se o Claude Code não aceitar o form
 
 ## 2. Linha de base (5 dias úteis)
 2.1 Por sessão: tipo de tarefa (exploração, implementação, planejamento, revisão, depuração), modelo, subagentes usados, tempo até entrega e número de correções.
-2.2 Ao final de cada dia, rodar `/usage` e anotar o consumo.
+2.2 Ao final de cada dia, rodar `/usage` e anotar o consumo. Conferência extra: `python token_audit.py --project Projetos --days 7` (copiado de bryanvine/token-saver, lido e sem rede; preços fixos no código, valor é estimativa; pode não contar transcrições de subagentes, confirmar antes de usar na etapa 3).
 Concluído quando: pelo menos 15 sessões registradas.
 
 ## 3. Comparação com e sem subagentes
