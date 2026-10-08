@@ -49,6 +49,21 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 
 **Leitura:** o tema funciona (até 18K), mas quem ganha tem (1) uma PESSOA/personagem com voz e expressão, (2) o porquê por trás (802.11b feio → marketing), (3) duração maior (36–135 s) com tensão, (4) humor de reação. Os vídeos mudos em PT, só com texto, quase não saem do zero. **Risco do nosso vídeo B (mudo, 25 s): cair na faixa de baixo.** Ajuste: narração do Bit + o porquê do 802.11b + o Bit reagindo em cena.
 
+### Curiosidades tech no INSTAGRAM · 08/10/2026 · 26 posts de #curiosidadestech (Reels, imagem e carrossel)
+| Faixa | Quem | Curtidas | Formato e tratamento |
+|---|---|---|---|
+| Topo | @securiters | 262K, 5,2K coment. | Reel com rosto pensativo + título proibido/secreto ("Cómo entrar a la D3EP WEB", palavra censurada pra passar no filtro) |
+| Topo | @elidicastech | 80K, 3,8K coment. | **imagem única estilo manchete de notícia**: foto forte + etiqueta amarela ("Saúde") + frase entre aspas em vermelho ("Sentir raiva" ao ouvir alguém mastigando…); a LEGENDA LONGA explica e dá dica (vira salvamento) |
+| Meio | @abelezadosdados | 7,5K | Reel: pessoa + tela dividida contando história com ano e personagem ("Em 1961, um professor de matemática entrou num cassino…") |
+| Meio | @ohomem.resolve, @davision.eth, @coisa_de_dev | 0,8–2,4K | utilidade ("funções escondidas do celular"), ironia visual (braço robótico clicando no "não sou um robô"), segredo de big tech (bunker da OpenAI) |
+| Base | franquias (@supergeeks…: 0–2), "Descubra os segredos…", "5 curiosidades sobre a Apple" | 0–23 | texto institucional igual em vários perfis, lista genérica, sem gancho emocional |
+**O que muda do TikTok para o Instagram:** no Instagram **imagem única ou carrossel estilo manchete** compete com Reel (80K num post estático!); a **legenda longa** com explicação + dica pesa mais (salvamento); ganchos de **segredo/proibido** e **emoção do dia a dia** ("você sente raiva…") puxam muito; história com ano + personagem funciona nas duas.
+**O que roubar:** cartão-manchete (foto/arte forte + etiqueta de categoria + frase entre aspas com a palavra-chave em vermelho) → formato "Bit News"; legenda longa no Instagram com 1 dica prática no fim; títulos de segredo ("o que a fábrica não te conta", "o botão que ninguém usa").
+
+## Regra de benchmark (pedido em 08/10/2026)
+- **20 amostras POR PLATAFORMA onde o post vai sair** (TikTok, Instagram e LinkedIn), porque o que funciona numa não funciona na outra. No Instagram, a busca por palavra não funciona na web: use as páginas de hashtag (instagram.com/explore/tags/<tag>/) e leia curtidas/comentários pelo og:description de cada post.
+- Inclua **carrosséis e imagens**, não só vídeos: carrossel informativo ou engraçado também viraliza.
+
 ## Como atualizar (rotina diária e conversas de análise)
 - Antes de produzir cada tema: busque o tema no TikTok (PT e EN), anote ~20 vídeos (curtidas, salvos, duração, rosto/voz/texto, gancho, se conta o porquê) numa tabela de benchmark aqui, e decida o que o nosso precisa ter para ficar no topo. Depois de 24/72 h, compare o nosso com a amostra.
 - Todo dia, antes de produzir: puxe as métricas dos posts de 24 h e 72 h atrás (TikTok Studio → Publicações/Análise; Meta Business Suite → Conteúdo/Insights; LinkedIn → Ver análise), preencha a tabela e escreva 1 linha de aprendizado.
