@@ -1,0 +1,109 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>ep virgula</title>
+<script src="brand.js"></script><script src="bit_art.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// "A vírgula que quase quebrou uma fábrica": tipografia editorial, código e glitch; o Bit só comenta no fim (com o anel do GMS).
+// ?t=3 mostra um quadro; ?save=1 renderiza o mp4.
+const q = new URLSearchParams(location.search), W = 1080, H = 1920, FPS = 30, DIR = 'semana-2026-10-05', OUT = 'Qui08_Instagram_TikTok_Virgula.mp4';
+const FALAS = [
+  { txt: 'Uma vírgula quase quebrou uma fábrica.', acc: ['vírgula', 'fábrica.'], cena: 'virgula' },
+  { txt: 'Aqui no Brasil, doze e meio se escreve assim.', acc: [], cena: 'ptbr' },
+  { txt: 'Só que pra muito sistema, vírgula não é casa decimal. É separador.', acc: ['separador.'], cena: 'separa' },
+  { txt: 'Aí os 12,5 metros viram 125. Ou viram erro. Ou viram zero.', acc: ['125.', 'erro.', 'zero.'], cena: 'estrago' },
+  { txt: 'Construindo o GMS, eu caí nessa. O jeito certo é nunca confiar no formato do texto: converter dizendo qual é a localidade.', acc: ['localidade.'], cena: 'codigo' },
+  { txt: 'Desde então eu desconfio de toda vírgula.', acc: ['vírgula.'], cena: 'fim' },
+];
+const LEAD = 0.15, GAP = 0.2, TAIL = 0.6;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), out = x => 1 - Math.pow(1 - x, 3);
+const rnd = n => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); }; // pseudoaleatório determinístico por quadro
+function txt(g, s, x, y, size, col, opts = {}) { g.font = `${opts.w || 900} ${size}px ${opts.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = opts.mono ? '0px' : `${-0.04 * size}px`; g.textAlign = opts.align || 'left'; g.fillStyle = col; g.fillText(s, x, y); g.textAlign = 'left'; }
+function glitch(g, draw, amt, fr) { // aberração cromática + fatias deslocadas, intensidade amt (0..1)
+  if (amt <= 0.01) return draw(0, 0, null);
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 * amt; draw(-14 * amt, 0, '#00E5FF'); draw(14 * amt, 0, '#FF2A00'); g.restore(); draw(0, 0, null);
+  const c = g.canvas, slices = Math.round(3 + amt * 6);
+  for (let i = 0; i < slices; i++) { const y = rnd(fr * 7 + i) * H, h = 8 + rnd(fr * 3 + i) * 60 * amt, dx = (rnd(fr * 11 + i) - 0.5) * 90 * amt; g.drawImage(c, 0, y, W, h, dx, y, W, h); }
+}
+function wrap(g, words, maxW) { const lines = [[]]; let w = 0; for (const wd of words) { const ww = g.measureText(wd + ' ').width; if (w + ww > maxW && lines.at(-1).length) { lines.push([]); w = 0; } lines.at(-1).push(wd); w += ww; } return lines; }
+function legenda(g, f, k) {
+  const size = f.txt.length > 70 ? 52 : 64; g.font = `800 ${size}px Geist`; g.letterSpacing = `${-0.03 * size}px`;
+  const words = f.txt.split(' '), lines = wrap(g, words, W - 180), n = words.length; let idx = 0, y = 1470 - (lines.length - 1) * size * 1.12; // acima da faixa que a interface do Reels/TikTok cobre
+  for (const ln of lines) { let x = 90; for (const wd of ln) { const a = clamp((k * n * 1.12 - idx) * 3); g.globalAlpha = 0.22 + 0.78 * a; g.fillStyle = a > 0.5 && f.acc.includes(wd) ? BRAND.accent : BRAND.paper; g.fillText(wd, x, y); x += g.measureText(wd + ' ').width; idx++; } y += size * 1.12; }
+  g.globalAlpha = 1;
+}
+(async () => {
+  await loadBrandFonts();
+  const bit = await BitArt.load('/Marca/bit/bit_pensando.png');
+  const SR = 48000, ac = new OfflineAudioContext(2, SR, SR);
+  const vozes = await Promise.all(FALAS.map((_, i) => fetch(`/w/stems/virgula/fala${i + 1}.mp3`).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b))));
+  let t = LEAD; FALAS.forEach((f, i) => { f.t0 = t; f.dur = vozes[i].duration; t += f.dur + GAP; }); const DUR = Math.ceil((t - GAP + TAIL) * FPS) / FPS;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; document.body.append(cv); const g = cv.getContext('2d');
+  const cur = tt => { const i = FALAS.findIndex(f => tt < f.t0 + f.dur + GAP); return i < 0 ? FALAS.length - 1 : i; };
+  const CENA = {
+    virgula: (u, k, fr) => { // a vírgula gigante, tremendo cada vez mais
+      glitch(g, (dx, dy, col) => txt(g, ',', W / 2 + dx, 1180 + dy, 1100, col || BRAND.accent, { align: 'center' }), 0.15 + 0.6 * k, fr);
+      txt(g, 'CASO REAL · GMS', 90, 260, 30, BRAND.mute, { mono: true, w: 700 });
+    },
+    ptbr: (u, k) => {
+      const a = out(clamp(u / 0.4));
+      g.globalAlpha = a; txt(g, '12', 150, 1050, 420, BRAND.paper); txt(g, ',', 150 + g.measureText('12').width, 1050, 420, BRAND.accent); txt(g, '5', 150 + g.measureText('12,').width, 1050, 420, BRAND.paper); g.globalAlpha = 1;
+      txt(g, 'PT-BR · DOZE E MEIO', 150, 1150, 34, BRAND.mute, { mono: true, w: 700 });
+    },
+    separa: (u, k, fr) => { // o 12 e o 5 se afastam: a vírgula vira separador de milhar
+      const s = out(clamp((k - 0.35) / 0.5)) * 160;
+      g.font = '900 420px Geist'; g.letterSpacing = '-17px'; const w12 = g.measureText('12').width;
+      txt(g, '12', 150 - s, 1050, 420, BRAND.paper); txt(g, ',', 150 + w12, 1050, 420, BRAND.accent); txt(g, '5', 150 + g.measureText('12,').width + s, 1050, 420, BRAND.paper);
+      txt(g, k < 0.4 ? 'PT-BR · DOZE E MEIO' : 'EN-US · VÍRGULA = SEPARADOR DE MILHAR', 150, 1150, 34, k < 0.4 ? BRAND.mute : BRAND.accent, { mono: true, w: 700 });
+      txt(g, 'o sistema esperava: 12.5', 150, 1240, 40, BRAND.mute, { mono: true, w: 500 });
+    },
+    estrago: (u, k, fr) => { // três resultados batendo como carimbo
+      const items = [['125', BRAND.accent, 0.12], ['#ERRO', BRAND.paper, 0.5], ['0', BRAND.paper, 0.78]];
+      txt(g, '12,5 m  →', 90, 520, 60, BRAND.mute, { mono: true, w: 700 });
+      items.forEach(([s, col, at], i) => { const a = clamp((k - at) / 0.08); if (a <= 0) return; const sc = 1 + (1 - out(a)) * 0.6;
+        g.save(); g.translate(150, 740 + i * 250); g.scale(sc, sc); g.globalAlpha = a; txt(g, s, 0, 0, 220, col); g.restore();
+        if (a < 1) glitch(g, () => {}, 0.6 * (1 - a), fr); });
+    },
+    codigo: (u, k) => { // o conserto, em Power Fx
+      const x = 70, y = 470, w = W - 140, h = 640; g.fillStyle = BRAND.ink2; g.fillRect(x, y, w, h); g.strokeStyle = '#2A2A2E'; g.lineWidth = 2; g.strokeRect(x, y, w, h);
+      txt(g, 'POWER FX', x + 40, y + 70, 28, BRAND.mute, { mono: true, w: 700 });
+      const L = [['// app em en-US, confiando no formato', BRAND.mute], ['Value("12,5")', BRAND.paper], ['  → 125', BRAND.accent], ['', 0], ['// dizendo a localidade', BRAND.mute], ['Value("12,5", "pt-BR")', BRAND.paper], ['  → 12.5', '#3DDC97']];
+      L.forEach(([s, col], i) => { const a = clamp((k * 1.4 - i / L.length) * 4); if (!s || a <= 0) return; g.globalAlpha = a; txt(g, s, x + 40, y + 150 + i * 62, 34, col, { mono: true, w: 500 }); });
+      g.globalAlpha = 1;
+      BitArt.draw(g, bit, 900, 1160, 280, { ring: u * 1.6 }); // uniforme do GMS, no canto do painel
+    },
+    fim: (u, k, fr) => { // o Bit, seco, encarando a vírgula
+      txt(g, ',', 300, 1080, 700, BRAND.accent, { align: 'center' });
+      BitArt.draw(g, bit, 760, 1340, 620 * (0.96 + 0.04 * out(clamp(u / 0.3))), { ring: u * 1.6 });
+    },
+  };
+  async function frame(tt) {
+    const fr = Math.round(tt * FPS), i = cur(tt), f = FALAS[i], u = tt - f.t0, k = clamp(u / f.dur);
+    g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H);
+    CENA[f.cena](u, k, fr);
+    legenda(g, f, k);
+    const cut = clamp(1 - u / 0.12); if (i > 0 && cut > 0) glitch(g, () => {}, 0.7 * cut, fr + 999); // corte seco com glitch entre cenas
+    grain(g, W, H, 0.07);
+    if (tt > DUR - 0.3) { g.fillStyle = `rgba(12,12,13,${clamp((tt - (DUR - 0.3)) / 0.3)})`; g.fillRect(0, 0, W, H); }
+  }
+  if (!q.has('save')) { await frame(+(q.get('t') || 1)); document.title = 'ready'; return; }
+  const len = Math.round(SR * DUR), L = new Float32Array(len), R = new Float32Array(len);
+  const mus = await new OfflineAudioContext(2, SR, SR).decodeAudioData(await (await fetch('/w/stems/music.wav')).arrayBuffer());
+  for (let i = 0; i < len; i++) { const ti = i / SR, fade = Math.min(1, ti / 0.4, (DUR - ti) / 0.6), j = Math.floor(ti * mus.sampleRate); L[i] = mus.getChannelData(0)[j] * 0.13 * fade; R[i] = mus.getChannelData(1)[j] * 0.13 * fade; }
+  vozes.forEach((b, n) => { const off = Math.round(FALAS[n].t0 * SR), d0 = b.getChannelData(0), d1 = b.numberOfChannels > 1 ? b.getChannelData(1) : d0, r = b.sampleRate / SR;
+    for (let i = 0; i < b.duration * SR && off + i < len; i++) { const j = Math.floor(i * r); L[off + i] += d0[j] * 0.95; R[off + i] += d1[j] * 0.95; } });
+  for (let i = 0; i < len; i++) { L[i] = Math.max(-1, Math.min(1, L[i])); R[i] = Math.max(-1, Math.min(1, R[i])); }
+  const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let err = null;
+  const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 3.2e6, framerate: FPS });
+  const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 160000 });
+  for (let i = 0; i < len; i += 1024) { const n = Math.min(1024, len - i), d = new Float32Array(n * 2); d.set(L.subarray(i, i + n), 0); d.set(R.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
+  for (let fr = 0; fr < Math.round(DUR * FPS); fr++) {
+    await frame(fr / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(fr * 1e6 / FPS) }); ve.encode(vf, { keyFrame: fr % 60 === 0 }); vf.close();
+    if (ve.encodeQueueSize > 10) await new Promise(r => setTimeout(r, 5)); document.title = `${fr}/${Math.round(DUR * FPS)}`;
+  }
+  await ve.flush(); await ae.flush(); if (err) throw err; mux.finalize();
+  await fetch(`/save?dir=${DIR}&name=${OUT}`, { method: 'POST', body: mux.target.buffer });
+  document.title = 'ready ' + DUR.toFixed(2);
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
