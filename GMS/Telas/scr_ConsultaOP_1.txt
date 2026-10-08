@@ -4,7 +4,7 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({ctxAbaCOP: 1, ctxBuscaCOP: ""});
+        =UpdateContext({ctxAbaCOP: 1, ctxBuscaCOP: "", ctxModalPackCOP: false});
         If(
             IsEmpty(colRecentesCOP),
             Collect(colRecentesCOP, {OP: 0, Mangueira: "", Quando: Now()});
@@ -66,7 +66,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.3.1"
+            Text: ="Versão 0.4.0"
             Width: =180
             X: =1090
             Y: =21
@@ -632,6 +632,36 @@ Screens:
                   Width: =200
                   X: =380
                   Y: =41
+            - btn_PackListCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: |-
+                    =If(
+                        IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaCOP.Selected.ID).ID),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =36
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =UpdateContext({ctxModalPackCOP: true})
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: =If(IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaCOP.Selected.ID).ID), "Packlist não registrado", "Packlists da OP")
+                  Width: =190
+                  X: =840
+                  Y: =4
             - rct_BordaAbasCOP:
                 Control: Rectangle@2.3.0
                 Properties:
@@ -1465,3 +1495,200 @@ Screens:
                   Width: =1012
                   X: =16
                   Y: =160
+      - rct_OverlayPackCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            OnSelect: |-
+              =UpdateContext({ctxModalPackCOP: false})
+            Visible: =ctxModalPackCOP
+            Width: =1366
+      - rct_CardPackCOP:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Fill: =fx_CorSuperficie
+            Height: =520
+            Visible: =ctxModalPackCOP
+            Width: =760
+            X: =303
+            Y: =124
+      - lbl_TituloPackCOP:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =34
+            Size: =fx_FonteTitulo
+            Text: ="Packlists da OP " & Text(gal_FilaCOP.Selected.OP, "[$-en-US]0")
+            Visible: =ctxModalPackCOP
+            Width: =600
+            X: =327
+            Y: =140
+      - lbl_SubPackCOP:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorTextoSuave
+            Font: =fx_FonteFamilia
+            Height: =22
+            Size: =fx_FonteApoio
+            Text: ="Só aparecem pallets já registrados. A reimpressão sai igual à original e não grava nada."
+            Visible: =ctxModalPackCOP
+            Width: =712
+            X: =327
+            Y: =176
+      - gal_PalletsPackCOP:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            Fill: =Color.Transparent
+            Height: =370
+            Items: =Sort(Filter(Packing_Pallets, FichaID = gal_FilaCOP.Selected.ID), Pallet)
+            TemplateSize: =76
+            Visible: =ctxModalPackCOP
+            Width: =712
+            X: =327
+            Y: =210
+          Children:
+            - rct_ItemPackCOP:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Fill: =fx_CorSuperficie
+                  Height: =68
+                  Width: =712
+                  Y: =4
+            - lbl_PalletPackCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  Size: =fx_FonteDestaque
+                  Text: ="Pallet " & Text(ThisItem.Pallet, "[$-en-US]0")
+                  Width: =160
+                  X: =16
+                  Y: =12
+            - lbl_DetPackCOP:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =22
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    =Text(ThisItem.QtdLances, "[$-en-US]0") & " lances   ·   " &
+                    fx_QtdBR(ThisItem.TotalM) & " m   ·   impresso em " &
+                    fx_DataHoraBR(Text(ThisItem.DataHoraImp))
+                  Width: =470
+                  X: =16
+                  Y: =40
+            - btn_ReimprimirPackCOP:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  Fill: =fx_CorInfo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorInfo, -20%)
+                  OnSelect: |-
+                    =IfError(
+                        ClearCollect(colInspPackCOP, Filter(RegistrosInspeção, OP_ID = gal_FilaCOP.Selected.OP));
+                        ClearCollect(
+                            colPalletImp,
+                            ForAll(
+                                Split(ThisItem.LanceIDs, ";") As _l,
+                                { ID: Value(_l.Result), Qtd: LookUp(colInspPackCOP, ID = Value(_l.Result)).Quantidade }
+                            )
+                        );
+                        If(
+                            CountRows(Filter(colPalletImp, IsBlank(Qtd))) > 0,
+                            Notify("Não achei " & CountRows(Filter(colPalletImp, IsBlank(Qtd))) & " lance(s) deste pallet. Avise a supervisão.", NotificationType.Error, 8000),
+                            Set(varFichaIDImp, gal_FilaCOP.Selected.ID);
+                            Set(varFalhaRegManual, false);
+                            Set(varPackingManual, false);
+                            Set(varReimpressaoImp, true);
+                            Set(varDataImp, Text(ThisItem.DataHoraImp, "yyyy-mm-dd hh:mm"));
+                            Set(VarMangueiraOP, gal_FilaCOP.Selected.OP);
+                            Set(varMangueiraImp, gal_FilaCOP.Selected.Mangueira);
+                            Set(varPalletTxt, "  ·  PALLET " & Text(ThisItem.Pallet, "[$-en-US]0"));
+                            Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colPalletImp, Qtd), 0)));
+                            Set(
+                                varHTMLLances,
+                                "<table style='border-collapse:collapse;width:100%'>"
+                                & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                                & Concat(
+                                    ForAll(
+                                        Sequence(13) As _i,
+                                        {
+                                            linha:
+                                                "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                                & Text(_i.Value, "[$-en-US]0")
+                                                & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                                & If(
+                                                    CountRows(colPalletImp) >= _i.Value,
+                                                    fx_QtdBR(Index(colPalletImp, _i.Value).Qtd),
+                                                    "0,00"
+                                                )
+                                                & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                                & Text(_i.Value + 13, "[$-en-US]0")
+                                                & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                                & If(
+                                                    CountRows(colPalletImp) >= _i.Value + 13,
+                                                    fx_QtdBR(Index(colPalletImp, _i.Value + 13).Qtd),
+                                                    "0,00"
+                                                )
+                                                & "</td></tr>"
+                                        }
+                                    ),
+                                    linha
+                                )
+                                & "</table>"
+                            );
+                            UpdateContext({ctxModalPackCOP: false});
+                            Navigate(TelaImpressao, ScreenTransition.None)
+                        ),
+                        Notify("Não consegui montar o packlist. Confira a rede e tente de novo.", NotificationType.Error, 8000)
+                    )
+                  PressedFill: =ColorFade(fx_CorInfo, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Reimprimir"
+                  Width: =200
+                  X: =496
+                  Y: =10
+      - btn_FecharPackCOP:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =fx_CorTexto
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcaoS
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =UpdateContext({ctxModalPackCOP: false})
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Fechar"
+            Visible: =ctxModalPackCOP
+            Width: =160
+            X: =879
+            Y: =592

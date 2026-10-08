@@ -29,7 +29,13 @@ Screens:
             Fill: =RGBA(100, 116, 139, 1)
             Font: =Font.'Open Sans'
             Height: =46
-            OnSelect: =Navigate(scr_Finalização_1, ScreenTransition.None)
+            OnSelect: |-
+              =If(
+                  varReimpressaoImp,
+                  Set(varReimpressaoImp, false);
+                  Navigate(scr_ConsultaOP_1, ScreenTransition.None),
+                  Navigate(scr_Finalização_1, ScreenTransition.None)
+              )
             Text: ="← Voltar"
             Visible: =!Parent.Printing
             Width: =120
@@ -57,7 +63,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             Size: =fx_FonteTitulo
-            Text: =Text(Now(), "yyyy-mm-dd hh:mm")
+            Text: =If(varReimpressaoImp, varDataImp, Text(Now(), "yyyy-mm-dd hh:mm"))
             Width: =360
             X: =228
             Y: =28
