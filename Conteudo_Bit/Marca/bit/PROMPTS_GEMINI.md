@@ -1,5 +1,17 @@
 # Prompts do Bit pro Gemini
 
+## Ficha do personagem (cole ANTES de qualquer pedido; o Gemini desvia sem ela)
+> FICHA DO PERSONAGEM "BIT", siga à risca e anexe bit_acenando.png como referência exata:
+> - Corpo e cabeça são UMA peça só: um bloco vertical arredondado (mais alto que largo, cantos bem arredondados), sem pescoço.
+> - Cor vermelho-alaranjado chapado (#F0522D), faixa de luz mais clara na lateral esquerda e sombra suave à direita. Contorno marrom-escuro grosso e uniforme (#5A1E14).
+> - Rosto na metade de cima do bloco: dois olhos grandes, redondos e brancos, um pouco separados, cada um com pupila marrom-escura grande e um brilho branco; sobrancelhas curtas, finas e arqueadas; boca pequena aberta em sorriso, interior marrom com língua rosa. Sem nariz, sem orelhas, sem bochechas, sem dentes.
+> - Antena: haste fina marrom-escura, levemente curva, saindo do topo um pouco à esquerda do centro, com uma bolinha vermelha brilhante na ponta (com reflexo branco).
+> - Peito: na parte de baixo da frente do corpo, uma placa em trapézio (mais larga embaixo) com degradê arco-íris horizontal (vermelho, laranja, amarelo, verde, azul), com contorno.
+> - Braços finos e cilíndricos, mesma cor, saindo de pequenas articulações redondas nas laterais; mãos de desenho com 4 dedos arredondados, mesma cor, sem luvas.
+> - Pernas curtas e retas, cilíndricas, com pés simples arredondados da mesma cor, sem sapatos.
+> - Proporção: corpo ~60% da altura, pernas ~20%, antena ~20%. Cartoon 2D vetorial moderno, traço limpo, sombreado chapado em 2 tons, sem textura, sem 3D.
+> - NÃO: pescoço, cabeça separada, roupa (só o acessório pedido), tela no rosto, olhos de LED, botões extras, cor diferente, corpo de lata, pernas longas.
+
 **Sempre:** anexe a folha `bit_v1_folha.png` (os 6 Bits) como referência em todo pedido e gere **uma imagem por prompt**. Se o personagem mudar de formato, cor ou olhos, peça de novo com "mantenha EXATAMENTE o mesmo personagem da referência".
 
 Salve as imagens aqui (`Conteudo_Bit/Marca/bit/`) com o nome indicado em cada prompt.
