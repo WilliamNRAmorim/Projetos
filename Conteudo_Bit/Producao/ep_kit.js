@@ -7,7 +7,7 @@ window.EpKit = (() => {
   function txt(g, s, x, y, size, col, o = {}) { g.font = `${o.w || 900} ${size}px ${o.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = o.mono ? '0px' : `${-0.04 * size}px`; g.textAlign = o.align || 'left'; g.fillStyle = col; g.fillText(s, x, y); g.textAlign = 'left'; }
   function glitch(g, draw, amt, fr) { // aberração cromática + fatias deslocadas
     if (amt <= 0.01) return draw(0, 0, null);
-    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 * amt; draw(-14 * amt, 0, '#00E5FF'); draw(14 * amt, 0, '#FF2A00'); g.restore(); draw(0, 0, null);
+    g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 * amt; draw(-14 * amt, 0, '#EEEDE8'); draw(14 * amt, 0, '#FF2A00'); g.restore(); draw(0, 0, null);
     for (let i = 0, n = Math.round(3 + amt * 6); i < n; i++) { const y = rnd(fr * 7 + i) * H, h = 8 + rnd(fr * 3 + i) * 60 * amt, dx = (rnd(fr * 11 + i) - 0.5) * 90 * amt; g.drawImage(g.canvas, 0, y, W, h, dx, y, W, h); }
   }
   function wrap(g, words, maxW) { const lines = [[]]; let w = 0; for (const wd of words) { const ww = g.measureText(wd + ' ').width; if (w + ww > maxW && lines.at(-1).length) { lines.push([]); w = 0; } lines.at(-1).push(wd); w += ww; } return lines; }

@@ -21,7 +21,7 @@ const rnd = n => { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.f
 function txt(g, s, x, y, size, col, opts = {}) { g.font = `${opts.w || 900} ${size}px ${opts.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = opts.mono ? '0px' : `${-0.04 * size}px`; g.textAlign = opts.align || 'left'; g.fillStyle = col; g.fillText(s, x, y); g.textAlign = 'left'; }
 function glitch(g, draw, amt, fr) { // aberração cromática + fatias deslocadas, intensidade amt (0..1)
   if (amt <= 0.01) return draw(0, 0, null);
-  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 * amt; draw(-14 * amt, 0, '#00E5FF'); draw(14 * amt, 0, '#FF2A00'); g.restore(); draw(0, 0, null);
+  g.save(); g.globalCompositeOperation = 'lighter'; g.globalAlpha = 0.55 * amt; draw(-14 * amt, 0, '#EEEDE8'); draw(14 * amt, 0, '#FF2A00'); g.restore(); draw(0, 0, null);
   const c = g.canvas, slices = Math.round(3 + amt * 6);
   for (let i = 0; i < slices; i++) { const y = rnd(fr * 7 + i) * H, h = 8 + rnd(fr * 3 + i) * 60 * amt, dx = (rnd(fr * 11 + i) - 0.5) * 90 * amt; g.drawImage(c, 0, y, W, h, dx, y, W, h); }
 }

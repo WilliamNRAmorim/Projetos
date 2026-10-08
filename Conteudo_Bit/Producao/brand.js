@@ -11,12 +11,12 @@ window.BRAND = {
 };
 // grão de filme: textura gerada uma vez e aplicada em overlay por cima de cada quadro
 window.grain = (() => {
-  let tile;
+  let tile; let s = 20261008; const seed = () => { s = (s + 0x6D2B79F5) | 0; let t = Math.imul(s ^ (s >>> 15), 1 | s); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; // semente fixa: mesmo grão em toda sessão
   return (ctx, W, H, alpha = 0.09) => {
     if (!tile) {
       tile = document.createElement('canvas'); tile.width = tile.height = 300;
       const g = tile.getContext('2d'), d = g.createImageData(300, 300);
-      for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (Math.random() - 0.5) * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
+      for (let i = 0; i < d.data.length; i += 4) { const v = 128 + (seed() - 0.5) * 255; d.data[i] = d.data[i + 1] = d.data[i + 2] = v; d.data[i + 3] = 255; }
       g.putImageData(d, 0, 0);
     }
     ctx.save(); ctx.globalAlpha = alpha; ctx.globalCompositeOperation = 'overlay'; ctx.fillStyle = ctx.createPattern(tile, 'repeat'); ctx.fillRect(0, 0, W, H); ctx.restore();
