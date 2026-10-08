@@ -1,0 +1,98 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>ep virgula 5h</title>
+<script src="brand.js"></script><script src="bit_art.js"></script><script src="ep_kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// "A vírgula das 5 da manhã": história (ficção baseada num problema real do GMS), narrada pelo Bit sobre o Will.
+// Arco: gancho com mistério → o que está em jogo → pressão → investigação → virada → resolução → sentido → fecho seco.
+const { W, H, clamp, out, txt, glitch } = EpKit;
+const P = BRAND.paper, A = BRAND.accent, M = BRAND.mute, I2 = BRAND.ink2, OK = '#3DDC97';
+let bit;
+const FALAS = [
+  { cena: 'portao', acc: ['125', 'nunca', 'existiram.'], txt: 'Sexta, cinco da manhã. Tinha um caminhão no portão esperando 125 metros de mangueira... que nunca existiram.' },
+  { cena: 'painel', acc: ['125.', 'painel.'], txt: 'O pedido era de 12,5 metros. Mas o painel dizia 125. E a fábrica inteira acreditou no painel.' },
+  { cena: 'telefone', acc: ['culpa', 'dele.'], txt: 'O telefone do Will tocou. Ele tinha construído aquele sistema. Se tava errado... era culpa dele.' },
+  { cena: 'onibus', acc: ['meio', 'caminho.'], txt: 'Ele abriu o código no ônibus, ainda escuro. O operador digitou certo. A planilha mandou certo. O erro tava no meio do caminho.' },
+  { cena: 'virada', acc: ['inglês.', '125.'], txt: 'O sistema do outro lado falava inglês. E em inglês, vírgula não é decimal. 12,5 virou 125.' },
+  { cena: 'conserto', acc: ['pânico.'], txt: 'Uma linha de código resolveu. Dois minutos de correção. Duas horas de pânico.', pausa: 0.9 },
+  { cena: 'sentido', acc: ['óbvio.'], txt: 'Naquela manhã eu aprendi uma coisa: o bug quase nunca tá onde a gente procura. Tá no detalhe que todo mundo achou óbvio.', corte: false, pausa: 0.6 },
+  { cena: 'fecho', acc: ['vírgula.'], txt: 'Desde então, eu confiro toda vírgula. Duas vezes.', corte: false },
+];
+function hora(g, s, y = 330) { txt(g, s, 90, y, 130, P, { mono: true, w: 700 }); }
+function etiqueta(g, s, y, col = M) { txt(g, s, 90, y, 30, col, { mono: true, w: 700 }); }
+function caminhao(g, x, y, s, farol) { // silhueta em traço, sem detalhe demais
+  g.save(); g.translate(x, y); g.scale(s, s); g.lineWidth = 5; g.strokeStyle = P; g.fillStyle = I2;
+  g.fillRect(-330, -230, 430, 230); g.strokeRect(-330, -230, 430, 230); // baú
+  g.beginPath(); g.moveTo(110, 0); g.lineTo(110, -170); g.lineTo(220, -170); g.lineTo(270, -100); g.lineTo(270, 0); g.closePath(); g.fill(); g.stroke(); // cabine
+  g.strokeRect(140, -150, 70, 50);
+  for (const wx of [-260, -170, 200]) { g.beginPath(); g.arc(wx, 10, 38, 0, 7); g.fillStyle = BRAND.ink; g.fill(); g.stroke(); }
+  const gl = g.createRadialGradient(285, -45, 4, 285, -45, 260 * farol); gl.addColorStop(0, 'rgba(238,237,232,.55)'); gl.addColorStop(1, 'rgba(238,237,232,0)'); g.fillStyle = gl; g.fillRect(270, -300, 300 * farol, 520);
+  g.restore();
+}
+const CENAS = {
+  portao(g, u, k, fr) {
+    etiqueta(g, 'SEXTA-FEIRA', 190, A); hora(g, '05:02');
+    const s = 1 + 0.06 * k; caminhao(g, 470, 1000, 1.0 * s, 0.6 + 0.4 * Math.abs(Math.sin(u * 1.3)));
+    g.strokeStyle = 'rgba(238,237,232,.35)'; g.lineWidth = 6; for (let x = 40; x < W; x += 70) { g.beginPath(); g.moveTo(x, 1080); g.lineTo(x, 1180); g.stroke(); } // portão
+    g.beginPath(); g.moveTo(0, 1080); g.lineTo(W, 1080); g.stroke();
+    if (k > 0.55) glitch(g, (dx, dy, c) => txt(g, '125 m ?', 560 + dx, 640, 120, c || A, { align: 'center' }), 0.25, fr);
+  },
+  painel(g, u, k, fr) {
+    hora(g, '05:04');
+    const x = 70, y = 470, w = W - 140; g.fillStyle = I2; g.fillRect(x, y, w, 700); g.strokeStyle = '#2A2A2E'; g.lineWidth = 2; g.strokeRect(x, y, w, 700);
+    etiqueta(g, 'PEDIDO 4471 · MANGUEIRA R2', y + 70);
+    etiqueta(g, 'QTD. PEDIDA', y + 170); txt(g, '12,5 m', x + w - 40, y + 190, 80, P, { align: 'right' });
+    g.fillStyle = '#2A2A2E'; g.fillRect(x + 20, y + 240, w - 40, 2);
+    etiqueta(g, 'NO PAINEL', y + 320); const blink = k > 0.3 && Math.floor(u * 3) % 2 === 0;
+    txt(g, '125 m', x + w - 40, y + 420, 170, blink ? A : P, { align: 'right' });
+    if (k > 0.72) { const a = clamp((k - 0.72) / 0.08), sc = 1 + (1 - out(a)) * 0.5; g.save(); g.translate(x + w / 2, y + 590); g.rotate(-0.08); g.scale(sc, sc); g.globalAlpha = a;
+      g.strokeStyle = A; g.lineWidth = 6; g.strokeRect(-330, -60, 660, 100); txt(g, 'LIBERADO P/ EXPEDIÇÃO', 0, 10, 46, A, { align: 'center', mono: true, w: 700 }); g.restore(); }
+  },
+  telefone(g, u, k, fr) {
+    const sh = k < 0.75 ? Math.sin(u * 70) * 7 : 0, x = 290 + sh, y = 300, w = 500, h = 980;
+    g.fillStyle = I2; g.beginPath(); g.roundRect(x, y, w, h, 60); g.fill(); g.strokeStyle = P; g.lineWidth = 6; g.stroke();
+    txt(g, '05:07', x + w / 2, y + 170, 110, P, { align: 'center', mono: true, w: 700 });
+    txt(g, 'Supervisor', x + w / 2, y + 400, 76, P, { align: 'center' }); txt(g, 'ligando…', x + w / 2, y + 470, 40, M, { align: 'center', mono: true, w: 500 });
+    for (const [cx, col] of [[x + 130, A], [x + w - 130, OK]]) { g.beginPath(); g.arc(cx, y + h - 170, 60, 0, 7); g.fillStyle = col; g.fill(); }
+    const pulse = (u * 1.2) % 1; g.strokeStyle = `rgba(255,59,31,${0.6 * (1 - pulse)})`; g.lineWidth = 4; g.beginPath(); g.roundRect(x - 30 * pulse, y - 30 * pulse, w + 60 * pulse, h + 60 * pulse, 60); g.stroke();
+  },
+  onibus(g, u, k, fr) {
+    etiqueta(g, '05:21 · NO ÔNIBUS', 260, A);
+    const nos = [['OPERADOR', 'digitou 12,5', true, 0.28], ['PLANILHA', 'enviou 12,5', true, 0.52], ['SISTEMA', 'recebeu 125', false, 0.78]];
+    nos.forEach(([n, d, ok, at], i) => { const a = clamp((k - at + 0.1) / 0.1); if (a <= 0) return; const y = 400 + i * 250;
+      g.globalAlpha = a; g.fillStyle = I2; g.fillRect(90, y, W - 180, 180); g.strokeStyle = ok ? '#2A2A2E' : A; g.lineWidth = ok ? 2 : 5; g.strokeRect(90, y, W - 180, 180);
+      etiqueta(g, n, y + 55); txt(g, d, 130, y + 145, 64, ok ? P : A); txt(g, ok ? '✓' : '✗', W - 140, y + 135, 90, ok ? OK : A, { align: 'right' });
+      if (i) { g.strokeStyle = ok ? M : A; g.lineWidth = 4; g.beginPath(); g.moveTo(W / 2, y - 70); g.lineTo(W / 2, y); g.stroke(); }
+      g.globalAlpha = 1; });
+  },
+  virada(g, u, k, fr) {
+    const s = out(clamp((k - 0.3) / 0.35)) * 150, en = k > 0.3;
+    etiqueta(g, en ? 'EN-US · VÍRGULA = SEPARADOR DE MILHAR' : 'PT-BR · VÍRGULA = DECIMAL', 560, en ? A : M);
+    if (k < 0.78) { g.font = '900 400px Geist'; g.letterSpacing = '-16px'; const w12 = g.measureText('12').width;
+      txt(g, '12', 140 - s, 1000, 400, P); txt(g, ',', 140 + w12, 1000, 400, A); txt(g, '5', 140 + g.measureText('12,').width + s, 1000, 400, P); }
+    else glitch(g, (dx, dy, c) => txt(g, '125', 140 + dx, 1000, 400, c || A), clamp(1 - (k - 0.78) / 0.15), fr);
+  },
+  conserto(g, u, k, fr) {
+    const x = 70, y = 380, w = W - 140; g.fillStyle = I2; g.fillRect(x, y, w, 420); g.strokeStyle = '#2A2A2E'; g.lineWidth = 2; g.strokeRect(x, y, w, 420);
+    etiqueta(g, 'POWER FX', y + 70);
+    txt(g, 'Value(qtd)', x + 40, y + 170, 46, M, { mono: true, w: 500 }); txt(g, '→ 125', x + w - 40, y + 170, 46, M, { mono: true, w: 500, align: 'right' });
+    g.strokeStyle = A; g.lineWidth = 4; g.beginPath(); g.moveTo(x + 30, y + 155); g.lineTo(x + w - 30, y + 155); g.stroke();
+    const a = clamp((k - 0.08) / 0.12); g.globalAlpha = a; txt(g, 'Value(qtd, "pt-BR")', x + 40, y + 290, 46, P, { mono: true, w: 500 }); txt(g, '→ 12.5', x + w - 40, y + 290, 46, OK, { mono: true, w: 700, align: 'right' }); g.globalAlpha = 1;
+    const b = clamp((k - 0.4) / 0.1), c = clamp((k - 0.7) / 0.1);
+    g.globalAlpha = b; txt(g, '2 min', 90, 1020, 150, P); etiqueta(g, 'DE CORREÇÃO', 1070); g.globalAlpha = c; txt(g, '2 h', 600, 1020, 150, A); txt(g, 'DE PÂNICO', 600, 1070, 30, A, { mono: true, w: 700 }); g.globalAlpha = 1;
+  },
+  sentido(g, u, k) { // silêncio: só a vírgula, crescendo devagar
+    const s = 0.4 + 0.25 * k; g.globalAlpha = clamp(u / 0.6); txt(g, ',', W / 2, 980, 900 * s, A, { align: 'center' }); g.globalAlpha = 1;
+  },
+  fecho(g, u, k) {
+    txt(g, ',', 300, 1080, 700, A, { align: 'center' });
+    BitArt.draw(g, bit, 760, 1340, 620, { ring: u * 1.6 });
+  },
+};
+EpKit.run({
+  falas: FALAS, cenas: CENAS, stems: '/w/stems/virgula5h', dir: 'semana-2026-10-05', out: 'Qui08_Instagram_TikTok_Virgula5h.mp4',
+  prep: async () => { bit = await BitArt.load('/Marca/bit/bit_pensando.png'); },
+  musica: (ti, i) => [0.15, 0.15, 0.17, 0.17, 0.2, 0.15, 0, 0.09][i], // tensão sobe até a virada; silêncio na lição
+}).catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
