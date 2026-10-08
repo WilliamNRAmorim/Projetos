@@ -947,7 +947,11 @@ Screens:
                   Self.Selected.NomeMangueira = fx_MangueiraOutra,
                   Reset(inp_OutraMangTubo);
                   UpdateContext({ctxModalOutraMangTubo: true}),
-                  Set(varMangueiraEscolhidaTubo, Self.Selected.NomeMangueira)
+                  Set(varMangueiraEscolhidaTubo, Self.Selected.NomeMangueira);
+                  If(
+                      !IsBlank(cmb_OpTubo_1.Selected.OPnum) && cmb_OpTubo_1.Selected.PN <> Self.Selected.NomeMangueira,
+                      Reset(cmb_OpTubo_1)
+                  )
               )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
@@ -998,6 +1002,12 @@ Screens:
             HoverFill: =fx_CorInfoSuave
             Items: =colTrancadeiras
             Items.Value: =Value
+            OnChange: |-
+              =Set(varTrPlanoTubo, Self.Selected.Value);
+              If(
+                  !IsBlank(cmb_OpTubo_1.Selected.OPnum) && cmb_OpTubo_1.Selected.TrDrp <> Self.Selected.Value,
+                  Reset(cmb_OpTubo_1)
+              )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
             SelectionColor: =fx_CorInfo
@@ -1089,7 +1099,13 @@ Screens:
             Items: |-
               =Filter(
                   colPlanoTubo,
-                  !(OPnum in colOPsUsadasTubo.OP) || OPnum = gal_FilaTubo_1.Selected.OP
+                  (!(OPnum in colOPsUsadasTubo.OP) || OPnum = gal_FilaTubo_1.Selected.OP) &&
+                  (
+                      IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) ||
+                      cmb_MangueiraTubo_1.Selected.NomeMangueira = fx_MangueiraOutra ||
+                      PN = cmb_MangueiraTubo_1.Selected.NomeMangueira
+                  ) &&
+                  (IsBlank(drp_TrancadeiraTubo_1.Selected.Value) || TrDrp = drp_TrancadeiraTubo_1.Selected.Value)
               )
             OnChange: |-
               =If(
@@ -1097,14 +1113,7 @@ Screens:
                   Set(varTrPlanoTubo, Blank());
                   Set(varQtdPlanoTubo, Blank()),
                   Set(varMangueiraEscolhidaTubo, Coalesce(Self.Selected.PN, varMangueiraEscolhidaTubo));
-                  Set(
-                      varTrPlanoTubo,
-                      If(
-                          IsBlank(Self.Selected.Trancadeira),
-                          Blank(),
-                          If(Self.Selected.Trancadeira = "TE.01", "Spiral", Substitute(Self.Selected.Trancadeira, ".", ""))
-                      )
-                  );
+                  Set(varTrPlanoTubo, If(IsBlank(Self.Selected.Trancadeira), Blank(), Self.Selected.TrDrp));
                   Set(varQtdPlanoTubo, If(Self.Selected.QtdPlanejada > 0, Self.Selected.QtdPlanejada, Blank()));
                   Reset(cmb_MangueiraTubo_1);
                   Reset(drp_TrancadeiraTubo_1);
@@ -1482,7 +1491,8 @@ Screens:
                       colPlanoTubo,
                       AddColumns(
                           Filter(Plano_OPs, Tipo = "Tubo", Encerrada = false),
-                          OPnum, Value(Title)
+                          OPnum, Value(Title),
+                          TrDrp, If(Trancadeira = "TE.01", "Spiral", Substitute(Trancadeira, ".", ""))
                       )
                   );
                   true,
