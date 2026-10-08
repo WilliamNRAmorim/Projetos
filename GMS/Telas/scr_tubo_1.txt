@@ -26,6 +26,8 @@ Screens:
             )
         );
         Set(varMangueiraEscolhidaTubo, Blank());
+        Set(varTrPlanoTubo, Blank());
+        Set(varQtdPlanoTubo, Blank());
         Select(ico_RefreshTubo_1)
     Children:
       - tmr_RelogioTubo_1:
@@ -91,7 +93,6 @@ Screens:
             VerticalAlign: =VerticalAlign.Top
             Width: =180
             X: =25
-            Y: =20
       - lbl_TotalFilaTubo_1:
           Control: ModernText@1.0.0
           Properties:
@@ -140,7 +141,9 @@ Screens:
               Reset(drp_TrancadeiraTubo_1);
               Reset(cmb_OpTubo_1);
               Reset(inp_ObsTubo_1);
-              Set(varMangueiraEscolhidaTubo, Blank())
+              Set(varMangueiraEscolhidaTubo, Blank());
+              Set(varTrPlanoTubo, Blank());
+              Set(varQtdPlanoTubo, Blank())
             TemplateFill: =Color.Transparent
             TemplateSize: =112
             Width: =315
@@ -766,7 +769,12 @@ Screens:
                   fx_CorErro,
                   fx_CorBorda
               )
-            Default: =gal_FilaTubo_1.Selected.quantidade_tubo
+            Default: |-
+              =If(
+                  Coalesce(gal_FilaTubo_1.Selected.quantidade_tubo, 0) > 0,
+                  gal_FilaTubo_1.Selected.quantidade_tubo,
+                  varQtdPlanoTubo
+              )
             DelayOutput: =true
             DisplayMode: |-
               =If(
@@ -908,7 +916,7 @@ Screens:
                       If(
                           IsBlank(_atual) || !IsBlank(LookUp(colMangEscTubo, NomeMangueira = _atual)),
                           colMangEscTubo,
-                          Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), "t")
+                          Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), t)
                       )
                   ),
                   NomeMangueira = Coalesce(varMangueiraEscolhidaTubo, gal_FilaTubo_1.Selected.Mangueira)
@@ -931,7 +939,7 @@ Screens:
                   If(
                       IsBlank(_atual) || !IsBlank(LookUp(colMangEscTubo, NomeMangueira = _atual)),
                       colMangEscTubo,
-                      Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), "t")
+                      Ungroup(Table({t: colMangEscTubo}, {t: Table({NomeMangueira: _atual})}), t)
                   )
               )
             OnChange: |-
@@ -977,7 +985,7 @@ Screens:
             ChevronFill: =fx_CorRotulo
             ChevronHoverBackground: =fx_CorFundo
             ChevronHoverFill: =fx_CorRotulo
-            Default: =gal_FilaTubo_1.Selected.Trançadeira
+            Default: =Coalesce(varTrPlanoTubo, gal_FilaTubo_1.Selected.Trançadeira)
             DisplayMode: |-
               =If(
                   fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
@@ -1066,7 +1074,7 @@ Screens:
             ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
             ChevronHoverFill: =fx_CorSuperficie
             DefaultSelectedItems: =Filter(colPlanoTubo, OPnum = gal_FilaTubo_1.Selected.OP)
-            DisplayFields: =["Rotulo"]
+            DisplayFields: =["Title"]
             DisplayMode: |-
               =If(
                   fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
@@ -1074,22 +1082,41 @@ Screens:
                   DisplayMode.Disabled
               )
             Font: =fx_FonteFamilia
-            Height: =fx_AlturaCampo
+            Height: =44
             HoverFill: =fx_CorInfoSuave
             InputTextPlaceholder: ="Escolha a OP do plano"
-            IsSearchable: =true
+            IsSearchable: =false
             Items: |-
               =Filter(
                   colPlanoTubo,
                   !(OPnum in colOPsUsadasTubo.OP) || OPnum = gal_FilaTubo_1.Selected.OP
               )
+            OnChange: |-
+              =If(
+                  IsBlank(Self.Selected.OPnum),
+                  Set(varTrPlanoTubo, Blank());
+                  Set(varQtdPlanoTubo, Blank()),
+                  Set(varMangueiraEscolhidaTubo, Coalesce(Self.Selected.PN, varMangueiraEscolhidaTubo));
+                  Set(
+                      varTrPlanoTubo,
+                      If(
+                          IsBlank(Self.Selected.Trancadeira),
+                          Blank(),
+                          If(Self.Selected.Trancadeira = "TE.01", "Spiral", Substitute(Self.Selected.Trancadeira, ".", ""))
+                      )
+                  );
+                  Set(varQtdPlanoTubo, If(Self.Selected.QtdPlanejada > 0, Self.Selected.QtdPlanejada, Blank()));
+                  Reset(cmb_MangueiraTubo_1);
+                  Reset(drp_TrancadeiraTubo_1);
+                  Reset(inp_QtdTubo_1)
+              )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
-            SearchFields: =["Title", "PN"]
+            SearchFields: =["Title"]
             SelectMultiple: =false
             SelectionColor: =fx_CorSuperficie
             SelectionFill: =fx_CorInfo
-            Width: =148
+            Width: =162
             X: =369
             Y: =583
       - lbl_RotObsTubo_1:
@@ -1127,7 +1154,7 @@ Screens:
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteCorpo
             Width: =310
-            X: =531
+            X: =545
             Y: =583
       - lbl_AlertaBalancoTubo_1:
           Control: Label@2.5.1
@@ -1455,8 +1482,7 @@ Screens:
                       colPlanoTubo,
                       AddColumns(
                           Filter(Plano_OPs, Tipo = "Tubo", Encerrada = false),
-                          "OPnum", Value(Title),
-                          "Rotulo", Title & "  ·  " & Coalesce(PN, "") & If(!IsBlank(Trancadeira), "  ·  " & Trancadeira, "") & If(QtdPlanejada > 0, "  ·  " & Text(QtdPlanejada, "0") & " m", "")
+                          OPnum, Value(Title)
                       )
                   );
                   true,
@@ -1465,7 +1491,7 @@ Screens:
               );
               With(
                   { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
-                  ClearCollect(colOPsUsadasTubo, ShowColumns(Filter(ficha_producao, OP >= _min), "OP"))
+                  ClearCollect(colOPsUsadasTubo, ShowColumns(Filter(ficha_producao, OP >= _min), OP))
               );
               ClearCollect(
                   colKanbanTrancTubo,
