@@ -1889,7 +1889,7 @@ Screens:
             BorderColor: =fx_CorBorda
             Fill: =Color.Transparent
             Height: =307
-            Items: =Filter(colKanbanTrancTubo, Ativa)
+            Items: =colKanbanTrancTubo
             TemplateFill: =Color.Transparent
             TemplateSize: =44
             Width: =198
@@ -1899,11 +1899,11 @@ Screens:
             - btn_LinhaKanbanTubo:
                 Control: Classic/Button@2.2.0
                 Properties:
-                  BorderColor: =fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd)
+                  BorderColor: =If(ThisItem.Ativa, fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd), fx_CorBorda)
                   BorderThickness: =1
                   Color: =fx_CorTexto
                   DisplayMode: =DisplayMode.View
-                  Fill: =ColorFade(fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd), 88%)
+                  Fill: =If(ThisItem.Ativa, ColorFade(fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd), 88%), Color.Transparent)
                   Font: =fx_FonteFamilia
                   HoverFill: =Self.Fill
                   PressedFill: =Self.Fill
@@ -1917,7 +1917,7 @@ Screens:
             - lbl_MaqKanbanTubo:
                 Control: Label@2.5.1
                 Properties:
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Ativa, fx_CorTexto, fx_CorTextoSuave)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Size: =fx_FonteCorpo
@@ -1929,7 +1929,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Right
-                  Color: =fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd)
+                  Color: =If(ThisItem.Ativa, fx_SemaforoTranc(ThisItem.Rodando, ThisItem.Qtd), fx_CorTextoSuave)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Size: =fx_FonteApoio
@@ -1937,6 +1937,8 @@ Screens:
                     =If(
                         ThisItem.Tipo = "ORF",
                         Text(ThisItem.Qtd) & " s/ grade",
+                        !ThisItem.Ativa,
+                        "sem produção" & If(ThisItem.Qtd > 0, " · " & Text(ThisItem.Qtd), ""),
                         ThisItem.Rodando,
                         Text(ThisItem.Qtd) & " atrás",
                         "parada" & If(ThisItem.Qtd > 0, " · " & Text(ThisItem.Qtd), "")
