@@ -10,6 +10,7 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 5. Seguidores ganhos por post.
 
 ## Regras da receita (versão 0, 08/10/2026)
+- **Visual que a pessoa aprovou ("de genérico para bom", 08/10):** layout montado no código (faixa de baixo com etiqueta + manchete + virada) + cena rica e colorida do tema + **Bit fantasiado do tema** e **objetos de cena desenhados no Gemini no traço do Bit**, recortados e reposicionados. Gemini gerando a cena inteira ficou genérico; cena só em código ficou "sem sal". O meio-termo é o certo.
 - História com arco > apresentação ou informação solta (rejeição do Ep. 0 e do "vírgula 27 s"; a pessoa aprovou o arco completo).
 - Gancho com mistério nos 2 primeiros segundos; legenda acima de y≈1500.
 - Bit como narrador seco, não como protagonista fofo.
