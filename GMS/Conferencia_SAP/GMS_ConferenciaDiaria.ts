@@ -1,5 +1,10 @@
 /**
- * GMS_ConferenciaDiaria  v1.0.2  (05/10/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.1.0  (08/10/2026)  MEL-196  C29
+ * v1.1.0: o packing passa a vir do GMS (listas Packing_Pallets e Packing_Manual), nao mais do BD Packing List (apagado
+ *   em 08/10). Casamento EXATO por ID de lance (LanceIDs do pallet = ID de RegistrosInspecao). Categorias novas:
+ *   pallet com lance inexistente / de outra OP / repetido em outro pallet / total diferente da soma dos lances, e
+ *   packing manual Pendente com OP que ja existe. Lance anterior a PACK_GMS_DESDE nao e cobrado de packing (sem fonte).
+ *   Parametros novos no FIM da assinatura: palletsJson e manualJson. packingJson (BD) continua aceito e pode ir "[]".
  * v1.0.2: o runtime do Office Script compila para ES5 sem iterador: nada de spread/for-of em Map ou Set
  * (deu "Invalid array length" no 1o teste do fluxo). Map/Set so via chavesMap/valoresMap/chavesSet.
  * Office Script — roda pelo Power Automate em cima do mb51.xlsx (somente leitura).
@@ -69,6 +74,11 @@ interface RefIn { id?: Val; op?: Val; q?: Val; dt?: Val; cod?: Val; cab?: Val;
   ID?: Val; OP_ID?: Val; _x0043_?: Val; Created?: Val; A?: Val; cabine_teste?: Val; }
 interface FichaIn { op?: Val; pn?: Val; OP?: Val; Mangueira?: Val; }
 interface PackIn { id: number; sl: number; pn: string; q: number; ts: string; c: boolean; }
+// Packing_Pallets e Packing_Manual (corpo CRU do SharePoint, nomes internos) ou formato curto
+interface PalletIn { id?: Val; ficha?: Val; pallet?: Val; op?: Val; lances?: Val; qtd?: Val; total?: Val; imp?: Val;
+  ID?: Val; Id?: Val; FichaID?: Val; Pallet?: Val; Title?: Val; LanceIDs?: Val; QtdLances?: Val; TotalM?: Val; DataHoraImp?: Val; }
+interface ManualIn { id?: Val; op?: Val; status?: Val; total?: Val; pn?: Val; imp?: Val;
+  ID?: Val; Id?: Val; Title?: Val; Status?: Val; TotalM?: Val; Mangueira?: Val; DataHoraImp?: Val; }
 interface AbertoIn { chave?: Val; id?: Val; status?: Val; desde?: Val; categoria?: Val;
   Title?: Val; ID?: Val; Status?: Val; DataDeteccao?: Val; Categoria?: Val; }
 interface Aberto { chave: string; id: number; status: string; categoria: string; }
@@ -78,6 +88,7 @@ interface Aberto { chave: string; id: number; status: string; categoria: string;
 interface Lance { id: number; op: string; q: number; t: number; dia: string; cab: string; usado: boolean; slice: string; }
 interface Refugo { id: number; op: string; q: number; t: number; dia: string; cod: string; usado: boolean; }
 interface DocSap { op: string; pn: string; doc: string; q: number; dia: string; mvt: string; user: string; usado: boolean; papel: string; }
+interface Pallet { id: number; ficha: number; n: number; op: string; ids: number[]; qtd: number; total: number; t: number; dia: string; }
 interface Slice { id: number; sl: number; pn: string; q: number; t: number; dia: string; casou: string; opCasada: string; difQ: number; }
 interface AnaliseOP {
   op: string; pn: string; gms: number; ref: number; sap: number; dif: number;
@@ -90,6 +101,7 @@ const TOL_LANCE = 0.05;
 const PACK_ANTES_H = 96;   // janela de CASAMENTO (acha packing atrasado); a COBRANCA e no mesmo dia
 const PACK_DEPOIS_H = 2;   // relogio do packing pode estar ate 2 h atras do GMS
 const PACK_JANELA_DIAS = 6;
+const PACK_GMS_DESDE = "2026-10-06";   // 1o dia com packing registrado no GMS; antes disso o BD (apagado) era a fonte
 const FUSO_H = -3;         // Brasilia, sem horario de verao
 let packingSemDia = false;
 
@@ -108,7 +120,12 @@ const CAT: { [k: string]: Categoria } = {
   PACK_SEM_GMS: { nome: "Packing sem lance no GMS", prio: 11, acao: "Conferir o romaneio: lance sem apontamento ou metragem digitada diferente", quem: "Logística / Cabine" },
   PACK_DUP: { nome: "Romaneio duplicado no Packing", prio: 12, acao: "Cancelar o romaneio duplicado no Packing List", quem: "Logística / Cabine" },
   PACK_ID: { nome: "ID de romaneio repetido no Packing", prio: 12, acao: "Corrigir o ID do romaneio no Packing List (um ID por romaneio)", quem: "Logística / Cabine" },
-  SEM_PACK: { nome: "Lance aprovado sem packing", prio: 13, acao: "Registrar o lance no Packing List ou confirmar onde está o material", quem: "Logística / Cabine" }
+  SEM_PACK: { nome: "Lance aprovado sem packing", prio: 13, acao: "Imprimir o packlist pelo GMS (Finalização) ou confirmar onde está o material", quem: "Logística / Cabine" },
+  PP_LANCE: { nome: "Pallet com lance que não existe no GMS", prio: 14, acao: "Conferir o pallet em Packing_Pallets: ID de lance apagado ou digitado errado", quem: "Supervisão / Cabine" },
+  PP_OP: { nome: "Pallet com lance de outra OP", prio: 14, acao: "Conferir qual OP é a certa: lance do pallet pertence a outra OP no GMS", quem: "Supervisão / Cabine" },
+  PP_DUP: { nome: "Lance em mais de um pallet", prio: 15, acao: "Corrigir os pallets: cada lance só pode sair em um pallet", quem: "Supervisão / Cabine" },
+  PP_TOTAL: { nome: "Total do pallet diferente da soma dos lances", prio: 16, acao: "Reimprimir o pallet ou corrigir TotalM/QtdLances em Packing_Pallets", quem: "Supervisão / Cabine" },
+  PM_PEND: { nome: "Packing manual pendente com OP que já existe", prio: 17, acao: "Regularizar: ligar o packing manual à OP e marcar como Regularizado", quem: "Logística / Cabine" }
 };
 
 // ───────────────────────── main (Power Automate) ─────────────────────────
@@ -122,7 +139,9 @@ function main(
   packingJson: string,
   abertosJson: string,
   toleranciaM: number,
-  janelaDias: number
+  janelaDias: number,
+  palletsJson: string,
+  manualJson: string
 ): Resultado {
   const tol = toleranciaM > 0 ? toleranciaM : 0.5;
   const janela = janelaDias > 0 ? janelaDias : 35;
@@ -130,7 +149,8 @@ function main(
   const inicio = somaDias(d, -janela);
   const sap = lerMB51(workbook, inicio);
   return conferir(d, sap, parseLista<InspIn>(inspecoesJson), parseLista<RefIn>(refugosJson),
-    parseLista<FichaIn>(fichaJson), parseLista<PackIn>(packingJson), parseLista<AbertoIn>(abertosJson), tol, inicio);
+    parseLista<FichaIn>(fichaJson), parseLista<PackIn>(packingJson), parseLista<PalletIn>(palletsJson), parseLista<ManualIn>(manualJson),
+    parseLista<AbertoIn>(abertosJson), tol, inicio);
 }
 
 function parseLista<T>(s: string): T[] {
@@ -225,7 +245,7 @@ function lerMB51(workbook: ExcelScript.Workbook, inicio: string): DocSap[] {
 
 function conferir(
   d: string, sapDocs: DocSap[], inspIn: InspIn[], refIn: RefIn[], fichaIn: FichaIn[],
-  packIn: PackIn[], abertosIn: AbertoIn[], tol: number, inicio: string
+  packIn: PackIn[], palletsIn: PalletIn[], manualIn: ManualIn[], abertosIn: AbertoIn[], tol: number, inicio: string
 ): Resultado {
   // 1) normaliza
   const lances: Lance[] = inspIn.map(r => {
@@ -274,6 +294,29 @@ function conferir(
   const packingPorOP = new Map<string, number>();
   for (const s of slices) { if (s.opCasada) { packingPorOP.set(s.opCasada, (packingPorOP.get(s.opCasada) || 0) + s.q); } }
 
+  // 3b) packing do GMS (Packing_Pallets): casamento EXATO por ID de lance (v1.1.0)
+  const pallets: Pallet[] = palletsIn.map(p => {
+    const t = instanteUTC(txt(pega(p.imp, p.DataHoraImp)));
+    return {
+      id: Number(pega(pega(p.id, p.ID), p.Id)) || 0, ficha: Number(pega(p.ficha, p.FichaID)) || 0, n: Number(pega(p.pallet, p.Pallet)) || 0,
+      op: textoOP(pega(p.op, p.Title)), ids: idsDeLances(txt(pega(p.lances, p.LanceIDs))), qtd: Number(pega(p.qtd, p.QtdLances)) || 0,
+      total: num(pega(p.total, p.TotalM)), t: t, dia: diaDe(t)
+    };
+  }).filter(p => p.id > 0 && p.ids.length > 0);
+  const palletsDoLance = new Map<number, number[]>();
+  for (const p of pallets) {
+    for (const i of p.ids) {
+      const l = palletsDoLance.get(i);
+      if (!l) { palletsDoLance.set(i, [p.id]); } else if (l.indexOf(p.id) < 0) { l.push(p.id); }
+    }
+  }
+  const lancePorId = new Map<number, Lance>();
+  for (const l of lances) { lancePorId.set(l.id, l); }
+  for (const l of lances) {
+    const ps = palletsDoLance.get(l.id);
+    if (ps && !l.slice) { l.slice = "P" + ps[0]; packingPorOP.set(l.op, (packingPorOP.get(l.op) || 0) + l.q); }
+  }
+
   // 4) escopo do dia: atividade em D (GMS, SAP ou packing) + tudo que esta aberto na lista
   const abertos = new Map<string, Aberto>();
   for (const a of abertosIn) {
@@ -285,9 +328,10 @@ function conferir(
   for (const r of refugos) { if (diaCobranca(r.dia) === d) { escopo.add(r.op); } }
   for (const s of sap) { if (diaCobranca(s.dia) === d) { escopo.add(s.op); } }
   for (const s of slices) { if (diaCobranca(s.dia) === d && s.opCasada) { escopo.add(s.opCasada); } }
+  for (const p of pallets) { if (p.op && diaCobranca(p.dia) === d) { escopo.add(p.op); } }
   // prazo do refugo vencendo hoje: o lote de lancamento do SAP desse refugo e D
   for (const r of refugos) { if (prazoRefugo(r.dia) === d) { escopo.add(r.op); } }
-  for (const k of chavesMap(abertos)) { if (!k.startsWith("PL ")) { escopo.add(k); } }
+  for (const k of chavesMap(abertos)) { if (!k.startsWith("PL ") && !k.startsWith("PP ") && !k.startsWith("PM ")) { escopo.add(k); } }
 
   const itens: ItemConferencia[] = [];
   let conferidas = 0;
@@ -310,7 +354,7 @@ function conferir(
     let detalhe = cat ? detalharOP(a, cat) : "";
     if (!cat) {
       // GMS x SAP ok: cobra packing de lance cujo dia de cobranca ja chegou
-      const semPack = (lancesOP.get(op) || []).filter(l => !l.slice && l.dia >= diaMinPack && diaCobranca(l.dia) <= d);
+      const semPack = (lancesOP.get(op) || []).filter(l => !l.slice && l.dia >= diaMinPack && l.dia >= PACK_GMS_DESDE && diaCobranca(l.dia) <= d);
       if (semPack.length) {
         catFinal = CAT.SEM_PACK;
         detalhe = "Lances sem packing: " + listar(semPack.map(l => fmt(l.q) + " m (" + dm(l.dia) + " " + hm(l.t) + ", Id " + l.id + ")"), 6);
@@ -377,6 +421,68 @@ function conferir(
       itens.push(itemPacking(chave, ab, ss, { nome: ab.categoria, prio: 99, acao: "", quem: "" }, "Conferido em " + dm(d) + ": romaneio bate com o GMS.", d, "Resolvido"));
     }
   }
+  // 5b) integridade dos pallets do GMS e packing manual pendente (v1.1.0)
+  const feitosPK = new Set<string>();
+  for (const p of pallets) {
+    if (p.dia < inicio || p.dia > d) { continue; }
+    const chave = "PP " + p.id;
+    const ab = abertos.get(chave);
+    if (diaCobranca(p.dia) !== d && !ab) { continue; }
+    feitosPK.add(chave);
+    const faltam: number[] = [];
+    const achados: Lance[] = [];
+    for (const i of p.ids) { const l = lancePorId.get(i); if (l) { achados.push(l); } else { faltam.push(i); } }
+    const repetidos: string[] = [];
+    for (const l of achados) { const ps = palletsDoLance.get(l.id) || []; if (ps.length > 1) { repetidos.push(l.id + " (pallets " + ps.join(", ") + ")"); } }
+    const outraOP = achados.filter(l => p.op !== "" && l.op !== p.op);
+    const totalGms = soma(achados.map(l => l.q));
+    const problemas: string[] = [];
+    let cat: Categoria | null = null;
+    if (faltam.length) { cat = CAT.PP_LANCE; problemas.push("lance(s) que não estão no GMS: " + listar(faltam.map(x => String(x)), 8)); }
+    if (outraOP.length) { cat = cat || CAT.PP_OP; problemas.push("lance(s) de outra OP: " + listar(outraOP.map(l => l.id + " (OP " + l.op + ")"), 6)); }
+    if (repetidos.length) { cat = cat || CAT.PP_DUP; problemas.push("lance(s) também em outro pallet: " + listar(repetidos, 6)); }
+    if (!faltam.length && Math.abs(totalGms - p.total) > TOL_LANCE) { cat = cat || CAT.PP_TOTAL; problemas.push("TotalM " + fmt(p.total) + " m, soma dos lances " + fmt(totalGms) + " m"); }
+    if (p.qtd !== p.ids.length) { cat = cat || CAT.PP_TOTAL; problemas.push("QtdLances " + p.qtd + ", IDs no pallet " + p.ids.length); }
+    const base = "Pallet " + p.n + " da ficha " + p.ficha + " (OP " + p.op + ")";
+    if (cat) {
+      itens.push(itemPallet(chave, ab, p.op, pnPorOP.get(p.op) || "", p.total, cat, base + ": " + problemas.join(" | "), d));
+    } else if (ab) {
+      itens.push(itemPallet(chave, ab, p.op, pnPorOP.get(p.op) || "", p.total, { nome: ab.categoria, prio: 99, acao: "", quem: "" },
+        "Conferido em " + dm(d) + ": " + base + " bate com o GMS.", d, "Resolvido"));
+    }
+  }
+  for (const m of manualIn) {
+    const id = Number(pega(pega(m.id, m.ID), m.Id)) || 0;
+    if (!id) { continue; }
+    const chave = "PM " + id;
+    const ab = abertos.get(chave);
+    const op = textoOP(pega(m.op, m.Title));
+    const t = instanteUTC(txt(pega(m.imp, m.DataHoraImp)));
+    const total = num(pega(m.total, m.TotalM));
+    const pendente = txt(pega(m.status, m.Status)) === "Pendente";
+    const existe = op !== "" && (lancesOP.has(op) || pnPorOP.has(op));
+    if (pendente && existe && diaDe(t) >= inicio) {
+      feitosPK.add(chave);
+      itens.push(itemPallet(chave, ab, op, normPN(txt(pega(m.pn, m.Mangueira))), total, CAT.PM_PEND,
+        "Packing manual de " + dm(diaDe(t)) + " (" + fmt(total) + " m) digitado com a OP " + op + ", que já existe no sistema", d));
+    } else if (ab) {
+      feitosPK.add(chave);
+      itens.push(itemPallet(chave, ab, op, "", total, { nome: ab.categoria, prio: 99, acao: "", quem: "" },
+        "Conferido em " + dm(d) + ": packing manual regularizado ou sem OP no sistema.", d, "Resolvido"));
+    }
+  }
+  // aberto de pallet/manual que sumiu (apagado ou fora da janela) = resolvido
+  for (const k of chavesMap(abertos)) {
+    const ab = abertos.get(k) as Aberto;
+    if ((k.startsWith("PP ") || k.startsWith("PM ")) && !feitosPK.has(k)) {
+      itens.push({
+        chave: k, idLista: Number(ab.id) || 0, op: "", pn: "", categoria: ab.categoria || "", prioridade: 99, status: "Resolvido",
+        gmsM: 0, refugoGmsM: 0, sapM: 0, packingM: 0, difM: 0, provavelOP: "",
+        detalhe: "Conferido em " + dm(d) + ": pallet/packing manual removido ou fora da janela.", acao: "", quemResolve: "", cabine: "", dataRef: d, corpoSP: "", corpoSPNovo: ""
+      });
+    }
+  }
+
   // aberto de packing cujo romaneio sumiu (cancelado) = resolvido
   for (const k of chavesMap(abertos)) {
     const ab = abertos.get(k) as Aberto;
@@ -407,7 +513,8 @@ function conferir(
   const abertosHoje = itens.filter(i => i.status !== "Resolvido");
   const resolvidos = itens.filter(i => i.status === "Resolvido").length;
   const mb51Ok = sap.some(s => s.dia === d) || diaSemana(d) === 0;
-  packingSemDia = lances.some(l => l.dia === d) && !slices.some(s => s.dia === d || s.dia === somaDias(d, 1));
+  packingSemDia = d >= PACK_GMS_DESDE && lances.some(l => l.dia === d) &&
+    !slices.some(s => s.dia === d || s.dia === somaDias(d, 1)) && !pallets.some(p => p.dia === d || p.dia === somaDias(d, 1));
   const ncOP = abertosHoje.filter(i => i.prioridade <= 10).length;
   const res: Resultado = {
     assunto: "Conferência GMS × SAP × Packing " + dm(d) + " — " + (abertosHoje.length ? abertosHoje.length + " pendência(s)" : "tudo conforme") +
@@ -514,6 +621,25 @@ function montarItem(op: string, ab: Aberto | undefined, a: AnaliseOP, c: Categor
     gmsM: a.gms, refugoGmsM: a.ref, sapM: a.sap, packingM: arred(pack), difM: a.dif, provavelOP: a.provavel,
     detalhe: detalhe, acao: c.acao, quemResolve: c.quem, cabine: a.cab, dataRef: d, corpoSP: "", corpoSPNovo: ""
   };
+}
+
+function itemPallet(chave: string, ab: Aberto | undefined, op: string, pn: string, totalM: number, c: Categoria, detalhe: string, d: string, status: string = "Aberto"): ItemConferencia {
+  const st = status === "Resolvido" ? "Resolvido" : (ab && ab.status === "Justificado" ? "Justificado" : "Aberto");
+  return {
+    chave: chave, idLista: ab ? Number(ab.id) || 0 : 0, op: op, pn: pn, categoria: c.nome, prioridade: c.prio,
+    status: st, gmsM: 0, refugoGmsM: 0, sapM: 0, packingM: arred(totalM), difM: 0, provavelOP: "",
+    detalhe: detalhe, acao: c.acao, quemResolve: c.quem, cabine: "", dataRef: d, corpoSP: "", corpoSPNovo: ""
+  };
+}
+
+/** LanceIDs do pallet -> numeros. Aceita texto simples "1;2;3" e o HTML que o SharePoint poe em coluna de texto formatado. */
+function idsDeLances(s: string): number[] {
+  const out: number[] = [];
+  const re = /[>;](\d+)/g;
+  const t = ";" + s;
+  let m: RegExpExecArray | null = re.exec(t);
+  while (m !== null) { out.push(Number(m[1])); m = re.exec(t); }
+  return out;
 }
 
 function itemPacking(chave: string, ab: Aberto | undefined, ss: Slice[], c: Categoria, detalhe: string, d: string, status: string = "Aberto"): ItemConferencia {
