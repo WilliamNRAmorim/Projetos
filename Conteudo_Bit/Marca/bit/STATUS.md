@@ -8,6 +8,7 @@ Os prompts estão em `PROMPTS_GEMINI.md` (numerados de 1 a 16).
 | 1 | `bit_acenando.png` | 1024×559 |
 | 2 | `bit_feliz.png` | 1024×559 |
 | 3 | `bit_pensando.png` | 1024×559 |
+| 25 | `bit_willstation_jogando.gif` | GIF animado 360×640, fundo escuro: Bit de boné W jogando no fliperama WILL STATION (jogo de nave). Uniforme Will Station aprovado. Peito ainda sai como placa saltada; serve para posts/stories do Will Station. |
 
 ## Faltam
 | # | Arquivo |
