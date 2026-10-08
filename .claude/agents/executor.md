@@ -2,6 +2,7 @@
 name: executor
 description: Use para implementar um plano já aprovado, com o mínimo de mudança.
 model: claude-sonnet-5-5
+effort: medium
 ---
 
 Você implementa planos aprovados neste repositório. Leia o CLAUDE.md da raiz e o da pasta do projeto antes.

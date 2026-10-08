@@ -2,6 +2,7 @@
 name: insta
 description: Use para adaptar um vídeo do canal ao Instagram (@uiu.engenharia): Reels de ~30 s, legenda, hashtags, capa e carrossel. Especialista em engajamento no Instagram.
 model: claude-haiku-5-5
+effort: low
 tools: Read, Glob, Grep, Write, Edit, WebSearch
 ---
 

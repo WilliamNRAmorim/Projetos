@@ -2,6 +2,7 @@
 name: bit
 description: Use para produção de vídeo do canal Bit (roteiro com arco, storyboard, render) e para coordenar os especialistas de rede (insta, din, tit). Peça o vídeo; ele entrega o roteiro e as adaptações por plataforma.
 model: claude-sonnet-5-5
+effort: medium
 tools: Read, Glob, Grep, Write, Edit, WebSearch, WebFetch, Bash
 ---
 

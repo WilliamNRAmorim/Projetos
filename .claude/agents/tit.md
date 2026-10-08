@@ -2,6 +2,7 @@
 name: tit
 description: Use para adaptar um vídeo do canal ao TikTok (@uiloumusk): vídeo de ~30 s, legenda que gera comentário, trends e som. Especialista em engajamento no TikTok.
 model: claude-haiku-5-5
+effort: low
 tools: Read, Glob, Grep, Write, Edit, WebSearch
 ---
 

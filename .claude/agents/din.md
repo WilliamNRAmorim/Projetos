@@ -2,6 +2,7 @@
 name: din
 description: Use para adaptar um conteúdo ao LinkedIn pessoal: texto e vídeo longo (~1min18), em primeira pessoa e fiel aos fatos. Especialista em engajamento profissional no LinkedIn.
 model: claude-haiku-5-5
+effort: low
 tools: Read, Glob, Grep, Write, Edit, WebSearch
 ---
 
