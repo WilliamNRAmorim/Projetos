@@ -191,7 +191,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteApoio
-            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0")
+            Text: =If(CountRows(colRecentesCOP) >= 1, Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0"), "")
             Visible: =CountRows(colRecentesCOP) >= 1
             Width: =66
             X: =16
@@ -216,7 +216,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteApoio
-            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP, "0")
+            Text: =If(CountRows(colRecentesCOP) >= 2, Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 2).OP, "0"), "")
             Visible: =CountRows(colRecentesCOP) >= 2
             Width: =66
             X: =90
@@ -241,7 +241,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteApoio
-            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP, "0")
+            Text: =If(CountRows(colRecentesCOP) >= 3, Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 3).OP, "0"), "")
             Visible: =CountRows(colRecentesCOP) >= 3
             Width: =66
             X: =164
@@ -266,7 +266,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteApoio
-            Text: =Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP, "0")
+            Text: =If(CountRows(colRecentesCOP) >= 4, Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 4).OP, "0"), "")
             Visible: =CountRows(colRecentesCOP) >= 4
             Width: =66
             X: =238
@@ -1605,8 +1605,8 @@ Screens:
                         ClearCollect(
                             colPalletImp,
                             ForAll(
-                                Split(ThisItem.LanceIDs, ";") As _l,
-                                { ID: Value(_l.Result), Qtd: LookUp(colInspPackCOP, ID = Value(_l.Result)).Quantidade }
+                                MatchAll(ThisItem.LanceIDs, "\d+") As _l,
+                                { ID: Value(_l.FullMatch), Qtd: LookUp(colInspPackCOP, ID = Value(_l.FullMatch)).Quantidade }
                             )
                         );
                         If(

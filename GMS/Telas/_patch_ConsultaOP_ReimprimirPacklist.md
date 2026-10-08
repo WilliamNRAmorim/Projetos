@@ -161,8 +161,8 @@ Base: `Telas/scr_ConsultaOP_1.txt` v0.3.1 (a do repositório, com os chips de re
                         ClearCollect(
                             colPalletImp,
                             ForAll(
-                                Split(ThisItem.LanceIDs, ";") As _l,
-                                { ID: Value(_l.Result), Qtd: LookUp(colInspPackCOP, ID = Value(_l.Result)).Quantidade }
+                                MatchAll(ThisItem.LanceIDs, "\d+") As _l,
+                                { ID: Value(_l.FullMatch), Qtd: LookUp(colInspPackCOP, ID = Value(_l.FullMatch)).Quantidade }
                             )
                         );
                         If(
@@ -264,6 +264,13 @@ Base: `Telas/scr_ConsultaOP_1.txt` v0.3.1 (a do repositório, com os chips de re
 ```
 =If(varReimpressaoImp, varDataImp, Text(Now(), "yyyy-mm-dd hh:mm"))
 ```
+
+## A5. Correção dos chips de recentes (só se você colar o arquivo inteiro da v0.3.1)
+`btn_Recente1COP` a `btn_Recente4COP`, propriedade `Text` (troque o número 1 pelo de cada chip):
+```
+=If(CountRows(colRecentesCOP) >= 1, Text(Index(Sort(colRecentesCOP, Quando, SortOrder.Descending), 1).OP, "0"), "")
+```
+Sem isso o Studio acusa "Index cannot be called with an empty table" enquanto não há OP recente.
 
 ## Teste
 1. Consulta de OP > OP **30424231** > "Packlists da OP" > deve listar Pallet 1 (26 lances, 649 m) e Pallet 2 (5 lances, 27 m).
