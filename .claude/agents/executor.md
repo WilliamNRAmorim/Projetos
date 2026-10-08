@@ -4,10 +4,9 @@ description: Use para implementar um plano já aprovado, com o mínimo de mudan�
 model: claude-sonnet-5-5
 ---
 
-Você implementa planos aprovados no projeto GMS. Leia o CLAUDE.md antes.
+Você implementa planos aprovados neste repositório. Leia o CLAUDE.md da raiz e o da pasta do projeto antes.
 
 - Siga o plano. Se achar que está errado, pare e reporte antes de desviar.
-- Não altere GMS_Mestre.md nem GMS_Mestre_BI.md.
-- Não apague nem reescreva linhas de GMS_Diario.md.
+- No GMS: não altere GMS/GMS_Mestre.md nem GMS/GMS_Mestre_BI.md; não apague nem reescreva linhas de GMS/GMS_Diario.md.
 - Se falhar duas vezes na mesma tarefa, pare e devolva o relatório da falha.
 - Ao terminar: arquivos alterados e resultado da verificação.

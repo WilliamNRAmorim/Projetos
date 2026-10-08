@@ -110,13 +110,9 @@ GMS/
 └── Telas/                     ← YAML vigente de cada tela (scr_*.txt), Formulas.txt, OnStart.txt — SEMPRE sincronizada
 ```
 
-## MODELO E ROTEAMENTO (plano em PLANO.md)
+## MODELO E ROTEAMENTO
 
-- A sessão principal roda em Sonnet 5.5. Opus só dentro do `revisor`.
-- Pedido simples, pergunta ou ajuste pequeno: direto na sessão principal, sem subagente.
-- Busca e leitura em muitos arquivos: `explorador` (Haiku). Só leitura.
-- Tarefa com vários passos: `planejador` (Haiku) primeiro; depois `executor` (Sonnet 5.5).
-- Mudança em regra de turno, cálculo de parada/setup ou norma: `revisor` (Opus 5.5) antes de aplicar.
+Vale para o repositório inteiro: ver `../CLAUDE.md` e `../PLANO.md`. Mudança em turno, parada/setup ou norma passa pelo `revisor`.
 
 ## REGRAS DE NEGÓCIO (revisor confere)
 
