@@ -106,6 +106,27 @@ while ($l.IsListening) {
           if (Test-Path (MemFile $de)) { Copy-Item (MemFile $de) (MemFile $para) -Force }
           Send $res @{ ok = $true }
         }
+        '/api/historico' {
+          # eventos dos últimos N dias (lê os arquivos mensais; devolve o JSON cru, sem reprocessar)
+          $dias = 7; [void][int]::TryParse([string]$req.QueryString['dias'], [ref]$dias); if ($dias -lt 1) { $dias = 1 }; if ($dias -gt 62) { $dias = 62 }
+          $corte = (Get-Date).ToUniversalTime().AddDays(-$dias).ToString('o')
+          $out = New-Object System.Collections.Generic.List[string]
+          foreach ($m in @((Get-Date).AddMonths(-2), (Get-Date).AddMonths(-1), (Get-Date))) {
+            $f = Join-Path $root ('data\historico-' + $m.ToString('yyyy-MM') + '.jsonl')
+            if (Test-Path $f) { foreach ($ln in [IO.File]::ReadAllLines($f, [Text.Encoding]::UTF8)) { if ($ln.Length -gt 40 -and $ln.Substring(6, 27) -ge $corte.Substring(0, 27)) { $out.Add($ln) } } }
+          }
+          $b = $enc.GetBytes('[' + ($out -join ',') + ']'); $res.ContentType = 'application/json; charset=utf-8'; $res.AddHeader('Cache-Control', 'no-store'); $res.ContentLength64 = $b.Length; $res.OutputStream.Write($b, 0, $b.Length)
+        }
+        '/api/relatorio' {
+          $b = Body $req; $nome = [string]$b.nome; $txt = [string]$b.texto
+          if ($nome -notmatch '^semana-\d{4}-\d{2}-\d{2}\.md$' -or $txt.Length -lt 20 -or $txt.Length -gt 300000) { Send $res @{ erro = 'dados inválidos' } 400; break }
+          $dir = Join-Path $root 'relatorios'; New-Item -ItemType Directory -Force $dir | Out-Null
+          [IO.File]::WriteAllText((Join-Path $dir $nome), $txt, $enc); Send $res @{ ok = $true; arquivo = ('Sala_Agentes/relatorios/' + $nome) }
+        }
+        '/api/relatorios' {
+          $dir = Join-Path $root 'relatorios'
+          Send $res @{ itens = @(Get-ChildItem $dir -Filter 'semana-*.md' -ErrorAction SilentlyContinue | Sort-Object Name -Descending | ForEach-Object { $_.Name }) }
+        }
         default { Send $res @{ erro = 'rota desconhecida' } 404 }
       }
       continue

@@ -113,6 +113,7 @@ try {
     if ($lines.Count -gt $max) { $lines.RemoveRange(0, $lines.Count - $max) }
     $out = "[`n  " + ($lines -join ",`n  ") + "`n]"
     [IO.File]::WriteAllText($file, $out, (New-Object Text.UTF8Encoding($false)))
+    try { [IO.File]::AppendAllText((Join-Path (Join-Path $root "data") ("historico-" + (Get-Date).ToString("yyyy-MM") + ".jsonl")), $evJson + "`n", (New-Object Text.UTF8Encoding($false))) } catch { }
   } finally { [void]$mutex.ReleaseMutex() }
 
   # Nuvem (opcional): se existir hooks\nuvem.json, envia a versão reduzida ao Firebase Realtime Database.
