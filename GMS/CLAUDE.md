@@ -109,3 +109,25 @@ GMS/
 ├── gms_qa_yaml.py             ← QA de YAML
 └── Telas/                     ← YAML vigente de cada tela (scr_*.txt), Formulas.txt, OnStart.txt — SEMPRE sincronizada
 ```
+
+## MODELO E ROTEAMENTO (plano em PLANO.md)
+
+- A sessão principal roda em Sonnet 5.5. Opus só dentro do `revisor`.
+- Pedido simples, pergunta ou ajuste pequeno: direto na sessão principal, sem subagente.
+- Busca e leitura em muitos arquivos: `explorador` (Haiku). Só leitura.
+- Tarefa com vários passos: `planejador` (Haiku) primeiro; depois `executor` (Sonnet 5.5).
+- Mudança em regra de turno, cálculo de parada/setup ou norma: `revisor` (Opus 5.5) antes de aplicar.
+
+## REGRAS DE NEGÓCIO (revisor confere)
+
+- Parada real (célula incapaz de produzir) nunca é somada com tempo excedido (produzindo acima da meta).
+- Setup = intervalo entre a última peça boa de uma OAP e a primeira peça boa da próxima. Nunca por cliques do operador.
+- Turnos do hose cell: 1º 05:20–13:57; 2º a partir de 13:57 (hora extra até 23:20); 3º 22:20–05:20. Conferir mudanças em `fx_Turno`, `fx_InicioTurnoMin`, `fx_GradeHoraHora` e `dTurno` do BI.
+- A tela Hora-Hora da Montagem não troca de turno automaticamente.
+
+## PROCESSO (complementa as regras acima)
+
+- Mudança com mais de um arquivo começa com plano aprovado.
+- Não alterar `GMS_Mestre.md` nem `GMS_Mestre_BI.md` sem pedido explícito.
+- Não enviar dados de produção, SAP ou dados pessoais.
+- Ao final: arquivos alterados, verificação, modelo usado em cada etapa e pendências.
