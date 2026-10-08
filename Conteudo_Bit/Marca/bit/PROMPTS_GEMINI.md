@@ -90,6 +90,9 @@ Mesmo prefixo do item 1, com `bit_acenando.png` como referência e "com a mesma 
 |---|---|
 | `bit_tablet.png` | Ele segura um tablet virado para a câmera mostrando um gráfico de barras, tranquilo e confiante, meio sorriso. |
 | `bit_joinha.png` | Ele faz joinha com uma mão e pisca um olho. |
+| `bit_desconfiado.png` | Desconfiado: um olho semicerrado e uma sobrancelha levantada, boca de lado, com o dedo indicador levantado como quem vai dizer "bom…" (pose de antes da revelação; tirada dos vídeos que mais engajam). |
+| `bit_placa.png` | Ele segura com as duas mãos, na frente do peito, uma plaquinha de papel branco retangular EM BRANCO (sem nenhum texto), levemente torta, olhando para a câmera com cara de "sério isso?". |
+| `bit_apontando_lousa.png` | De lado, apontando com o braço esticado para a esquerda, como professor mostrando uma lousa fora da imagem, confiante. |
 | `bit_willstation.png` | **Uniforme Will Station:** boné vermelho com a letra W branca na frente; ele segura um joystick de fliperama preto com a bolinha vermelha e comemora. |
 | `bit_bastidores.png` | **Uniforme Bastidores:** capacete de obra amarelo; ele segura uma chave de boca e coça a cabeça, pensativo. |
 

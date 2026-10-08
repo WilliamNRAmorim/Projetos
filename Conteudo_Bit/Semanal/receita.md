@@ -36,6 +36,17 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | Topo | Vin Explains (EN) | 10,2K (1.491 salvos) | rosto, "professor" em sala de aula (fundo de lousa), 38 s, gancho "people think…" |
 | Meio | Eric Guidry, Doxael, Andrew Grant (EN) | 925–1.358 | rosto falando para a câmera, 36 s, tom "odeio te dizer" |
 | Base | maioria dos vídeos em PT (Tech Oculto, Universo Tech, Fatos Surpreendentes, TechLab…) | 1–103 | sem rosto e sem voz: texto genérico "você sabia?", sem história, sem o porquê |
+**O que roubar (e fazer melhor) dos que deram certo:**
+| Elemento | Quem fez | Como o Bit faz melhor |
+|---|---|---|
+| Gancho falado "people think…" / "hate to break it to ya…" | Vin Explains, Eric Guidry | "Odeio te contar isso, mas…" / "Todo mundo acha que…" na voz do Bit, já no 1º segundo |
+| Expressão desconfiada (olho semicerrado + dedo levantado "bom…") antes da revelação | Stupid Little Genius | pose `bit_desconfiado` (Gemini) na hora da virada |
+| Placa escrita à mão como objeto de cena ("WiFi means nothing?") | Stupid Little Genius | o Bit segurando uma plaquinha de papel com a frase-chave (pose `bit_placa`, texto desenhado no código) |
+| "Professor" com lousa: autoridade leve | Vin Explains | cenário de lousa/terminal no fundo, o Bit apontando |
+| Legenda = a pergunta simples ("What does WiFi stand for?") | Vin Explains (1.491 salvos) | 1ª linha da legenda sempre a pergunta que a pessoa digitaria na busca |
+| O porquê + bastidor (802.11b assustava cliente) | Stupid Little Genius (854 compart.) | sempre explicar o porquê com um detalhe de bastidor |
+| Hashtags enxutas do nicho: #TechTok #WiFi #NowYouKnow | Eric Guidry | #techtok + tema + #curiosidades (3–5, nada de #fyp) |
+
 **Leitura:** o tema funciona (até 18K), mas quem ganha tem (1) uma PESSOA/personagem com voz e expressão, (2) o porquê por trás (802.11b feio → marketing), (3) duração maior (36–135 s) com tensão, (4) humor de reação. Os vídeos mudos em PT, só com texto, quase não saem do zero. **Risco do nosso vídeo B (mudo, 25 s): cair na faixa de baixo.** Ajuste: narração do Bit + o porquê do 802.11b + o Bit reagindo em cena.
 
 ## Como atualizar (rotina diária e conversas de análise)
