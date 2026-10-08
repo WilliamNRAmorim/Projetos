@@ -24,3 +24,18 @@ Ou seja: a regra pegaria os 4 casos óbvios sem barrar produção real (424 de 4
 5. **Limpeza**: marcar as 4 fichas inventadas para a supervisão corrigir (não apago nada sem aprovação).
 
 Decisões para o William antes de implementar: (a) COOIS vale como plano ou só as abas das trançadoras? (b) quem aprova exceção e como (PIN, lista de supervisores?) (c) OP de mandril entra na mesma lista? (d) o app deve funcionar offline sem consultar a lista (cache local `colPlanoOPs` no OnStart)?
+
+## Decisões do William (08/10/2026)
+- COOIS (export do SAP com as ordens de produção, status REL/TECO): entra como fonte, marcada `Origem=COOIS`. Serve para OP real que ainda não foi alocada a uma trançadora.
+- Exceção (OP fora do plano): aprovam william.amorim@danfoss.com ou carlos.brizon@danfoss.com.
+- OP de mandril entra na mesma lista só vindo da aba `Extrusora de Mandril` (col. D Ordem, C mandril FMxxxxx, E bitola); a solda de mandril NÃO usa a lista.
+- App só funciona com rede: consulta a lista ao vivo, sem cópia offline.
+- Carga automática: Power Automate + Office Script lendo o Excel do mês e gravando em `Plano_OPs`.
+
+## Feito (08/10/2026)
+- Lista SharePoint `Plano_OPs` criada (Title = OP, PN, Trancadeira, Mes, QtdPlanejada, Origem, Atualizado).
+- Carga inicial de OUTUBRO: 194 OPs (161 Plano, 1 PlanoMandril, 32 COOIS); `seed_outubro.json` guarda os dados.
+## Falta
+1. Office Script `GMS_PlanoOPs` (lê `PL_<MES>_Trançadeira.xlsx`: abas T*.xx, Extrusora de Mandril, COOIS) + fluxo `GMS_PlanoOPs_Sync` (upsert por OP; mês atual e anterior).
+2. Lista `Excecoes_OP` (OP, motivo, quem aprovou, data) e regra no app (scr_mandril_1/scr_tubo_1).
+3. Categoria "OP fora do plano" na conferência diária.
