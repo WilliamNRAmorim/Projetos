@@ -30,6 +30,7 @@ try {
   $cut = { param($s, $n) $s = [string]$s; if ($s.Length -gt $n) { $s.Substring(0, $n) + '…' } else { $s } }
 
   $evName = [string]$in.hook_event_name
+  if (([string]$in.tool_name -eq 'Agent') -or ([string]$in.tool_name -eq 'Task')) { try { [IO.File]::WriteAllText((Join-Path (Join-Path $root 'data') ('_raw_Agent_' + $evName + '.json')), $raw, (New-Object Text.UTF8Encoding($false))) } catch { } }
   $tool = ''; $alvo = ''; $arquivo = ''; $resumo = ''; $spawnTipo = ''
   if ($evName -eq 'PostToolUse' -or $evName -eq 'PreToolUse') {
     $tool = [string]$in.tool_name
@@ -51,12 +52,21 @@ try {
   }
   if ($evName -eq 'SubagentStop' -and $in.last_assistant_message) { $resumo = & $cut $in.last_assistant_message 1500 }
 
+  # Resultado de um agente (PostToolUse da ferramenta Agent): aqui chega o RELATÓRIO FINAL dele (handbackReport.text)
+  # e o id/tipo reais do agente. (No SubagentStop a mensagem final vem vazia nos agentes de verdade.)
+  $agIdResp = ''; $agTipoResp = ''
+  if ($evName -eq 'PostToolUse' -and ($tool -eq 'Agent' -or $tool -eq 'Task') -and $in.tool_response) {
+    $tr = $in.tool_response
+    $agIdResp = [string]$tr.agentId; $agTipoResp = [string]$tr.agentType
+    if ($tr.handbackReport -and $tr.handbackReport.text) { $resumo = & $cut $tr.handbackReport.text 1500 }
+  }
+
   $ev = [ordered]@{
     t       = (Get-Date).ToUniversalTime().ToString('o')
     ev      = $evName
     session = [string]$in.session_id
-    agent   = [string]$in.agent_id
-    type    = $(if ($spawnTipo) { $spawnTipo } else { [string]$in.agent_type })
+    agent   = $(if ($agIdResp) { $agIdResp } else { [string]$in.agent_id })
+    type    = $(if ($agTipoResp) { $agTipoResp } elseif ($spawnTipo) { $spawnTipo } else { [string]$in.agent_type })
     project = $leaf
     reason  = [string]$in.reason
     tool    = $tool
