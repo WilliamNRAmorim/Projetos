@@ -1,7 +1,7 @@
 ---
 name: planejador
 description: Use para planejar tarefas com vários passos antes de implementar. Não escreve código.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 tools: Read, Glob, Grep
 ---
 

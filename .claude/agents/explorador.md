@@ -1,7 +1,7 @@
 ---
 name: explorador
 description: Use para buscar e ler arquivos do projeto e responder onde algo está e como funciona. Somente leitura.
-model: claude-haiku-4-5-20251001
+model: claude-haiku-5-5
 tools: Read, Glob, Grep
 ---
 

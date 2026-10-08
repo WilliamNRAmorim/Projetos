@@ -8,7 +8,7 @@
 - `gms.py` deriva backlog e estado. Não editar os dados derivados à mão.
 
 ## 1. Teste dos modelos (antes de tudo)
-1.1 Criar `.claude/agents/teste-modelo.md` com `model: claude-haiku-4-5-20251001` e tarefa trivial (listar arquivos). Conferir no histórico qual modelo rodou.
+1.1 Criar `.claude/agents/teste-modelo.md` com `model: claude-haiku-5-5` e tarefa trivial (listar arquivos). Conferir no histórico qual modelo rodou.
 1.2 Repetir com `claude-sonnet-5-5`.
 1.3 Apagar o arquivo de teste.
 Concluído quando: os dois IDs confirmados. Se o Claude Code não aceitar o formato, parar e reportar.
