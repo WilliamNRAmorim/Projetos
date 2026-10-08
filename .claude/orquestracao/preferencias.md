@@ -9,3 +9,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-08: toda imagem, áudio e vídeo vai para o `produtor-de-artes`.
 - 2026-10-08: nada que vá ao LinkedIn leva o Bit (nem mascote, nem texto, nem assinatura). O LinkedIn é o perfil pessoal dele. Vale para bit, din e produtor-de-artes.
 2026-10-08 | Teste 1 de motion (quadrado em loop) aprovado sem ver diferença 30 vs 60 fps; seguir a recomendação da equipe: 30 fps.
+2026-10-08 | Quando houver recomendada, William manda seguir sem perguntar (testes 3 e 4). Teste 5 v1 faltou som de movimento descendente; passou a ser padrão nos testes seguintes.
