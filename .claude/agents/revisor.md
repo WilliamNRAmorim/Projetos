@@ -2,6 +2,7 @@
 name: revisor
 description: Use somente para revisar mudanças em regras de negócio (no GMS: turno, parada/setup), arquitetura ou normas. Somente leitura.
 model: claude-opus-5-5
+effort: medium
 tools: Read, Glob, Grep
 ---
 
