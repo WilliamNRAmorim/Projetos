@@ -4,7 +4,7 @@
 <script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
 <style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
 <script>
-// Fatos rápidos de quinta 08/10 (sem narração: texto no ritmo de leitura + trilha). ?v=wifi | ?v=ia ; ?sheet=1 confere ; ?save=1 renderiza.
+// Fatos rápidos de quinta 08/10, narrados pelo Bit (o benchmark mostrou que vídeo mudo de 'você sabia?' não sai do zero). ?v=wifi | ?v=ia ; ?sheet=1 confere ; ?save=1 renderiza.
 // Fontes: Wi-Fi: TechRadar / Interbrand / entrevista de Phil Belanger (Boing Boing, 2005). IA nos games: Pesquisa Game Brasil 2026 (Omelete).
 const { W, H, clamp, out, txt, glitch } = EpKit;
 const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2, OK = '#3DDC97';
@@ -14,11 +14,12 @@ function rot(g, s, y = 300, col = A) { txt(g, s, 90, y, 30, col, { mono: true, w
 function wifi(g, cx, cy, s, col) { g.strokeStyle = col; g.lineCap = 'round'; for (let i = 1; i <= 3; i++) { g.lineWidth = 26 * s; g.beginPath(); g.arc(cx, cy, 70 * i * s, -Math.PI * 0.78, -Math.PI * 0.22); g.stroke(); } g.fillStyle = col; g.beginPath(); g.arc(cx, cy, 20 * s, 0, 7); g.fill(); }
 const EP = {
   wifi: {
-    out: 'Qui08_B_TikTok_Instagram_WiFi.mp4',
+    out: 'Qui08_B_TikTok_Instagram_WiFi.mp4', stems: '/w/stems/q08_wifi',
     falas: [
       { cena: 'mito', acc: ['Wireless', 'Fidelity.'], txt: 'Você passou a vida inteira achando que Wi-Fi significa Wireless Fidelity.' },
       { cena: 'nada', acc: ['nada.'], txt: 'Não significa. Wi-Fi não significa nada.' },
-      { cena: 'agencia', acc: ['soava', 'bem.'], txt: 'Em 1999, uma agência de marcas inventou o nome só porque soava bem. Tipo hi-fi.' },
+      { cena: 'tecnico', acc: ['802.11b.'], txt: 'O nome técnico dessa tecnologia era IEEE 802.11b. Imagina vender isso numa caixa.' },
+      { cena: 'agencia', acc: ['soava', 'bem.'], txt: 'Então, em 1999, contrataram uma agência de marcas. Ela inventou Wi-Fi só porque soava bem. Tipo hi-fi.' },
       { cena: 'slogan', acc: ['erro.'], txt: 'O "Wireless Fidelity" foi um slogan colado depois. E até quem estava lá disse que foi um erro.' },
       { cena: 'fim', acc: ['marketing', 'puro.'], txt: 'Ou seja: o nome mais falado da sua casa é marketing puro.' },
     ],
@@ -27,6 +28,8 @@ const EP = {
       nada(g, u, k, fr) { rot(g, 'A VERDADE'); wifi(g, W / 2, 900, 1.6, '#2A2A2E'); txt(g, 'Wi-Fi =', 90, 1080, 110, P);
         glitch(g, (dx, dy, c) => txt(g, 'nada.', 90 + dx, 1230, 190, c || A), clamp(1 - u / 0.6) * 0.8, fr);
         g.strokeStyle = A; g.lineWidth = 10; g.beginPath(); g.moveTo(80, 1170); g.lineTo(80 + 900 * out(clamp(u / 0.4)), 1140); g.stroke(); },
+      tecnico(g, u, k, fr) { rot(g, 'O NOME DE VERDADE'); glitch(g, (dx, dy, c) => { txt(g, 'IEEE', 90 + dx, 760, 200, c || P); txt(g, '802.11b', 90 + dx, 960, 200, c || P); }, clamp(1 - u / 0.5) * 0.5, fr);
+        if (k > 0.55) { const a = out(clamp((k - 0.55) / 0.15)); BitArt.draw(g, bit, 860, 1300, 380 * a + 1); txt(g, 'boa sorte vendendo isso.', 90, 1110, 40, MU, { mono: true, w: 500 }); } },
       agencia(g, u, k) { rot(g, '1999 · AGÊNCIA INTERBRAND');
         // 10 nomes propostos (Belanger): só o escolhido aparece; os outros ficam como barras, sem inventar nomes
         txt(g, '10 NOMES PROPOSTOS', 90, 400, 30, MU, { mono: true, w: 700 });
@@ -41,14 +44,14 @@ const EP = {
         if (k > 0.55) { const a = clamp((k - 0.55) / 0.1), sc = 1 + (1 - out(a)) * 0.5; g.save(); g.translate(W / 2, 960); g.rotate(-0.07); g.scale(sc, sc); g.globalAlpha = a; g.strokeStyle = A; g.lineWidth = 8; g.strokeRect(-200, -70, 400, 120); txt(g, 'ERRO', 0, 20, 90, A, { align: 'center', mono: true, w: 700 }); g.restore(); } },
       fim(g, u) { wifi(g, 330, 900, 1.3, A); BitArt.draw(g, bit, 790, 1290, 560); txt(g, 'MARKETING PURO', 90, 300, 30, A, { mono: true, w: 700 }); },
     },
-    musica: () => 0.24,
+    musica: () => 0.13,
   },
   ia: {
-    out: 'Qui08_C_TikTok_IAnosGames.mp4',
+    out: 'Qui08_C_TikTok_IAnosGames.mp4', stems: '/w/stems/q08_ia',
     falas: [
       { cena: 'medo', acc: ['medo', 'IA'], txt: 'Pesquisa nova: quase metade dos gamers brasileiros tem medo da IA nos jogos.' },
-      { cena: 'porque', acc: ['empregos'], txt: 'O medo: perder empregos e a criatividade virar linha de produção.' },
-      { cena: 'mas', acc: ['contradição:'], txt: 'Mas olha a contradição:' },
+      { cena: 'porque', acc: ['empregos'], txt: 'O medo é perder empregos e a criatividade virar linha de produção.' },
+      { cena: 'mas', acc: ['contradição.'], txt: 'Mas olha a contradição.' },
       { cena: 'compra', acc: ['comprariam'], txt: '39% comprariam um jogo feito por IA. E outros 41% talvez.' },
       { cena: 'voce', acc: ['Jogaria?'], txt: 'E você? Jogaria?' },
     ],
@@ -63,11 +66,11 @@ const EP = {
         txt(g, 'jogo feito por IA', 90, 1000, 54, MU, { mono: true, w: 500 }); },
       voce(g, u) { txt(g, 'E você?', 90, 700, 190, P); txt(g, 'Jogaria?', 90, 900, 190, A); BitArt.draw(g, bit, 800, 1360, 480); },
     },
-    musica: () => 0.24,
+    musica: () => 0.13,
   },
 }[V];
 EpKit.run({
-  falas: EP.falas, cenas: EP.cenas, semVoz: true, gap: 0.25, tail: 0.8, grao: 0.04, bitrate: 2.4e6,
+  falas: EP.falas, cenas: EP.cenas, stems: EP.stems, gap: 0.3, tail: 0.8, grao: 0.04, bitrate: 2.4e6,
   dir: 'semana-2026-10-05', out: EP.out, musica: EP.musica,
   prep: async () => { bit = await BitArt.load('/Marca/bit/bit_pensando.png'); },
 }).catch(e => document.title = 'ERROR ' + e.message);
