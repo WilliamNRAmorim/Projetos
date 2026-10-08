@@ -98,7 +98,8 @@ Screens:
                   Concurrent(
                       Refresh(CarreteisMandril),
                       Refresh(ControleExtrusora_estrutura),
-                      Refresh(ficha_producao)
+                      Refresh(ficha_producao),
+                      Refresh(Plano_OPs)
                   ),
                   Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
               );
@@ -114,6 +115,18 @@ Screens:
                   ClearCollect(
                       colSoldaExt,
                       Filter(ficha_producao, processo = "Mandril", status_processo = "Em processo")
+                  ),
+                  ClearCollect(
+                      colPlanoExt,
+                      AddColumns(
+                          Filter(Plano_OPs, Tipo = "Extrusora", Encerrada = false),
+                          "OPnum", Value(Title),
+                          "Rotulo", Title & "  ·  " & Coalesce(PN, "") & If(!IsBlank(Trancadeira), "  ·  " & Trancadeira, "")
+                      )
+                  ),
+                  ClearCollect(
+                      colOPsUsadasExt,
+                      ShowColumns(Filter(ControleExtrusora_estrutura, OP > 0), "OP", "ID")
                   )
               );
               With(
@@ -847,24 +860,30 @@ Screens:
             Width: =148
             X: =531
             Y: =320
-      - inp_OpExt:
-          Control: Classic/TextInput@2.3.2
+      - cmb_OpExt:
+          Control: Classic/ComboBox@2.4.0
           Properties:
-            AccessibleLabel: ="OP da extrusão"
-            BorderColor: =If(!IsBlank(Trim(Self.Text)) && !IsMatch(Trim(Self.Text), "\d+"), fx_CorErro, fx_CorBorda)
-            Default: =If(IsBlank(ctxRegExt.OP), "", Text(ctxRegExt.OP, "[$-en-US]0"))
-            DelayOutput: =true
+            AccessibleLabel: ="OP da extrusão, do plano"
+            BorderColor: =If(ctxProduzindoExt && IsBlank(Self.Selected.OPnum), fx_CorErro, fx_CorBorda)
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: =Filter(colPlanoExt, OPnum = ctxRegExt.OP)
+            DisplayFields: =["Rotulo"]
             DisplayMode: =If(ctxProduzindoExt && !ctxProcExt, DisplayMode.Edit, DisplayMode.Disabled)
             Font: =fx_FonteFamilia
             Height: =fx_AlturaCampo
-            HintText: ="Número da OP"
             HoverFill: =fx_CorInfoSuave
-            PaddingLeft: =10
-            RadiusBottomLeft: =fx_RaioS
-            RadiusBottomRight: =fx_RaioS
-            RadiusTopLeft: =fx_RaioS
-            RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteCorpo
+            InputTextPlaceholder: ="Escolha a OP do plano"
+            IsSearchable: =true
+            Items: =Filter(colPlanoExt, !(OPnum in colOPsUsadasExt.OP) || OPnum = ctxRegExt.OP)
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Title", "PN"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
             Width: =148
             X: =531
             Y: =354
@@ -1306,7 +1325,7 @@ Screens:
                       _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
                       _agora: Now(),
                       _q: fx_Num(inp_QtdExt_1.Text),
-                      _op: Trim(inp_OpExt.Text),
+                      _op: Text(cmb_OpExt.Selected.OPnum, "[$-en-US]0"),
                       _quem: cmb_OperadorExt_1.Selected.Nome
                   },
                   With(
@@ -1323,8 +1342,8 @@ Screens:
                           !fx_MetragemOk(_q),
                           Notify("Informe a metragem extrudada.", NotificationType.Warning, 6000);
                           UpdateContext({ctxProcExt: false}),
-                          !IsBlank(_op) && !IsMatch(_op, "\d+"),
-                          Notify("A OP da extrusão aceita só números.", NotificationType.Warning, 6000);
+                          IsBlank(cmb_OpExt.Selected.OPnum),
+                          Notify("Escolha a OP do plano para fechar a extrusão.", NotificationType.Warning, 6000);
                           UpdateContext({ctxProcExt: false}),
                           Patch(
                               ControleExtrusora_estrutura,
@@ -1387,7 +1406,7 @@ Screens:
                                   )
                               );
                               Reset(inp_QtdExt_1);
-                              Reset(inp_OpExt);
+                              Reset(cmb_OpExt);
                               Reset(inp_ObsExt);
                               UpdateContext({ctxDesmExt: ""});
                               Select(btn_CarregarExt);
@@ -1426,7 +1445,7 @@ Screens:
                   {
                       _r: LookUp(ControleExtrusora_estrutura, ID = ctxRegExt.ID),
                       _q: fx_Num(inp_QtdExt_1.Text),
-                      _op: Trim(inp_OpExt.Text)
+                      _op: Text(cmb_OpExt.Selected.OPnum, "[$-en-US]0")
                   },
                   If(
                       IsBlank(_r.ID) || !IsBlank(_r.data_hora_final),
@@ -1436,9 +1455,6 @@ Screens:
                       _r.Modified <> ctxRegExt.Modified,
                       Notify("Outro aparelho salvou esta extrusão. A tela foi recarregada — confira os campos e salve de novo.", NotificationType.Error, 8000);
                       Select(btn_CarregarExt);
-                      UpdateContext({ctxProcExt: false}),
-                      !IsBlank(_op) && !IsMatch(_op, "\d+"),
-                      Notify("A OP da extrusão aceita só números.", NotificationType.Warning, 6000);
                       UpdateContext({ctxProcExt: false}),
                       Patch(
                           ControleExtrusora_estrutura,
@@ -2571,7 +2587,7 @@ Screens:
                                 RefugoExtrusora_estrutura,
                                 Defaults(RefugoExtrusora_estrutura),
                                 {
-                                    Title: Coalesce(Trim(inp_OpExt.Text), ctxRegExt.Title),
+                                    Title: Coalesce(Text(cmb_OpExt.Selected.OPnum, "[$-en-US]0"), ctxRegExt.Title),
                                     Bitola: ctxRegExt.Bitola,
                                     cod_mandril: ctxRegExt.cod_mandril,
                                     CodigoErro: cmb_TipoRefExt.Selected.Value,
@@ -3093,7 +3109,7 @@ Screens:
                                         )
                                     );
                                     Reset(inp_QtdExt_1);
-                                    Reset(inp_OpExt);
+                                    Reset(cmb_OpExt);
                                     Reset(inp_ObsExt);
                                     Reset(inp_MotivoCancExt);
                                     UpdateContext({ctxDesmExt: "", ctxModalCancExt: false});

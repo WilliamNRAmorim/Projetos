@@ -136,7 +136,7 @@ Screens:
               Reset(cmb_OperadorTubo_1);
               Reset(cmb_MangueiraTubo_1);
               Reset(drp_TrancadeiraTubo_1);
-              Reset(inp_OpTubo_1);
+              Reset(cmb_OpTubo_1);
               Reset(inp_ObsTubo_1);
               Set(varMangueiraEscolhidaTubo, Blank())
             TemplateFill: =Color.Transparent
@@ -1049,24 +1049,22 @@ Screens:
             Width: =148
             X: =369
             Y: =544
-      - inp_OpTubo_1:
-          Control: Classic/TextInput@2.3.2
+      - cmb_OpTubo_1:
+          Control: Classic/ComboBox@2.4.0
           Properties:
-            AccessibleLabel: ="Número da ordem de produção, oito dígitos"
+            AccessibleLabel: ="Ordem de produção do plano"
             BorderColor: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" &&
-                  (Len(Trim(Self.Text)) <> 8 || Coalesce(Value(Self.Text), 0) <= 0),
+                  fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && IsBlank(Self.Selected.OPnum),
                   fx_CorErro,
                   fx_CorBorda
               )
-            Default: |-
-              =If(
-                  IsBlank(gal_FilaTubo_1.Selected.OP) || gal_FilaTubo_1.Selected.OP = 0,
-                  "",
-                  Text(gal_FilaTubo_1.Selected.OP, "00000000")
-              )
-            DelayOutput: =true
+            ChevronBackground: =fx_CorInfo
+            ChevronFill: =fx_CorSuperficie
+            ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
+            ChevronHoverFill: =fx_CorSuperficie
+            DefaultSelectedItems: =Filter(colPlanoTubo, OPnum = gal_FilaTubo_1.Selected.OP)
+            DisplayFields: =["Rotulo"]
             DisplayMode: |-
               =If(
                   fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
@@ -1074,18 +1072,21 @@ Screens:
                   DisplayMode.Disabled
               )
             Font: =fx_FonteFamilia
-            FontWeight: =FontWeight.Semibold
-            Format: =TextFormat.Number
             Height: =fx_AlturaCampo
-            HintText: ="8 dígitos"
             HoverFill: =fx_CorInfoSuave
-            MaxLength: =8
-            PaddingLeft: =10
-            RadiusBottomLeft: =fx_RaioS
-            RadiusBottomRight: =fx_RaioS
-            RadiusTopLeft: =fx_RaioS
-            RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteDestaque
+            InputTextPlaceholder: ="Escolha a OP do plano"
+            IsSearchable: =true
+            Items: |-
+              =Filter(
+                  colPlanoTubo,
+                  !(OPnum in colOPsUsadasTubo.OP) || OPnum = gal_FilaTubo_1.Selected.OP
+              )
+            PressedColor: =fx_CorSuperficie
+            PressedFill: =fx_CorInfo
+            SearchFields: =["Title", "PN"]
+            SelectMultiple: =false
+            SelectionColor: =fx_CorSuperficie
+            SelectionFill: =fx_CorInfo
             Width: =148
             X: =369
             Y: =583
@@ -1431,7 +1432,8 @@ Screens:
                   Concurrent(
                       Refresh(ficha_producao),
                       Refresh(lista_carreteis),
-                      Refresh('Hora-Hora')
+                      Refresh('Hora-Hora'),
+                      Refresh(Plano_OPs)
                   ),
                   Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
               );
@@ -1445,6 +1447,21 @@ Screens:
                       colHHDiaTubo,
                       Filter('Hora-Hora', Data = fx_DataRefEm(Now()))
                   )
+              );
+              IfError(
+                  ClearCollect(
+                      colPlanoTubo,
+                      AddColumns(
+                          Filter(Plano_OPs, Tipo = "Tubo", Encerrada = false),
+                          "OPnum", Value(Title),
+                          "Rotulo", Title & "  ·  " & Coalesce(PN, "") & If(!IsBlank(Trancadeira), "  ·  " & Trancadeira, "") & If(QtdPlanejada > 0, "  ·  " & Text(QtdPlanejada, "0") & " m", "")
+                      )
+                  ),
+                  Notify("Não consegui ler o plano de OPs. Toque em atualizar.", NotificationType.Error, 8000)
+              );
+              With(
+                  { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
+                  ClearCollect(colOPsUsadasTubo, ShowColumns(Filter(ficha_producao, OP >= _min), "OP"))
               );
               ClearCollect(
                   colKanbanTrancTubo,
@@ -1627,8 +1644,7 @@ Screens:
                   !IsBlank(dte_ValidadeTubo_1.SelectedDate) &&
                   fx_CompostoValido(inp_CodTubo_1.Text) &&
                   Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) > 0 &&
-                  Len(Trim(inp_OpTubo_1.Text)) = 8 &&
-                  Coalesce(Value(inp_OpTubo_1.Text), 0) > 0 &&
+                  !IsBlank(cmb_OpTubo_1.Selected.OPnum) &&
                   fx_MetragemOk(fx_Num(inp_QtdTubo_1.Text)),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
@@ -2276,7 +2292,7 @@ Screens:
                                     Reset(cmb_OperadorTubo_1);
                                     Reset(cmb_MangueiraTubo_1);
                                     Reset(drp_TrancadeiraTubo_1);
-                                    Reset(inp_OpTubo_1);
+                                    Reset(cmb_OpTubo_1);
                                     Reset(inp_ObsTubo_1);
                                     UpdateContext({ctxModalIniciarTubo: false, ctxAgora: Now()});
                                     Set(varProcessando, false);
@@ -2343,7 +2359,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =22
                   Size: =fx_FonteCorpo
-                  Text: ="OP " & Trim(inp_OpTubo_1.Text) & "  ·  " & Coalesce(cmb_MangueiraTubo_1.Selected.NomeMangueira, "—") & "  ·  carretel " & Coalesce(gal_FilaTubo_1.Selected.'Carretel Saida', "—")
+                  Text: ="OP " & Text(cmb_OpTubo_1.Selected.OPnum, "00000000") & "  ·  " & Coalesce(cmb_MangueiraTubo_1.Selected.NomeMangueira, "—") & "  ·  carretel " & Coalesce(gal_FilaTubo_1.Selected.'Carretel Saida', "—")
                   Width: =560
                   X: =403
                   Y: =192
@@ -2564,7 +2580,7 @@ Screens:
                         !IsBlank(Trim(inp_LoteTubo_1.Text)) &&
                         fx_CompostoValido(inp_CodTubo_1.Text) &&
                         Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) > 0 &&
-                        Len(Trim(inp_OpTubo_1.Text)) = 8 &&
+                        !IsBlank(cmb_OpTubo_1.Selected.OPnum) &&
                         fx_MetragemOk(fx_Num(inp_QtdTubo_1.Text)) &&
                         (ctxUsouTudoTubo || fx_MetragemOk(fx_Num(inp_SobraTubo_1.Text))),
                         DisplayMode.Edit,
@@ -2583,7 +2599,7 @@ Screens:
                             _r: LookUp(ficha_producao, ID = gal_FilaTubo_1.Selected.ID),
                             _agora: Now(),
                             _turno: fx_TurnoEm(Now()),
-                            _op: Value(Trim(inp_OpTubo_1.Text)),
+                            _op: Coalesce(cmb_OpTubo_1.Selected.OPnum, 0),
                             _qtd: fx_Num(inp_QtdTubo_1.Text),
                             _refugo: Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0),
                             _operador: cmb_OperadorTubo_1.Selected.Nome,
@@ -2592,8 +2608,11 @@ Screens:
                             _sobra: If(ctxUsouTudoTubo, 0, Coalesce(fx_Num(inp_SobraTubo_1.Text), 0))
                         },
                         If(
-                            Len(Trim(inp_OpTubo_1.Text)) <> 8 || _op <= 0,
-                            Notify("A OP deve ter exatamente 8 dígitos e não pode ser zero.", NotificationType.Warning, 8000);
+                            _op <= 0,
+                            Notify("Escolha a OP na lista do plano.", NotificationType.Warning, 8000);
+                            Set(varProcessando, false),
+                            IsBlank(LookUp(Plano_OPs, Title = Text(_op, "00000000") && Encerrada = false).ID),
+                            Notify("Esta OP saiu do plano ou já foi encerrada. Toque em atualizar e escolha de novo.", NotificationType.Error, 10000);
                             Set(varProcessando, false),
                             IsBlank(_operador) || IsBlank(_mangueira) || IsBlank(_trancadeira) || IsBlank(Trim(inp_LoteTubo_1.Text)) || !fx_MetragemOk(_qtd) ||
                             !fx_CompostoValido(inp_CodTubo_1.Text) || Coalesce(fx_DiametroPol(inp_DiametroTubo_1.Text), 0) <= 0,
@@ -2794,7 +2813,7 @@ Screens:
                                             Reset(cmb_OperadorTubo_1);
                                             Reset(cmb_MangueiraTubo_1);
                                             Reset(drp_TrancadeiraTubo_1);
-                                            Reset(inp_OpTubo_1);
+                                            Reset(cmb_OpTubo_1);
                                             Reset(inp_ObsTubo_1);
                                             Reset(inp_SobraTubo_1);
                                             Reset(gal_FilaTubo_1);
