@@ -19,7 +19,7 @@ Ou seja: a regra pegaria os 4 casos óbvios sem barrar produção real (424 de 4
 ## Proposta
 1. **Lista SharePoint `Plano_OPs`** (OP texto único, PN, Trancadeira, Mes, QtdPlanejada m, Origem = Plano|COOIS, Atualizado). Fonte única de verdade para o app. Excel continua do planejamento; o app nunca escreve nele.
 2. **Carga**: Office Script (padrão do GMS_ConferenciaDiaria) + fluxo agendado lê `PL_<mês atual>` e o próximo (abas das trançadoras + COOIS) e faz upsert na lista. Roda de hora em hora (o plano muda no mês).
-3. **App** (`scr_mandril_1:2735`, `scr_tubo_1:2729`, onde nasce a ficha): antes do `Patch(Defaults(ficha_producao))`, exigir `^\d{8}$` e `LookUp(Plano_OPs, OP = ...)`. Se não achar: bloqueia e mostra "OP não está no plano do mês. Chame o PCP/supervisor". Se o PN digitado difere do plano: aviso forte. Exceção (OP urgente fora do plano) só com PIN do supervisor e motivo gravado na ficha, para rastrear.
+3. **App** (`scr_tubo_1` campo `inp_OpTubo_1`, linha ~2586, valida contra plano das trançadeiras + COOIS; `scr_ExtrusoraMandril_1` campo `inp_OpExt`, linhas ~1309/1429, valida contra a aba Extrusora de Mandril; `scr_mandril_1` (solda) não tem OP e fica fora): antes do `Patch(Defaults(ficha_producao))`, exigir `^\d{8}$` e `LookUp(Plano_OPs, OP = ...)`. Se não achar: bloqueia e mostra "OP não está no plano do mês. Chame o PCP/supervisor". Se o PN digitado difere do plano: aviso forte. Exceção (OP urgente fora do plano) só com PIN do supervisor e motivo gravado na ficha, para rastrear.
 4. **Conferência diária**: nova categoria "OP fora do plano" para o que passar pela exceção ou entrar sem validação.
 5. **Limpeza**: marcar as 4 fichas inventadas para a supervisão corrigir (não apago nada sem aprovação).
 
