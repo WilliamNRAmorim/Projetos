@@ -22,8 +22,10 @@ window.EpKit = (() => {
     const q = new URLSearchParams(location.search), F = opts.falas, LEAD = opts.lead ?? 0.2, GAP = opts.gap ?? 0.35, TAIL = opts.tail ?? 0.8;
     await loadBrandFonts(); if (opts.prep) await opts.prep();
     const SR = 48000, ac = new OfflineAudioContext(2, SR, SR);
-    const vozes = await Promise.all(F.map((_, i) => fetch(`${opts.stems}/fala${i + 1}.mp3`).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b))));
-    let t = LEAD; F.forEach((f, i) => { f.t0 = t; f.dur = vozes[i].duration; t += f.dur + (f.pausa ?? GAP); }); const DUR = Math.ceil((t + TAIL) * FPS) / FPS;
+    // sem narração (fatos rápidos): cada fala dura o tempo de leitura (~0,34 s por palavra), só texto + trilha
+    const vozes = opts.semVoz ? F.map(() => null) : await Promise.all(F.map((_, i) => fetch(`${opts.stems}/fala${i + 1}.mp3`).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b))));
+    const durTexto = f => Math.max(1.6, f.txt.split(' ').length * 0.34 + 0.4);
+    let t = LEAD; F.forEach((f, i) => { f.t0 = t; f.dur = vozes[i] ? vozes[i].duration : (f.dur || durTexto(f)); t += f.dur + (f.pausa ?? GAP); }); const DUR = Math.ceil((t + TAIL) * FPS) / FPS;
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H; document.body.append(cv); const g = cv.getContext('2d');
     const cur = tt => { const i = F.findIndex(f => tt < f.t0 + f.dur + (f.pausa ?? GAP)); return i < 0 ? F.length - 1 : i; };
     async function frame(tt) {
@@ -32,7 +34,7 @@ window.EpKit = (() => {
       await opts.cenas[f.cena](g, u, k, fr, tt);
       legenda(g, f, k);
       const cut = clamp(1 - u / 0.12); if (i > 0 && cut > 0 && f.corte !== false) glitch(g, () => {}, 0.7 * cut, fr + 999);
-      grain(g, W, H, 0.07);
+      grain(g, W, H, opts.grao ?? 0.07);
       if (tt > DUR - 0.3) { g.fillStyle = `rgba(12,12,13,${clamp((tt - (DUR - 0.3)) / 0.3)})`; g.fillRect(0, 0, W, H); }
     }
     if (q.has('sheet')) { // folha de conferência: um quadro no meio do fim de cada fala, lado a lado
@@ -46,7 +48,7 @@ window.EpKit = (() => {
     const m0 = mus.getChannelData(0), m1 = mus.getChannelData(1), ml = m0.length;
     let vol = 0; for (let i = 0; i < len; i++) { const ti = i / SR, ci = cur(ti), target = opts.musica ? opts.musica(ti, ci, ti - F[ci].t0) : 0.14; vol += (target - vol) * 0.00012; // volume desliza, sem degrau
       const fade = Math.min(1, ti / 0.4, (DUR - ti) / 0.8), j = Math.floor(ti * mus.sampleRate) % ml; L[i] = m0[j] * vol * fade; R[i] = m1[j] * vol * fade; }
-    vozes.forEach((b, n) => { const off = Math.round(F[n].t0 * SR), d0 = b.getChannelData(0), d1 = b.numberOfChannels > 1 ? b.getChannelData(1) : d0, r = b.sampleRate / SR;
+    vozes.forEach((b, n) => { if (!b) return; const off = Math.round(F[n].t0 * SR), d0 = b.getChannelData(0), d1 = b.numberOfChannels > 1 ? b.getChannelData(1) : d0, r = b.sampleRate / SR;
       for (let i = 0; i < b.duration * SR && off + i < len; i++) { const j = Math.floor(i * r); L[off + i] += d0[j] * 0.95; R[off + i] += d1[j] * 0.95; } });
     for (let i = 0; i < len; i++) { L[i] = Math.max(-1, Math.min(1, L[i])); R[i] = Math.max(-1, Math.min(1, R[i])); }
     const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
