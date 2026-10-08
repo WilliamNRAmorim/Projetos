@@ -39,3 +39,14 @@ Decisões para o William antes de implementar: (a) COOIS vale como plano ou só 
 1. Office Script `GMS_PlanoOPs` (lê `PL_<MES>_Trançadeira.xlsx`: abas T*.xx, Extrusora de Mandril, COOIS) + fluxo `GMS_PlanoOPs_Sync` (upsert por OP; mês atual e anterior).
 2. Lista `Excecoes_OP` (OP, motivo, quem aprovou, data) e regra no app (scr_mandril_1/scr_tubo_1).
 3. Categoria "OP fora do plano" na conferência diária.
+
+## Mudança de desenho (William, 08/10/2026): dropdown no lugar da digitação
+- `scr_tubo_1` (`inp_OpTubo_1`) e `scr_ExtrusoraMandril_1` (`inp_OpExt`) deixam de ter campo de texto: o operador ESCOLHE a OP num dropdown. OP passa a ser **obrigatória** também na extrusora de mandril.
+- O dropdown só lista OP que (a) está em `Plano_OPs` do tipo da tela, (b) não está encerrada e (c) ainda não está em nenhuma ficha (não está em processo nem já foi usada).
+- Sem digitação não há OP inventada. A exceção (OP fora do plano) vira um botão "Pedir exceção" que só libera com aprovação do William ou do Carlos Brizon; sem aprovação, a OP não entra.
+- Campos novos em `Plano_OPs`: `Tipo` (Tubo | Extrusora; solda não usa), `StatusSAP` (REL/TECO, vem do COOIS), `Encerrada` (Sim quando TECO). Excel do plano continua só leitura.
+- Item no dropdown mostra "OP · mangueira · trançadora · metros" para o operador conferir.
+- Rascunho da fonte (Power Fx), a validar no Studio antes de colar:
+  `Sort(Filter(Plano_OPs, Tipo = "Tubo", !Encerrada, !(Value(Title) in colOPsEmUso.OP)), Title)` com
+  `ClearCollect(colOPsEmUso, ShowColumns(Filter(ficha_producao, Created >= DateAdd(Today(), -60, TimeUnit.Days)), OP))` no OnVisible (filtro delegável pela data; ficha_producao passa de 2000 linhas).
+- O Office Script de carga passa a preencher Tipo, StatusSAP e Encerrada a partir da aba COOIS (status TECO = encerrada).
