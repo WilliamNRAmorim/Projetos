@@ -19,8 +19,10 @@ Screens:
         If(
             IsEmpty(colSpecTubo),
             IfError(
-                ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION),
-                Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Toque em atualizar.", NotificationType.Error, 8000)
+                ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION);
+                true,
+                Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Toque em atualizar.", NotificationType.Error, 8000);
+                false
             )
         );
         Set(varMangueiraEscolhidaTubo, Blank());
@@ -1456,8 +1458,10 @@ Screens:
                           "OPnum", Value(Title),
                           "Rotulo", Title & "  ·  " & Coalesce(PN, "") & If(!IsBlank(Trancadeira), "  ·  " & Trancadeira, "") & If(QtdPlanejada > 0, "  ·  " & Text(QtdPlanejada, "0") & " m", "")
                       )
-                  ),
-                  Notify("Não consegui ler o plano de OPs. Toque em atualizar.", NotificationType.Error, 8000)
+                  );
+                  true,
+                  Notify("Não consegui ler o plano de OPs. Toque em atualizar.", NotificationType.Error, 8000);
+                  false
               );
               With(
                   { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
@@ -3887,8 +3891,10 @@ Screens:
               =If(
                   IsEmpty(colSpecTubo),
                   IfError(
-                      ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION),
-                      Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Tente de novo.", NotificationType.Error, 8000)
+                      ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION);
+                      true,
+                      Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Tente de novo.", NotificationType.Error, 8000);
+                      false
                   )
               );
               UpdateContext({ctxModalDelinTubo: true})
