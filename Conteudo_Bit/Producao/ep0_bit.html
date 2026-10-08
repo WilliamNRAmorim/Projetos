@@ -1,0 +1,82 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>ep0 bit</title>
+<script src="brand.js"></script><script src="bit_art.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// Episódio 0: o Bit se apresenta (narrado com a voz dele, ElevenLabs). ?t=3 mostra um quadro; ?save=1 renderiza o mp4.
+const q = new URLSearchParams(location.search), W = 1080, H = 1920, FPS = 30, DIR = 'semana-2026-10-05', OUT = 'Qui08_Instagram_TikTok_Ep0_Bit.mp4';
+// cada fala: texto da legenda, palavras em destaque, o que aparece na tela
+const FALAS = [
+  { txt: 'Oi! Eu sou o Bit.', acc: ['Bit.'], cena: 'acenando' },
+  { txt: 'Eu moro no computador de um estudante de Engenharia de Computação que constrói umas coisas meio doidas.', acc: ['doidas.'], cena: 'pensando' },
+  { txt: 'Uma fábrica que saiu do papel...', acc: ['fábrica'], cena: 'gms' },
+  { txt: 'um fliperama feito do zero...', acc: ['fliperama'], cena: 'will' },
+  { txt: 'e eu vou te contar tudo. Inclusive o que deu errado.', acc: ['deu', 'errado.'], cena: 'feliz' },
+];
+const LEAD = 0.25, GAP = 0.22, TAIL = 0.7; // respiro antes da 1ª fala, entre falas e no fim
+const ease = { out: x => 1 - Math.pow(1 - x, 3), back: x => { const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); } };
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+function seek(v, t) { return new Promise(res => { const done = () => { v.removeEventListener('seeked', on); res(); }; const on = () => v.requestVideoFrameCallback ? (v.requestVideoFrameCallback(done), setTimeout(done, 250)) : done(); v.addEventListener('seeked', on); v.currentTime = t; }); }
+function wrap(g, words, maxW) { const lines = [[]]; let w = 0; for (const wd of words) { const ww = g.measureText(wd + ' ').width; if (w + ww > maxW && lines.at(-1).length) { lines.push([]); w = 0; } lines.at(-1).push(wd); w += ww; } return lines; }
+function legenda(g, f, k) { // palavras entram uma a uma acompanhando a fala (k = progresso 0..1 da fala)
+  const size = f.txt.length > 60 ? 70 : 92; g.font = `900 ${size}px Geist`; g.letterSpacing = `${-0.035 * size}px`; g.textBaseline = 'alphabetic';
+  const words = f.txt.split(' '), lines = wrap(g, words, W - 180), n = words.length; let idx = 0, y = 330;
+  for (const ln of lines) { let x = 90; for (const wd of ln) { const a = clamp((k * n * 1.15 - idx) * 3); if (a > 0) { g.globalAlpha = a; g.fillStyle = f.acc.includes(wd) ? BRAND.accent : BRAND.paper; g.fillText(wd, x, y + (1 - ease.out(a)) * 18); } x += g.measureText(wd + ' ').width; idx++; } y += size * 1.08; }
+  g.globalAlpha = 1;
+}
+function card(g, v, t0, u, label) { // trecho de vídeo num quadro com sombra seca vermelha, entrando de baixo
+  const cw = 600, ch = cw * v.videoHeight / v.videoWidth, x = (W - cw) / 2, y = 620 + (1 - ease.out(clamp(u / 0.35))) * 140;
+  g.fillStyle = BRAND.accent; g.fillRect(x + 16, y + 16, cw, ch); g.drawImage(v, x, y, cw, ch); g.lineWidth = 5; g.strokeStyle = BRAND.paper; g.strokeRect(x, y, cw, ch);
+  g.font = '700 30px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = BRAND.mute; g.fillText(label, x, y - 24);
+}
+(async () => {
+  await loadBrandFonts();
+  const [acenando, pensando, feliz] = await Promise.all(['bit_acenando', 'bit_pensando', 'bit_feliz'].map(n => BitArt.load(`/Marca/bit/${n}.png`)));
+  const POSE = { acenando, pensando, feliz, gms: pensando, will: feliz };
+  const mkv = src => { const v = document.createElement('video'); v.src = src; v.muted = true; v.preload = 'auto'; return new Promise(r => { v.onloadeddata = () => r(v); }); };
+  const [vg, vw] = await Promise.all([mkv('/Videos/Publicar/GMS_Reel_PT_30s.mp4'), mkv(`/Semanal/${DIR}/Sab10_Carrossel_5.mp4`)]);
+  const SR = 48000, ac = new OfflineAudioContext(2, SR, SR);
+  const vozes = await Promise.all(FALAS.map((_, i) => fetch(`/w/stems/ep0/fala${i + 1}.mp3`).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b))));
+  let t = LEAD; FALAS.forEach((f, i) => { f.t0 = t; f.dur = vozes[i].duration; t += f.dur + GAP; }); const DUR = Math.ceil((t - GAP + TAIL) * FPS) / FPS;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; document.body.append(cv); const g = cv.getContext('2d');
+  const at = tt => { let i = FALAS.findIndex(f => tt < f.t0 + f.dur + GAP); return i < 0 ? FALAS.length - 1 : i; };
+  async function frame(tt) {
+    const i = at(tt), f = FALAS[i], u = tt - f.t0, k = clamp(u / f.dur);
+    g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H);
+    const gl = g.createRadialGradient(W / 2, H * 0.62, 40, W / 2, H * 0.62, W * 0.8); gl.addColorStop(0, 'rgba(255,59,31,.34)'); gl.addColorStop(1, 'rgba(255,59,31,0)'); g.fillStyle = gl; g.fillRect(0, 0, W, H);
+    const ring = f.cena === 'gms' ? { ring: tt * 1.4 } : {};
+    if (f.cena === 'gms' || f.cena === 'will') {
+      const v = f.cena === 'gms' ? vg : vw; await seek(v, (f.cena === 'gms' ? 16 : 0.5) + u); card(g, v, f.t0, u, f.cena === 'gms' ? 'PROJETO 01 · GMS' : 'PROJETO 02 · WILL STATION');
+      BitArt.draw(g, POSE[f.cena], 860, 1560 + Math.sin(tt * 6) * 8, 430, ring);
+    } else {
+      const pop = i === 0 ? ease.back(clamp(u / 0.45)) : 1 + 0.04 * Math.max(0, 1 - clamp(u / 0.25)); // entrada com elástico no "Oi"
+      const hop = f.cena === 'feliz' ? Math.abs(Math.sin(tt * 5.5)) * 50 : Math.sin(tt * 2.4) * 10;
+      BitArt.draw(g, POSE[f.cena], W / 2, 1560 - hop, 860 * pop);
+    }
+    legenda(g, f, k);
+    g.font = '700 30px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = BRAND.accent; g.fillText('EPISÓDIO 0', 90, 200);
+    if (tt > DUR - 0.35) { g.fillStyle = `rgba(12,12,13,${clamp((tt - (DUR - 0.35)) / 0.35)})`; g.fillRect(0, 0, W, H); } // fecha no escuro pra emendar o loop
+  }
+  if (!q.has('save')) { await frame(+(q.get('t') || 1)); document.title = 'ready'; return; }
+  // áudio: falas nos seus tempos + trilha baixinha por baixo
+  const len = Math.round(SR * DUR), L = new Float32Array(len), R = new Float32Array(len);
+  const mus = await new OfflineAudioContext(2, SR, SR).decodeAudioData(await (await fetch('/w/stems/music.wav')).arrayBuffer());
+  for (let i = 0; i < len; i++) { const ti = i / SR, fade = Math.min(1, ti / 0.4, (DUR - ti) / 0.6), j = Math.floor(ti * mus.sampleRate); L[i] = mus.getChannelData(0)[j] * 0.16 * fade; R[i] = mus.getChannelData(1)[j] * 0.16 * fade; }
+  vozes.forEach((b, n) => { const off = Math.round(FALAS[n].t0 * SR), d0 = b.getChannelData(0), d1 = b.numberOfChannels > 1 ? b.getChannelData(1) : d0, r = b.sampleRate / SR;
+    for (let i = 0; i < b.duration * SR && off + i < len; i++) { const j = Math.floor(i * r); L[off + i] += d0[j] * 0.95; R[off + i] += d1[j] * 0.95; } });
+  for (let i = 0; i < len; i++) { L[i] = Math.max(-1, Math.min(1, L[i])); R[i] = Math.max(-1, Math.min(1, R[i])); }
+  const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let err = null;
+  const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 4.5e6, framerate: FPS });
+  const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 160000 });
+  for (let i = 0; i < len; i += 1024) { const n = Math.min(1024, len - i), d = new Float32Array(n * 2); d.set(L.subarray(i, i + n), 0); d.set(R.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
+  for (let fr = 0; fr < Math.round(DUR * FPS); fr++) {
+    await frame(fr / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(fr * 1e6 / FPS) }); ve.encode(vf, { keyFrame: fr % 60 === 0 }); vf.close();
+    if (ve.encodeQueueSize > 10) await new Promise(r => setTimeout(r, 5)); document.title = `${fr}/${Math.round(DUR * FPS)}`;
+  }
+  await ve.flush(); await ae.flush(); if (err) throw err; mux.finalize();
+  await fetch(`/save?dir=${DIR}&name=${OUT}`, { method: 'POST', body: mux.target.buffer });
+  document.title = 'ready ' + DUR.toFixed(2);
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
