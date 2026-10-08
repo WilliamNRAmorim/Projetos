@@ -26,6 +26,7 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 4 | 08/10 11:00 | TikTok (+IG 12h) | Wi-Fi não significa nada (25 s) | myth-busting, sem voz | myth-busting segura mais que fato comum | | | |
 | 5 | 08/10 15:00 | TikTok | IA nos games (19 s) | número + contradição + pergunta, sem voz | pergunta final gera mais comentários | | | |
 | 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | | | |
+| 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | | | |
 | 7 | 10/10 11:00 | Instagram | Carrossel Mario 40 KB (7 itens) | carrossel história | carrossel com gancho meta ("menos que esta imagem") gera salvamentos | | | |
 
 ## Benchmarks (amostra de ~20 vídeos do mesmo tema antes de postar)

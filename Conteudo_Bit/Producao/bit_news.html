@@ -1,0 +1,51 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>bit news</title>
+<script src="brand.js"></script><script src="bit_art.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}img{width:432px}</style></head><body>
+<script>
+// "Bit News": imagem-manchete 1080×1350 (formato que chegou a 80K curtidas no benchmark do Instagram):
+// arte forte em cima, etiqueta de categoria, manchete com a frase-chave entre aspas em vermelho, virada embaixo.
+// ?save=1 grava na pasta da semana. Cada notícia é uma entrada em NEWS.
+const q = new URLSearchParams(location.search), W = 1080, H = 1350, M = 80;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2;
+const NEWS = {
+  satelite: {
+    out: 'Qui08_D_Instagram_BitNews_SateliteIA.png', dir: 'semana-2026-10-05', tag: 'ESPAÇO · IA',
+    head: [['"Data center no espaço": ', A], ['a IA do Google já roda em órbita', P]],
+    sub: 'E o maior problema lá em cima não é a radiação. É o calor.',
+    arte(g, bit) { // espaço, arco da Terra, satélite em traço com 4 chips e ondas de calor; o Bit observando
+      g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, 760);
+      for (let i = 0; i < 90; i++) { const x = (i * 397) % W, y = (i * 263) % 700, r = (i % 3) * 0.8 + 0.8; g.fillStyle = `rgba(238,237,232,${0.15 + (i % 5) * 0.08})`; g.fillRect(x, y, r, r); }
+      const gl = g.createRadialGradient(W / 2, 1400, 600, W / 2, 1400, 1000); gl.addColorStop(0, 'rgba(255,59,31,0.0)'); gl.addColorStop(0.62, 'rgba(255,59,31,0.0)'); gl.addColorStop(0.64, 'rgba(255,59,31,0.35)'); gl.addColorStop(1, 'rgba(255,59,31,0)'); g.fillStyle = gl; g.fillRect(0, 0, W, 760);
+      g.strokeStyle = P; g.lineWidth = 4; g.beginPath(); g.arc(W / 2, 1400, 820, Math.PI * 1.2, Math.PI * 1.8); g.stroke();
+      g.save(); g.translate(560, 300); g.rotate(-0.18); g.lineWidth = 5; g.strokeStyle = P;
+      g.fillStyle = I2; g.fillRect(-70, -90, 140, 180); g.strokeRect(-70, -90, 140, 180); // corpo do tamanho de uma geladeira
+      for (let k = 0; k < 4; k++) { g.fillStyle = A; g.fillRect(-46 + (k % 2) * 52, -60 + Math.floor(k / 2) * 66, 40, 40); } // as 4 TPUs
+      for (const s of [-1, 1]) { g.strokeRect(s > 0 ? 90 : -330, -55, 240, 110); for (let c = 1; c < 6; c++) { const x0 = s > 0 ? 90 : -330; g.beginPath(); g.moveTo(x0 + c * 40, -55); g.lineTo(x0 + c * 40, 55); g.stroke(); } g.beginPath(); g.moveTo(s * 70, 0); g.lineTo(s * 90, 0); g.stroke(); }
+      g.strokeStyle = A; g.lineWidth = 6; for (let w = 0; w < 3; w++) { g.beginPath(); for (let y = 0; y <= 120; y += 6) { const x = -30 + w * 30 + Math.sin(y / 14) * 9; y ? g.lineTo(x, 110 + y) : g.moveTo(x, 110); } g.stroke(); } // calor saindo
+      g.restore();
+      g.font = '700 26px "Geist Mono"'; g.fillStyle = MU; g.fillText('4 CHIPS DE IA · 650 KM DE ALTURA', 90, 110);
+      BitArt.draw(g, bit, 930, 745, 300);
+    },
+  },
+};
+const N = NEWS[q.get('n') || 'satelite'];
+function wrap(g, parts, maxW) { // quebra preservando a cor de cada trecho
+  const words = []; parts.forEach(([s, col]) => s.split(/(\s+)/).forEach(w => w && words.push([w, col])));
+  const lines = [[]]; let w = 0; for (const [t, col] of words) { const ww = g.measureText(t).width; if (w + ww > maxW && t.trim() && lines.at(-1).length) { lines.push([]); w = 0; } if (!lines.at(-1).length && !t.trim()) continue; lines.at(-1).push([t, col]); w += ww; } return lines;
+}
+(async () => {
+  await loadBrandFonts(); const bit = await BitArt.load('/Marca/bit/bit_pensando.png');
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.textBaseline = 'alphabetic';
+  g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H); N.arte(g, bit);
+  g.fillStyle = BRAND.ink; g.fillRect(0, 760, W, H - 760);
+  g.font = '800 30px "Geist Mono"'; g.letterSpacing = '2px'; const tw = g.measureText(N.tag).width + 40; g.fillStyle = A; g.fillRect(M, 730, tw, 60); g.fillStyle = BRAND.ink; g.fillText(N.tag, M + 20, 771);
+  g.font = '900 76px Geist'; g.letterSpacing = '-3px'; let y = 880; for (const ln of wrap(g, N.head, W - 2 * M)) { let x = M; for (const [t, col] of ln) { g.fillStyle = col; g.fillText(t, x, y); x += g.measureText(t).width; } y += 84; }
+  g.font = '600 40px Geist'; g.letterSpacing = '-1px'; y += 20; for (const ln of wrap(g, [[N.sub, MU]], W - 2 * M)) { let x = M; for (const [t, col] of ln) { g.fillStyle = col; g.fillText(t, x, y); x += g.measureText(t).width; } y += 50; }
+  g.font = '700 26px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = A; g.fillText('BIT NEWS', M, H - 60); g.fillStyle = MU; g.textAlign = 'right'; g.fillText('@uiu.engenharia', W - M, H - 60); g.textAlign = 'left';
+  grain(g, W, H, 0.05);
+  const im = document.createElement('img'); im.src = c.toDataURL(); document.body.append(im);
+  if (q.has('save')) await fetch(`/save?dir=${N.dir}&name=${N.out}`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) });
+  document.title = 'ready';
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>

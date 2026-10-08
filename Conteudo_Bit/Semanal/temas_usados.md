@@ -8,3 +8,4 @@
 | 10/10/2026 | Instagram, TikTok | Super Mario em 40 KB (carrossel) |
 | 08/10/2026 | TikTok, Instagram | Wi-Fi não significa nada (myth-busting) |
 | 08/10/2026 | TikTok | IA nos games: medo x compraria (Pesquisa Game Brasil) |
+| 08/10/2026 | Instagram | Bit News: Google Suncatcher, satélite de IA (calor no espaço) |
