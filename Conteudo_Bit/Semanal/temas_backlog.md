@@ -22,6 +22,8 @@ Pesquisado em 07/10/2026 (EUA/global). A ideia: pegar o FORMATO que viraliza lá
 | **Rock, paper, scissors** (contrasta escolhas e dores) | "Excel, Power BI ou Python?" e o Bit escolhendo com argumento | fato rápido, interativo |
 | **"Be OK"** (dancinha feliz + texto revelando a realidade) | o Bit dançando + "eu quando o deploy passou" / "o servidor: 🔥" | humor dia a dia |
 | **"Two Fishes"** (voz calma explicando uma briga que ninguém pediu) | o Bit explicando com calma por que tab é melhor que espaço | humor dia a dia |
+**Sons em alta (outubro/2026, TikTok):** "Patient Zero" (Taylor Swift), "Ramalama (Bang Bang)" (Róisín Murphy), "Bow Bow Bow" (Zeddy Will), "we fell in love in october" (girl in red), além dos áudios dos trends "Be OK" (Ingrid Michaelson) e "Two Fishes". Conferir na biblioteca do app no dia (som some rápido).
+
 Observação: os trends que dependem de um áudio famoso (Be OK, Two Fishes) precisam do som adicionado **dentro do app** na hora de postar (o render não pode usar música com direitos). O vídeo sai com o texto e a animação no tempo do áudio, e o `_texto.txt` diz qual som escolher no TikTok/Instagram.
 
 ## Histórias com arco (vídeo A)
