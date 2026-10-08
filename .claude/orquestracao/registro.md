@@ -7,3 +7,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-08 | Teste 2: ?safe=1 e ?sheet=compasso no ep_kit.js | eu (Sonnet), sem subagente | edição pequena em um arquivo, sem regra de negócio; verificado no navegador | ~US$ 0,3
 2026-10-08 | Teste 5: áudio por código 10 s, sincronia por pico e medição LUFS/dBTP | produtor-de-artes (Opus, ~250k tokens) | áudio é sempre Opus | ~US$ 1,5
 2026-10-08 | Testes 3 (debounce conceitual), 4 (frase cinética), teste5_v2 (swoosh descendente + ducking) | bit (16k tokens) + 2 produtor-de-artes (Opus, ~110k + ~?), em paralelo | texto no bit; render e áudio sempre Opus | ~US$ 3 a 4
+2026-10-08 | Análise de desempenho dos posts de hoje (TikTok e Instagram) | eu (Sonnet) coletei métricas no navegador + tit e insta em paralelo | coleta exige login e os agentes não têm navegador; análise barata e independente | ~US$ 0,5

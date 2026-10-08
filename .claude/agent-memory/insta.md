@@ -1,0 +1,2 @@
+- [2026-10-08] Leitura de 24 h com menos de 6 h de idade é parcial: escreva na coluna como "parcial" e só feche a conclusão com os números de 24 h.
+- [2026-10-08] Antes de analisar, confira a hora de postagem no receita.md contra a informada pelo William (exp. 6b estava 16:00 no caderno e ~17:00 pelo relato).

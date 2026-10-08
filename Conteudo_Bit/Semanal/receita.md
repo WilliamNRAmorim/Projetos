@@ -24,10 +24,10 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 1 | 07/10 08:30 | LinkedIn | GMS + MESA-11 (78 s) | texto profissional + vídeo sem voz | ângulo de autocrítica técnica gera alcance fora da rede | 13 h: 346 impr., 60% fora da rede, 4,3% engaj., 26 s de média (de 78) | | autocrítica técnica funciona no LinkedIn; metade do vídeo não é vista |
 | 2 | 07/10 19:00 | Instagram | GMS 30 s | texto na tela, sem voz | — | 3 h: 0 visualizações (conta nova, 0 seguidores) | | conta nova precisa de empurrão (compartilhar no perfil pessoal) |
 | 3 | 07/10 19:00 | TikTok | GMS 30 s | texto na tela, sem voz | — | 3 h: 40 vis., 2 curtidas; 4 h: 53 vis. | | conta com histórico de outro nicho; acompanhar |
-| 4 | 08/10 11:00 | TikTok (+IG 12h) | Wi-Fi não significa nada (25 s) | myth-busting, sem voz | myth-busting segura mais que fato comum | | | |
-| 5 | 08/10 15:00 | TikTok | IA nos games (19 s) | número + contradição + pergunta, sem voz | pergunta final gera mais comentários | | | |
-| 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | | | |
-| 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | | | |
+| 4 | 08/10 11:00 | TikTok (+IG 12h) | Wi-Fi não significa nada (25 s) | myth-busting, sem voz | myth-busting segura mais que fato comum | ~9 h (parcial): 92 vis., 1 curtida, 0 coment.; sem ganho sobre o GMS (93 vis., 4 curtidas) | | |
+| 5 | 08/10 15:00 | TikTok | IA nos games (19 s) | número + contradição + pergunta, sem voz | pergunta final gera mais comentários | ~5 h (parcial): 64 vis., 2 curtidas, 0 coment.; pergunta final não gerou comentário | | |
+| 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | ~1 h (parcial): 2 vis., 0 curtidas, 0 coment.; cedo demais para avaliar | | |
+| 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | parcial (~3 h): 6 vis., 6 contas, 1 curtida, 0 salv./compart.; cedo para concluir | | |
 | 7 | 10/10 11:00 | Instagram | Carrossel Mario 40 KB (7 itens) | carrossel história | carrossel com gancho meta ("menos que esta imagem") gera salvamentos | | | |
 
 ## Benchmarks (amostra de ~20 vídeos do mesmo tema antes de postar)

@@ -1,0 +1,5 @@
+- [2026-10-08] WebSearch acha blogs de fornecedor para tendências de TikTok; para sons e vídeos reais, sempre pedir checagem no Creative Center e no app (busca não alcança o TikTok).
+- [2026-10-08] Pesquisa de nicho tech: marcar cada número como "de fornecedor" e não apresentar matéria secundária como fato sem abrir a fonte original.
+- [2026-10-08] APROVADO
+- [2026-10-08] Post mudo só com texto em PT ficou na faixa base do benchmark (1 curtida em 92 vis.); pergunta final sem comentário em 64 vis. Não julgar antes de 72 h nem sem retenção.
+- [2026-10-08] Coluna "24 h" com posts de 1 a 9 h: marcar como parcial com o tempo real decorrido, nunca chamar de 24 h.
