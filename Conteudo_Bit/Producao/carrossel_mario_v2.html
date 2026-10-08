@@ -1,0 +1,68 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>carrossel mario v2</title>
+<script src="brand.js"></script><script src="bit_art.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;display:flex;flex-wrap:wrap;gap:12px;padding:12px}img{width:270px}</style></head><body>
+<script>
+// Carrossel do Mario no formato novo: história com arco (gancho → missão → limite → trapaça → contraste → sentido), 1080×1350.
+// Fatos conferidos: 40 KB = 32 KB PRG + 8 KB CHR (Computer History Museum/touchit.sk); nuvem e arbusto com o mesmo desenho (WhatCulture);
+// RDR2 com 150 GB no PC (TechRadar). O slide 6 continua sendo o vídeo 3D do Will Station (Sab10_Carrossel_6.mp4).
+const q = new URLSearchParams(location.search), W = 1080, H = 1350, DIR = 'semana-2026-10-05', M = 90;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, OK = '#3DDC97';
+function t(g, s, x, y, size, col, o = {}) { g.font = `${o.w || 900} ${size}px ${o.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = o.mono ? '1px' : `${-0.04 * size}px`; g.textAlign = o.align || 'left'; g.fillStyle = col; g.fillText(s, x, y); g.textAlign = 'left'; }
+function linhas(g, parts, x, y, size, lh) { g.font = `900 ${size}px Geist`; g.letterSpacing = `${-0.04 * size}px`; let cx = x, cy = y;
+  for (const [s, col] of parts) s.split(/(\n)/).forEach(seg => { if (seg === '\n') { cx = x; cy += lh; return; } g.fillStyle = col; g.fillText(seg, cx, cy); cx += g.measureText(seg).width; }); }
+function rotulo(g, s, y = 150, col = A) { t(g, s, M, y, 30, col, { mono: true, w: 700 }); }
+function pagina(g, i) { t(g, `${i}/7`, W - M, H - 70, 28, MU, { mono: true, w: 700, align: 'right' }); }
+// nuvem desenhada em pixel (desenho próprio, esquemático): 1 = contorno, 2 = preenchimento
+const NUVEM = ['....1111........','...122221.111...','..1222222122221.','.12222222222221.','1222222222222221','1222222222222221','.12222222222221.','..111111111111..'];
+function pixel(g, art, x, y, s, fill, line) { art.forEach((row, j) => [...row].forEach((c, i) => { if (c === '.') return; g.fillStyle = c === '1' ? line : fill; g.fillRect(x + i * s, y + j * s, s, s); })); }
+let bitP, bitF;
+const SLIDES = [
+  g => { // 1. gancho: a própria imagem pesa mais que o jogo
+    rotulo(g, 'SUPER MARIO BROS. · 1985');
+    linhas(g, [['Esse jogo inteiro\ncabe em menos\nespaço que ', P], ['esta\nimagem.', A]], M, 380, 118, 122);
+    t(g, 'ARRASTA →', M, H - 160, 34, MU, { mono: true, w: 700 }); pagina(g, 1);
+  },
+  g => { // 2. a missão
+    rotulo(g, 'A MISSÃO');
+    linhas(g, [['Um mundo inteiro.\nOito mundos, na\nverdade. Com música.\n\nE um limite de\n', P], ['40 KB.', A]], M, 330, 84, 94);
+    t(g, 'o tamanho de um e-mail sem anexo.', M, 1080, 40, MU, { mono: true, w: 500 }); pagina(g, 2);
+  },
+  g => { // 3. o limite, em barras
+    rotulo(g, 'DENTRO DO CARTUCHO');
+    const x = M, w = W - 2 * M, y = 360;
+    g.fillStyle = BRAND.ink2; g.fillRect(x, y, w, 150); g.fillStyle = A; g.fillRect(x, y, w * 0.8, 150); g.fillStyle = P; g.fillRect(x + w * 0.8 + 6, y, w * 0.2 - 6, 150);
+    t(g, '32 KB', x + 30, y + 100, 76, BRAND.ink); t(g, '8 KB', x + w - 20, y + 100, 56, BRAND.ink, { align: 'right' });
+    linhas(g, [['32 KB', A], [' pro jogo todo:\ncódigo, fases, música\ne efeitos.\n\n', P], ['8 KB', P], [' pra todos os\ndesenhos da tela.', MU]], M, 680, 70, 80); pagina(g, 3);
+  },
+  g => { // 4. a trapaça
+    rotulo(g, 'NÃO CABIA. ENTÃO ELES TRAPACEARAM.');
+    pixel(g, NUVEM, 150, 300, 22, P, MU); t(g, 'nuvem', 150, 520, 34, MU, { mono: true, w: 700 });
+    pixel(g, NUVEM, 600, 300, 22, OK, MU); t(g, 'arbusto', 600, 520, 34, MU, { mono: true, w: 700 });
+    linhas(g, [['É o ', P], ['mesmo desenho.\n', A], ['Só muda a cor.', P]], M, 760, 92, 100);
+    t(g, 'reaproveitar era o único jeito de caber.', M, 1080, 34, MU, { mono: true, w: 500 }); pagina(g, 4);
+  },
+  g => { // 5. o contraste com hoje
+    rotulo(g, 'E HOJE?');
+    linhas(g, [['Red Dead\nRedemption 2\npede ', P], ['150 GB.', A]], M, 330, 112, 118);
+    linhas(g, [['Dá pra guardar o Mario\n', P], ['quase 4 milhões', A], [' de vezes\nnesse espaço.', P]], M, 830, 64, 74); pagina(g, 5);
+  },
+  null, // 6. vídeo 3D do Will Station (arquivo já pronto)
+  g => { // 7. o sentido + o Bit
+    rotulo(g, 'O QUE FICA');
+    linhas(g, [['Limite não mata\na criatividade.\n', P], ['Às vezes é ele\nque cria.', A]], M, 330, 100, 108);
+    BitArt.draw(g, bitP, 820, 1230, 470);
+    t(g, '"e a gente reclama que o', M, 1000, 36, MU, { mono: true, w: 500 }); t(g, 'celular tá sem espaço."', M, 1050, 36, MU, { mono: true, w: 500 }); t(g, 'BIT', M, 1110, 30, A, { mono: true, w: 700 }); pagina(g, 7);
+  },
+];
+(async () => {
+  await loadBrandFonts(); bitP = await BitArt.load('/Marca/bit/bit_pensando.png');
+  for (let i = 0; i < SLIDES.length; i++) { if (!SLIDES[i]) continue;
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d'); g.textBaseline = 'alphabetic';
+    g.fillStyle = BRAND.ink; g.fillRect(0, 0, W, H); SLIDES[i](g); grain(g, W, H, 0.07);
+    const im = document.createElement('img'); im.src = c.toDataURL(); document.body.append(im);
+    if (q.has('save')) await fetch(`/save?dir=${DIR}&name=Sab10_Carrossel_${i + 1}.png`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) });
+  }
+  document.title = 'ready';
+})().catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
