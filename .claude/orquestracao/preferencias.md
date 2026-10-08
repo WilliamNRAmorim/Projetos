@@ -7,3 +7,5 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-08: quer evitar repetir o GMS nos posts; o essencial é o contexto de engenharia aplicada à indústria.
 - 2026-10-08: prefere agentes com esforço baixo no Haiku e médio no Sonnet e no Opus.
 - 2026-10-08: toda imagem, áudio e vídeo vai para o `produtor-de-artes`.
+- 2026-10-08: nada que vá ao LinkedIn leva o Bit (nem mascote, nem texto, nem assinatura). O LinkedIn é o perfil pessoal dele. Vale para bit, din e produtor-de-artes.
+2026-10-08 | Teste 1 de motion (quadrado em loop) aprovado sem ver diferença 30 vs 60 fps; seguir a recomendação da equipe: 30 fps.
