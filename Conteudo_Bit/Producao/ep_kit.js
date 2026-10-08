@@ -36,6 +36,15 @@ window.EpKit = (() => {
       const cut = clamp(1 - u / 0.12); if (i > 0 && cut > 0 && f.corte !== false) glitch(g, () => {}, 0.7 * cut, fr + 999);
       grain(g, W, H, opts.grao ?? 0.07);
       if (tt > DUR - 0.3) { g.fillStyle = `rgba(12,12,13,${clamp((tt - (DUR - 0.3)) / 0.3)})`; g.fillRect(0, 0, W, H); }
+      if (q.has('safe') && !q.has('save')) { // conferência: área segura do Reels/TikTok (só com ?safe=1, nunca no render)
+        g.save(); g.fillStyle = 'rgba(255,59,31,0.18)'; g.fillRect(0, 0, W, 250); g.fillRect(0, 1480, W, H - 1480); g.fillRect(940, 900, W - 940, 580);
+        g.strokeStyle = '#FF3B1F'; g.lineWidth = 3; g.setLineDash([14, 10]); g.strokeRect(90, 250, 850, 1230); g.restore();
+      }
+    }
+    if (q.get('sheet') === 'compasso') { // folha de conferência: 1 quadro por compasso (120 BPM = 2 s), com o tempo escrito
+      const step = 2, n = Math.ceil(DUR / step), sw = 270, sh = 480, sheet = document.createElement('canvas'); sheet.width = sw * 5; sheet.height = sh * Math.ceil(n / 5); const sg = sheet.getContext('2d'); sg.font = '700 20px monospace';
+      for (let i = 0; i < n; i++) { await frame(Math.min(i * step, DUR - 0.05)); const x = (i % 5) * sw, y = Math.floor(i / 5) * sh; sg.drawImage(cv, x, y, sw, sh); sg.fillStyle = '#FF3B1F'; sg.fillText('c' + (i + 1) + ' ' + (i * step) + 's', x + 8, y + 24); }
+      cv.replaceWith(sheet); sheet.style.width = '100%'; document.title = 'ready ' + DUR.toFixed(1); return;
     }
     if (q.has('sheet')) { // folha de conferência: um quadro no meio do fim de cada fala, lado a lado
       const n = F.length, sw = 270, sh = 480, sheet = document.createElement('canvas'); sheet.width = sw * 4; sheet.height = sh * Math.ceil(n / 4); const sg = sheet.getContext('2d');
