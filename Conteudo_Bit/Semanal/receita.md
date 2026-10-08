@@ -62,6 +62,10 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 **O que muda do TikTok para o Instagram:** no Instagram **imagem única ou carrossel estilo manchete** compete com Reel (80K num post estático!); a **legenda longa** com explicação + dica pesa mais (salvamento); ganchos de **segredo/proibido** e **emoção do dia a dia** ("você sente raiva…") puxam muito; história com ano + personagem funciona nas duas.
 **O que roubar:** cartão-manchete (foto/arte forte + etiqueta de categoria + frase entre aspas com a palavra-chave em vermelho) → formato "Bit News"; legenda longa no Instagram com 1 dica prática no fim; títulos de segredo ("o que a fábrica não te conta", "o botão que ninguém usa").
 
+### Espaço/astronomia no INSTAGRAM · 08/10/2026 (#espaco, #astronomia) · para o Bit News do satélite
+Topo: "A NASA LIBEROU PESSOAL!!" (63K), "SE ANDRÔMEDA É VISÍVEL, POR QUE NÃO CONSEGUIMOS VÊ-LA A OLHO NU? 👀", "É ASSIM QUE UM BURACO NEGRO…". **Padrão:** 1ª linha curta, em CAIXA ALTA, com novidade/exclusividade ou contradição; explicação depois. Aplicado na legenda: "O GOOGLE MANDOU UMA IA PRO ESPAÇO. E ELA PASSA CALOR."
+**Erro corrigido:** a 1ª legenda foi escrita só com base nas hashtags gerais e abria com "Você sabia que…" (padrão da base). A amostra tem que ser do TEMA específico em cada plataforma.
+
 ## Regra de benchmark (pedido em 08/10/2026)
 - **20 amostras POR PLATAFORMA onde o post vai sair** (TikTok, Instagram e LinkedIn), porque o que funciona numa não funciona na outra. No Instagram, a busca por palavra não funciona na web: use as páginas de hashtag (instagram.com/explore/tags/<tag>/) e leia curtidas/comentários pelo og:description de cada post.
 - Inclua **carrosséis e imagens**, não só vídeos: carrossel informativo ou engraçado também viraliza.
