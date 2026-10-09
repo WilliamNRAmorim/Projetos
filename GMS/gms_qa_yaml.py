@@ -236,5 +236,22 @@ for n,f in formulas:
         globais.add(m.group(1) or m.group(3))
 print("Conferir manualmente contra as outras telas:", sorted(globais) if globais else "nenhuma")
 
+print("\n=== 16. Formula sem '=' no inicio (PA1001 YamlInvalidSyntax) ===")
+sem_igual=[n for n,f in formulas if not f.lstrip().startswith("=")]
+print("OK" if not sem_igual else "FALHOU: "+str(sem_igual))
+
+print("\n=== 17. IfError(Collect/ClearCollect, Notify): fallback Boolean x Table ===")
+rx_ife = re.compile(r"IfError\(\s*(Clear)?Collect\(")
+ife=[]
+for n,f in formulas:
+    for m in rx_ife.finditer(f):
+        i=m.end(); prof=1
+        while i < len(f) and prof:
+            if f[i]=="(": prof+=1
+            elif f[i]==")": prof-=1
+            i+=1
+        if re.match(r"\s*,\s*Notify\(", f[i:]): ife.append(n)
+print("OK" if not ife else "ALERTA (usar If(IsError(ClearCollect(...)), Notify(...))): "+str(sorted(set(ife))))
+
 print("\n=== 10. Inventario ===")
 print("Controles:", len(ctrls), "| Formulas:", len(formulas), "| Linhas:", raw.count("\n")+1)

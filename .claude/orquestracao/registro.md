@@ -17,3 +17,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-09 | Corrige erro de tipo (IfError Boolean x Table) na Trançagem e registra lições | chefe sozinho (Opus) | 1 tela + diário/lições, sem subagente | baixo
 2026-10-09 | Commit geral do repositório (pasta Missão Manutenção e relatório de uso) | chefe sozinho (Opus) | só git, sem subagente | baixo
 2026-10-09 | .gitattributes marcando binários para não corromper PDF no checkout | chefe sozinho (Opus) | config git, sem subagente | baixo
+2026-10-09 | Testes 16 e 17 no QA de YAML (= no início e IfError Collect/Notify) | chefe sozinho (Opus) | script pequeno, plano já aprovado pelo William | baixo

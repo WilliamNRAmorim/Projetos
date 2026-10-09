@@ -24,7 +24,7 @@
 | 1.10 | `ModernDropdown` está fora da lista provada. Usar `Classic/DropDown@2.3.1` | COLAR HoraHora v0.5.0 |
 | 1.11 | O `gms_qa_yaml.py` **não verifica propriedade × tipo de controle**. PA2108 passa pelo QA e só estoura no import. Pendente: adicionar esse teste | conversa 24/09 |
 | 1.12 | Timer só roda em **Preview** no Studio. BarcodeReader só funciona de verdade no **tablet** | MS Learn; Mestre §3.9.6 |
-| 1.13 | Fórmula em bloco multilinha (barra vertical + hífen) **também começa com `=`** na primeira linha. `=` perdido no meio (ex.: antes da string, dentro do `With`) dá PA1001 YamlInvalidSyntax. O QA ainda não pega | conversa 09/10 (Trançagem) |
+| 1.13 | Fórmula em bloco multilinha (barra vertical + hífen) **também começa com `=`** na primeira linha. `=` perdido no meio (ex.: antes da string, dentro do `With`) dá PA1001 YamlInvalidSyntax. O QA pega no teste 16 | conversa 09/10 (Trançagem) |
 
 ## 2. Power Fx: lógica que falha em silêncio
 
