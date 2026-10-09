@@ -146,3 +146,5 @@ Fonte: `testes/reel30_notas.md`. Teste real com 900 quadros, 50 eventos de som e
 - Quem audita não deve ser só quem produziu: o `revisor-leve` achou duas contradições nas próprias notas (costura de áudio e tipo de pico) em 1 min.
 - Dependências por CDN (fontes e mp4-muxer) tornam o render dependente de rede.
 - Rótulo mono de 33 px é o menor texto aceitável em 1080 px; no celular fica pequeno.
+
+**Kit compartilhado (08/10/2026).** As extensões do reel30 já estão em `bit_rig.js` (pose `aponta`, expressão `neutro`, `face.lid`, `o.poseB/o.mix`, `o.tilt`, `o.amp`) e em `testes/audio_kit.js` (`o.freq`, `cfg.trilha`, `cfg.bitrateVideo`, `cfg.folhaPorParte`, `cfg.depois`, teto -2,0 dBTP, transiente no swoosh descendente). Próximo reel: parta de `testes/reel30.html` como molde e troque só roteiro, textos e eventos de som.

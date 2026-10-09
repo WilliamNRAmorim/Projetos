@@ -62,8 +62,8 @@ window.EpKit = (() => {
     for (let i = 0; i < len; i++) { L[i] = Math.max(-1, Math.min(1, L[i])); R[i] = Math.max(-1, Math.min(1, R[i])); }
     const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
     let err = null;
-    const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: opts.bitrate || 3.2e6, framerate: FPS });
-    const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 160000 });
+    const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: opts.bitrate || 3.2e6, framerate: FPS, bitrateMode: opts.cbr ? 'constant' : 'variable' });
+    const ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: opts.abitrate || 160000 });
     for (let i = 0; i < len; i += 1024) { const n = Math.min(1024, len - i), d = new Float32Array(n * 2); d.set(L.subarray(i, i + n), 0); d.set(R.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
     for (let fr = 0; fr < Math.round(DUR * FPS); fr++) {
       await frame(fr / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(fr * 1e6 / FPS) }); ve.encode(vf, { keyFrame: fr % 60 === 0 }); vf.close();

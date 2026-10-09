@@ -1,0 +1,138 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>carrossel will station (instagram)</title>
+<script src="brand.js"></script><script src="bit_art.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>html,body{margin:0;width:1080px;height:1350px;overflow:hidden;background:#0C0C0D}canvas{display:block}</style></head><body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// Carrossel Instagram Will Station (Sex 09/10), roteiro v2: Semanal/semana-2026-10-05/Sex09_Instagram_WillStation_roteiro.md
+// Um slide por vez: ?s=1..7. Servir com serve.ps1 e renderizar com Edge headless --screenshot --window-size=1080,1350.
+// Fotos: só as 3 reais de WillStation/fotos (prints de post; os recortes abaixo tiram as setas e os pontinhos do Instagram).
+const q = new URLSearchParams(location.search), S = +(q.get('s') || 1), W = 1080, H = 1350, M = 90, CW = W - 2 * M;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, INK = BRAND.ink;
+const c = document.getElementById('c'), g = c.getContext('2d'); g.textBaseline = 'alphabetic';
+
+// texto: linhas = [[ [trecho, cor], ... ], ...]; reduz o corpo até a linha mais larga caber em maxW. Devolve {size, boxes}
+function bloco(linhas, x, y, size, lhK = 1.04, o = {}) {
+  const w = o.w || 900, maxW = o.maxW || CW, fam = o.mono ? '"Geist Mono"' : 'Geist', ls = o.mono ? 0.02 : -0.04;
+  const set = s => { g.font = `${w} ${s}px ${fam}`; g.letterSpacing = `${ls * s}px`; };
+  const larg = () => Math.max(...linhas.map(l => l.reduce((a, [t]) => a + g.measureText(t).width, 0)));
+  set(size); while (larg() > maxW) { size -= 2; set(size); }
+  const boxes = {}; let cy = y;
+  for (const l of linhas) { let cx = x; for (const [t, col, id] of l) { g.fillStyle = col; g.fillText(t, cx, cy); const tw = g.measureText(t).width; if (id) boxes[id] = { x: cx, y: cy - size * 0.76, w: tw, h: size * 0.84 }; cx += tw; } cy += size * lhK; }
+  return { size, boxes, bottom: cy - size * lhK };
+}
+function rotulo(s, y = 150, col = MU) { g.font = '700 26px "Geist Mono"'; g.letterSpacing = '3.5px'; g.fillStyle = A; g.fillRect(M, y - 19, 14, 14); g.fillStyle = col; g.fillText(s, M + 32, y); }
+function pagina(i) { g.font = '700 26px "Geist Mono"'; g.letterSpacing = '2px'; g.fillStyle = MU; g.textAlign = 'right'; g.fillText(`${i}/7`, W - M, 150); g.textAlign = 'left'; }
+
+// pseudo-aleatório fixo (o mesmo glitch a cada render)
+let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+// glitch: fatias horizontais deslocadas + uma cópia deslocada em #FF3B1F por baixo; só dentro do retângulo
+function glitch(r, n = 6, amp = 18, pad = 30) {
+  const x = Math.round(r.x - pad), y = Math.round(r.y), w = Math.round(r.w + 2 * pad), h = Math.round(r.h);
+  for (let k = 0; k < n; k++) {
+    const sh = 3 + Math.round(rnd() * h * 0.16), sy = y + Math.round(rnd() * (h - sh)), dx = Math.round((rnd() - 0.5) * 2 * amp);
+    const im = g.getImageData(x, sy, w, sh);
+    g.fillStyle = INK; g.fillRect(x, sy, w, sh); g.putImageData(im, x + dx, sy);
+    if (k % 2 === 0) { // fantasma em #FF3B1F só nos pixels claros da fatia (texto branco), deslocado
+      const t = document.createElement('canvas'); t.width = w; t.height = sh; const tx = t.getContext('2d'), red = tx.createImageData(w, sh), d = im.data, e = red.data;
+      for (let i = 0; i < d.length; i += 4) if (d[i + 1] > 150) { e[i] = 255; e[i + 1] = 59; e[i + 2] = 31; e[i + 3] = 230; }
+      tx.putImageData(red, 0, 0); g.drawImage(t, x + dx + (dx < 0 ? 9 : -9), sy);
+    }
+  }
+}
+
+// foto: recorte (sx,sy,sw,sh) da foto -> retângulo de destino; escurece, contraste e nitidez leve (as fotos são webp pequenos)
+function tratar(img, [sx, sy, sw, sh], dw, dh, o = {}) {
+  const t = document.createElement('canvas'); t.width = dw; t.height = dh; const x = t.getContext('2d');
+  x.imageSmoothingQuality = 'high'; x.filter = `brightness(${o.b ?? 0.8}) contrast(${o.k ?? 1.12}) saturate(${o.sat ?? 0.95})`; x.drawImage(img, sx, sy, sw, sh, 0, 0, dw, dh); x.filter = 'none';
+  const amt = o.sharp ?? 0.55; if (amt > 0) { // unsharp mask
+    const b = document.createElement('canvas'); b.width = dw; b.height = dh; const bx = b.getContext('2d'); bx.filter = 'blur(1.6px)'; bx.drawImage(t, 0, 0);
+    const a = x.getImageData(0, 0, dw, dh), bl = bx.getImageData(0, 0, dw, dh).data, d = a.data;
+    for (let i = 0; i < d.length; i += 4) for (let k = 0; k < 3; k++) d[i + k] = d[i + k] + amt * (d[i + k] - bl[i + k]);
+    x.putImageData(a, 0, 0);
+  }
+  return t;
+}
+// moldura: borda reta off-white, sem sombra nem canto arredondado; rot em graus
+function moldura(t, cx, cy, o = {}) {
+  const bw = o.borda ?? 8; g.save(); g.translate(cx, cy); g.rotate((o.rot || 0) * Math.PI / 180); g.globalAlpha = o.alpha ?? 1;
+  g.fillStyle = o.cor || P; g.fillRect(-t.width / 2 - bw, -t.height / 2 - bw, t.width + 2 * bw, t.height + 2 * bw);
+  g.drawImage(t, -t.width / 2, -t.height / 2); g.restore();
+}
+const load = src => new Promise((ok, err) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => err(new Error('imagem ' + src)); i.src = src; });
+
+const SLIDES = {
+  async 1() { // capa: objeto + marco, foto 1 nos 2/3 de baixo
+    const f = await load('/WillStation/fotos/willstation_1.webp');
+    const y0 = 480; // foto até a borda de baixo, sangrando na largura
+    g.drawImage(tratar(f, [0, 236, 680, 548], W, H - y0, { b: 0.72, k: 1.18, sharp: 0.5 }), 0, y0);
+    rotulo('WILL STATION'); pagina(1);
+    const h = bloco([[['Montei este fliperama', P]], [['em 3 meses.', P]]], M, 268, 96, 1.0);
+    bloco([[['Ele roda Super Mario.', A]]], M, h.bottom + 92, 54, 1, { w: 800 });
+  },
+  async 2() { // a pergunta, glitch leve em "TI"
+    pagina(2);
+    bloco([[['O que é', P]], [['engenharia?', P]]], M, 470, 140, 1.0);
+    const r = bloco([[['E o que é ', A], ['TI', A, 'ti'], ['?', A]]], M, 790, 140, 1.0);
+    glitch(r.boxes.ti, 4, 9, 6);
+    bloco([[['Foi montando isso que eu descobri.', MU]]], M, 1000, 44, 1, { w: 500 });
+  },
+  async 3() { // a virada (só a linha 2, decisão do William)
+    pagina(3);
+    bloco([[['Descobri que', P]], [['não é só arrumar', P]], [['impressora', A], ['.', P]]], M, 560, 128, 1.02);
+  },
+  async 4() { // o que tinha dentro: foto 3 (terminal) em moldura, -2°
+    pagina(4);
+    const h = bloco([[['Por dentro: Linux,', P]], [['RetroPie e um ', P], ['Arduino', A], ['.', P]]], M, 262, 80, 1.04);
+    const f = await load('/WillStation/fotos/willstation_3.webp');
+    const t = tratar(f, [0, 0, 737, 430], 800, Math.round(800 * 430 / 737), { b: 0.78, k: 1.1, sharp: 0.45 });
+    moldura(t, W / 2, h.bottom + 70 + t.height / 2, { rot: -2 });
+    const itens = ['Shield Joystick', 'Sistema Linux', 'Emulador RetroPie', 'Arduino Uno R3', 'cabo macho-fêmea', 'Raspberry que já vinha com tela', 'linhas e linhas de código'];
+    let y = h.bottom + 70 + t.height + 104;
+    g.font = '500 30px "Geist Mono"'; g.letterSpacing = '0.6px';
+    for (const s of itens) { g.fillStyle = A; g.fillRect(M, y - 13, 10, 10); g.fillStyle = P; g.fillText(s, M + 30, y); y += 44; }
+  },
+  async 5() { // o processo: foto 2 cortada ao meio, traço vermelho entre as metades
+    pagina(5);
+    const h = bloco([[['Monta aqui.', P]], [['Desmonta lá.', P]]], M, 268, 112, 1.0);
+    bloco([[['Erro no código. Ponto e vírgula.', MU]]], M, h.bottom + 76, 40, 1, { w: 500 });
+    const f = await load('/WillStation/fotos/willstation_2.webp');
+    // largura útil toda (CW=900); recorte de 563 px de largura na foto -> ampliação 1,6x no máximo; alturas somam 740 e o fim cai em H-M
+    const wd = CW, top = [152, 118, 563, 240], bot = [32, 676, 563, 222];
+    const ta = tratar(f, top, wd, Math.round(wd * top[3] / top[2]), { b: 0.85, k: 1.08, sharp: 0.5 });
+    const tb = tratar(f, bot, wd, Math.round(wd * bot[3] / bot[2]), { b: 0.8, k: 1.08, sharp: 0.5 });
+    let y = h.bottom + 112; g.drawImage(ta, M, y); y += ta.height;
+    g.fillStyle = A; g.fillRect(M, y + 10, CW, 8); y += 28; g.drawImage(tb, M, y);
+  },
+  async 6() { // o choque: raio geométrico #FF3B1F, glitch na virada entre as linhas
+    pagina(6);
+    g.save(); g.translate(805, 190); g.scale(1.1, 1.1); g.fillStyle = A; g.beginPath();
+    [[70, 0], [150, 0], [105, 105], [160, 105], [30, 290], [62, 150], [10, 150]].forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill(); g.restore();
+    const a = bloco([[['Mexi com curto-circuito.', P]], [['Tomei choque.', P]]], M, 640, 72, 1.08, { w: 800 });
+    const b = bloco([[['Foi o meu choque', P]], [['de realidade.', P]]], M, a.bottom + 210, 128, 1.0);
+    glitch({ x: M, y: a.bottom - 40, w: 760, h: 170 }, 9, 22, 20); // pega o pé da linha 1 e o topo da linha 2
+  },
+  async 7() { // fecho: sentido + Bit pequeno (pose seca), foto 1 pequena e apagada
+    pagina(7);
+    const f = await load('/WillStation/fotos/willstation_1.webp');
+    const t = tratar(f, [40, 230, 580, 560], 300, 290, { b: 0.9, k: 1.05, sharp: 0.2 });
+    moldura(t, W - M - 158, 380, { alpha: 0.32, borda: 6 });
+    bloco([[['Foi aí que eu entendi', P]], [['a diferença entre', P]], [['engenharia e TI.', P]]], M, 700, 96, 1.04);
+    const bit = BitArt.cutout(await load('/Marca/bit/bit_pensando.png')); // pose seca, a mesma do fecho do carrossel do Mario
+    BitArt.draw(g, bit, W - M - 80, H - M, 230);
+    g.font = '500 32px "Geist Mono"'; g.letterSpacing = '0.6px'; g.fillStyle = P;
+    g.fillText('"Peças devolvidas.', M, 1150); g.fillText('Ficaram as linhas de código."', M, 1194);
+    g.font = '700 26px "Geist Mono"'; g.letterSpacing = '3px'; g.fillStyle = A; g.fillText('BIT', M, 1250);
+  },
+};
+(async () => {
+  await loadBrandFonts();
+  await Promise.all(['500 30px "Geist Mono"', '700 26px "Geist Mono"'].map(f => document.fonts.load(f, 'ÁÉÍçãõê/0123456789'))); await document.fonts.ready;
+  await new Promise(r => setTimeout(r, 400)); // sem esta pausa o canvas ainda desenha o 1º texto mono com a Geist comum
+  g.fillStyle = INK; g.fillRect(0, 0, W, H);
+  await SLIDES[S](); grain(g, W, H, 0.08);
+  // ?save=1: grava o PNG exato do canvas em Semanal/semana-2026-10-05 (POST /save do serve.ps1), sem depender do tempo do screenshot
+  if (q.has('save')) await fetch(`/save?dir=semana-2026-10-05&name=Sex09_Instagram_WillStation_${S}.png`, { method: 'POST', body: await new Promise(r => c.toBlob(r, 'image/png')) });
+  document.title = 'ready';
+})().catch(e => { document.title = 'ERROR ' + e.message; g.fillStyle = 'red'; g.font = '40px sans-serif'; g.fillText('ERRO ' + e.message, 40, 80); });
+</script></body></html>

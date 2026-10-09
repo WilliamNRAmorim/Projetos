@@ -5,7 +5,7 @@
 // - mix em -14 LUFS / -1 dBTP medidos DEPOIS do AAC (BS.1770-4, true peak 4x), erro de pico por evento medido em stem isolado codificado.
 // Uso: AudioKit.render({ prefixo, W, H, FPS, DUR, frame(g, t), eventos: [{ nome, tipo, t, nivel, visual, semente?, dur?, folha? }], extra? })
 window.AudioKit = (() => {
-  const SR = 48000, ALVO_LUFS = -14, TETO_LIMITADOR = -1.5, BITRATE = 192000;
+  const SR = 48000, ALVO_LUFS = -14, TETO_LIMITADOR = -2.0, BITRATE = 192000;
   const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), dB = v => 20 * Math.log10(v);
   const seed = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 
@@ -14,9 +14,9 @@ window.AudioKit = (() => {
   async function sintetiza(tipo, o = {}) {
     const dur = { clique: 0.15, impacto: 0.5, whoosh: 0.65, tique: 0.04, swooshDesce: o.dur || 0.55 }[tipo], ac = new OfflineAudioContext(1, Math.ceil(dur * SR), SR), s = o.semente || 0;
     if (tipo === 'clique') {
-      const n = ruido(ac, dur, 11 + s), bp = ac.createBiquadFilter(), g1 = ac.createGain(); bp.type = 'bandpass'; bp.frequency.value = 3500; bp.Q.value = 1.2;
+      const n = ruido(ac, dur, 11 + s), bp = ac.createBiquadFilter(), g1 = ac.createGain(); bp.type = 'bandpass'; bp.frequency.value = o.freq ? o.freq * 1.6 : 3500; bp.Q.value = 1.2; // o.freq (opcional): afinação do estalo
       g1.gain.setValueAtTime(0, 0); g1.gain.linearRampToValueAtTime(1, 0.0015); g1.gain.exponentialRampToValueAtTime(0.001, 0.05);
-      const os = ac.createOscillator(), g2 = ac.createGain(); os.frequency.value = 2200; g2.gain.setValueAtTime(0, 0); g2.gain.linearRampToValueAtTime(0.5, 0.001); g2.gain.exponentialRampToValueAtTime(0.001, 0.07);
+      const os = ac.createOscillator(), g2 = ac.createGain(); os.frequency.value = o.freq || 2200; g2.gain.setValueAtTime(0, 0); g2.gain.linearRampToValueAtTime(0.5, 0.001); g2.gain.exponentialRampToValueAtTime(0.001, 0.07);
       n.connect(bp).connect(g1).connect(ac.destination); os.connect(g2).connect(ac.destination); n.start(0); os.start(0);
     } else if (tipo === 'impacto') {
       const os = ac.createOscillator(), g1 = ac.createGain(); os.frequency.setValueAtTime(150, 0); os.frequency.exponentialRampToValueAtTime(42, 0.18);
@@ -35,11 +35,12 @@ window.AudioKit = (() => {
       g1.gain.setValueAtTime(0.001, 0); g1.gain.exponentialRampToValueAtTime(1, P); g1.gain.linearRampToValueAtTime(0, P + 0.07);
       const os = ac.createOscillator(), g2 = ac.createGain(); os.type = 'triangle'; os.frequency.setValueAtTime(1100, 0); os.frequency.exponentialRampToValueAtTime(170, P);
       g2.gain.setValueAtTime(0.0005, 0); g2.gain.exponentialRampToValueAtTime(0.35, P); g2.gain.linearRampToValueAtTime(0, P + 0.07);
+      const ck = ac.createOscillator(), g3 = ac.createGain(); ck.frequency.value = 900; g3.gain.setValueAtTime(0, 0); g3.gain.setValueAtTime(0, P - 0.0008); g3.gain.linearRampToValueAtTime(1.6, P); g3.gain.exponentialRampToValueAtTime(0.001, P + 0.012); ck.connect(g3).connect(ac.destination); ck.start(0); // reel30: transiente de chegada no pico (o pico de ruído puro mudava de lugar no AAC)
       n.connect(bp).connect(g1).connect(ac.destination); os.connect(g2).connect(ac.destination); n.start(0); os.start(0);
     } else if (tipo === 'tique') { // quique do contato: estalo curto e agudo
       const n = ruido(ac, dur, 55 + s), hp = ac.createBiquadFilter(), g1 = ac.createGain(); hp.type = 'highpass'; hp.frequency.value = 4500;
       g1.gain.setValueAtTime(0, 0); g1.gain.linearRampToValueAtTime(1, 0.0008); g1.gain.exponentialRampToValueAtTime(0.001, 0.009);
-      const os = ac.createOscillator(), g2 = ac.createGain(); os.frequency.value = 3600 + 400 * seed(s + 7)(); g2.gain.setValueAtTime(0, 0); g2.gain.linearRampToValueAtTime(0.35, 0.0006); g2.gain.exponentialRampToValueAtTime(0.001, 0.014);
+      const os = ac.createOscillator(), g2 = ac.createGain(); os.frequency.value = o.freq || 3600 + 400 * seed(s + 7)(); g2.gain.setValueAtTime(0, 0); g2.gain.linearRampToValueAtTime(0.35, 0.0006); g2.gain.exponentialRampToValueAtTime(0.001, 0.014);
       n.connect(hp).connect(g1).connect(ac.destination); os.connect(g2).connect(ac.destination); n.start(0); os.start(0);
     } else throw new Error('tipo de efeito desconhecido: ' + tipo);
     return (await ac.startRendering()).getChannelData(0).slice();
@@ -99,7 +100,7 @@ window.AudioKit = (() => {
     for (let i = 0; i < N; i += 1024) { const n = Math.min(1024, N - i), d = new Float32Array(n * 2); d.set(L.subarray(i, i + n), 0); d.set(R.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
     if (video) {
       const { W, H, FPS, DUR, frame } = video, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
-      const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 3.2e6, framerate: FPS });
+      const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }); ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: video.bitrate || 3.2e6, framerate: FPS });
       for (let f = 0; f < Math.round(DUR * FPS); f++) { frame(g, f / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS) }); ve.encode(vf, { keyFrame: f % 60 === 0 }); vf.close(); if (ve.encodeQueueSize > 10) await new Promise(r => setTimeout(r, 5)); document.title = `video ${f}`; }
       await ve.flush();
     }
@@ -130,9 +131,16 @@ window.AudioKit = (() => {
     const sfx = new Float32Array(N); for (const e of EV) for (let i = 0; i < e._x.length; i++) { const j = e.inicioAmostra + i; if (j >= 0 && j < N) sfx[j] += e._x[i]; }
     // 2) trilha: 0-DUR s de stems/music.wav, entrada 0,05 s e saída 0,4 s, cama em -16 LUFS, depois ducking
     const mus = await new OfflineAudioContext(2, SR, SR).decodeAudioData(await (await fetch('/w/stems/music.wav')).arrayBuffer());
-    const m = [0, 1].map(c => mus.getChannelData(Math.min(c, mus.numberOfChannels - 1)).slice(0, N));
-    for (let i = 0; i < N; i++) { const t = i / SR, f = Math.min(1, t / 0.05, (DUR - t) / 0.4); m[0][i] *= f; m[1][i] *= f; }
-    R.trilha = { arquivo: 'stems/music.wav', trecho: `0-${DUR} s`, lufsOriginal: +lufs(m).toFixed(2) };
+    let m;
+    if (cfg.trilha) { // opcional (reel30): cfg.trilha.pos(t) = posição na música em s (null = silêncio) e cfg.trilha.ganho(t) = envelope; interpolação linear
+      const src = [0, 1].map(c => mus.getChannelData(Math.min(c, mus.numberOfChannels - 1))), msr = mus.sampleRate; m = [new Float32Array(N), new Float32Array(N)];
+      for (let i = 0; i < N; i++) { const t = i / SR, p = cfg.trilha.pos(t); if (p == null) continue; const x = p * msr, j = Math.floor(x), fr = x - j, gn = cfg.trilha.ganho(t); if (j + 1 >= src[0].length) continue;
+        for (let c = 0; c < 2; c++) m[c][i] = (src[c][j] * (1 - fr) + src[c][j + 1] * fr) * gn; }
+    } else {
+      m = [0, 1].map(c => mus.getChannelData(Math.min(c, mus.numberOfChannels - 1)).slice(0, N));
+      for (let i = 0; i < N; i++) { const t = i / SR, f = Math.min(1, t / 0.05, (DUR - t) / 0.4); m[0][i] *= f; m[1][i] *= f; }
+    }
+    R.trilha = { arquivo: 'stems/music.wav', trecho: cfg.trilha ? cfg.trilha.descricao : `0-${DUR} s`, lufsOriginal: +lufs(m).toFixed(2) };
     const gm = Math.pow(10, (-16 - R.trilha.lufsOriginal) / 20); m.forEach(c => { for (let i = 0; i < N; i++) c[i] *= gm; }); R.trilha.ganhoCama_dB = +dB(gm).toFixed(2);
     const gd = ducking(sfx, DUCK.maxDb, DUCK.ref); m.forEach(c => { for (let i = 0; i < N; i++) c[i] *= gd[i]; });
     R.trilha.lufsDepoisDoDucking = +lufs(m).toFixed(2);
@@ -148,7 +156,7 @@ window.AudioKit = (() => {
       final = { g, lim }; if (Math.abs(L - ALVO_LUFS) <= 0.1 && tp <= -1) break; ganho += ALVO_LUFS - L;
     }
     // 4) render final com vídeo; medido no mp4 decodificado
-    const mp4 = await codificaAAC(final.lim.out, N, { W, H, FPS, DUR, frame });
+    const mp4 = await codificaAAC(final.lim.out, N, { W, H, FPS, DUR, frame, bitrate: cfg.bitrateVideo });
     await salvar(`${prefixo}_30fps.mp4`, new Blob([mp4]));
     const dec = await decodifica(mp4);
     R.final = { arquivo: `${prefixo}_30fps.mp4`, bytes: mp4.byteLength, srDecodificado: dec.sr, amostrasDecodificadas: dec.len, amostrasEsperadas: N,
@@ -170,7 +178,9 @@ window.AudioKit = (() => {
     R.resumo = { eventos: EV.length, maxErroPicoAmostraDepoisDoAAC_ms: Math.max(...EV.map(e => Math.abs(e.erroPicoAmostra_ms_depoisDoAAC))), maxReducaoLimitadorNoPicoDeEfeito_dB: Math.min(...EV.map(e => e.reducaoLimitadorNoPico_dB)) };
     R.video = { fps: FPS, quadros: Math.round(DUR * FPS), nota: 'eventos em quadro inteiro; 1 quadro = 33,3 ms' };
     // 6) folha: 4 quadros por evento marcado (f-2..f+1) + forma de onda decodificada ±200 ms (vermelho = alvo)
-    const FE = EV.filter(e => e.folha !== false), sw = 270, sh = 480, wh = 150, sheet = document.createElement('canvas'); sheet.width = sw * 4; sheet.height = (sh + wh) * FE.length; const sg = sheet.getContext('2d');
+    const FEtodos = EV.filter(e => e.folha !== false), porParte = cfg.folhaPorParte || FEtodos.length, sw = 270, sh = 480, wh = 150; // cfg.folhaPorParte (opcional): divide a folha em arquivos _1, _2...
+    for (let parte = 0; parte * porParte < FEtodos.length; parte++) {
+    const FE = FEtodos.slice(parte * porParte, (parte + 1) * porParte), sheet = document.createElement('canvas'); sheet.width = sw * 4; sheet.height = (sh + wh) * FE.length; const sg = sheet.getContext('2d');
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cg = cv.getContext('2d');
     sg.fillStyle = BRAND.ink; sg.fillRect(0, 0, sheet.width, sheet.height);
     FE.forEach((e, r) => {
@@ -183,7 +193,9 @@ window.AudioKit = (() => {
       sg.font = '700 18px "Geist Mono"'; sg.fillStyle = BRAND.paper;
       sg.fillText(`${e.nome}  alvo ${e.t.toFixed(3)} s  erro pico ${e.erroPicoAmostra_ms_depoisDoAAC} ms  limitador ${e.reducaoLimitadorNoPico_dB} dB  trilha ${e.duckingTrilhaNoPico_dB} dB`, 8, y0 + sh + 22);
     });
-    await salvar(`${prefixo}_folha_eventos.png`, await new Promise(r => sheet.toBlob(r, 'image/png')));
+    await salvar(porParte < FEtodos.length ? `${prefixo}_folha_eventos_${parte + 1}.png` : `${prefixo}_folha_eventos.png`, await new Promise(r => sheet.toBlob(r, 'image/png')));
+    }
+    if (cfg.depois) await cfg.depois(R, dec, final); // opcional (reel30): medições extras no mp4 decodificado antes de gravar o json
     await salvar(`${prefixo}_mix_preAAC.wav`, new Blob([wav(final.lim.out)]));
     await salvar(`${prefixo}_medicoes.json`, new Blob([JSON.stringify(R, null, 2)]));
     document.body.insertAdjacentHTML('beforeend', `<pre>${JSON.stringify(R.final)}</pre>`); document.title = 'DONE';

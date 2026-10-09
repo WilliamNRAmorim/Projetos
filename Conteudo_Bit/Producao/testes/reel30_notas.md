@@ -7,9 +7,9 @@ Nada publicado, nada enviado, sem commit. Produtor-de-artes (Opus 5.5).
 - `reel30_30fps.mp4`: 1080x1920, 30 fps, 900 quadros, H.264 8 Mbps + AAC 192 kbps.
 - `reel30_medicoes.json` (áudio depois do AAC, por evento) e `reel30_auditoria.json` (vídeo sem codec, quadro a quadro).
 - Folhas: `reel30_folha_compasso.png`, `_compasso_safe.png`, `_compasso_meio_safe.png`, `reel30_8quadros.png`, `reel30_contato_1..4.png` (120 quadros, 1 a cada 0,25 s), `reel30_folha_eventos_1..9.png` (50 eventos, 4 quadros + forma de onda), `reel30_mix_preAAC.wav`.
-- `reel30_bit_rig.js` e `reel30_audio_kit.js`: cópias com extensões só do reel30. Os compartilhados `bit_rig.js` e `testes/audio_kit.js` foram restaurados ao commit (git status limpo), então os testes 3, 4 e 5 v2 usam o mesmo código de antes.
-  - `reel30_bit_rig.js`: expressão `neutro`; `face.lid`; pose `aponta`; `o.poseB/o.mix` (mistura de poses); `o.tilt` (inclina o tronco); `o.amp` (0 = parado: balanço, respiração e antena).
-  - `reel30_audio_kit.js`: `o.freq` no clique e no tique; `cfg.trilha` (posição e envelope da música); `cfg.bitrateVideo`; `cfg.folhaPorParte`; `cfg.depois`; teto do limitador -2,0 dBTP (era -1,5); transiente de 0,8 ms no pico do swoosh descendente.
+- `bit_rig.js` e `testes/audio_kit.js` (compartilhados) agora incluem as extensões do reel30, todas opcionais. As cópias `reel30_*` foram removidas (08/10/2026). Mudanças de comportamento padrão: teto do limitador em -2,0 dBTP e transiente de 0,8 ms no pico do swoosh descendente. Os testes 3, 4 e 5 v2 têm os mp4 já renderizados antes disso; se forem renderizados de novo, vão usar o código novo.
+  - (extensão) `bit_rig.js`: expressão `neutro`; `face.lid`; pose `aponta`; `o.poseB/o.mix` (mistura de poses); `o.tilt` (inclina o tronco); `o.amp` (0 = parado: balanço, respiração e antena).
+  - (extensão) `audio_kit.js`: `o.freq` no clique e no tique; `cfg.trilha` (posição e envelope da música); `cfg.bitrateVideo`; `cfg.folhaPorParte`; `cfg.depois`; teto do limitador -2,0 dBTP (era -1,5); transiente de 0,8 ms no pico do swoosh descendente.
 
 ## Medições finais
 - Vídeo, sem codec: quadro 0 x quadro 899 = 0 px, com e sem grão; render(0) x render(30) = 0 px. Respiro 27,6-28,0 s (13 quadros) parado, 0 px. Pureza (quadro 150 fora de ordem) 0 px.

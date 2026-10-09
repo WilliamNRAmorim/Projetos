@@ -45,6 +45,7 @@
     surpreso: { look: [0, 0], wide: true, browR: 'alta', browL: 'alta', mouth: 'o' },
     comemorando: { look: [0, 3], mouth: 'grande', blush: true },
     confuso: { look: [11, 4], lid: 0.42, browL: 'baixa', browR: 'alta', mouth: 'onda' },
+    neutro: { look: [0, 0], mouth: 'reta' }, // reel30: repouso, boca fechada (linha), sem bochecha; olhar e pálpebra vêm de face.look/face.lid
   };
   const EYE = [[660, 362], [750, 362]];
   function eye(ctx, cx, cy, e, look, blink) {
@@ -77,7 +78,7 @@
     else { ctx.beginPath(); ctx.moveTo(mx - 30, my); ctx.quadraticCurveTo(mx, my + 28, mx + 30, my); ctx.stroke(); }
   }
   function face(ctx, t, f) {
-    const e = EX[f.expr] || EX.acenando, look = f.look || [e.look ? e.look[0] + Math.sin(t * 1.3) * 3 : 0, e.look ? e.look[1] : 0], blink = f.blink || 0;
+    const e0 = EX[f.expr] || EX.acenando, e = f.lid != null ? { ...e0, lid: f.lid } : e0, look = f.look || [e.look ? e.look[0] + Math.sin(t * 1.3) * 3 : 0, e.look ? e.look[1] : 0], blink = f.blink || 0;
     if (e.blush) { ctx.fillStyle = 'rgba(255,140,140,.5)'; for (const x of [612, 798]) { ctx.beginPath(); ctx.ellipse(x, 425, 24, 13, 0, 0, 7); ctx.fill(); } }
     EYE.forEach(([cx, cy], i) => { eye(ctx, cx, cy, e, look, blink); brow(ctx, cx, cy, i ? e.browR : e.browL, i ? 1 : -1); });
     mouth(ctx, e.mouth);
@@ -93,19 +94,23 @@
     tranquilo: t => ({ L: [[548, 470], [500, 545], [505, 610], 0.3, false], R: [[862, 470], [910, 545], [905, 610], -0.3, false] }),
     tchau: t => { const w = Math.sin(t * Math.PI * 2 * 2) * 0.35; return { L: [[548, 470], [500, 545], [505, 610], 0.3, false], R: [[862, 455], [950 + 20 * w, 400], [960 + 60 * w, 300], -0.2 + w, true] }; },
     comemora: t => { const b = Math.sin(t * Math.PI * 4) * 12; return { L: [[548, 455], [470, 380], [470, 280 + b], 0.25, true], R: [[862, 455], [940, 380], [940, 280 + b], -0.25, true] }; },
+    aponta: t => ({ L: [[548, 470], [462, 438], [388, 392], -1.05, false], R: [[862, 470], [910, 545], [905, 610], -0.3, false] }), // braço esquerdo (lado do leitor) estendido, mão fechada
   };
+  const lerpArm = (a, b, k) => [0, 1, 2].map(i => [a[i][0] + (b[i][0] - a[i][0]) * k, a[i][1] + (b[i][1] - a[i][1]) * k]).concat([a[3] + (b[3] - a[3]) * k, k < 0.5 ? a[4] : b[4]]);
+  // opcionais (reel30): o.poseB + o.mix (0..1) misturam duas poses; o.tilt (rad) inclina o tronco no quadril; o.amp (0..1) escala balanço, respiração e antena (0 = parado)
   R.draw = (ctx, t, o = {}) => {
-    const { x = 0, y = 0, s = 1, pose = 'tranquilo', ring = 0 } = o;
-    const bob = Math.sin(t * Math.PI * 2) * 7, sq = 1 + Math.sin(t * Math.PI * 2 + 0.6) * 0.015, P = POSES[pose](t);
+    const { x = 0, y = 0, s = 1, pose = 'tranquilo', ring = 0 } = o, amp = o.amp ?? 1;
+    const bob = Math.sin(t * Math.PI * 2) * 7 * amp, sq = 1 + Math.sin(t * Math.PI * 2 + 0.6) * 0.015 * amp, P0 = POSES[pose](t);
+    const P = o.poseB && o.mix ? (Q => ({ L: lerpArm(P0.L, Q.L, o.mix), R: lerpArm(P0.R, Q.R, o.mix) }))(POSES[o.poseB](t)) : P0;
     ctx.save(); ctx.translate(x, y); ctx.scale(s, s); ctx.translate(-705, -770);   // origem = entre os pés
     // pernas e pés (não balançam com o corpo)
     for (const [hx, fx] of [[650, 630], [760, 780]]) { tube(ctx, [[hx, 620], [hx, 690], [fx, 735]], 26); ctx.beginPath(); ctx.ellipse(fx + (fx < 705 ? -10 : 10), 752, 44, 22, 0, 0, 7); fill(ctx, R.col.body); }
-    ctx.translate(0, bob); ctx.translate(705, 630); ctx.scale(1 / sq, sq); ctx.translate(-705, -630);
+    ctx.translate(0, bob); ctx.translate(705, 630); ctx.scale(1 / sq, sq); if (o.tilt) ctx.rotate(o.tilt); ctx.translate(-705, -630);
     // braço de trás, corpo, antena (balança com atraso), rosto, braço da frente
     const arm = a => { tube(ctx, [a[0], a[1], a[2]], 24); hand(ctx, a[2][0], a[2][1], a[3], a[4]); };
     arm(P.L);
     ctx.drawImage(R.body, 0, 0);
-    ctx.save(); ctx.translate(PIVOT.x, PIVOT.y); ctx.rotate(Math.sin(t * Math.PI * 2 - 0.9) * 0.1); ctx.translate(-PIVOT.x, -PIVOT.y); ctx.drawImage(R.antenna, 0, 0); gmsRing(ctx, t, ring); ctx.restore();
+    ctx.save(); ctx.translate(PIVOT.x, PIVOT.y); ctx.rotate(Math.sin(t * Math.PI * 2 - 0.9) * 0.1 * amp); ctx.translate(-PIVOT.x, -PIVOT.y); ctx.drawImage(R.antenna, 0, 0); gmsRing(ctx, t, ring); ctx.restore();
     face(ctx, t, o.face || {});
     arm(P.R);
     ctx.restore();
