@@ -48,7 +48,7 @@ Também derivados: grade (punch-in, encolhe, volta e desce) e esvaziamento em ca
 - Bit em monocromático (filtro cinza): o corpo vermelho-laranja seria um 2º vermelho em todo quadro. Sem o anel do GMS, porque ele gira e quebraria o quadro 0 = quadro 899.
 - Joinha (8,0 s) não existe no rig: usei a expressão `feliz` de 8,0 a 8,9 s.
 - Trilha: na análise, a pulsação mais forte de music.wav é de 1 s (60 BPM, compatível com o meio-tempo de 120 BPM). Tempo forte em 1,996 s. Para 0-27,6 s uso o trecho 3,996-31,596 s; para 28-30 s, o trecho 1,996-3,996 s, o que deixa a música contínua na costura.
-- Aprovações do roteiro continuam pendentes: "DOIS DE FORA. ANOTADO", "MEU SISTEMA" (paráfrase) e nomes de produto na tela.
+- Aprovações do roteiro continuam pendentes: "DOIS DE FORA, ANOTADO", "MEU SISTEMA" (paráfrase) e nomes de produto na tela.
 
 ## Limitações que restam
 - Costura do áudio depois do AAC: salto de 0,0595 da última para a primeira amostra, contra 0,0303 entre vizinhas. Antes do AAC é contínuo (0,0208). É borda do codificador e pode dar um clique leve no loop do app.

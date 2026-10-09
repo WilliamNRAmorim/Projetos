@@ -45,14 +45,14 @@ Não uso "9 meses", "1 a 2 dias" nem a frase "Não criamos o dado": ficam para o
 | 16,0-19,0 | C9-C10 (1ª) | Prova 1: a grade completa, com os estados todos; ao lado, soma mono 6 + 1 + 2 + 2 = 11, calculada na tela a partir dos estados (não digitada) | rótulo mono: ANÁLISE DO TCC EM ENGENHARIA DE COMPUTAÇÃO | Em repouso |
 | 19,0-22,0 | C10 (2ª) - C11 | Prova 2: a grade encolhe para o canto superior; quatro linhas mono entram, uma por batida | 100% LOW-CODE / POWER APPS · MICROSOFT LISTS / POWER AUTOMATE · POWER BI / RESTRIÇÃO, NÃO PREFERÊNCIA | Inclina a cabeça |
 | 22,0-26,0 | C12-C13 | Fechamento: grade volta ao centro; frase em duas linhas, DEIXAR DE FORA em #FF3B1F | SABER O QUE DEIXAR DE FORA / TAMBÉM FOI ENGENHARIA | Olho semicerrado |
-| 24,0-26,0 | C13 | Fecho seco do Bit, em balão reto, mute | DOIS DE FORA. ANOTADO (tom do Bit, não é fato; aprovar) | Único momento de destaque do Bit |
+| 24,0-26,0 | C13 | Fecho seco do Bit, em balão reto, mute | DOIS DE FORA, ANOTADO (tom do Bit, não é fato; aprovar) | Único momento de destaque do Bit |
 | 26,0-27,6 | C14 | O balão sai; a grade desce de volta ao estado do quadro 0 (todos os 11 viram contorno mute, em cascata inversa) | | Volta à pose de repouso do C1 |
 | 27,6-28,0 | C14 | Respiro de 0,4 s: tudo parado | | Parado |
 | 28,0-30,0 | C15 | Loop: o texto do gancho entra e fica; quadro 30 = quadro 0 | MEU SISTEMA NÃO COBRE TUDO | Igual ao C1 |
 
 Observações:
 - Cada ideia fica 2 s ou mais, exceto os cortes de texto de 0,5 s que são trocas de máscara, não ideias novas.
-- Ponto final: o balão do Bit tem "DOIS DE FORA. ANOTADO" com um ponto no meio da frase, que é pontuação interna; se for lida como ponto final, trocar por "DOIS DE FORA, ANOTADO".
+- Ponto final: o balão do Bit tem "DOIS DE FORA, ANOTADO" com um ponto no meio da frase, que é pontuação interna; se for lida como ponto final, trocar por "DOIS DE FORA, ANOTADO".
 - Loop: render(0) == render(30): mesma posição da grade, mesmo estado dos quadrados, mesma pose do Bit; conferir diferença de pixels = 0 antes do grão.
 
 ## Mapa de som (eventos por compasso/batida; picos exatos, não o início)
@@ -96,7 +96,7 @@ TikTok: "meu sistema não cobre tudo. e eu mostrei onde"
 Hashtags: #engenhariadecomputacao #powerapps #industria40 #manufatura #lowcode
 
 ## Precisa de confirmação do William
-1. Aprovar o fecho do Bit "DOIS DE FORA. ANOTADO" (tom, não é fato) ou trocar.
+1. Aprovar o fecho do Bit "DOIS DE FORA, ANOTADO" (tom, não é fato) ou trocar.
 2. Aprovar "MEU SISTEMA NÃO COBRE TUDO": o texto original diz "Ele não cobre tudo" sobre o GMS; "meu sistema" é a minha paráfrase.
 3. Joinha do Bit em 8,0 s depende de a pose existir no rig (`bit_joinha` está na lista de faltas em `Marca/bit/STATUS.md`); sem a pose, o Bit só mantém o olho aberto.
 4. Nomear Power Apps, Microsoft Lists, Power Automate e Power BI na tela é nome de produto, já usado no post de LinkedIn.
