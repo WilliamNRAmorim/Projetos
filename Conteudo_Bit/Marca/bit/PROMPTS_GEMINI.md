@@ -97,3 +97,51 @@ Mesmo prefixo do item 1, com `bit_acenando.png` como referência e "com a mesma 
 | `bit_bastidores.png` | **Uniforme Bastidores:** capacete de obra amarelo; ele segura uma chave de boca e coça a cabeça, pensativo. |
 
 O uniforme do **GMS** (anel de 8 cores em volta da bolinha da antena) é desenhado no código por cima de qualquer pose, não precisa pedir ao Gemini.
+
+## 7. Vídeos de sexta 09/10 (Apollo 1202, primeiro bug, funciona na minha máquina)
+
+Método aprovado em 08/10: **Bit fantasiado do tema + objetos de cena no traço do Bit, tudo em fundo branco liso**, que eu recorto (`BitArt.cutout`) e reposiciono no layout em código. Não peça a cena inteira (fica genérica). Use a Ficha do personagem + `bit_acenando.png` como referência e UMA imagem por prompt.
+
+Prefixo dos itens 7.1 e 7.2 (Bit):
+> Mantenha EXATAMENTE o mesmo personagem da imagem de referência: robozinho cartoon 2D vermelho-alaranjado, corpo arredondado, antena fina com bolinha vermelha na ponta, olhos grandes brancos com pupila marrom-escura, contorno marrom-escuro, mesma placa trapezoidal de espectro no peito, mesmo traço e sombreado chapado. Corpo inteiro, centralizado, ocupando cerca de 70% da altura, fundo branco liso, sem sombra no chão, sem texto, alta resolução.
+
+Prefixo dos objetos (7.3):
+> Objeto ilustrado em cartoon 2D vetorial no MESMO estilo do personagem Bit: contorno marrom-escuro grosso e uniforme (#5A1E14), cores chapadas com sombreado em 2 tons, sem textura, sem 3D, sem personagem. Centralizado, ocupando cerca de 70% do quadro, fundo branco liso, sem sombra no chão, sem nenhum texto, alta resolução.
+
+### 7.1 Vídeo A · Apollo 11 (Bit astronauta)
+Já existe `bit_astronauta.png` (assustado, suando). Faltam as poses da tensão e da resolução. Complemento de cada uma, **com traje de astronauta branco com detalhes vermelhos e capacete de vidro transparente** (como no `bit_astronauta.png`, a antena sai pelo capacete e a placa de espectro continua no peito):
+
+| Arquivo | Complemento |
+|---|---|
+| `bit_astronauta_alarme.png` | Olhos arregalados, boca em "O", uma mão apontando para um painel fora da imagem (à direita), pose tensa, uma gota de suor. |
+| `bit_astronauta_joinha.png` | Aliviado, de joinha com uma mão, meio sorriso, olhos semicerrados (fecho seco, "missão cumprida"). |
+| `bit_astronauta_flutuando.png` | Flutuando de lado, braços relaxados, olhando para a câmera com cara de "tá tudo sob controle" (pose do "sentido"). |
+| `bit_houston.png` | Sem traje: Bit com um fone de ouvido com microfone, sentado de lado numa cadeira de escritório, olhando para cima, mão no queixo decidindo (cena de Houston). |
+
+### 7.2 Vídeo B · Primeiro bug (Bit detetive)
+| Arquivo | Complemento |
+|---|---|
+| `bit_lupa.png` | Segurando uma lupa grande à frente de um olho (o olho fica enorme atrás da lente), curvado para frente, curioso. |
+| `bit_pinca.png` | Segurando com uma pinça fina uma mariposa pequena e cinza, olhando para ela de perto, uma sobrancelha levantada. |
+
+### 7.3 Objetos de cena (sem personagem)
+| Arquivo | Complemento |
+|---|---|
+| `obj_modulo_lunar.png` | Módulo lunar da Apollo estilo cartoon: corpo octogonal dourado e prateado, quatro pernas de pouso com pratos, escada, janelas triangulares, chama vermelho-alaranjada saindo do motor embaixo. Vista de frente, levemente de cima. |
+| `obj_modulo_lunar_pousado.png` | Mesmo módulo lunar, pousado em um pequeno monte de poeira cinza, SEM chama. |
+| `obj_painel_alarme.png` | Painel de computador retrô dos anos 60 em cartoon: moldura cinza-escura, teclado numérico pequeno, visor retangular escuro com espaço VAZIO (sem números) e uma luz de alarme redonda vermelha acesa. |
+| `obj_mariposa.png` | Mariposa cinza e bege com antenas, asas abertas, vista de cima, simpática e levemente amassada. |
+| `obj_rele.png` | Relé eletromecânico antigo em cartoon: caixa transparente com contatos de metal dourados e uma bobina de cobre, vista de frente. |
+| `obj_caderno.png` | Caderno de registro antigo aberto, folhas amareladas com linhas, SEM texto, com um pedaço de fita adesiva transparente no centro. |
+| `obj_notebook_fogo.png` | Notebook cinza aberto com a tela VAZIA (preta) e pequenas chamas vermelho-alaranjadas saindo do teclado. |
+| `obj_caixa_container.png` | Caixa de papelão fechada com fita e uma pequena bandeirinha vermelha em cima, vista de frente (container do Docker). |
+
+### 7.4 Vídeo C · Funciona na minha máquina (Bit dev)
+| Arquivo | Complemento |
+|---|---|
+| `bit_dev_orgulhoso.png` | Sentado em frente a um notebook cinza (tela vazia virada para a câmera), braços para cima, sorriso grande, orgulhoso. |
+| `bit_dev_alibi.png` | De pé, de braços cruzados, olhando de lado com um meio sorriso culpado, uma gota de suor, como quem inventa desculpa. |
+| `bit_entregando.png` | Segurando com os dois braços esticados uma caixa de papelão fechada, entregando para a câmera, simpático. |
+
+### Como eu uso
+Quando as imagens estiverem em `Marca/bit/` com esses nomes, aviso e re-renderizo os 3 vídeos trocando os desenhos de código (módulo lunar, mariposa, caderno, painel, notebook, caixa) pelas artes do Gemini e o Bit pelas poses certas de cada cena. Se alguma sair torta, peça de novo com "mantenha EXATAMENTE o mesmo personagem da referência". Texto nas imagens: sempre EM BRANCO, eu escrevo no código (o Gemini erra letras).
