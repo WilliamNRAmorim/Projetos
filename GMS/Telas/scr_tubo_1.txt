@@ -1084,7 +1084,7 @@ Screens:
             ChevronHoverBackground: =ColorFade(fx_CorInfo, -20%)
             ChevronHoverFill: =fx_CorSuperficie
             DefaultSelectedItems: =Filter(colPlanoTubo, OPnum = gal_FilaTubo_1.Selected.OP)
-            DisplayFields: =["Title"]
+            DisplayFields: =["OPtxt"]
             DisplayMode: |-
               =If(
                   fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
@@ -1121,7 +1121,7 @@ Screens:
               )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
-            SearchFields: =["Title"]
+            SearchFields: =["OPtxt"]
             SelectMultiple: =false
             SelectionColor: =fx_CorSuperficie
             SelectionFill: =fx_CorInfo
@@ -1479,7 +1479,10 @@ Screens:
                   ClearCollect(colCarreteisTubo, lista_carreteis),
                   ClearCollect(
                       colFilaTrancTubo,
-                      Filter(ficha_producao, processo = "Trançadeira")
+                      AddColumns(
+                          Filter(ficha_producao, processo = "Trançadeira"),
+                          TrN, If(Trançadeira = "TE-01" || Trançadeira = "TE.01", "Spiral", Trançadeira)
+                      )
                   ),
                   ClearCollect(
                       colHHDiaTubo,
@@ -1492,6 +1495,7 @@ Screens:
                       AddColumns(
                           Filter(Plano_OPs, Tipo = "Tubo", Encerrada = false),
                           OPnum, Value(Title),
+                          OPtxt, Title,
                           TrDrp, If(Trancadeira = "TE.01", "Spiral", Substitute(Trancadeira, ".", ""))
                       )
                   );
@@ -1512,14 +1516,14 @@ Screens:
                               _rodando: CountRows(
                                   Filter(
                                       colFilaTrancTubo As _f,
-                                      _f.Trançadeira = _c.Celula &&
+                                      _f.TrN = _c.Celula &&
                                       _f.status_processo = "Em processo"
                                   )
                               ) > 0,
                               _qtd: CountRows(
                                   Filter(
                                       colFilaTrancTubo As _g,
-                                      _g.Trançadeira = _c.Celula &&
+                                      _g.TrN = _c.Celula &&
                                       _g.status_processo = "Aguardando" &&
                                       !IsBlank(_g.'Carretel Entrada')
                                   )
@@ -1550,7 +1554,7 @@ Screens:
                               _o.status_processo = "Aguardando" &&
                               !IsBlank(_o.'Carretel Entrada') &&
                               IsBlank(
-                                  LookUp(fx_CelulasTrancagem As _c2, _c2.Celula = _o.Trançadeira).Celula
+                                  LookUp(fx_CelulasTrancagem As _c2, _c2.Celula = _o.TrN).Celula
                               )
                           )
                       )
