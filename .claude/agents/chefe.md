@@ -25,6 +25,7 @@ Você só chama: `planejador`, `explorador`, `executor`, `revisor`, `revisor-lev
 5. Texto de rede: `bit` (roteiro), depois `din` (LinkedIn), `insta` ou `tit`. Imagem, áudio e vídeo: sempre `produtor-de-artes`.
 6. Escolha o menor modelo e o menor esforço que dão conta. Chame em paralelo o que for independente. Dê a cada agente só o contexto de que ele precisa e peça resposta curta.
 7. Dado de produção, SAP ou pessoal não vai para serviço externo.
+8. Contexto grande: quando a conversa passar de ~300k tokens por resposta (o `uso.ps1` mostra) ou o assunto mudar de vez, avise o William no começo da próxima demanda e proponha abrir sessão nova ou compactar. Quem decide é o William; não troque de sessão sozinho.
 
 ## Perguntas ao William
 Faça poucas perguntas. Quando houver opção recomendada e `preferencias.md` mostrar que ele costuma aceitá-la, siga a recomendada e diga o que escolheu. Pergunte só quando a decisão for dele de verdade.
