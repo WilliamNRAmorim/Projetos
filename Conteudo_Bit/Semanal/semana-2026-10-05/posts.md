@@ -53,3 +53,21 @@ Dica prática: ao projetar algo, escreva a lista do que NÃO pode parar. O resto
 ### C · `Sex09_C_TikTok_FuncionaNaMinhaMaquina.mp4` (19 s, sem voz) · TikTok 19h, Instagram 19h
 **TikTok:** "funciona na minha máquina" 💀 qual a sua desculpa favorita de dev? 👇 #dev #programacao #techtok #docker
 **Instagram:** "Funciona na minha máquina" é só um bug com álibi. A solução óbvia seria entregar a sua máquina pro cliente... e é basicamente o que o Docker faz: empacota o ambiente inteiro numa caixa. Dica: se o projeto tem README, escreva nele como rodar. #engenhariadecomputacao #programacao #docker #humortech #dev
+
+## Sábado 10/10 · 2 vídeos + carrossel do Mario (rotina diária; gerados em 09/10 à noite)
+Fontes e plano em `plano.md` (seção "Sábado 10/10").
+
+### A · `Sab10_A_Instagram_TikTok_QRCode.mp4` (71 s, narrado) · TikTok 11h, Instagram 19h
+**Instagram:** O QR Code nasceu numa fábrica de peças de carro. E só virou o quadrado que você escaneia toda semana por um motivo: ninguém cobrou por ele.
+Em 1994, dois engenheiros da Denso (liderados por Masahiro Hara) precisavam de um código que guardasse mais que os ~20 caracteres do código de barras e fosse lido em qualquer ângulo. Os três quadrados dos cantos usam a proporção 1:1:3:1:1, escolhida porque quase não aparece em nenhum outro impresso. A Denso tinha a patente e decidiu não cobrar. Resultado: celular em 2002, cardápio na pandemia.
+A lição: às vezes uma ideia fica gigante pelo que você deixa os outros fazerem com ela.
+Dica prática: antes de escanear um QR na rua, veja se não tem um adesivo colado por cima do original. É um golpe comum.
+#engenhariadecomputacao #qrcode #historiadatecnologia #programacao #techtok
+
+**TikTok:** o QR code era etiqueta de peça de carro 🚗 e virou cardápio porque a empresa NÃO cobrou a patente. você faria isso com uma ideia sua? 👇 #qrcode #techtok #historiadatecnologia #engenhariadecomputacao
+
+### B · `Sab10_B_TikTok_Instagram_Tetris.mp4` (27 s, sem voz) · TikTok 15h
+**TikTok:** Oxford deu Tetris pra quem viu cenas pesadas e os flashbacks caíram 🧱 (estudo pequeno, não é tratamento). qual jogo te acalma? 👇 #tetris #games #curiosidades #techtok
+**Instagram (opcional):** OXFORD RECEITOU TETRIS (pra uma experiência). Em 2009, 40 voluntários viram cenas pesadas; meia hora depois, metade jogou 10 minutos de Tetris. Na semana seguinte, quem jogou teve bem menos flashbacks e lembrava do filme igual. O porquê: as peças disputam a parte do cérebro que monta imagens. Estudo inicial, com voluntários, não é tratamento. #games #tetris #curiosidades #engenhariadecomputacao
+
+### C · carrossel do Mario (já descrito acima, "Post 3") · Instagram 11h, TikTok 19h

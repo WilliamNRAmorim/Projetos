@@ -45,3 +45,32 @@ O carrossel do Will Station de sexta (Sex09_Instagram_WillStation_*) vem de outr
 - **A (Apollo 11):** alarme 1202 por sobrecarga do computador de guiagem (AGC) a ~5 min do início da descida motorizada; tarefas começavam mais do que terminavam e a memória temporária acabou; o computador reiniciava e descartava tarefas de baixa prioridade; Steve Bales (guiagem, Houston) deu GO; o alarme repetiu; a tripulação não tinha visto o alarme nas simulações; ~2.048 palavras de memória apagável (~4 KB). Fontes: Discover Magazine "Apollo 11's 1202 Alarm Explained"; MIT News 2009 (Apollo Eyles); Science Museum blog "Apollo 11 moon landing: the most difficult moments". Não afirmei "pior que uma calculadora" (não confirmado). Não afirmei a idade de Bales nem causa exata do radar.
 - **B (primeiro bug):** mariposa achada no relé #70, painel F, do Harvard Mark II em 9/9/1947, colada no caderno com a nota "First actual case of bug being found"; hoje no Smithsonian (NMAH). O termo "bug" já era usado antes (carta de Edison, 1878). Não atribuí a nota a ninguém (autoria disputada: Hopper x Bill Burke). Fontes: National Geographic Education "World's First Computer Bug"; Science Notes (9 set).
 - **C:** piada/humor (sem dado). Afirmação técnica: Docker empacota código, bibliotecas e dependências do ambiente num container.
+
+---
+## Sábado 10/10 (rotina diária, gerada em 09/10 à noite)
+Pilares: A = história com arco a partir de fato real (QR Code) · B = fato rápido de games/ciência (Tetris em Oxford), puxando o fim de semana da BGS · C = o **carrossel do Mario** já planejado para hoje (substitui o 3º vídeo, como a regra permite).
+**Métricas 24 h/72 h: não puxadas** (sem login nas plataformas no navegador desta execução). **Benchmark parcial:** TikTok pediu CAPTCHA (não resolvo); Instagram deu 12 posts de #qrcode e depois pediu login. Detalhes em receita.md.
+
+| # | Horário | Arquivo | Tema | Redes |
+|---|---|---|---|---|
+| A | TikTok 11h · Instagram 19h | `Sab10_A_Instagram_TikTok_QRCode.mp4` (71,5 s, narrado, 7,7 MB) | O QR Code nasceu numa fábrica de peças de carro e virou o cardápio do mundo porque a patente ficou aberta | TikTok + Instagram |
+| B | TikTok 15h | `Sab10_B_TikTok_Instagram_Tetris.mp4` (27 s, sem voz, 4,9 MB) | Oxford deu Tetris depois de cenas pesadas e os flashbacks caíram | TikTok (+ Instagram opcional) |
+| C | Instagram 11h · TikTok 19h | `Sab10_Carrossel_*` (já pronto) | Super Mario em 40 KB | Instagram + TikTok (modo foto) |
+
+### Fontes dos fatos
+- **A (QR Code):** desenvolvido na DENSO WAVE (então divisão da DENSO), liderado por Masahiro Hara com mais um integrante; lançado em 1994, ~1,5 ano após o início; código de barras guardava ~20 caracteres; leitura 10× mais rápida que outros códigos; proporção 1:1:3:1:1 dos marcadores escolhida após pesquisar impressos atrás da proporção que menos aparece, para ler em qualquer ângulo; patente mantida mas sem exercer os direitos; celulares com leitor no Japão a partir de 2002. Fonte: qrcode.com/en/history (DENSO WAVE). Uso na pandemia (cardápios): conhecimento geral, dito como dramatização ("virou o cardápio do mundo"). NÃO usei a história do tabuleiro de Go (não confirmada em fonte oficial).
+- **B (Tetris):** Holmes et al., "Can Playing the Computer Game 'Tetris' Reduce the Build-Up of Flashbacks for Trauma?", PLoS ONE, jan/2009: 40 voluntários saudáveis viram filme com cenas reais de ferimentos; 30 min depois, 10 min de Tetris ou nada; diário de flashbacks por 1 semana; grupo Tetris teve significativamente menos flashbacks e a memória do filme (teste de 32 itens) ficou igual. Estudo preliminar, não é tratamento (dito no vídeo). Tetris de 1984 (Pajitnov). Fontes: Universidade de Oxford (ox.ac.uk/node/7182), National Geographic, DOAJ/PLoS ONE.
+
+---
+## Plano da semana 12–18/10 (rascunho de sábado)
+Regra: 3 por dia (A história narrada + B fato rápido + C fato/humor ou Bit News), Instagram 2/dia, carrossel/manchete ≥ 3 na semana.
+| Dia | A (história, narrada) | B / C (rápidos ou Bit News) |
+|---|---|---|
+| Seg 12 | Y2K: o mundo correndo contra dois dígitos | Bit News: último dia da BGS (fato verificado do evento) · humor "Prova de Cálculo × prova de Programação" |
+| Ter 13 | Will Station: o ponto e vírgula que travou o fliperama uma semana (dramatizado) | Por que o ícone de salvar ainda é um disquete · carrossel "QWERTY: por que não ABC" |
+| Qua 14 | O bug do fuso: o registro que chegou "amanhã" (ficção universo GMS) | O primeiro vídeo do YouTube (19 s, zoológico) · "Two Fishes" do Bit: tab × espaço (som no app) |
+| Qui 15 | O Ctrl+Z e a origem do desfazer (conferir fonte) | Senha 123456 segue no topo · Bit News manchete |
+| Sex 16 | GTA 6 a 1 mês: 13 anos entre GTA V e GTA 6 | Som do modem discado: o que ele "falava" · humor "git push --force do estagiário" |
+| Sáb 17 | O botão que ninguém apertava de luva (dramatizado, chão de fábrica) | carrossel "Subtle Foreshadowing" de um deploy · primeiro spam (1978) |
+| Dom 18 | (livre) | Bit News de Halloween: "o vírus mais assustador da história" (conferir) |
+Prazo: GTA 6 marco de 1 mês em 19/10 → A de sexta 16. LinkedIn: ver `linkedin_proximo_post` (não gerei texto novo: sem ângulo real novo esta semana).

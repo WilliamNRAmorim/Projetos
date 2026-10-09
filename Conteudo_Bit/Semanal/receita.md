@@ -29,6 +29,10 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | ~1 h (parcial): 2 vis., 0 curtidas, 0 coment.; cedo demais para avaliar | | |
 | 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | parcial (~3 h): 6 vis., 6 contas, 1 curtida, 0 salv./compart.; cedo para concluir | | |
 | 7 | 10/10 11:00 | Instagram | Carrossel Mario 40 KB (7 itens) | carrossel história | carrossel com gancho meta ("menos que esta imagem") gera salvamentos | | | |
+| 8 | 10/10 11:00 | TikTok (+IG 19h) | QR Code: da fábrica ao cardápio (71 s) | história com arco, narrada, objetos 100% desenhados em código | história de "objeto do dia a dia com origem inesperada" retém mais que o Apollo (tema distante) | | | |
+| 9 | 10/10 15:00 | TikTok | Tetris em Oxford (27 s) | fato rápido sem voz, ciência + games, com o porquê | fato com "o porquê" + ressalva honesta segura até o fim mesmo sem voz | | | |
+
+**Métricas de 24 h/72 h (Sex09 e Qui08): não puxadas em 09/10** (navegador desta execução sem login no TikTok Studio/Meta/LinkedIn). Puxar na conversa de agendamento.
 
 ## Benchmarks (amostra de ~20 vídeos do mesmo tema antes de postar)
 ### Wi-Fi não significa nada · 08/10/2026 · 24 vídeos (12 PT, 12 EN) no TikTok
@@ -65,6 +69,18 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 ### Espaço/astronomia no INSTAGRAM · 08/10/2026 (#espaco, #astronomia) · para o Bit News do satélite
 Topo: "A NASA LIBEROU PESSOAL!!" (63K), "SE ANDRÔMEDA É VISÍVEL, POR QUE NÃO CONSEGUIMOS VÊ-LA A OLHO NU? 👀", "É ASSIM QUE UM BURACO NEGRO…". **Padrão:** 1ª linha curta, em CAIXA ALTA, com novidade/exclusividade ou contradição; explicação depois. Aplicado na legenda: "O GOOGLE MANDOU UMA IA PRO ESPAÇO. E ELA PASSA CALOR."
 **Erro corrigido:** a 1ª legenda foi escrita só com base nas hashtags gerais e abria com "Você sabia que…" (padrão da base). A amostra tem que ser do TEMA específico em cada plataforma.
+
+### QR Code no INSTAGRAM · 09/10/2026 · 12 posts de #qrcode (amostra parcial: depois o Instagram pediu login; TikTok pediu CAPTCHA)
+| Faixa | Quem | Curtidas | Formato e tratamento |
+|---|---|---|---|
+| Topo | jynxclips2025 | 103K | clipe de streamer em pânico com um QR na tela (reação + suspense) |
+| Topo | rctigyan / jornadatop | 90K / 37K | tutorial "QR Code no Word" (utilidade escondida; "quantos anos levou pra descobrir…") |
+| Topo | techwithmahi07 | 47K, 1,7K coment. | utilidade: mandar fotos de casamento por QR |
+| Meio | jd___42703170 / luccacolombo | 19K / 12K | golpe do QR (medo + alerta) |
+| Meio | monicatipss, cadu_gimenes, ttbuildsbric, minutotechpro | 2,7–8,6K | dica de uso (Word, Wi-Fi, LEGO) |
+| Base | yungcaza, ai.trend.kr | 70–1,8K | QR como enfeite/arte sem utilidade nem história |
+**Leitura:** no Instagram o QR rende como **utilidade** ("você não sabia que dava") e **alerta de golpe**; ninguém da amostra conta a **origem**, então a história é ângulo livre. **O que roubar:** a dica escondida e o alerta de golpe entram na LEGENDA (dica prática do golpe do adesivo); o gancho "quase ninguém sabe" no 1º segundo; a reação do personagem ao QR (Bit com lupa).
+### Tetris/ciência · sem amostra (bloqueios acima). Aplicado por regra: o porquê explícito, ressalva honesta, número concreto (40 pessoas, 10 min, 1 semana).
 
 ## Regra de benchmark (pedido em 08/10/2026)
 - **20 amostras POR PLATAFORMA onde o post vai sair** (TikTok, Instagram e LinkedIn), porque o que funciona numa não funciona na outra. No Instagram, a busca por palavra não funciona na web: use as páginas de hashtag (instagram.com/explore/tags/<tag>/) e leia curtidas/comentários pelo og:description de cada post.

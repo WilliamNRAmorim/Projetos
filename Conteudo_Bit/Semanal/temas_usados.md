@@ -12,3 +12,5 @@
 | 09/10/2026 | TikTok, Instagram | Apollo 11: o alarme 1202 (história, narrada) |
 | 09/10/2026 | TikTok, Instagram | O primeiro bug era um inseto (mas a palavra já existia) |
 | 09/10/2026 | TikTok, Instagram | "Funciona na minha máquina" e o Docker (humor) |
+| 10/10/2026 | TikTok, Instagram | QR Code: nasceu em fábrica de peças de carro, patente aberta (história, narrada) |
+| 10/10/2026 | TikTok | Tetris reduziu flashbacks em estudo de Oxford (fato rápido) |

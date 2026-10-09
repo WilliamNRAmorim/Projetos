@@ -1,0 +1,91 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>ep qr code</title>
+<script src="brand.js"></script><script src="bit_art.js"></script><script src="ep_kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// "O quadrado que nasceu numa fábrica" (QR Code, Denso, 1994): fato histórico contado como história com arco, narrado pelo Bit. Fontes em plano.md (seção Sábado 10/10).
+// Arco: gancho com mistério → o problema → desafio → caçada da proporção → virada (patente aberta) → resolução (celular, pandemia) → sentido → fecho seco.
+// QR, código de barras e celular desenhados em código; poses do Bit do Gemini (bit_lupa, bit_pensando, bit_entregando, bit_feliz).
+const { W, H, clamp, out, txt, glitch, rnd } = EpKit;
+const P = BRAND.paper, A = BRAND.accent, M = BRAND.mute, I2 = BRAND.ink2, OK = '#3DDC97';
+const ART = {};
+const bitDraw = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
+const FALAS = [
+  { cena: 'gancho', acc: ['fábrica'], txt: 'Tem um quadrado que você escaneia toda semana. E quase ninguém sabe que ele nasceu numa fábrica de peças de carro, no Japão.' },
+  { cena: 'barras', acc: ['vinte'], txt: 'O problema: o código de barras guardava uns vinte caracteres. Pouco demais pra contar a história de uma peça inteira.' },
+  { cena: 'equipe', acc: ['duas', 'qualquer'], txt: 'Na Denso, o engenheiro Masahiro Hara recebeu a missão com uma equipe de duas pessoas. E um desafio: o leitor tinha que achar o código em qualquer ângulo.' },
+  { cena: 'proporcao', acc: ['três,', 'nunca'], txt: 'Então eles caçaram, em pilhas de impressos, a proporção de preto e branco que quase nunca aparece no mundo. Acharam: um, um, três, um, um.' },
+  { cena: 'virada', acc: ['virada:', 'ninguém.'], txt: 'Em 1994 nasceu o QR Code, lendo dez vezes mais rápido. E aí veio a virada: a Denso tinha a patente... e decidiu não cobrar de ninguém.' },
+  { cena: 'mundo', acc: ['2002.', 'cardápio'], txt: 'Aí qualquer um pôde usar. Os celulares japoneses ganharam leitor em 2002. E na pandemia, o quadrado de fábrica virou o cardápio do mundo.' },
+  { cena: 'sentido', acc: ['deixa'], txt: 'Às vezes uma ideia não fica gigante pelo que você cobra dela. Fica pelo que você deixa os outros fazerem com ela.', corte: false, pausa: 0.6 },
+  { cena: 'fecho', acc: ['peça'], txt: 'Então, da próxima vez que pedir um X-tudo pelo QR... lembra: isso aí era etiqueta de peça de carro.', corte: false },
+];
+const et = (g, s, y, col = M) => txt(g, s, 90, y, 30, col, { mono: true, w: 700 });
+// QR desenhado: 25×25 módulos, 3 marcadores de posição (1:1:3:1:1) e o resto pseudoaleatório; reveal = fração de módulos visíveis
+function qr(g, cx, cy, size, reveal = 1, rot = 0, col = P, finderCol = col) {
+  const n = 25, s = size / n; g.save(); g.translate(cx, cy); g.rotate(rot); g.translate(-size / 2, -size / 2);
+  const inF = (x, y) => (x < 8 && y < 8) || (x > n - 9 && y < 8) || (x < 8 && y > n - 9);
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { if (inF(x, y)) continue; const r = rnd(x * 31 + y * 17 + 5); if (r < 0.5 && rnd(x * 7 + y * 131) < reveal) { g.fillStyle = col; g.fillRect(x * s, y * s, s + 0.5, s + 0.5); } }
+  if (reveal > 0.15) [[0, 0], [n - 7, 0], [0, n - 7]].forEach(([fx, fy]) => { g.fillStyle = finderCol; g.fillRect(fx * s, fy * s, 7 * s, 7 * s); g.fillStyle = BRAND.ink; g.fillRect((fx + 1) * s, (fy + 1) * s, 5 * s, 5 * s); g.fillStyle = finderCol; g.fillRect((fx + 2) * s, (fy + 2) * s, 3 * s, 3 * s); });
+  g.restore();
+}
+function gear(g, cx, cy, r, rot) { g.save(); g.translate(cx, cy); g.rotate(rot); g.fillStyle = I2; g.strokeStyle = M; g.lineWidth = 4; g.beginPath();
+  for (let i = 0; i < 24; i++) { const a = i / 24 * Math.PI * 2, rr = i % 2 ? r : r * 1.18; g.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); } g.closePath(); g.fill(); g.stroke();
+  g.fillStyle = BRAND.ink; g.beginPath(); g.arc(0, 0, r * 0.35, 0, 7); g.fill(); g.stroke(); g.restore(); }
+const CENAS = {
+  gancho(g, u, k, fr) {
+    et(g, 'ESSE QUADRADO', 190, A);
+    glitch(g, (dx, dy, c) => qr(g, W / 2 + dx, 640, 640, out(clamp(k / 0.5)), 0, c || P), clamp(1 - u / 0.6) * 0.8, fr);
+    if (k > 0.55) { const a = clamp((k - 0.55) / 0.15); g.globalAlpha = a; et(g, 'NASCEU NUMA FÁBRICA · JAPÃO', 1040, A); g.globalAlpha = 1; }
+    bitDraw(g, 'bit_lupa', 900, 1250, 300);
+  },
+  barras(g, u, k) {
+    et(g, 'O PROBLEMA · CÓDIGO DE BARRAS', 190, A);
+    let x = 90; for (let i = 0; x < W - 90; i++) { const w = 6 + Math.floor(rnd(i * 3.3) * 4) * 6; if (i % 2 === 0) { g.fillStyle = P; g.fillRect(x, 300, w, 300); } x += w; }
+    const c = Math.round(20 * clamp(k / 0.4)); txt(g, String(c), 90, 840, 220, P, { mono: true, w: 700 }); et(g, 'CARACTERES, MAIS OU MENOS', 900);
+    gear(g, 800, 1120, 120, u * 0.6); if (k > 0.55) { const a = clamp((k - 0.55) / 0.12); g.globalAlpha = a; txt(g, 'POUCO.', 90, 1150, 120, A); g.globalAlpha = 1; }
+  },
+  equipe(g, u, k) {
+    et(g, 'DENSO · 1992', 190, A);
+    txt(g, 'MASAHIRO', 90, 360, 110, P); txt(g, 'HARA', 90, 470, 110, P);
+    et(g, 'EQUIPE: 2 PESSOAS', 540);
+    if (k > 0.45) { const a = clamp((k - 0.45) / 0.12); g.globalAlpha = a; qr(g, 420, 880, 380, 1, Math.sin(u * 1.6) * 0.8); et(g, 'LER EM QUALQUER ÂNGULO', 1150, A); g.globalAlpha = 1; }
+    bitDraw(g, 'bit_pensando', 860, 1220, 380);
+  },
+  proporcao(g, u, k) {
+    et(g, 'A CAÇADA', 190, A);
+    const pa = clamp(k / 0.5); for (let i = 0; i < 14; i++) { const y = 300 + i * 34; g.fillStyle = I2; g.fillRect(90, y, (W - 180) * (0.4 + 0.6 * rnd(i * 5.1)), 18); }
+    g.fillStyle = `rgba(255,59,31,${0.9 * (1 - pa)})`; g.fillRect(90, 300 + ((u * 300) % 476), W - 180, 4);
+    if (k > 0.5) {
+      const t = out(clamp((k - 0.5) / 0.3)), seg = [1, 1, 3, 1, 1], unit = 110, x0 = (W - 7 * unit) / 2; let x = x0; g.globalAlpha = t;
+      seg.forEach((sw, i) => { if (i % 2 === 0) { g.fillStyle = i === 2 ? A : P; g.fillRect(x, 900, sw * unit, 160); } else { g.strokeStyle = M; g.lineWidth = 2; g.strokeRect(x, 900, sw * unit, 160); } txt(g, String(sw), x + sw * unit / 2, 1130, 60, i === 2 ? A : P, { align: 'center', mono: true, w: 700 }); x += sw * unit; });
+      g.globalAlpha = 1;
+    }
+  },
+  virada(g, u, k, fr) {
+    et(g, '1994 · QR = QUICK RESPONSE', 190, A);
+    qr(g, 330, 520, 420, 1);
+    txt(g, '10×', 620, 470, 160, P, { mono: true, w: 700 }); txt(g, 'MAIS RÁPIDO', 620, 530, 34, M, { mono: true, w: 700 });
+    if (k > 0.5) { const b = clamp((k - 0.5) / 0.12); g.save(); g.translate(W / 2, 1050); g.rotate(-0.08); g.scale(1 + (1 - out(b)) * 0.6, 1 + (1 - out(b)) * 0.6); g.globalAlpha = b;
+      g.strokeStyle = OK; g.lineWidth = 10; g.strokeRect(-400, -110, 800, 220); txt(g, 'PATENTE ABERTA', 0, 30, 92, OK, { align: 'center' }); g.restore(); }
+    if (k > 0.48 && k < 0.6) glitch(g, () => {}, 0.7, fr);
+  },
+  mundo(g, u, k) {
+    et(g, 'DEPOIS', 190, A);
+    const marks = [['1994', 'FÁBRICA', 0], ['2002', 'CELULAR', 0.3], ['2020', 'PANDEMIA', 0.62]];
+    g.fillStyle = I2; g.fillRect(90, 330, W - 180, 6);
+    marks.forEach(([y, l, at], i) => { const a = clamp((k - at) / 0.1), x = 90 + i * 360; g.globalAlpha = 0.25 + 0.75 * a; g.fillStyle = a > 0.5 ? A : M; g.fillRect(x, 318, 30, 30); txt(g, y, x, 420, 60, P, { mono: true, w: 700 }); txt(g, l, x, 470, 28, M, { mono: true, w: 700 }); g.globalAlpha = 1; });
+    const px = 540, py = 860; g.strokeStyle = P; g.lineWidth = 8; g.strokeRect(px - 190, py - 330, 380, 660); g.fillStyle = I2; g.fillRect(px - 182, py - 322, 364, 644);
+    qr(g, px, py - 40, 260, 1); g.strokeStyle = A; g.lineWidth = 6; const sy = py - 170 + ((u * 200) % 260); g.beginPath(); g.moveTo(px - 150, sy); g.lineTo(px + 150, sy); g.stroke();
+    if (k > 0.7) { const a = clamp((k - 0.7) / 0.1); g.globalAlpha = a; txt(g, 'CARDÁPIO', px, py + 250, 64, OK, { align: 'center' }); g.globalAlpha = 1; }
+  },
+  sentido(g, u, k) { const a = clamp(u / 0.6); g.globalAlpha = a; txt(g, 'DEIXAR', W / 2, 500, 200, P, { align: 'center' }); txt(g, 'USAR', W / 2, 680, 200, A, { align: 'center' }); bitDraw(g, 'bit_entregando', 540, 1250, 480); g.globalAlpha = 1; },
+  fecho(g, u, k) { qr(g, 300, 520, 360, 1, -0.12, '#2A2A2E'); gear(g, 300, 520, 70, u * 0.8); bitDraw(g, 'bit_feliz', 640, 1400, 820); },
+};
+EpKit.run({
+  falas: FALAS, cenas: CENAS, stems: '/w/stems/qrcode', dir: 'semana-2026-10-05', out: 'Sab10_A_Instagram_TikTok_QRCode.mp4', grao: 0.04, bitrate: 0.8e6, cbr: true, abitrate: 96000,
+  prep: async () => { for (const k of ['bit_lupa', 'bit_pensando', 'bit_entregando', 'bit_feliz']) ART[k] = await BitArt.load(`/Marca/bit/${k}.png`); },
+  musica: (ti, i) => [0.15, 0.15, 0.17, 0.18, 0.2, 0.16, 0, 0.09][i],
+}).catch(e => document.title = 'ERROR ' + e.message);
+</script></body></html>
