@@ -12,3 +12,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-08 | Fusão das extensões do reel30 nos kits compartilhados (bit_rig.js, testes/audio_kit.js) e molde reel30.html | eu (Sonnet), sem subagente | edição mecânica, extensões opcionais; verificado carregando reel30, teste3 e bit_teste sem erros | ~US$ 0,5
 2026-10-09 | Diagnóstico: dropdown de OP do Tubo vazio e 'fora da grade' no kanban | chefe (Opus) sozinho, sem subagente | leitura direta da lista e do YAML bastou | ver uso_2026-10-09.md
 2026-10-09 | Teste no Studio: DisplayFields do combo de OP do Tubo | chefe (Opus) sozinho, via navegador | teste direto no Studio, sem salvar nem publicar | ver uso_2026-10-09.md
+2026-10-09 | Hora-Hora do Mandril fora do padrão: diagnóstico (já existe molde MEL-224) | chefe sozinho (Opus) | consulta curta, sem subagente | ver uso_2026-10-09.md
