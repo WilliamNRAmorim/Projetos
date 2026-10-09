@@ -15,24 +15,29 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 - Gancho com mistério nos 2 primeiros segundos; legenda acima de y≈1500.
 - Bit como narrador seco, não como protagonista fofo.
 - TikTok: várzea + pergunta no fim. Instagram: moderado. LinkedIn: profissional, ângulo novo.
-- (a confirmar com dados) fatos rápidos sem voz seguram tanto quanto com voz?
+- **CONFIRMADO (09/10, 3 de 3 no TikTok, e no Instagram): vídeo mudo, só texto na tela, não segura.** GMS, Wi-Fi e IA nos games (mudos) ficaram em ~92 vis., 2,5–2,9 s de tempo médio e 0–2% de vídeo completo; a vírgula (narrada) teve 6,7 s e 4,4% no TikTok e 14 s de média no Instagram (contra 2 s do GMS mudo). Fato rápido também leva voz do Bit (curto = pouco crédito).
+- **CONFIRMADO (5 de 5 no TikTok): a maioria sai em 0:01.** O 1º quadro decide: começar já com imagem forte + voz no quadro 0 (sem tela escura, sem rótulo pequeno), e a capa = o gancho.
+- **Instagram com 3 seguidores: estático não é distribuído.** Bit News (7 vis.) e carrossel Will Station (3 vis.) contra Reels de 126–135 vis. Até a conta crescer: Reel primeiro; manchete/carrossel como apoio (e no TikTok modo foto).
 - (a confirmar) myth-busting rende mais visualização completa que fato "olha que curioso".
 
 ## Experimentos
 | # | Data/hora | Rede | Vídeo | Formato | Hipótese | 24 h | 72 h | Aprendizado |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 07/10 08:30 | LinkedIn | GMS + MESA-11 (78 s) | texto profissional + vídeo sem voz | ângulo de autocrítica técnica gera alcance fora da rede | 13 h: 346 impr., 60% fora da rede, 4,3% engaj., 26 s de média (de 78) | | autocrítica técnica funciona no LinkedIn; metade do vídeo não é vista |
-| 2 | 07/10 19:00 | Instagram | GMS 30 s | texto na tela, sem voz | — | 3 h: 0 visualizações (conta nova, 0 seguidores) | | conta nova precisa de empurrão (compartilhar no perfil pessoal) |
-| 3 | 07/10 19:00 | TikTok | GMS 30 s | texto na tela, sem voz | — | 3 h: 40 vis., 2 curtidas; 4 h: 53 vis. | | conta com histórico de outro nicho; acompanhar |
-| 4 | 08/10 11:00 | TikTok (+IG 12h) | Wi-Fi não significa nada (25 s) | myth-busting, sem voz | myth-busting segura mais que fato comum | ~9 h (parcial): 92 vis., 1 curtida, 0 coment.; sem ganho sobre o GMS (93 vis., 4 curtidas) | | |
-| 5 | 08/10 15:00 | TikTok | IA nos games (19 s) | número + contradição + pergunta, sem voz | pergunta final gera mais comentários | ~5 h (parcial): 64 vis., 2 curtidas, 0 coment.; pergunta final não gerou comentário | | |
-| 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | ~1 h (parcial): 2 vis., 0 curtidas, 0 coment.; cedo demais para avaliar | | |
-| 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | parcial (~3 h): 6 vis., 6 contas, 1 curtida, 0 salv./compart.; cedo para concluir | | |
+| 2 | 07/10 19:00 | Instagram | GMS 30 s | texto na tela, sem voz | — | 3 h: 0 visualizações (conta nova, 0 seguidores) | ~49 h: 126 vis., 123 alcance, 2 curtidas, **2 s de média** (de 30) | conta nova precisa de empurrão (compartilhar no perfil pessoal) |
+| 3 | 07/10 19:00 | TikTok | GMS 30 s | texto na tela, sem voz | — | 3 h: 40 vis., 2 curtidas; 4 h: 53 vis. | ~49 h: 93 vis., 4 curtidas, 2,88 s de média, 2% completo, saída em 0:01 | conta com histórico de outro nicho; acompanhar |
+| 4 | 08/10 11:00 | TikTok (+IG 12h) | Wi-Fi não significa nada (25 s) | myth-busting, sem voz | myth-busting segura mais que fato comum | ~9 h (parcial): 92 vis., 1 curtida, 0 coment.; sem ganho sobre o GMS (93 vis., 4 curtidas) | ~33 h: TikTok 94 vis., 1 curtida, 2,93 s, 1,9% completo; Instagram 14 vis., 3 curtidas, **25 s de média** (de 36) | myth-busting mudo não ganhou do GMS no TikTok; no IG quem viu, viu quase tudo (amostra mínima) |
+| 5 | 08/10 15:00 | TikTok | IA nos games (19 s) | número + contradição + pergunta, sem voz | pergunta final gera mais comentários | ~5 h (parcial): 64 vis., 2 curtidas, 0 coment.; pergunta final não gerou comentário | ~29 h: 92 vis., 3 curtidas, 0 coment., 2,51 s, 0% completo | pergunta no fim não adianta se ninguém chega no fim |
+| 6 | 08/10 19:00 | Instagram + TikTok | A vírgula das 5 da manhã (62 s) | história com arco, narrada | arco narrado tem a maior retenção da semana | ~1 h (parcial): 2 vis., 0 curtidas, 0 coment.; cedo demais para avaliar | ~25 h: TikTok 114 vis., 4 curtidas, **6,7 s, 4,4% completo** (melhor do perfil); Instagram 135 vis., 120 alcance, 6 curtidas, **14 s de média**, 28 min assistidos | narração + arco = melhor retenção nas duas redes |
+| 6b | 08/10 16:00 | Instagram | Bit News: satélite de IA do Google (imagem única) | imagem-manchete + legenda longa com dica | formato estático 'manchete' rende salvamentos/alcance perto de Reel (benchmark @elidicastech 80K) | parcial (~3 h): 6 vis., 6 contas, 1 curtida, 0 salv./compart.; cedo para concluir | ~28 h: 7 vis., 2 alcance, 3 curtidas, 0 salv. | estático não sai da base de seguidores |
 | 7 | 10/10 11:00 | Instagram | Carrossel Mario 40 KB (7 itens) | carrossel história | carrossel com gancho meta ("menos que esta imagem") gera salvamentos | | | |
 | 8 | 10/10 11:00 | TikTok (+IG 19h) | QR Code: da fábrica ao cardápio (71 s) | história com arco, narrada, objetos 100% desenhados em código | história de "objeto do dia a dia com origem inesperada" retém mais que o Apollo (tema distante) | | | |
-| 9 | 10/10 15:00 | TikTok | Tetris em Oxford (27 s) | fato rápido sem voz, ciência + games, com o porquê | fato com "o porquê" + ressalva honesta segura até o fim mesmo sem voz | | | |
+| 9 | 10/10 15:00 | TikTok | Tetris em Oxford (27 s) | fato rápido sem voz, ciência + games, com o porquê | fato com "o porquê" + ressalva honesta segura até o fim mesmo sem voz | | | já contraria a regra confirmada em 09/10: refazer com voz |
+| 10 | 09/10 11:00 | Instagram | Carrossel Will Station (7 itens) | carrossel história de projeto | — | ~9 h: 3 vis., 1 curtida | | estático parado |
+| 11 | 09/10 19:00 | TikTok + Instagram | Curta "pra que a gente serve?" (pixel art, 58 s, outra sessão) | curta animado | — | ~1 h: TikTok 13 vis., 1,19 s; IG 0 | | cedo |
+| — | 09/10 | — | Apollo 1202, Primeiro bug, Docker (Sex09) | — | — | **não publicados** (não aparecem no TikTok nem no Instagram) | | produção sem publicação: alinhar agendamento |
 
-**Métricas de 24 h/72 h (Sex09 e Qui08): não puxadas em 09/10** (navegador desta execução sem login no TikTok Studio/Meta/LinkedIn). Puxar na conversa de agendamento.
+**Métricas puxadas em 09/10 à noite** pelo Chrome da pessoa (TikTok Studio → Análise de cada post; Meta Business Suite → Insights → Content). O navegador do app não tem login: usar o Claude in Chrome.
 
 ## Benchmarks (amostra de ~20 vídeos do mesmo tema antes de postar)
 ### Wi-Fi não significa nada · 08/10/2026 · 24 vídeos (12 PT, 12 EN) no TikTok
