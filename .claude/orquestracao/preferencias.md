@@ -10,3 +10,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-08: nada que vá ao LinkedIn leva o Bit (nem mascote, nem texto, nem assinatura). O LinkedIn é o perfil pessoal dele. Vale para bit, din e produtor-de-artes.
 2026-10-08 | Teste 1 de motion (quadrado em loop) aprovado sem ver diferença 30 vs 60 fps; seguir a recomendação da equipe: 30 fps.
 2026-10-08 | Quando houver recomendada, William manda seguir sem perguntar (testes 3 e 4). Teste 5 v1 faltou som de movimento descendente; passou a ser padrão nos testes seguintes.
+2026-10-08 | Trabalho de produtor-de-artes: dar estimativa de tempo e custo antes de disparar; no máximo 1 a 2 rodadas de correção; régua alta (auditoria quadro a quadro, 3+ simulações) só se o William pedir; rodar em paralelo o que for independente. Motivo: reel de 30 s levou ~45 min e US$ 9 a 13.
