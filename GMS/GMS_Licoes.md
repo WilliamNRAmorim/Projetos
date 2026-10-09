@@ -24,6 +24,7 @@
 | 1.10 | `ModernDropdown` está fora da lista provada. Usar `Classic/DropDown@2.3.1` | COLAR HoraHora v0.5.0 |
 | 1.11 | O `gms_qa_yaml.py` **não verifica propriedade × tipo de controle**. PA2108 passa pelo QA e só estoura no import. Pendente: adicionar esse teste | conversa 24/09 |
 | 1.12 | Timer só roda em **Preview** no Studio. BarcodeReader só funciona de verdade no **tablet** | MS Learn; Mestre §3.9.6 |
+| 1.13 | Fórmula em bloco multilinha (barra vertical + hífen) **também começa com `=`** na primeira linha. `=` perdido no meio (ex.: antes da string, dentro do `With`) dá PA1001 YamlInvalidSyntax. O QA ainda não pega | conversa 09/10 (Trançagem) |
 
 ## 2. Power Fx: lógica que falha em silêncio
 
@@ -51,6 +52,7 @@
 | 2.20 | `IfError` só na forma de 2 argumentos (regra do projeto) | memória legada |
 | 2.21 | Agregação do 3º turno exige piso **e** teto, porque o turno atravessa a meia-noite | memória legada |
 | 2.22 | Code 128B offline: 4 UDFs (`C128Val`, `C128Pat`, `C128Encode`, `C128SVG`) renderizadas num `Image` com `"data:image/svg+xml," & EncodeUrl(...)`, sem API externa | memória legada |
+| 2.23 | `IfError` exige o **mesmo tipo** no valor e no fallback. `IfError(ClearCollect(...), Notify(...))` dá "Expecting a Table value". Carga com aviso usa `If(IsError(ClearCollect(...)), Notify(...))` | conversa 09/10 (Trançagem) |
 
 ## 3. Números, locale e medidas
 
