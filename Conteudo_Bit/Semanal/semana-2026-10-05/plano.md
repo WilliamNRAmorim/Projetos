@@ -28,3 +28,20 @@ Pilares da semana: post 1 = projeto (GMS) · post 2 = dia a dia/humor (Ficha × 
 4. **Fecho (12–18 s):** a Ficha amassada, o Bit dá um joinha. Texto final: "O papel esquece."
 
 Trilha: stems da produção. Sem chamada pra seguir, só o episódio.
+
+---
+## Sexta 09/10 (rotina diária, gerada em 08/10 à noite)
+Pilares: A = fato histórico em história com arco (Apollo 11) · B = fato rápido/myth-busting (primeiro bug) · C = humor dia a dia (dev).
+O carrossel do Will Station de sexta (Sex09_Instagram_WillStation_*) vem de outra sessão; por isso nenhum vídeo de hoje fala de projeto.
+**Benchmark e métricas de 24 h/72 h: não feitos nesta execução** (TikTok sem login no navegador do app; Meta e LinkedIn não consultados). Roteiros aplicam as regras atuais da receita: voz do Bit no A, porquê por trás do fato, tensão, virada; B e C sem voz, com mini-arco.
+
+| # | Horário | Vídeo | Tema | Redes |
+|---|---|---|---|---|
+| A | TikTok 11h · Instagram 12h | `Sex09_A_Instagram_TikTok_Apollo1202.mp4` | O alarme 1202 da Apollo 11 (história, narrada, ~73 s) | TikTok + Instagram |
+| B | TikTok 15h | `Sex09_B_TikTok_Instagram_PrimeiroBug.mp4` | O primeiro bug era um inseto, mas a palavra já existia (myth-busting, ~20 s) | TikTok (+ Instagram se quiser) |
+| C | TikTok 19h · Instagram 19h | `Sex09_C_TikTok_FuncionaNaMinhaMaquina.mp4` | "Funciona na minha máquina" e o Docker (humor, ~20 s) | TikTok + Instagram |
+
+### Fontes dos fatos
+- **A (Apollo 11):** alarme 1202 por sobrecarga do computador de guiagem (AGC) a ~5 min do início da descida motorizada; tarefas começavam mais do que terminavam e a memória temporária acabou; o computador reiniciava e descartava tarefas de baixa prioridade; Steve Bales (guiagem, Houston) deu GO; o alarme repetiu; a tripulação não tinha visto o alarme nas simulações; ~2.048 palavras de memória apagável (~4 KB). Fontes: Discover Magazine "Apollo 11's 1202 Alarm Explained"; MIT News 2009 (Apollo Eyles); Science Museum blog "Apollo 11 moon landing: the most difficult moments". Não afirmei "pior que uma calculadora" (não confirmado). Não afirmei a idade de Bales nem causa exata do radar.
+- **B (primeiro bug):** mariposa achada no relé #70, painel F, do Harvard Mark II em 9/9/1947, colada no caderno com a nota "First actual case of bug being found"; hoje no Smithsonian (NMAH). O termo "bug" já era usado antes (carta de Edison, 1878). Não atribuí a nota a ninguém (autoria disputada: Hopper x Bill Burke). Fontes: National Geographic Education "World's First Computer Bug"; Science Notes (9 set).
+- **C:** piada/humor (sem dado). Afirmação técnica: Docker empacota código, bibliotecas e dependências do ambiente num container.

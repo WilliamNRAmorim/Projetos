@@ -9,3 +9,6 @@
 | 08/10/2026 | TikTok, Instagram | Wi-Fi não significa nada (myth-busting) |
 | 08/10/2026 | TikTok | IA nos games: medo x compraria (Pesquisa Game Brasil) |
 | 08/10/2026 | Instagram | Bit News: Google Suncatcher, satélite de IA (calor no espaço) |
+| 09/10/2026 | TikTok, Instagram | Apollo 11: o alarme 1202 (história, narrada) |
+| 09/10/2026 | TikTok, Instagram | O primeiro bug era um inseto (mas a palavra já existia) |
+| 09/10/2026 | TikTok, Instagram | "Funciona na minha máquina" e o Docker (humor) |

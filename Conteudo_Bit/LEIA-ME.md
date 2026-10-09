@@ -14,6 +14,7 @@ Conteúdo de Instagram, TikTok e LinkedIn sobre Engenharia de Computação, com 
 
 ## Regras de conteúdo
 - O tom é de quem mostra o trabalho: nada de aula nem de chamada pra ação.
+- Nada que vá ao LinkedIn leva o Bit (nem mascote, nem texto, nem assinatura): o LinkedIn é o perfil pessoal do William.
 - Nada de números do Kaizen nem dados reais da empresa nos posts. O GMS é contado pelo TCC: 9 meses, 2 de desenvolvimento e 7 de implantação.
 - Sistema visual: monocromático com um único destaque (#FF3B1F), fonte Geist, cantos retos e grão.
 
