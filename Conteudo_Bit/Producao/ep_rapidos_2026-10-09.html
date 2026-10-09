@@ -5,20 +5,18 @@
 <style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
 <script>
 // Fatos rápidos de sexta 09/10, SEM narração (só legenda grande + trilha). ?v=bug | ?v=maq ; ?sheet=1 confere ; ?save=1 renderiza.
+// Artes do Bit e objetos geradas no Gemini (Nano Banana) e recortadas por BitArt.cutout; texto, layout e dados em código.
 // Fontes (bug): Smithsonian/NMAH e Computer History Museum (mariposa no relé #70 do Harvard Mark II, 9/9/1947); carta de Edison de 1878 usando "bug" (Oxford English Dictionary / Nat Geo).
 const { W, H, clamp, out, txt, glitch } = EpKit;
 const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2, OK = '#3DDC97';
 const q = new URLSearchParams(location.search), V = q.get('v') || 'bug';
-let bit;
+const ART = {};
+const obj = (g, im, cx, cy, h) => { const w = im.width * h / im.height; g.drawImage(im, cx - w / 2, cy - h / 2, w, h); };
+const bitDraw = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
 const rot = (g, s, y = 230, col = A) => txt(g, s, 90, y, 30, col, { mono: true, w: 700 });
-function moth(g, cx, cy, s, col, flap) {
-  g.save(); g.translate(cx, cy); g.scale(s, s); g.fillStyle = col; g.strokeStyle = BRAND.ink; g.lineWidth = 4;
-  for (const sx of [-1, 1]) { g.save(); g.scale(sx, 1); g.rotate(-0.15 * flap); g.beginPath(); g.moveTo(10, 0); g.bezierCurveTo(60, -90, 170, -80, 180, -10); g.bezierCurveTo(170, 50, 80, 60, 10, 20); g.closePath(); g.fill(); g.stroke(); g.restore(); }
-  g.fillRect(-12, -30, 24, 90); g.strokeRect(-12, -30, 24, 90); g.restore();
-}
 const EP = {
   bug: {
-    out: 'Sex09_B_TikTok_Instagram_PrimeiroBug.mp4',
+    out: 'Sex09_B_TikTok_Instagram_PrimeiroBug.mp4', art: ['bit_lupa', 'bit_pinca', 'obj_mariposa', 'obj_rele', 'obj_caderno'],
     falas: [
       { cena: 'gancho', acc: ['inseto', 'verdade.'], txt: 'O primeiro bug da história dos computadores foi um inseto de verdade.' },
       { cena: 'rele', acc: ['mariposa'], txt: '1947, Harvard. O computador parou. Dentro de um relé: uma mariposa.' },
@@ -27,28 +25,25 @@ const EP = {
       { cena: 'fim', acc: ['piada.'], txt: 'A mariposa não inventou o bug. Só deu a piada que a gente repete até hoje.' },
     ],
     cenas: {
-      gancho(g, u, k, fr) { rot(g, 'O MITO'); glitch(g, (dx, dy, c) => txt(g, 'BUG', 90 + dx, 800, 330, c || P), clamp(1 - u / 0.5) * 0.6, fr); moth(g, 760, 1050 + Math.sin(u * 3) * 14, 1.1, A, Math.sin(u * 20)); },
-      rele(g, u, k) { rot(g, '09.09.1947 · HARVARD MARK II');
-        g.fillStyle = I2; g.fillRect(90, 330, W - 180, 700); g.strokeStyle = '#2A2A2E'; g.lineWidth = 2; g.strokeRect(90, 330, W - 180, 700);
-        for (let i = 0; i < 12; i++) { const x = 150 + (i % 4) * 215, y = 400 + Math.floor(i / 4) * 200, hit = i === 6; g.strokeStyle = hit ? A : '#2A2A2E'; g.lineWidth = hit ? 5 : 3; g.strokeRect(x, y, 170, 150); txt(g, 'R' + (64 + i), x + 85, y + 90, 40, hit ? A : MU, { align: 'center', mono: true, w: 700 }); }
-        if (k > 0.45) { const a = out(clamp((k - 0.45) / 0.2)); g.globalAlpha = a; moth(g, 150 + 2 * 215 + 85, 400 + 200 + 60, 0.42 * a + 0.01, P, 0); g.globalAlpha = 1; }
-        if (k > 0.6) txt(g, 'RELÉ #70', 90, 1120, 60, A, { mono: true, w: 700 }); },
-      caderno(g, u, k) { rot(g, 'O CADERNO DE REGISTRO');
-        g.fillStyle = P; g.fillRect(110, 330, W - 220, 760); g.fillStyle = BRAND.ink;
-        for (let i = 0; i < 6; i++) g.fillRect(150, 400 + i * 60, 500 + (i * 83 % 200), 5);
-        moth(g, 330, 820, 0.6, '#8C8B86', 0);
-        const a = clamp((k - 0.3) / 0.15), sc = 1 + (1 - out(a)) * 0.4; g.save(); g.translate(W / 2, 960); g.rotate(-0.05); g.scale(sc, sc); g.globalAlpha = a;
+      gancho(g, u, k, fr) { rot(g, 'O MITO'); glitch(g, (dx, dy, c) => txt(g, 'BUG', 90 + dx, 640, 330, c || P), clamp(1 - u / 0.5) * 0.6, fr);
+        bitDraw(g, 'bit_lupa', 560, 1230, 620); obj(g, ART.obj_mariposa, 880 + Math.sin(u * 3) * 20, 760 + Math.sin(u * 4) * 20, 200); },
+      rele(g, u, k) { rot(g, '09.09.1947 · HARVARD MARK II'); obj(g, ART.obj_rele, W / 2, 700, 600);
+        if (k > 0.35) { const a = out(clamp((k - 0.35) / 0.25)); obj(g, ART.obj_mariposa, W / 2 - 20, 720, 190 * a + 1); }
+        txt(g, 'RELÉ #70', 90, 1090, 70, A, { mono: true, w: 700 }); },
+      caderno(g, u, k) { rot(g, 'O CADERNO DE REGISTRO'); obj(g, ART.obj_caderno, W / 2, 620, 560);
+        const a = out(clamp(k / 0.3)); obj(g, ART.obj_mariposa, W / 2 - 10, 610 + (1 - a) * -200, 130 * a + 1);
+        const b = clamp((k - 0.35) / 0.2), sc = 1 + (1 - out(b)) * 0.4; g.save(); g.translate(W / 2, 1060); g.rotate(-0.04); g.scale(sc, sc); g.globalAlpha = b;
         txt(g, '"First actual case of', 0, 0, 52, A, { align: 'center', w: 800 }); txt(g, 'bug being found."', 0, 66, 52, A, { align: 'center', w: 800 }); g.restore(); },
       edison(g, u, k, fr) { rot(g, 'MAS ANTES DISSO');
         glitch(g, (dx, dy, c) => txt(g, '1878', 90 + dx, 800, 330, c || A), clamp(1 - u / 0.5) * 0.6, fr);
         g.fillStyle = I2; g.fillRect(90, 900, W - 180, 260); g.strokeStyle = '#2A2A2E'; g.lineWidth = 2; g.strokeRect(90, 900, W - 180, 260);
         txt(g, 'CARTA DE THOMAS EDISON', 130, 990, 34, MU, { mono: true, w: 700 }); txt(g, '"bug" = defeito', 130, 1100, 80, P); },
-      fim(g, u) { moth(g, 300, 760, 1.2, A, Math.sin(u * 10)); BitArt.draw(g, bit, 790, 1290, 560); rot(g, 'A PIADA FICOU'); },
+      fim(g, u) { obj(g, ART.obj_mariposa, 300, 700, 360 + Math.sin(u * 8) * 10); bitDraw(g, 'bit_pinca', 760, 1230, 620); rot(g, 'A PIADA FICOU'); },
     },
     musica: () => 0.13,
   },
   maq: {
-    out: 'Sex09_C_TikTok_FuncionaNaMinhaMaquina.mp4',
+    out: 'Sex09_C_TikTok_FuncionaNaMinhaMaquina.mp4', art: ['bit_dev_orgulhoso', 'bit_dev_alibi', 'bit_entregando', 'obj_notebook_fogo', 'obj_caixa_container'],
     falas: [
       { cena: 'dev', acc: ['funciona.'], txt: 'Dev: "na minha máquina funciona."' },
       { cena: 'cliente', acc: ['erro.'], txt: 'Cliente: "aqui deu erro."' },
@@ -57,13 +52,14 @@ const EP = {
       { cena: 'fim', acc: ['álibi.'], txt: '"Funciona na minha máquina" é só um bug com álibi.' },
     ],
     cenas: {
-      dev(g, u, k) { rot(g, 'DEV · 17:58 DE SEXTA'); txt(g, '$ npm start', 90, 520, 70, MU, { mono: true, w: 500 }); const a = clamp((k - 0.3) / 0.15); g.globalAlpha = a; txt(g, '✓ funcionando', 90, 650, 90, OK, { mono: true, w: 700 }); g.globalAlpha = 1; },
-      cliente(g, u, k, fr) { rot(g, 'CLIENTE · MESMO CÓDIGO', 230, A); txt(g, '$ npm start', 90, 520, 70, MU, { mono: true, w: 500 }); glitch(g, (dx, dy, c) => txt(g, '✗ ERRO', 90 + dx, 700, 190, c || A, { mono: true, w: 700 }), clamp(1 - u / 0.5) * 0.7, fr); },
-      solucao(g, u, k) { rot(g, 'A SOLUÇÃO'); const x = 90 + 560 * out(clamp(k / 0.8)); g.fillStyle = I2; g.fillRect(x, 560, 330, 260); g.strokeStyle = P; g.lineWidth = 5; g.strokeRect(x, 560, 330, 260); txt(g, 'MINHA', x + 165, 670, 56, P, { align: 'center' }); txt(g, 'MÁQUINA', x + 165, 740, 56, P, { align: 'center' }); txt(g, '→', 450, 950, 180, A, { align: 'center' }); txt(g, 'cliente', 90, 1100, 50, MU, { mono: true, w: 700 }); },
-      docker(g, u, k) { rot(g, 'DOCKER · CONTAINER');
-        g.fillStyle = I2; g.fillRect(90, 420, W - 180, 700); g.strokeStyle = A; g.lineWidth = 6; g.strokeRect(90, 420, W - 180, 700);
-        ['código', 'bibliotecas', 'versões', 'sistema'].forEach((s, i) => { const a = clamp((k - 0.1 - i * 0.15) / 0.12); g.globalAlpha = a; g.fillStyle = '#2A2A2E'; g.fillRect(150, 480 + i * 150, W - 300, 110); txt(g, s, 190, 555 + i * 150, 54, P, { mono: true, w: 700 }); g.globalAlpha = 1; }); },
-      fim(g, u) { glitch(g, (dx, dy, c) => txt(g, 'BUG', 90 + dx, 700, 300, c || P), 0.15, Math.round(u * 6)); txt(g, 'com álibi', 90, 800, 90, A); BitArt.draw(g, bit, 790, 1330, 560); },
+      dev(g, u, k) { rot(g, 'DEV · 17:58 DE SEXTA'); txt(g, '$ npm start', 90, 460, 70, MU, { mono: true, w: 500 }); const a = clamp((k - 0.3) / 0.15); g.globalAlpha = a; txt(g, '✓ funcionando', 90, 590, 90, OK, { mono: true, w: 700 }); g.globalAlpha = 1;
+        bitDraw(g, 'bit_dev_orgulhoso', 560, 1230, 620); },
+      cliente(g, u, k, fr) { rot(g, 'CLIENTE · MESMO CÓDIGO', 230, A); txt(g, '$ npm start', 90, 460, 70, MU, { mono: true, w: 500 }); glitch(g, (dx, dy, c) => txt(g, '✗ ERRO', 90 + dx, 640, 190, c || A, { mono: true, w: 700 }), clamp(1 - u / 0.5) * 0.7, fr);
+        obj(g, ART.obj_notebook_fogo, W / 2, 1000, 520); },
+      solucao(g, u, k) { rot(g, 'A SOLUÇÃO'); const t = out(clamp(k / 0.8)); bitDraw(g, 'bit_entregando', 330 + 360 * t, 1230, 620); txt(g, '→ cliente', 930, 520, 50, A, { align: 'right', mono: true, w: 700 }); },
+      docker(g, u, k) { rot(g, 'DOCKER · CONTAINER'); obj(g, ART.obj_caixa_container, W / 2, 640, 520);
+        ['código', 'bibliotecas', 'versões', 'sistema'].forEach((s, i) => { const a = clamp((k - 0.1 - i * 0.15) / 0.12); g.globalAlpha = a; g.fillStyle = I2; g.fillRect(150, 960 + i * 90, W - 300, 70); txt(g, s, 190, 1010 + i * 90, 40, P, { mono: true, w: 700 }); g.globalAlpha = 1; }); },
+      fim(g, u) { glitch(g, (dx, dy, c) => txt(g, 'BUG', 90 + dx, 560, 300, c || P), 0.15, Math.round(u * 6)); txt(g, 'com álibi', 90, 660, 90, A); bitDraw(g, 'bit_dev_alibi', 600, 1230, 620); },
     },
     musica: () => 0.13,
   },
@@ -71,6 +67,6 @@ const EP = {
 EpKit.run({
   falas: EP.falas, cenas: EP.cenas, semVoz: true, gap: 0.3, tail: 0.8, grao: 0.03, bitrate: 1.8e6, cbr: true, abitrate: 96000,
   dir: 'semana-2026-10-05', out: EP.out, musica: EP.musica,
-  prep: async () => { bit = await BitArt.load(V === 'bug' ? '/Marca/bit/bit_pensando.png' : '/Marca/bit/bit_feliz.png'); },
+  prep: async () => { for (const k of EP.art) ART[k] = await BitArt.load(`/Marca/bit/${k}.png`); },
 }).catch(e => document.title = 'ERROR ' + e.message);
 </script></body></html>

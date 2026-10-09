@@ -201,5 +201,5 @@ window.AudioKit = (() => {
     document.body.insertAdjacentHTML('beforeend', `<pre>${JSON.stringify(R.final)}</pre>`); document.title = 'DONE';
     return R;
   }
-  return { SR, seed, sintetiza, lufs, truePeak, render, salvar };
+  return { SR, seed, sintetiza, lufs, truePeak, render, salvar, limita, codificaAAC, decodifica, wav, atraso, TETO_LIMITADOR }; // limita..atraso: usados pelo curta (curta_bit_pt.html)
 })();
