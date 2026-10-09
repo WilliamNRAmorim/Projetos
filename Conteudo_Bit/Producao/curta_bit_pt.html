@@ -272,7 +272,7 @@ async function montaAudio() {
 }
 
 // ---------- saídas ----------
-const DIR = 'semana-2026-10-05', PREF = 'Sex09_VideoBit_v1';
+const DIR = 'semana-2026-10-05', BR = +q.get('br') || 12, PREF = 'Sex09_VideoBit_v1' + (q.get('br') ? '_leve' : '');
 const salvar = (name, body) => fetch(`/save?dir=${DIR}&name=${name}`, { method: 'POST', body });
 const png = c => new Promise(r => c.toBlob(r, 'image/png'));
 async function fonteQuadros(tipo) { // 'frame' = frame(t) direto; 'mp4' = quadros lidos do MP4 entregue
@@ -341,7 +341,7 @@ async function render() {
   const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
   const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
   let err = null; const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }), ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e });
-  ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: 12e6, framerate: FPS }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
+  ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: BR * 1e6, framerate: FPS }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
   const [La, Ra] = final.lim.out;
   for (let i = 0; i < N; i += 1024) { const n = Math.min(1024, N - i), d = new Float32Array(n * 2); d.set(La.subarray(i, i + n), 0); d.set(Ra.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
   for (let f = 0; f < NF; f++) { await frame(g, f / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) }); ve.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
