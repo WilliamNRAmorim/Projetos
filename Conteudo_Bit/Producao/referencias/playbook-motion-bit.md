@@ -116,3 +116,33 @@ O total fica entre US$ 6 e 11. Os testes 1 e 2 não dependem de texto. Os testes
 1. O glitch com ciano #00E5FF no `ep_kit.js`: manter como exceção técnica, trocar por glitch monocromático com vermelho ou remover.
 2. O grão usa `Math.random` uma única vez. É estático e não quebra o loop, mas não é idêntico entre sessões. Decidir se ele passa a ser semeado.
 3. 30 ou 60 fps (resposta depois do teste 1).
+
+## 6. Lições do reel completo de 30 s (reel30, 08/10/2026)
+
+Fonte: `testes/reel30_notas.md`. Teste real com 900 quadros, 50 eventos de som e 3 rodadas de correção. Levou cerca de 45 min e US$ 9 a 13; use as lições abaixo para não repetir os 7 defeitos que custaram as rodadas.
+
+**Planeje antes de renderizar (evita rodadas)**
+- **Leitura mínima de 2 s.** Rótulo e frase só contam depois de parados e inteiros. Entrada por máscara come tempo de leitura: nas trocas no tempo forte, use corte seco; máscara só no gancho e no fecho.
+- **Grade de tempo fracionada.** Em 30 fps, 0,25 s não cai em quadro inteiro. Use múltiplos de 1/3 de batida (0,1667 s) quando precisar de ritmo rápido.
+- **Altura de bloco.** Frases de fecho precisam caber por altura (4 linhas visuais) e não só por largura, senão invadem a grade.
+- **Punch-in** ancorado na borda de cima, para o texto não encostar na grade.
+- **Um destaque vermelho por quadro.** O corpo vermelho do Bit seria um 2º vermelho, então o Bit vai em cinza no reel. Decida isso antes.
+- **Gancho já na tela no quadro 0** (exigência do loop). Por isso não há hit em 0,0 s; pense no som de entrada só para a primeira exibição.
+
+**Loop perfeito (primeiro e último quadro com 0 px)**
+- Mola assentada devolve o valor exato (soma de molas em ponto flutuante deixa resíduo e quebra o loop).
+- O primeiro desenho em cada canvas novo sai diferente. Refaça o desenho de aquecimento antes de medir.
+- Elementos que giram (anel do GMS) quebram a igualdade entre quadro 0 e último; deixe-os de fora.
+
+**Áudio**
+- Teto do limitador em −2,0 dBTP para o true peak final ficar ≤ −1 depois do AAC (com −1,5 saiu −0,86).
+- Efeitos simultâneos (hits empilhados) fazem o limitador cortar 2 a 3 dB. Reduza o nível de cada um e abaixe a trilha uns 10 dB sob cada efeito (ducking).
+- Swoosh descendente precisa de um transiente de chegada (cerca de 0,8 ms) no pico, senão o pico de ruído cai fora do lugar e o erro passa de 5 ms depois do AAC.
+- **A costura do loop depois do AAC não é perfeita.** Antes do AAC o salto é 0,0208; depois, 0,0595 (o dobro do salto entre vizinhas). Pode dar clique leve; é limitação do codificador. O AAC decodificado ganha ~768 amostras no fim. Para loop de áudio sem clique, o app precisa fazer o loop do áudio com crossfade curto.
+- "Erro de pico < 1 ms" vale para o pico de amostra; o pico de envelope de 10 ms chega a 4,7 ms. Diga qual dos dois se mede.
+
+**Processo**
+- Auditar as 900 quadros custa horas de Opus. Faça folha por compasso (`?sheet=compasso`), folha de eventos e auditoria numérica, e pare em 1 a 2 rodadas.
+- Quem audita não deve ser só quem produziu: o `revisor-leve` achou duas contradições nas próprias notas (costura de áudio e tipo de pico) em 1 min.
+- Dependências por CDN (fontes e mp4-muxer) tornam o render dependente de rede.
+- Rótulo mono de 33 px é o menor texto aceitável em 1080 px; no celular fica pequeno.
