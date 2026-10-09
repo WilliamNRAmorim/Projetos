@@ -15,3 +15,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-09 | Hora-Hora do Mandril fora do padrão: diagnóstico (já existe molde MEL-224) | chefe sozinho (Opus) | consulta curta, sem subagente | ver uso_2026-10-09.md
 2026-10-09 | Corrige erro PA1001 (fórmulas multilinha sem '=') na tela de Trançagem | chefe sozinho (Opus) | ajuste pequeno em 1 arquivo, sem subagente | baixo
 2026-10-09 | Corrige erro de tipo (IfError Boolean x Table) na Trançagem e registra lições | chefe sozinho (Opus) | 1 tela + diário/lições, sem subagente | baixo
+2026-10-09 | Commit geral do repositório (pasta Missão Manutenção e relatório de uso) | chefe sozinho (Opus) | só git, sem subagente | baixo
