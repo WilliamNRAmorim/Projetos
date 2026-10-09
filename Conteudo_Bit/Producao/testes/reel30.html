@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Reel 30 s · Meu sistema não cobre tudo (GMS x MESA-11)</title>
+<script src="../brand.js"></script>
+<script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`);</script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script src="reel30_bit_rig.js"></script>
+<script src="reel30_audio_kit.js"></script>
+<style>body{margin:0;background:#0C0C0D;color:#8C8B86;font:13px "Geist Mono",monospace}canvas{display:block;max-width:100%}pre{padding:8px;white-space:pre-wrap}</style>
+</head><body>
+<script>
+// Reel 30 s com o Bit: "Meu sistema não cobre tudo" (GMS x MESA-11). Roteiro: testes/reel30_roteiro.md. Notas e auditoria: testes/reel30_notas.md.
+// 1080x1920, 30 fps, 30,0 s, 120 BPM (15 compassos de 2 s). frame(t) puro: sem timer, sem estado entre quadros, molas em forma fechada, grão com semente (brand.js).
+// Loop: o quadro 0 e o quadro 899 são idênticos (o gancho entra em 28,0 s e já está inteiro no quadro 0).
+// Simulações (estado calculado a partir dos dados, não desenhado à mão):
+//   S1 varredura: o marcador percorre as 11 funções; cada quadrado ganha o estado que está em FUNCOES; os rótulos 6/1/2/2 e "11 FUNÇÕES" são contagens desse vetor.
+//   S2 soma: cada parcela de 6 + 1 + 2 + 2 = 11 é a contagem dos quadrados em cada estado; os quadrados contados pulsam no tique da parcela; o total é FUNCOES.length.
+//   S3 pilha: a barra LOW-CODE enche um segmento por ferramenta listada em STACK; "100%" = ferramentas low-code / ferramentas (calculado).
+// URL: ?t=4.5 (quadro; aceita lista 1,2,3) · &safe=1 (área segura) · ?sheet=compasso[&em=meio][&safe=1] · ?folhas=1 (todas as folhas + auditoria) · ?render=1 (mp4 + medições)
+const W = 1080, H = 1920, FPS = 30, DUR = 30, NF = DUR * FPS, GRAO = 0.07;
+const q = new URLSearchParams(location.search), P = BRAND.paper, MU = BRAND.mute, INK = BRAND.ink;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), lerp = (a, b, k) => a + (b - a) * k;
+const out3 = x => 1 - Math.pow(1 - x, 3), in2 = x => x * x, inout = x => x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const OM = 14, mola = u => u <= 0 ? 0 : u >= 0.6 ? 1 : 1 - (1 + OM * u) * Math.exp(-OM * u); // fechada, amortecimento crítico, w = 14; fecha em 0,6 s (resíduo < 0,3%)
+const Q = f => f / FPS; // tempo de um quadro inteiro (todo evento cai em quadro inteiro)
+
+// ---------- dados (roteiro, tabela "Fatos usados"; fonte: Videos/Publicar/posts_prontos.md, LinkedIn) ----------
+const FUNCOES = ['I', 'I', 'I', 'I', 'I', 'I', 'E', 'P', 'P', 'F', 'F']; // MESA-11: I implementada, E em expansão, P parcial, F fora do escopo
+const STACK = [{ nome: 'POWER APPS', lowcode: true }, { nome: 'MICROSOFT LISTS', lowcode: true }, { nome: 'POWER AUTOMATE', lowcode: true }, { nome: 'POWER BI', lowcode: true }];
+const conta = c => FUNCOES.filter(s => s === c).length, CATS = ['I', 'E', 'P', 'F'];
+const pctLow = Math.round(100 * STACK.filter(s => s.lowcode).length / STACK.length);
+const TX = { // texto de tela; os números vêm das contagens acima
+  gancho: ['MEU SISTEMA', 'NÃO COBRE', 'TUDO'], c2: 'AVALIEI O GMS CONTRA O MESA-11',
+  c3a: `${FUNCOES.length} FUNÇÕES`, c3b: ['O MODELO DE', 'REFERÊNCIA DA', 'MANUFATURA'],
+  p1: `${conta('I')} IMPLEMENTADAS`, p2a: `${conta('E')} EM EXPANSÃO`, p2b: `${conta('P')} PARCIAIS`, p3: `${conta('F')} FORA DO ESCOPO`,
+  tcc: 'ANÁLISE DO TCC EM ENGENHARIA DE COMPUTAÇÃO', parcelas: CATS.map(conta), total: FUNCOES.length,
+  l1: `${pctLow}% LOW-CODE`, l2: `${STACK[0].nome} · ${STACK[1].nome}`, l3: `${STACK[2].nome} · ${STACK[3].nome}`, l4: 'RESTRIÇÃO, NÃO PREFERÊNCIA',
+  fecho: ['SABER O QUE', 'DEIXAR DE FORA', 'TAMBÉM FOI', 'ENGENHARIA'], balao: 'DOIS DE FORA. ANOTADO',
+};
+TX.soma = `${TX.parcelas.join(' + ')} = ${TX.total}`;
+const ROTEIRO = { p1: '6 IMPLEMENTADAS', p2a: '1 EM EXPANSÃO', p2b: '2 PARCIAIS', p3: '2 FORA DO ESCOPO', c3a: '11 FUNÇÕES', soma: '6 + 1 + 2 + 2 = 11', l1: '100% LOW-CODE', l2: 'POWER APPS · MICROSOFT LISTS', l3: 'POWER AUTOMATE · POWER BI' };
+
+// ---------- tempos (s); tudo em quadro inteiro ----------
+const TRI = Q(5); // 1/3 de batida a 120 BPM = 0,1667 s = 5 quadros
+const T = {
+  ganchoEntra: 28.0, ganchoSai: 1.8, cascata: i => 2.0 + Q(3 * i), marcadorChega: 4.0, punch: [4.0, 5.0],
+  enche: i => FUNCOES[i] === 'I' ? 6.0 + 0.5 * i : FUNCOES[i] === 'E' ? 9.0 : FUNCOES[i] === 'P' ? 10.5 + 0.5 * (i - FUNCOES.indexOf('P')) : null,
+  vermelho: 12.0, vermelhoParaFrase: 22.0, soma: [0, 1, 2, 3].map(k => 16.0 + k * TRI), encolhe: [18.5, 19.0], linhas: [0, 1, 2, 3].map(k => 19.0 + k * TRI),
+  volta: [21.5, 22.0], fecho: 22.0, balao: [24.0, 25.8], desce: [26.0, 27.3], sobe: [27.3, 27.6], esvazia: i => 26.0 + Q(3 * (FUNCOES.length - 1 - i)), respiro: [27.6, 28.0],
+};
+const SAI = 0.2, ENTRA = 0.3; // saída por máscara 0,2 s (out cúbico) termina no corte; entrada 0,3 s
+
+// ---------- grade (objeto-guia): 11 quadrados retos 3 + 4 + 4, 140 px, folga 24 px ----------
+const SQ = 140, GAP = 24, ROWS = [3, 4, 4], GW = 4 * SQ + 3 * GAP, GH = 3 * SQ + 2 * GAP, CENTRO = { x: 540, y: 672 + GH / 2 }, CANTO = { s: 0.4 };
+CANTO.x = 90 + CANTO.s * GW / 2; CANTO.y = 270 + CANTO.s * GH / 2;
+const RECT = []; { let i = 0; ROWS.forEach((n, r) => { const x0 = (GW - (n * SQ + (n - 1) * GAP)) / 2; for (let c = 0; c < n; c++) RECT[i++] = { x: x0 + c * (SQ + GAP), y: r * (SQ + GAP), w: SQ, h: SQ }; }); }
+function grade(t) { // transformação da grade: centro, escala, descida
+  const u1 = in2(clamp((t - T.encolhe[0]) / (T.encolhe[1] - T.encolhe[0]))), u2 = in2(clamp((t - T.volta[0]) / (T.volta[1] - T.volta[0]))), k = u1 - u2;
+  const sCam = 1 + 0.06 * (inout(clamp((t - T.punch[0]) / (T.punch[1] - T.punch[0]))) - u1); // punch-in 1,00 -> 1,06; volta a 1,00 junto com o encolhimento
+  const dy = 40 * in2(clamp((t - T.desce[0]) / (T.desce[1] - T.desce[0]))) - 40 * out3(clamp((t - T.sobe[0]) / (T.sobe[1] - T.sobe[0])));
+  return { x: lerp(CENTRO.x, CANTO.x, k), y: lerp(CENTRO.y + (sCam - 1) * GH / 2, CANTO.y, k) + dy, s: lerp(sCam, CANTO.s, k) }; // punch-in ancorado na borda de cima: a grade cresce para baixo e não encosta no texto
+}
+function quadrado(i, t) { // estado visual do quadrado i em t, derivado de FUNCOES[i]
+  const c = FUNCOES[i], tA = T.cascata(i), tR = T.esvazia(i), ativo = t >= tA && t < tR;
+  let esc = t >= tA ? 1 + 0.12 * (1 - mola(t - tA)) : 1;
+  const tc = T.soma[CATS.indexOf(c)]; if (t >= tc && t < tc + 0.6) esc *= 1 + 0.06 * (1 - mola(t - tc)); // pulso: este quadrado foi contado nesta parcela
+  let topo = 0, base = 0; const tF = T.enche(i);
+  if (tF != null && t < tR) { const p = in2(clamp((t - (tF - 0.2)) / 0.2)); if (c === 'P') { topo = SQ / 2; base = SQ / 2 + SQ / 2 * p; } else base = SQ * p; // o preenchimento cai da borda de cima (P: do meio)
+    const d = in2(clamp((t - (tR - 0.1)) / 0.1)); topo = lerp(topo, base, d); } // esvazia descendo
+  const anel = c === 'E' && t < tR ? 12 * in2(clamp((t - 8.8) / 0.2)) : 0;
+  const vermelho = c === 'F' && t >= T.vermelho && t < T.vermelhoParaFrase;
+  return { esc, topo, base, anel, cor: vermelho ? 'acc' : ativo ? P : MU, lw: vermelho ? 6 : 3 };
+}
+const FF = { x: RECT[9].x, y: RECT[9].y, w: RECT[10].x + SQ - RECT[9].x, h: SQ };
+const MOV = [ // marcador (cursor da avaliação): [início, fim, de, para, easing]
+  [3.5, 4.0, { ...RECT[0], x: RECT[0].x - 420 }, RECT[0], in2],
+  ...[1, 2, 3, 4, 5, 6].map(i => [T.enche(i - 1), T.enche(i - 1) + 0.25, RECT[i - 1], RECT[i], out3]).map((m, k) => k === 5 ? [8.5, 8.75, m[2], m[3], out3] : m),
+  [10.0, 10.25, RECT[6], RECT[7], out3], [10.5, 10.75, RECT[7], RECT[8], out3],
+  [11.0, 11.5, RECT[8], { ...FF, y: FF.y - 24 }, out3], [11.6, 12.0, { ...FF, y: FF.y - 24 }, FF, in2], // assenta 24 px para baixo, acelerando, e para seco em 12,0
+];
+function marcador(t) {
+  if (t < MOV[0][0] || t >= T.vermelho) return null;
+  let r = MOV[0][2]; for (const [a, b, de, para, e] of MOV) { if (t < a) break; const k = t >= b ? 1 : e((t - a) / (b - a)); r = { x: lerp(de.x, para.x, k), y: lerp(de.y, para.y, k), w: lerp(de.w, para.w, k), h: lerp(de.h, para.h, k) }; }
+  return r;
+}
+
+// ---------- texto: blocos medidos na fonte real, entrada e saída por máscara reta ----------
+let LAY = null, ACC = null, CAIXAS = null; // ACC: destaques vermelhos do quadro; CAIXAS: caixas de texto visíveis (auditoria)
+const acc = tag => { if (ACC) ACC.add(tag); return BRAND.accent; };
+function fonte(g, f) { g.font = `${f.w} ${f.s}px ${f.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = f.mono ? '0px' : `${-0.03 * f.s}px`; g.textBaseline = 'alphabetic'; g.textAlign = 'left'; }
+function cabe(g, linhas, f, maxW, maxS) { let s = maxS; for (; s > 20; s--) { fonte(g, { ...f, s }); if (Math.max(...linhas.map(l => g.measureText(l).width)) <= maxW) break; } return s; }
+function bloco(g, linhas, y0, y1) { // linhas: [{s, f, gap}] -> baselines e caixas de máscara, bloco centrado em y0..y1
+  let y = 0; const out = linhas.map((l, k) => { fonte(g, l.f); const m = g.measureText(l.s), cap = (fonte(g, l.f), g.measureText('H').actualBoundingBoxAscent);
+    if (k) y += (l.gap ?? 0.26 * l.f.s) + cap; else y = cap; const r = { ...l, b: y, asc: m.actualBoundingBoxAscent, desc: m.actualBoundingBoxDescent, w: m.width, cap }; return r; });
+  const topo = -out[0].cap, fim = out.at(-1).b + out.at(-1).desc, dy = (y0 + y1) / 2 - (topo + fim) / 2;
+  out.forEach(r => { r.b += dy; r.box = { y0: Math.floor(r.b - r.asc - 6), y1: Math.ceil(r.b + r.desc + 6) }; }); return out;
+}
+function cabeAltura(g, fazer, s0, y0, y1) { // maior tamanho em que o bloco cabe na faixa y0..y1 (com acentos e descendentes)
+  for (let s = s0; s > 20; s--) { const L = bloco(g, fazer(s), y0, y1); if (L[0].b - L[0].asc >= y0 && L.at(-1).b + L.at(-1).desc <= y1) return L; } throw new Error('bloco não cabe');
+}
+function layout() {
+  const g = document.createElement('canvas').getContext('2d'), D = s => ({ w: 900, s }), M = (s, w = 700) => ({ w, s, mono: true }), Z = [270, 630];
+  const sG = cabe(g, TX.gancho, D(), 850, 150), s3 = cabe(g, TX.c3b, D(), 850, 120), sP = cabe(g, [TX.p1, TX.p2a, TX.p2b, TX.p3], D(), 850, 112), sF = cabe(g, TX.fecho, D(), 850, 130);
+  const sL1 = cabe(g, [TX.l1], D(), 850, 120), sM = cabe(g, [TX.l2, TX.l3, TX.l4], M(), 850, 46), sC2 = cabe(g, [TX.c2], M(), 850, 44), sT = cabe(g, [TX.tcc], M(0, 500), 850, 34), sS = cabe(g, [TX.soma], M(), 850, 84);
+  const L = {};
+  L.gancho = cabeAltura(g, S => TX.gancho.map((s, k) => ({ s, f: D(S), cor: k === 2 ? 'acc' : P })), sG, ...Z);
+  L.c2 = bloco(g, [{ s: TX.c2, f: M(sC2), cor: P }], ...Z);
+  L.c3 = cabeAltura(g, S => [{ s: TX.c3a, f: M(40, 500), cor: MU }, ...TX.c3b.map((s, k) => ({ s, f: D(S), cor: P, gap: k ? undefined : 34 }))], s3, ...Z);
+  L.p1 = bloco(g, [{ s: TX.p1, f: D(sP), cor: P }], ...Z);
+  L.p2 = bloco(g, [{ s: TX.p2a, f: D(sP), cor: P }, { s: TX.p2b, f: D(sP), cor: P }], ...Z);
+  L.p3 = bloco(g, [{ s: TX.p3, f: D(sP), cor: P }], ...Z);
+  L.tcc = bloco(g, [{ s: TX.tcc, f: M(sT, 500), cor: MU }, { s: TX.soma, f: M(sS), cor: P, gap: 70 }], ...Z);
+  L.l = bloco(g, [{ s: TX.l1, f: D(sL1), cor: P }, { s: TX.l2, f: M(sM), cor: P, gap: 112 }, { s: TX.l3, f: M(sM), cor: P, gap: 26 }, { s: TX.l4, f: M(sM), cor: P, gap: 70 }], 520, 1000);
+  L.barra = { x: 90, y: L.l[0].b + 28, w: 850, h: 22 };
+  L.fecho = cabeAltura(g, S => TX.fecho.map((s, k) => ({ s, f: D(S), cor: k === 1 ? 'acc' : P })), sF, ...Z);
+  { fonte(g, M(sS)); const b = L.tcc[1]; let x = 90; b.parc = []; const pedacos = []; TX.parcelas.forEach((n, k) => { pedacos.push(k ? ' + ' + n : '' + n); }); pedacos.push(` = ${TX.total}`);
+    for (const p of pedacos) { b.parc.push({ s: p, x }); x += g.measureText(p).width; } }
+  { const f = M(36); fonte(g, f); const tw = g.measureText(TX.balao).width; L.balao = { f, x1: 752, y0: 1252, y1: 1340, tw }; L.balao.x0 = L.balao.x1 - tw - 52; }
+  L.tam = { gancho: L.gancho[0].f.s, c3: L.c3[1].f.s, passos: sP, fecho: L.fecho[0].f.s, l1: sL1, mono: sM, c2: sC2, tcc: sT, soma: sS };
+  return L;
+}
+// item de texto: { tIn, ent (0 = corte seco no tempo forte; senão máscara em s, cada linha +2 quadros), fim (some por completo), sai (0 = corte seco em fim; senão máscara terminando em fim) }
+// tt = tempo (o gancho usa t+30 antes de 14 s). Rótulos trocam por corte seco no tempo forte para a leitura plena caber nos 2 s do compasso.
+const ITENS = () => [
+  { id: 'gancho', L: LAY.gancho, tIn: T.ganchoEntra, ent: ENTRA, fim: T.ganchoSai + SAI + 30, sai: SAI, wrap: true },
+  { id: 'c2', L: LAY.c2, tIn: 2.0, ent: 0, fim: 4.0, sai: 0 },
+  { id: 'c3', L: LAY.c3, tIn: 4.0, ent: 0, fim: 6.0, sai: 0 },
+  { id: 'p1', L: LAY.p1, tIn: 6.0, ent: 0, fim: 9.0, sai: 0 },
+  { id: 'p2a', L: [LAY.p2[0]], tIn: 9.0, ent: 0, fim: 12.0, sai: 0 }, { id: 'p2b', L: [LAY.p2[1]], tIn: 9.5, ent: ENTRA, fim: 12.0, sai: 0 },
+  { id: 'p3', L: LAY.p3, tIn: 12.0, ent: 0, fim: 16.0, sai: 0 },
+  { id: 'tcc', L: [LAY.tcc[0]], tIn: 16.0, ent: 0, fim: T.encolhe[0], sai: 0 },
+  ...[0, 1, 2, 3].map(k => ({ id: 'l' + (k + 1), L: [LAY.l[k]], tIn: T.linhas[k], ent: 0, fim: T.volta[0], sai: 0 })),
+  { id: 'fecho', L: LAY.fecho, tIn: T.fecho, ent: ENTRA, fim: 26.0, sai: SAI },
+];
+function linhaTexto(g, id, r, t0, ent, fim, sai, t) { // uma linha: entra subindo para dentro da máscara (ou seca); sai subindo (ou seca)
+  if (t < t0 || t >= fim) return;
+  const hB = r.box.y1 - r.box.y0, e = ent ? out3(clamp((t - t0) / ent)) : 1, s = sai ? out3(clamp((t - (fim - sai)) / sai)) : 0, off = (1 - e) * hB - s * hB;
+  if (Math.abs(off) >= hB) return;
+  g.save(); g.beginPath(); g.rect(0, r.box.y0, W, hB); g.clip(); fonte(g, r.f); g.fillStyle = r.cor === 'acc' ? acc(id) : r.cor; g.fillText(r.s, 90, r.b + off); g.restore();
+  if (CAIXAS) CAIXAS.push({ id, x0: 90, x1: 90 + r.w, y0: Math.max(r.box.y0, r.b + off - r.asc), y1: Math.min(r.box.y1, r.b + off + r.desc) });
+}
+function textos(g, t) {
+  for (const it of ITENS()) { const tt = it.wrap && t < 14 ? t + 30 : t; it.L.forEach((r, k) => linhaTexto(g, it.id, r, it.tIn + (it.ent ? Q(2 * k) : 0), it.ent, it.fim, it.sai, tt)); }
+  // soma (S2): cada parcela aparece seca no seu tique; a última vem com "= 11"; sai por corte junto com o rótulo
+  const b = LAY.tcc[1];
+  if (t >= T.soma[0] && t < T.encolhe[0]) { fonte(g, b.f); g.fillStyle = P; const vis = b.parc.filter((p, k) => t >= T.soma[Math.min(k, 3)]); vis.forEach(p => g.fillText(p.s, p.x, b.b));
+    if (CAIXAS) CAIXAS.push({ id: 'soma', x0: 90, x1: vis.at(-1).x + g.measureText(vis.at(-1).s).width, y0: b.b - b.asc, y1: b.b + b.desc }); }
+  // barra LOW-CODE (S3): um segmento por ferramenta de STACK, cheio quando a linha que a nomeia entra
+  if (t >= T.linhas[0] && t < T.volta[0]) { const B = LAY.barra, n = STACK.length, gp = 10, sw = (B.w - gp * (n - 1)) / n;
+    STACK.forEach((st, k) => { const tk = T.linhas[1 + (k >> 1)], p = st.lowcode ? in2(clamp((t - (tk - 0.1)) / 0.1)) : 0, x = B.x + k * (sw + gp);
+      g.strokeStyle = MU; g.lineWidth = 2; g.strokeRect(x + 1, B.y + 1, sw - 2, B.h - 2); if (p > 0) { g.fillStyle = P; g.fillRect(x, B.y, sw * p, B.h); } });
+    if (CAIXAS) CAIXAS.push({ id: 'barra', x0: B.x, x1: B.x + B.w, y0: B.y, y1: B.y + B.h }); }
+}
+function balao(g, t) { // entra com pop seco no estalo (24,0); sai por corte no tempo forte (26,0), junto com o fim da frase
+  if (t < T.balao[0] || t >= 26.0) return null;
+  const B = LAY.balao, e = 0.9 + 0.1 * mola(t - T.balao[0]);
+  if (e <= 0.001) return null;
+  const ax = B.x1 + 26, ay = (B.y0 + B.y1) / 2; // bico apontado para o Bit
+  g.save(); g.translate(ax, ay); g.scale(e, e); g.translate(-ax, -ay);
+  g.fillStyle = BRAND.ink2; g.strokeStyle = MU; g.lineWidth = 3; g.lineJoin = 'miter';
+  g.beginPath(); g.moveTo(B.x0, B.y0); g.lineTo(B.x1, B.y0); g.lineTo(B.x1, ay - 14); g.lineTo(ax, ay); g.lineTo(B.x1, ay + 14); g.lineTo(B.x1, B.y1); g.lineTo(B.x0, B.y1); g.closePath(); g.fill(); g.stroke();
+  fonte(g, B.f); g.fillStyle = P; g.fillText(TX.balao, B.x0 + 26, ay + 13); g.restore();
+  const cx = (x) => ax + (x - ax) * e, cy = y => ay + (y - ay) * e;
+  return { x0: cx(B.x0), x1: ax, y0: cy(B.y0), y1: cy(B.y1), tx0: cx(B.x0 + 26), tx1: cx(B.x0 + 26 + B.tw), ty0: cy(ay - 14), ty1: cy(ay + 13) };
+}
+
+// ---------- o Bit: rig 2D (bit_rig.js) em monocromático, pequeno, à direita; só reage ----------
+const BIT = { x: 860, y: 1420, s: 220 / 685 }; // pés em (860, 1420), ~220 px de altura
+const molaK = (keys, t) => keys.slice(1).reduce((v, [tk, val], k) => { const m = mola(t - tk); return m === 1 ? val : v + (val - keys[k][1]) * m; }, keys[0][1]); // mola assentada = valor exato (sem erro de soma: quadro 0 == quadro 899)
+const KB = { // quadros-chave do Bit (molas fechadas; tudo assentado em 27,2 s, igual ao quadro 0)
+  tilt: [[-1, 0], [2.0, -0.12], [4.0, -0.04], [6.0, 0], [19.0, -0.12], [22.0, 0]],
+  aponta: [[-1, 0], [4.0, 1], [6.0, 0]],
+  lid: [[-1, 0], [9.0, 0.45], [12.0, 0], [22.0, 0.45], [24.0, 0.25], [26.0, 0]],
+  lx: [[-1, -9], [4.0, -13], [6.0, -9], [12.0, -11], [16.0, -9], [19.0, -12], [22.0, -9], [24.0, 0], [26.0, -9]],
+  ly: [[-1, -6], [4.0, -9], [6.0, -6], [12.0, -12], [16.0, -6], [19.0, -14], [22.0, -6], [24.0, 2], [26.0, -6]],
+  amp: [[-1, 0], [1.6, 1], [12.0, 0], [16.0, 1], [26.6, 0]],
+};
+const PISCA = [0.9, 5.3, 14.6, 17.9, 20.8, 25.2];
+function bitPose(t) {
+  const blink = PISCA.reduce((m, b) => Math.max(m, 1 - Math.min(1, Math.abs(t - b) / 0.07)), 0);
+  return { tilt: molaK(KB.tilt, t), mix: molaK(KB.aponta, t), amp: molaK(KB.amp, t), face: { expr: t >= 8.0 && t < 8.9 ? 'feliz' : 'neutro', look: [molaK(KB.lx, t), molaK(KB.ly, t)], lid: molaK(KB.lid, t), blink } };
+}
+let BC = null; const BOX = { w: 440, h: 470, fx: 220, fy: 445 };
+function bit(g, t) {
+  if (!BC) { BC = document.createElement('canvas'); BC.width = BOX.w; BC.height = BOX.h; }
+  const b = BC.getContext('2d'), p = bitPose(t); b.setTransform(1, 0, 0, 1, 0, 0); b.clearRect(0, 0, BOX.w, BOX.h);
+  BitRig.draw(b, t, { x: BOX.fx, y: BOX.fy, s: BIT.s, pose: 'tranquilo', poseB: 'aponta', mix: p.mix, tilt: p.tilt, amp: p.amp, face: p.face });
+  g.save(); g.filter = 'grayscale(1) brightness(1.7)'; g.drawImage(BC, BIT.x - BOX.fx, BIT.y - BOX.fy); g.restore(); // monocromático: o corpo do Bit é vermelho-laranja e seria um 2º vermelho no quadro
+}
+
+// ---------- frame(t) puro ----------
+const VISTOS = new WeakSet(); // 1º desenho em cada canvas novo saía até 2 níveis diferente (aquecimento do canvas); é refeito
+function frame(g, t, comGrao = true, safe = q.has('safe'), cam = null) {
+  if (!VISTOS.has(g.canvas)) { VISTOS.add(g.canvas); frame(g, t, comGrao, safe, cam); g.getImageData(0, 0, 1, 1); }
+  t = Math.round(((t % DUR) + DUR) % DUR * FPS * 1000) / (FPS * 1000) + 1e-6; // normaliza (loop); +1 µs garante que o evento marcado no quadro f acontece no próprio quadro f
+  const C = cam || { fundo: 1, grade: 1, texto: 1, bit: 1, balao: 1 };
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none';
+  if (C.fundo) { g.fillStyle = INK; g.fillRect(0, 0, W, H); } else g.clearRect(0, 0, W, H);
+  if (C.grade) { // grade + marcador, no espaço da grade
+    const G = grade(t); g.save(); g.translate(G.x, G.y); g.scale(G.s, G.s); g.translate(-GW / 2, -GH / 2);
+    for (let i = 0; i < FUNCOES.length; i++) { const r = RECT[i], v = quadrado(i, t); g.save(); g.translate(r.x + SQ / 2, r.y + SQ / 2); g.scale(v.esc, v.esc); g.translate(-SQ / 2, -SQ / 2);
+      if (v.base > v.topo + 0.01) { g.fillStyle = P; g.fillRect(0, v.topo, SQ, v.base - v.topo); }
+      g.strokeStyle = v.cor === 'acc' ? acc('fora') : v.cor; g.lineWidth = v.lw; g.strokeRect(v.lw / 2, v.lw / 2, SQ - v.lw, SQ - v.lw);
+      if (v.anel > 0.01) { g.strokeStyle = P; g.lineWidth = 3; g.strokeRect(-v.anel + 1.5, -v.anel + 1.5, SQ + 2 * v.anel - 3, SQ + 2 * v.anel - 3); }
+      g.restore(); }
+    const m = marcador(t); if (m) { g.strokeStyle = acc('marcador'); g.lineWidth = 6; g.strokeRect(m.x + 3, m.y + 3, m.w - 6, m.h - 6); }
+    g.restore();
+  }
+  if (C.texto) textos(g, t);
+  if (C.bit) bit(g, t);
+  let bb = null; if (C.balao) bb = balao(g, t);
+  if (comGrao) grain(g, W, H, GRAO);
+  if (safe) { // conferência da área segura (igual ao ep_kit.js ?safe=1); nunca entra no render
+    g.save(); g.fillStyle = 'rgba(255,59,31,0.18)'; g.fillRect(0, 0, W, 250); g.fillRect(0, 1480, W, H - 1480); g.fillRect(940, 900, W - 940, 580);
+    g.strokeStyle = '#FF3B1F'; g.lineWidth = 3; g.setLineDash([14, 10]); g.strokeRect(90, 250, 850, 1230); g.restore();
+  }
+  return bb;
+}
+
+// ---------- áudio: eventos com o PICO no quadro do evento (gerados das mesmas constantes do vídeo) ----------
+const EV = [];
+const ev = (nome, tipo, t, nivel, visual, o = {}) => EV.push({ nome, tipo, t, nivel, visual, ...o });
+ev('whoosh sobe: gancho sai', 'whoosh', T.ganchoSai, 0.26, 'gancho sai por máscara para cima (out cúbico: mais rápido no início, 1,8 s)');
+FUNCOES.forEach((_, i) => ev(`estalo cascata ${i + 1}/11`, 'clique', T.cascata(i), 0.2, `quadrado ${i + 1} entra (contorno acende + pop)`, { freq: Math.round(900 * Math.pow(2, 2 * i / 12)), semente: i }));
+ev('hit grave: virada', 'impacto', T.marcadorChega, 0.3, 'marcador vermelho chega ao 1º quadrado; punch-in começa');
+ev('estalo: virada', 'clique', T.marcadorChega, 0.12, 'marcador para seco sobre o 1º quadrado', { freq: 2600, semente: 20 });
+FUNCOES.forEach((c, i) => { if (c === 'I') ev(`tick enche ${i + 1}/6`, 'clique', T.enche(i), 0.22, `quadrado ${i + 1} termina de encher (o preenchimento cai e para)`, { freq: 1500, semente: 30 + i }); });
+ev('tick: em expansão', 'clique', T.enche(6), 0.22, '7º quadrado ganha o contorno externo e enche', { freq: 1900, semente: 40 });
+[7, 8].forEach((i, k) => ev(`tick parcial ${i + 1}`, 'clique', T.enche(i), 0.22, `quadrado ${i + 1} enche pela metade`, { freq: 2300 + 300 * k, semente: 41 + k }));
+ev('hit grave: fora do escopo', 'impacto', T.vermelho, 0.26, 'marcador assenta; os 2 últimos viram contorno vermelho');
+ev('swoosh desce: marcador assenta', 'swooshDesce', T.vermelho, 0.14, 'marcador desce 24 px acelerando (11,6-12,0) e para seco', { dur: 0.48 });
+T.soma.forEach((t, k) => ev(`tique soma ${k + 1}/4`, 'tique', t, 0.22, `parcela ${TX.parcelas[k]} (${['implementadas', 'em expansão', 'parciais', 'fora do escopo'][k]}) contada${k === 3 ? ' + "= 11"' : ''}`, { freq: 4200, semente: 50 + k }));
+ev('whoosh: grade encolhe', 'whoosh', T.encolhe[1], 0.24, 'grade sobe para o canto e para em 19,0');
+T.linhas.forEach((t, k) => ev(`tique linha ${k + 1}/4`, 'tique', t, 0.2, `linha mono ${k + 1} entra`, { freq: 3000, semente: 60 + k }));
+ev('swoosh desce: grade volta', 'swooshDesce', T.volta[1], 0.14, 'grade desce do canto ao centro (21,5-22,0)', { dur: 0.58 });
+ev('hit grave: fecho', 'impacto', T.fecho, 0.26, 'grade chega ao centro; frase entra; o vermelho passa para DEIXAR DE FORA');
+ev('estalo: balão', 'clique', T.balao[0], 0.24, 'balão do Bit aparece', { freq: 2400, semente: 70 });
+FUNCOES.forEach((_, j) => { const i = FUNCOES.length - 1 - j; ev(`estalo grave esvazia ${i + 1}`, 'clique', T.esvazia(i), 0.2, `quadrado ${i + 1} volta a contorno mute`, { freq: Math.round(620 * Math.pow(2, -j / 12)), semente: 80 + j }); });
+ev('swoosh desce longo', 'swooshDesce', T.desce[1], 0.24, 'grade desce 40 px e para no fundo (26,0-27,3)', { dur: 1.38 });
+ev('hit: gancho entra', 'impacto', T.ganchoEntra, 0.36, 'gancho entra por máscara (fecha o loop)');
+
+// ---------- trilha: stems/music.wav, alinhada à grade de 120 BPM; silêncio no respiro; costura do loop contínua ----------
+async function analisaBatida() {
+  const mus = await new OfflineAudioContext(2, 48000, 48000).decodeAudioData(await (await fetch('/w/stems/music.wav')).arrayBuffer());
+  const a = mus.getChannelData(0), b = mus.getChannelData(1), sr = mus.sampleRate, hop = 240, n = Math.floor(a.length / hop) - 1, e = new Float32Array(n), on = new Float32Array(n);
+  for (let k = 0; k < n; k++) { let s = 0; for (let i = k * hop + 1; i < k * hop + 480 && i < a.length; i++) { const d = (a[i] + b[i] - a[i - 1] - b[i - 1]) / 2; s += d * d; } e[k] = Math.log(s + 1e-9); }
+  for (let k = 1; k < n; k++) on[k] = Math.max(0, e[k] - e[k - 1]);
+  const dt = hop / sr, sc = (Pp, ph) => { let s = 0, c = 0; for (let t = ph; t < n * dt; t += Pp) { s += on[Math.round(t / dt)] || 0; c++; } return s / c; };
+  let best = { s: -1 }; for (let Pp = 0.30; Pp <= 1.0; Pp += 0.0005) for (let ph = 0; ph < Pp; ph += 0.005) { const s = sc(Pp, ph); if (s > best.s) best = { s, P: Pp, ph }; }
+  const media = on.reduce((x, y) => x + y, 0) / n;
+  let fino = best; for (let Pp = best.P - 0.002; Pp <= best.P + 0.002; Pp += 0.0001) for (let ph = best.ph - 0.01; ph <= best.ph + 0.01; ph += 0.001) { if (ph < 0) continue; const s = sc(Pp, ph); if (s > fino.s) fino = { s, P: Pp, ph }; }
+  const fases = [0, 1, 2, 3].map(j => sc(fino.P * 4, fino.ph + j * fino.P)), j = fases.indexOf(Math.max(...fases));
+  return { periodo_s: +fino.P.toFixed(4), bpm: +(60 / fino.P).toFixed(2), fase_s: +fino.ph.toFixed(3), tempoForte_s: +(fino.ph + j * fino.P).toFixed(3), contraste: +(fino.s / media).toFixed(2), duracao_s: +(a.length / sr).toFixed(2), fasesCompasso: fases.map(x => +x.toFixed(3)) };
+}
+
+// ---------- auditoria do vídeo (sem codec) ----------
+function difere(a, b) { let n = 0, mx = 0; for (let i = 0; i < a.length; i += 4) { const d = Math.max(Math.abs(a[i] - b[i]), Math.abs(a[i + 1] - b[i + 1]), Math.abs(a[i + 2] - b[i + 2])); if (d) { n++; if (d > mx) mx = d; } } return { pixelsDiferentes: n, maiorDiferenca: mx }; }
+const sobrepoe = (a, b, m = 0) => a.x0 < b.x1 + m && b.x0 < a.x1 + m && a.y0 < b.y1 + m && b.y0 < a.y1 + m;
+async function auditoria() {
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }), A = {};
+  const px = (t, grao, cam) => { frame(g, t, grao, false, cam); return g.getImageData(0, 0, W, H).data; };
+  A.textos = Object.fromEntries(Object.keys(ROTEIRO).map(k => [k, { calculado: k === 'soma' ? TX.soma : TX[k], roteiro: ROTEIRO[k], igual: (k === 'soma' ? TX.soma : TX[k]) === ROTEIRO[k] }]));
+  A.fonte = { geist900: document.fonts.check('900 100px Geist'), geistMono700: document.fonts.check('700 40px "Geist Mono"'), geistMono500: document.fonts.check('500 40px "Geist Mono"') };
+  A.loop = { q0_vs_q899_semGrao: difere(px(0, false), px(Q(NF - 1), false)), q0_vs_q899_comGrao: difere(px(0, true), px(Q(NF - 1), true)), render0_vs_render30_semGrao: difere(px(0, false), px(30, false)) };
+  { const a = px(5.0, true); px(23.3, true); px(0.4, true); A.pureza_q150_foraDeOrdem = difere(a, px(5.0, true)); }
+  { const f0 = Math.round(T.respiro[0] * FPS), f1 = Math.round(T.respiro[1] * FPS), ref = px(Q(f0), true); let pior = 0; for (let f = f0; f <= f1; f++) pior = Math.max(pior, difere(px(Q(f), true), ref).pixelsDiferentes);
+    A.respiro = { de: T.respiro[0], ate: T.respiro[1], quadros: f1 - f0 + 1, parado_s: +((f1 - f0) / FPS).toFixed(3), maiorPixelsDiferentes: pior }; }
+  { // gancho estático 28,5 s -> 1,7 s (o que fica parado na costura)
+    const ref = px(0, true); let pior = 0; for (const f of [855, 870, 885, 899, 5, 15, 30, 40]) pior = Math.max(pior, difere(px(Q(f), true), ref).pixelsDiferentes); A.costura_maiorDiferenca_px = pior; }
+  // por quadro: área segura (texto: 0 px fora; elementos: nada nos botões, topo e base), vermelhos, sobreposições, Bit sem vermelho
+  const foraTexto = [], foraElem = [], vermelhoDuplo = [], sobrepos = [], bitVermelho = [], larg = []; let maxW = 0;
+  const zonaBotao = (x, y) => (y < 250) || (y >= 1480) || (x >= 940 && y >= 900);
+  for (let f = 0; f < NF; f++) { const t = Q(f);
+    ACC = new Set(); CAIXAS = []; const bb = frame(g, t, false, false, { texto: 1, balao: 1 }); const d = g.getImageData(0, 0, W, H).data; const cx = CAIXAS, vermelhos = [...ACC];
+    let nt = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { if (x >= 90 && x < 940 && y >= 250 && y < 1480) continue; if (d[(y * W + x) * 4 + 3]) nt++; }
+    if (nt) foraTexto.push({ q: f, px: nt });
+    ACC = new Set(); CAIXAS = null; frame(g, t, false, false, { grade: 1, bit: 1 }); const e = g.getImageData(0, 0, W, H).data; vermelhos.push(...ACC);
+    let ne = 0, gx0 = W, gy0 = H, gx1 = 0, gy1 = 0; for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) { const i = (y * W + x) * 4; if (!e[i + 3]) continue; if (zonaBotao(x, y)) ne++; }
+    if (ne) foraElem.push({ q: f, px: ne });
+    if (new Set(vermelhos).size > 1) vermelhoDuplo.push({ q: f, tags: [...new Set(vermelhos)] });
+    // caixas: grade (com anel e marcador), Bit (alfa do recorte), balão
+    const G = grade(t), gb = { x0: G.x - G.s * (GW / 2 + 14), x1: G.x + G.s * (GW / 2 + 14), y0: G.y - G.s * (GH / 2 + 14) - (marcador(t) ? 24 * G.s : 0), y1: G.y + G.s * (GH / 2 + 14) };
+    const bd = BC.getContext('2d').getImageData(0, 0, BOX.w, BOX.h).data; let bx0 = 1e9, by0 = 1e9, bx1 = -1, by1 = -1, nr = 0;
+    for (let y = 0; y < BOX.h; y++) for (let x = 0; x < BOX.w; x++) { const i = (y * BOX.w + x) * 4; if (bd[i + 3] > 8) { bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); } }
+    { frame(g, t, false, false, { bit: 1 }); const z = g.getImageData(BIT.x - BOX.fx, BIT.y - BOX.fy, BOX.w, BOX.h).data; for (let i = 0; i < z.length; i += 4) if (z[i + 3] > 8 && z[i] - z[i + 1] > 40) nr++; }
+    if (nr) bitVermelho.push({ q: f, px: nr });
+    const bitB = { x0: BIT.x - BOX.fx + bx0, x1: BIT.x - BOX.fx + bx1, y0: BIT.y - BOX.fy + by0, y1: BIT.y - BOX.fy + by1 };
+    if (f === 0) A.caixaBit_q0 = bitB;
+    for (let a = 0; a < cx.length; a++) { maxW = Math.max(maxW, cx[a].x1 - 90);
+      if (sobrepoe(cx[a], gb)) sobrepos.push({ q: f, a: cx[a].id, b: 'grade' }); if (sobrepoe(cx[a], bitB)) sobrepos.push({ q: f, a: cx[a].id, b: 'bit' });
+      for (let b2 = a + 1; b2 < cx.length; b2++) if (cx[a].id !== cx[b2].id && sobrepoe(cx[a], cx[b2])) sobrepos.push({ q: f, a: cx[a].id, b: cx[b2].id }); }
+    if (bb) { if (sobrepoe(bb, bitB)) sobrepos.push({ q: f, a: 'balao', b: 'bit' }); if (sobrepoe(bb, gb)) sobrepos.push({ q: f, a: 'balao', b: 'grade' }); for (const c of cx) if (sobrepoe(bb, c)) sobrepos.push({ q: f, a: 'balao', b: c.id }); }
+    if (sobrepoe(bitB, gb)) sobrepos.push({ q: f, a: 'bit', b: 'grade' });
+    if (f % 30 === 0) document.title = `auditoria ${f}`;
+  }
+  ACC = null; CAIXAS = null;
+  const resume = (arr) => ({ quadros: arr.length, primeiros: arr.slice(0, 12) });
+  A.areaSegura = { texto_pixelsFora: resume(foraTexto), elementos_emBotoesTopoBase: resume(foraElem), larguraMaxTexto_px: Math.round(maxW) };
+  A.vermelho = { quadrosComMaisDeUmDestaque: resume(vermelhoDuplo), bitComPixelVermelho: resume(bitVermelho) };
+  A.sobreposicoes = resume(sobrepos); if (sobrepos.length) A.sobreposicoesPorPar = Object.entries(sobrepos.reduce((m, s) => (m[s.a + '×' + s.b] = (m[s.a + '×' + s.b] || []).concat(s.q), m), {})).map(([k, v]) => ({ par: k, de: v[0], ate: v.at(-1), quadros: v.length }));
+  // máscaras não cortam texto parado: linha desenhada com e sem máscara no meio da janela de leitura
+  A.mascaraCortaTexto = []; for (const it of ITENS()) it.L.forEach(r => { const m = document.createElement('canvas'); m.width = W; m.height = H; const mg = m.getContext('2d'); fonte(mg, r.f); mg.fillStyle = '#fff'; mg.fillText(r.s, 90, r.b);
+    const a = mg.getImageData(0, 0, W, H).data; let fora = 0; for (let y = 0; y < H; y++) { if (y >= r.box.y0 && y < r.box.y1) continue; for (let x = 0; x < W; x++) if (a[(y * W + x) * 4 + 3]) fora++; } if (fora) A.mascaraCortaTexto.push({ id: it.id, s: r.s, pxFora: fora }); });
+  // tempo de tela de cada ideia (na tela = da entrada ao fim da saída; leitura plena = parada e inteira)
+  A.leitura = ITENS().map(it => { const ult = it.tIn + (it.ent ? Q(2 * (it.L.length - 1)) : 0);
+    return { id: it.id, texto: it.L.map(r => r.s).join(' / '), entra: +(it.tIn % 30).toFixed(3), sai: +(it.fim % 30).toFixed(3), naTela_s: +(it.fim - it.tIn).toFixed(3), leituraPlena_s: +((it.fim - it.sai) - (ult + it.ent)).toFixed(3) }; });
+  A.leitura.push({ id: 'soma = 11', texto: TX.soma, entra: +T.soma[3].toFixed(3), sai: T.encolhe[0], naTela_s: +(T.encolhe[0] - T.soma[3]).toFixed(3), leituraPlena_s: +(T.encolhe[0] - T.soma[3]).toFixed(3) },
+    { id: 'balão', texto: TX.balao, entra: T.balao[0], sai: 26.0, naTela_s: 26.0 - T.balao[0], leituraPlena_s: 26.0 - T.balao[0] });
+  A.leitura.forEach(l => l.ok2s = l.naTela_s >= 2 - 1e-9 && l.leituraPlena_s >= 2 - 1e-9);
+  A.layout = LAY.tam; A.pontoFinal = Object.values(TX).flat().filter(s => typeof s === 'string' && /\.$/.test(s.trim()));
+  return A;
+}
+
+// ---------- folhas ----------
+const salvar = (name, body) => fetch(`/save?name=${name}`, { method: 'POST', body });
+const png = c => new Promise(r => c.toBlob(r, 'image/png'));
+async function folha(nome, ts, cols, sw, sh, safe, rot) {
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cg = cv.getContext('2d');
+  const rows = Math.ceil(ts.length / cols), sc = document.createElement('canvas'); sc.width = sw * cols; sc.height = sh * rows; const sg = sc.getContext('2d'); sg.fillStyle = '#000'; sg.fillRect(0, 0, sc.width, sc.height);
+  ts.forEach((t, i) => { frame(cg, t, true, safe); const x = (i % cols) * sw, y = Math.floor(i / cols) * sh; sg.drawImage(cv, x, y, sw, sh); sg.strokeStyle = '#333'; sg.strokeRect(x + 0.5, y + 0.5, sw - 1, sh - 1);
+    sg.font = `700 ${Math.max(14, sw / 14)}px "Geist Mono"`; sg.fillStyle = '#FF3B1F'; sg.fillText(rot ? rot(t, i) : `q${Math.round(t * FPS)} ${t.toFixed(2)}s`, x + 6, y + Math.max(16, sw / 12)); });
+  await salvar(nome, await png(sc));
+}
+const comp = (em) => Array.from({ length: 15 }, (_, i) => Math.min(i * 2 + em, DUR - Q(1)));
+async function folhas() {
+  const LOOP_ANTES = await (async () => { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }); const px = (t, gr) => { frame(g, t, gr, false); return g.getImageData(0, 0, W, H).data; }; return { semGrao: difere(px(0, false), px(Q(NF - 1), false)), comGrao: difere(px(0, true), px(Q(NF - 1), true)), q0_vs_q0: difere(px(0, false), px(0, false)) }; })();
+  const rc = (t, i) => `c${i + 1} ${t.toFixed(2)}s`;
+  await folha('reel30_folha_compasso.png', comp(0), 5, 270, 480, false, rc);
+  await folha('reel30_folha_compasso_safe.png', comp(0), 5, 270, 480, true, rc);
+  await folha('reel30_folha_compasso_meio_safe.png', comp(1), 5, 270, 480, true, rc);
+  await folha('reel30_8quadros.png', [1.0, 5.0, 8.6, 11.2, 15.0, 20.4, 25.0, Q(NF - 1)], 4, 540, 960, false);
+  for (let p = 0; p < 4; p++) await folha(`reel30_contato_${p + 1}.png`, Array.from({ length: 30 }, (_, i) => Q(Math.round((p * 30 + i) * 7.5))), 6, 216, 384, false);
+  document.title = 'auditoria'; const A = await auditoria(); A.loop_antesDasFolhas = LOOP_ANTES; { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }); const px = t => { frame(g, t, false, false); return g.getImageData(0, 0, W, H).data; }; const a = px(0); A.loop_depois_q0_vs_q0 = difere(a, px(0)); A.loop_depois_q0_vs_q899 = difere(a, px(Q(NF - 1))); }
+  await salvar('reel30_auditoria.json', new Blob([JSON.stringify(A, null, 2)]));
+  document.body.insertAdjacentHTML('beforeend', `<pre>${JSON.stringify(A, null, 2)}</pre>`); document.title = 'DONE';
+}
+async function render() {
+  const bat = await analisaBatida();
+  const B = bat.tempoForte_s % 2, A0 = B + 2; // trilha: t em [0; 27,6) toca a partir de A0; em [28; 30) toca a partir de B; pos(30) = B + 2 = pos(0) -> costura contínua
+  const trilha = { descricao: `music.wav: 0-27,6 s = ${A0.toFixed(3)}-${(A0 + 27.6).toFixed(3)} s; 27,6-28,0 silêncio; 28-30 s = ${B.toFixed(3)}-${(B + 2).toFixed(3)} s (costura do loop contínua)`,
+    pos: t => t < 27.6 ? t + A0 : t >= 28.0 ? t - 28.0 + B : null,
+    ganho: t => t < 27.6 ? Math.min(1, (27.6 - t) / 0.15) : Math.min(1, (t - 28.0) / 0.005) };
+  const extra = { peca: 'reel30', roteiro: 'testes/reel30_roteiro.md', formato: { W, H, FPS, DUR, quadros: NF, compassos: 15, bpm: 120 }, batidaDaTrilha: bat, textosCalculados: TX };
+  return AudioKit.render({ prefixo: 'reel30', W, H, FPS, DUR, frame, eventos: EV, duck: { maxDb: -10, ref: 0.2 }, trilha, bitrateVideo: 8e6, folhaPorParte: 6, extra,
+    depois: async (R, dec, final) => { const s = AudioKit.SR, a = Math.round(27.62 * s), b = Math.round(27.98 * s); let e = 0, pk = 0; for (const c of dec.chs) for (let i = a; i < b; i++) { e += c[i] * c[i]; pk = Math.max(pk, Math.abs(c[i])); }
+      R.respiroAudio = { trecho: '27,62-27,98 s (depois do AAC)', rms_dBFS: +(10 * Math.log10(e / (2 * (b - a)) + 1e-20)).toFixed(1), pico_dBFS: +(20 * Math.log10(pk + 1e-20)).toFixed(1) };
+      let d = 0; for (const c of dec.chs) d = Math.max(d, Math.abs(c[s * DUR - 1] - c[0])); let adj = 0; for (const c of dec.chs) for (let i = s * 29; i < s * DUR - 1; i++) adj = Math.max(adj, Math.abs(c[i + 1] - c[i])); R.costuraAudio = { saltoUltimaParaPrimeiraAmostra: +d.toFixed(4), maiorSaltoEntreAmostrasVizinhas_29a30s: +adj.toFixed(4), nota: 'a costura não salta mais que a própria música salta entre amostras vizinhas' };
+      { const m = final.lim.out; let dp = 0, ap = 0; for (const c of m) { dp = Math.max(dp, Math.abs(c[s * DUR - 1] - c[0])); for (let i = s * 29; i < s * DUR - 1; i++) ap = Math.max(ap, Math.abs(c[i + 1] - c[i])); } R.costuraAudio.preAAC = { saltoUltimaParaPrimeira: +dp.toFixed(4), maiorSaltoVizinhas_29a30s: +ap.toFixed(4) }; } } });
+}
+async function preview() {
+  for (const t of (q.get('t') || '1').split(',').map(Number)) { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; cv.style.width = '540px'; document.body.append(cv); frame(cv.getContext('2d'), t); }
+  if (q.has('shot')) { const c = document.querySelector('canvas'); await salvar(`reel30_tmp_${q.get('shot')}.png`, await png(c)); }
+  document.title = 'ready';
+}
+(async () => {
+  await loadBrandFonts(); const todo = Object.values(TX).flat().join(' ');
+  await Promise.all([500, 700, 800, 900].map(w => document.fonts.load(`${w} 100px Geist`, todo)).concat([500, 700].map(w => document.fonts.load(`${w} 40px "Geist Mono"`, todo))));
+  await BitRig.load('/Marca/bit/bit_corpo.jpg'); LAY = layout();
+  { const c = document.createElement('canvas'); c.width = W; c.height = H; const wg = c.getContext('2d', { willReadFrequently: true }); for (const t of [0, 5, 12.5, 16.6, 20, 23, 24.5, 0]) { frame(wg, t, true, false); frame(wg, t, false, false); wg.getImageData(0, 0, 1, 1); } } // aquecimento: o 1º desenho da página saía até 2 níveis diferente (cache de glifo/filtro); descartado
+  if (q.has('render')) return render();
+  if (q.has('folhas')) return folhas();
+  if (q.has('dbg')) { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }), R = {};
+    for (const k of ['grade', 'texto', 'bit', 'balao', 'tudo', 'fundoBit', 'fundoGrade', 'repete0']) { const cam = k === 'tudo' ? null : k === 'fundoBit' ? { fundo: 1, bit: 1 } : k === 'fundoGrade' ? { fundo: 1, grade: 1, texto: 1 } : k === 'repete0' ? null : { [k]: 1 }; frame(g, 0, false, false, cam); const a = g.getImageData(0, 0, W, H).data; frame(g, k === 'repete0' ? 0 : Q(NF - 1), false, false, cam); const b = g.getImageData(0, 0, W, H).data;
+      let n = 0, x0 = W, y0 = H, x1 = 0, y1 = 0; for (let i = 0; i < a.length; i += 4) if (a[i] !== b[i] || a[i + 1] !== b[i + 1] || a[i + 2] !== b[i + 2] || a[i + 3] !== b[i + 3]) { n++; const p = i / 4, x = p % W, y = (p / W) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } R[k] = { n, x0, y0, x1, y1 }; }
+    R.pose0 = bitPose(1e-6); R.pose899 = bitPose(Q(NF - 1) + 1e-6); await salvar('reel30_dbg.json', new Blob([JSON.stringify(R)])); document.title = 'DONE'; return; }
+  if (q.get('sheet') === 'compasso') { const em = q.get('em') === 'meio' ? 1 : 0; await folha(`reel30_folha_compasso${em ? '_meio' : ''}${q.has('safe') ? '_safe' : ''}.png`, comp(em), 5, 270, 480, q.has('safe'), (t, i) => `c${i + 1} ${t.toFixed(2)}s`); document.title = 'DONE'; return; }
+  return preview();
+})().catch(e => { document.title = 'ERROR ' + e.message; salvar('reel30_erro.txt', new Blob([String(e.stack || e)])); });
+</script>
+</body></html>
