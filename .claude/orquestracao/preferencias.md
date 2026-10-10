@@ -17,3 +17,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-09: banco de artes deve usar o Gemini (não o motor em código); cenários saem coloridos já no Gemini, sem repintar depois; lista de 10 a 20 artes variando entre grupos; 'sim' dado para baixar as artes do banco.
 - 2026-10-09: William exige SEMPRE benchmark de ~20 vídeos por plataforma (TikTok e Instagram, via Chrome logado: TikTok pela busca; Instagram pela API /api/v1/fbsearch/web/top_serp/ com x-ig-app-id) antes de concluir qualquer coisa sobre relevância ou formato. Nunca concluir com os 5 a 6 posts da própria conta. Sem isso, não afirmar 'X ganha de Y'.
 - 2026-10-09: ao apagar artes que não são do Bit, quis manter os cenários coloridos (servem de fundo).
+- 2026-10-10: curtas pixel art 2 e 3: aceitou as recomendadas do bit (cartão final literal nos dois, falas coloquiais como estão).

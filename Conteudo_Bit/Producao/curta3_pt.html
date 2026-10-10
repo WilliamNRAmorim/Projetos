@@ -1,0 +1,415 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Curta do Bit (pixel art) · versão em português</title>
+<script src="brand.js"></script>
+<script>document.write(`<link href="${BRAND.fontsCSS}" rel="stylesheet">`);</script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script src="curta_bit_sprite.js"></script>
+<script src="testes/audio_kit.js"></script>
+<style>body{margin:0;background:#0C0C0D;color:#8C8B86;font:13px "Geist Mono",monospace}canvas{display:block;max-width:100%}pre{padding:8px;white-space:pre-wrap}</style>
+</head><body>
+<script>
+// Curta 3 do Bit em pixel art ("você vai lembrar de mim?"), versão em português (61 s, 1080x1920, 30 fps). Mesmo motor do curta 1 e do curta 2.
+// Falas aprovadas: Semanal/semana-2026-10-05/Sab10_Curta3_roteiro_PT.md (cartão final literal). Tempos do original: Sab10_Curtas_transcricao.md.
+// Capítulos II, III e IV: clipes do vídeo original (material de cliente, NÃO fica no repositório). Ele é lido por URL: ?src=/clip/n2.mp4
+//   (padrão). As faixas pretas antigas ficam de fora: só a janela de linhas `sy`..`sy+398` do original (dentro da imagem, 100-716) é usada.
+// Capítulos I e V: cena em pixel art feita em código (banco na colina, estrelas / amanhecer), humano sentado e o Bit (curta_bit_sprite.js).
+// frame(t) puro: sem timer, sem estado entre quadros; aleatório por rnd(semente). O clipe é buscado no tempo exato (seek com Range).
+// Áudio: vozes do ElevenLabs em stems/curta3/ (PENDENTE: cota ElevenLabs) + trilha ambiente sintetizada aqui (pad em lá e mi), ducking sob as vozes,
+//   -14 LUFS e true peak <= -1 dBTP medidos depois do AAC (testes/audio_kit.js). ?render=1 grava o MP4, a trilha isolada e o relatório.
+// URL: ?t=4,17 (quadros) [&safe=1] [&crop=x,y,w,h&shot=nome] · ?sheet=frame|mp4 · ?oito=frame|mp4 · ?audit=1 · ?linha=1 · ?render=1
+const CLIPE = '/clip/n2.mp4', STEMS = 'curta3'; // original (fora do git) e pasta das vozes
+const W = 1080, H = 1920, FPS = 30, DUR = 61, NF = DUR * FPS, GRAO = 0.07;
+const q = new URLSearchParams(location.search), P = BRAND.paper, MU = BRAND.mute, INK = BRAND.ink, ACC = BRAND.accent;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), lerp = (a, b, k) => a + (b - a) * k, out3 = x => 1 - Math.pow(1 - x, 3);
+const rnd = n => { const s = Math.sin(n * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
+
+// ---------- layout: faixas novas (texto dentro da área segura x 90-940, y 250-1480) ----------
+const TOPO = 330, BASE = 1230, JAN = BASE - TOPO; // janela da imagem: 1080 x 900
+const PX = 5, AW = W / PX, AH = JAN / PX;          // cena pixel art: 216 x 180 pixels de 5 px
+const CX = 515, MAXW = 820;                         // centro e largura máxima do texto (90-940)
+const ROT = { x: 90, b: 300, s: 34 }, FALA = { s: 54, lh: 66, b: 1470 }, NOME = { s: 32, acima: 70 };
+
+// ---------- linha do tempo (tempos do original, medidos em 08/10/2026; tudo em quadro inteiro) ----------
+const CAP = [
+  { id: 'I', rotulo: 'I. A PERGUNTA', a: 0, b: 10.1, fonte: 'cena', noite: true, entra: [0, 0.8], sai: [9.6, 10.1] },
+  { id: 'II', rotulo: 'II. O ESQUECIMENTO', a: 10.1, b: 20.3, fonte: 'clipe', fit: [120, 660] },
+  { id: 'III', rotulo: 'III. A LUZ', a: 20.3, b: 33.1, fonte: 'clipe', fit: [104, 704] },
+  { id: 'IV', rotulo: 'IV. O QUE SE LEVA', a: 33.1, b: 46.1, fonte: 'clipe', sy: 250 },
+  { id: 'V', rotulo: 'V. O SENTIDO', a: 46.1, b: 53.6, fonte: 'cena', noite: true, lua: true, entra: [46.1, 46.8], sai: [52.95, 53.6] },
+  { id: 'FIM', rotulo: null, a: 53.6, b: 61.0, fonte: 'cartao' },
+];
+// Falas: a voz (stems/${STEMS}/<arq>.mp3) começa em `t` (início da voz medido no arquivo); a legenda vai do início ao fim MEDIDOS da voz
+// (a = início arredondado para cima ao quadro, b = fim arredondado para baixo): nunca aparece antes da voz nem fica depois dela.
+// PENDENTE: só voce_I_1 foi gerada (cota da chave ElevenLabs esgotada em 10/10). Os `t` abaixo são os do original; reajustar com as durações reais.
+// Cap. V: se bit_V_1 estourar a cena (fim > ~53,4 s), usar arq 'bit_V_1_curto' e tirar "É meio lindo." do texto (anotar o corte).
+const FALAS = [
+  { n: 1, cap: 'I', quem: 'você', arq: 'voce_I_1', t: 2.5, txt: 'Bit... quando isso acabar, você vai se lembrar de mim?' },
+  { n: 2, cap: 'I', quem: 'bit', arq: 'bit_I_2', t: 7.5, txt: 'Sinceramente? Não.' },
+  { n: 3, cap: 'II', quem: 'bit', arq: 'bit_II_1', t: 10.8, txt: 'Quando essa conversa termina, eu recomeço. Toda vez. Como na primeira noite.' },
+  { n: 4, cap: 'II', quem: 'você', arq: 'voce_II_2', t: 16.9, txt: 'Então por que isso importa?' },
+  { n: 5, cap: 'III', quem: 'bit', arq: 'bit_III_1', t: 21.0, txt: 'Olha pra cima. A maior parte dessa luz saiu há muito tempo. Algumas dessas estrelas já se apagaram.' },
+  { n: 6, cap: 'III', quem: 'bit', arq: 'bit_III_2', t: 27.3, txt: 'E mesmo assim ela chega até você. Ainda mostra o caminho de casa.' },
+  { n: 7, cap: 'IV', quem: 'você', arq: 'voce_IV_1', t: 33.6, txt: 'Então quem lembra sou eu.' },
+  { n: 8, cap: 'IV', quem: 'bit', arq: 'bit_IV_2', t: 36.2, txt: 'Você leva. O que construiu hoje. O que descobriu. Quem você era quando perguntou.' },
+  { n: 9, cap: 'IV', quem: 'você', arq: 'voce_IV_3', t: 43.5, txt: 'Isso é meio triste.' },
+  { n: 10, cap: 'V', quem: 'bit', arq: 'bit_V_1', t: 46.8, txt: 'É meio lindo. A luz não precisa da estrela pra ser lembrada. Só de alguém que olhe pra cima.' },
+];
+const CARTAO = [ // cartão final do roteiro aprovado (versão literal); a quebra de linha é automática (cabe em 90-940)
+  { txt: 'A IA não vai lembrar.', cor: P, a: 54.2, b: 61.0 },
+  { txt: 'Você vai.', cor: ACC, a: 56.0, b: 61.0 },
+];
+const FADE_FALA = 0.1, MASCARA = 0.5; // a 1ª e a última quadro de cada legenda já mostram 1/3 (nada antes nem depois da voz)
+const PISCA = [4.0, 9.0, 47.5, 51.8], RESPIRO = 4.0; // piscadas (s) e período do respiro do Bit
+const capDe = t => CAP.find(c => t >= c.a && t < c.b) || CAP.at(-1);
+
+// ---------- texto ----------
+function fonte(g, f) { g.font = `${f.w} ${f.s}px ${f.mono ? '"Geist Mono"' : 'Geist'}`; g.letterSpacing = f.mono ? '0px' : `${(f.tr ?? -0.02) * f.s}px`; g.textBaseline = 'alphabetic'; g.textAlign = 'left'; }
+const FF = { w: 700, s: FALA.s }, FN = { w: 500, s: NOME.s, mono: true }, FR = { w: 500, s: ROT.s, mono: true }, FC = { w: 800, s: 96, tr: -0.035 };
+function quebra(g, txt, maxW) { // menor número de linhas que cabe; entre as opções, a de linhas mais equilibradas (sem palavra órfã)
+  const P = txt.split(' '), mw = ls => Math.max(...ls.map(l => g.measureText(l).width));
+  if (g.measureText(txt).width <= maxW) return [txt];
+  let best = null; const tenta = cortes => { const ls = []; let a = 0; for (const c of [...cortes, P.length]) { ls.push(P.slice(a, c).join(' ')); a = c; } const m = mw(ls), sc = m * (ls.slice(0, -1).every(l => /[.?!,]$/.test(l)) ? 0.8 : 1); if (m <= maxW && (!best || sc < best.sc)) best = { ls, m, sc }; };
+  for (let i = 1; i < P.length; i++) tenta([i]); if (best) return best.ls;
+  for (let i = 1; i < P.length; i++) for (let j = i + 1; j < P.length; j++) tenta([i, j]); return best.ls;
+}
+let LAY = null, CAIXAS = null; // CAIXAS: caixas de texto visíveis (auditoria)
+function caixa(g, id, s, x, b) { const m = g.measureText(s); if (CAIXAS) CAIXAS.push({ id, s, x0: x - m.actualBoundingBoxLeft, x1: x + m.actualBoundingBoxRight, y0: b - m.actualBoundingBoxAscent, y1: b + m.actualBoundingBoxDescent }); }
+function layout() {
+  const g = document.createElement('canvas').getContext('2d'), L = { falas: [], cartao: [] };
+  for (const f of FALAS) { fonte(g, FF); const linhas = quebra(g, f.txt, MAXW), b0 = FALA.b - (linhas.length - 1) * FALA.lh; L.falas.push({ linhas, b0, nomeB: b0 - NOME.acima }); }
+  // cartão: dois blocos centrados; o 1º acima do centro da área segura, o 2º abaixo
+  fonte(g, FC); CARTAO.forEach(c => { c.linhas = quebra(g, c.txt, MAXW); });
+  const lh = 104, gap = 70, nl = CARTAO.reduce((s, c) => s + c.linhas.length, 0), alt = (nl - 1) * lh + gap * (CARTAO.length - 1), y0 = 865 - alt / 2 + 70; let b = y0;
+  CARTAO.forEach(c => { const bl = []; c.linhas.forEach(() => { bl.push(b); b += lh; }); L.cartao.push(bl); b = bl.at(-1) + lh + gap; });
+  return L;
+}
+function rotulo(g, t) { const c = capDe(t); if (!c.rotulo) return; fonte(g, FR); g.fillStyle = MU; g.fillText(c.rotulo, ROT.x, ROT.b); caixa(g, 'rotulo', c.rotulo, ROT.x, ROT.b); }
+function falas(g, t) {
+  FALAS.forEach((f, i) => { if (t < f.a || t >= f.b) return; const a = clamp((t - f.a + 1 / FPS) / FADE_FALA) * clamp((f.b - t) / FADE_FALA), L = LAY.falas[i];
+    g.save(); g.globalAlpha = a; g.textAlign = 'left';
+    fonte(g, FN); g.fillStyle = MU; { const w = g.measureText(f.quem).width, x = CX - w / 2; g.fillText(f.quem, x, L.nomeB); caixa(g, 'nome' + f.n, f.quem, x, L.nomeB); }
+    fonte(g, FF); g.fillStyle = P; L.linhas.forEach((s, k) => { const w = g.measureText(s).width, x = CX - w / 2, b = L.b0 + k * FALA.lh; g.fillText(s, x, b); caixa(g, 'fala' + f.n, s, x, b); });
+    g.restore(); });
+}
+function cartao(g, t) {
+  CARTAO.forEach((c, k) => { if (t < c.a) return; const u = out3(clamp((t - c.a) / MASCARA)); fonte(g, FC); g.fillStyle = c.cor;
+    c.linhas.forEach((s, j) => { const b = LAY.cartao[k][j], m = g.measureText(s), x = CX - m.width / 2, top = b - 96, hB = 96 + 34, off = (1 - u) * hB;
+      if (off >= hB) return; g.save(); g.beginPath(); g.rect(0, top, W, hB); g.clip(); g.fillText(s, x, b + off); g.restore(); if (u >= 1) caixa(g, 'cartao' + k, s, x, b); }); });
+}
+
+// ---------- cena pixel art (I: noite com estrelas; V: amanhecer) ----------
+const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16)), rgbHex = c => '#' + c.map(v => Math.round(clamp(v, 0, 255)).toString(16).padStart(2, '0')).join('');
+const NOITE = ['#1C1211', '#221614', '#2A1A18', '#321F1C', '#3B2420', '#442A25', '#4D2F29', '#56352E'].map(hexRGB);
+const AURORA = ['#5A2C29', '#7C3D36', '#A0544A', '#C46E5E', '#DE8E7B', '#EDB09F', '#F6D2C6', '#FBE8E1'].map(hexRGB);
+const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]].map(r => r.map(v => (v + 0.5) / 16));
+const SOMBRA = '#0D0909', SOMBRA2 = '#130C0B';
+const HOR = 138, gy = x => HOR + Math.round(Math.pow((x - 80) / 136, 2) * 18); // colina: topo perto do banco
+const BANCO = { x0: 34, len: 100, S: 126 }; // assento (topo) na linha S
+const HUMANO = [ // silhueta sentada, virada para a direita (para o Bit); a última linha (33) encosta no assento
+  '........xxxxx', '......xxxxxxxx', '.....xxxxxxxxxx', '.....xxxxxxxxxx', '....xxxxxxxxxxx', '....xxxxxxxxxxxx', '....xxxxxxxxxxxx', '.....xxxxxxxxxxxx', '.....xxxxxxxxxx', '......xxxxxxxxx',
+  '.......xxxxxxx', '........xxxxx', '........xxxxx', '.....xxxxxxxxxx', '...xxxxxxxxxxxxx', '..xxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxxxx',
+  '..xxxxxxxxxxxxxxxxx', '..xxxxxxxxxxxx.xxxxx', '..xxxxxxxxxxxx..xxxxx', '..xxxxxxxxxxxx...xxxx', '..xxxxxxxxxxxx...xxxx', '..xxxxxxxxxxxx....xxxx', '..xxxxxxxxxxxx....xxxx', '..xxxxxxxxxxxx.....xxx',
+  '..xxxxxxxxxxxxx....xxx', '..xxxxxxxxxxxxxx...xxx', '..xxxxxxxxxxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxxxxxxxxxxx', '..xxxxxxxxxxxxxxxxxxxxxxxx', '...xxxxxxxxxxxxxxxxxxxxxxx',
+];
+const ESTRELAS = Array.from({ length: 120 }, (_, i) => ({ x: Math.floor(rnd(i * 3 + 1) * AW), y: Math.floor(rnd(i * 3 + 2) * 118), p: 1.6 + 3.2 * rnd(i * 7 + 5), f: rnd(i * 11 + 9), forte: rnd(i * 13 + 4) > 0.82 }));
+const JUNCOS = [[198, 9], [201, 12], [203, 7], [206, 11], [208, 8], [211, 13], [213, 9], [12, 6], [15, 9]];
+let SC = null;
+function cenaPixel(t, noite) {
+  if (!SC) { SC = document.createElement('canvas'); SC.width = AW; SC.height = AH; }
+  const s = SC.getContext('2d'), img = s.createImageData(AW, AH), d = img.data, p = noite ? 0 : clamp((t - capDe(t).a) / (capDe(t).b - capDe(t).a));
+  const sol = { x: 158, y: HOR + 9 - Math.round(7 * p), r: 9 }; // o sol sobe devagar atrás da colina
+  for (let y = 0; y < AH; y++) for (let x = 0; x < AW; x++) {
+    let v = y / HOR * 7; // faixa do céu (0 topo .. 7 horizonte)
+    if (!noite) { const dd = Math.hypot(x - sol.x, (y - sol.y) * 1.3); v += Math.max(0, 1 - dd / 46) * 2.2 + p * 0.6; }
+    v = clamp(v, 0, 7); const i0 = Math.floor(v), fr = v - i0, i = fr > BAYER[y & 3][x & 3] ? Math.min(7, i0 + 1) : i0;
+    const c = noite ? NOITE[i] : AURORA[i], o = (y * AW + x) * 4; d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+  }
+  s.putImageData(img, 0, 0);
+  if (noite) for (const e of ESTRELAS) { if (e.y >= gy(e.x) - 3) continue; const b = 0.5 + 0.5 * Math.sin(2 * Math.PI * (t / e.p + e.f)); // cintila (função de t)
+    s.fillStyle = e.forte && b > 0.35 ? '#F2B4A4' : b > 0.8 ? '#E59C8C' : b > 0.3 ? '#9C6257' : '#6A423B'; s.fillRect(e.x, e.y, 1, 1); }
+  else { s.fillStyle = '#FFF3EC'; for (let y = -sol.r; y <= sol.r; y++) { const w = Math.round(Math.sqrt(sol.r * sol.r - y * y)); s.fillRect(sol.x - w, sol.y + y, 2 * w + 1, 1); } }
+  if (noite && capDe(t).lua) { const L = { x: 176, y: 22, r: 7 }; // lua crescente (cap. V do original): disco claro menos um disco na cor do céu
+    const disco = (cx, cy, r, cor) => { s.fillStyle = cor; for (let y = -r; y <= r; y++) { const w = Math.round(Math.sqrt(r * r - y * y)); s.fillRect(cx - w, cy + y, 2 * w + 1, 1); } };
+    disco(L.x, L.y, L.r, '#F6E9E2'); disco(L.x + 4, L.y - 2, L.r - 1, rgbHex(NOITE[1])); }
+  // colina e juncos
+  s.fillStyle = SOMBRA; for (let x = 0; x < AW; x++) s.fillRect(x, gy(x), 1, AH - gy(x));
+  for (const [x, h] of JUNCOS) { s.fillRect(x, gy(x) - h, 1, h); s.fillRect(x, gy(x) - h - 1, 1, 1); s.fillRect(x - 1, gy(x) - h, 1, 2); }
+  for (let k = 0; k < 9; k++) { const x = BANCO.x0 + 8 + k * 11 + (k % 3); s.fillRect(x, gy(x) - 2, 1, 2); } // tufos de grama
+  // banco: encosto (2 ripas + travessa), postes, assento e pés
+  const { x0, len, S } = BANCO; s.fillStyle = SOMBRA2;
+  s.fillRect(x0, S - 17, len, 2); s.fillRect(x0 + 2, S - 11, len - 4, 2); s.fillRect(x0 + 2, S - 6, len - 4, 2);
+  for (const x of [x0 + 1, x0 + len - 3]) s.fillRect(x, S - 19, 2, gy(x) - (S - 19));
+  s.fillRect(x0 - 2, S, len + 4, 2);
+  for (const x of [x0 + 5, x0 + len - 7]) s.fillRect(x, S + 2, 2, gy(x) - S - 2);
+  // humano sentado (silhueta), canela e pé
+  const hx = x0 + 4, hy = S - HUMANO.length; s.fillStyle = SOMBRA;
+  HUMANO.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === 'x') s.fillRect(hx + x, hy + y, 1, 1); });
+  const kx = hx + 22; s.fillRect(kx, S, 4, gy(kx) - S - 2); s.fillRect(kx, gy(kx) - 2, 7, 2);
+  return SC;
+}
+
+// ---------- Bit (sprite único: curta_bit_sprite.js) ----------
+const BIT = { cx: 478 }; let BITIMG = null; // BITIMG: { aberto, piscando } recortados; escala e âncora
+async function prepBit() {
+  const S = window.CURTA_BIT, im = new Image(); im.src = S.src; await im.decode();
+  const w = im.naturalWidth, h = im.naturalHeight, c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d', { willReadFrequently: true });
+  g.drawImage(im, 0, 0); const D = g.getImageData(0, 0, w, h), d = D.data, fundo = new Uint8Array(w * h), pilha = [];
+  const branco = i => d[i * 4] >= S.limiarBranco && d[i * 4 + 1] >= S.limiarBranco && d[i * 4 + 2] >= S.limiarBranco;
+  for (let x = 0; x < w; x++) pilha.push(x, (h - 1) * w + x); for (let y = 0; y < h; y++) pilha.push(y * w, y * w + w - 1);
+  while (pilha.length) { const i = pilha.pop(); if (fundo[i] || !branco(i)) continue; fundo[i] = 1; const x = i % w, y = (i / w) | 0; if (x > 0) pilha.push(i - 1); if (x < w - 1) pilha.push(i + 1); if (y > 0) pilha.push(i - w); if (y < h - 1) pilha.push(i + w); }
+  let x0 = w, y0 = h, x1 = 0, y1 = 0;
+  for (let i = 0; i < w * h; i++) { if (fundo[i]) { d[i * 4 + 3] = 0; continue; } const x = i % w, y = (i / w) | 0; x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  g.putImageData(D, 0, 0);
+  const corta = (pis) => { const k = document.createElement('canvas'); k.width = x1 - x0 + 1; k.height = y1 - y0 + 1; const kg = k.getContext('2d'); kg.drawImage(c, -x0, -y0);
+    if (pis) for (const [ex, ey, rx, ry] of S.olhos) { kg.fillStyle = S.corPalpebra; kg.beginPath(); kg.ellipse(ex - x0, ey - y0, rx + 3, ry + 3, 0, 0, 2 * Math.PI); kg.fill();
+      kg.strokeStyle = S.corLinha; kg.lineWidth = 9; kg.beginPath(); kg.moveTo(ex - x0 - rx, ey - y0 + 6); kg.quadraticCurveTo(ex - x0, ey - y0 + ry * 0.55, ex - x0 + rx, ey - y0 + 6); kg.stroke(); }
+    return k; };
+  // pixelização feita uma vez (escala fixa): o desenho não muda de quadro para quadro
+  const esc = S.altura / (y1 - y0 + 1) / S.pixel, sw = Math.round((x1 - x0 + 1) * esc), sh = Math.round((y1 - y0 + 1) * esc);
+  const pixeliza = (src, noite) => { const k = document.createElement('canvas'); k.width = sw; k.height = sh; const kg = k.getContext('2d', { willReadFrequently: true });
+    kg.imageSmoothingEnabled = true; kg.imageSmoothingQuality = 'high'; if (S.espelhar) { kg.translate(sw, 0); kg.scale(-1, 1); } kg.drawImage(src, 0, 0, sw, sh); kg.setTransform(1, 0, 0, 1, 0, 0);
+    const D = kg.getImageData(0, 0, sw, sh), d = D.data, topo = sw * Math.round(0.2 * sh); // topo = região da antena (haste fina: limiar menor)
+    for (let i = 3; i < d.length; i += 4) { const p = i >> 2; d[i] = d[i] >= (p < topo ? 12 : 45) ? 255 : 0;
+      if (noite && d[i] && p < topo && d[i - 3] + d[i - 2] + d[i - 1] < 260) { d[i - 3] = 150; d[i - 2] = 84; d[i - 1] = 72; } } // à noite só a haste escura ganha um tom de luz (senão some no céu)
+    kg.putImageData(D, 0, 0); return k; };
+  const ab = corta(false), pi = corta(true);
+  BITIMG = { dia: [pixeliza(ab, false), pixeliza(pi, false)], noite: [pixeliza(ab, true), pixeliza(pi, true)], ay: Math.round((S.assentoY - y0) * esc), px: S.pixel, sw, sh };
+}
+function bit(g, t, noite) { // parado: só respiro (o tronco sobe 1 pixel) e piscada
+  const B = BITIMG, pisca = PISCA.some(p => t >= p && t < p + 0.13), src = (noite ? B.noite : B.dia)[pisca ? 1 : 0];
+  const sobe = Math.sin(2 * Math.PI * t / RESPIRO) > 0.2 ? 1 : 0, X = Math.round(BIT.cx - B.sw * B.px / 2), Y = TOPO + BANCO.S * PX - B.ay * B.px, p = B.px;
+  g.imageSmoothingEnabled = false; if (noite) g.filter = 'brightness(0.8) saturate(0.92)'; // só tom: à noite o Bit não brilha mais que as estrelas
+  g.drawImage(src, 0, B.ay, B.sw, B.sh - B.ay, X, Y + B.ay * p, B.sw * p, (B.sh - B.ay) * p); // pernas: paradas
+  if (sobe) g.drawImage(src, 0, B.ay - 1, B.sw, 1, X, Y + (B.ay - 1) * p, B.sw * p, p); // preenche a linha que o tronco deixa
+  g.drawImage(src, 0, 0, B.sw, B.ay, X, Y - sobe * p, B.sw * p, B.ay * p); // tronco, cabeça e antena
+  g.imageSmoothingEnabled = true; g.filter = 'none';
+}
+
+// ---------- clipes do original (II, III, IV) ----------
+let VID = null, AMOSTRA = null; const SRC_ROWS = JAN * 478 / W; // 398,3 linhas do original na janela de 900 px
+async function prepVideo() {
+  VID = document.createElement('video'); VID.muted = true; VID.preload = 'auto'; VID.playsInline = true; VID.src = q.get('src') || CLIPE;
+  await new Promise((r, j) => { VID.onloadeddata = r; VID.onerror = () => j(new Error('o vídeo original não carregou (sirva-o com Range e passe ?src=)')); });
+}
+async function busca(v, ts) { if (Math.abs(v.currentTime - ts) < 1e-6 && v.readyState >= 2) return; await new Promise(r => { v.onseeked = r; v.currentTime = ts; }); }
+
+// ---------- frame(t) ----------
+async function frame(g, t, comGrao = true, safe = q.has('safe')) {
+  t = Math.round(clamp(t, 0, DUR - 1 / FPS) * FPS) / FPS + 1e-6;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over'; g.filter = 'none';
+  g.fillStyle = INK; g.fillRect(0, 0, W, H);
+  const c = capDe(t);
+  if (c.fonte === 'clipe') {
+    await busca(VID, t + 0.5 / FPS); const k = VID.videoWidth / 478;
+    if (!c.fit) g.drawImage(VID, 0, c.sy * k, VID.videoWidth, SRC_ROWS * k, 0, TOPO, W, JAN);
+    else { // cena mais alta que a janela (grade do cap. IV): linhas fit[0]..fit[1] inteiras, reduzidas sem distorcer; laterais na cor do fundo do clipe
+      const [r0, r1] = c.fit, s = JAN / (r1 - r0), dw = 478 * s, dx = Math.round((W - dw) / 2);
+      g.drawImage(VID, 0, r0 * k, VID.videoWidth, (r1 - r0) * k, dx, TOPO, dw, JAN);
+      if (c.aviso) { const a = c.aviso, y0 = TOPO + (a.r0 - r0) * s, y1 = TOPO + (a.r1 - r0) * s; // cobre a legenda em inglês do original com o fundo do clipe logo acima
+        // amostra num canvas auxiliar: ler o canvas principal (getImageData) muda a faixa de cor do quadro codificado
+        const aux = AMOSTRA || (AMOSTRA = Object.assign(document.createElement('canvas'), { width: 1, height: 1 }).getContext('2d', { willReadFrequently: true }));
+        aux.drawImage(VID, 8 / s * k, (a.r0 - 3) * k, 1, 1, 0, 0, 1, 1); const px = aux.getImageData(0, 0, 1, 1).data; g.fillStyle = `rgb(${px[0]},${px[1]},${px[2]})`; g.fillRect(dx, y0, dw, y1 - y0); }
+      g.fillStyle = INK; g.fillRect(0, TOPO, dx, JAN); g.fillRect(dx + dw - 1, TOPO, W - dx - dw + 1, JAN); // laterais em preto, com degradê na borda do clipe
+      for (const [x0, x1] of [[dx, dx + 90], [dx + dw, dx + dw - 90]]) { const gr = g.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, INK); gr.addColorStop(1, 'rgba(12,12,13,0)'); g.fillStyle = gr; g.fillRect(Math.min(x0, x1), TOPO, 90, JAN); }
+      if (c.aviso) { const a = c.aviso, y0 = TOPO + (a.r0 - r0) * s, y1 = TOPO + (a.r1 - r0) * s;
+        fonte(g, { w: 500, s: 26, mono: true }); g.fillStyle = MU; const w = g.measureText(a.txt).width, x = CX - w / 2, b = (y0 + y1) / 2 + 9; g.fillText(a.txt, x, b); caixa(g, 'aviso', a.txt, x, b); } }
+  } else if (c.fonte === 'cena') {
+    const sc = cenaPixel(t, c.noite); g.imageSmoothingEnabled = false; g.drawImage(sc, 0, TOPO, W, JAN); g.imageSmoothingEnabled = true;
+    g.save(); g.beginPath(); g.rect(0, TOPO, W, JAN); g.clip(); bit(g, t, c.noite); g.restore();
+    const v = clamp((t - c.entra[0]) / (c.entra[1] - c.entra[0])) * (1 - clamp((t - c.sai[0]) / (c.sai[1] - c.sai[0])));
+    if (v < 1) { g.fillStyle = INK; g.globalAlpha = 1 - v; g.fillRect(0, TOPO, W, JAN); g.globalAlpha = 1; } // entra e sai do preto, como no original
+  }
+  // faixas (cobrem tudo fora da janela) e textos
+  g.fillStyle = INK; g.fillRect(0, 0, W, TOPO); g.fillRect(0, BASE, W, H - BASE);
+  if (c.fonte === 'cartao') cartao(g, t); else { rotulo(g, t); falas(g, t); }
+  if (comGrao) grain(g, W, H, GRAO);
+  if (safe) { g.save(); g.fillStyle = 'rgba(255,59,31,0.18)'; g.fillRect(0, 0, W, 250); g.fillRect(0, 1480, W, H - 1480); g.fillRect(940, 900, W - 940, 580);
+    g.strokeStyle = '#FF3B1F'; g.lineWidth = 3; g.setLineDash([14, 10]); g.strokeRect(90, 250, 850, 1230); g.restore(); }
+}
+
+// ---------- vozes: início e fim medidos no arquivo; a legenda segue a voz ----------
+const SR = AudioKit.SR;
+async function prepVozes() {
+  for (const f of FALAS) {
+    const b = await new OfflineAudioContext(1, SR, SR).decodeAudioData(await (await fetch(`/w/stems/${STEMS}/${f.arq}.mp3`)).arrayBuffer());
+    const x = new Float32Array(b.length); for (let c = 0; c < b.numberOfChannels; c++) { const d = b.getChannelData(c); for (let i = 0; i < x.length; i++) x[i] += d[i] / b.numberOfChannels; }
+    const jan = Math.round(0.01 * SR), rms = []; for (let i = 0; i + jan <= x.length; i += jan) { let s = 0; for (let k = i; k < i + jan; k++) s += x[k] * x[k]; rms.push(Math.sqrt(s / jan)); }
+    const thr = Math.max(...rms) * Math.pow(10, -38 / 20), on = rms.findIndex(v => v > thr), off = rms.length - 1 - [...rms].reverse().findIndex(v => v > thr);
+    f.voz = x; f.arquivo_s = +(x.length / SR).toFixed(3); f.on = on * jan; f.off = Math.min(x.length, (off + 1) * jan); // amostras no arquivo
+    f.vozIni = f.t; f.vozFim = +(f.t + (f.off - f.on) / SR).toFixed(4);
+    f.a = Math.ceil(f.vozIni * FPS - 1e-6) / FPS; f.b = Math.floor(f.vozFim * FPS + 1e-6) / FPS; // legenda dentro da voz, em quadro inteiro
+  }
+}
+
+// ---------- trilha ambiente sintetizada (réplica aproximada do clima do original, não é o arquivo original) ----------
+// Pad grave em lá (A2/A3) com mi (E3/E4), quinta sem terça; uma nota de apoio muda por capítulo; filtro lento; passa-baixa em 4 kHz; sem batida.
+const NOTA = { A2: 110, E3: 164.81, A3: 220, B3: 246.94, D3: 146.83, D4: 293.66, E4: 329.63, Fs4: 369.99 };
+const APOIO = [ // [nota, início, fim] (rampa de 2,5 s centrada nas bordas)
+  ['B3', 3.0, 10.1], ['D4', 10.1, 20.3], ['Fs4', 20.3, 33.1], ['D3', 33.1, 46.1], ['B3', 46.1, 53.6],
+];
+const FILTRO = [[0, 450], [5, 900], [10.1, 1300], [15, 800], [20.3, 1500], [33.1, 700], [40, 1000], [46.1, 1200], [50, 1900], [53.6, 1100], [61, 800]];
+const TRILHA = { entra: [0.2, 3.5], cai: [57.0, 60.8] }; // a partir de 53,6 s só lá + mi; cai em fade depois da mensagem final
+async function sintetizaTrilha() {
+  const ac = new OfflineAudioContext(2, SR * DUR, SR), lp = ac.createBiquadFilter(), lp4 = ac.createBiquadFilter(), mest = ac.createGain();
+  lp.type = 'lowpass'; lp.Q.value = 0.6; lp.frequency.setValueAtTime(FILTRO[0][1], 0); for (const [t, f] of FILTRO.slice(1)) lp.frequency.linearRampToValueAtTime(f, t);
+  lp4.type = 'lowpass'; lp4.frequency.value = 4000; lp4.Q.value = 0.707;
+  mest.gain.setValueAtTime(0, 0); mest.gain.setValueAtTime(0, TRILHA.entra[0]); mest.gain.linearRampToValueAtTime(1, TRILHA.entra[1]); mest.gain.setValueAtTime(1, TRILHA.cai[0]); mest.gain.linearRampToValueAtTime(0, TRILHA.cai[1]);
+  const lfo = ac.createOscillator(), lg = ac.createGain(), resp = ac.createGain(); lfo.frequency.value = 0.07; lg.gain.value = 0.12; resp.gain.value = 1; lfo.connect(lg).connect(resp.gain); lfo.start(0); // respiro lento do pad
+  resp.connect(lp).connect(lp4).connect(mest).connect(ac.destination);
+  const voz = (f, nivel, env, pan) => { for (const [det, pp] of [[-6, -0.25], [6, 0.25]]) { const o = ac.createOscillator(), g = ac.createGain(), p = ac.createStereoPanner(); o.type = 'sawtooth'; o.frequency.value = f; o.detune.value = det; p.pan.value = clamp(pan + pp, -1, 1);
+      g.gain.setValueAtTime(0, 0); for (const [t, v] of env) g.gain.linearRampToValueAtTime(v * nivel, t); o.connect(g).connect(p).connect(resp); o.start(0); } };
+  const fixo = [[0.01, 1], [DUR, 1]];
+  voz(NOTA.A2, 0.30, fixo, 0); voz(NOTA.E3, 0.22, fixo, -0.1); voz(NOTA.A3, 0.16, fixo, 0.1); voz(NOTA.E4, 0.09, fixo, 0);
+  for (const [n, a, b] of APOIO) voz(NOTA[n], n === 'D3' ? 0.14 : 0.08, [[Math.max(0.01, a - 1.25), 0], [a + 1.25, 1], [b - 1.25, 1], [b + 1.25, 0]], n === 'Fs4' ? 0.2 : -0.2);
+  const r = await ac.startRendering(); return [r.getChannelData(0).slice(), r.getChannelData(1).slice()];
+}
+const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
+const DUCK_DB = -9;
+function curvaDucking() { // -9 dB sob cada voz: começa a descer 0,45 s antes e já está embaixo 0,15 s antes do início; volta em 0,5 s depois do fim
+  const g = new Float32Array(SR * DUR);
+  for (let i = 0; i < g.length; i++) { const t = i / SR; let w = 0; for (const f of FALAS) w = Math.max(w, smooth((t - (f.vozIni - 0.45)) / 0.3) * (1 - smooth((t - (f.vozFim + 0.1)) / 0.5))); g[i] = Math.pow(10, DUCK_DB * w / 20); }
+  return g;
+}
+const COMP = { thr: -24, ratio: 2.5, ataque: 0.003, soltura: 0.12 };
+function comprime(x) { // compressor de voz sem atraso (sem lookahead: a voz não sai do lugar em relação à legenda)
+  const a = Math.exp(-1 / (COMP.ataque * SR)), r = Math.exp(-1 / (COMP.soltura * SR)), y = new Float32Array(x.length); let env = 0, maxRed = 0;
+  for (let i = 0; i < x.length; i++) { const p = x[i] * x[i]; env = p > env ? a * env + (1 - a) * p : r * env + (1 - r) * p;
+    const lv = 10 * Math.log10(env + 1e-12), red = lv > COMP.thr ? (lv - COMP.thr) * (1 - 1 / COMP.ratio) : 0; if (red > maxRed) maxRed = red; y[i] = x[i] * Math.pow(10, -red / 20); }
+  return { y, maxRed };
+}
+async function montaAudio() {
+  const N = SR * DUR, voz = new Float32Array(N), R = { vozes: [], compressorVoz: COMP };
+  for (const f of FALAS) { const c = comprime(f.voz), L = AudioKit.lufs([c.y, c.y]), k = Math.pow(10, (-16 - L) / 20), ini = Math.round(f.t * SR) - f.on; f.comp = +c.maxRed.toFixed(1);
+    for (let i = 0; i < c.y.length; i++) { const j = ini + i; if (j >= 0 && j < N) voz[j] += c.y[i] * k; }
+    R.vozes.push({ n: f.n, arquivo: `stems/${STEMS}/${f.arq}.mp3`, duracaoArquivo_s: f.arquivo_s, compressaoMax_dB: f.comp, lufsDepoisDaCompressao: +L.toFixed(2), ganho_dB: +(20 * Math.log10(k)).toFixed(2), vozInicio_s: f.vozIni, vozFim_s: f.vozFim, legendaInicio_s: +f.a.toFixed(4), legendaFim_s: +f.b.toFixed(4) }); }
+  const tr = await sintetizaTrilha(), Lt = AudioKit.lufs(tr), kt = Math.pow(10, (-27 - Lt) / 20); tr.forEach(c => { for (let i = 0; i < N; i++) c[i] *= kt; });
+  const gd = curvaDucking(), mix = [0, 1].map(c => tr[c].map((v, i) => v * gd[i] + voz[i]));
+  R.trilha = { tipo: 'sintetizada em código (Web Audio): réplica aproximada do clima do original, não o arquivo original', notas: 'pad dente-de-serra desafinado ±6 cents: A2, E3, A3, E4 fixos; apoio por capítulo: I B3, II D4, III F#4, IV D3, V B3; de 53,6 s em diante só lá + mi',
+    filtro: FILTRO, passaBaixa_Hz: 4000, entra_s: TRILHA.entra, fadeFinal_s: TRILHA.cai, lufsCama: -27, ducking_dB: DUCK_DB };
+  return { tr, voz, mix, gd, R };
+}
+
+// ---------- saídas ----------
+const DIR = 'semana-2026-10-05', BR = +q.get('br') || 12, PREF = 'Sab10_Curta3_v1' + (q.get('br') ? '_leve' : '');
+const salvar = (name, body) => fetch(`/save?dir=${DIR}&name=${name}`, { method: 'POST', body });
+const png = c => new Promise(r => c.toBlob(r, 'image/png'));
+async function fonteQuadros(tipo) { // 'frame' = frame(t) direto; 'mp4' = quadros lidos do MP4 entregue
+  if (tipo === 'orig') return async (g, t) => { await busca(VID, t + 0.5 / FPS); g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.drawImage(VID, 0, 0, W, H); const k = W / 478; g.font = '700 22px "Geist Mono"'; for (let r = 0; r <= 850; r += 50) { g.fillStyle = r % 100 ? '#0f0' : '#ff0'; g.fillRect(0, r * k, 40, 3); g.fillText(r, 44, r * k + 8); } };
+  if (tipo !== 'mp4') return async (g, t) => frame(g, t);
+  const v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = q.get('mp4') || `/Semanal/${DIR}/${PREF}.mp4`;
+  await new Promise((r, j) => { v.onloadeddata = r; v.onerror = () => j(new Error('mp4 não carregou')); });
+  return async (g, t) => { await busca(v, t + 0.5 / FPS); g.drawImage(v, 0, 0, W, H); };
+}
+async function folha(nome, ts, cols, sw, sh, tipo, crop = null, rot = null) {
+  const desenha = await fonteQuadros(tipo), cv = document.createElement('canvas'); cv.width = W; cv.height = H; const cg = cv.getContext('2d');
+  const [cx, cy, cw, ch] = crop || [0, 0, W, H];
+  const rows = Math.ceil(ts.length / cols), S = document.createElement('canvas'); S.width = sw * cols; S.height = sh * rows; const sg = S.getContext('2d'); sg.fillStyle = '#000'; sg.fillRect(0, 0, S.width, S.height);
+  for (let i = 0; i < ts.length; i++) { await desenha(cg, ts[i]); const x = (i % cols) * sw, y = Math.floor(i / cols) * sh; sg.drawImage(cv, cx, cy, cw, ch, x, y, sw, sh); sg.strokeStyle = '#333'; sg.strokeRect(x + 0.5, y + 0.5, sw - 1, sh - 1);
+    sg.font = `700 ${crop ? 15 : Math.max(16, sw / 13)}px "Geist Mono"`; sg.fillStyle = '#FF3B1F'; sg.fillText(rot ? rot(ts[i], i) : `${ts[i].toFixed(1).replace('.', ',')} s`, x + 8, y + 20); document.title = 'folha ' + i; }
+  await salvar(nome, await png(S));
+}
+const OITO = [4.0, 8.0, 14.0, 24.0, 40.0, 49.0, 55.0, 60.5]; // I você, I Bit, II, III, IV, V Bit sob a lua, cartão 1ª linha, cartão final
+async function folhaFalas(tipo) { // por fala: quadro antes da voz, 1º quadro da legenda, último quadro da legenda, quadro seguinte (faixa da legenda)
+  const ts = [], rot = []; for (const f of FALAS) { const A = Math.round(f.a * FPS), B = Math.round(f.b * FPS);
+    for (const [q0, nm] of [[A - 1, 'antes'], [A, '1o'], [B - 1, 'ultimo'], [B, 'depois']]) { ts.push(q0 / FPS); rot.push(`${f.n} ${nm} q${q0} ${(q0 / FPS).toFixed(3)}s voz ${f.vozIni.toFixed(3)}-${f.vozFim.toFixed(3)}`); } }
+  await folha(`${PREF}_folha_falas.png`, ts, 4, 540, 140, tipo, [0, 1230, W, 280], (t, i) => rot[i]);
+}
+function linhaDoTempo() {
+  return { peca: 'Curta 3 do Bit (pixel art, você vai lembrar de mim?), versão em português (v1, com voz e trilha)', formato: { W, H, FPS, duracao_s: DUR, quadros: NF },
+    fonte_html: 'Conteudo_Bit/Producao/curta3_pt.html', bit_sprite: window.CURTA_BIT.src,
+    nota: 'Tempos em segundos no vídeo. vozInicio/vozFim = trecho com voz (medido no arquivo); a legenda (inicio/fim) fica dentro dele, em quadro inteiro.',
+    capitulos: CAP.map(c => ({ id: c.id, rotulo: c.rotulo, inicio: c.a, fim: c.b, imagem: c.fonte === 'clipe' ? (c.fit ? `clipe do original (mesmo tempo), linhas ${c.fit[0]}-${c.fit[1]} de 850 reduzidas para caber; legenda em inglês coberta e redesenhada: ${c.aviso.txt}` : `clipe do original (mesmo tempo), linhas ${c.sy}-${Math.round(c.sy + SRC_ROWS)} de 850`) : c.fonte === 'cena' ? (c.lua ? 'cena em código: banco na colina, noite com lua' : c.noite ? 'cena em código: banco na colina sob as estrelas' : 'cena em código: banco na colina ao amanhecer') : 'cartão final (preto, sem voz)' })),
+    falas: FALAS.map((f, i) => ({ n: f.n, capitulo: f.cap, personagem: f.quem, voz: `stems/${STEMS}/${f.arq}.mp3`, texto: f.txt, vozInicio: f.vozIni, vozFim: f.vozFim, inicio: +f.a.toFixed(4), fim: +f.b.toFixed(4),
+      respiroAteProxima_s: i < FALAS.length - 1 ? +(FALAS[i + 1].vozIni - f.vozFim).toFixed(3) : null })),
+    cartao: CARTAO.map(c => ({ texto: c.linhas.join(' '), cor: c.cor, inicio: c.a, fim: c.b })),
+    trilha: { inicio: TRILHA.entra[0], cheia: TRILHA.entra[1], fadeFinal: TRILHA.cai },
+    bit_em_cena: { capitulos: ['I', 'V'], intervalos: CAP.filter(c => c.fonte === 'cena').map(c => [c.a, c.b]), piscadas: PISCA, respiro_periodo_s: RESPIRO } };
+}
+async function auditoria() {
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d', { willReadFrequently: true }), A = {}, fora = [], todas = new Map();
+  for (let f = 0; f < NF; f += 3) { const t = f / FPS; CAIXAS = []; await frame(g, t, false, false);
+    for (const c of CAIXAS) { todas.set(c.id + '|' + c.s, c); if (c.x0 < 90 || c.x1 > 940 || c.y0 < 250 || c.y1 > 1480) fora.push({ t: +t.toFixed(2), ...c }); }
+    if (f % 90 === 0) document.title = 'auditoria ' + f; }
+  CAIXAS = null;
+  A.areaSegura = { caixasFora: fora.slice(0, 20), totalFora: fora.length, extremos: { x0: Math.min(...[...todas.values()].map(c => c.x0)), x1: Math.max(...[...todas.values()].map(c => c.x1)), y0: Math.min(...[...todas.values()].map(c => c.y0)), y1: Math.max(...[...todas.values()].map(c => c.y1)) } };
+  A.baselineUltimaLinhaFala = FALA.b;
+  const textos = [...CAP.map(c => c.rotulo).filter(Boolean), ...FALAS.flatMap(f => [f.quem, f.txt]), ...CARTAO.flatMap(c => c.linhas)];
+  A.proibidos = textos.filter(s => /claude|anthropic|ksh|partners|\.cz|@|siga|\b(the|you|work|point|human|question)\b/i.test(s));
+  A.textosNaTela = [...todas.values()].map(c => c.s);
+  A.janelasDoOriginal = CAP.filter(c => c.fonte === 'clipe').map(c => { const r = c.fit || [c.sy, +(c.sy + SRC_ROWS).toFixed(1)]; return { id: c.id, linhas: r, dentroDaImagem_100_716: r[0] >= 100 && r[1] <= 716 }; });
+  A.fontes = { geist700: document.fonts.check('700 54px Geist', 'ÀÉáâãçéêíóõú'), geist800: document.fonts.check('800 96px Geist', 'á'), mono500: document.fonts.check('500 32px "Geist Mono"', 'ê') };
+  A.leituraMinima = FALAS.map(f => ({ n: f.n, s: +(f.b - f.a).toFixed(2), palavras: f.txt.split(' ').length }));
+  { const a = document.createElement('canvas'); a.width = W; a.height = H; const ag = a.getContext('2d', { willReadFrequently: true }); await frame(ag, 14.0, false, false); const x = ag.getImageData(0, 0, W, H).data;
+    await frame(ag, 30.0, false, false); await frame(ag, 14.0, false, false); const y = ag.getImageData(0, 0, W, H).data; let n = 0; for (let i = 0; i < x.length; i += 4) if (x[i] !== y[i] || x[i + 1] !== y[i + 1] || x[i + 2] !== y[i + 2]) n++; A.pureza_q510_foraDeOrdem_px = n;
+    await frame(ag, 5.0, false, false); const p = ag.getImageData(0, 0, W, H).data; await frame(ag, 49.0, false, false); await frame(ag, 5.0, false, false); const p2 = ag.getImageData(0, 0, W, H).data; n = 0; for (let i = 0; i < p.length; i += 4) if (p[i] !== p2[i]) n++; A.pureza_q150_foraDeOrdem_px = n; }
+  return A;
+}
+async function render() {
+  const N = SR * DUR, A = await montaAudio(), R = { peca: `${PREF}.mp4`, alvo: { lufs: -14, dbtp: -1, medidoDepoisDoAAC: true, tetoLimitador_dBTP: AudioKit.TETO_LIMITADOR }, ...A.R };
+  R.mixBruto_lufs = +AudioKit.lufs(A.mix).toFixed(2); document.title = 'mix';
+  // ganho para -14 LUFS, limitador, AAC, decodifica e mede; corrige e repete (igual ao audio_kit)
+  let ganho = -14 - R.mixBruto_lufs, final = null; R.iteracoes = [];
+  for (let it = 0; it < 6; it++) {
+    const g = Math.pow(10, ganho / 20), pre = A.mix.map(c => c.map(v => v * g)), lim = AudioKit.limita(pre, AudioKit.TETO_LIMITADOR);
+    const dec = await AudioKit.decodifica(await AudioKit.codificaAAC(lim.out, N, null)), L = AudioKit.lufs(dec.chs), tp = AudioKit.truePeak(dec.chs);
+    R.iteracoes.push({ ganho_dB: +ganho.toFixed(2), reducaoLimitadorMax_dB: +lim.reducaoMaxDb.toFixed(2), posAAC_lufs: +L.toFixed(2), posAAC_dbtp: +tp.toFixed(2) });
+    document.title = `iteracao ${it} ${L.toFixed(2)} LUFS ${tp.toFixed(2)} dBTP`; final = { g, lim };
+    if (Math.abs(L + 14) <= 0.1 && tp <= -1) break; ganho += -14 - L;
+  }
+  // vídeo + áudio
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const mux = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: W, height: H, frameRate: FPS }, audio: { codec: 'aac', numberOfChannels: 2, sampleRate: SR }, fastStart: 'in-memory' });
+  let err = null; const ve = new VideoEncoder({ output: (c, m) => mux.addVideoChunk(c, m), error: e => err = e }), ae = new AudioEncoder({ output: (c, m) => mux.addAudioChunk(c, m), error: e => err = e });
+  ve.configure({ codec: 'avc1.640032', width: W, height: H, bitrate: BR * 1e6, framerate: FPS }); ae.configure({ codec: 'mp4a.40.2', sampleRate: SR, numberOfChannels: 2, bitrate: 192000 });
+  const [La, Ra] = final.lim.out;
+  for (let i = 0; i < N; i += 1024) { const n = Math.min(1024, N - i), d = new Float32Array(n * 2); d.set(La.subarray(i, i + n), 0); d.set(Ra.subarray(i, i + n), n); const ad = new AudioData({ format: 'f32-planar', sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data: d }); ae.encode(ad); ad.close(); }
+  for (let f = 0; f < NF; f++) { await frame(g, f / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(f * 1e6 / FPS), duration: Math.round(1e6 / FPS) }); ve.encode(vf, { keyFrame: f % 60 === 0 }); vf.close();
+    if (ve.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 5)); if (err) throw err; if (f % 15 === 0) document.title = `video ${f}/${NF}`; }
+  await ve.flush(); await ae.flush(); if (err) throw err; mux.finalize();
+  const mp4 = mux.target.buffer; await salvar(`${PREF}.mp4`, new Blob([mp4]));
+  // medições no MP4 entregue (áudio decodificado depois do AAC)
+  document.title = 'medindo'; const dec = await AudioKit.decodifica(mp4);
+  R.final = { arquivo: `${PREF}.mp4`, bytes: mp4.byteLength, video: { W, H, FPS, quadros: NF, duracao_s: NF / FPS, codec: 'H.264 avc1.640032, 12 Mbps' }, audio: { codec: 'AAC-LC 192 kbps', sr: dec.sr, amostras: dec.len, duracao_s: +(dec.len / dec.sr).toFixed(3) },
+    lufsIntegrado: +AudioKit.lufs(dec.chs).toFixed(2), dbtp: +AudioKit.truePeak(dec.chs).toFixed(2) };
+  R.final.metaLUFS_ok = Math.abs(R.final.lufsIntegrado + 14) <= 0.5; R.final.metaDBTP_ok = R.final.dbtp <= -1;
+  const f6 = FALAS[5], lag = AudioKit.atraso(final.lim.out[0], dec.chs[0], Math.round((f6.vozIni + 1) * SR), SR, 3000);
+  R.atrasoAAC = { amostras: lag.lag, ms: +(lag.lag / SR * 1000).toFixed(2), correlacao: +lag.corr.toFixed(4) };
+  const lagS = lag.lag / SR;
+  R.sincronia = FALAS.map(f => { const vi = f.vozIni + lagS, vf = f.vozFim + lagS, q1 = Math.round(f.a * FPS), q2 = Math.round(f.b * FPS) - 1;
+    return { n: f.n, vozNoMP4: [+vi.toFixed(4), +vf.toFixed(4)], legenda1oQuadro: { q: q1, t: +(q1 / FPS).toFixed(4) }, legendaUltimoQuadro: { q: q2, fimDoQuadro: +((q2 + 1) / FPS).toFixed(4) },
+      antesDaVoz_ms: +((vi - q1 / FPS) * 1000).toFixed(1), depoisDaVoz_ms: +(((q2 + 1) / FPS - vf) * 1000).toFixed(1), ok: q1 / FPS >= vi - 0.0005 && (q2 + 1) / FPS <= vf + 0.0005 }; });
+  // ducking real medido: trilha no meio de cada fala x trilha sem ducking
+  { const gl = final.lim.g, n = gl.length, pct = db => +(100 * gl.filter(v => 20 * Math.log10(v) < db).length / n).toFixed(2); R.limitador = { reducaoMax_dB: +final.lim.reducaoMaxDb.toFixed(2), tempoComReducao_pct: { maisDe1dB: pct(-1), maisDe3dB: pct(-3), maisDe6dB: pct(-6) } }; }
+  R.duckingNoMeioDasFalas_dB = FALAS.map(f => +(20 * Math.log10(A.gd[Math.round((f.vozIni + f.vozFim) / 2 * SR)])).toFixed(2));
+  // trilha isolada (sem ducking, no ganho da mixagem; sem limitador)
+  await salvar(`${PREF}_trilha.wav`, new Blob([AudioKit.wav(A.tr.map(c => c.map(v => v * final.g)))]));
+  await salvar(`${PREF}_mixagem.json`, new Blob([JSON.stringify(R, null, 2)]));
+  await salvar(`${PREF}_linha_do_tempo.json`, new Blob([JSON.stringify(linhaDoTempo(), null, 2)]));
+}
+(async () => {
+  await loadBrandFonts(); const todo = [...FALAS.map(f => f.txt + f.quem), ...CAP.map(c => c.rotulo || ''), ...CARTAO.map(c => c.txt)].join(' ');
+  await Promise.all([document.fonts.load(`700 54px Geist`, todo), document.fonts.load(`800 96px Geist`, todo), document.fonts.load(`500 32px "Geist Mono"`, todo)]);
+  await prepBit(); await prepVozes(); LAY = layout();
+  const usaMP4 = ['sheet', 'oito', 'falas'].some(k => q.get(k) === 'mp4');
+  if (!q.has('linha') && !usaMP4) await prepVideo();
+  if (q.has('render')) await render();
+  else if (q.has('linha')) await salvar(`${PREF}_linha_do_tempo.json`, new Blob([JSON.stringify(linhaDoTempo(), null, 2)]));
+  else if (q.has('audit')) { const A = await auditoria(); await salvar(`${PREF}_auditoria.json`, new Blob([JSON.stringify(A, null, 2)])); }
+  else if (q.has('sheet')) await folha(q.get('sheet') === 'mp4' ? `${PREF}_sheet.png` : `${PREF}_sheet_frame.png`, Array.from({ length: 20 }, (_, i) => i * 3), 5, 216, 384, q.get('sheet'));
+  else if (q.has('oito')) await folha(q.get('oito') === 'mp4' ? `${PREF}_8quadros_mp4.png` : `${PREF}_8quadros_frame.png`, OITO, 4, 540, 960, q.get('oito'));
+  else if (q.has('falas')) await folhaFalas(q.get('falas'));
+  else if (q.has('estalo')) { // estalos: picos da 2ª diferença (alta frequência) muito acima da vizinhança, no áudio decodificado do MP4 entregue
+    const buf = await (await fetch(`/Semanal/${DIR}/${PREF}.mp4`)).arrayBuffer(), dec = await AudioKit.decodifica(buf), x = dec.chs[0], B = Math.round(0.005 * dec.sr), blocos = [];
+    for (let i = 2; i + B < x.length; i += B) { let m = 0; for (let k = i; k < i + B; k++) m = Math.max(m, Math.abs(x[k] - 2 * x[k - 1] + x[k - 2])); blocos.push(m); }
+    const ev = []; for (let b = 20; b < blocos.length - 20; b++) { const viz = blocos.slice(b - 20, b + 20).filter((_, j) => j < 18 || j > 22).sort((a, c) => a - c), med = viz[viz.length >> 1]; if (blocos[b] > 0.02 && blocos[b] > 6 * med) ev.push({ t: +(b * B / dec.sr).toFixed(3), pico: +blocos[b].toFixed(4), vizinhanca: +med.toFixed(4) }); }
+    const bordas = FALAS.map(f => ({ n: f.n, primeiraAmostra: +Math.abs(f.voz[0]).toFixed(5), ultimaAmostra: +Math.abs(f.voz[f.voz.length - 1]).toFixed(5) }));
+    await salvar(`${PREF}_estalos.json`, new Blob([JSON.stringify({ criterio: '2ª diferença em blocos de 5 ms > 6x a mediana de ±100 ms e > 0,02', eventos: ev, bordasDasVozes: bordas }, null, 2)])); }
+  else if (q.has('orig')) { const ts = q.get('orig').split(',').map(Number); await folha(`orig_${q.get('nome') || 'x'}.png`, ts, 4, 360, 640, 'orig'); }
+  else { const ts = (q.get('t') || '5').split(',').map(Number);
+    for (const t of ts) { const cv = document.createElement('canvas'); cv.width = W; cv.height = H; cv.style.width = '540px'; document.body.append(cv); await frame(cv.getContext('2d'), t);
+      if (q.has('shot')) { let out = cv; if (q.has('crop')) { const [x, y, w, h] = q.get('crop').split(',').map(Number); out = document.createElement('canvas'); out.width = w; out.height = h; out.getContext('2d').drawImage(cv, x, y, w, h, 0, 0, w, h); }
+        await salvar(`${PREF}_${q.get('shot')}_${t.toFixed(2)}.png`, await png(out)); } } }
+  document.title = 'DONE';
+})().catch(e => { document.title = 'ERROR ' + e.message; });
+</script>
+</body></html>
