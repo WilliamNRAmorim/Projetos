@@ -24,6 +24,10 @@ window.EpKit = (() => {
     const SR = 48000, ac = new OfflineAudioContext(2, SR, SR);
     // sem narração (fatos rápidos): cada fala dura o tempo de leitura (~0,34 s por palavra), só texto + trilha
     const vozes = opts.semVoz ? F.map(() => null) : await Promise.all(F.map((_, i) => fetch(`${opts.stems}/fala${i + 1}.mp3`).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b))));
+    // fade de 5 ms nas bordas de cada fala (sem clique de início/fim) e tratamento opcional por fala: opts.vozFx(i, AudioBuffer) mexe nas amostras
+    vozes.forEach((b, i) => { if (!b) return; const n = Math.min(Math.round(0.005 * b.sampleRate), b.length >> 1);
+      for (let c = 0; c < b.numberOfChannels; c++) { const d = b.getChannelData(c); for (let j = 0; j < n; j++) { const w = j / n; d[j] *= w; d[d.length - 1 - j] *= w; } }
+      if (opts.vozFx) opts.vozFx(i, b); });
     const durTexto = f => Math.max(1.6, f.txt.split(' ').length * 0.34 + 0.4);
     let t = LEAD; F.forEach((f, i) => { f.t0 = t; f.dur = vozes[i] ? vozes[i].duration : (f.dur || durTexto(f)); t += f.dur + (f.pausa ?? GAP); }); const DUR = Math.ceil((t + TAIL) * FPS) / FPS;
     const cv = document.createElement('canvas'); cv.width = W; cv.height = H; document.body.append(cv); const g = cv.getContext('2d');

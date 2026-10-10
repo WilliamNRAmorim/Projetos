@@ -198,6 +198,13 @@ const q = new URLSearchParams(location.search);
 EpKit.run({
   falas: FALAS, cenas: CENAS, stems: '/w/stems/tetris', lead: 0.05, gap: 0.25, tail: 0.9, grao: 0.04, bitrate: 1.4e6, cbr: true, abitrate: 96000,
   dir: 'semana-2026-10-05', out: 'Sab10_B_TikTok_Instagram_Tetris_voz.mp4',
+  // de-clique da fala1: o "T" de "Tetris" (≈1,39 s no vídeo) saiu com um transiente duro que estala; onde a amostra salta > 0,25,
+  // mistura uma versão passa-baixa (~5 kHz) com janela cossenoidal de ±5 ms e tira ~2 dB. Só a fala1; as outras ficam intactas.
+  vozFx: (i, b) => { if (i !== 0) return; const R = Math.round(0.005 * b.sampleRate), a = 1 - Math.exp(-2 * Math.PI * 5000 / b.sampleRate);
+    for (let c = 0; c < b.numberOfChannels; c++) { const d = b.getChannelData(c), n = d.length, lp = new Float32Array(n), w = new Float32Array(n);
+      for (let j = 1; j < n; j++) lp[j] = lp[j - 1] + a * (d[j] - lp[j - 1]);
+      for (let j = 1; j < n; j++) if (Math.abs(d[j] - d[j - 1]) > 0.25) for (let k = -R; k <= R; k++) { const q = j + k; if (q >= 0 && q < n) w[q] = Math.max(w[q], 0.5 + 0.5 * Math.cos(Math.PI * k / R)); }
+      for (let j = 0; j < n; j++) if (w[j] > 0) d[j] = d[j] * (1 - w[j]) + lp[j] * w[j] * 0.8; } },
   musica: (ti, i) => [0.12, 0.11, 0.11, 0.11, 0.12, 0.11, 0.06, 0.1][i],
   prep: async () => {
     for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando', 'bit_apontando', 'bit_rindo']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
