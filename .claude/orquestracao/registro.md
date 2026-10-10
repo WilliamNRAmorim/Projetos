@@ -19,3 +19,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-09 | .gitattributes marcando binários para não corromper PDF no checkout | chefe sozinho (Opus) | config git, sem subagente | baixo
 2026-10-09 | Testes 16 e 17 no QA de YAML (= no início e IfError Collect/Notify) | chefe sozinho (Opus) | script pequeno, plano já aprovado pelo William | baixo
 2026-10-09 | Banco de 18 artes (Bit, Ficha, Carretel, cenários, objetos, personagens novos) gerado no Gemini via Chrome | chefe (Sonnet 5.5) dirigiu o Gemini; produtor-de-artes (Opus) escreveu os 30 prompts | Chrome é do chefe (subagente sem navegador); Opus só no texto dos prompts | total do dia US$ 32,61 (uso.ps1; parte deste pedido não separada)
+2026-10-09 | Preparar posts/vídeos de amanhã (sáb 10/10): só conferi, já estavam prontos e no Drive (hash igual) | chefe sozinho, Sonnet 5.5, sem subagente | trabalho já feito pela rotina das 20h | custo ~US$ 0,1 (estimado)

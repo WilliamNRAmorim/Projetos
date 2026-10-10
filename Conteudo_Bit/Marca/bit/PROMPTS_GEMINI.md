@@ -145,3 +145,11 @@ Já existe `bit_astronauta.png` (assustado, suando). Faltam as poses da tensão 
 
 ### Como eu uso
 Quando as imagens estiverem em `Marca/bit/` com esses nomes, aviso e re-renderizo os 3 vídeos trocando os desenhos de código (módulo lunar, mariposa, caderno, painel, notebook, caixa) pelas artes do Gemini e o Bit pelas poses certas de cada cena. Se alguma sair torta, peça de novo com "mantenha EXATAMENTE o mesmo personagem da referência". Texto nas imagens: sempre EM BRANCO, eu escrevo no código (o Gemini erra letras).
+
+## 8. Vídeo B de sábado 10/10 · Tetris (Bit dentro do poço)
+O vídeo já saiu com poses do banco (`bit_surpreso`, `bit_joinha`, `bit_confuso`, `bit_comemorando`, `bit_lupa`, `bit_pensando`). Estas duas deixam a ação mais clara numa próxima versão. Use o prefixo do item 7 (Bit) + `bit_acenando.png` como referência, uma imagem por prompt, fundo branco liso, sem peças de Tetris na imagem (eu desenho as peças em código).
+
+| Arquivo | Complemento |
+|---|---|
+| `bit_desviando.png` | Em pleno salto lateral para a direita, corpo inclinado, as duas pernas no ar, olhando para CIMA com olhos arregalados e boca em "O", braços abertos para equilibrar, duas gotas de suor saindo da cabeça. |
+| `bit_esmagado_leve.png` | Agachado e encolhido, as duas mãos sobre a cabeça como quem se protege de algo caindo, olhos fechados com força, antena dobrada para baixo, cara de "ai". |
