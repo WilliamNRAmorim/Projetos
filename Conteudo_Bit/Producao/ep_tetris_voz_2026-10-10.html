@@ -11,6 +11,7 @@ const { W, H, clamp, out, inout, txt, glitch, rnd } = EpKit;
 const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2;
 const ART = {};
 const bitDraw = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
+const bitEsq = (g, k, cx, bottom, h) => { g.save(); g.translate(cx, 0); g.scale(-1, 1); BitArt.draw(g, ART[k], 0, bottom, h); g.restore(); }; // espelhado: aponta/olha pra esquerda, onde fica o conteúdo
 const et = (g, s, x, y, col = MU, size = 30) => txt(g, s, x, y, size, col, { mono: true, w: 700 });
 // o poço: 10 colunas × 12 linhas de 84 px, encostado à esquerda pra fugir dos botões do TikTok (x > 940)
 const COLS = 10, ROWS = 12, C = 84, X0 = 90, YB = 1268, Y0 = YB - ROWS * C, XR = X0 + COLS * C, MID = X0 + COLS * C / 2;
@@ -77,7 +78,8 @@ const CENAS = {
       for (let i = 0; i < 6; i++) { g.fillStyle = 'rgba(238,237,232,.05)'; g.fillRect(sx, sy + ((u * 90 + i * 45) % sh), sw, 6); }
       g.fillStyle = A; g.beginPath(); g.moveTo(sx + sw / 2 - 40, sy + sh / 2 - 50); g.lineTo(sx + sw / 2 + 55, sy + sh / 2); g.lineTo(sx + sw / 2 - 40, sy + sh / 2 + 50); g.closePath(); g.fill();
       et(g, 'CENAS REAIS · FERIMENTOS', sx, sy + sh + 46, MU, 26);
-      bitDraw(g, 'bit_lupa', 790, topOf(6) + 4, 230);
+      // o Bit examina o filme de lupa e vai sendo erguido pelos voluntários que entram embaixo dele
+      const sob = Math.floor(n / 10) + (n % 10 > 7 ? 1 : 0); bitEsq(g, 'bit_lupa', 800, topOf(2 + sob) + 4, 230);
     });
     et(g, 'OXFORD · 2009', X0 + 24, Y0 + 50, A);
     if (k > 0.35) { const a = clamp((k - 0.35) / 0.15); g.globalAlpha = a; txt(g, '40', X0 + 30, topOf(6) - 40, 120, P, { mono: true, w: 700 }); et(g, 'VOLUNTÁRIOS SAUDÁVEIS', X0 + 200, topOf(6) - 50, P, 28); g.globalAlpha = 1; }
@@ -91,7 +93,8 @@ const CENAS = {
       for (let i = 0; i < 6; i++) { const t0 = i * 0.55 - 0.3, y = queda(u, t0, t0 + 0.7, Y0 - 10, topOf(2) - Math.floor(i / 2) * C * 2); if (u > t0) peca(g, seq[i], X0 + (i % 2 ? 3.1 : 1.6) * C, y, C); }
       g.restore();
       g.fillStyle = A; g.fillRect(X0 + 5 * C - 3, Y0, 6, YB - Y0);
-      bitDraw(g, 'bit_confuso', colX(7.5), topOf(2), 280);
+      // "uns jogaram Tetris": aponta pro lado das peças; "os outros, nada": coça a cabeça no lado vazio
+      if (k < 0.55) bitEsq(g, 'bit_apontando', colX(7.5), topOf(2), 270); else bitDraw(g, 'bit_confuso', colX(7.5), topOf(2), 280);
     });
     et(g, '+30 MIN DEPOIS', X0 + 24, Y0 + 50, A);
     et(g, 'TETRIS · 10 MIN', X0 + 24, Y0 + 110, P, 28); et(g, 'NADA', X0 + 5 * C + 24, Y0 + 110, MU, 28);
@@ -102,7 +105,7 @@ const CENAS = {
       pilha(g, BASE);
       for (let d = 0; d < 7; d++) { const a = clamp((k - 0.1 - d * 0.09) / 0.08); if (a <= 0) continue; const y = topOf(3) - (1 - out(a)) * 300; bloco(g, X0 + d * C, y, C, d === 6 ? A : P); txt(g, 'D' + (d + 1), X0 + d * C + C / 2, y + C / 2 + 12, 30, BRAND.ink, { align: 'center', mono: true, w: 700 }); }
       const im = ART.obj_caderno, h = 380, w = im.width * h / im.height; g.drawImage(im, MID - w / 2 - 60, Y0 + 130, w, h);
-      bitDraw(g, 'bit_pensando', colX(8.4), topOf(2), 230);
+      bitEsq(g, 'bit_lupa', colX(8.3), topOf(2), 240); // lê o diário de lupa
     });
     et(g, '7 DIAS · DIÁRIO', X0 + 24, Y0 + 50, A);
   },
@@ -123,7 +126,8 @@ const CENAS = {
       if (k > 0.5) { const a = clamp((k - 0.5) / 0.12) * fade; g.globalAlpha = a; et(g, 'MEMÓRIA DO FILME', X0 + 30, Y0 + 130, MU, 28); txt(g, '= IGUAL', X0 + 24, Y0 + 260, 120, P); et(g, 'TESTE DE 32 ITENS', X0 + 30, Y0 + 310, MU, 26); }
       g.globalAlpha = 1;
       const vis = gg < 0.18 || (gg < 0.45 && pisca);
-      if (vis) bitDraw(g, gg > 0 ? 'bit_surpreso' : 'bit_comemorando', colX(8.4), topOf(2), 250);
+      // "bem menos flashbacks": aponta pras colunas; "ficou igual": comemora; o O caindo: susto; linha completa: pisca e some
+      if (vis) { if (gg > 0) bitDraw(g, 'bit_surpreso', colX(8.4), topOf(2), 250); else if (k < 0.5) bitEsq(g, 'bit_apontando', colX(8.4), topOf(2), 250); else bitDraw(g, 'bit_comemorando', colX(8.4), topOf(2) - Math.abs(Math.sin(u * 7)) * 30, 250); }
       if (gg > 0.45) { const a = clamp((gg - 0.45) / 0.1); g.globalAlpha = a; txt(g, '−1 BIT', colX(7.2), YB - 60, 60, A, { align: 'center', mono: true, w: 700 }); g.globalAlpha = 1; }
     });
     et(g, 'O RESULTADO', X0 + 24, Y0 + 50, A);
@@ -134,7 +138,10 @@ const CENAS = {
     g.save(); tremor(g, u, 0.45, 10);
     poco(g, () => {
       for (let i = 0; i < 6; i++) { const t0 = i * 0.8, y = Y0 + ((u - t0) * 260 % (YB - Y0 + 200)); g.globalAlpha = 0.18; peca(g, 'TLSZJO'[i], X0 + 80 + (i * 137) % 680, y, 50, P); } g.globalAlpha = 1;
-      const by = queda(u, 0, 0.45, Y0 + 40, YB); bitDraw(g, 'bit_joinha', colX(7.6), by, 280); poeira(g, colX(7.6), YB, u, 0.45);
+      // "Voltei.": cai de volta como peça, em pé de susto; aterrissa de joinha; na explicação, aponta pro texto
+      const by = queda(u, 0, 0.45, Y0 + 300, YB);
+      if (u < 0.45) bitDraw(g, 'bit_surpreso', colX(7.6), by, 280); else if (k < 0.25) bitDraw(g, 'bit_joinha', colX(7.6), by, 280); else bitEsq(g, 'bit_apontando', colX(7.6), by, 280);
+      poeira(g, colX(7.6), YB, u, 0.45);
       const a = clamp((k - 0.22) / 0.1); g.globalAlpha = a;
       txt(g, 'PEÇAS', X0 + 30, Y0 + 230, 130, A);
       g.save(); g.translate(X0 + 640, Y0 + 180); g.rotate(Math.floor(u * 2) * Math.PI / 2); peca(g, 'T', 0, 60, 46); g.restore();
@@ -158,20 +165,31 @@ const CENAS = {
     if (k > 0.5) { g.globalAlpha = b * clamp((k - 0.5) / 0.1); txt(g, 'NÃO É TRATAMENTO', 0, 130, 76, A, { align: 'center' }); }
     g.restore();
   },
-  // fecho: cai de tudo, menos a reta; no fim, as 7 peças como "enquete"
+  // fecho: até "a peça reta" só cai S, Z e O e o Bit pula; na pergunta, o poço limpa e as 7 peças ficam grandes, todas visíveis, e o Bit aponta escolhendo
   fecho(g, u, k) {
-    const seq = ['S', 'Z', 'O', 'S', 'Z'];
+    const seq = ['S', 'Z', 'O', 'S', 'Z'], K2 = 0.6, enq = clamp((k - K2) / 0.06);
     let hop = 0;
     poco(g, () => {
       pilha(g, BASE);
-      seq.forEach((f, i) => { const t0 = 0.2 + i * 0.95, cx = i % 2 ? colX(1.5) : colX(4); if (u > t0) { peca(g, f, cx, queda(u, t0, t0 + 0.6, Y0 - 10, topOf(2) - (i > 1 ? C * 2 * Math.floor(i / 2) : 0)), C, i === seq.length - 1 && u > 4.5 ? P : A); } const d = u - (t0 + 0.6); if (d > 0 && d < 0.3) hop = Math.sin(Math.PI * d / 0.3) * 40; });
-      bitDraw(g, 'bit_confuso', colX(7.6), topOf(2) - hop, 270);
+      g.globalAlpha = 1 - enq;
+      seq.forEach((f, i) => { const t0 = 0.2 + i * 0.95, cx = i % 2 ? colX(1.5) : colX(4); if (u > t0) peca(g, f, cx, queda(u, t0, t0 + 0.6, Y0 - 10, topOf(2) - (i > 1 ? C * 2 * Math.floor(i / 2) : 0)), C); const d = u - (t0 + 0.6); if (d > 0 && d < 0.3 && k < K2) hop = Math.sin(Math.PI * d / 0.3) * 40; });
+      g.globalAlpha = 1;
+      if (k < K2) { bitDraw(g, 'bit_confuso', colX(7.6), topOf(2) - hop, 270); return; }
+      g.globalAlpha = enq;
+      const s = 56, gap = 30, sel = k > 0.9 ? 3 : Math.floor((k - K2) * 30) % 7; // o cursor passeia e para no S
+      const linhas = [[['I', 'O', 'T', 'S'], Y0 + 450], [['Z', 'J', 'L'], Y0 + 690]]; let idx = 0;
+      for (const [fs, yb] of linhas) { let x = X0 + 36;
+        for (const f of fs) { const [w, h] = tam(f), pw = w * s, on = idx === sel;
+          if (on) { g.strokeStyle = A; g.lineWidth = 6; g.strokeRect(x - 16, yb - 2 * s - 16, pw + 32, 2 * s + 32 + 64); }
+          peca(g, f, x + pw / 2, yb, s, on ? A : P);
+          txt(g, f, x + pw / 2, yb + 54, 44, on ? A : P, { align: 'center', mono: true, w: 700 });
+          x += pw + gap; idx++; } }
+      const fim = k > 0.9, pul = fim ? Math.abs(Math.sin((k - 0.9) * 40)) * 30 : 0;
+      bitEsq(g, fim ? 'bit_rindo' : 'bit_apontando', 810, topOf(2) - pul, 250);
+      g.globalAlpha = 1;
     });
-    et(g, 'TETRIS · 1984 · PAJITNOV', X0 + 24, Y0 + 50, A);
-    if (k > 0.62) { const a = clamp((k - 0.62) / 0.1); g.globalAlpha = a; g.fillStyle = 'rgba(12,12,13,.85)'; g.fillRect(X0, Y0 + 80, XR - X0, 330);
-      et(g, 'QUAL VOCÊ MAIS ODEIA?', X0 + 30, Y0 + 140, P, 32);
-      'IOTSZJL'.split('').forEach((f, i) => { const cx = X0 + 70 + i * 116; peca(g, f, cx, Y0 + 330, 26, f === 'I' ? A : P); txt(g, f, cx, Y0 + 385, 34, MU, { align: 'center', mono: true, w: 700 }); });
-      g.globalAlpha = 1; }
+    if (k < K2) et(g, 'TETRIS · 1984 · PAJITNOV', X0 + 24, Y0 + 50, A);
+    else { g.globalAlpha = enq; txt(g, 'QUAL PEÇA VOCÊ', X0 + 34, Y0 + 110, 76, P); txt(g, 'MAIS ', X0 + 34, Y0 + 190, 76, P); txt(g, 'ODEIA?', X0 + 34 + g.measureText('MAIS ').width, Y0 + 190, 76, A); g.globalAlpha = 1; }
   },
 };
 // as poses do banco já vêm sem fundo: achata sobre branco antes do recorte, pra o contorno do BitArt sair igual nas duas pastas
@@ -182,7 +200,7 @@ EpKit.run({
   dir: 'semana-2026-10-05', out: 'Sab10_B_TikTok_Instagram_Tetris_voz.mp4',
   musica: (ti, i) => [0.12, 0.11, 0.11, 0.11, 0.12, 0.11, 0.06, 0.1][i],
   prep: async () => {
-    for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
+    for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando', 'bit_apontando', 'bit_rindo']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
     for (const k of ['bit_lupa', 'bit_pensando']) ART[k] = await carregar(`/Marca/bit/${k}.png`);
     ART.obj_caderno = await carregar('/Marca/bit/obj_caderno.png');
   },

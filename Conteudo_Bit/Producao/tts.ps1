@@ -3,12 +3,15 @@
 # Uso: .\tts.ps1 -Voz Bit -Texto "Oi, eu sou o Bit!" -Saida C:\caminho\fala.mp3
 param(
   [Parameter(Mandatory)][ValidateSet('Bit', 'Ficha')][string]$Voz,
-  [Parameter(Mandatory)][string]$Texto,
+  [string]$Texto,
+  [string]$TextoArquivo,  # arquivo UTF-8 com o texto: use isto quando houver acento (argumento de linha de comando vira lixo no Git Bash)
   [Parameter(Mandatory)][string]$Saida,
   [string]$Modelo = 'eleven_multilingual_v2',
   [double]$Velocidade = 1.0  # 0.7 a 1.2 (ElevenLabs voice_settings.speed); 1.0 = como sempre foi
 )
 $ErrorActionPreference = 'Stop'
+if ($TextoArquivo) { $Texto = [IO.File]::ReadAllText($TextoArquivo, [Text.Encoding]::UTF8).Trim() }
+if (-not $Texto) { throw 'Informe -Texto ou -TextoArquivo' }
 $key = ((Get-Content -LiteralPath "$env:USERPROFILE\.elevenlabs" -Raw).Trim() -replace '^ELEVEN_API_KEY=', '').Trim()
 $h = @{ 'xi-api-key' = $key }
 $nome = @{ Bit = 'Bit'; Ficha = 'Ficha (GMS)' }[$Voz]
