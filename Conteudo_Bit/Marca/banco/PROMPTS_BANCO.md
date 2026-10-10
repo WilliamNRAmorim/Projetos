@@ -2,6 +2,8 @@
 
 30 prompts, um arquivo por prompt, na ordem em que vale gerar. Cada bloco é autocontido: copie o bloco inteiro (entre as linhas `---`), anexe a referência indicada e peça **uma imagem só**. Salve com o nome indicado nesta pasta (`Conteudo_Bit/Marca/banco/`).
 
+Decisão 09/10: cenários saem coloridos (sem repintar depois). Primeira leva: 18 das 30 artes.
+
 Regras que valem para todos:
 - Referência anexada: `Conteudo_Bit/Marca/bit/bit_acenando.png` (é ela que tem a placa de espectro no peito).
 - Nenhum texto, número, logo ou marca dentro da imagem. Telas, placas e papéis saem vazios; o texto entra no código.
@@ -266,7 +268,7 @@ Regras que valem para todos:
 >
 > Formato VERTICAL 9:16, alta resolução. SEM nenhum texto, número, letra, placa escrita, logo ou marca.
 >
-> CENA: chão de fábrica genérico visto de frente, na altura dos olhos. Ao fundo, uma linha de máquinas industriais simples (prensas e uma esteira transportadora com caixas de papelão fechadas), vigas de metal no teto e luminárias pendentes. No chão de concreto cinza, faixas de segurança amarelas e pretas no piso. À direita, uma estação de trabalho com um pequeno suporte e um tablet de tela apagada. Paleta dessaturada: cinzas quentes, grafite e bege; o ÚNICO ponto de cor forte é um vermelho-alaranjado (#FF3B1F) em uma luz de sinalização de máquina. Deixe o TERÇO DE BAIXO do quadro com chão livre e vazio (é onde um personagem vai ficar em pé) e o terço de cima com pouco detalhe (espaço para título).
+> CENA: chão de fábrica genérico visto de frente, na altura dos olhos. Ao fundo, uma linha de máquinas industriais simples (prensas e uma esteira transportadora com caixas de papelão fechadas), vigas de metal no teto e luminárias pendentes. No chão de concreto cinza, faixas de segurança amarelas e pretas no piso. À direita, uma estação de trabalho com um pequeno suporte e um tablet de tela apagada. Paleta colorida e viva, na mesma família de cores do Bit (vermelho-alaranjado #FF3B1F, amarelo, azul, verde), com destaque em vermelho-alaranjado em uma luz de sinalização de máquina. Deixe o TERÇO DE BAIXO do quadro com chão livre e vazio (é onde um personagem vai ficar em pé) e o terço de cima com pouco detalhe (espaço para título).
 
 ---
 
@@ -276,7 +278,7 @@ Regras que valem para todos:
 >
 > Formato VERTICAL 9:16, alta resolução. SEM nenhum texto, número, letra, placa escrita, logo ou marca.
 >
-> CENA: bancada de engenharia/eletrônica vista de frente. Uma mesa de madeira clara ocupa a metade de baixo. Em cima dela: uma placa de microcontrolador azul genérica (sem marca), uma protoboard com alguns fios coloridos, um ferro de solda no suporte, um multímetro com visor APAGADO, um rolinho de solda e algumas peças pequenas. Na parede atrás, um painel perfurado (pegboard) com alicates e chaves pendurados e uma luminária articulada acesa. Paleta dessaturada: cinzas quentes, grafite e bege; o ÚNICO ponto de cor forte é um vermelho-alaranjado (#FF3B1F) no LED aceso da placa. Deixe o centro da mesa livre (é onde um personagem vai ficar) e o terço de cima com pouco detalhe (espaço para título).
+> CENA: bancada de engenharia/eletrônica vista de frente. Uma mesa de madeira clara ocupa a metade de baixo. Em cima dela: uma placa de microcontrolador azul genérica (sem marca), uma protoboard com alguns fios coloridos, um ferro de solda no suporte, um multímetro com visor APAGADO, um rolinho de solda e algumas peças pequenas. Na parede atrás, um painel perfurado (pegboard) com alicates e chaves pendurados e uma luminária articulada acesa. Paleta colorida e viva, na mesma família de cores do Bit (vermelho-alaranjado #FF3B1F, amarelo, azul, verde), com destaque em vermelho-alaranjado no LED aceso da placa. Deixe o centro da mesa livre (é onde um personagem vai ficar) e o terço de cima com pouco detalhe (espaço para título).
 
 ---
 
@@ -286,7 +288,7 @@ Regras que valem para todos:
 >
 > Formato VERTICAL 9:16, alta resolução. SEM nenhum texto, número, letra, bandeira, logo ou marca.
 >
-> CENA: interior de uma estação espacial genérica, visto de frente. Paredes curvas de painéis brancos e cinza com parafusos e alças, cabos presos às paredes, uma janela redonda grande no alto mostrando o espaço escuro com estrelas pequenas e a curva de um planeta azul-acinzentado. Nas laterais, painéis de controle com botões e telas APAGADAS. Paleta dessaturada: brancos, cinzas frios e grafite; o ÚNICO ponto de cor forte é um vermelho-alaranjado (#FF3B1F) em uma luz de alerta redonda num painel. Deixe o centro e o terço de baixo do quadro livres (é onde um personagem vai flutuar).
+> CENA: interior de uma estação espacial genérica, visto de frente. Paredes curvas de painéis brancos e cinza com parafusos e alças, cabos presos às paredes, uma janela redonda grande no alto mostrando o espaço escuro com estrelas pequenas e a curva de um planeta azul-acinzentado. Nas laterais, painéis de controle com botões e telas APAGADAS. Paleta colorida e viva, na mesma família de cores do Bit (vermelho-alaranjado #FF3B1F, amarelo, azul, verde), com destaque em vermelho-alaranjado em uma luz de alerta redonda num painel. Deixe o centro e o terço de baixo do quadro livres (é onde um personagem vai flutuar).
 
 ---
 
