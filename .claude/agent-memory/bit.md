@@ -13,3 +13,4 @@
 - [2026-10-08] Código do Will Station não está no repo (só sobre_o_projeto.txt); pedir o .ino antes de prometer simulação de código real.
 - [2026-10-08] Vídeo pixel art do Bit (PT): entregue roteiro com 2 mensagens finais; dúvidas abertas: quem é o 'Você', voz vs legenda, cap. V.
 - [2026-10-08] Reel 30s com Bit: usei MESA-11 (posts_prontos.md, LinkedIn) como tema ainda sem reel; todos os fatos vinham de um arquivo so, facil de citar.
+- [2026-10-10] Curtas 2 e 3 (PT, só texto): conferir tempo por cena com folga; recomendei mensagem literal nos dois (paralelismo).
