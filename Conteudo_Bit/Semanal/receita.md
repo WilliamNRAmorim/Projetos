@@ -36,7 +36,7 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 10 | 09/10 11:00 | Instagram | Carrossel Will Station (7 itens) | carrossel história de projeto | — | ~9 h: 3 vis., 1 curtida | | estático parado |
 | 11 | 09/10 19:00 | TikTok + Instagram | Curta "pra que a gente serve?" (pixel art, 58 s, outra sessão) | curta animado | — | ~1 h: TikTok 13 vis., 1,19 s; IG 0 | | cedo |
 | 12 | 11/10 19:00 | TikTok + Instagram | Primeiro spam (44 s) | história com arco, SEM voz (sem créditos) | arco forte + gancho visual no quadro 0 (caixa de spam) segura mais que os mudos de 08/10 (2,5–2,9 s), mesmo sem voz | | | |
-| 13 | 11/10 15:00 | TikTok + Instagram | Primeiro .com (27 s) | fato rápido sem voz, contradição no gancho ("não é do Google") | gancho de contradição com marca conhecida segura os 2 primeiros segundos | | | |
+| 13 | 11/10 18:00 | TikTok + Instagram | Primeiro .com (27 s) | fato rápido sem voz, contradição no gancho ("não é do Google") | gancho de contradição com marca conhecida segura os 2 primeiros segundos | | | |
 | 14 | 11/10 21:00 | TikTok | Suspeito: o cache (19 s) | humor, formato "Suspect" da gringa, sem voz | humor identificável de dev gera comentário (pergunta "suspeito mais procurado") | | | |
 | — | 09/10 | — | Apollo 1202, Primeiro bug, Docker (Sex09) | — | — | **não publicados** (não aparecem no TikTok nem no Instagram) | | produção sem publicação: alinhar agendamento |
 

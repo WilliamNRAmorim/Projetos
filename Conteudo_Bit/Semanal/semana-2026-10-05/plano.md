@@ -79,12 +79,12 @@ Prazo: GTA 6 marco de 1 mês em 19/10 → A de sexta 16. LinkedIn: ver `linkedin
 ## Domingo 11/10 (rotina de sábado refeita no domingo de manhã; a execução de sábado 20h falhou)
 Pilares: A = fato histórico em história com arco (primeiro spam) · B = fato rápido de internet/IA (primeiro .com) · C = humor dia a dia no formato "Suspect" do radar da gringa.
 **Sem voz nos três:** a conta do ElevenLabs (chave "bit-conteudo") ficou com 11 créditos; cada fala pede ~65. Saíram só com texto + trilha, apesar da regra confirmada da receita (mudo segura menos). Compensação: gancho visual forte no quadro 0, frases curtas, legenda com a pergunta. **Renovar/comprar créditos antes de segunda** ou os vídeos de 12/10 também saem mudos.
-Horários deslocados (a rodada ficou pronta ~10h30): B 15h, A 19h, C 21h.
+Horários deslocados (a rodada ficou pronta ~10h30; agendamento feito às 17h30 com a pessoa): **B 18h, A 19h, C 21h. Agendados e conferidos em 11/10** (TikTok Studio: B, A, C; Meta Business Suite: B e A no Instagram).
 
 | # | Horário | Arquivo | Tema | Redes |
 |---|---|---|---|---|
 | A | TikTok 19h · Instagram 19h | `Dom11_A_Instagram_TikTok_PrimeiroSpam.mp4` (44 s, 6,8 MB) | O primeiro spam (1978): 393 endereços, reclamação geral e milhões em vendas | TikTok + Instagram |
-| B | TikTok 15h · Instagram 15h | `Dom11_B_TikTok_Instagram_PrimeiroPontoCom.mp4` (27 s, 3,1 MB) | O primeiro .com (symbolics.com, 1985) era de uma empresa de IA que quebrou; o site segue no ar | TikTok + Instagram |
+| B | TikTok 18h · Instagram 18h | `Dom11_B_TikTok_Instagram_PrimeiroPontoCom.mp4` (27 s, 3,1 MB) | O primeiro .com (symbolics.com, 1985) era de uma empresa de IA que quebrou; o site segue no ar | TikTok + Instagram |
 | C | TikTok 21h | `Dom11_C_TikTok_SuspeitoCache.mp4` (19 s, 2,6 MB) | "Suspeito: o cache" (humor) | TikTok |
 Arquivo de produção: `Producao/ep_domingo_2026-10-11.html?ep=spam|dotcom|cache`.
 
