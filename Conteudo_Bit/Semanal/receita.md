@@ -125,3 +125,6 @@ symbolics.com: ~11 vídeos (NameSilo, TxTechnician, ES/ID), quase todos "você s
 **O que roubar:** a contradição "todo mundo odiou, e deu milhões" (no gancho da legenda do TikTok); o humor "Obrigado, Gary" (Clean Email) → fecho seco do Bit; no .com, a contradição com marca conhecida ("não é do Google").
 
 **Limites desta amostra**: TikTok só mostra curtidas; não medi retenção; o ranking é "mais curtidos" da busca, não amostra aleatória; faltou LinkedIn e Instagram para Tetris/trauma.
+
+## Mudança de rotina (11/10/2026)
+A pessoa decidiu: "todo dia postar não tá compensando". Agora o sábado produz a semana inteira (2 posts/dia) e o domingo agenda tudo. A semana 12–18/10 tem 10 vídeos novos **sem voz** (créditos esgotados) + 4 sobras (Apollo narrado, Curta 2 com vozes, primeiro bug e Docker mudos). **Experimento natural da semana:** comparar retenção do Apollo (narrado) e da Curta 2 (vozes) contra os 12 mudos; se os mudos ficarem de novo em ~2–3 s de média, a regra "mudo não segura" fica confirmada de vez e a recarga de créditos vira prioridade.

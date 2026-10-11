@@ -1,0 +1,305 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>semana 12-10</title>
+<script src="brand.js"></script><script src="bit_art.js"></script><script src="ep_kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// Semana 12–18/10: 10 vídeos novos SEM voz (créditos do ElevenLabs esgotados em 11/10). ?ep=<chave> (ver EPS no fim).
+// Fatos e fontes: Semanal/semana-2026-10-12/plano.md. ?sheet=1 confere; ?save=1 renderiza.
+const { W, H, clamp, out, inout, txt, rnd } = EpKit;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2, INK = BRAND.ink, OK = '#3DDC97';
+const ART = {};
+const bit = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
+const bitEsq = (g, k, cx, bottom, h) => { g.save(); g.translate(cx, 0); g.scale(-1, 1); BitArt.draw(g, ART[k], 0, bottom, h); g.restore(); };
+const et = (g, s, x, y, col = MU, size = 30) => txt(g, s, x, y, size, col, { mono: true, w: 700 });
+const X0 = 90, XR = 940, CW = XR - X0;
+const ap = (k, a, d = 0.12) => clamp((k - a) / d);
+const fade = (g, a, fn) => { if (a <= 0) return; g.save(); g.globalAlpha *= a; fn(); g.restore(); };
+function caixa(g, x, y, w, h, col = P, lw = 5) { g.strokeStyle = col; g.lineWidth = lw; g.strokeRect(x, y, w, h); }
+function painel(g, x, y, w, h, col = P, fill = I2) { g.fillStyle = fill; g.fillRect(x, y, w, h); caixa(g, x, y, w, h, col); }
+function tremor(g, u, t0, amt = 14) { const d = u - t0; if (d < 0 || d > 0.35) return; const a = amt * (1 - d / 0.35); g.translate((rnd(u * 97) - 0.5) * 2 * a, (rnd(u * 53) - 0.5) * 2 * a); }
+// linhas grandes que entram uma a uma: L = [[texto, cor, tamanho?]]
+function linhas(g, L, x, y, k, k0 = 0.05, passo = 0.14, size = 120) { let yy = y; L.forEach(([s, c, sz], i) => { const z = sz || size; if (i) yy += z * 1.08; const y0 = yy; fade(g, ap(k, k0 + i * passo, 0.08), () => txt(g, s, x, y0, z, c)); }); }
+function envelope(g, x, y, w, col = P, fill = I2) { const h = w * 0.66; g.fillStyle = fill; g.fillRect(x, y, w, h); g.strokeStyle = col; g.lineWidth = Math.max(2, w / 22); g.strokeRect(x, y, w, h); g.beginPath(); g.moveTo(x, y); g.lineTo(x + w / 2, y + h * 0.55); g.lineTo(x + w, y); g.stroke(); }
+function relogio(g, cx, cy, r, hh, mm, col = P) { g.strokeStyle = col; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.fillStyle = col; g.fillRect(cx + Math.sin(a) * r * 0.82 - 5, cy - Math.cos(a) * r * 0.82 - 5, 10, 10); }
+  const ah = ((hh % 12) + mm / 60) * Math.PI / 6, am = mm * Math.PI / 30; g.lineCap = 'butt';
+  g.lineWidth = 14; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(ah) * r * 0.5, cy - Math.cos(ah) * r * 0.5); g.stroke();
+  g.strokeStyle = A; g.lineWidth = 8; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(am) * r * 0.75, cy - Math.cos(am) * r * 0.75); g.stroke(); }
+function disquete(g, x, y, s, col = P, fill = I2) { g.fillStyle = fill; g.fillRect(x, y, s, s); caixa(g, x, y, s, s, col, s / 30); g.fillStyle = col; g.fillRect(x + s * 0.22, y, s * 0.5, s * 0.3); g.fillStyle = fill; g.fillRect(x + s * 0.52, y + s * 0.05, s * 0.12, s * 0.2); g.fillStyle = col; g.fillRect(x + s * 0.15, y + s * 0.52, s * 0.7, s * 0.42); g.fillStyle = fill; for (let i = 0; i < 3; i++) g.fillRect(x + s * 0.22, y + s * (0.62 + i * 0.1), s * 0.56, s * 0.03); }
+function terminal(g, x, y, w, h, L, k, k0 = 0.05, passo = 0.1, size = 30) { painel(g, x, y, w, h, MU); L.forEach(([s, c], i) => fade(g, ap(k, k0 + i * passo, 0.05), () => et(g, s, x + 30, y + 60 + i * size * 1.6, c || P, size))); }
+function tecla(g, x, y, w, s, on, size = 64) { g.fillStyle = MU; g.fillRect(x, y + 20, w, 190); g.fillStyle = on ? A : P; g.fillRect(x, y + (on ? 14 : 0), w, 190); txt(g, s, x + w / 2, y + 120 + (on ? 14 : 0), size, INK, { align: 'center' }); }
+function barras(g, vals, x, base, w, gap, max, hmax, cores) { vals.forEach((v, i) => { const h = hmax * v / max; g.fillStyle = cores[i] || MU; g.fillRect(x + i * (w + gap), base - h, w, h); }); }
+
+// ================= Qua14 · 12h · disquete =================
+const DISQUETE = { falas: [
+  { cena: 'icone', acc: ['nunca', 'segurado'], txt: 'Você clica nele todo dia. Mas talvez nunca tenha segurado um.' },
+  { cena: 'medida', acc: ['1,44', 'MB.'], txt: 'É um disquete de 3,5 polegadas. Guardava 1,44 MB. Menos que uma foto de celular hoje.' },
+  { cena: 'sony', acc: ['2011.'], txt: 'A Sony, uma das últimas a fabricar, parou de produzir em 2011.' },
+  { cena: 'fecho', acc: ['desenho', 'não.'], txt: 'O objeto sumiu. O desenho ficou. E virou o símbolo de salvar.', corte: false },
+], musica: () => 0.2, cenas: {
+  icone(g, u, k) { const s = 520 + 30 * Math.sin(u * 2); et(g, 'CTRL+S', X0, 320, A, 34); disquete(g, W / 2 - 40 - s / 2, 380, s); bitEsq(g, 'bit_pensando', 830, 1300, 230); },
+  medida(g, u, k) { disquete(g, X0, 340, 300); caixa(g, X0 - 20, 320, 340, 340, A, 3); et(g, '3,5"', X0 + 120, 710, P, 34);
+    fade(g, ap(k, 0.3), () => { txt(g, '1,44', X0 + 360, 470, 150, A); et(g, 'MB', X0 + 380, 530, P, 40); });
+    fade(g, ap(k, 0.6), () => { g.fillStyle = I2; g.fillRect(X0, 800, CW, 70); g.fillStyle = MU; g.fillRect(X0, 800, CW * 0.36, 70); et(g, 'DISQUETE', X0 + 20, 846, INK, 26); et(g, 'FOTO DE CELULAR ≈ 3–5 MB', X0, 920, P, 28); g.fillStyle = A; g.fillRect(X0, 950, CW, 30); });
+    bit(g, 'bit_surpreso', 820, 1290, 200); },
+  sony(g, u, k) { et(g, 'FIM DA PRODUÇÃO', X0, 330, A, 30); txt(g, '2011', X0, 560, 260, P);
+    for (let i = 0; i < 6; i++) disquete(g, X0 + i * 140, Math.min(1080, 700 + Math.max(0, (u - 0.3 - i * 0.15)) * 400 * (i % 2 ? 1 : 0.6)), 110, MU);
+    fade(g, ap(k, 0.5), () => { g.save(); g.translate(X0 + 380, 1010); g.rotate(-0.05); caixa(g, -300, -70, 600, 120, A, 7); txt(g, 'DESCONTINUADO', 0, 18, 64, A, { align: 'center' }); g.restore(); }); },
+  fecho(g, u, k) { fade(g, 1 - ap(k, 0.3, 0.15), () => disquete(g, X0, 380, 360)); fade(g, ap(k, 0.3, 0.15), () => { caixa(g, X0, 380, 360, 360, MU, 3); g.setLineDash([16, 12]); caixa(g, X0, 380, 360, 360, MU, 3); g.setLineDash([]); });
+    disquete(g, X0 + 470, 470, 180, A); et(g, 'SALVAR', X0 + 495, 700, P, 30); linhas(g, [['O OBJETO SUMIU.', MU, 70], ['O DESENHO FICOU.', P, 70]], X0, 900, k, 0.4, 0.2); bit(g, 'bit_joinha', 820, 1300, 220); },
+} };
+
+// ================= Qua14 · 19h · Y2K =================
+const Y2K = { falas: [
+  { cena: 'gancho', acc: ['dois', 'dígitos.'], txt: '31 de dezembro de 1999. O mundo inteiro com medo de dois dígitos.' },
+  { cena: 'memoria', acc: ['caríssima.', '68.'], txt: 'Nos anos 60, memória era caríssima. Pra economizar, o ano ia com dois dígitos: 1968 virava 68.' },
+  { cena: 'virada', acc: ['00.', '1900.'], txt: 'Funcionou por décadas. Até alguém notar: depois de 99 vem 00. E 00 parece 1900.' },
+  { cena: 'sistemas', acc: ['errar'], txt: 'Juros, salários, aviões, usinas. Tudo que calcula datas podia errar a conta.' },
+  { cena: 'custo', acc: ['300', '600', 'bilhões'], txt: 'O mundo gastou entre 300 e 600 bilhões de dólares, segundo a Gartner, revisando código linha por linha.' },
+  { cena: 'meianoite', acc: ['nada'], txt: 'Meia-noite. Quase nada aconteceu.', pausa: 0.8 },
+  { cena: 'injusto', acc: ['mentira.'], txt: 'E veio a parte injusta: muita gente achou que o perigo era mentira.' },
+  { cena: 'licao', acc: ['prevenção', 'nunca'], txt: 'Quando a prevenção funciona, parece que o problema nunca existiu.', pausa: 0.6 },
+  { cena: 'fecho', acc: ['2038.'], txt: 'Ah, e já tem o próximo marcado: 2038. Mas isso é outro vídeo.', corte: false },
+], musica: (ti, i) => [0.2, 0.18, 0.2, 0.2, 0.2, 0.12, 0.18, 0.04, 0.16][i], cenas: {
+  gancho(g, u, k) { const s = 23 + Math.floor(u * 9) % 37; et(g, '31/12/1999', X0, 320, A, 34);
+    txt(g, '23:59:' + String(Math.min(59, s)).padStart(2, '0'), X0, 560, 150, P); txt(g, '99', X0, 900, 330, MU); txt(g, '→ 00', X0 + 380, 900, 200, A);
+    bitEsq(g, 'bit_pensando', 830, 1300, 230); },
+  memoria(g, u, k) { et(g, 'ANOS 60 · CARTÃO PERFURADO', X0, 320, A, 30); painel(g, X0, 360, CW, 330, MU, '#d9d6c8');
+    for (let c = 0; c < 22; c++) for (let r = 0; r < 6; r++) if (rnd(c * 9 + r) > 0.7) { g.fillStyle = INK; g.fillRect(X0 + 30 + c * 36, 400 + r * 46, 16, 26); }
+    fade(g, ap(k, 0.45), () => { txt(g, '19', X0, 900, 220, MU); g.fillStyle = A; g.fillRect(X0 - 10, 820, 260, 16); txt(g, '68', X0 + 270, 900, 220, P); et(g, '2 BYTES A MENOS POR DATA', X0, 970, MU, 28); });
+    bit(g, 'bit_lupa', 830, 1300, 210); },
+  virada(g, u, k) { g.save(); tremor(g, u, 0.6 * (FALAS_DUR.virada || 3), 16); txt(g, '99 + 1 =', X0, 500, 140, P); fade(g, ap(k, 0.35), () => txt(g, '00', X0, 760, 280, A)); fade(g, ap(k, 0.7), () => { txt(g, '= 1900?', X0, 960, 140, P); }); g.restore(); bit(g, 'bit_surpreso', 820, 1300, 220); },
+  sistemas(g, u, k) { const L = ['JUROS', 'SALÁRIOS', 'AVIÕES', 'USINAS']; L.forEach((s, i) => fade(g, ap(k, 0.05 + i * 0.15, 0.06), () => { painel(g, X0, 340 + i * 190, CW, 160, MU); txt(g, s, X0 + 40, 450 + i * 190, 90, P); txt(g, '!', XR - 60, 450 + i * 190, 100, A, { align: 'center' }); }));
+    bitEsq(g, 'bit_apontando', 840, 1300, 200); },
+  custo(g, u, k) { et(g, 'GARTNER · ESTIMATIVA MUNDIAL', X0, 330, A, 30); const v = Math.round(300 * out(clamp(k / 0.35))), v2 = Math.round(600 * out(clamp((k - 0.35) / 0.3)));
+    txt(g, 'US$ ' + v, X0, 540, 140, P); fade(g, ap(k, 0.35), () => txt(g, 'a ' + v2, X0, 700, 140, A)); fade(g, ap(k, 0.6), () => { txt(g, 'BILHÕES', X0, 860, 140, P); });
+    for (let i = 0; i < 12; i++) fade(g, ap(k, 0.2 + i * 0.05, 0.04), () => et(g, 'IF ANO < 50 THEN ANO = ANO + 2000', X0, 960 + i * 0, MU, 24)); },
+  meianoite(g, u, k) { const t = clamp(k / 0.35); relogio(g, W / 2 - 40, 640, 270, 23 + (t >= 1 ? 1 : 0), t >= 1 ? 0 : 59 + t, P);
+    fade(g, ap(k, 0.4), () => { txt(g, '00:00', X0, 1060, 120, OK); et(g, '01/01/2000 · SISTEMAS OK', X0, 1120, OK, 28); }); bit(g, 'bit_joinha', 830, 1300, 200); },
+  injusto(g, u, k) { et(g, 'MANCHETES DE JANEIRO', X0, 330, A, 30); ['"Y2K FOI EXAGERO"', '"BILHÕES À TOA?"', '"O BUG QUE NÃO VEIO"'].forEach((s, i) => fade(g, ap(k, 0.08 + i * 0.2, 0.08), () => { painel(g, X0, 380 + i * 220, CW, 180, MU, '#d9d6c8'); txt(g, s, X0 + 30, 490 + i * 220, 64, INK); }));
+    bit(g, 'bit_confuso', 830, 1300, 210); },
+  licao(g, u, k) { linhas(g, [['PREVENÇÃO', P, 140], ['QUE FUNCIONA', P, 110], ['PARECE', MU, 110], ['EXAGERO.', A, 140]], X0, 520, k, 0.05, 0.18); },
+  fecho(g, u, k) { txt(g, '2038', X0, 620, 300, A); et(g, '19/01/2038 · 03:14:07 UTC', X0, 700, P, 32); et(g, 'RELÓGIO DE 32 BITS DO UNIX ESTOURA', X0, 750, MU, 28); bit(g, k > 0.6 ? 'bit_rindo' : 'bit_pensando', 800, 1300, 240); },
+} };
+const FALAS_DUR = {};
+
+// ================= Qui15 · 12h · primeiro vídeo do YouTube =================
+const YOUTUBE = { falas: [
+  { cena: 'gancho', acc: ['19', 'elefante.'], txt: 'O primeiro vídeo do YouTube tem 19 segundos. E é sobre tromba de elefante.' },
+  { cena: 'quem', acc: ['2005.', 'fundadores,'], txt: '23 de abril de 2005. Jawed Karim, um dos fundadores, no zoológico de San Diego.' },
+  { cena: 'roteiro', acc: ['longas.', 'acabou.'], txt: 'Ele diz que os elefantes têm trombas muito, muito longas. E acabou.' },
+  { cena: 'views', acc: ['400', 'milhões'], txt: 'Hoje passa de 400 milhões de visualizações.' },
+  { cena: 'fecho', acc: ['obra-prima.', 'primeiro'], txt: 'Ninguém começa com obra-prima. Começa com o primeiro upload.', corte: false },
+], musica: () => 0.2, cenas: {
+  gancho(g, u, k) { painel(g, X0, 340, CW, 480, P, '#000'); const p = clamp(u / 4); g.fillStyle = A; g.fillRect(X0, 800, CW * p, 20); g.fillStyle = MU; g.fillRect(X0 + CW * p, 800, CW * (1 - p), 20);
+    g.fillStyle = A; g.beginPath(); g.moveTo(W / 2 - 80, 500); g.lineTo(W / 2 + 40, 580); g.lineTo(W / 2 - 80, 660); g.fill(); et(g, '0:' + String(Math.min(19, Math.floor(u * 4.75))).padStart(2, '0') + ' / 0:19', X0 + 20, 870, P, 30);
+    bitEsq(g, 'bit_lupa', 830, 1300, 210); },
+  quem(g, u, k) { txt(g, '23/04', X0, 500, 200, P); txt(g, '2005', X0, 680, 200, A); fade(g, ap(k, 0.4), () => { et(g, 'JAWED KARIM · COFUNDADOR', X0, 780, P, 32); et(g, 'ZOOLÓGICO DE SAN DIEGO', X0, 830, MU, 30); }); bit(g, 'bit_apontando', 820, 1300, 210); },
+  roteiro(g, u, k) { et(g, 'ROTEIRO COMPLETO', X0, 330, A, 30); painel(g, X0, 370, CW, 520, MU);
+    // elefante em blocos: corpo, cabeça, tromba que cresce
+    const tx = X0 + 200, ty = 560; g.fillStyle = MU; g.fillRect(tx, ty, 300, 180); g.fillRect(tx + 280, ty - 40, 150, 150); g.fillRect(tx + 20, ty + 180, 50, 80); g.fillRect(tx + 220, ty + 180, 50, 80);
+    const L = 60 + 220 * out(clamp(k / 0.6)); g.fillStyle = A; g.fillRect(tx + 400, ty + 60, 40, L); g.fillStyle = INK; g.fillRect(tx + 360, ty - 10, 16, 16);
+    fade(g, ap(k, 0.6), () => txt(g, 'FIM.', X0 + 30, 860, 80, P)); bit(g, 'bit_confuso', 840, 1300, 200); },
+  views(g, u, k) { const v = Math.round(400 * out(clamp(k / 0.6))); txt(g, v + ' MI', X0, 650, 220, A); et(g, 'VISUALIZAÇÕES', X0, 720, P, 34); bit(g, 'bit_comemorando', 800, 1300 - Math.abs(Math.sin(u * 6)) * 20, 250); },
+  fecho(g, u, k) { linhas(g, [['NINGUÉM COMEÇA', MU, 90], ['COM OBRA-PRIMA.', P, 90], ['COMEÇA COM O', MU, 90], ['1º UPLOAD.', A, 150]], X0, 470, k, 0.05, 0.15); bit(g, 'bit_joinha', 830, 1300, 200); },
+} };
+
+// ================= Qui15 · 19h · Will Station e o debug do patinho (dramatizado) =================
+const PATINHO = { falas: [
+  { cena: 'gancho', acc: ['Três', 'nenhum'], txt: 'Três dias. Um fliperama montado. E nenhum botão respondia.' },
+  { cena: 'projeto', acc: ['Will', 'Station'], txt: 'O Will Station era o projeto da faculdade: Raspberry, Arduino, joystick e RetroPie.' },
+  { cena: 'nada', acc: ['nada.'], txt: 'O jogo abria. A tela acendia. Apertava o botão e nada.' },
+  { cena: 'tentativas', acc: ['Nada.'], txt: 'Troquei cabo. Refiz solda. Reinstalei tudo. Nada.' },
+  { cena: 'voz', acc: ['voz', 'alta.'], txt: 'Na terceira noite, sem ninguém pra perguntar, comecei a explicar o código em voz alta. Pro Bit.' },
+  { cena: 'achou', acc: ['2', '3.'], txt: 'Linha por linha. "Aqui eu leio o botão no pino 2... que no código está como pino 3."', pausa: 0.8 },
+  { cena: 'numero', acc: ['número.', 'dias.'], txt: 'Um número. Três dias.' },
+  { cena: 'licao', acc: ['voz', 'alta', 'olho'], txt: 'Dev chama isso de debug do patinho: explicar em voz alta acha o erro que o olho não acha.', pausa: 0.6 },
+  { cena: 'fecho', acc: ['antes'], txt: 'Da próxima vez, me chamem antes da terceira noite.', corte: false },
+], musica: (ti, i) => [0.2, 0.18, 0.18, 0.2, 0.16, 0.2, 0.18, 0.04, 0.16][i], cenas: {
+  gancho(g, u, k) { arcade(g, u, false); txt(g, 'DIA 3', X0, 330, 60, A); bitEsq(g, 'bit_confuso', 840, 1300, 200); },
+  projeto(g, u, k) { et(g, 'WILL STATION · PROJETO DA FACULDADE', X0, 320, A, 28); ['RASPBERRY PI', 'ARDUINO UNO', 'JOYSTICK', 'RETROPIE'].forEach((s, i) => fade(g, ap(k, 0.08 + i * 0.15, 0.06), () => { painel(g, X0, 370 + i * 170, 560, 130, MU); et(g, s, X0 + 30, 450 + i * 170, P, 40); }));
+    bit(g, 'bit_apontando', 830, 1300, 210); },
+  nada(g, u, k) { arcade(g, u, true); fade(g, ap(k, 0.6), () => txt(g, 'NADA.', X0 + 600, 900, 70, A)); bitEsq(g, 'bit_surpreso', 850, 1300, 180); },
+  tentativas(g, u, k) { ['TROCAR CABO', 'REFAZER SOLDA', 'REINSTALAR TUDO'].forEach((s, i) => fade(g, ap(k, 0.05 + i * 0.22, 0.06), () => { et(g, '[ ] ' + s, X0, 450 + i * 120, P, 44); fade(g, ap(k, 0.15 + i * 0.22, 0.04), () => txt(g, '✕', X0 + 690, 455 + i * 120, 70, A)); }));
+    fade(g, ap(k, 0.8), () => txt(g, 'NADA.', X0, 930, 140, A)); bit(g, 'bit_pensando', 820, 1300, 220); },
+  voz(g, u, k) { relogio(g, X0 + 170, 520, 150, 2, 47, MU); et(g, '3ª NOITE', X0 + 360, 470, A, 34); et(g, 'NINGUÉM ONLINE', X0 + 360, 530, MU, 28);
+    painel(g, X0, 720, 520, 360, MU); ['while True:', '  b = ler(PINO)', '  if b: pular()'].forEach((s, i) => et(g, s, X0 + 30, 790 + i * 60, i === 1 ? A : P, 32));
+    // ondas de voz saindo em direção ao Bit
+    for (let i = 0; i < 3; i++) { const r = ((u * 120 + i * 60) % 180); g.strokeStyle = `rgba(238,237,232,${1 - r / 180})`; g.lineWidth = 5; g.beginPath(); g.arc(660, 900, 40 + r, -0.6, 0.6); g.stroke(); }
+    bitEsq(g, 'bit_lupa', 840, 1300, 220); },
+  achou(g, u, k) { painel(g, X0, 340, CW, 300, MU); et(g, '# botão de pular', X0 + 30, 410, MU, 30); et(g, 'PINO = 3', X0 + 30, 480, P, 54); et(g, '# ligado na placa:', X0 + 30, 560, MU, 30);
+    fade(g, ap(k, 0.45), () => { g.save(); g.translate(X0 + 120, 760); txt(g, 'FIO NO PINO 2', 0, 0, 80, P); txt(g, 'CÓDIGO NO PINO 3', 0, 110, 80, A); g.restore(); caixa(g, X0 + 20, 425, 340, 80, A, 6); });
+    bit(g, k > 0.5 ? 'bit_surpreso' : 'bit_lupa', 830, 1300, 210); },
+  numero(g, u, k) { g.save(); tremor(g, u, 0.1, 12); txt(g, '3', X0, 820, 560, A); txt(g, '→ 2', X0 + 380, 820, 220, OK); g.restore(); et(g, 'UM NÚMERO · TRÊS DIAS', X0, 900, P, 34); bit(g, 'bit_rindo', 820, 1300, 220); },
+  licao(g, u, k) { linhas(g, [['EXPLICAR', P, 140], ['EM VOZ ALTA', A, 120], ['ACHA O ERRO', P, 110], ['QUE O OLHO', MU, 110], ['NÃO ACHA.', MU, 110]], X0, 460, k, 0.05, 0.14); },
+  fecho(g, u, k) { arcade(g, u, true, true); bit(g, 'bit_joinha', 820, 1300, 230); },
+} };
+function arcade(g, u, apertando, ok = false) { // fliperama em blocos: gabinete, tela, botões
+  const x = X0 + 60, y = 380; g.fillStyle = I2; g.fillRect(x, y, 520, 820); caixa(g, x, y, 520, 820, P, 6); g.fillStyle = A; g.fillRect(x, y, 520, 80); txt(g, 'WILL STATION', x + 260, y + 58, 44, INK, { align: 'center' });
+  g.fillStyle = '#000'; g.fillRect(x + 40, y + 120, 440, 330); caixa(g, x + 40, y + 120, 440, 330, MU, 4);
+  const hx = x + 100 + (ok ? (u * 140) % 300 : 0), hy = y + 360 - (ok ? Math.abs(Math.sin(u * 5)) * 120 : 0); g.fillStyle = ok ? OK : P; g.fillRect(hx, hy, 40, 40); g.fillStyle = MU; g.fillRect(x + 40, y + 400, 440, 50);
+  g.fillStyle = MU; g.fillRect(x + 20, y + 500, 480, 200); g.fillStyle = P; g.fillRect(x + 90, y + 560, 20, 90); g.beginPath(); g.arc(x + 100, y + 555, 30, 0, 7); g.fill();
+  const on = apertando && Math.floor(u * 3) % 2 === 0; [[330, 580], [420, 560], [330, 660], [420, 640]].forEach(([bx, by], i) => { g.fillStyle = i === 0 && on ? '#7a1608' : A; g.beginPath(); g.arc(x + bx, y + by, 34 - (i === 0 && on ? 4 : 0), 0, 7); g.fill(); }); }
+
+// ================= Sex16 · 12h · senha 123456 =================
+const SENHA = { falas: [
+  { cena: 'gancho', acc: ['mais', 'usada', 'sabe'], txt: 'A senha mais usada do mundo em 2025 tem seis dígitos. E você sabe qual é.' },
+  { cena: 'revela', acc: ['123456.', '21', 'milhões'], txt: '123456. Apareceu cerca de 21 milhões de vezes em vazamentos, segundo a NordPass.' },
+  { cena: 'ranking', acc: ['admin,'], txt: 'Logo atrás: admin, 12345678, 123456789 e 12345.' },
+  { cena: 'tempo', acc: ['segundo.'], txt: 'Programa de força bruta testa essas primeiro. Cai em menos de um segundo.' },
+  { cena: 'fecho', acc: ['frase', 'gerenciador.'], txt: 'Senha boa é frase longa que só você lembra. Ou um gerenciador.', corte: false },
+], musica: () => 0.2, cenas: {
+  gancho(g, u, k) { et(g, 'SENHA', X0, 420, MU, 34); painel(g, X0, 450, CW, 160, P); const n = Math.floor(u * 5) % 7; for (let i = 0; i < 6; i++) { g.fillStyle = i < n ? P : MU; g.beginPath(); g.arc(X0 + 90 + i * 120, 530, 26, 0, 7); g.fill(); }
+    et(g, 'NORDPASS · 2025', X0, 330, A, 30); bitEsq(g, 'bit_lupa', 830, 1300, 220); },
+  revela(g, u, k) { et(g, 'Nº 1 DO MUNDO', X0, 330, A, 30); painel(g, X0, 380, CW, 220, A); txt(g, '123456', W / 2 - 40, 545, 170, P, { align: 'center' });
+    fade(g, ap(k, 0.45), () => { txt(g, '≈ 21 MI', X0, 820, 160, P); et(g, 'APARIÇÕES EM VAZAMENTOS', X0, 880, MU, 30); }); bit(g, 'bit_surpreso', 820, 1300, 210); },
+  ranking(g, u, k) { ['1  123456', '2  admin', '3  12345678', '4  123456789', '5  12345'].forEach((s, i) => fade(g, ap(k, 0.03 + i * 0.12, 0.05), () => { painel(g, X0, 340 + i * 150, CW, 120, i === 0 ? A : MU); et(g, s, X0 + 40, 415 + i * 150, P, 52); }));
+    bit(g, 'bit_confuso', 830, 1300, 190); },
+  tempo(g, u, k) { et(g, 'FORÇA BRUTA', X0, 330, A, 30); painel(g, X0, 380, CW, 330, MU); for (let i = 0; i < 6; i++) { const t = (u * 8 + i) % 6; et(g, '> ' + ['123456', 'admin', '12345678', '123456789', '12345', 'password'][Math.floor(t)] + (Math.floor(t) === 0 ? '  ✓' : '  ✕'), X0 + 30, 440 + i * 46, Math.floor(t) === 0 ? OK : MU, 30); }
+    fade(g, ap(k, 0.5), () => { txt(g, '< 1 s', X0, 960, 220, A); }); bit(g, 'bit_surpreso', 830, 1300, 190); },
+  fecho(g, u, k) { et(g, 'SENHA BOA', X0, 330, OK, 30); painel(g, X0, 380, CW, 160, OK); et(g, 'cafe-frio-no-busao-de-terca', X0 + 30, 475, P, 40); et(g, '(exemplo: não use esta)', X0, 590, MU, 26);
+    linhas(g, [['FRASE LONGA', P, 100], ['OU GERENCIADOR', A, 100], ['DE SENHAS.', P, 100]], X0, 760, k, 0.3, 0.15); bit(g, 'bit_joinha', 830, 1300, 200); },
+} };
+
+// ================= Sex16 · 19h · GTA 6, 13 anos =================
+const GTA = { falas: [
+  { cena: 'gancho', acc: ['13', 'anos.'], txt: 'Setembro de 2013. Sai GTA V. A espera pelo próximo ia durar 13 anos.' },
+  { cena: 'trailer', acc: ['90', 'milhões'], txt: 'Dezembro de 2023: o primeiro trailer de GTA 6 passa de 90 milhões de views em 24 horas. Recorde mundial.' },
+  { cena: 'adiamento1', acc: ['2025.', 'maio'], txt: 'A promessa era 2025. Depois virou maio de 2026.' },
+  { cena: 'adiamento2', acc: ['19', 'novembro'], txt: 'Aí veio o segundo adiamento: 19 de novembro de 2026.', pausa: 0.6 },
+  { cena: 'pressao', acc: ['segurando'], txt: 'Milhões de pessoas reclamando. E um estúdio inteiro segurando o botão de lançar.' },
+  { cena: 'porque', acc: ['atrasado', 'quebrado'], txt: 'Porque jogo atrasado ainda pode ficar bom. Jogo que lança quebrado, ninguém esquece.' },
+  { cena: 'licao', acc: ['patch.'], txt: 'Prazo importa. Mas primeira impressão não tem patch.', pausa: 0.6 },
+  { cena: 'fecho', acc: ['férias.'], txt: 'Falta pouco mais de um mês. Eu já pedi férias.', corte: false },
+], musica: (ti, i) => [0.2, 0.22, 0.2, 0.22, 0.18, 0.18, 0.04, 0.16][i], cenas: {
+  gancho(g, u, k) { et(g, 'A ESPERA', X0, 330, A, 30); const n = Math.round(13 * out(clamp(k / 0.7))); txt(g, String(n), X0, 760, 420, n === 13 ? A : P); et(g, 'ANOS', X0 + 10, 830, P, 40);
+    for (let i = 0; i < 14; i++) { g.fillStyle = i <= n ? (i === 13 ? A : P) : I2; g.fillRect(X0 + i * 60, 920, 46, 46); } et(g, '2013', X0, 1010, MU, 24); txt(g, '2026', XR - 140, 1010, 24, MU, { mono: true, w: 700 }); bitEsq(g, 'bit_pensando', 840, 1300, 210); },
+  trailer(g, u, k) { painel(g, X0, 340, CW, 480, P, '#000'); g.fillStyle = A; g.beginPath(); g.moveTo(W / 2 - 100, 500); g.lineTo(W / 2 + 20, 580); g.lineTo(W / 2 - 100, 660); g.fill(); et(g, 'TRAILER 1 · DEZ/2023', X0 + 20, 380, P, 26);
+    const v = Math.round(90 * out(clamp(k / 0.6))); txt(g, v + ' MI', X0, 1000, 180, A); et(g, 'VIEWS EM 24 H · GUINNESS', X0, 1060, P, 30); bit(g, 'bit_surpreso', 840, 1300, 180); },
+  adiamento1(g, u, k) { calendario(g, '2025', 380, ap(k, 0.3, 0.08)); fade(g, ap(k, 0.45), () => calendario(g, 'MAIO 2026', 760, ap(k, 0.85, 0.08))); bit(g, 'bit_confuso', 830, 1300, 200); },
+  adiamento2(g, u, k) { g.save(); tremor(g, u, 0.15, 16); txt(g, '19', X0, 660, 380, A); txt(g, 'NOV', X0 + 450, 520, 130, P); txt(g, '2026', X0 + 450, 660, 130, P); g.restore(); et(g, 'DATA ATUAL · PS5 E XBOX SERIES', X0, 740, MU, 30); bit(g, 'bit_joinha', 830, 1300, 210); },
+  pressao(g, u, k) { for (let i = 0; i < 26; i++) { const x = X0 + rnd(i * 3) * (CW - 200), y = 340 + rnd(i * 7) * 560; fade(g, ap(k, i * 0.025, 0.05), () => { g.fillStyle = I2; g.fillRect(x, y, 220, 64); caixa(g, x, y, 220, 64, MU, 3); et(g, ['CADÊ??', 'ADIOU DE NOVO', 'LANÇA LOGO', '13 ANOS!!', 'SÉRIO?'][i % 5], x + 14, y + 42, i % 3 ? P : A, 22); }); }
+    painel(g, W / 2 - 230, 960, 380, 160, A, A); txt(g, 'LANÇAR', W / 2 - 40, 1060, 80, INK, { align: 'center' }); bit(g, 'bit_pensando', 840, 1300, 190); },
+  porque(g, u, k) { painel(g, X0, 360, 400, 400, OK); et(g, 'ATRASADO', X0 + 30, 420, OK, 30); txt(g, '✓', X0 + 200, 640, 200, OK, { align: 'center' }); et(g, 'AINDA DÁ', X0 + 30, 720, P, 30);
+    fade(g, ap(k, 0.45), () => { painel(g, X0 + 450, 360, 400, 400, A); et(g, 'QUEBRADO', X0 + 480, 420, A, 30); txt(g, '✕', X0 + 650, 640, 200, A, { align: 'center' }); et(g, 'NINGUÉM ESQUECE', X0 + 480, 720, P, 26); }); bit(g, 'bit_apontando', 830, 1300, 200); },
+  licao(g, u, k) { linhas(g, [['PRAZO IMPORTA.', MU, 100], ['PRIMEIRA', P, 140], ['IMPRESSÃO', P, 140], ['NÃO TEM PATCH.', A, 110]], X0, 500, k, 0.05, 0.16); },
+  fecho(g, u, k) { calendario(g, 'NOV 2026', 420, 0, 19); bit(g, k > 0.5 ? 'bit_rindo' : 'bit_joinha', 820, 1300, 240); },
+} };
+function calendario(g, titulo, y, risco, marca) { painel(g, X0, y, CW, 330, MU); g.fillStyle = MU; g.fillRect(X0, y, CW, 70); et(g, titulo, X0 + 24, y + 48, INK, 34);
+  for (let d = 0; d < 21; d++) { const x = X0 + 24 + (d % 7) * 116, yy = y + 90 + Math.floor(d / 7) * 76; g.fillStyle = marca && d + 8 === marca ? A : '#232327'; g.fillRect(x, yy, 100, 64); et(g, String(d + 8), x + 12, yy + 42, P, 24); }
+  if (risco > 0) { g.save(); g.strokeStyle = A; g.lineWidth = 14; g.beginPath(); g.moveTo(X0, y); g.lineTo(X0 + CW * risco, y + 330 * risco); g.moveTo(XR, y); g.lineTo(XR - CW * risco, y + 330 * risco); g.stroke(); g.restore(); } }
+
+// ================= Sáb17 · 12h · tab × espaço (formato "Two Fishes", som pelo app) =================
+const TAB = { falas: [
+  { cena: 'calmo', acc: ['tab'], txt: 'Eu não tô bravo. Só acho que tab é melhor que espaço.' },
+  { cena: 'um', acc: ['Uma', 'nível.'], txt: 'Uma tecla, um nível. Cada um vê na largura que quiser.' },
+  { cena: 'quatro', acc: ['Quatro'], txt: 'Espaço? Quatro toques pra fazer o trabalho de um.' },
+  { cena: 'python', acc: ['misturar.'], txt: 'Mas tudo bem. O Python aceita os dois. Só não pode misturar.' },
+  { cena: 'fecho', acc: ['calmo.'], txt: 'Eu tô calmo. Calmo.', corte: false },
+], musica: () => 0.1, cenas: {
+  calmo(g, u, k) { et(g, 'OPINIÃO QUE NINGUÉM PEDIU', X0, 330, A, 30); txt(g, 'TAB', X0, 640, 260, P); txt(g, '>', X0 + 520, 640, 200, MU); txt(g, '␣', X0 + 680, 640, 200, MU); bit(g, 'bit_pensando', 800, 1300, 280); },
+  um(g, u, k) { tecla(g, X0, 400, 360, 'TAB ⇥', ap(k, 0.1, 0.1) > 0 && ap(k, 0.1, 0.1) < 1, 70); fade(g, ap(k, 0.35), () => { painel(g, X0, 720, CW, 260, MU); et(g, 'if x:', X0 + 30, 790, P, 36); g.fillStyle = A; g.fillRect(X0 + 30, 830, 120, 40); et(g, 'pular()', X0 + 170, 862, P, 36); et(g, '← 1 tab', X0 + 30, 940, A, 28); }); bit(g, 'bit_joinha', 830, 1300, 200); },
+  quatro(g, u, k) { for (let i = 0; i < 4; i++) tecla(g, X0 + i * 215, 420, 195, '␣', Math.floor(u * 4) % 4 === i, 70); fade(g, ap(k, 0.5), () => txt(g, '×4', X0, 900, 200, A)); bit(g, 'bit_confuso', 830, 1300, 210); },
+  python(g, u, k) { terminal(g, X0, 380, CW, 330, [['>>> python app.py', P], ['TabError: inconsistent', A], ['use of tabs and spaces', A], ['in indentation', A]], k, 0.25, 0.1, 34); bit(g, 'bit_apontando', 830, 1300, 210); },
+  fecho(g, u, k) { txt(g, 'CALMO.', X0, 640, 200, P); bit(g, 'bit_rindo', 760, 1300, 300); },
+} };
+
+// ================= Sáb17 · 19h · o bug do fuso (ficção) =================
+const FUSO = { falas: [
+  { cena: 'gancho', acc: ['amanhã', 'começou.'], txt: '21h01. O relatório diz que a produção de amanhã já começou.' },
+  { cena: 'sistema', acc: ['hora'], txt: 'O sistema da fábrica registrava cada peça na hora em que saía da máquina.' },
+  { cena: 'virada', acc: ['20h59,', '21h,'], txt: 'Até 20h59, tudo certo. A partir das 21h, os registros caíam no dia seguinte.' },
+  { cena: 'suspeitas', acc: ['fraude.', 'assombração.'], txt: 'O supervisor achou que era fraude. O operador achou que era assombração.' },
+  { cena: 'utc', acc: ['UTC,', 'três'], txt: 'Era o servidor. Ele vivia em UTC, três horas na frente de Brasília.', pausa: 0.6 },
+  { cena: 'meianoite', acc: ['meia-noite', 'amanhã.'], txt: '21h aqui é meia-noite lá. Pro servidor, já era amanhã.' },
+  { cena: 'licao', acc: ['UTC.', 'lê.'], txt: 'Guarde a hora em UTC. Mostre no horário de quem lê.', pausa: 0.6 },
+  { cena: 'fecho', acc: ['relógio'], txt: 'Ninguém foi preso. Mas o servidor ganhou um relógio de parede.', corte: false },
+], musica: (ti, i) => [0.2, 0.18, 0.2, 0.2, 0.2, 0.2, 0.04, 0.16][i], cenas: {
+  gancho(g, u, k) { et(g, 'RELATÓRIO DE PRODUÇÃO', X0, 330, A, 30); painel(g, X0, 380, CW, 420, MU); et(g, 'HOJE · 11/10', X0 + 30, 450, P, 34); et(g, '1.240 peças', X0 + 30, 510, MU, 34);
+    fade(g, ap(k, 0.3), () => { g.fillStyle = A; g.fillRect(X0 + 20, 570, CW - 40, 180); et(g, 'AMANHÃ · 12/10', X0 + 40, 640, INK, 34); et(g, '38 peças ???', X0 + 40, 700, INK, 34); }); txt(g, '21:01', X0, 960, 150, P); bit(g, 'bit_surpreso', 830, 1300, 210); },
+  sistema(g, u, k) { for (let i = 0; i < 5; i++) { const x = X0 + ((u * 180 + i * 200) % (CW + 100)) - 100; g.fillStyle = P; g.fillRect(x, 560, 90, 90); } g.fillStyle = MU; g.fillRect(X0, 650, CW, 20); painel(g, X0, 380, 260, 160, MU); et(g, 'MÁQUINA', X0 + 30, 470, P, 30);
+    terminal(g, X0, 760, CW, 300, [['peça 1238 · 20:57:41', P], ['peça 1239 · 20:58:10', P], ['peça 1240 · 20:59:02', P]], k, 0.15, 0.15, 32); bitEsq(g, 'bit_lupa', 840, 1300, 190); },
+  virada(g, u, k) { terminal(g, X0, 360, CW, 520, [['20:59:02 → 11/10', P], ['20:59:47 → 11/10', P], ['21:00:13 → 12/10', A], ['21:00:58 → 12/10', A], ['21:01:30 → 12/10', A]], k, 0.05, 0.13, 40); bit(g, 'bit_confuso', 830, 1300, 210); },
+  suspeitas(g, u, k) { painel(g, X0, 380, 400, 420, MU); et(g, 'SUPERVISOR', X0 + 24, 440, MU, 28); txt(g, 'FRAUDE', X0 + 24, 560, 80, A);
+    fade(g, ap(k, 0.45), () => { painel(g, X0 + 450, 380, 400, 420, MU); et(g, 'OPERADOR', X0 + 474, 440, MU, 28); txt(g, 'FANTASMA', X0 + 474, 560, 58, P); }); bit(g, 'bit_pensando', 830, 1300, 200); },
+  utc(g, u, k) { relogio(g, X0 + 190, 600, 170, 21, 0, P); et(g, 'BRASÍLIA', X0 + 120, 820, P, 30); relogio(g, X0 + 640, 600, 170, 0, 0, A); et(g, 'SERVIDOR · UTC', X0 + 520, 820, A, 30);
+    fade(g, ap(k, 0.5), () => txt(g, '+3 H', X0 + 330, 1000, 120, A)); bitEsq(g, 'bit_apontando', 860, 1300, 180); },
+  meianoite(g, u, k) { txt(g, '21:00', X0, 560, 150, P); et(g, 'AQUI · 11/10', X0, 620, MU, 30); fade(g, ap(k, 0.35), () => { txt(g, '00:00', X0, 820, 150, A); et(g, 'LÁ · 12/10', X0, 880, A, 30); }); bit(g, 'bit_surpreso', 820, 1300, 220); },
+  licao(g, u, k) { linhas(g, [['GUARDE', MU, 110], ['EM UTC.', P, 150], ['MOSTRE NO', MU, 110], ['HORÁRIO DE', P, 120], ['QUEM LÊ.', A, 150]], X0, 440, k, 0.05, 0.14); },
+  fecho(g, u, k) { relogio(g, W / 2 - 40, 640, 220, 21, 3, P); et(g, 'BRT · UTC−3', W / 2 - 150, 920, OK, 34); bit(g, 'bit_rindo', 830, 1300, 230); },
+} };
+
+// ================= Dom18 · 12h · protetor de tela =================
+const PROTETOR = { falas: [
+  { cena: 'gancho', acc: ['enfeite.', 'verdade.'], txt: 'Protetor de tela não era enfeite. Ele protegia a tela de verdade.' },
+  { cena: 'tubo', acc: ['parada', 'sempre.'], txt: 'Nos monitores de tubo, a mesma imagem parada por horas marcava a tela pra sempre.' },
+  { cena: 'fantasma', acc: ['burn-in:', 'fantasma'], txt: 'Era o burn-in: um fantasma da imagem que ficava lá até com outra coisa na tela.' },
+  { cena: 'solucao', acc: ['mexe.'], txt: 'A solução: se nada se mexe, a gente mexe. Canos, estrelas, torradas voadoras.' },
+  { cena: 'fecho', acc: ['OLED.'], txt: 'Hoje a maioria das telas não marca. Mas fica de olho no seu OLED.', corte: false },
+], musica: () => 0.2, cenas: {
+  gancho(g, u, k) { crt(g, u, 'estrelas'); et(g, 'SCREEN SAVER', X0, 330, A, 30); bitEsq(g, 'bit_lupa', 840, 1300, 200); },
+  tubo(g, u, k) { crt(g, u, 'parado'); fade(g, ap(k, 0.5), () => { txt(g, 'HORAS', X0, 1150, 90, A); et(g, 'MESMA IMAGEM', X0 + 340, 1130, P, 30); }); bit(g, 'bit_pensando', 850, 1300, 180); },
+  fantasma(g, u, k) { crt(g, u, 'fantasma'); fade(g, ap(k, 0.4), () => txt(g, 'BURN-IN', X0, 1150, 100, A)); bit(g, 'bit_surpreso', 850, 1300, 180); },
+  solucao(g, u, k) { crt(g, u, 'canos'); bit(g, 'bit_comemorando', 850, 1300 - Math.abs(Math.sin(u * 6)) * 20, 190); },
+  fecho(g, u, k) { painel(g, X0, 400, CW, 520, MU, '#000'); et(g, 'OLED', X0 + 30, 460, A, 30); g.globalAlpha = 0.08; g.fillStyle = P; g.fillRect(X0 + 40, 820, CW - 80, 60); g.globalAlpha = 1; et(g, 'BARRA DE TAREFAS PARADA = RISCO', X0, 1000, P, 28); bit(g, 'bit_joinha', 820, 1300, 220); },
+} };
+function crt(g, u, modo) { const x = X0 + 30, y = 400, w = 700, h = 560; g.fillStyle = '#2a2a2e'; g.fillRect(x - 40, y - 40, w + 80, h + 120); caixa(g, x - 40, y - 40, w + 80, h + 120, P, 6); g.fillStyle = '#000'; g.fillRect(x, y, w, h);
+  g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+  if (modo === 'estrelas') for (let i = 0; i < 40; i++) { const z = ((u * 0.6 + rnd(i)) % 1), sx = x + w / 2 + (rnd(i * 3) - 0.5) * w * z * 1.6, sy = y + h / 2 + (rnd(i * 5) - 0.5) * h * z * 1.6; g.fillStyle = P; g.fillRect(sx, sy, 3 + z * 8, 3 + z * 8); }
+  if (modo === 'parado' || modo === 'fantasma') { g.fillStyle = modo === 'parado' ? OK : 'rgba(61,220,151,.18)'; g.font = '700 34px "Geist Mono"'; ['C:\\> DIR', 'AUTOEXEC.BAT', 'CONFIG.SYS', 'C:\\> _'].forEach((s, i) => g.fillText(s, x + 30, y + 70 + i * 50)); if (modo === 'fantasma') { g.fillStyle = P; g.font = '800 60px Geist'; g.fillText('OUTRA COISA', x + 60, y + 400); } }
+  if (modo === 'canos') { const n = Math.floor(u * 6); g.fillStyle = A; for (let i = 0; i < n * 3; i++) { const cx = x + (rnd(i * 7) * w), cy = y + (rnd(i * 11) * h); g.fillRect(cx, cy, i % 2 ? 160 : 26, i % 2 ? 26 : 160); } }
+  for (let yy = y; yy < y + h; yy += 6) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(x, yy, w, 2); } g.restore(); }
+
+// ================= Dom18 · 19h · ILOVEYOU =================
+const LOVE = { falas: [
+  { cena: 'gancho', acc: ['eu', 'te', 'amo.'], txt: 'Maio de 2000. Milhões de pessoas abriram um e-mail que dizia: eu te amo.' },
+  { cena: 'anexo', acc: ['ILOVEYOU.'], txt: 'Assunto: ILOVEYOU. Anexo: LOVE-LETTER-FOR-YOU.TXT.vbs.' },
+  { cena: 'extensao', acc: ['escondia', 'programa.'], txt: 'Parecia um texto. Mas o Windows escondia a extensão de verdade: .vbs, um programa.' },
+  { cena: 'espalha', acc: ['todos', 'contatos'], txt: 'Quem abria mandava o vírus pra todos os contatos do Outlook. E perdia arquivos.' },
+  { cena: 'escala', acc: ['50', 'milhões', 'desligaram'], txt: 'Em dez dias, mais de 50 milhões de infecções relatadas. O Pentágono e o Parlamento britânico desligaram o e-mail.', pausa: 0.6 },
+  { cena: 'autor', acc: ['estudante', 'pagar.'], txt: 'O autor era um estudante de Manila. Queria roubar senhas pra usar internet sem pagar.' },
+  { cena: 'licao', acc: ['convence'], txt: 'O ataque mais eficiente não invade o computador. Ele convence a pessoa.', pausa: 0.6 },
+  { cena: 'fecho', acc: ['desconfia.'], txt: 'Então, se alguém te mandar eu te amo com anexo... desconfia.', corte: false },
+], musica: (ti, i) => [0.2, 0.2, 0.2, 0.22, 0.22, 0.18, 0.04, 0.16][i], cenas: {
+  gancho(g, u, k) { et(g, 'CAIXA DE ENTRADA · MAIO/2000', X0, 330, MU, 28); for (let i = 0; i < 6; i++) { const y = 380 + i * 120; g.fillStyle = i % 2 ? '#141416' : I2; g.fillRect(X0, y, CW, 110); envelope(g, X0 + 24, y + 30, 70, A); et(g, 'ILOVEYOU', X0 + 120, y + 70, P, 40); txt(g, '♥', XR - 50, y + 75, 50, A, { align: 'center' }); }
+    bitEsq(g, 'bit_surpreso', 840, 1300, 200); },
+  anexo(g, u, k) { painel(g, X0, 360, CW, 560, P); et(g, 'ASSUNTO: ILOVEYOU', X0 + 30, 430, P, 36); et(g, 'kindly check the attached', X0 + 30, 500, MU, 30); et(g, 'LOVELETTER coming from me.', X0 + 30, 545, MU, 30);
+    fade(g, ap(k, 0.35), () => { painel(g, X0 + 30, 640, CW - 60, 200, A); et(g, '📎 LOVE-LETTER-FOR-YOU', X0 + 60, 720, P, 34); et(g, '.TXT.vbs', X0 + 60, 790, A, 44); }); bit(g, 'bit_lupa', 840, 1300, 190); },
+  extensao(g, u, k) { et(g, 'O QUE VOCÊ VIA', X0, 330, MU, 28); txt(g, 'LOVE-LETTER', X0, 450, 90, P); txt(g, '.TXT', X0, 560, 110, P);
+    fade(g, ap(k, 0.4), () => { et(g, 'O QUE ERA', X0, 680, A, 28); txt(g, '.TXT.vbs', X0, 820, 130, A); et(g, '= PROGRAMA (VISUAL BASIC SCRIPT)', X0, 890, P, 28); }); bit(g, 'bit_apontando', 840, 1300, 190); },
+  espalha(g, u, k) { const c = [W / 2 - 40, 640]; const n = Math.floor(1 + 40 * clamp(k / 0.7)); for (let i = 0; i < n; i++) { const a = i * 2.4, r = 60 + i * 11; const x = c[0] + Math.cos(a) * r - 30, y = c[1] + Math.sin(a) * r * 0.9 - 20; if (y < 330 || y > 1150) continue; envelope(g, x, y, 60, A); }
+    envelope(g, c[0] - 50, c[1] - 33, 100, P, A); et(g, 'CONTATOS DO OUTLOOK', X0, 330, A, 28); bit(g, 'bit_surpreso', 860, 1300, 170); },
+  escala(g, u, k) { txt(g, '50 MI+', X0, 560, 200, A); et(g, 'INFECÇÕES RELATADAS EM 10 DIAS', X0, 620, P, 28);
+    fade(g, ap(k, 0.5), () => { ['PENTÁGONO', 'PARLAMENTO BRITÂNICO'].forEach((s, i) => { painel(g, X0, 720 + i * 170, CW, 140, MU); et(g, s, X0 + 30, 805 + i * 170, P, 38); et(g, 'E-MAIL OFF', XR - 230, 805 + i * 170, A, 32); }); }); },
+  autor(g, u, k) { et(g, 'MANILA · FILIPINAS', X0, 330, A, 30); txt(g, '24', X0, 640, 300, P); et(g, 'ANOS · ESTUDANTE', X0, 710, MU, 32);
+    fade(g, ap(k, 0.45), () => { painel(g, X0, 800, CW, 200, MU); et(g, 'OBJETIVO:', X0 + 30, 865, MU, 28); et(g, 'SENHAS PRA INTERNET GRÁTIS', X0 + 30, 940, P, 36); }); bit(g, 'bit_confuso', 840, 1300, 180); },
+  licao(g, u, k) { linhas(g, [['O ATAQUE', MU, 110], ['MAIS EFICIENTE', P, 110], ['NÃO INVADE.', P, 130], ['CONVENCE.', A, 160]], X0, 500, k, 0.05, 0.16); },
+  fecho(g, u, k) { envelope(g, X0, 420, 420, A); txt(g, '♥ + 📎', X0 + 470, 600, 90, P); txt(g, '= ✕', X0 + 470, 720, 90, A); bit(g, k > 0.6 ? 'bit_rindo' : 'bit_lupa', 820, 1300, 240); },
+} };
+
+const EPS = {
+  disquete: { ...DISQUETE, out: 'Qua14_1_TikTok_Instagram_Disquete.mp4' },
+  y2k: { ...Y2K, out: 'Qua14_2_Instagram_TikTok_Y2K.mp4' },
+  youtube: { ...YOUTUBE, out: 'Qui15_1_TikTok_Instagram_PrimeiroVideoYouTube.mp4' },
+  patinho: { ...PATINHO, out: 'Qui15_2_Instagram_TikTok_WillStationPatinho.mp4' },
+  senha: { ...SENHA, out: 'Sex16_1_TikTok_Instagram_Senha123456.mp4' },
+  gta: { ...GTA, out: 'Sex16_2_Instagram_TikTok_GTA6.mp4' },
+  tab: { ...TAB, out: 'Sab17_1_TikTok_Instagram_TabEspaco.mp4' },
+  fuso: { ...FUSO, out: 'Sab17_2_Instagram_TikTok_BugDoFuso.mp4' },
+  protetor: { ...PROTETOR, out: 'Dom18_1_TikTok_Instagram_ProtetorDeTela.mp4' },
+  love: { ...LOVE, out: 'Dom18_2_Instagram_TikTok_ILOVEYOU.mp4' },
+};
+const abre = src => new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = src; }); // onload: decode() trava com a aba oculta
+async function carregar(src) { const im = await abre(src); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0); return BitArt.cutout(await abre(c.toDataURL())); }
+const q = new URLSearchParams(location.search), E = EPS[q.get('ep') || 'y2k'];
+const longo = E.falas.length > 6;
+EpKit.run({
+  falas: E.falas, cenas: E.cenas, semVoz: true, lead: 0.05, gap: 0.35, tail: 1.0, grao: 0.04, bitrate: longo ? 1.35e6 : 2.4e6, cbr: true, abitrate: 96000,
+  dir: 'semana-2026-10-12', out: E.out, musica: E.musica,
+  prep: async () => {
+    for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando', 'bit_apontando', 'bit_rindo']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
+    for (const k of ['bit_lupa', 'bit_pensando']) ART[k] = await carregar(`/Marca/bit/${k}.png`);
+  },
+}).catch(e => { document.title = 'ERROR ' + e.message; console.error(e); });
+</script></body></html>

@@ -18,3 +18,13 @@
 | 11/10/2026 | TikTok, Instagram | O primeiro spam (1978, Gary Thuerk/DEC) (história, sem voz) |
 | 11/10/2026 | TikTok, Instagram | O primeiro .com: symbolics.com (1985), empresa de IA que quebrou (fato rápido) |
 | 11/10/2026 | TikTok | "Suspeito: o cache" (humor, formato Suspect) |
+| 14/10/2026 | TikTok, Instagram | O ícone de salvar é um disquete (fato rápido, sem voz) |
+| 14/10/2026 | TikTok, Instagram | Y2K: o mundo contra dois dígitos (história, sem voz) |
+| 15/10/2026 | TikTok, Instagram | O primeiro vídeo do YouTube (fato rápido) |
+| 15/10/2026 | TikTok, Instagram | Will Station e o debug do patinho (dramatizado) |
+| 16/10/2026 | TikTok, Instagram | Senha 123456, a mais usada de 2025 (fato rápido) |
+| 16/10/2026 | TikTok, Instagram | GTA 6: 13 anos e dois adiamentos (história) |
+| 17/10/2026 | TikTok, Instagram | Tab × espaço (humor, formato Two Fishes) |
+| 17/10/2026 | TikTok, Instagram | O bug do fuso: UTC × Brasília (ficção) |
+| 18/10/2026 | TikTok, Instagram | Por que existia protetor de tela (burn-in) |
+| 18/10/2026 | TikTok, Instagram | ILOVEYOU, o vírus do "eu te amo" (história) |

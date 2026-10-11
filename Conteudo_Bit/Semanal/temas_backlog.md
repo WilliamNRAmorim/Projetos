@@ -5,7 +5,7 @@ Levantado em 07/10/2026. Fatos com fonte precisam ser reconferidos com WebSearch
 ## Em alta agora (usar primeiro, têm prazo)
 | Tema | Gancho | Formato | Prazo |
 |---|---|---|---|
-| GTA 6 sai em 19/11 | "13 anos entre GTA V e GTA 6: o que um estúdio faz nesse tempo?" | história A | marco de 1 mês: 19/10 |
+| ~~GTA 6 sai em 19/11~~ (usado 16/10) | "13 anos entre GTA V e GTA 6: o que um estúdio faz nesse tempo?" | história A | marco de 1 mês: 19/10 |
 | BGS 2026 (9–12/10, SP) | o Bit "na fila da BGS" com fatos de bastidor de games | fato rápido | até 12/10 |
 | IA nos games (Pesquisa Game Brasil 2026: 45,7% temem perder empregos; 39,3% comprariam jogo feito por IA) | "Você jogaria um game feito por IA?" | fato rápido com pergunta | outubro |
 | Trend "2026 é o novo 2016" | "a tecnologia de 2016 vs 2026: o que sumiu" | história A ou fato | enquanto durar a trend |
@@ -39,28 +39,28 @@ Observação: os trends que dependem de um áudio famoso (Be OK, Two Fishes) pre
 
 ## Histórias com arco (vídeo A)
 - ~~**QR Code:** inventado em 1994 pra rastrear peça de carro, tratado como modismo, salvo pela câmera do celular. Fracasso → volta por cima.~~ (usado 10/10)
-- **O bug do fuso horário** (dramatizado, universo GMS): o registro que chegou "amanhã".
+- ~~**O bug do fuso horário**~~ (usado 17/10) (dramatizado, universo GMS): o registro que chegou "amanhã".
 - **O botão que ninguém conseguia apertar de luva** (dramatizado, chão de fábrica).
 - **Will Station:** o curto-circuito / o choque / o ponto e vírgula que travou o fliperama por uma semana.
-- **Y2K:** o mundo inteiro correndo contra dois dígitos.
+- ~~**Y2K:** o mundo inteiro correndo contra dois dígitos.~~ (usado 14/10)
 - **O primeiro "bug" era uma mariposa de verdade** (Harvard, 1947).
 - **O Ctrl+Z existe por causa de um engano** (origem do desfazer).
 - **Apollo 11 pousou com um computador mais fraco que uma calculadora** (e um alarme quase abortou o pouso).
 
 ## Fatos rápidos (vídeos B e C)
 - A nuvem e o arbusto do Mario são o mesmo desenho (já usado no carrossel; reaproveitar só em outro ângulo).
-- O primeiro vídeo do YouTube tem 19 s e é num zoológico.
+- ~~O primeiro vídeo do YouTube tem 19 s e é num zoológico.~~ (usado 15/10)
 - ~~O primeiro domínio .com registrado.~~ (usado 11/10)
 - Por que o teclado é QWERTY e não ABC.
 - O som do modem discado: o que ele estava "falando".
 - Wi-Fi não significa "Wireless Fidelity".
 - O botão de "fechar porta" do elevador (muitos não funcionam).
-- O pixel morto, o "burn-in" e por que telas antigas guardavam fantasmas.
+- ~~O pixel morto, o "burn-in" e por que telas antigas guardavam fantasmas.~~ (usado 18/10, protetor de tela)
 - Quanto pesa a internet (estimativa dos elétrons em movimento).
 - ~~O primeiro e-mail de spam (1978).~~ (usado 11/10 como história A)
-- Por que o ícone de salvar ainda é um disquete.
+- ~~Por que o ícone de salvar ainda é um disquete.~~ (usado 14/10)
 - ~~O Tetris foi usado em estudo sobre memória/trauma.~~ (usado 10/10)
-- A senha "123456" segue entre as mais usadas do mundo.
+- ~~A senha "123456" segue entre as mais usadas do mundo.~~ (usado 16/10)
 
 ## Pilar dia a dia (humor)
 - "Compila na minha máquina."
