@@ -71,6 +71,24 @@ Regra: 3 por dia (A história narrada + B fato rápido + C fato/humor ou Bit New
 | Qua 14 | O bug do fuso: o registro que chegou "amanhã" (ficção universo GMS) | O primeiro vídeo do YouTube (19 s, zoológico) · "Two Fishes" do Bit: tab × espaço (som no app) |
 | Qui 15 | O Ctrl+Z e a origem do desfazer (conferir fonte) | Senha 123456 segue no topo · Bit News manchete |
 | Sex 16 | GTA 6 a 1 mês: 13 anos entre GTA V e GTA 6 | Som do modem discado: o que ele "falava" · humor "git push --force do estagiário" |
-| Sáb 17 | O botão que ninguém apertava de luva (dramatizado, chão de fábrica) | carrossel "Subtle Foreshadowing" de um deploy · primeiro spam (1978) |
+| Sáb 17 | O botão que ninguém apertava de luva (dramatizado, chão de fábrica) | carrossel "Subtle Foreshadowing" de um deploy · ~~primeiro spam (1978)~~ (usado 11/10; trocar por "o pixel morto e o burn-in") |
 | Dom 18 | (livre) | Bit News de Halloween: "o vírus mais assustador da história" (conferir) |
 Prazo: GTA 6 marco de 1 mês em 19/10 → A de sexta 16. LinkedIn: ver `linkedin_proximo_post` (não gerei texto novo: sem ângulo real novo esta semana).
+
+---
+## Domingo 11/10 (rotina de sábado refeita no domingo de manhã; a execução de sábado 20h falhou)
+Pilares: A = fato histórico em história com arco (primeiro spam) · B = fato rápido de internet/IA (primeiro .com) · C = humor dia a dia no formato "Suspect" do radar da gringa.
+**Sem voz nos três:** a conta do ElevenLabs (chave "bit-conteudo") ficou com 11 créditos; cada fala pede ~65. Saíram só com texto + trilha, apesar da regra confirmada da receita (mudo segura menos). Compensação: gancho visual forte no quadro 0, frases curtas, legenda com a pergunta. **Renovar/comprar créditos antes de segunda** ou os vídeos de 12/10 também saem mudos.
+Horários deslocados (a rodada ficou pronta ~10h30): B 15h, A 19h, C 21h.
+
+| # | Horário | Arquivo | Tema | Redes |
+|---|---|---|---|---|
+| A | TikTok 19h · Instagram 19h | `Dom11_A_Instagram_TikTok_PrimeiroSpam.mp4` (44 s, 6,8 MB) | O primeiro spam (1978): 393 endereços, reclamação geral e milhões em vendas | TikTok + Instagram |
+| B | TikTok 15h · Instagram 15h | `Dom11_B_TikTok_Instagram_PrimeiroPontoCom.mp4` (27 s, 3,1 MB) | O primeiro .com (symbolics.com, 1985) era de uma empresa de IA que quebrou; o site segue no ar | TikTok + Instagram |
+| C | TikTok 21h | `Dom11_C_TikTok_SuspeitoCache.mp4` (19 s, 2,6 MB) | "Suspeito: o cache" (humor) | TikTok |
+Arquivo de produção: `Producao/ep_domingo_2026-10-11.html?ep=spam|dotcom|cache`.
+
+### Fontes dos fatos
+- **A (spam):** Gary Thuerk (marketing da DEC), 3/5/1978, ARPANET, convite para demonstração do DECSYSTEM-20; 393 destinatários na maioria das fontes (uma diz 397); os primeiros ~120 endereços no campo "Para" e o resto vazou para o corpo; reclamações e repreensão da administração da ARPANET ("flagrant violation"); vendas relatadas de mais de US$ 12 milhões (há quem cite 13–14 milhões: usei "mais de 12, segundo os relatos"). Fontes: abusix.com ("The Birth of Email Spam: Gary Thuerk's 1978 'Green Card' Incident"), thinkbrg.com ("Remembering the Dawn of Spam"), tportal.hr. Nome "spam" do esquete do Monty Python (1970): conhecimento geral, sem número.
+- **B (symbolics.com):** registrado em 15/03/1985, primeiro .com; pedido por fax/correio aprovado à mão pelo SRI; Symbolics fazia Lisp machines populares para IA nos anos 80; o "inverno da IA" levou a empresa à falência; domínio vendido em agosto/2009 (XF.com Investments) e no ar hoje. Fontes: Wikipedia "Symbolics", stackscale.com, betanews.com (15/03/2025), techradar.com.
+- **C:** humor, sem dado. Afirmação técnica: Ctrl+Shift+R recarrega ignorando o cache.

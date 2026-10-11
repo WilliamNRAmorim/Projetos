@@ -29,7 +29,7 @@ Pesquisa web desta semana veio rasa (sem acesso ao top do r/ProgrammerHumor e do
 | Formato lá fora | Como fica com o Bit | Pilar |
 |---|---|---|
 | **"Subtle Foreshadowing"** (pistas pequenas no começo que viram a chave no final) | história A em que um detalhe do 1º segundo (um "warning" ignorado no terminal, um cabo frouxo no Will Station) vira a causa do desastre; o Bit volta o vídeo no fecho: "tava ali desde o começo" | história A / humor |
-| **"Suspect"** (descrever alguém como suspeito de filme policial, com manias engraçadas) | "Suspeito: o estagiário. Últimas palavras: 'é só um push rapidinho'. Arma: --force." Ficha policial desenhada em código, Bit de detetive (lupa) | humor dia a dia |
+| **"Suspect"** (descrever alguém como suspeito de filme policial, com manias engraçadas) (usado 11/10 com o cache; o do estagiário/--force segue livre) | "Suspeito: o estagiário. Últimas palavras: 'é só um push rapidinho'. Arma: --force." Ficha policial desenhada em código, Bit de detetive (lupa) | humor dia a dia |
 | **"Two Fishes"** (voz calma defendendo uma tese que ninguém pediu), continua forte | o Bit, calmíssimo, defendendo "tab é melhor que espaço" ou "Ctrl+C Ctrl+V é engenharia de reuso" | humor (sem som no mp4; som no app) |
 | **Demo não-verbal / micro-utilidade** (Shorts: payoff rápido, sem fala) | Bit News de utilidade: "o atalho que ninguém usa" (Win+V, histórico da área de transferência), só tela + texto | fato rápido |
 | **Reveal de Halloween** (outubro) | "O vírus de computador mais assustador da história" (conferir fato: ILOVEYOU 2000 ou Morris 1988) como história A no fim do mês | história A |
@@ -50,14 +50,14 @@ Observação: os trends que dependem de um áudio famoso (Be OK, Two Fishes) pre
 ## Fatos rápidos (vídeos B e C)
 - A nuvem e o arbusto do Mario são o mesmo desenho (já usado no carrossel; reaproveitar só em outro ângulo).
 - O primeiro vídeo do YouTube tem 19 s e é num zoológico.
-- O primeiro domínio .com registrado.
+- ~~O primeiro domínio .com registrado.~~ (usado 11/10)
 - Por que o teclado é QWERTY e não ABC.
 - O som do modem discado: o que ele estava "falando".
 - Wi-Fi não significa "Wireless Fidelity".
 - O botão de "fechar porta" do elevador (muitos não funcionam).
 - O pixel morto, o "burn-in" e por que telas antigas guardavam fantasmas.
 - Quanto pesa a internet (estimativa dos elétrons em movimento).
-- O primeiro e-mail de spam (1978).
+- ~~O primeiro e-mail de spam (1978).~~ (usado 11/10 como história A)
 - Por que o ícone de salvar ainda é um disquete.
 - ~~O Tetris foi usado em estudo sobre memória/trauma.~~ (usado 10/10)
 - A senha "123456" segue entre as mais usadas do mundo.

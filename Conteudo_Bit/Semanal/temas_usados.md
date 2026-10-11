@@ -14,3 +14,7 @@
 | 09/10/2026 | TikTok, Instagram | "Funciona na minha máquina" e o Docker (humor) |
 | 10/10/2026 | TikTok, Instagram | QR Code: nasceu em fábrica de peças de carro, patente aberta (história, narrada) |
 | 10/10/2026 | TikTok | Tetris reduziu flashbacks em estudo de Oxford (fato rápido) |
+
+| 11/10/2026 | TikTok, Instagram | O primeiro spam (1978, Gary Thuerk/DEC) (história, sem voz) |
+| 11/10/2026 | TikTok, Instagram | O primeiro .com: symbolics.com (1985), empresa de IA que quebrou (fato rápido) |
+| 11/10/2026 | TikTok | "Suspeito: o cache" (humor, formato Suspect) |

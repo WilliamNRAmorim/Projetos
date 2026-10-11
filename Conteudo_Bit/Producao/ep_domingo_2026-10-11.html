@@ -1,0 +1,270 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>domingo 11-10</title>
+<script src="brand.js"></script><script src="bit_art.js"></script><script src="ep_kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// Domingo 11/10: três vídeos SEM voz (créditos do ElevenLabs esgotados em 11/10: 11 restantes). ?ep=spam | dotcom | cache.
+// Fatos e fontes: Semanal/semana-2026-10-05/plano.md, seção Domingo 11/10. ?sheet=1 confere; ?save=1 renderiza.
+const { W, H, clamp, out, inout, txt, rnd } = EpKit;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2, OK = '#3DDC97';
+const ART = {};
+const bit = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
+const bitEsq = (g, k, cx, bottom, h) => { g.save(); g.translate(cx, 0); g.scale(-1, 1); BitArt.draw(g, ART[k], 0, bottom, h); g.restore(); };
+const et = (g, s, x, y, col = MU, size = 30) => txt(g, s, x, y, size, col, { mono: true, w: 700 });
+const X0 = 90, XR = 940, CW = XR - X0;
+const ap = (k, a, d = 0.12) => clamp((k - a) / d); // aparece a partir de k = a
+const fade = (g, a, fn) => { g.save(); g.globalAlpha *= a; fn(); g.restore(); };
+function caixa(g, x, y, w, h, col = P, lw = 5) { g.strokeStyle = col; g.lineWidth = lw; g.strokeRect(x, y, w, h); }
+function envelope(g, x, y, w, col = P, fill = I2) { const h = w * 0.66; g.fillStyle = fill; g.fillRect(x, y, w, h); g.strokeStyle = col; g.lineWidth = Math.max(2, w / 22); g.strokeRect(x, y, w, h); g.beginPath(); g.moveTo(x, y); g.lineTo(x + w / 2, y + h * 0.55); g.lineTo(x + w, y); g.stroke(); }
+function tremor(g, u, t0, amt = 14) { const d = u - t0; if (d < 0 || d > 0.35) return; const a = amt * (1 - d / 0.35); g.translate((rnd(u * 97) - 0.5) * 2 * a, (rnd(u * 53) - 0.5) * 2 * a); }
+function barra(g, url, y, k0, u, opts = {}) { // barra de endereço de navegador com digitação
+  const x = X0, w = CW, h = 120; g.fillStyle = I2; g.fillRect(x, y, w, h); caixa(g, x, y, w, h, opts.col || P, 5);
+  g.fillStyle = MU; g.beginPath(); g.arc(x + 60, y + h / 2, 18, 0, 7); g.fill();
+  const n = Math.floor(url.length * clamp(k0)), s = url.slice(0, n); g.font = '700 58px "Geist Mono"'; g.letterSpacing = '0px';
+  const dot = s.indexOf('.com'); g.fillStyle = P; g.textAlign = 'left';
+  if (dot >= 0 && opts.acc) { g.fillText(s.slice(0, dot), x + 110, y + 80); g.fillStyle = A; g.fillText(s.slice(dot), x + 110 + g.measureText(s.slice(0, dot)).width, y + 80); }
+  else g.fillText(s, x + 110, y + 80);
+  if (Math.floor(u * 2.5) % 2 === 0 && clamp(k0) < 1) { g.fillStyle = A; g.fillRect(x + 114 + g.measureText(s).width, y + 30, 6, 64); }
+  if (opts.risca) { const r = clamp(opts.risca); g.fillStyle = A; g.fillRect(x + 100, y + h / 2 - 4, (g.measureText(url).width + 20) * r, 10); }
+}
+
+// ---------- A · o primeiro spam ----------
+const SPAM = {
+  falas: [
+    { cena: 'gancho', acc: ['48', 'todo', 'dia.'], txt: 'Esse e-mail tem 48 anos. E você recebe uma cópia dele todo dia.' },
+    { cena: 'dec', acc: ['1978.', 'lotar'], txt: 'Maio de 1978. Um vendedor da DEC precisava lotar uma demonstração de computador.' },
+    { cena: 'arpa', acc: ['ARPANET,', 'todo', 'mundo'], txt: 'Ideia dele: usar a ARPANET, avó da internet, pra avisar todo mundo de uma vez.' },
+    { cena: 'para', acc: ['393', 'vazou'], txt: '393 endereços. Nem couberam no destinatário: o resto vazou pro corpo do e-mail.' },
+    { cena: 'envia', acc: ['reclamação.', 'flagrante.'], txt: 'Enviou. Choveu reclamação. A rede chamou de violação flagrante.', pausa: 0.6 },
+    { cena: 'vendas', acc: ['vendeu.', '12', 'milhões'], txt: 'Só que vendeu. Segundo os relatos, mais de 12 milhões de dólares.' },
+    { cena: 'copia', acc: ['copiou.'], txt: 'Funcionou pra um. Então todo mundo copiou.' },
+    { cena: 'licao', acc: ['atalho', 'barulho'], txt: 'O que é atalho pra você vira barulho pra todo mundo.', pausa: 0.6 },
+    { cena: 'fecho', acc: ['spam', 'Gary.'], txt: 'O nome spam veio depois, de um esquete do Monty Python. Obrigado, Gary.', corte: false },
+  ],
+  musica: (ti, i) => [0.2, 0.18, 0.18, 0.2, 0.22, 0.2, 0.18, 0.04, 0.16][i],
+  cenas: {
+    // quadro 0: caixa de entrada rolando de spam; no fundo, a linha vermelha de 1978
+    gancho(g, u, k) {
+      const ASS = ['VOCÊ FOI SELECIONADO', 'ÚLTIMA CHANCE', 'SEU PRÊMIO CHEGOU', 'OFERTA SÓ HOJE', 'CONFIRME SEUS DADOS', 'GANHE 10X MAIS', 'URGENTE: LEIA', 'PROMOÇÃO RELÂMPAGO'];
+      et(g, 'CAIXA DE ENTRADA · 2026', X0, 300, MU, 30); txt(g, '48 ANOS', XR, 300, 34, A, { align: 'right', mono: true, w: 700 });
+      g.save(); g.beginPath(); g.rect(X0, 330, CW, 760); g.clip();
+      const off = (u * 260) % 95;
+      for (let i = -1; i < 9; i++) { const y = 330 + i * 95 + off; g.fillStyle = i % 2 ? '#141416' : I2; g.fillRect(X0, y, CW, 90); envelope(g, X0 + 24, y + 24, 60, MU); et(g, ASS[(i + 80 - Math.floor(u * 260 / 95)) % 8], X0 + 110, y + 58, P, 30); }
+      g.restore();
+      const y = 1110; g.fillStyle = A; g.fillRect(X0, y, CW, 110); envelope(g, X0 + 24, y + 28, 70, BRAND.ink, A);
+      et(g, '03/05/1978', X0 + 120, y + 48, BRAND.ink, 28); et(g, 'DIGITAL WILL BE GIVING A PRODUCT…', X0 + 120, y + 88, BRAND.ink, 26);
+      bitEsq(g, 'bit_lupa', 840, 1300, 200);
+    },
+    // terminal da DEC e a sala da demonstração (cadeiras que precisam encher)
+    dec(g, u, k) {
+      txt(g, 'MAIO', X0, 400, 110, P); txt(g, '1978', X0, 520, 150, A);
+      const tx = X0, ty = 590, tw = 560, th = 330; g.fillStyle = I2; g.fillRect(tx, ty, tw, th); caixa(g, tx, ty, tw, th);
+      et(g, 'DECSYSTEM-20', tx + 30, ty + 70, P, 34); et(g, '> DEMO MARCADA', tx + 30, ty + 130, MU, 28); et(g, '> CONVIDADOS: ?', tx + 30, ty + 180, A, 28);
+      if (Math.floor(u * 2.5) % 2 === 0) { g.fillStyle = P; g.fillRect(tx + 30, ty + 210, 22, 36); }
+      et(g, 'A SALA DA DEMO', X0, 1010, MU, 26);
+      for (let i = 0; i < 12; i++) { const x = X0 + (i % 6) * 120, y = 1040 + Math.floor(i / 6) * 100; g.strokeStyle = MU; g.lineWidth = 4; g.strokeRect(x, y, 80, 60); g.fillRect(x, y + 60, 6, 26); g.fillRect(x + 74, y + 60, 6, 26); }
+      bit(g, 'bit_pensando', 820, 960, 260);
+    },
+    // a rede: nós acendendo a partir de um ponto
+    arpa(g, u, k) {
+      et(g, 'ARPANET · A AVÓ DA INTERNET', X0, 300, A, 30);
+      const N = 34, pts = []; for (let i = 0; i < N; i++) pts.push([X0 + 30 + rnd(i * 3.1) * (CW - 60), 380 + rnd(i * 7.7) * 760]);
+      const c = [X0 + 160, 1000]; pts[0] = c;
+      g.lineWidth = 3; for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) { const d = Math.hypot(pts[i][0] - pts[j][0], pts[i][1] - pts[j][1]); if (d < 210) { g.strokeStyle = 'rgba(238,237,232,.14)'; g.beginPath(); g.moveTo(...pts[i]); g.lineTo(...pts[j]); g.stroke(); } }
+      const R = out(clamp((k - 0.35) / 0.55)) * 1100;
+      if (k > 0.35 && k < 0.95) { g.save(); g.beginPath(); g.rect(X0, 330, CW, 900); g.clip(); g.strokeStyle = A; g.lineWidth = 4; g.globalAlpha = 0.6; g.beginPath(); g.arc(c[0], c[1], R, 0, 7); g.stroke(); g.restore(); }
+      pts.forEach((p, i) => { const on = i === 0 || Math.hypot(p[0] - c[0], p[1] - c[1]) < R; g.fillStyle = on ? A : P; g.fillRect(p[0] - 10, p[1] - 10, 20, 20); });
+      bitEsq(g, 'bit_apontando', 800, 1300, 220);
+    },
+    // o campo "PARA:" enchendo e transbordando pro corpo
+    para(g, u, k) {
+      const n = Math.min(393, Math.floor(393 * out(clamp(k / 0.8))));
+      txt(g, String(n), XR, 420, 150, A, { align: 'right' }); txt(g, 'ENDEREÇOS', XR, 470, 28, MU, { align: 'right', mono: true, w: 700 });
+      et(g, 'DE: THUERK@DEC', X0, 400, P, 30);
+      const bx = X0, by = 520, bw = CW, bh = 300; g.fillStyle = I2; g.fillRect(bx, by, bw, bh); caixa(g, bx, by, bw, bh); et(g, 'PARA:', bx + 20, by + 44, MU, 26);
+      g.font = '700 22px "Geist Mono"'; let x = bx + 110, y = by + 44, i = 0;
+      for (; i < n; i++) { const s = 'usr' + (100 + i) + '@host' + (i % 37) + '; '; const w = g.measureText(s).width; if (x + w > bx + bw - 20) { x = bx + 20; y += 32; } if (y > by + bh - 14) break; g.fillStyle = P; g.fillText(s, x, y); x += w; }
+      // o que não coube vaza pro corpo, em vermelho, caindo
+      et(g, 'CORPO DA MENSAGEM', bx, by + bh + 60, MU, 26); g.save(); g.beginPath(); g.rect(X0, by + bh + 80, CW, 900); g.clip();
+      for (let j = i, row = 0; j < n; j += 6, row++) { const yy = by + bh + 110 + row * 30; if (yy > 1240) break; g.fillStyle = A; g.font = '700 22px "Geist Mono"'; g.fillText(Array.from({ length: 6 }, (_, q) => 'usr' + (100 + j + q) + '@host' + ((j + q) % 37)).join('; '), bx, yy); } g.restore();
+    },
+    // ENVIAR, tremor e chuva de reclamação
+    envia(g, u, k) {
+      g.save(); tremor(g, u, 0.25, 18);
+      const p = clamp((u - 0.1) / 0.15), s = 1 - 0.08 * Math.sin(Math.PI * p);
+      g.save(); g.translate(W / 2 - 40, 470); g.scale(s, s); g.fillStyle = A; g.fillRect(-300, -110, 600, 220); txt(g, 'ENVIAR', 0, 38, 110, BRAND.ink, { align: 'center' }); g.restore();
+      for (let i = 0; i < 22; i++) { const t0 = 0.5 + i * 0.12, d = u - t0; if (d < 0) continue; const x = X0 + rnd(i * 4.3) * (CW - 140), y = Math.min(640 + Math.pow(d, 2) * 1400, 1130 - Math.floor(i / 6) * 60 - rnd(i) * 30); envelope(g, x, y, 130, A); txt(g, '!', x + 65, y + 72, 60, A, { align: 'center' }); }
+      fade(g, ap(k, 0.55), () => { g.save(); g.translate(W / 2 - 40, 1230); g.rotate(-0.05); caixa(g, -390, -70, 780, 120, A, 7); txt(g, 'VIOLAÇÃO FLAGRANTE', 0, 18, 64, A, { align: 'center' }); g.restore(); });
+      g.restore();
+      bit(g, 'bit_surpreso', 860, 1010, 190);
+    },
+    // contador de vendas
+    vendas(g, u, k) {
+      et(g, 'SEGUNDO OS RELATOS', X0, 420, MU, 30);
+      const v = Math.floor(12e6 * out(clamp((k - 0.1) / 0.6)));
+      txt(g, 'US$', X0, 560, 80, P); txt(g, v.toLocaleString('pt-BR'), X0, 720, 150, A);
+      fade(g, ap(k, 0.7), () => txt(g, '+ EM VENDAS', X0, 830, 80, P));
+      const by = 1230; for (let i = 0; i < 6; i++) { const h = 40 + i * 50 * out(clamp((k - 0.1) / 0.6)); g.fillStyle = i === 5 ? A : MU; g.fillRect(X0 + i * 95, by - h, 70, h); }
+      bit(g, 'bit_comemorando', 800, 1230 - Math.abs(Math.sin(u * 6)) * 20, 250);
+    },
+    // um envelope vira centenas
+    copia(g, u, k) {
+      const n = Math.max(1, Math.floor(Math.pow(2, 1 + 8 * clamp((k - 0.15) / 0.7))));
+      const cols = 14, w = 56; for (let i = 0; i < Math.min(n, 252); i++) { const x = X0 + (i % cols) * 61, y = 330 + Math.floor(i / cols) * 50; envelope(g, x, y, w, i === 0 ? A : MU); }
+      txt(g, n > 252 ? '∞' : String(n), XR, 1260, 140, A, { align: 'right' });
+      bit(g, 'bit_confuso', 230, 1300, 230);
+    },
+    // lição: silêncio, tipografia
+    licao(g, u, k) {
+      fade(g, ap(k, 0.05), () => { txt(g, 'ATALHO', X0, 560, 170, P); et(g, 'PRA VOCÊ', X0 + 6, 620, MU, 36); });
+      fade(g, ap(k, 0.45), () => { const j = k > 0.45 && k < 0.6 ? (rnd(u * 50) - 0.5) * 30 : 0; txt(g, 'BARULHO', X0 + j, 880, 170, A); et(g, 'PRA TODO MUNDO', X0 + 6, 940, MU, 36); });
+    },
+    // fecho: a parede de SPAM do esquete, uma linha em vermelho
+    fecho(g, u, k) {
+      for (let r = 0; r < 14; r++) { const dx = ((u * (r % 2 ? 80 : -80)) % 300) - 300; et(g, 'SPAM '.repeat(16), X0 + dx, 330 + r * 62, r === 6 ? A : 'rgba(140,139,134,.45)', 44); }
+      g.fillStyle = BRAND.ink; g.fillRect(X0, 1000, CW, 70); et(g, 'MONTY PYTHON · 1970', X0, 1050, P, 30);
+      bit(g, k > 0.7 ? 'bit_rindo' : 'bit_joinha', 820, 1300, 240);
+    },
+  },
+};
+
+// ---------- B · o primeiro .com ----------
+const DOTCOM = {
+  falas: [
+    { cena: 'gancho', acc: ['primeiro', 'Google.', 'Amazon.'], txt: 'O primeiro ponto com da história não é do Google. Nem da Amazon.' },
+    { cena: 'registro', acc: ['1985.', 'mão,'], txt: 'É symbolics.com, registrado em 15 de março de 1985. À mão, por fax ou correio.' },
+    { cena: 'ia', acc: ['inteligência', 'artificial.'], txt: 'A Symbolics fazia computadores pra inteligência artificial. Nos anos 80.' },
+    { cena: 'quebra', acc: ['moda,', 'quebrou.'], txt: 'Aí a IA saiu de moda, e a empresa quebrou.', pausa: 0.5 },
+    { cena: 'vivo', acc: ['sobreviveu.', 'hoje.'], txt: 'O endereço sobreviveu. Está no ar até hoje.' },
+    { cena: 'fecho', acc: ['morreu.', 'não.'], txt: 'A empresa morreu. O link, não.', corte: false },
+  ],
+  musica: (ti, i) => [0.2, 0.2, 0.2, 0.22, 0.2, 0.12][i],
+  cenas: {
+    gancho(g, u, k) {
+      et(g, 'O PRIMEIRO .COM', X0, 330, A, 34);
+      barra(g, 'google.com', 430, u / 0.7, u, { risca: (k - 0.3) / 0.1 });
+      fade(g, ap(k, 0.45, 0.05), () => barra(g, 'amazon.com', 620, (k - 0.45) / 0.2, u, { risca: (k - 0.75) / 0.1 }));
+      fade(g, ap(k, 0.3), () => txt(g, '✕', XR - 30, 520, 80, A, { align: 'right' })); fade(g, ap(k, 0.75), () => txt(g, '✕', XR - 30, 710, 80, A, { align: 'right' }));
+      bit(g, 'bit_pensando', 760, 1250, 300);
+    },
+    registro(g, u, k) {
+      barra(g, 'symbolics.com', 330, k / 0.35, u, { acc: true, col: A });
+      // o fax saindo com a data
+      const fx = X0 + 60, fw = 560, fy = 560, sai = out(clamp((k - 0.3) / 0.4)) * 520;
+      g.fillStyle = MU; g.fillRect(fx - 40, fy - 20, fw + 80, 40);
+      g.save(); g.beginPath(); g.rect(fx, fy, fw, 600); g.clip(); g.fillStyle = P; g.fillRect(fx, fy + sai - 520, fw, 520);
+      g.translate(0, sai - 520); et(g, 'PEDIDO DE DOMÍNIO', fx + 30, fy + 70, MU, 26); txt(g, '15/03', fx + 30, fy + 220, 130, BRAND.ink); txt(g, '1985', fx + 30, fy + 350, 130, A);
+      for (let i = 0; i < 4; i++) { g.fillStyle = 'rgba(12,12,13,.25)'; g.fillRect(fx + 30, fy + 400 + i * 26, 300 + rnd(i) * 160, 8); }
+      g.restore();
+      et(g, 'FAX OU CORREIO · APROVADO À MÃO', X0, 1230, MU, 26);
+      bitEsq(g, 'bit_lupa', 830, 1200, 220);
+    },
+    ia(g, u, k) {
+      et(g, 'SYMBOLICS · LISP MACHINE', X0, 330, A, 30);
+      const mx = X0 + 40, my = 400, mw = 600, mh = 440; g.fillStyle = I2; g.fillRect(mx, my, mw, mh); caixa(g, mx, my, mw, mh, P, 8);
+      g.fillStyle = '#121214'; g.fillRect(mx + 30, my + 30, mw - 60, mh - 60);
+      const L = ['(defun pensa (x)', '  (if (ia-p x)', '      (resolve x)', '      (pensa (cdr x))))'];
+      L.forEach((s, i) => fade(g, ap(k, 0.1 + i * 0.12), () => et(g, s, mx + 60, my + 100 + i * 60, i === 0 ? A : P, 30)));
+      g.fillStyle = MU; g.fillRect(mx + mw / 2 - 40, my + mh, 80, 60); g.fillRect(mx + 80, my + mh + 60, mw - 160, 20);
+      g.fillStyle = I2; g.fillRect(mx, my + mh + 110, mw, 70); caixa(g, mx, my + mh + 110, mw, 70, MU, 4);
+      fade(g, ap(k, 0.5), () => txt(g, 'IA · ANOS 80', X0, 1240, 100, P));
+      bitEsq(g, 'bit_apontando', 840, 1050, 230);
+    },
+    quebra(g, u, k) {
+      et(g, 'O "INVERNO DA IA"', X0, 330, A, 30);
+      const px = X0, py = 1050, pw = 700, ph = 600, pts = [[0, .2], [.15, .35], [.3, .6], [.45, .9], [.55, .95], [.65, .3], [.8, .08], [1, .02]];
+      const r = clamp(k / 0.7); g.strokeStyle = MU; g.lineWidth = 3; g.beginPath(); g.moveTo(px, py); g.lineTo(px + pw, py); g.stroke();
+      g.strokeStyle = A; g.lineWidth = 10; g.beginPath(); pts.forEach(([x, y], i) => { if (x > r) return; const X = px + x * pw, Y = py - y * ph; i ? g.lineTo(X, Y) : g.moveTo(X, Y); }); g.stroke();
+      fade(g, ap(k, 0.7, 0.05), () => { g.save(); g.translate(X0 + 360, 1210); g.rotate(-0.06); const s = 1 + 0.4 * (1 - ap(k, 0.7, 0.1)); g.scale(s, s); caixa(g, -230, -80, 460, 130, A, 8); txt(g, 'FALIU', 0, 25, 100, A, { align: 'center' }); g.restore(); });
+      bit(g, 'bit_surpreso', 850, 820, 190);
+    },
+    vivo(g, u, k) {
+      barra(g, 'symbolics.com', 330, 1, u, { acc: true, col: OK });
+      g.fillStyle = OK; g.beginPath(); g.arc(XR - 50, 390, 16 + Math.sin(u * 6) * 4, 0, 7); g.fill(); et(g, 'NO AR', XR - 80, 500, OK, 30); g.textAlign = 'left';
+      txt(g, '1985', X0, 720, 150, MU); txt(g, '→', X0, 860, 120, P); txt(g, '2026', X0, 1020, 150, OK);
+      bit(g, 'bit_joinha', 760, 1250, 290);
+    },
+    fecho(g, u, k) {
+      txt(g, 'EMPRESA', X0, 560, 150, MU); g.fillStyle = A; g.fillRect(X0 - 10, 505, (CW - 120) * out(ap(k, 0.1, 0.2)), 16);
+      fade(g, ap(k, 0.45), () => { txt(g, 'LINK', X0, 800, 150, P); txt(g, '✓', X0 + 430, 800, 140, OK); });
+      bit(g, 'bit_rindo', 780, 1260, 260);
+    },
+  },
+};
+
+// ---------- C · suspeito: o cache ----------
+const CACHE = {
+  falas: [
+    { cena: 'ficha', acc: ['cache.'], txt: 'Ficha policial. Suspeito: o cache.' },
+    { cena: 'crime', acc: ['ontem,', 'deploy.'], txt: 'Crime: mostrar pro cliente o site de ontem, logo depois do deploy.' },
+    { cena: 'testemunha', acc: ['corrigi'], txt: 'Testemunha, o dev: "mas eu já corrigi isso!"' },
+    { cena: 'alibi', acc: ['rápido."'], txt: 'Álibi do suspeito: "eu só tava guardando pra ficar mais rápido."' },
+    { cena: 'sentenca', acc: ['Ctrl+Shift+R.', 'amanhã.'], txt: 'Sentença: Ctrl+Shift+R. E ele volta amanhã.', corte: false },
+  ],
+  musica: (ti, i) => [0.2, 0.2, 0.2, 0.2, 0.18][i],
+  cenas: {
+    // fila de reconhecimento: régua de altura e o suspeito (um bloco de memória) com plaquinha 304
+    ficha(g, u, k) {
+      for (let i = 0; i < 9; i++) { const y = 380 + i * 95; g.fillStyle = 'rgba(238,237,232,.12)'; g.fillRect(X0, y, CW, 4); et(g, String(200 - i * 10), X0, y - 12, MU, 22); }
+      const s = 1 + 0.15 * (1 - out(clamp(u / 0.3)));
+      g.save(); g.translate(W / 2 - 60, 780); g.scale(s, s);
+      g.fillStyle = I2; g.fillRect(-190, -300, 380, 360); caixa(g, -190, -300, 380, 360, P, 8);
+      for (let i = 0; i < 8; i++) { g.fillStyle = MU; g.fillRect(-170 + i * 46, 60, 22, 50); }
+      txt(g, 'CACHE', 0, -110, 90, P, { align: 'center' }); g.fillStyle = P; g.fillRect(-90, -50, 40, 14); g.fillRect(50, -50, 40, 14); // olhar desconfiado
+      g.fillStyle = P; g.fillRect(-170, 140, 340, 130); et(g, 'SUSPEITO', 0, 190, BRAND.ink, 28); g.textAlign = 'center'; txt(g, 'Nº 304', 0, 255, 60, A, { align: 'center' });
+      g.restore();
+      et(g, 'FICHA POLICIAL', X0, 320, A, 30);
+      bitEsq(g, 'bit_lupa', 850, 1290, 200);
+    },
+    // o crime: deploy feito no terminal, navegador do cliente ainda na versão velha
+    crime(g, u, k) {
+      et(g, 'CRIME', X0, 320, A, 30);
+      g.fillStyle = I2; g.fillRect(X0, 360, CW, 220); caixa(g, X0, 360, CW, 220, MU, 4);
+      et(g, '$ deploy --prod', X0 + 30, 420, P, 30); fade(g, ap(k, 0.15), () => et(g, '✓ v2.0 no ar', X0 + 30, 480, OK, 30));
+      g.fillStyle = I2; g.fillRect(X0, 640, CW, 520); caixa(g, X0, 640, CW, 520, P, 5); et(g, 'NAVEGADOR DO CLIENTE', X0 + 30, 690, MU, 24);
+      fade(g, ap(k, 0.35), () => { txt(g, 'v1.0', X0 + 30, 900, 170, A); et(g, 'A VERSÃO DE ONTEM', X0 + 36, 980, P, 30); });
+      bit(g, 'bit_surpreso', 800, 1270, 200);
+    },
+    testemunha(g, u, k) {
+      et(g, 'TESTEMUNHA: O DEV', X0, 320, A, 30);
+      g.save(); tremor(g, u, 0.2, 12);
+      txt(g, '"MAS EU', X0, 560, 130, P); txt(g, 'JÁ CORRIGI', X0, 700, 130, A); txt(g, 'ISSO!"', X0, 840, 130, P);
+      g.restore();
+      bit(g, 'bit_confuso', 760, 1290, 300);
+    },
+    alibi(g, u, k) {
+      et(g, 'ÁLIBI DO SUSPEITO', X0, 320, A, 30);
+      g.fillStyle = I2; g.fillRect(X0, 380, CW, 560); caixa(g, X0, 380, CW, 560, P, 5);
+      g.fillStyle = I2; g.beginPath(); g.moveTo(X0 + 120, 935); g.lineTo(X0 + 120, 1030); g.lineTo(X0 + 230, 935); g.fill(); g.strokeStyle = P; g.lineWidth = 5; g.beginPath(); g.moveTo(X0 + 120, 940); g.lineTo(X0 + 120, 1030); g.lineTo(X0 + 230, 940); g.stroke();
+      const L = ['"EU SÓ TAVA', 'GUARDANDO', 'PRA FICAR', 'MAIS RÁPIDO."']; L.forEach((s, i) => fade(g, ap(k, 0.08 + i * 0.12), () => txt(g, s, X0 + 40, 500 + i * 120, 100, i === 3 ? A : P)));
+      bitEsq(g, 'bit_pensando', 800, 1290, 250);
+    },
+    sentenca(g, u, k) {
+      et(g, 'SENTENÇA', X0, 320, A, 30);
+      const K = [['CTRL', 260], ['SHIFT', 300], ['R', 160]]; let x = X0;
+      K.forEach(([s, w], i) => { const p = ap(k, 0.08 + i * 0.12, 0.06), dn = p > 0 && p < 1 ? 14 : (p >= 1 ? 8 : 0); g.fillStyle = MU; g.fillRect(x, 520, w, 200); g.fillStyle = i === 2 && p > 0 ? A : P; g.fillRect(x, 500 + dn, w, 190); txt(g, s, x + w / 2, 630 + dn, 64, BRAND.ink, { align: 'center' }); x += w + 25; });
+      fade(g, ap(k, 0.6), () => { et(g, 'E ELE VOLTA', X0, 900, MU, 40); txt(g, 'AMANHÃ.', X0, 1040, 150, A); });
+      bit(g, k > 0.6 ? 'bit_rindo' : 'bit_joinha', 800, 1290, 230);
+    },
+  },
+};
+
+const EPS = {
+  spam: { ...SPAM, out: 'Dom11_A_Instagram_TikTok_PrimeiroSpam.mp4', bitrate: 1.35e6 },
+  dotcom: { ...DOTCOM, out: 'Dom11_B_TikTok_Instagram_PrimeiroPontoCom.mp4', bitrate: 2.4e6 },
+  cache: { ...CACHE, out: 'Dom11_C_TikTok_SuspeitoCache.mp4', bitrate: 2.4e6 },
+};
+// onload em vez de decode(): decode() não resolve com a aba do Browser pane oculta
+const abre = src => new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = src; });
+async function carregar(src) { const im = await abre(src); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0); const i2 = await abre(c.toDataURL()); return BitArt.cutout(i2); }
+const q = new URLSearchParams(location.search), E = EPS[q.get('ep') || 'spam'];
+EpKit.run({
+  falas: E.falas, cenas: E.cenas, semVoz: true, lead: 0.05, gap: 0.35, tail: 1.0, grao: 0.04, bitrate: E.bitrate, cbr: true, abitrate: 96000,
+  dir: 'semana-2026-10-05', out: E.out, musica: E.musica,
+  prep: async () => {
+    for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando', 'bit_apontando', 'bit_rindo']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
+    for (const k of ['bit_lupa', 'bit_pensando']) ART[k] = await carregar(`/Marca/bit/${k}.png`);
+  },
+}).catch(e => { document.title = 'ERROR ' + e.message; console.error(e); });
+</script></body></html>

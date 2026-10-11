@@ -71,3 +71,17 @@ Dica prática: antes de escanear um QR na rua, veja se não tem um adesivo colad
 **Instagram (opcional):** OXFORD RECEITOU TETRIS (pra uma experiência). Em 2009, 40 voluntários viram cenas pesadas; meia hora depois, metade jogou 10 minutos de Tetris. Na semana seguinte, quem jogou teve bem menos flashbacks e lembrava do filme igual. O porquê: as peças disputam a parte do cérebro que monta imagens. Estudo inicial, com voluntários, não é tratamento. #games #tetris #curiosidades #engenhariadecomputacao
 
 ### C · carrossel do Mario (já descrito acima, "Post 3") · Instagram 11h, TikTok 19h
+
+## Domingo 11/10 · 3 vídeos, todos sem voz (rotina de sábado, refeita no domingo de manhã)
+Fontes e plano em `plano.md` (seção "Domingo 11/10"). Legendas completas nos `Dom11_*_texto.txt`.
+
+### A · `Dom11_A_Instagram_TikTok_PrimeiroSpam.mp4` (44 s) · TikTok 19h, Instagram 19h
+**Instagram:** Esse e-mail tem 48 anos e você recebe uma cópia dele todo dia. 📩 (texto completo em `Dom11_A_Instagram_TikTok_PrimeiroSpam_texto.txt`; lição: "o que é atalho pra você vira barulho pra todo mundo"; dica: cancelar inscrição x marcar como spam)
+**TikTok:** o primeiro spam da história foi em 1978, pra 393 pessoas 📩 todo mundo odiou... e deu MILHÕES em vendas. qual o spam mais absurdo que já caiu no seu e-mail? 👇 #techtok #historiadatecnologia #email #internet
+
+### B · `Dom11_B_TikTok_Instagram_PrimeiroPontoCom.mp4` (27 s) · TikTok 15h, Instagram 15h
+**Instagram:** O PRIMEIRO .COM DA HISTÓRIA NÃO É DO GOOGLE. 🌐 (texto completo no `_texto.txt`; dica: renovação automática do domínio)
+**TikTok:** o primeiro .com da história é de uma empresa de IA... dos anos 80 💀 a empresa faliu e o site tá no ar até hoje. qual foi o primeiro site que você entrou na vida? 👇 #techtok #internet #historiadatecnologia #curiosidades
+
+### C · `Dom11_C_TikTok_SuspeitoCache.mp4` (19 s) · TikTok 21h
+**TikTok:** ficha policial do cache 🚨 réu reincidente. qual o suspeito mais procurado do seu código? 👇 #dev #programacao #techtok #humordev

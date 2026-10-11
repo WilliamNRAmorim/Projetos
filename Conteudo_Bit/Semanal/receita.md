@@ -35,6 +35,9 @@ Objetivo: descobrir, com dados, o formato que mais segura o usuário e mais alca
 | 9 | 10/10 15:00 | TikTok | Tetris em Oxford (27 s) | fato rápido sem voz, ciência + games, com o porquê | fato com "o porquê" + ressalva honesta segura até o fim mesmo sem voz | | | já contraria a regra confirmada em 09/10: refazer com voz |
 | 10 | 09/10 11:00 | Instagram | Carrossel Will Station (7 itens) | carrossel história de projeto | — | ~9 h: 3 vis., 1 curtida | | estático parado |
 | 11 | 09/10 19:00 | TikTok + Instagram | Curta "pra que a gente serve?" (pixel art, 58 s, outra sessão) | curta animado | — | ~1 h: TikTok 13 vis., 1,19 s; IG 0 | | cedo |
+| 12 | 11/10 19:00 | TikTok + Instagram | Primeiro spam (44 s) | história com arco, SEM voz (sem créditos) | arco forte + gancho visual no quadro 0 (caixa de spam) segura mais que os mudos de 08/10 (2,5–2,9 s), mesmo sem voz | | | |
+| 13 | 11/10 15:00 | TikTok + Instagram | Primeiro .com (27 s) | fato rápido sem voz, contradição no gancho ("não é do Google") | gancho de contradição com marca conhecida segura os 2 primeiros segundos | | | |
+| 14 | 11/10 21:00 | TikTok | Suspeito: o cache (19 s) | humor, formato "Suspect" da gringa, sem voz | humor identificável de dev gera comentário (pergunta "suspeito mais procurado") | | | |
 | — | 09/10 | — | Apollo 1202, Primeiro bug, Docker (Sex09) | — | — | **não publicados** (não aparecem no TikTok nem no Instagram) | | produção sem publicação: alinhar agendamento |
 
 **Métricas puxadas em 09/10 à noite** pelo Chrome da pessoa (TikTok Studio → Análise de cada post; Meta Business Suite → Insights → Content). O navegador do app não tem login: usar o Claude in Chrome.
@@ -110,4 +113,15 @@ Fonte: busca do TikTok (curtidas visíveis; sem views) e API de busca do Instagr
 - Leitura: tema com demanda real; nosso B mudo de 27 s não segue o que os do topo fazem (voz/rosto/personagem). Refazer com a voz do Bit.
 **Super Mario**: Instagram: gameplay e nostalgia dominam (26,4M plays em gameplay de 54 s); "bastidores na Nintendo" 1,6M (BBC Archive, 136 s). Curiosidade em carrossel não apareceu no topo.
 **Em alta agora (Instagram BR)**: BGS 2026 em andamento (9 a 12/10): "o que tem pra comer na BGS" 944K plays, 13 s; stands e brindes 120K; GTA 6 (Rockstar 13,7M plays, trailer 19 s). Tech BR em curiosidade: "superpoderes da chavinha do carro" 4,4M plays (58 s), "ponto preto menor que..." 2,3M (104 s), robô humanoide 820K. Padrão: gancho de objeto do dia a dia, 40 a 100 s, voz falada.
+**Métricas puxadas em 11/10 de manhã (~16–20 h depois, Chrome):** TikTok: QR Code 99 vis., 5 curtidas; Tetris com voz 90 vis., 1 curtida; carrossel Mario (modo foto) 92 vis., 3 curtidas; 0 comentários em todos. Instagram: QR Code 134 vis., 125 alcance, 1 curtida; Tetris 110 vis., 102 alcance, 1 curtida (carrossel Mario não aparece publicado no Instagram). Os posts de GMS, Wi-Fi e IA nos games não aparecem mais na lista do TikTok (5 publicações). **Aprendizado:** com voz ou sem, o TikTok está travado em ~90–100 vis. por post (teto da conta, não do formato); no Instagram os Reels de história ficam em 110–135. Retenção por post não puxada nesta rodada (ver na próxima).
+
+### Primeiro spam / primeiro .com · 11/10/2026 · amostra curta no TikTok (busca EN; Instagram e LinkedIn não feitos nesta rodada)
+| Faixa | Quem | Curtidas | Como tratou |
+|---|---|---|---|
+| Topo | Technic Alex (EN) | 326 | "Gary queria vender um computador; deu 13 milhões apesar do ódio": personagem + contradição |
+| Meio | Ad World Prime, Fascinating Five, Historical Humans, Clean Email (marca, humor "#ThanksGary") | 21–59 | data do dia + fato; humor de marca |
+| Base | "Viu Lá?" (PT, texto "esse e-mail mudou a internet"), ncsx, Magic Frames AI | 7–10 | texto/fato seco sem personagem |
+symbolics.com: ~11 vídeos (NameSilo, TxTechnician, ES/ID), quase todos "você sabia que o primeiro domínio…" sem o ângulo da IA que quebrou: ângulo livre.
+**O que roubar:** a contradição "todo mundo odiou, e deu milhões" (no gancho da legenda do TikTok); o humor "Obrigado, Gary" (Clean Email) → fecho seco do Bit; no .com, a contradição com marca conhecida ("não é do Google").
+
 **Limites desta amostra**: TikTok só mostra curtidas; não medi retenção; o ranking é "mais curtidos" da busca, não amostra aleatória; faltou LinkedIn e Instagram para Tetris/trauma.
