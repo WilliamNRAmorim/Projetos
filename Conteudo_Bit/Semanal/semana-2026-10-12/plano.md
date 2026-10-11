@@ -4,6 +4,7 @@ Decidido em 11/10/2026: a rodada diária acabou. Todo sábado a tarefa produz a 
 **Todos os vídeos novos saíram SEM voz** (créditos do ElevenLabs zerados em 11/10). Os 4 primeiros são sobras prontas que nunca foram postadas.
 
 Horários: **12h** = fato rápido / humor · **19h** = história. TikTok e Instagram nos dois horários.
+**Agendado em 11/10 à noite: 28 de 28** (14 no TikTok Studio, 14 Reels no Meta Business Suite), conferidos nas listas de agendados. O som "Two Fishes" do post de sábado 12h não foi adicionado (o vídeo vai com a trilha própria).
 
 | Dia | 12h | 19h |
 |---|---|---|
