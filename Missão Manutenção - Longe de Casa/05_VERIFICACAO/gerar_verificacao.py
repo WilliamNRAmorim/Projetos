@@ -28,7 +28,7 @@ IA_EXEMPLO_JSON = os.path.join(DIR_DADOS, "candidatos_ia_exemplo.json")
 LEGADO_JSON = os.path.join(DIR_DADOS, "legado_verificacao.json")
 RESPOSTAS_JSON = os.path.join(DIR_DADOS, "respostas.json")
 RETRATO_JSON = os.path.join(DIR_DADOS, "retrato_geracao.json")   # o que a última geração escreveu nas colunas amarelas
-CAMPOS_RESP = ("codigo_final", "nome_final", "parte_final", "obs", "medidas")
+CAMPOS_RESP = ("codigo_final", "nome_final", "parte_final", "obs")
 GRT_CSV = os.path.join(DIR_DADOS, "grt_conhecidos.csv")
 GERAL_XLSX = os.path.join(AQUI, "VERIFICACAO_GERAL.xlsx")
 DIR_SUBS = os.path.join(AQUI, "POR_CONFIANCA")
@@ -733,7 +733,7 @@ def texto_candidata(c):
 
 def preencher_resposta(it, rec):
     """Valores das colunas amarelas para o item (lista de candidatas da planilha nova)."""
-    out = {"resp": "", "cod": "", "nome": "", "parte": "", "obs": "", "med": ""}
+    out = {"resp": "", "cod": "", "nome": "", "parte": "", "obs": ""}
     if not rec:
         return out
     cod_f = rec.get("codigo_final", "")
@@ -751,8 +751,7 @@ def preencher_resposta(it, rec):
             antiga = f"Resposta anterior: candidata = {rec['candidata_codigo']}"
             if antiga not in obs:
                 obs = (obs + " | " if obs else "") + antiga
-    out.update({"cod": cod_f, "nome": rec.get("nome_final", ""), "parte": rec.get("parte_final", ""), "obs": obs,
-                "med": rec.get("medidas", "")})
+    out.update({"cod": cod_f, "nome": rec.get("nome_final", ""), "parte": rec.get("parte_final", ""), "obs": obs})
     return out
 
 
@@ -776,17 +775,17 @@ def construir_aba_verificar(wb, titulo, itens, resp, prefixo, consulta=False):
     cab = ["Grupo", "Material", "Foto", "Local (pallet / caixa / qtd)", "O que é (IA)", "Nome sugerido (PT)"]
     for k in range(1, 6):
         cab += [f"Desenho {k}", f"Candidata {k}"]
-    cab += ["Maior %", "Já no GRT?", "Medir para confirmar"]
+    cab += ["Maior %", "Já no GRT?"]
     if consulta:
         cab += ["Situação no GERAL (só consulta)", "Faixa"]
     else:
         cab += ["APRENDIZ: qual candidata confere? (1-5 / Nenhuma / Mais fotos)", "Código FINAL confirmado",
-                "Nome da peça FINAL", "Parte da máquina FINAL", "Observação do aprendiz", "Medidas anotadas (mm)", "Faixa"]
+                "Nome da peça FINAL", "Parte da máquina FINAL", "Observação do aprendiz", "Faixa"]
     ws.append(cab)
-    n_res = 6 + 10 + 3  # colunas até "Medir"
+    n_res = 6 + 10 + 2  # colunas até "Já no GRT?"
     c_resp = n_res + 1
-    _estilo_cab(ws, len(cab), None if consulta else (c_resp, c_resp + 5))
-    larg = [9, 16, 43, 17, 30, 22] + [30, 36] * 5 + [8, 26, 34, 22, 20, 22, 30, 20, 11]
+    _estilo_cab(ws, len(cab), None if consulta else (c_resp, c_resp + 4))
+    larg = [9, 16, 43, 17, 30, 22] + [30, 36] * 5 + [8, 26, 22, 20, 22, 30, 30, 11]
     for i, w in enumerate(larg, 1):
         ws.column_dimensions[_col(i)].width = w
     fino = Side(style="thin", color="BFBFBF")
@@ -822,19 +821,18 @@ def construir_aba_verificar(wb, titulo, itens, resp, prefixo, consulta=False):
                     cel.font = Font(size=8)
                 if c["veredito"] == "refutada":
                     cel.font = Font(size=8, color="7F7F7F", strike=False, italic=True)
-        ws.cell(row=r, column=n_res - 2, value=it["maior"])
-        ws.cell(row=r, column=n_res - 1, value=it["grt_txt"])
-        ws.cell(row=r, column=n_res, value=it["medir"])
+        ws.cell(row=r, column=n_res - 1, value=it["maior"])
+        ws.cell(row=r, column=n_res, value=it["grt_txt"])
         a = preencher_resposta(it, resp.get(it["material"]))
         if consulta:
             sit = " · ".join(str(x) for x in (a["resp"], a["cod"]) if x not in ("", None)) or "pendente"
             ws.cell(row=r, column=c_resp, value=sit)
             ws.cell(row=r, column=c_resp + 1, value=it["faixa"])
         else:
-            for j, key in enumerate(("resp", "cod", "nome", "parte", "obs", "med")):
+            for j, key in enumerate(("resp", "cod", "nome", "parte", "obs")):
                 cel = ws.cell(row=r, column=c_resp + j, value=a[key] if a[key] != "" else None)
                 cel.fill = amarelo
-            ws.cell(row=r, column=c_resp + 6, value=it["faixa"])
+            ws.cell(row=r, column=c_resp + 5, value=it["faixa"])
         for c in range(1, len(cab) + 1):
             cel = ws.cell(row=r, column=c)
             cel.alignment = topo
@@ -843,9 +841,9 @@ def construir_aba_verificar(wb, titulo, itens, resp, prefixo, consulta=False):
                 cel.font = Font(size=9)
         m = it["maior"]
         if m is not None:
-            ws.cell(row=r, column=n_res - 2).fill = PatternFill(
+            ws.cell(row=r, column=n_res - 1).fill = PatternFill(
                 "solid", fgColor="C6EFCE" if m >= 70 else ("FFEB9C" if m >= 40 else "F8CBAD"))
-            ws.cell(row=r, column=n_res - 2).alignment = Alignment(horizontal="center", vertical="top")
+            ws.cell(row=r, column=n_res - 1).alignment = Alignment(horizontal="center", vertical="top")
     dv = DataValidation(type="list", formula1='"1,2,3,4,5,Nenhuma,Mais fotos"', allow_blank=True)
     dv.error = "Escolha 1 a 5, Nenhuma ou Mais fotos"
     dv.errorTitle = "Valor inválido"
@@ -865,10 +863,10 @@ def construir_aba_conferir(wb, titulo, itens, resp, prefixo):
     cab = ["Grupo", "Material", "Foto", "Local (pallet / caixa / qtd)", "Código anotado → descrição (manual)",
            "Desenho 1", "Candidata 1", "O que conferir",
            "APRENDIZ: o código confere? (Sim / Nenhuma / Mais fotos)", "Código FINAL confirmado",
-           "Nome da peça FINAL", "Parte da máquina FINAL", "Observação do aprendiz", "Medidas anotadas (mm)", "Faixa"]
+           "Nome da peça FINAL", "Parte da máquina FINAL", "Observação do aprendiz", "Faixa"]
     ws.append(cab)
-    _estilo_cab(ws, len(cab), (9, 14))
-    for i, w in enumerate([9, 20, 43, 17, 34, 30, 40, 34, 22, 20, 22, 30, 20, 11, 11], 1):
+    _estilo_cab(ws, len(cab), (9, 13))
+    for i, w in enumerate([9, 20, 43, 17, 34, 30, 40, 34, 22, 20, 22, 30, 30, 11], 1):
         ws.column_dimensions[_col(i)].width = w
     fino = Side(style="thin", color="BFBFBF")
     borda = Border(left=fino, right=fino, top=fino, bottom=fino)
@@ -897,10 +895,10 @@ def construir_aba_conferir(wb, titulo, itens, resp, prefixo):
             ws.cell(row=r, column=7, value="Código não localizado no catálogo")
         ws.cell(row=r, column=8, value=it["medir"])
         a = preencher_resposta(it, resp.get(it["material"]))
-        for j, key in enumerate(("resp", "cod", "nome", "parte", "obs", "med")):
+        for j, key in enumerate(("resp", "cod", "nome", "parte", "obs")):
             cel = ws.cell(row=r, column=9 + j, value=a[key] if a[key] != "" else None)
             cel.fill = amarelo
-        ws.cell(row=r, column=15, value=it["faixa"])
+        ws.cell(row=r, column=14, value=it["faixa"])
         for c in range(1, len(cab) + 1):
             cel = ws.cell(row=r, column=c)
             cel.alignment = topo
@@ -1056,14 +1054,14 @@ def gerar_status(itens, resp):
         ws.column_dimensions[c].width = 13
     det = wb.create_sheet("Detalhe")
     det.append(["Grupo", "Faixa", "Material", "Local", "Status", "Candidata escolhida", "Código FINAL", "Nome FINAL",
-                "Parte da máquina FINAL", "Observação", "Medidas anotadas", "Fonte da resposta", "Data"])
+                "Parte da máquina FINAL", "Observação", "Fonte da resposta", "Data"])
     cor = {ST_OK: "C6EFCE", ST_PEND: "FFC7CE", "Sem foto": "D9D9D9", ST_NENHUMA: "FFEB9C", ST_FOTOS: "DDEBF7"}
     for it in itens:
         rec = resp.get(it["material"], {})
         st = cls[id(it)]
         det.append([it["grupo"], it["faixa"], it["material"], it["local"], st,
                     rec.get("candidata_codigo") or rec.get("flag", ""), rec.get("codigo_final", ""),
-                    rec.get("nome_final", ""), rec.get("parte_final", ""), rec.get("obs", ""), rec.get("medidas", ""),
+                    rec.get("nome_final", ""), rec.get("parte_final", ""), rec.get("obs", ""),
                     rec.get("fonte", ""), rec.get("data", "")])
         det.cell(row=det.max_row, column=5).fill = PatternFill("solid", fgColor=cor.get(st, "FFFFFF"))
     for c in det[1]:

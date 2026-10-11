@@ -174,7 +174,7 @@ button{cursor:pointer}
     <ol>
       <li><b>Comparar</b>: veja os desenhos das candidatas à direita. Clique no desenho para abrir a página inteira do manual (os círculos vermelhos mostram o número da peça no desenho). Use o Catálogo (C) para buscar qualquer peça por código ou descrição.</li>
       <li><b>Confirmar</b>: clique em "Confere" na candidata certa (ou N = nenhuma, M = mais fotos). Ajuste código, nome e parte da máquina se precisar e escreva observações.</li>
-      <li><b>Registrar no Excel</b>: clique em "Copiar para o Excel" (ou tecla <kbd>X</kbd>), abra o VERIFICACAO_GERAL.xlsx compartilhado, clique na 1ª coluna amarela da linha do material e cole (<kbd>Ctrl</kbd>+<kbd>V</kbd>). As 6 colunas amarelas são preenchidas de uma vez e os outros PCs veem na hora.</li>
+      <li><b>Registrar no Excel</b>: clique em "Copiar para o Excel" (ou tecla <kbd>X</kbd>), abra o VERIFICACAO_GERAL.xlsx compartilhado, clique na 1ª coluna amarela da linha do material e cole (<kbd>Ctrl</kbd>+<kbd>V</kbd>). As colunas amarelas são preenchidas de uma vez e os outros PCs veem na hora.</li>
     </ol>
     <p><b>Quem vale é o Excel compartilhado.</b> Esta tela só ajuda a identificar: o que você marca aqui fica guardado apenas neste PC. "Exportar respostas" gera uma cópia de segurança (CSV) que o ATUALIZAR_STATUS.bat também sabe ler.</p>
     <h3>Atalhos</h3>
@@ -466,7 +466,7 @@ $('#direita').addEventListener('click', function(e){
   var im = t.closest('[data-pag]'); if (im) abrirPagina(candsOf(cur)[+im.getAttribute('data-pag')]);
 });
 $('#direita').addEventListener('input', function(e){
-  var id = e.target.id, d = ensure(cur), map = {'d-cod':'cod', 'd-nome':'nome', 'd-parte':'parte', 'd-med':'med', 'd-obs':'obs'};
+  var id = e.target.id, d = ensure(cur), map = {'d-cod':'cod', 'd-nome':'nome', 'd-parte':'parte', 'd-obs':'obs'};
   if (map[id]) { d[map[id]] = e.target.value; d.data = agora(); aposMudar(); }
 });
 $('#direita').addEventListener('change', function(e){
@@ -479,7 +479,7 @@ $('#direita').addEventListener('change', function(e){
 });
 
 /* ---------- copiar a decisão para o Excel compartilhado ---------- */
-/* Ordem das colunas amarelas do VERIFICACAO_GERAL.xlsx: candidata | código | nome | parte | observação | medidas.
+/* Ordem das colunas amarelas do VERIFICACAO_GERAL.xlsx: candidata | código | nome | parte | observação.
    O número da candidata é a posição na lista da planilha (as 5 primeiras da IA, mesma ordem desta tela). */
 function linhaExcel(it){
   var d = dec[it.m] || vazioDec(), primeira = '';
@@ -493,8 +493,7 @@ function linhaExcel(it){
   var cod = d.cod || (c ? c.cod : d.cand || ''), nome = d.nome || (c ? (c.nome || c.desc || '') : ''),
       parte = d.parte || (c ? [c.conj, c.maq].filter(Boolean).join(' · ') : '');
   var cols = [primeira, cod, nome, parte];
-  if (d.obs || d.med) cols.push(d.obs);   // observação só entra se houver algo a colar depois dela
-  if (d.med) cols.push(d.med);
+  if (d.obs) cols.push(d.obs);   // sem observação, copia só 4 colunas e não apaga a observação que outro PC escreveu
   return cols.map(limpa).join('\t');
 }
 function copiarExcel(){
@@ -502,7 +501,7 @@ function copiarExcel(){
   var d = dec[cur.m];
   if (!d || (!d.cand && !d.flag && !d.cod)) { msg('Escolha primeiro a candidata (ou Nenhuma / Mais fotos).'); return; }
   var txt = linhaExcel(cur), ncol = txt.split('\t').length;
-  var aviso = (d.med && !d.obs) ? ' Atenção: a Observação vai em branco (está vazia aqui).' : '';
+  var aviso = '';
   var ok = function(){ msg('Copiado (' + ncol + ' colunas). No Excel: linha ' + cur.m + ', 1ª coluna amarela, Ctrl+V.' + aviso); };
   var reserva = function(){
     var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
@@ -607,12 +606,12 @@ $('#cat-res').addEventListener('click', function(e){
 /* ---------- exportar / importar ---------- */
 function csvCel(v){ v = String(v == null ? '' : v); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function exportar(){
-  var rows = [['Material','Grupo','Candidata escolhida','Código FINAL','Nome FINAL','Parte FINAL','Observação','Medidas anotadas','Status','Data']];
+  var rows = [['Material','Grupo','Candidata escolhida','Código FINAL','Nome FINAL','Parte FINAL','Observação','Status','Data']];
   ITENS.forEach(function(it){
     var d = dec[it.m]; if (!d) return;
     var st = statusOf(it);
-    if (st === 'Pendente' && !d.obs && !d.med && !d.nome && !d.parte) return;
-    rows.push([it.m, it.g, d.cand || d.flag || '', d.cod, d.nome, d.parte, d.obs, d.med, st, d.data]);
+    if (st === 'Pendente' && !d.obs && !d.nome && !d.parte) return;
+    rows.push([it.m, it.g, d.cand || d.flag || '', d.cod, d.nome, d.parte, d.obs, st, d.data]);
   });
   var txt = '\uFEFF' + rows.map(function(r){ return r.map(csvCel).join(';'); }).join('\r\n') + '\r\n';
   var n = new Date(), nome = 'RESPOSTAS_IDENTIFICADOR_' + n.getFullYear() + '-' + two(n.getMonth() + 1) + '-' + two(n.getDate()) + '_' + two(n.getHours()) + two(n.getMinutes()) + '.csv';

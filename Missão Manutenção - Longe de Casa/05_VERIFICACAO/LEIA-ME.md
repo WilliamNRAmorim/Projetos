@@ -13,10 +13,8 @@ Aqui o aprendiz confere, com a peça na mão, o que a IA sugeriu para cada mater
 | `VERIFICACAO_GERAL.xlsx` | Uma linha por material (aba Verificar, 202), aba Conferir códigos (28) e Leia-me. Colunas amarelas = preencher. |
 | `POR_CONFIANCA\SUB1_ALTA_70-100.xlsx`, `SUB2_MEDIA_40-69.xlsx`, `SUB3_BAIXA_0-39.xlsx` | Mesma planilha dividida pela maior % de cada material. |
 | `STATUS_VERIFICACAO.xlsx` | Resumo por grupo e por faixa (Total, Conferido, Nenhuma, Mais fotos, Pendente, Sem foto) e detalhe por material. |
-| `CARTAO_DE_ESCALA_A4.pdf` | Cartão para imprimir em 100% e fotografar a peça em cima dele. |
 | `GERAR_VERIFICACAO.bat` / `gerar_verificacao.py` | Refaz as planilhas, o `IDENTIFICADOR.html` e o status. |
 | `ATUALIZAR_STATUS.bat` / `atualizar_status.py` | Só junta as respostas e refaz `STATUS_VERIFICACAO.xlsx`. |
-| `gerar_cartao_escala.py` | Refaz o `CARTAO_DE_ESCALA_A4.pdf`. |
 | `modelo_identificador.html` | Modelo da tela (o gerador injeta os dados nele). |
 | `dados\` | `respostas.json` (respostas juntadas), candidatas da IA, legado, GRT conhecidos. |
 | `_backup\` | Cópia das planilhas antes de cada geração. |
@@ -25,7 +23,7 @@ Aqui o aprendiz confere, com a peça na mão, o que a IA sugeriu para cada mater
 1. No `IDENTIFICADOR.html`, escolha o material na lista (setas, J/K) e olhe a foto (roda = zoom, arrastar, duplo clique volta, R gira).
 2. **Comparar o desenho**: clique no recorte da candidata para abrir a página inteira do manual (círculos vermelhos = número da peça).
 3. **Confirmar**: botão "Confere" (teclas 1 a 5), N = nenhuma confere, M = preciso de mais fotos. Ajuste código, nome, parte da máquina e observação se precisar.
-4. **Registrar no Excel**: clique em **Copiar para o Excel** (tecla X). No `VERIFICACAO_GERAL.xlsx`, clique na **1ª coluna amarela** da linha do material e cole (Ctrl+V). As 6 colunas amarelas (candidata, código, nome, parte, observação, medidas) se preenchem de uma vez e os outros PCs veem na hora. A numeração das candidatas é a mesma na tela e na planilha.
+4. **Registrar no Excel**: clique em **Copiar para o Excel** (tecla X). No `VERIFICACAO_GERAL.xlsx`, clique na **1ª coluna amarela** da linha do material e cole (Ctrl+V). As colunas amarelas (candidata, código, nome, parte e, se houver, observação) se preenchem de uma vez e os outros PCs veem na hora. A numeração das candidatas é a mesma na tela e na planilha.
 
 Também dá para preencher as colunas amarelas direto no Excel, sem a tela.
 
