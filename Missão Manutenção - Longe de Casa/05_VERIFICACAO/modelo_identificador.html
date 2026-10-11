@@ -145,9 +145,8 @@ button{cursor:pointer}
       <div id="cab-item"></div>
       <div id="viewer"><div class="tb"><button id="b-rot" title="Girar 90° (R)">Girar ⟳</button><button id="b-rst" title="Duplo clique">Ajustar</button></div><div class="pzc" id="foto-c"></div><div class="dica">roda do mouse = zoom · arrastar = mover · duplo clique = voltar · R = girar</div></div>
       <div id="thumbs"></div>
-      <div class="abas"><button id="t-info" class="on">Sobre a peça</button><button id="t-medi">Medi a peça</button></div>
+      <div class="abas"><button id="t-info" class="on">Sobre a peça</button></div>
       <div class="painel" id="p-info"></div>
-      <div class="painel" id="p-medi" style="display:none"></div>
     </section>
     <section id="direita"></section>
   </div>
@@ -173,8 +172,7 @@ button{cursor:pointer}
     <button class="bt" style="float:right" data-fecha="m-ajuda">Fechar</button>
     <h2>Como usar o Identificador</h2>
     <ol>
-      <li><b>Medir</b>: com o paquímetro, meça a peça (diâmetro interno, externo, comprimento, espessura) e conte dentes / veja a rosca. Para fotos novas, use o cartão de escala.</li>
-      <li><b>Comparar</b>: veja os desenhos das candidatas à direita. Clique no desenho para abrir a página inteira do manual (os círculos vermelhos mostram o número da peça no desenho). Use "Medi a peça" para buscar no catálogo inteiro pelas medidas.</li>
+      <li><b>Comparar</b>: veja os desenhos das candidatas à direita. Clique no desenho para abrir a página inteira do manual (os círculos vermelhos mostram o número da peça no desenho). Use o Catálogo (C) para buscar qualquer peça por código ou descrição.</li>
       <li><b>Confirmar</b>: clique em "Confere" na candidata certa (ou N = nenhuma, M = mais fotos). Ajuste código, nome e parte da máquina se precisar e escreva observações.</li>
       <li><b>Registrar no Excel</b>: clique em "Copiar para o Excel" (ou tecla <kbd>X</kbd>), abra o VERIFICACAO_GERAL.xlsx compartilhado, clique na 1ª coluna amarela da linha do material e cole (<kbd>Ctrl</kbd>+<kbd>V</kbd>). As 6 colunas amarelas são preenchidas de uma vez e os outros PCs veem na hora.</li>
     </ol>
@@ -295,7 +293,7 @@ var pzPag = new PZ($('#pag-box'), $('#pag-c'));
 
 /* ---------- estado ---------- */
 var F = {g:'', s:'', c:'', q:''};
-var view = [], cur = null, fotoIdx = 0, unidade = 'mm';
+var view = [], cur = null, fotoIdx = 0;
 
 function passa(it){
   if (F.g && it.g !== F.g) return false;
@@ -378,14 +376,12 @@ function renderItem(){
   if (it.fora) h += '<div class="aviso ru"><b>Pode não estar nos manuais.</b> A IA acha que esta peça é fora do catálogo' +
     (it.sug ? ': ' + esc(it.sug) : '.') + '</div>';
   else if (it.sug) h += '<h4>Sugestão comercial</h4><div>' + esc(it.sug) + '</div>';
-  if (it.medir) h += '<h4>O que medir</h4>' + lista(it.medir.split(/;\s*/).filter(Boolean));
   if (it.verif) h += '<h4>Verificação</h4><div>' + esc(it.verif) + '</div>';
   if (it.conf) h += '<div class="peq" style="margin-top:6px">Confiança da IA: ' + esc(it.conf) + '</div>';
   if (it.fonte === 'legado') h += '<div class="aviso">Candidatas da rodada anterior (ainda sem a nova análise da IA).</div>';
   if (it.g === 'Conferir códigos') h += '<div class="aviso">O código já foi achado nos manuais. Só confirme se o desenho é o da peça da foto.</div>';
-  if (!h) h = '<div class="peq">Sem análise da IA para este item. Use "Medi a peça" ou o Catálogo.</div>';
+  if (!h) h = '<div class="peq">Sem análise da IA para este item. Use o Catálogo.</div>';
   $('#p-info').innerHTML = h;
-  renderMedi(true);
   renderDireita();
 }
 
@@ -421,14 +417,13 @@ function formHtml(it){
     '<div><label>Código FINAL</label><input id="d-cod" value="' + esc(d.cod) + '"></div>' +
     '<div><label>Nome da peça FINAL</label><input id="d-nome" value="' + esc(d.nome) + '"></div>' +
     '<div class="full"><label>Parte da máquina FINAL</label><input id="d-parte" value="' + esc(d.parte) + '"></div>' +
-    '<div><label>Medidas anotadas (mm)</label><input id="d-med" value="' + esc(d.med) + '" placeholder="ex.: Øint 12,7 · Øext 15 · C 16"></div>' +
-    '<div><label>Observação</label><textarea id="d-obs">' + esc(d.obs) + '</textarea></div></div>' +
+    '<div class="full"><label>Observação</label><textarea id="d-obs">' + esc(d.obs) + '</textarea></div></div>' +
     '<div class="btns" style="margin-top:6px"><button class="btn-ok" id="b-xls">Copiar para o Excel (X)</button>' +
     '<span class="peq" style="align-self:center">depois cole (Ctrl+V) na 1ª coluna amarela da linha <b>' + esc(it.m) + '</b> no Excel compartilhado</span></div></div>';
 }
 function renderDireita(){
   var it = cur, d = dec[it.m], cs = candsOf(it), h = formHtml(it);
-  if (!cs.length) h += '<div class="aviso">Sem candidatas para este item. Meça a peça (aba "Medi a peça") ou use o Catálogo (C).</div>';
+  if (!cs.length) h += '<div class="aviso">Sem candidatas para este item. Use o Catálogo (C).</div>';
   cs.forEach(function(c, k){ h += candHtml(c, k, d); });
   h += '<div class="btns" style="margin:6px 0 20px"><button class="btn2" id="b-nen">Nenhuma confere (N)</button><button class="btn2" id="b-mf">Preciso de mais fotos (M)</button><button class="btn2" id="b-cat2">Buscar no catálogo (C)</button></div>';
   $('#direita').innerHTML = h;
@@ -561,76 +556,6 @@ $('#pag-marc').addEventListener('click', function(){
 });
 $('#pag-rst').addEventListener('click', function(){ pzPag.reset(); });
 
-/* ---------- Medi a peça ---------- */
-var TIPOS = [];
-CAT.forEach(function(p){ if (p.t && TIPOS.indexOf(p.t) < 0) TIPOS.push(p.t); });
-TIPOS.sort();
-var medTipo = null;
-function renderMedi(reset){
-  if (reset) {
-    medTipo = TIPOS.indexOf(cur.tipo) >= 0 ? cur.tipo : '';
-    unidade = unidade || 'mm';
-    var to = '<option value="">Todos os tipos</option>' + TIPOS.map(function(t){ return '<option' + (t === medTipo ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('');
-    $('#p-medi').innerHTML = '<div class="peq" style="margin-bottom:6px">Digite o que mediu. A lista mostra, no catálogo inteiro, as peças com medidas próximas (tolerância ±0,4 mm ou 3%, o maior; dentes ±1; rosca igual). Campo vazio = não usar.</div>' +
-      '<div class="mf"><div><label>Unidade</label><select id="m-un"><option value="mm">milímetros (mm)</option><option value="pol"' + (unidade === 'pol' ? ' selected' : '') + '>polegadas (pol)</option></select></div>' +
-      '<div><label>Øint (furo)</label><input id="m-id"></div><div><label>Øext</label><input id="m-od"></div><div><label>Comprimento</label><input id="m-c"></div>' +
-      '<div><label>Espessura</label><input id="m-e"></div><div><label>Rosca (ex.: 3/8-16)</label><input id="m-ro"></div><div><label>Nº de dentes</label><input id="m-z"></div>' +
-      '<div><label>Tipo da peça</label><select id="m-t">' + to + '</select></div></div><div id="m-res"></div>';
-  }
-  rodaMedi();
-}
-function numero(s){
-  s = String(s || '').trim().replace(',', '.'); if (!s) return null;
-  var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/); if (m) return +m[1] + m[2] / m[3];
-  m = s.match(/^(\d+)\s*\/\s*(\d+)$/); if (m) return m[1] / m[2];
-  var v = parseFloat(s); return isNaN(v) ? null : v;
-}
-function normRosca(s){ return String(s || '').toLowerCase().replace(/[\s"]/g, '').replace(/unc|unf|un|nc|nf/g, ''); }
-var DIMS = [['id', 'Øint'], ['od', 'Øext'], ['c', 'comp.'], ['e', 'espessura']];
-function rodaMedi(){
-  var box = $('#m-res'); if (!box) return;
-  var u = unidade === 'pol' ? 25.4 : 1, q = {};
-  DIMS.forEach(function(dm){ var v = numero(($('#m-' + dm[0]) || {}).value); q[dm[0]] = v == null ? null : v * u; });
-  var ro = normRosca(($('#m-ro') || {}).value), z = numero(($('#m-z') || {}).value), tipo = ($('#m-t') || {}).value || '';
-  var dado = DIMS.some(function(dm){ return q[dm[0]] != null; }) || ro || z != null;
-  if (!dado) { box.innerHTML = '<div class="vazio">Preencha pelo menos uma medida.</div>'; return; }
-  var melhor = {};
-  CAT.forEach(function(p){
-    if (tipo && p.t !== tipo) return;
-    var ok = 0, soma = 0, nota = [], i, dm, v, d, tol;
-    for (i = 0; i < DIMS.length; i++) {
-      dm = DIMS[i][0]; if (q[dm] == null) continue; v = p.v[dm]; if (v == null) continue;
-      d = Math.abs(v - q[dm]); tol = Math.max(0.4, 0.03 * v);
-      if (d > tol) return;
-      ok++; soma += d / tol; nota.push(DIMS[i][1] + ' ' + (d < 0.05 ? 'igual' : 'Δ ' + fmtMm(d) + ' mm'));
-    }
-    if (ro && p.s) { if (normRosca(p.s) === ro || normRosca(p.s).indexOf(ro) === 0 || ro.indexOf(normRosca(p.s)) === 0) { ok++; nota.push('rosca ' + p.s); } else return; }
-    if (z != null && p.z != null) { if (Math.abs(p.z - z) <= 1) { ok++; soma += Math.abs(p.z - z); nota.push(p.z + ' dentes'); } else return; }
-    if (!ok) return;
-    var k = normCod(p.c), at = melhor[k];
-    if (!at || ok > at.ok || (ok === at.ok && p.k < at.p.k)) melhor[k] = {p:p, ok:ok, s:soma / ok, nota:nota};
-  });
-  var arr = Object.keys(melhor).map(function(k){ return melhor[k]; });
-  arr.sort(function(a, b){ return b.ok - a.ok || a.s - b.s; });
-  var tot = arr.length; arr = arr.slice(0, 40);
-  if (!arr.length) { box.innerHTML = '<div class="vazio">Nada no catálogo com essas medidas' + (tipo ? ' (tipo: ' + esc(tipo) + '). Tente "Todos os tipos"' : '') + '. A peça pode ser comercial / fora dos manuais.</div>'; return; }
-  box.innerHTML = '<div class="peq" style="margin-top:6px">' + tot + ' peça(s) parecida(s)' + (tot > 40 ? ' (mostrando as 40 mais próximas)' : '') + '</div><div class="res">' +
-    arr.map(function(r, i){
-      var p = r.p;
-      return '<div class="card" data-r="' + i + '"><div class="top"><span class="cod">' + esc(p.c) + '</span><span class="pct" style="font-size:11px">' + r.ok + ' medida(s) batem</span></div>' +
-        '<div class="cimg" data-pr="' + esc(p.i) + '">' + img(recSrc(p.r)) + '</div><div class="nm">' + esc(p.n) + '</div><div class="peq">' + esc(p.d) + '</div>' +
-        '<div class="peq">' + esc(MAN[p.a] || p.a) + ' · pág. ' + esc(p.p) + '</div>' +
-        '<div class="med">' + esc(r.nota.join(' · ')) + '<br><span class="peq">' + esc(p.x) + '</span></div>' +
-        '<div class="btns"><button class="btn-ok" data-usar="' + esc(p.i) + '">Usar este</button></div></div>';
-    }).join('') + '</div>';
-}
-$('#p-medi').addEventListener('input', function(e){
-  if (e.target.id && e.target.id.indexOf('m-') === 0) { clearTimeout(rodaMedi.t); rodaMedi.t = setTimeout(rodaMedi, 150); }
-});
-$('#p-medi').addEventListener('change', function(e){
-  if (e.target.id === 'm-un') { unidade = e.target.value; rodaMedi(); }
-  else if (e.target.id === 'm-t') rodaMedi();
-});
 function usarDoCatalogo(id){
   if (!cur || !CATID[id]) return;
   var d = ensure(cur);
@@ -647,7 +572,6 @@ function delegaUsar(e){
   if (im) { abrirPagina(candDoCatalogo(CATID[im.getAttribute('data-pr')])); return true; }
   return false;
 }
-$('#p-medi').addEventListener('click', delegaUsar);
 
 /* ---------- catálogo ---------- */
 var CATTXT = CAT.map(function(p){ return semAcento([p.c, p.d, p.n, p.t, p.m, p.j, MAN[p.a]].join(' ')); });
@@ -753,10 +677,9 @@ $('#b-ajuda').addEventListener('click', function(){ $('#m-ajuda').classList.add(
 $('#b-rot').addEventListener('click', function(){ pzFoto.rot(); });
 $('#b-rst').addEventListener('click', function(){ pzFoto.reset(); });
 $('#t-info').addEventListener('click', function(){ aba('info'); });
-$('#t-medi').addEventListener('click', function(){ aba('medi'); });
 function aba(n){
-  $('#p-info').style.display = n === 'info' ? '' : 'none'; $('#p-medi').style.display = n === 'medi' ? '' : 'none';
-  $('#t-info').classList.toggle('on', n === 'info'); $('#t-medi').classList.toggle('on', n === 'medi');
+  $('#p-info').style.display = n === 'info' ? '' : 'none';
+  $('#t-info').classList.toggle('on', n === 'info');
 }
 function navegar(delta){
   if (!view.length) return;

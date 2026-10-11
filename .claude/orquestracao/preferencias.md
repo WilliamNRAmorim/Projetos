@@ -21,3 +21,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-10: quer tudo registrado (modificações, aprendizados e o que se aprendeu errando); no Missão Manutenção isso vai no 01_MESTRES/MESTRE_EU.md, linhas marcadas "Claude (pedido do William)". Aceitou a recomendada no escopo da identificação de peças (NI + nome livre + códigos fora dos manuais).
 - 2026-10-11: ultracode/Opus serve para achar a solução que o Sonnet não alcança (desenho, regras, casos de teste); a execução vai para o Sonnet 5.5 em esforço médio, numa sessão nova, a partir de um plano escrito. No Missão Manutenção: Excel no OneDrive é o registro dos 3 PCs; HTML só como lupa (não dá para hospedar na internet).
 - 2026-10-11: mandou seguir o PLANO_PROXIMA_SESSAO.md do Missão Manutenção com o chefe (Sonnet 5.5) executando direto, sem pedir escolhas.
+- 2026-10-11: não vão medir peças; identificação só por foto/desenho (aba 'Medi a peça' removida).

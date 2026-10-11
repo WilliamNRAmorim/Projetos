@@ -17,9 +17,6 @@ Peça inteira + close das marcações, régua/paquímetro ao lado, fundo liso, e
 ## Cadastro
 Depois de confirmada, seguir `guia_preenchimento_cadastro_material.pdf`.
 
-## Medir antes de decidir
-- **Cartão de escala**: imprima `05_VERIFICACAO\CARTAO_DE_ESCALA_A4.pdf` em 100% (confira o quadrado de 50 mm) e fotografe a peça inteira, de cima, sobre o cartão. Faça também um close das gravações e uma foto de lado.
-- **Medidas que não dependem de escala** (valem mesmo sem régua na foto): número de dentes, tipo de rosca (passo fino ou grosso), formato (sextavado, cilíndrico, cônico), furo passante ou cego, chanfros, rebaixos, gravações e relação entre diâmetros (ex.: Øext é cerca de 2x o Øint).
-- **Paquímetro**: meça Øint, Øext, comprimento e espessura (mm ou polegadas) e anote junto com a rosca. Os manuais estão em polegadas; o Identificador mostra o esperado em mm e pol.
-- **Identificador** (`05_VERIFICACAO\IDENTIFICADOR.html`): na aba "Medi a peça", digite as medidas e veja o ranking do catálogo inteiro (tolerância de 0,4 mm ou 3%, o maior; dentes ±1; rosca igual). Compare o desenho (página inteira do manual), confirme a candidata e use **Copiar para o Excel** (tecla X) para colar a resposta nas colunas amarelas do `VERIFICACAO_GERAL.xlsx` compartilhado no OneDrive.
+## Sem medição
+Decisão de 11/10: as peças não serão medidas. A identificação é por foto, gravações, formato e comparação com o desenho dos manuais no `05_VERIFICACAO\IDENTIFICADOR.html`; confirmou a candidata, use **Copiar para o Excel** (tecla X) e cole nas colunas amarelas do `VERIFICACAO_GERAL.xlsx` no OneDrive.
 

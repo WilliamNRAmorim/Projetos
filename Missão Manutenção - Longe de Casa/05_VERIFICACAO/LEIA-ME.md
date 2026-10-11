@@ -3,13 +3,13 @@
 Aqui o aprendiz confere, com a peça na mão, o que a IA sugeriu para cada material. A pasta é usada em 3 PCs pelo OneDrive:
 
 - **O registro oficial é um só: `VERIFICACAO_GERAL.xlsx`**, aberto no Excel com o salvamento automático ligado. Assim os 3 PCs veem as respostas em tempo real.
-- **`IDENTIFICADOR.html` é a lupa para identificar**: foto grande, candidatas com o desenho do manual marcado, "Medi a peça" e catálogo. Abre com dois cliques, sem Python e sem internet, e pode estar aberto nos 3 PCs ao mesmo tempo. O que se marca nele fica só naquele PC; para registrar, use o botão **Copiar para o Excel**.
+- **`IDENTIFICADOR.html` é a lupa para identificar**: foto grande, candidatas com o desenho do manual marcado e catálogo. Abre com dois cliques, sem Python e sem internet, e pode estar aberto nos 3 PCs ao mesmo tempo. O que se marca nele fica só naquele PC; para registrar, use o botão **Copiar para o Excel**.
 - Os arquivos de `POR_CONFIANCA\` são só para consulta e impressão (não têm colunas amarelas). Não preencha neles, para não ter duas versões.
 
 ## Arquivos
 | Arquivo | Para quê |
 |---|---|
-| `IDENTIFICADOR.html` | Tela de conferência: lista, foto com zoom, candidatas com desenho do manual, "Medi a peça", catálogo, exportar/importar. |
+| `IDENTIFICADOR.html` | Tela de conferência: lista, foto com zoom, candidatas com desenho do manual, catálogo, exportar/importar. |
 | `VERIFICACAO_GERAL.xlsx` | Uma linha por material (aba Verificar, 202), aba Conferir códigos (28) e Leia-me. Colunas amarelas = preencher. |
 | `POR_CONFIANCA\SUB1_ALTA_70-100.xlsx`, `SUB2_MEDIA_40-69.xlsx`, `SUB3_BAIXA_0-39.xlsx` | Mesma planilha dividida pela maior % de cada material. |
 | `STATUS_VERIFICACAO.xlsx` | Resumo por grupo e por faixa (Total, Conferido, Nenhuma, Mais fotos, Pendente, Sem foto) e detalhe por material. |
@@ -23,10 +23,9 @@ Aqui o aprendiz confere, com a peça na mão, o que a IA sugeriu para cada mater
 
 ## Fluxo do aprendiz (3 PCs)
 1. No `IDENTIFICADOR.html`, escolha o material na lista (setas, J/K) e olhe a foto (roda = zoom, arrastar, duplo clique volta, R gira).
-2. **Medir**: com o paquímetro, meça Øint, Øext, comprimento, espessura, rosca e dentes. Na aba "Medi a peça" aparecem, no catálogo inteiro, as peças com medidas próximas.
-3. **Comparar o desenho**: clique no recorte da candidata para abrir a página inteira do manual (círculos vermelhos = número da peça).
-4. **Confirmar**: botão "Confere" (teclas 1 a 5), N = nenhuma confere, M = preciso de mais fotos. Ajuste código, nome, parte da máquina, observação e medidas se precisar.
-5. **Registrar no Excel**: clique em **Copiar para o Excel** (tecla X). No `VERIFICACAO_GERAL.xlsx`, clique na **1ª coluna amarela** da linha do material e cole (Ctrl+V). As 6 colunas amarelas (candidata, código, nome, parte, observação, medidas) se preenchem de uma vez e os outros PCs veem na hora. A numeração das candidatas é a mesma na tela e na planilha.
+2. **Comparar o desenho**: clique no recorte da candidata para abrir a página inteira do manual (círculos vermelhos = número da peça).
+3. **Confirmar**: botão "Confere" (teclas 1 a 5), N = nenhuma confere, M = preciso de mais fotos. Ajuste código, nome, parte da máquina e observação se precisar.
+4. **Registrar no Excel**: clique em **Copiar para o Excel** (tecla X). No `VERIFICACAO_GERAL.xlsx`, clique na **1ª coluna amarela** da linha do material e cole (Ctrl+V). As 6 colunas amarelas (candidata, código, nome, parte, observação, medidas) se preenchem de uma vez e os outros PCs veem na hora. A numeração das candidatas é a mesma na tela e na planilha.
 
 Também dá para preencher as colunas amarelas direto no Excel, sem a tela.
 
