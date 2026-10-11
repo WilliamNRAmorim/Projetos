@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Identificador de peças</title>
+<style>
+:root{--azul:#1F4E78;--azul2:#2d6aa0;--fundo:#eef1f5;--card:#fff;--borda:#cfd6de;--txt:#1c2733;--suave:#5b6b7b;--ok:#2e7d32;--ok-bg:#e3f4e4;--al:#b26a00;--al-bg:#fff1d6;--ru:#b3261e;--ru-bg:#fbe3e1;--amar:#fff2cc}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;font:13px/1.35 "Segoe UI",system-ui,Arial,sans-serif;color:var(--txt);background:var(--fundo);overflow:hidden}
+button,select,input,textarea{font:inherit}
+button{cursor:pointer}
+#app{display:flex;flex-direction:column;height:100vh;min-width:1180px}
+#topo{background:var(--azul);color:#fff;padding:6px 12px;display:flex;flex-direction:column;gap:6px}
+#topo .l{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#topo h1{font-size:16px;margin:0 10px 0 0;font-weight:600}
+#topo select,#topo input[type=search]{padding:4px 6px;border:1px solid #9db4c9;border-radius:4px;background:#fff;color:var(--txt)}
+#topo input[type=search]{width:260px}
+#topo label{font-size:12px;opacity:.9}
+.bt{background:#fff;color:var(--azul);border:1px solid #9db4c9;border-radius:4px;padding:4px 10px;font-weight:600}
+.bt:hover{background:#e6f0f9}
+.bt.pri{background:#ffd966;border-color:#e0b400;color:#3a2f00}
+#prog{display:flex;align-items:center;gap:8px;font-size:12px}
+#barra{width:220px;height:10px;background:#0d2b45;border-radius:5px;overflow:hidden}
+#barra i{display:block;height:100%;background:#7fd37f;width:0}
+#corpo{flex:1;display:grid;grid-template-columns:290px minmax(440px,1fr) 540px;min-height:0}
+#lista{overflow:auto;background:#fff;border-right:1px solid var(--borda)}
+#centro{overflow:auto;padding:8px 10px;border-right:1px solid var(--borda)}
+#direita{overflow:auto;padding:8px 10px;background:#f6f8fb}
+.li{display:flex;gap:8px;align-items:center;padding:5px 8px;border-bottom:1px solid #e6eaef;cursor:pointer}
+.li:hover{background:#f0f5fa}
+.li.on{background:#d8e8f7;outline:2px solid var(--azul2);outline-offset:-2px}
+.li .th{width:54px;height:40px;background:#e5e9ee;border-radius:3px;overflow:hidden;flex:none;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888}
+.li .th img{width:100%;height:100%;object-fit:cover}
+.li .tx{flex:1;min-width:0}
+.li .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .lc{font-size:11px;color:var(--suave);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .pc{font-size:11px;color:var(--suave);text-align:right;min-width:30px}
+.dot{width:11px;height:11px;border-radius:50%;flex:none;background:#c5ccd4}
+.dot.Conferido{background:#2e9e45}.dot.Nenhuma{background:#e0a100}.dot.Mais{background:#3b87d6}
+.gr{font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;background:#e1e8f0;color:#35506b}
+#cab-item{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+#cab-item h2{margin:0;font-size:18px}
+#viewer{position:relative;height:44vh;min-height:260px;background:#222;border-radius:6px;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:grab;user-select:none}
+#viewer.drag{cursor:grabbing}
+.pzc{display:flex;align-items:center;justify-content:center;transform-origin:50% 50%;will-change:transform}
+#foto-c img{max-width:100%;max-height:44vh;display:block;-webkit-user-drag:none}
+#viewer .tb{position:absolute;right:6px;top:6px;display:flex;gap:4px;z-index:2}
+#viewer .tb button{background:rgba(255,255,255,.88);border:0;border-radius:4px;padding:3px 8px}
+#viewer .dica{position:absolute;left:8px;bottom:6px;color:#cfd8e0;font-size:11px;pointer-events:none}
+#thumbs{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap}
+#thumbs img{height:46px;border:2px solid transparent;border-radius:3px;cursor:pointer}
+#thumbs img.on{border-color:var(--azul2)}
+.semimg{background:#d9dde2;color:#555;font-size:11px;padding:14px;text-align:center;word-break:break-all;min-width:120px;min-height:60px;display:flex;align-items:center;justify-content:center}
+.abas{display:flex;gap:4px;border-bottom:2px solid var(--azul);margin-top:6px}
+.abas button{border:0;background:#dbe3ec;padding:6px 14px;border-radius:5px 5px 0 0;font-weight:600;color:#35506b}
+.abas button.on{background:var(--azul);color:#fff}
+.painel{background:#fff;border:1px solid var(--borda);border-top:0;padding:10px;border-radius:0 0 6px 6px}
+.painel h4{margin:10px 0 3px;font-size:12px;text-transform:uppercase;color:var(--suave);letter-spacing:.03em}
+.painel h4:first-child{margin-top:0}
+.painel ul{margin:2px 0 0 18px;padding:0}
+.aviso{background:var(--al-bg);border:1px solid #e8c36a;border-radius:5px;padding:6px 8px;margin:6px 0}
+.aviso.ru{background:var(--ru-bg);border-color:#e39a95}
+.peq{font-size:11px;color:var(--suave)}
+.dec{background:#fff;border:2px solid var(--azul2);border-radius:6px;padding:8px;margin-bottom:8px;position:sticky;top:-8px;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+.dec h3{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.dec .g{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px}
+.dec label{display:block;font-size:11px;color:var(--suave)}
+.dec input,.dec select,.dec textarea{width:100%;padding:3px 5px;border:1px solid var(--borda);border-radius:3px;background:var(--amar)}
+.dec textarea{height:38px;resize:vertical}
+.dec .full{grid-column:1/3}
+.stt{padding:1px 8px;border-radius:9px;font-size:11px;font-weight:700}
+.stt.Conferido{background:var(--ok-bg);color:var(--ok)}.stt.Pendente{background:#e8ebef;color:#555}.stt.Nenhuma{background:var(--al-bg);color:var(--al)}.stt.Mais{background:#dcebfa;color:#1b5fa3}
+.card{background:var(--card);border:2px solid var(--borda);border-radius:6px;margin-bottom:8px;padding:8px}
+.card.sel{border-color:#2e9e45;background:#f3fbf4}
+.card.refut{opacity:.72}
+.card .top{display:flex;gap:8px;align-items:center;margin-bottom:4px}
+.card .num{background:var(--azul);color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.card .cod{font-size:15px;font-weight:700}
+.card .pct{margin-left:auto;font-weight:700;color:var(--azul)}
+.selo{font-size:11px;font-weight:700;padding:1px 7px;border-radius:9px}
+.selo.sustenta{background:var(--ok-bg);color:var(--ok)}.selo.duvidosa{background:var(--al-bg);color:var(--al)}.selo.refutada{background:var(--ru-bg);color:var(--ru)}
+.cimg{position:relative;background:#fff;border:1px solid var(--borda);cursor:zoom-in;text-align:center;margin:4px 0}
+.cimg img{max-width:100%;max-height:230px;display:block;margin:0 auto}
+.cimg .lupa{position:absolute;right:4px;bottom:3px;background:rgba(31,78,120,.85);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px}
+.card .nm{font-weight:600}
+.card .med{background:#eef5fc;border-radius:4px;padding:3px 6px;margin:4px 0;font-size:12px}
+.card .mot{font-size:12px;margin-top:3px}
+.card .btns{display:flex;gap:6px;margin-top:6px}
+.btn-ok{background:#2e9e45;color:#fff;border:0;border-radius:4px;padding:5px 14px;font-weight:700}
+.btn-ok.on{background:#1b6e2d}
+.btn2{background:#fff;border:1px solid var(--borda);border-radius:4px;padding:5px 10px}
+.grt{display:inline-block;background:#e6e0f7;color:#4b3a8a;border-radius:9px;padding:1px 8px;font-size:11px;font-weight:600;margin-top:3px}
+.mf{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px}
+.mf label{font-size:11px;color:var(--suave);display:block}
+.mf input,.mf select{width:100%;padding:3px 5px;border:1px solid var(--borda);border-radius:3px}
+.res{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.res .card{margin:0}
+.res .cimg img{max-height:130px}
+.modal{position:fixed;inset:0;background:rgba(10,20,30,.78);display:none;z-index:50;flex-direction:column}
+.modal.on{display:flex}
+.mhead{background:var(--azul);color:#fff;padding:8px 14px;display:flex;gap:12px;align-items:center}
+.mhead b{font-size:16px}
+.mhead .x{margin-left:auto}
+#pag-box{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:grab;background:#333}
+.pgw{position:relative;display:inline-block;background:#fff}
+.pgw img{display:block;max-width:94vw;max-height:84vh;-webkit-user-drag:none}
+.pgw svg{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+#cat-corpo{flex:1;overflow:auto;background:var(--fundo);padding:10px 14px}
+#cat-res{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:10px}
+#cat-res .cimg img{max-height:170px}
+.ajuda{background:#fff;max-width:760px;margin:30px auto;padding:18px 24px;border-radius:8px;overflow:auto;max-height:86vh}
+.ajuda h2{margin-top:0}
+.ajuda kbd{background:#eef;border:1px solid #aab;border-bottom-width:2px;border-radius:3px;padding:0 5px;font-family:inherit;font-weight:700}
+.ajuda td{padding:2px 10px 2px 0;vertical-align:top}
+#msg{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#1c2733;color:#fff;padding:8px 16px;border-radius:6px;display:none;z-index:99}
+.vazio{color:var(--suave);padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="topo">
+    <div class="l">
+      <h1>Identificador de peças</h1>
+      <div id="prog"><div id="barra"><i></i></div><span id="prog-txt"></span></div>
+      <span style="flex:1"></span>
+      <button class="bt" id="b-cat" title="Buscar em todo o catálogo (C)">Catálogo</button>
+      <button class="bt" id="b-exp" title="Cópia de segurança: baixa RESPOSTAS_IDENTIFICADOR_...csv (quem vale é o Excel compartilhado)">Exportar (cópia)</button>
+      <button class="bt" id="b-imp">Importar respostas</button>
+      <input type="file" id="f-imp" accept=".csv,text/csv" style="display:none">
+      <button class="bt" id="b-ajuda" title="Atalhos (?)">Ajuda ?</button>
+    </div>
+    <div class="l">
+      <label>Grupo <select id="f-g"><option value="">Todos</option><option>NI</option><option>Nome livre</option><option>Código a conferir</option><option>Conferir códigos</option></select></label>
+      <label>Status <select id="f-s"><option value="">Todos</option><option>Pendente</option><option>Conferido</option><option>Nenhuma</option><option>Mais fotos</option></select></label>
+      <label>Confiança <select id="f-c"><option value="">Todas</option><option value="ALTA">Alta (70+)</option><option value="MEDIA">Média (40-69)</option><option value="BAIXA">Baixa (0-39)</option><option value="SEM_CANDIDATA">Sem candidata</option></select></label>
+      <input type="search" id="f-q" placeholder="Buscar material, pallet ou caixa ( / )">
+      <span id="cont" class="peq" style="color:#cfe0f0"></span>
+    </div>
+  </div>
+  <div id="corpo">
+    <aside id="lista"></aside>
+    <section id="centro">
+      <div id="cab-item"></div>
+      <div id="viewer"><div class="tb"><button id="b-rot" title="Girar 90° (R)">Girar ⟳</button><button id="b-rst" title="Duplo clique">Ajustar</button></div><div class="pzc" id="foto-c"></div><div class="dica">roda do mouse = zoom · arrastar = mover · duplo clique = voltar · R = girar</div></div>
+      <div id="thumbs"></div>
+      <div class="abas"><button id="t-info" class="on">Sobre a peça</button><button id="t-medi">Medi a peça</button></div>
+      <div class="painel" id="p-info"></div>
+      <div class="painel" id="p-medi" style="display:none"></div>
+    </section>
+    <section id="direita"></section>
+  </div>
+</div>
+
+<div class="modal" id="m-pag">
+  <div class="mhead"><b id="pag-tit"></b><span id="pag-sub" class="peq" style="color:#d6e6f5"></span>
+    <button class="bt" id="pag-marc">Marcações: ligadas</button><button class="bt" id="pag-rst">Ajustar</button><button class="bt x" data-fecha="m-pag">Fechar (Esc)</button></div>
+  <div id="pag-box"><div class="pzc" id="pag-c"></div></div>
+</div>
+
+<div class="modal" id="m-cat">
+  <div class="mhead"><b>Catálogo dos manuais</b><span class="peq" style="color:#d6e6f5" id="cat-sub"></span><button class="bt x" data-fecha="m-cat">Fechar (Esc)</button></div>
+  <div id="cat-corpo">
+    <input type="search" id="cat-q" placeholder="Código, palavra em inglês ou português, tipo, máquina... (ex.: spring 3/4, bucha, RB2 arruela)" style="width:100%;padding:8px;font-size:15px;border:1px solid var(--borda);border-radius:5px">
+    <div id="cat-info" class="peq" style="margin-top:6px"></div>
+    <div id="cat-res"></div>
+  </div>
+</div>
+
+<div class="modal" id="m-ajuda">
+  <div class="ajuda">
+    <button class="bt" style="float:right" data-fecha="m-ajuda">Fechar</button>
+    <h2>Como usar o Identificador</h2>
+    <ol>
+      <li><b>Medir</b>: com o paquímetro, meça a peça (diâmetro interno, externo, comprimento, espessura) e conte dentes / veja a rosca. Para fotos novas, use o cartão de escala.</li>
+      <li><b>Comparar</b>: veja os desenhos das candidatas à direita. Clique no desenho para abrir a página inteira do manual (os círculos vermelhos mostram o número da peça no desenho). Use "Medi a peça" para buscar no catálogo inteiro pelas medidas.</li>
+      <li><b>Confirmar</b>: clique em "Confere" na candidata certa (ou N = nenhuma, M = mais fotos). Ajuste código, nome e parte da máquina se precisar e escreva observações.</li>
+      <li><b>Registrar no Excel</b>: clique em "Copiar para o Excel" (ou tecla <kbd>X</kbd>), abra o VERIFICACAO_GERAL.xlsx compartilhado, clique na 1ª coluna amarela da linha do material e cole (<kbd>Ctrl</kbd>+<kbd>V</kbd>). As 6 colunas amarelas são preenchidas de uma vez e os outros PCs veem na hora.</li>
+    </ol>
+    <p><b>Quem vale é o Excel compartilhado.</b> Esta tela só ajuda a identificar: o que você marca aqui fica guardado apenas neste PC. "Exportar respostas" gera uma cópia de segurança (CSV) que o ATUALIZAR_STATUS.bat também sabe ler.</p>
+    <h3>Atalhos</h3>
+    <table>
+      <tr><td><kbd>↑</kbd> <kbd>↓</kbd> ou <kbd>K</kbd> <kbd>J</kbd></td><td>peça anterior / próxima</td></tr>
+      <tr><td><kbd>1</kbd> a <kbd>5</kbd></td><td>escolher a candidata (de novo = desmarcar)</td></tr>
+      <tr><td><kbd>N</kbd> / <kbd>M</kbd></td><td>Nenhuma candidata confere / Preciso de mais fotos</td></tr>
+      <tr><td><kbd>X</kbd></td><td>copiar a decisão para colar no Excel</td></tr>
+      <tr><td><kbd>R</kbd></td><td>girar a foto 90°</td></tr>
+      <tr><td>roda do mouse</td><td>zoom na foto ou na página do manual; arraste para mover; duplo clique volta</td></tr>
+      <tr><td><kbd>C</kbd></td><td>abrir o catálogo</td></tr>
+      <tr><td><kbd>/</kbd></td><td>ir para a busca</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>fechar janela</td></tr>
+      <tr><td><kbd>?</kbd></td><td>esta ajuda</td></tr>
+    </table>
+    <p class="peq">As porcentagens são estimativas feitas por foto. Só vale como definitivo o que você conferir com a peça na mão.</p>
+  </div>
+</div>
+<div id="msg"></div>
+
+<script type="application/json" id="dados">/*__DADOS__*/</script>
+<script>
+(function(){
+'use strict';
+var D = JSON.parse(document.getElementById('dados').textContent);
+var ITENS = D.itens, CAT = D.catalogo, GRT = D.grt || {}, MAN = D.manuais || {};
+var CATID = {};
+CAT.forEach(function(p){ CATID[p.i] = p; });
+var KEY = 'identificador_respostas_v1';
+var $ = function(s){ return document.querySelector(s); };
+
+/* ---------- utilidades ---------- */
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function enc(p){ return String(p).split('/').map(function(x){ return x === '..' || x === '.' ? x : encodeURIComponent(x); }).join('/'); }
+function semAcento(s){ return String(s || '').normalize('NFD').replace(/[\u0300-\u036F]/g, '').toLowerCase(); }
+function two(n){ return (n < 10 ? '0' : '') + n; }
+function agora(){ var d = new Date(); return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()); }
+function msg(t){ var m = $('#msg'); m.textContent = t; m.style.display = 'block'; clearTimeout(msg.t); msg.t = setTimeout(function(){ m.style.display = 'none'; }, 3200); }
+window.imgErr = function(el){
+  var d = document.createElement('div'); d.className = 'semimg';
+  d.textContent = 'Imagem não encontrada: ' + (el.getAttribute('data-p') || '');
+  if (el.parentNode) el.parentNode.replaceChild(d, el);
+};
+function img(path, extra){
+  if (!path) return '<div class="semimg">sem imagem</div>';
+  return '<img src="' + esc(enc(path)) + '" data-p="' + esc(path) + '" onerror="imgErr(this)" ' + (extra || '') + '>';
+}
+function recSrc(r){ return r ? '../02_MANUAIS/' + r : ''; }
+function fmtMm(v){ return v.toFixed(1).replace('.', ','); }
+
+/* ---------- decisões ---------- */
+var dec = {};
+function vazioDec(){ return {cand:'', flag:'', cod:'', nome:'', parte:'', obs:'', med:'', extra:[], data:''}; }
+Object.keys(D.respostas || {}).forEach(function(m){
+  var r = D.respostas[m], d = vazioDec();
+  d.cand = r.candidata_codigo || ''; d.flag = r.flag || ''; d.cod = r.codigo_final || ''; d.nome = r.nome_final || '';
+  d.parte = r.parte_final || ''; d.obs = r.obs || ''; d.med = r.medidas || ''; d.data = r.data || '';
+  dec[m] = d;
+});
+var memOnly = false;
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY) || '{}');
+    Object.keys(s).forEach(function(m){
+      var l = s[m], e = dec[m];
+      if (!e || (l.data || '') >= (e.data || '')) { var d = vazioDec(); for (var k in l) d[k] = l[k]; dec[m] = d; }
+      else if (l.extra && l.extra.length) { e.extra = l.extra; }
+    });
+  } catch (e) { memOnly = true; }
+})();
+function salvar(){ try { localStorage.setItem(KEY, JSON.stringify(dec)); } catch (e) { if (!memOnly) msg('Atenção: o navegador parou de guardar o rascunho deste PC. Registre no Excel (Copiar para o Excel).'); memOnly = true; } }
+function ensure(it){ var d = dec[it.m]; if (!d) d = dec[it.m] = vazioDec(); return d; }
+function statusOf(it){
+  var d = dec[it.m]; if (!d) return 'Pendente';
+  if (d.cod || d.cand) return 'Conferido';
+  return d.flag || 'Pendente';
+}
+function stClasse(s){ return s === 'Mais fotos' ? 'Mais' : s; }
+
+/* ---------- candidatas ---------- */
+function candDoCatalogo(p){
+  return {cod:p.c, desc:p.d, nome:p.n, conj:p.j, maq:p.m, man:MAN[p.a] || p.a, pag:p.p, lista:p.l, rec:p.r, pm:p.g, bal:p.b, pon:p.o,
+          med:p.x, pct:null, mot:'', dif:'', ver:'', nota:'', grt:GRT[normCod(p.c)] || '', pid:p.i, extra:true};
+}
+function normCod(s){ return String(s || '').split('/')[0].replace(/\s+/g, '').toUpperCase(); }
+function candsOf(it){
+  var r = it.c.slice();
+  var d = dec[it.m];
+  if (d && d.extra) d.extra.forEach(function(id){ if (CATID[id]) r.push(candDoCatalogo(CATID[id])); });
+  return r;
+}
+
+/* ---------- zoom e arrasto ---------- */
+function PZ(box, cont){
+  var t = this; t.box = box; t.c = cont; t.s = 1; t.x = 0; t.y = 0; t.r = 0;
+  var drag = null;
+  box.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var rc = box.getBoundingClientRect(), px = e.clientX - rc.left - rc.width / 2, py = e.clientY - rc.top - rc.height / 2;
+    var ns = Math.min(14, Math.max(0.2, t.s * (e.deltaY < 0 ? 1.18 : 1 / 1.18)));
+    t.x = px - (px - t.x) * ns / t.s; t.y = py - (py - t.y) * ns / t.s; t.s = ns; t.ap();
+  }, {passive:false});
+  box.addEventListener('mousedown', function(e){
+    if (e.button !== 0 || e.target.closest('button')) return;
+    drag = {x:e.clientX - t.x, y:e.clientY - t.y}; box.classList.add('drag'); e.preventDefault();
+  });
+  window.addEventListener('mousemove', function(e){ if (drag) { t.x = e.clientX - drag.x; t.y = e.clientY - drag.y; t.ap(); } });
+  window.addEventListener('mouseup', function(){ drag = null; box.classList.remove('drag'); });
+  box.addEventListener('dblclick', function(e){ if (!e.target.closest('button')) t.reset(); });
+}
+PZ.prototype.ap = function(){ this.c.style.transform = 'translate(' + this.x + 'px,' + this.y + 'px) scale(' + this.s + ') rotate(' + this.r + 'deg)'; };
+PZ.prototype.reset = function(){ this.s = 1; this.x = 0; this.y = 0; this.r = 0; this.ap(); };
+PZ.prototype.rot = function(){ this.r = (this.r + 90) % 360; this.ap(); };
+var pzFoto = new PZ($('#viewer'), $('#foto-c'));
+var pzPag = new PZ($('#pag-box'), $('#pag-c'));
+
+/* ---------- estado ---------- */
+var F = {g:'', s:'', c:'', q:''};
+var view = [], cur = null, fotoIdx = 0, unidade = 'mm';
+
+function passa(it){
+  if (F.g && it.g !== F.g) return false;
+  if (F.s && statusOf(it) !== F.s) return false;
+  if (F.c && it.faixa !== F.c) return false;
+  if (F.q) { var t = semAcento(it.m + ' ' + it.loc); if (t.indexOf(semAcento(F.q)) < 0) return false; }
+  return true;
+}
+function filtrar(){
+  view = ITENS.filter(passa);
+  $('#cont').textContent = view.length + ' de ' + ITENS.length + ' na lista';
+  renderLista();
+  if (!cur || view.indexOf(cur) < 0) { if (view.length) selecionar(view[0], true); else { cur = null; renderItem(); } }
+}
+
+/* ---------- lista ---------- */
+function linhaHtml(it, i){
+  var st = statusOf(it);
+  return '<div class="li' + (it === cur ? ' on' : '') + '" data-i="' + i + '"><div class="th">' +
+    (it.fotos.length ? img(it.fotos[0], 'loading="lazy"') : 'sem foto') + '</div><div class="tx"><div class="nm">' + esc(it.m) +
+    '</div><div class="lc"><span class="gr">' + esc(it.g) + '</span> ' + esc(it.loc) + '</div></div><div class="pc">' +
+    (it.maior != null ? it.maior + '%' : '') + '</div><span class="dot ' + stClasse(st) + '" title="' + esc(st) + '"></span></div>';
+}
+function renderLista(){
+  var h = view.map(linhaHtml).join('');
+  $('#lista').innerHTML = h || '<div class="vazio">Nenhum item com esses filtros.</div>';
+}
+function atualizaLinha(it){
+  var i = view.indexOf(it); if (i < 0) return;
+  var el = $('#lista').children[i]; if (!el) return;
+  var d = el.querySelector('.dot'); d.className = 'dot ' + stClasse(statusOf(it)); d.title = statusOf(it);
+}
+$('#lista').addEventListener('click', function(e){
+  var li = e.target.closest('.li'); if (li) selecionar(view[+li.getAttribute('data-i')]);
+});
+
+function progresso(){
+  var n = {Conferido:0, Nenhuma:0, 'Mais fotos':0};
+  ITENS.forEach(function(it){ var s = statusOf(it); if (n[s] != null) n[s]++; });
+  $('#barra i').style.width = (100 * n.Conferido / ITENS.length) + '%';
+  $('#prog-txt').textContent = n.Conferido + '/' + ITENS.length + ' conferidos · ' + n.Nenhuma + ' nenhuma · ' + n['Mais fotos'] + ' mais fotos';
+}
+
+/* ---------- item ---------- */
+function selecionar(it, semRolar){
+  cur = it; fotoIdx = 0;
+  var els = $('#lista').children, i = view.indexOf(it);
+  for (var k = 0; k < els.length; k++) els[k].classList.toggle('on', k === i);
+  if (!semRolar && els[i]) els[i].scrollIntoView({block:'nearest'});
+  renderItem();
+}
+function mostraFoto(){
+  var c = $('#foto-c');
+  c.innerHTML = cur.fotos.length ? img(cur.fotos[fotoIdx]) : '<div class="semimg" style="color:#ccc;background:#333">SEM FOTO para este material</div>';
+  pzFoto.reset();
+  var th = '';
+  if (cur.fotos.length > 1) cur.fotos.forEach(function(f, i){ th += img(f, 'class="' + (i === fotoIdx ? 'on' : '') + '" data-f="' + i + '"'); });
+  $('#thumbs').innerHTML = th;
+}
+$('#thumbs').addEventListener('click', function(e){
+  var f = e.target.getAttribute && e.target.getAttribute('data-f'); if (f == null) return;
+  fotoIdx = +f; mostraFoto();
+});
+function lista(s){ return s ? '<ul>' + s.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>' : ''; }
+function renderItem(){
+  if (!cur) {
+    $('#cab-item').innerHTML = ''; $('#foto-c').innerHTML = ''; $('#thumbs').innerHTML = '';
+    $('#p-info').innerHTML = '<div class="vazio">Nenhum item na lista.</div>'; $('#direita').innerHTML = ''; return;
+  }
+  var it = cur;
+  $('#cab-item').innerHTML = '<h2>' + esc(it.m) + '</h2><span class="gr">' + esc(it.g) + '</span><span>' + esc(it.loc) +
+    (it.qtd != null && it.qtd !== '' ? ' · qtd ' + esc(it.qtd) + ' ' + esc(it.un) : '') + '</span>' +
+    (it.maior != null ? '<span class="peq">maior chance: ' + it.maior + '%</span>' : '');
+  mostraFoto();
+  var h = '';
+  if (it.oque) h += '<h4>O que é (IA)</h4><div>' + esc(it.oque) + '</div>';
+  if (it.nome) h += '<h4>Nome sugerido</h4><div>' + esc(it.nome) + (it.tipo ? ' <span class="peq">(tipo: ' + esc(it.tipo) + ')</span>' : '') + '</div>';
+  if (it.marc) h += '<h4>Marcações lidas na peça</h4><div>' + esc(it.marc) + '</div>';
+  if (it.inv && it.inv.length) h += '<h4>Características que não dependem de escala</h4>' + lista(it.inv);
+  if (it.fora) h += '<div class="aviso ru"><b>Pode não estar nos manuais.</b> A IA acha que esta peça é fora do catálogo' +
+    (it.sug ? ': ' + esc(it.sug) : '.') + '</div>';
+  else if (it.sug) h += '<h4>Sugestão comercial</h4><div>' + esc(it.sug) + '</div>';
+  if (it.medir) h += '<h4>O que medir</h4>' + lista(it.medir.split(/;\s*/).filter(Boolean));
+  if (it.verif) h += '<h4>Verificação</h4><div>' + esc(it.verif) + '</div>';
+  if (it.conf) h += '<div class="peq" style="margin-top:6px">Confiança da IA: ' + esc(it.conf) + '</div>';
+  if (it.fonte === 'legado') h += '<div class="aviso">Candidatas da rodada anterior (ainda sem a nova análise da IA).</div>';
+  if (it.g === 'Conferir códigos') h += '<div class="aviso">O código já foi achado nos manuais. Só confirme se o desenho é o da peça da foto.</div>';
+  if (!h) h = '<div class="peq">Sem análise da IA para este item. Use "Medi a peça" ou o Catálogo.</div>';
+  $('#p-info').innerHTML = h;
+  renderMedi(true);
+  renderDireita();
+}
+
+/* ---------- direita: decisão e candidatas ---------- */
+function candHtml(c, k, d){
+  var sel = d && d.cand && normCod(d.cand) === normCod(c.cod);
+  var h = '<div class="card' + (sel ? ' sel' : '') + (c.ver === 'refutada' ? ' refut' : '') + '" data-k="' + k + '"><div class="top"><span class="num">' + (k < 9 ? k + 1 : '+') + '</span><span class="cod">' + esc(c.cod) + '</span>' +
+    (c.ver ? '<span class="selo ' + esc(c.ver) + '">' + esc({sustenta:'✓ sustenta', duvidosa:'? duvidosa', refutada:'✗ refutada'}[c.ver] || c.ver) + '</span>' : '') +
+    (c.extra ? '<span class="selo duvidosa">adicionada por você</span>' : '') +
+    (c.pct != null ? '<span class="pct">' + c.pct + '%</span>' : '') + '</div>';
+  h += '<div class="cimg" data-pag="' + k + '">' + img(recSrc(c.rec || c.pm)) + '<span class="lupa">clique: página inteira do manual</span></div>';
+  if (c.nome) h += '<div class="nm">' + esc(c.nome) + '</div>';
+  h += '<div>' + esc(c.desc) + '</div>';
+  var l3 = [c.conj, c.maq].filter(Boolean).join(' · ');
+  if (l3) h += '<div class="peq">' + esc(l3) + '</div>';
+  h += '<div class="peq">' + esc(c.man || '') + (c.pag ? ' · desenho pág. ' + c.pag : '') + (c.lista && c.lista !== c.pag ? ' (lista pág. ' + c.lista + ')' : '') + '</div>';
+  if (c.med) h += '<div class="med"><b>Esperado:</b> ' + esc(c.med) + '</div>';
+  if (c.grt) h += '<span class="grt">já no GRT: ' + esc(c.grt) + '</span>';
+  if (c.mot) h += '<div class="mot"><b>Por que parece:</b> ' + esc(c.mot) + '</div>';
+  if (c.dif) h += '<div class="mot"><b>O que diferencia:</b> ' + esc(c.dif) + '</div>';
+  if (c.nota) h += '<div class="mot peq"><b>Verificador:</b> ' + esc(c.nota) + '</div>';
+  h += '<div class="btns"><button class="btn-ok' + (sel ? ' on' : '') + '" data-conf="' + k + '">' + (sel ? '✓ Confere' : 'Confere') + (k < 5 ? ' (' + (k + 1) + ')' : '') + '</button>';
+  if (c.extra) h += '<button class="btn2" data-rem="' + k + '">Remover da lista</button>';
+  return h + '</div></div>';
+}
+function formHtml(it){
+  var d = dec[it.m] || vazioDec(), cs = candsOf(it), st = statusOf(it);
+  var op = '<option value="">— escolha —</option>';
+  cs.forEach(function(c, k){ op += '<option value="' + k + '"' + (d.cand && normCod(d.cand) === normCod(c.cod) ? ' selected' : '') + '>' + (k + 1) + ' · ' + esc(c.cod) + '</option>'; });
+  op += '<option value="N"' + (d.flag === 'Nenhuma' ? ' selected' : '') + '>Nenhuma confere (N)</option><option value="M"' + (d.flag === 'Mais fotos' ? ' selected' : '') + '>Preciso de mais fotos (M)</option>';
+  return '<div class="dec"><h3><span>Decisão: ' + esc(it.m) + '</span><span class="stt ' + stClasse(st) + '" id="d-st">' + esc(st) + '</span></h3><div class="g">' +
+    '<div class="full"><label>Candidata escolhida</label><select id="d-cand">' + op + '</select></div>' +
+    '<div><label>Código FINAL</label><input id="d-cod" value="' + esc(d.cod) + '"></div>' +
+    '<div><label>Nome da peça FINAL</label><input id="d-nome" value="' + esc(d.nome) + '"></div>' +
+    '<div class="full"><label>Parte da máquina FINAL</label><input id="d-parte" value="' + esc(d.parte) + '"></div>' +
+    '<div><label>Medidas anotadas (mm)</label><input id="d-med" value="' + esc(d.med) + '" placeholder="ex.: Øint 12,7 · Øext 15 · C 16"></div>' +
+    '<div><label>Observação</label><textarea id="d-obs">' + esc(d.obs) + '</textarea></div></div>' +
+    '<div class="btns" style="margin-top:6px"><button class="btn-ok" id="b-xls">Copiar para o Excel (X)</button>' +
+    '<span class="peq" style="align-self:center">depois cole (Ctrl+V) na 1ª coluna amarela da linha <b>' + esc(it.m) + '</b> no Excel compartilhado</span></div></div>';
+}
+function renderDireita(){
+  var it = cur, d = dec[it.m], cs = candsOf(it), h = formHtml(it);
+  if (!cs.length) h += '<div class="aviso">Sem candidatas para este item. Meça a peça (aba "Medi a peça") ou use o Catálogo (C).</div>';
+  cs.forEach(function(c, k){ h += candHtml(c, k, d); });
+  h += '<div class="btns" style="margin:6px 0 20px"><button class="btn2" id="b-nen">Nenhuma confere (N)</button><button class="btn2" id="b-mf">Preciso de mais fotos (M)</button><button class="btn2" id="b-cat2">Buscar no catálogo (C)</button></div>';
+  $('#direita').innerHTML = h;
+}
+function aposMudar(){
+  var st = statusOf(cur), e = $('#d-st');
+  if (e) { e.textContent = st; e.className = 'stt ' + stClasse(st); }
+  atualizaLinha(cur); progresso(); salvar();
+}
+function escolher(k){
+  var cs = candsOf(cur); if (k >= cs.length) return;
+  var c = cs[k], d = ensure(cur);
+  if (d.cand && normCod(d.cand) === normCod(c.cod)) { limpaAuto(d); d.cand = ''; }
+  else {
+    d.cand = c.cod; d.flag = ''; d.cod = c.cod; d.nome = c.nome || c.desc || '';
+    d.parte = [c.conj, c.maq].filter(Boolean).join(' · ');
+  }
+  d.data = agora(); renderDireita(); aposMudar();
+}
+function limpaAuto(d){ if (d.cand && d.cod === d.cand) { d.cod = ''; d.nome = ''; d.parte = ''; } }
+function marcar(flag){
+  var d = ensure(cur);
+  if (d.flag === flag) { d.flag = ''; } else { limpaAuto(d); d.cand = ''; d.flag = flag; }
+  d.data = agora(); renderDireita(); aposMudar();
+}
+$('#direita').addEventListener('click', function(e){
+  var t = e.target;
+  if (t.id === 'b-nen') return marcar('Nenhuma');
+  if (t.id === 'b-mf') return marcar('Mais fotos');
+  if (t.id === 'b-cat2') return abrirCatalogo();
+  if (t.id === 'b-xls') return copiarExcel();
+  var b = t.closest('[data-conf]'); if (b) return escolher(+b.getAttribute('data-conf'));
+  var r = t.closest('[data-rem]');
+  if (r) {
+    var k = +r.getAttribute('data-rem') - cur.c.length, d = ensure(cur);
+    var id = d.extra[k]; d.extra.splice(k, 1);
+    var c = CATID[id]; if (c && d.cand && normCod(d.cand) === normCod(c.c)) { limpaAuto(d); d.cand = ''; }
+    renderDireita(); aposMudar(); return;
+  }
+  var im = t.closest('[data-pag]'); if (im) abrirPagina(candsOf(cur)[+im.getAttribute('data-pag')]);
+});
+$('#direita').addEventListener('input', function(e){
+  var id = e.target.id, d = ensure(cur), map = {'d-cod':'cod', 'd-nome':'nome', 'd-parte':'parte', 'd-med':'med', 'd-obs':'obs'};
+  if (map[id]) { d[map[id]] = e.target.value; d.data = agora(); aposMudar(); }
+});
+$('#direita').addEventListener('change', function(e){
+  if (e.target.id !== 'd-cand') return;
+  var v = e.target.value;
+  if (v === 'N') { var d = ensure(cur); if (d.flag !== 'Nenhuma') marcar('Nenhuma'); }
+  else if (v === 'M') { var d2 = ensure(cur); if (d2.flag !== 'Mais fotos') marcar('Mais fotos'); }
+  else if (v === '') { var d3 = ensure(cur); limpaAuto(d3); d3.cand = ''; d3.flag = ''; d3.data = agora(); renderDireita(); aposMudar(); }
+  else { var d4 = ensure(cur); d4.cand = ''; escolher(+v); }
+});
+
+/* ---------- copiar a decisão para o Excel compartilhado ---------- */
+/* Ordem das colunas amarelas do VERIFICACAO_GERAL.xlsx: candidata | código | nome | parte | observação | medidas.
+   O número da candidata é a posição na lista da planilha (as 5 primeiras da IA, mesma ordem desta tela). */
+function linhaExcel(it){
+  var d = dec[it.m] || vazioDec(), primeira = '';
+  if (d.flag) primeira = d.flag;
+  else if (d.cand) {
+    if (it.g === 'Conferir códigos') { if (it.c && it.c[0] && normCod(it.c[0].cod) === normCod(d.cand)) primeira = 'Sim'; }
+    else (it.c || []).slice(0, 5).forEach(function(c, k){ if (!primeira && normCod(c.cod) === normCod(d.cand)) primeira = String(k + 1); });
+  }
+  var limpa = function(v){ return String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim(); };
+  var c = null; if (d.cand) candsOf(it).forEach(function(x){ if (!c && normCod(x.cod) === normCod(d.cand)) c = x; });
+  var cod = d.cod || (c ? c.cod : d.cand || ''), nome = d.nome || (c ? (c.nome || c.desc || '') : ''),
+      parte = d.parte || (c ? [c.conj, c.maq].filter(Boolean).join(' · ') : '');
+  var cols = [primeira, cod, nome, parte];
+  if (d.obs || d.med) cols.push(d.obs);   // observação só entra se houver algo a colar depois dela
+  if (d.med) cols.push(d.med);
+  return cols.map(limpa).join('\t');
+}
+function copiarExcel(){
+  if (!cur) return;
+  var d = dec[cur.m];
+  if (!d || (!d.cand && !d.flag && !d.cod)) { msg('Escolha primeiro a candidata (ou Nenhuma / Mais fotos).'); return; }
+  var txt = linhaExcel(cur), ncol = txt.split('\t').length;
+  var aviso = (d.med && !d.obs) ? ' Atenção: a Observação vai em branco (está vazia aqui).' : '';
+  var ok = function(){ msg('Copiado (' + ncol + ' colunas). No Excel: linha ' + cur.m + ', 1ª coluna amarela, Ctrl+V.' + aviso); };
+  var reserva = function(){
+    var ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy') ? ok() : msg('Não consegui copiar: selecione e copie à mão.'); } catch (e) { msg('Não consegui copiar: selecione e copie à mão.'); }
+    ta.remove();
+  };
+  try { if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(txt).then(ok, reserva); else reserva(); } catch (e) { reserva(); }
+}
+
+/* ---------- página inteira do manual ---------- */
+var marcOn = true;
+function abrirPagina(c){
+  if (!c) return;
+  var path = recSrc(c.pm || c.rec);
+  $('#pag-tit').textContent = c.cod + ' · ' + (c.man || '') + (c.pag ? ' · pág. ' + c.pag : '');
+  $('#pag-sub').textContent = (c.bal && c.bal.length) ? 'Círculos vermelhos = números desta peça no desenho; pontos = onde a seta toca' : (c.pm ? 'Sem marcações neste manual (escaneado).' : 'Página inteira indisponível: mostrando o recorte.');
+  var w = document.createElement('div'); w.className = 'pgw';
+  var im = document.createElement('img'); im.setAttribute('data-p', path);
+  im.onerror = function(){ window.imgErr(im); };
+  im.onload = function(){ desenhaMarcas(w, im, c); };
+  im.src = enc(path);
+  w.appendChild(im);
+  var cont = $('#pag-c'); cont.innerHTML = ''; cont.appendChild(w);
+  pzPag.reset(); marcOn = true; $('#pag-marc').textContent = 'Marcações: ligadas';
+  $('#m-pag').classList.add('on');
+}
+function desenhaMarcas(w, im, c){
+  var W = im.naturalWidth, H = im.naturalHeight; if (!W || !H) return;
+  var ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg');
+  svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H); svg.setAttribute('id', 'pag-svg');
+  var sw = Math.max(2.5, W / 380);
+  (c.bal || []).forEach(function(b){
+    var cx = (b[0] + b[2]) / 2 * W, cy = (b[1] + b[3]) / 2 * H, r = Math.max((b[2] - b[0]) * W, (b[3] - b[1]) * H) / 2 * 1.45 + 3;
+    var e = document.createElementNS(ns, 'circle');
+    e.setAttribute('cx', cx); e.setAttribute('cy', cy); e.setAttribute('r', r);
+    e.setAttribute('fill', 'none'); e.setAttribute('stroke', '#e00000'); e.setAttribute('stroke-width', sw);
+    svg.appendChild(e);
+  });
+  (c.pon || []).forEach(function(p){
+    var e = document.createElementNS(ns, 'circle');
+    e.setAttribute('cx', p[0] * W); e.setAttribute('cy', p[1] * H); e.setAttribute('r', Math.max(4, W / 260));
+    e.setAttribute('fill', '#e00000'); svg.appendChild(e);
+  });
+  svg.style.display = marcOn ? '' : 'none';
+  w.appendChild(svg);
+}
+$('#pag-marc').addEventListener('click', function(){
+  marcOn = !marcOn; var s = $('#pag-svg'); if (s) s.style.display = marcOn ? '' : 'none';
+  this.textContent = 'Marcações: ' + (marcOn ? 'ligadas' : 'desligadas');
+});
+$('#pag-rst').addEventListener('click', function(){ pzPag.reset(); });
+
+/* ---------- Medi a peça ---------- */
+var TIPOS = [];
+CAT.forEach(function(p){ if (p.t && TIPOS.indexOf(p.t) < 0) TIPOS.push(p.t); });
+TIPOS.sort();
+var medTipo = null;
+function renderMedi(reset){
+  if (reset) {
+    medTipo = TIPOS.indexOf(cur.tipo) >= 0 ? cur.tipo : '';
+    unidade = unidade || 'mm';
+    var to = '<option value="">Todos os tipos</option>' + TIPOS.map(function(t){ return '<option' + (t === medTipo ? ' selected' : '') + '>' + esc(t) + '</option>'; }).join('');
+    $('#p-medi').innerHTML = '<div class="peq" style="margin-bottom:6px">Digite o que mediu. A lista mostra, no catálogo inteiro, as peças com medidas próximas (tolerância ±0,4 mm ou 3%, o maior; dentes ±1; rosca igual). Campo vazio = não usar.</div>' +
+      '<div class="mf"><div><label>Unidade</label><select id="m-un"><option value="mm">milímetros (mm)</option><option value="pol"' + (unidade === 'pol' ? ' selected' : '') + '>polegadas (pol)</option></select></div>' +
+      '<div><label>Øint (furo)</label><input id="m-id"></div><div><label>Øext</label><input id="m-od"></div><div><label>Comprimento</label><input id="m-c"></div>' +
+      '<div><label>Espessura</label><input id="m-e"></div><div><label>Rosca (ex.: 3/8-16)</label><input id="m-ro"></div><div><label>Nº de dentes</label><input id="m-z"></div>' +
+      '<div><label>Tipo da peça</label><select id="m-t">' + to + '</select></div></div><div id="m-res"></div>';
+  }
+  rodaMedi();
+}
+function numero(s){
+  s = String(s || '').trim().replace(',', '.'); if (!s) return null;
+  var m = s.match(/^(\d+)\s+(\d+)\s*\/\s*(\d+)$/); if (m) return +m[1] + m[2] / m[3];
+  m = s.match(/^(\d+)\s*\/\s*(\d+)$/); if (m) return m[1] / m[2];
+  var v = parseFloat(s); return isNaN(v) ? null : v;
+}
+function normRosca(s){ return String(s || '').toLowerCase().replace(/[\s"]/g, '').replace(/unc|unf|un|nc|nf/g, ''); }
+var DIMS = [['id', 'Øint'], ['od', 'Øext'], ['c', 'comp.'], ['e', 'espessura']];
+function rodaMedi(){
+  var box = $('#m-res'); if (!box) return;
+  var u = unidade === 'pol' ? 25.4 : 1, q = {};
+  DIMS.forEach(function(dm){ var v = numero(($('#m-' + dm[0]) || {}).value); q[dm[0]] = v == null ? null : v * u; });
+  var ro = normRosca(($('#m-ro') || {}).value), z = numero(($('#m-z') || {}).value), tipo = ($('#m-t') || {}).value || '';
+  var dado = DIMS.some(function(dm){ return q[dm[0]] != null; }) || ro || z != null;
+  if (!dado) { box.innerHTML = '<div class="vazio">Preencha pelo menos uma medida.</div>'; return; }
+  var melhor = {};
+  CAT.forEach(function(p){
+    if (tipo && p.t !== tipo) return;
+    var ok = 0, soma = 0, nota = [], i, dm, v, d, tol;
+    for (i = 0; i < DIMS.length; i++) {
+      dm = DIMS[i][0]; if (q[dm] == null) continue; v = p.v[dm]; if (v == null) continue;
+      d = Math.abs(v - q[dm]); tol = Math.max(0.4, 0.03 * v);
+      if (d > tol) return;
+      ok++; soma += d / tol; nota.push(DIMS[i][1] + ' ' + (d < 0.05 ? 'igual' : 'Δ ' + fmtMm(d) + ' mm'));
+    }
+    if (ro && p.s) { if (normRosca(p.s) === ro || normRosca(p.s).indexOf(ro) === 0 || ro.indexOf(normRosca(p.s)) === 0) { ok++; nota.push('rosca ' + p.s); } else return; }
+    if (z != null && p.z != null) { if (Math.abs(p.z - z) <= 1) { ok++; soma += Math.abs(p.z - z); nota.push(p.z + ' dentes'); } else return; }
+    if (!ok) return;
+    var k = normCod(p.c), at = melhor[k];
+    if (!at || ok > at.ok || (ok === at.ok && p.k < at.p.k)) melhor[k] = {p:p, ok:ok, s:soma / ok, nota:nota};
+  });
+  var arr = Object.keys(melhor).map(function(k){ return melhor[k]; });
+  arr.sort(function(a, b){ return b.ok - a.ok || a.s - b.s; });
+  var tot = arr.length; arr = arr.slice(0, 40);
+  if (!arr.length) { box.innerHTML = '<div class="vazio">Nada no catálogo com essas medidas' + (tipo ? ' (tipo: ' + esc(tipo) + '). Tente "Todos os tipos"' : '') + '. A peça pode ser comercial / fora dos manuais.</div>'; return; }
+  box.innerHTML = '<div class="peq" style="margin-top:6px">' + tot + ' peça(s) parecida(s)' + (tot > 40 ? ' (mostrando as 40 mais próximas)' : '') + '</div><div class="res">' +
+    arr.map(function(r, i){
+      var p = r.p;
+      return '<div class="card" data-r="' + i + '"><div class="top"><span class="cod">' + esc(p.c) + '</span><span class="pct" style="font-size:11px">' + r.ok + ' medida(s) batem</span></div>' +
+        '<div class="cimg" data-pr="' + esc(p.i) + '">' + img(recSrc(p.r)) + '</div><div class="nm">' + esc(p.n) + '</div><div class="peq">' + esc(p.d) + '</div>' +
+        '<div class="peq">' + esc(MAN[p.a] || p.a) + ' · pág. ' + esc(p.p) + '</div>' +
+        '<div class="med">' + esc(r.nota.join(' · ')) + '<br><span class="peq">' + esc(p.x) + '</span></div>' +
+        '<div class="btns"><button class="btn-ok" data-usar="' + esc(p.i) + '">Usar este</button></div></div>';
+    }).join('') + '</div>';
+}
+$('#p-medi').addEventListener('input', function(e){
+  if (e.target.id && e.target.id.indexOf('m-') === 0) { clearTimeout(rodaMedi.t); rodaMedi.t = setTimeout(rodaMedi, 150); }
+});
+$('#p-medi').addEventListener('change', function(e){
+  if (e.target.id === 'm-un') { unidade = e.target.value; rodaMedi(); }
+  else if (e.target.id === 'm-t') rodaMedi();
+});
+function usarDoCatalogo(id){
+  if (!cur || !CATID[id]) return;
+  var d = ensure(cur);
+  if (cur.c.every(function(c){ return c.pid !== id; }) && d.extra.indexOf(id) < 0) d.extra.push(id);
+  var cs = candsOf(cur), k = -1;
+  cs.forEach(function(c, i){ if (c.pid === id && k < 0) k = i; });
+  if (k < 0) { renderDireita(); aposMudar(); return; }
+  d.cand = ''; renderDireita(); escolher(k);
+  msg('Adicionada e escolhida: ' + CATID[id].c);
+}
+function delegaUsar(e){
+  var b = e.target.closest('[data-usar]'); if (b) { usarDoCatalogo(b.getAttribute('data-usar')); return true; }
+  var im = e.target.closest('[data-pr]');
+  if (im) { abrirPagina(candDoCatalogo(CATID[im.getAttribute('data-pr')])); return true; }
+  return false;
+}
+$('#p-medi').addEventListener('click', delegaUsar);
+
+/* ---------- catálogo ---------- */
+var CATTXT = CAT.map(function(p){ return semAcento([p.c, p.d, p.n, p.t, p.m, p.j, MAN[p.a]].join(' ')); });
+function abrirCatalogo(){
+  $('#m-cat').classList.add('on'); $('#cat-sub').textContent = CAT.length + ' ocorrências em ' + Object.keys(MAN).length + ' manuais';
+  setTimeout(function(){ $('#cat-q').focus(); }, 30); buscaCat();
+}
+function buscaCat(){
+  var toks = semAcento($('#cat-q').value).split(/\s+/).filter(Boolean), out = [], total = 0, vistos = {};
+  if (!toks.length) { $('#cat-info').textContent = 'Digite para buscar.'; $('#cat-res').innerHTML = ''; return; }
+  for (var i = 0; i < CAT.length; i++) {
+    var t = CATTXT[i], ok = true;
+    for (var j = 0; j < toks.length; j++) if (t.indexOf(toks[j]) < 0) { ok = false; break; }
+    if (!ok) continue;
+    var p = CAT[i], k = p.c + '|' + p.a + '|' + p.p;
+    if (vistos[k]) continue; vistos[k] = 1;
+    total++; if (out.length < 60) out.push(p);
+  }
+  $('#cat-info').textContent = total + ' resultado(s)' + (total > 60 ? ' (mostrando 60: refine a busca)' : '');
+  $('#cat-res').innerHTML = out.map(function(p){
+    return '<div class="card"><div class="top"><span class="cod">' + esc(p.c) + '</span></div><div class="cimg" data-pr="' + esc(p.i) + '">' + img(recSrc(p.r)) + '</div>' +
+      '<div class="nm">' + esc(p.n) + '</div><div class="peq">' + esc(p.d) + '</div><div class="peq">' + esc(p.j) + ' · ' + esc(p.m) + '</div>' +
+      '<div class="peq">' + esc(MAN[p.a] || p.a) + ' · pág. ' + esc(p.p) + '</div>' + (p.x ? '<div class="med">' + esc(p.x) + '</div>' : '') +
+      '<div class="btns"><button class="btn-ok" data-usar="' + esc(p.i) + '">Usar como candidata</button></div></div>';
+  }).join('');
+}
+$('#cat-q').addEventListener('input', function(){ clearTimeout(buscaCat.t); buscaCat.t = setTimeout(buscaCat, 180); });
+$('#cat-res').addEventListener('click', function(e){
+  if (e.target.closest('[data-usar]')) { delegaUsar(e); $('#m-cat').classList.remove('on'); }
+  else delegaUsar(e);
+});
+
+/* ---------- exportar / importar ---------- */
+function csvCel(v){ v = String(v == null ? '' : v); return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function exportar(){
+  var rows = [['Material','Grupo','Candidata escolhida','Código FINAL','Nome FINAL','Parte FINAL','Observação','Medidas anotadas','Status','Data']];
+  ITENS.forEach(function(it){
+    var d = dec[it.m]; if (!d) return;
+    var st = statusOf(it);
+    if (st === 'Pendente' && !d.obs && !d.med && !d.nome && !d.parte) return;
+    rows.push([it.m, it.g, d.cand || d.flag || '', d.cod, d.nome, d.parte, d.obs, d.med, st, d.data]);
+  });
+  var txt = '\uFEFF' + rows.map(function(r){ return r.map(csvCel).join(';'); }).join('\r\n') + '\r\n';
+  var n = new Date(), nome = 'RESPOSTAS_IDENTIFICADOR_' + n.getFullYear() + '-' + two(n.getMonth() + 1) + '-' + two(n.getDate()) + '_' + two(n.getHours()) + two(n.getMinutes()) + '.csv';
+  var blob = new Blob([txt], {type:'text/csv;charset=utf-8'});
+  var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  msg('Cópia de segurança: ' + nome + ' (' + (rows.length - 1) + ' linhas). O registro oficial continua sendo o Excel compartilhado.');
+}
+function parseCsv(t){
+  t = t.replace(/^\uFEFF/, ''); var rows = [], row = [], cel = '', q = false, i, ch;
+  for (i = 0; i < t.length; i++) {
+    ch = t[i];
+    if (q) { if (ch === '"') { if (t[i + 1] === '"') { cel += '"'; i++; } else q = false; } else cel += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ';') { row.push(cel); cel = ''; }
+    else if (ch === '\n') { row.push(cel); rows.push(row); row = []; cel = ''; }
+    else if (ch !== '\r') cel += ch;
+  }
+  if (cel !== '' || row.length) { row.push(cel); rows.push(row); }
+  return rows;
+}
+function importar(texto){
+  var rows = parseCsv(texto); if (rows.length < 2) { msg('Arquivo vazio ou fora do formato.'); return; }
+  var h = rows[0].map(semAcento), ix = {};
+  h.forEach(function(n, i){
+    if (n === 'material') ix.m = i; else if (n.indexOf('candidata') === 0) ix.cand = i;
+    else if (n.indexOf('codigo') === 0) ix.cod = i; else if (n.indexOf('nome') === 0) ix.nome = i;
+    else if (n.indexOf('parte') === 0) ix.parte = i; else if (n.indexOf('observ') === 0) ix.obs = i;
+    else if (n.indexOf('medidas') === 0) ix.med = i; else if (n === 'status') ix.st = i; else if (n === 'data') ix.data = i;
+  });
+  if (ix.m == null) { msg('Não achei a coluna "Material": esse arquivo não é uma exportação do Identificador.'); return; }
+  var por = {}; ITENS.forEach(function(it){ por[it.m] = it; });
+  var n = 0, g = function(r, k){ return ix[k] != null && r[ix[k]] != null ? r[ix[k]].trim() : ''; };
+  rows.slice(1).forEach(function(r){
+    var it = por[(r[ix.m] || '').trim()]; if (!it) return;
+    var dataArq = g(r, 'data'), atual = dec[it.m];
+    if (atual && atual.data && dataArq && atual.data > dataArq) return;   // o rascunho deste PC é mais novo
+    var d = ensure(it), c = g(r, 'cand'), st = semAcento(g(r, 'st'));
+    if (c) { if (semAcento(c) === 'nenhuma') { d.flag = 'Nenhuma'; d.cand = ''; } else if (semAcento(c).indexOf('mais foto') === 0) { d.flag = 'Mais fotos'; d.cand = ''; } else { d.cand = c; d.flag = ''; } }
+    else if (!d.cand && !d.cod) { if (st === 'nenhuma') d.flag = 'Nenhuma'; else if (st.indexOf('mais foto') === 0) d.flag = 'Mais fotos'; }
+    ['cod','nome','parte','obs','med'].forEach(function(k){ var v = g(r, k); if (v) d[k] = v; });
+    d.data = g(r, 'data') || agora(); n++;
+  });
+  salvar(); progresso(); renderLista(); if (cur) renderDireita(); filtrar();
+  msg(n + ' resposta(s) importada(s).');
+}
+
+/* ---------- eventos gerais ---------- */
+function fecha(id){ $('#' + id).classList.remove('on'); }
+document.querySelectorAll('[data-fecha]').forEach(function(b){ b.addEventListener('click', function(){ fecha(b.getAttribute('data-fecha')); }); });
+['f-g', 'f-s', 'f-c'].forEach(function(id){ $('#' + id).addEventListener('change', function(){ F[id.slice(2)] = this.value; filtrar(); }); });
+$('#f-q').addEventListener('input', function(){ F.q = this.value; clearTimeout(filtrar.t); filtrar.t = setTimeout(filtrar, 150); });
+$('#b-cat').addEventListener('click', abrirCatalogo);
+$('#b-exp').addEventListener('click', exportar);
+$('#b-imp').addEventListener('click', function(){ $('#f-imp').click(); });
+$('#f-imp').addEventListener('change', function(){
+  var f = this.files[0]; if (!f) return;
+  var rd = new FileReader(); rd.onload = function(){ importar(String(rd.result)); }; rd.readAsText(f, 'utf-8'); this.value = '';
+});
+$('#b-ajuda').addEventListener('click', function(){ $('#m-ajuda').classList.add('on'); });
+$('#b-rot').addEventListener('click', function(){ pzFoto.rot(); });
+$('#b-rst').addEventListener('click', function(){ pzFoto.reset(); });
+$('#t-info').addEventListener('click', function(){ aba('info'); });
+$('#t-medi').addEventListener('click', function(){ aba('medi'); });
+function aba(n){
+  $('#p-info').style.display = n === 'info' ? '' : 'none'; $('#p-medi').style.display = n === 'medi' ? '' : 'none';
+  $('#t-info').classList.toggle('on', n === 'info'); $('#t-medi').classList.toggle('on', n === 'medi');
+}
+function navegar(delta){
+  if (!view.length) return;
+  var i = view.indexOf(cur) + delta; i = Math.max(0, Math.min(view.length - 1, i)); selecionar(view[i]);
+}
+document.addEventListener('keydown', function(e){
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  var tg = e.target.tagName, digitando = (tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT');
+  if (e.key === 'Escape') { document.querySelectorAll('.modal.on').forEach(function(m){ m.classList.remove('on'); }); if (digitando) e.target.blur(); return; }
+  if (digitando) return;
+  if (document.querySelector('.modal.on')) return;
+  var k = e.key.toLowerCase();
+  if (k === 'arrowdown' || k === 'j') { e.preventDefault(); navegar(1); }
+  else if (k === 'arrowup' || k === 'k') { e.preventDefault(); navegar(-1); }
+  else if (/^[1-9]$/.test(k) && cur) escolher(+k - 1);
+  else if (k === 'n' && cur) marcar('Nenhuma');
+  else if (k === 'm' && cur) marcar('Mais fotos');
+  else if (k === 'x' && cur) copiarExcel();
+  else if (k === 'r') pzFoto.rot();
+  else if (k === 'c') { e.preventDefault(); abrirCatalogo(); }
+  else if (k === '?') $('#m-ajuda').classList.add('on');
+  else if (k === '/') { e.preventDefault(); $('#f-q').focus(); }
+});
+
+/* ---------- início ---------- */
+if (memOnly) msg('Atenção: o navegador não guarda rascunho neste PC. Registre cada peça no Excel (Copiar para o Excel).');
+progresso(); filtrar();
+})();
+</script>
+</body>
+</html>
