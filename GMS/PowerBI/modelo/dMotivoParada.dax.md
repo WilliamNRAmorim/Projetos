@@ -1,6 +1,7 @@
 # MEL-107 — motivo padronizado (DAX para colar no modelo "(GMS)")
 
-> Gerado por `gerar_mapa_motivos.py`. **Não aplicado.** Aplicar só com o "sim" do William, depois da revisão.
+> Gerado por `gerar_mapa_motivos.py`. **APLICADO em 13/10/2026** no modelo (GMS) do workspace Controle de Fabricação, pelo editor TMDL do serviço, com o "sim" do William. Revisão do `revisor` não ocorreu (agente indisponível na sessão). Atualização de dados feita às 10:17; verificação: 32 motivos padrão em Hora-Hora, 0 linhas sem Tipo, soma por Tipo = total (8.906,67 h / 13.622 linhas).
+> Rollback: apagar a tabela `dMotivoParada`, as colunas `Hora-Hora[Motivo Padrão]` e `Hora-Hora[Motivo 2 Padrão]` e os 3 relacionamentos pelo TMDL view.
 > Vale para o Power BI Desktop (arquivo-fonte do modelo) e para a edição web do modelo. Se o modelo for
 > republicado de um .pbix antigo, estas colunas somem: por isso o DAX fica versionado aqui.
 
