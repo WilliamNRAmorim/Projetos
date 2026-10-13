@@ -63,7 +63,10 @@ def col(ent, prop):
 
 
 def med(prop, ent="Medidas"):
-    return {"Measure": {"Expression": {"SourceRef": {"Entity": ent}}, "Property": prop}}
+    ref = {"Entity": ent}
+    if ent == "Medidas" and prop in NOMES_EXT:  # medida de relatorio: o Desktop exige Schema "extension"
+        ref = {"Schema": "extension", "Entity": ent}
+    return {"Measure": {"Expression": {"SourceRef": ref}, "Property": prop}}
 
 
 def fp(prop):
@@ -122,6 +125,7 @@ EXT = [
     ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
 ]
+NOMES_EXT = {e[0] for e in EXT}
 
 
 # ---- infraestrutura -------------------------------------------------------
@@ -133,7 +137,7 @@ class Pagina:
     def add(self, nome, x, y, w, h, visual):
         self.z += 1
         self.visuais.append({
-            "$schema": f"{SCH}/visualContainer/2.12.0/schema.json",
+            "$schema": f"{SCH}/visualContainer/2.13.0/schema.json",
             "name": nome,
             "position": {"x": x, "y": y, "z": self.z, "height": h, "width": w, "tabOrder": self.z},
             "visual": visual,
@@ -407,7 +411,7 @@ def pg_visao_geral():
     kpis(p, [
         ("Metragem Produzida", fp("Metragem Produzida"), med("Δ Metragem vs mês ant.")),
         ("Mangueiras Produzidas", fp("Qtd Mangueiras Produzidas"), None),
-        ("Disponibilidade", med("Disponibilidade"), med("Δ Disponibilidade vs mês ant.")),
+        ("Disponibilidade", med("Disponibilidade %"), med("Δ Disponibilidade vs mês ant.")),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
         ("Refugo PPM", med("Refugo PPM"), med("Δ Refugo PPM vs mês ant.")),
         ("OPs Ativas", fp("OPs Ativas"), None),
