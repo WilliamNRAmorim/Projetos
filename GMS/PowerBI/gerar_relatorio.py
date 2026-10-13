@@ -124,6 +124,10 @@ EXT = [
      [(M, "Refugo PPM")]),
     ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
+    # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
+    ("Minutos Excedidos Montagem", "Double",
+     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
+     'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
 ]
 NOMES_EXT = {e[0] for e in EXT}
 
@@ -158,7 +162,8 @@ def filtro_excluir(ent, prop, valores, alias, nome):
 
 
 FILTRO_HH = lambda: [filtro_excluir("Hora-Hora", "Motivo", ["Almoço", "22 - Refeição"], "h", "f_refeicao_hh")]
-FILTRO_PM = lambda: [filtro_excluir("Paradas_Montagem", "Motivo", ["RF - Refeição"], "p", "f_refeicao_pm")]
+FILTRO_PM = lambda: [filtro_excluir("Paradas_Montagem", "Motivo",
+                                    ["RF - Refeição", "TE - Tempo Excedido"], "p", "f_refeicao_excedido_pm")]
 
 
 def container(titulo=None, fundo=True, tam_titulo=11, cor_titulo=ARDOSIA, pad=(6, 6, 10, 10)):
@@ -493,10 +498,11 @@ def pg_paradas_montagem():
                (col("Paradas_Montagem", "Celula"), "Célula", None, False),
                (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
     kpis(p, [
-        ("Minutos Parados", med("Minutos Parados Montagem"), None),
+        ("Minutos Parados (parada real)", med("Minutos Parados Montagem"), None),
         ("Horas Paradas", med("Horas Decimais Montagem"), None),
         ("Célula Gargalo", med("Célula Gargalo Montagem"), None),
         ("Motivo Mais Frequente", med("Motivo Mais Frequente Montagem"), None),
+        ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
         "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Minutos Parados Montagem")],
