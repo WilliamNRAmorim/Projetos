@@ -1,5 +1,5 @@
 {
-  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "g_status",
   "position": {
     "x": 16,
@@ -39,6 +39,7 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
+                      "Schema": "extension",
                       "Entity": "Medidas"
                     }
                   },
@@ -50,6 +51,25 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Schema": "extension",
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Quantidade Produzida Montagem"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
       }
     },
     "objects": {
@@ -245,5 +265,38 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "ff63c80380c15480705e",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Producao_Montagem"
+              }
+            },
+            "Property": "Status"
+          }
+        },
+        "type": "Categorical"
+      },
+      {
+        "name": "2b10a8b9194e01697905",
+        "field": {
+          "Measure": {
+            "Expression": {
+              "SourceRef": {
+                "Schema": "extension",
+                "Entity": "Medidas"
+              }
+            },
+            "Property": "Quantidade Produzida Montagem"
+          }
+        },
+        "type": "Advanced"
+      }
+    ]
   }
 }
