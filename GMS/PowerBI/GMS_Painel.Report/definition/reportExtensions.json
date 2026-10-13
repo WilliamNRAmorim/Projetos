@@ -10,59 +10,78 @@
           "dataType": "Double",
           "expression": "[Disponibilidade %]",
           "formatString": "0.0%",
-          "displayFolder": "Painel (relatório)"
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "Disponibilidade %"
+              }
+            ]
+          }
         },
         {
           "name": "Tempo Parado %",
           "dataType": "Double",
           "expression": "[% Tempo Parado]",
           "formatString": "0.0%",
-          "displayFolder": "Painel (relatório)"
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "% Tempo Parado"
+              }
+            ]
+          }
         },
         {
           "name": "Δ Metragem vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
+          "expression": "VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
           "formatString": "+0.0%;-0.0%;0.0%",
-          "displayFolder": "Painel (relatório)"
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "ficha_producao",
+                "name": "Metragem Produzida"
+              }
+            ]
+          }
         },
         {
           "name": "Δ Disponibilidade vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b), a - b)",
+          "expression": "VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
           "formatString": "+0.0%;-0.0%;0.0%",
-          "displayFolder": "Painel (relatório)"
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "Disponibilidade %"
+              }
+            ]
+          }
         },
         {
           "name": "Δ Tempo Parado vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b), a - b)",
+          "expression": "VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
           "formatString": "+0.0%;-0.0%;0.0%",
-          "displayFolder": "Painel (relatório)"
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "% Tempo Parado"
+              }
+            ]
+          }
         },
         {
-          "name": "Fila Média (h)",
-          "dataType": "Double",
-          "expression": "AVERAGE(fFluxoEtapas[Fila_h])",
-          "formatString": "0.0",
-          "displayFolder": "Painel (relatório)"
-        },
-        {
-          "name": "Processamento Médio (h)",
-          "dataType": "Double",
-          "expression": "AVERAGE(fFluxoEtapas[Proc_h])",
-          "formatString": "0.0",
-          "displayFolder": "Painel (relatório)"
-        },
-        {
-          "name": "Lead Time Médio (h)",
-          "dataType": "Double",
-          "expression": "AVERAGE(fFluxoEtapas[Lead_h])",
-          "formatString": "0.0",
-          "displayFolder": "Painel (relatório)"
-        },
-        {
-          "name": "Tempo Parado Montagem (min)",
+          "name": "Minutos Parados Montagem",
           "dataType": "Double",
           "expression": "SUM(Paradas_Montagem[TempoParadoMin])",
           "formatString": "#,0",

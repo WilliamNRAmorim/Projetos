@@ -1,16 +1,16 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.12.0/schema.json",
-  "name": "g_celula",
+  "name": "g_razao",
   "position": {
-    "x": 408,
+    "x": 654,
     "y": 210,
     "z": 14,
     "height": 244,
-    "width": 856,
+    "width": 610,
     "tabOrder": 14
   },
   "visual": {
-    "visualType": "clusteredColumnChart",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
         "Category": {
@@ -20,14 +20,14 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Producao_Montagem"
+                      "Entity": "fFluxoEtapas"
                     }
                   },
-                  "Property": "Celula"
+                  "Property": "Etapa"
                 }
               },
-              "queryRef": "Producao_Montagem.Celula",
-              "nativeQueryRef": "Celula",
+              "queryRef": "fFluxoEtapas.Etapa",
+              "nativeQueryRef": "Etapa",
               "active": true
             }
           ]
@@ -39,17 +39,35 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Medidas"
+                      "Entity": "fFluxoEtapas"
                     }
                   },
-                  "Property": "Quantidade Produzida Montagem"
+                  "Property": "Razao Fila-Processo"
                 }
               },
-              "queryRef": "Medidas.Quantidade Produzida Montagem",
-              "nativeQueryRef": "Quantidade Produzida Montagem"
+              "queryRef": "fFluxoEtapas.Razao Fila-Processo",
+              "nativeQueryRef": "Razao Fila-Processo"
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "fFluxoEtapas"
+                  }
+                },
+                "Property": "Ordem_Etapa"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
@@ -178,7 +196,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Quantidade produzida por célula'"
+                  "Value": "'Quantas vezes a fila supera o processamento'"
                 }
               }
             },

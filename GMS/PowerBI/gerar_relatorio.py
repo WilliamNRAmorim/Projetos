@@ -81,25 +81,28 @@ def proj(campo, ativo=False):
 
 
 # ---- medidas de relatorio (reportExtensions) ------------------------------
-D_MES = "DATEADD(dCalendario[Date], -1, MONTH)"
+# Regra: so nasce medida aqui quando o modelo nao tem (formato % e variacao vs mes anterior).
+# O DAX do modelo foi lido ao vivo em 13/10/2026 (DAX query view). Padrao de mes anterior = o mesmo
+# da medida "Refugo PPM vs Mes Anterior" do modelo (PREVIOUSMONTH em dCalendario[Date]).
+MES_ANT = "PREVIOUSMONTH(dCalendario[Date])"
 FMT_VAR = '+0.0%;-0.0%;0.0%'
+M = "Medidas"
 EXT = [
-    ("Disponibilidade", "Double", "[Disponibilidade %]", "0.0%"),
-    ("Tempo Parado %", "Double", "[% Tempo Parado]", "0.0%"),
+    # (nome, tipo, DAX, formato, [(entidade, medida) referenciadas])
+    ("Disponibilidade", "Double", "[Disponibilidade %]", "0.0%", [(M, "Disponibilidade %")]),
+    ("Tempo Parado %", "Double", "[% Tempo Parado]", "0.0%", [(M, "% Tempo Parado")]),
     ("Δ Metragem vs mês ant.", "Double",
-     f"VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], {D_MES}) "
-     "RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))", FMT_VAR),
+     f"VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], {MES_ANT}) "
+     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))", FMT_VAR,
+     [("ficha_producao", "Metragem Produzida")]),
     ("Δ Disponibilidade vs mês ant.", "Double",
-     f"VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], {D_MES}) "
-     "RETURN IF(NOT ISBLANK(b), a - b)", FMT_VAR),
+     f"VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], {MES_ANT}) "
+     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)", FMT_VAR, [(M, "Disponibilidade %")]),
     ("Δ Tempo Parado vs mês ant.", "Double",
-     f"VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], {D_MES}) "
-     "RETURN IF(NOT ISBLANK(b), a - b)", FMT_VAR),
-    ("Fila Média (h)", "Double", "AVERAGE(fFluxoEtapas[Fila_h])", "0.0"),
-    ("Processamento Médio (h)", "Double", "AVERAGE(fFluxoEtapas[Proc_h])", "0.0"),
-    ("Lead Time Médio (h)", "Double", "AVERAGE(fFluxoEtapas[Lead_h])", "0.0"),
-    ("Tempo Parado Montagem (min)", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0"),
-    ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0"),
+     f"VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], {MES_ANT}) "
+     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)", FMT_VAR, [(M, "% Tempo Parado")]),
+    ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
+    ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
 ]
 
 
@@ -177,13 +180,14 @@ def card_delta(campo):
     }
 
 
-def slicer(campo, titulo, sync=None):
+def slicer(campo, titulo, sync=None, unico=False):
     v = {
         "visualType": "slicer",
         "query": {"queryState": {"Values": {"projections": [proj(campo, True)]}}},
         "objects": {
             "data": [{"properties": {"mode": txt("Dropdown")}}],
             "header": [{"properties": {"show": boo(False)}}],
+            **({"selection": [{"properties": {"strictSingleSelect": boo(True)}}]} if unico else {}),
         },
         "visualContainerObjects": container(titulo, tam_titulo=9),
         "drillFilterOtherVisuals": True,
@@ -321,18 +325,18 @@ LARG_UTIL = W_PAG - 2 * MARGEM
 Y_KPI, Y_R1, Y_R2 = 102, 210, 464
 
 
-def cabecalho(p, titulo, slicers):
+def cabecalho(p, titulo, slicers, larg_seg=168):
     """Faixa vermelha com titulo/logo, navegador entre paginas e ate 3 slicers."""
     p.add("faixa", 0, 0, 1280, 48, faixa(VERMELHO))
-    p.add("titulo", MARGEM, 6, 700, 36, caixa_texto(f"GMS · {titulo}", 18))
+    p.add("titulo", MARGEM, 4, 720, 40, caixa_texto(f"GMS · {titulo}", 16))
     p.add("atualizado", 760, 8, 330, 32,
           card(med("Dado Atualizado até"), None, fonte=11, cor_valor=BRANCO, fundo=False))
     p.add("logo", 1100, 0, 180, 48, logo())
-    p.add("nav", MARGEM, 54, 700, 40, navegador())
-    larg, x = 168, W_PAG - MARGEM
-    for i, (campo, rotulo, sync) in enumerate(reversed(slicers)):
-        x -= larg
-        p.add(f"seg{i}", x, 54, larg, 40, slicer(campo, rotulo, sync))
+    p.add("nav", MARGEM, 54, 760, 40, navegador())
+    x = W_PAG - MARGEM
+    for i, (campo, rotulo, sync, unico) in enumerate(reversed(slicers)):
+        x -= larg_seg
+        p.add(f"seg{i}", x, 54, larg_seg, 40, slicer(campo, rotulo, sync, unico))
         x -= VAO
 
 
@@ -349,66 +353,71 @@ def kpis(p, itens, y=Y_KPI):
             p.add(f"kpi{i}_d", x, y + 72, w, 28, card_delta(delta))
 
 
-SEG_MES = (col("dCalendario", "AnoMês"), "Mês", "gms_mes")
+SEG_MES = (col("dCalendario", "Mês"), "Mês", "gms_mes", False)
 WL, WR = 626, 610
+FT = lambda prop: med(prop, "fFluxoEtapas")
+ET = lambda prop: med(prop, "Etapas")
+PM = lambda prop: med(prop, "Producao_Montagem")
 
 
 def pg_visao_geral():
     p = Pagina("pg_visao_geral", "Visão Geral", FILTRO_HH())
-    cabecalho(p, "Visão Geral da Produção",
-              [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno")])
+    cabecalho(p, "Visão Geral da Produção", [SEG_MES])
     kpis(p, [
         ("Metragem Produzida", fp("Metragem Produzida"), med("Δ Metragem vs mês ant.")),
-        ("Atingimento da Meta", fp("% Atingimento Meta"), None),
+        ("Mangueiras Produzidas", fp("Qtd Mangueiras Produzidas"), None),
         ("Disponibilidade", med("Disponibilidade"), med("Δ Disponibilidade vs mês ant.")),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
         ("Refugo PPM", med("Refugo PPM"), med("Refugo PPM vs Mês Anterior")),
-        ("Ordens em Andamento", med("Ordens em Andamento"), None),
+        ("OPs Ativas", fp("OPs Ativas"), None),
     ])
     p.add("g_tendencia", MARGEM, Y_R1, WL, 244, grafico(
-        "lineChart", col("dCalendario", "AnoMês"), [fp("Metragem Produzida")], "Metragem produzida por mês"))
+        "lineChart", col("dCalendario", "Mês"), [fp("Metragem Produzida")], "Metragem produzida por mês"))
     p.add("g_etapa", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
-        "clusteredBarChart", col("Etapas", "Etapa"), [med("Produção por Etapa")],
-        "Produção por etapa (ordem do fluxo)", ordenar=col("Etapas", "OrdemEtapa")))
+        "clusteredBarChart", col("Etapas", "Etapa"), [ET("Realizado Etapa"), ET("Planejado Etapa")],
+        "Realizado × planejado por etapa (m)", ordenar=col("Etapas", "OrdemEtapa"), legenda=True))
     p.add("g_motivo", MARGEM, Y_R2, WL, 240, grafico(
         "clusteredBarChart", col("Hora-Hora", "Motivo"), [med("Tempo Parado (h)")],
         "Motivos de parada por tempo (h)", ordenar=med("Tempo Parado (h)"), desc=True))
-    p.add("g_refugo", MARGEM + WL + VAO, Y_R2, WR, 240, grafico(
-        "clusteredColumnChart", col("TiposErros", "CodigoErro"), [med("Refugo (m)")],
-        "Refugo (m) por código de erro", ordenar=med("Refugo (m)"), desc=True))
+    p.add("g_ppm", MARGEM + WL + VAO, Y_R2, WR, 240, grafico(
+        "lineChart", col("dCalendario", "Mês"), [med("Refugo PPM")], "Refugo PPM por mês"))
     return p
 
 
 def pg_gargalo():
     p = Pagina("pg_gargalo", "Gargalo e Fluxo", FILTRO_HH())
-    cabecalho(p, "Gargalo e Fluxo", [SEG_MES, (col("Hora-Hora", "Célula"), "Célula", "gms_celula")])
+    cabecalho(p, "Gargalo e Fluxo", [SEG_MES, (col("Hora-Hora", "Célula"), "Célula", "gms_celula", False)])
     kpis(p, [
-        ("Célula Gargalo", med("Célula Gargalo"), None),
-        ("Fila no Gargalo (h)", med("Fila no Gargalo (h)"), None),
-        ("Produtividade da Célula (m/h)", med("Produtividade da Célula (m/h)"), None),
+        ("Etapa Gargalo (maior fila)", FT("Etapa Gargalo"), None),
+        ("Eficiência de Fluxo", FT("Eficiencia de Fluxo"), None),
+        ("Lead Total por Ficha (h)", FT("Lead Total por Ficha (h)"), None),
+        ("Célula com mais Parada", med("Célula Gargalo"), None),
         ("Turnos-Célula Ativos", med("Turnos-Célula Ativos"), None),
     ])
     p.add("g_fluxo", MARGEM, Y_R1, WL, 244, grafico(
-        "barChart", col("fFluxoEtapas", "Etapa"), [med("Fila Média (h)"), med("Processamento Médio (h)")],
-        "Fila × processamento por etapa (h)", ordenar=col("fFluxoEtapas", "Ordem_Etapa"), legenda=True))
-    p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
-        "clusteredColumnChart", col("Hora-Hora", "Célula"), [med("Tempo Parado (h)")],
-        "Tempo parado por célula (h)", ordenar=med("Tempo Parado (h)"), desc=True))
-    p.add("t_fluxo", MARGEM, Y_R2, LARG_UTIL, 240, tabela(
-        [col("fFluxoEtapas", "Etapa"), med("Fila Média (h)"), med("Processamento Médio (h)"),
-         med("Lead Time Médio (h)")], "Lead time por etapa"))
+        "barChart", col("fFluxoEtapas", "Etapa"), [FT("Fila Media (h)"), FT("Proc Media (h)")],
+        "Fila + processamento médios por etapa (h)", ordenar=col("fFluxoEtapas", "Ordem_Etapa"), legenda=True))
+    p.add("g_razao", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
+        "clusteredBarChart", col("fFluxoEtapas", "Etapa"), [FT("Razao Fila-Processo")],
+        "Quantas vezes a fila supera o processamento", ordenar=col("fFluxoEtapas", "Ordem_Etapa")))
+    p.add("g_prod_cel", MARGEM, Y_R2, WL, 240, grafico(
+        "clusteredColumnChart", col("Hora-Hora", "Célula"), [med("Produtividade da Célula (m/h)")],
+        "Produtividade por célula (m/h)", ordenar=med("Produtividade da Célula (m/h)"), desc=True))
+    p.add("t_fluxo", MARGEM + WL + VAO, Y_R2, WR, 240, tabela(
+        [col("fFluxoEtapas", "Etapa"), FT("Fila Mediana (h)"), FT("Proc Mediana (h)"),
+         FT("Lead Mediana (h)"), FT("Fila P90 (h)")], "Fluxo por etapa (medianas)"))
     return p
 
 
 def pg_paradas():
-    p = Pagina("pg_paradas", "Paradas e Qualidade", FILTRO_HH())
+    p = Pagina("pg_paradas", "Paradas", FILTRO_HH())
     cabecalho(p, "Paradas e Qualidade (Mangueira)",
-              [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno"),
-               (col("Hora-Hora", "Motivo"), "Motivo", None)])
+              [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno", False),
+               (col("Hora-Hora", "Motivo"), "Motivo", None, False)])
     kpis(p, [
         ("Tempo Parado (h)", med("Tempo Parado (h)"), None),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
-        ("Motivo Mais Frequente", med("Motivo Mais Frequente"), None),
+        ("Motivo Nº1", med("Motivo Nº1"), None),
         ("Horas Perdidas (Motivo Nº1)", med("Horas Perdidas Motivo Nº1"), None),
         ("Refugo PPM", med("Refugo PPM"), med("Refugo PPM vs Mês Anterior")),
         ("Refugo (m)", med("Refugo (m)"), None),
@@ -421,8 +430,10 @@ def pg_paradas():
     p.add("g_turno", MARGEM + wl + VAO, Y_R1, wr, 244, grafico(
         "clusteredColumnChart", col("Hora-Hora", "Turno"), [med("Tempo Parado (h)")],
         "Tempo parado por turno (h)", cores_turno=True))
-    p.add("g_ppm", MARGEM, Y_R2, WL, 240, grafico(
-        "lineChart", col("dCalendario", "AnoMês"), [med("Refugo PPM")], "Refugo PPM por mês"))
+    p.add("g_pareto_ref", MARGEM, Y_R2, WL, 240, grafico(
+        "lineClusteredColumnComboChart", col("TiposErros", "CodigoErro"), [med("Refugo (m)")],
+        "Pareto de refugo (m) e % acumulado", ordenar=med("Refugo (m)"), desc=True,
+        segunda=[med("% Acumulado Refugo")]))
     p.add("t_motivos", MARGEM + WL + VAO, Y_R2, WR, 240, tabela(
         [col("Hora-Hora", "Motivo"), med("Tempo Parado (h)"), med("% Acumulado Paradas")],
         "Motivos de parada"))
@@ -430,42 +441,44 @@ def pg_paradas():
 
 
 def pg_paradas_montagem():
-    p = Pagina("pg_paradas_montagem", "Paradas Montagem", FILTRO_PM())
+    p = Pagina("pg_paradas_montagem", "Paradas Mont.", FILTRO_PM())
     cabecalho(p, "Paradas da Montagem",
-              [(col("Paradas_Montagem", "Turno"), "Turno", None),
-               (col("Paradas_Montagem", "Celula"), "Célula", None),
-               (col("Paradas_Montagem", "Motivo"), "Motivo", None)])
+              [(col("Paradas_Montagem", "Turno"), "Turno", None, False),
+               (col("Paradas_Montagem", "Celula"), "Célula", None, False),
+               (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
     kpis(p, [
-        ("Total Tempo Parado (min)", med("Tempo Parado Montagem (min)"), None),
+        ("Minutos Parados", med("Minutos Parados Montagem"), None),
+        ("Horas Paradas", med("Horas Decimais Montagem"), None),
         ("Célula Gargalo", med("Célula Gargalo Montagem"), None),
         ("Motivo Mais Frequente", med("Motivo Mais Frequente Montagem"), None),
     ])
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
-        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Tempo Parado Montagem (min)")],
-        "Minutos parados por motivo", ordenar=med("Tempo Parado Montagem (min)"), desc=True))
+        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Minutos Parados Montagem")],
+        "Minutos parados por motivo", ordenar=med("Minutos Parados Montagem"), desc=True))
     p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 494, grafico(
-        "clusteredColumnChart", col("Paradas_Montagem", "Celula"), [med("Tempo Parado Montagem (min)")],
-        "Minutos parados por célula", ordenar=med("Tempo Parado Montagem (min)"), desc=True))
+        "clusteredColumnChart", col("Paradas_Montagem", "Celula"), [med("Minutos Parados Montagem")],
+        "Minutos parados por célula", ordenar=med("Minutos Parados Montagem"), desc=True))
     return p
 
 
 def pg_produtividade():
-    p = Pagina("pg_produtividade", "Produtividade Montagem")
+    p = Pagina("pg_produtividade", "Prod. Mont.")
     cabecalho(p, "Produtividade da Montagem",
-              [(col("Producao_Montagem", "Turno"), "Turno", None),
-               (col("Producao_Montagem", "Celula"), "Célula", None),
-               (col("Producao_Montagem", "Status"), "Status", None)])
+              [(col("Producao_Montagem", "Turno"), "Turno", None, False),
+               (col("Producao_Montagem", "Celula"), "Célula", None, False),
+               (col("Producao_Montagem", "Status"), "Status", None, False)])
     kpis(p, [
-        ("Início", med("Inicio em Selecionado"), None),
-        ("Fim", med("Fim em Selecionado"), None),
-        ("Quantidade Produzida", med("Quantidade Produzida Montagem"), None),
+        ("Real (OPs finalizadas)", PM("Real Montagem"), None),
+        ("Meta do Dia", PM("Meta Montagem Dia"), None),
+        ("Atingimento", PM("% Montagem c/ Seta"), None),
+        ("OPs Finalizadas", PM("OPs Finalizadas Montagem"), None),
         ("Ordens em Andamento", med("Ordens em Andamento"), None),
     ])
     p.add("g_status", MARGEM, Y_R1, 380, 494, pizza(
         col("Producao_Montagem", "Status"), med("Quantidade Produzida Montagem"), "Quantidade por status"))
-    p.add("g_celula", MARGEM + 392, Y_R1, 856, 244, grafico(
-        "clusteredColumnChart", col("Producao_Montagem", "Celula"), [med("Quantidade Produzida Montagem")],
-        "Quantidade produzida por célula"))
+    p.add("t_meta", MARGEM + 392, Y_R1, 856, 244, tabela(
+        [col("dMetaMontagem", "Celula"), col("dMetaMontagem", "Turno"), PM("Meta Montagem Dia"),
+         PM("Real Montagem"), PM("% Montagem c/ Seta")], "Meta × real por célula e turno"))
     p.add("t_ops", MARGEM + 392, Y_R2, 856, 240, tabela(
         [col("Producao_Montagem", c) for c in ("Celula", "PN", "MetaHora", "QtdProduzida", "Status", "Turno")],
         "Ordens de montagem"))
@@ -473,13 +486,14 @@ def pg_produtividade():
 
 
 def pg_plano():
-    p = Pagina("pg_plano", "Plano de Produção")
-    cabecalho(p, "Plano de Produção (Hose)", [])
+    p = Pagina("pg_plano", "Plano")
+    cabecalho(p, "Plano de Produção (Hose)",
+              [(col("ficha_producao", "AnoMes_Producao"), "Mês do plano (escolha 1)", None, True)], larg_seg=240)
     kpis(p, [
         ("Meta do Mês", fp("Meta Plan"), None),
         ("Realizado (GMS)", fp("Realizado MTD"), None),
-        ("Atingimento %", fp("% Atingimento Meta"), None),
-        ("Em Atraso", fp("Atraso"), None),
+        ("Atingimento", fp("% Atingimento Meta"), None),
+        ("Em Atraso (m)", fp("Atraso"), None),
         ("Meta Diária", fp("Meta Diaria Planejada"), None),
         ("Dias Úteis", fp("Dias Uteis Mes"), None),
     ])
@@ -552,8 +566,10 @@ def main():
         "$schema": f"{SCH}/reportExtension/1.0.0/schema.json",
         "name": "extension",
         "entities": [{"name": "Medidas", "measures": [
-            {"name": n, "dataType": t, "expression": e, "formatString": f, "displayFolder": "Painel (relatório)"}
-            for n, t, e, f in EXT]}],
+            dict({"name": n, "dataType": t, "expression": e, "formatString": f,
+                  "displayFolder": "Painel (relatório)"},
+                 **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
+            for n, t, e, f, refs in EXT]}],
     })
     paginas = [pg_visao_geral(), pg_gargalo(), pg_paradas(), pg_paradas_montagem(), pg_produtividade(), pg_plano()]
     grava(DEF / "pages" / "pages.json", {
