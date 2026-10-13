@@ -20,6 +20,12 @@ f = lambda s: float(str(s).replace(",", ""))
 def d_us(s):  # 'MM/DD/AAAA h:mm AM/PM' ou 'MM/DD/AAAA'
     return dt.datetime.strptime(s.split()[0], "%m/%d/%Y").date()
 
+ALIAS = {"HC139-7_S-GX": "HC139-7"}  # mesma mangueira com sufixo de cliente
+def canon(m):
+    return ALIAS.get(m, m)
+def eh_mangueira(m):
+    return not m.startswith(("MANDREL", "MANDRIL"))
+
 # GMS
 fichas = {r["OP"]: (norm_material(r["Mangueira"]) if r["Mangueira"].startswith("HOSE") else r["Mangueira"].strip()).upper() for r in csv_rows("ficha_producao.csv")}
 gms_boa, gms_ref = collections.defaultdict(float), collections.defaultdict(float)
@@ -28,14 +34,14 @@ for r in csv_rows("RegistrosInspeção.csv"):
     d = d_us(r["DataHoraInspecao"])
     if INI <= d <= FIM:
         m = r["Mangueira"].strip().upper() or fichas.get(r["OP_ID"], "(sem mangueira)")
-        gms_boa[m] += f(r["Quantidade"])
+        gms_boa[canon(m)] += f(r["Quantidade"])
 for r in csv_rows("TiposErros.csv"):
     d = d_us(r["DataHoraRefugo"] or r["Criado"])
     if INI <= d <= FIM:
         m = fichas.get(r["OP_ID"])
         m = m.upper() if m else m
         if m is None: ops_sem_ficha[r["OP_ID"]] += 1; m = "(OP sem ficha)"
-        gms_ref[m] += f(r["Quantidade"])
+        gms_ref[canon(m)] += f(r["Quantidade"])
 
 # MB51 (aba MB51 do relatório de 01/10, a mesma base dos números de referência)
 sap_boa, sap_ref = collections.defaultdict(float), collections.defaultdict(float)
@@ -43,10 +49,10 @@ ws = openpyxl.load_workbook(RELATORIO, read_only=True, data_only=True)["MB51"]
 for r in ws.iter_rows(min_row=2, values_only=True):
     d, mvt, un, q, usr = r[9], str(r[5]), r[11], r[14], r[15]
     if not isinstance(d, dt.datetime) or not INI <= d.date() <= FIM or q is None or un != "M" or mvt not in ("101", "102"): continue
-    m = norm_material(r[2]).upper(); s = q  # 102 já vem negativo na MB51
+    m = canon(norm_material(r[2]).upper()); s = q  # 102 já vem negativo na MB51
     (sap_ref if usr in USUARIOS_REFUGO else sap_boa)[m] += s
 
-mats = sorted(set(gms_boa) | set(gms_ref) | set(sap_boa) | set(sap_ref))
+mats = sorted(m for m in set(gms_boa) | set(gms_ref) | set(sap_boa) | set(sap_ref) if eh_mangueira(m))
 wb = openpyxl.Workbook(); ws = wb.active; ws.title = "Por mangueira"
 cab = ["Mangueira", "GMS boa (m)", "GMS refugo (m)", "GMS total (m)", "MB51 boa (m)", "MB51 refugo (m)", "MB51 total (m)", "Dif. boa (MB51 - GMS)", "Dif. total (MB51 - GMS)"]
 ws.append(cab)
@@ -70,6 +76,7 @@ for l in [
     "GMS refugo: TiposErros (Quantidade), pela data do refugo; a mangueira vem da ficha_producao pela OP.",
     "MB51: aba MB51 do Relatorio_Conferencia_MB51_v3_2.xlsx (01/10/2026), só unidade M, movimentos 101 + 102 (o estorno 102 já vem negativo), pela Posting Date.",
     "MB51 refugo = lançamentos dos usuários de refugo (U445131 e U452021); MB51 boa = os demais.",
+    "Só mangueiras: mandris (MANDREL-…, MANDRIL FLEXIVEL) ficam fora. HC139-7_S-GX foi somado ao HC139-7.",
     "Mangueira da MB51 vem da Material Description normalizada (norm_material); seis materiais podem ficar com nome diferente nos dois lados.",
     "Diferença = MB51 - GMS: positiva = sobra no SAP; negativa = falta lançar no SAP. Material não compensa com material.",
     "Fonte de verdade: SAP. Dados são fotografias de 01/10 (MB51) e 02/10-06/10 (GMS).",
@@ -78,7 +85,7 @@ p.column_dimensions["A"].width = 130
 out = Path(__file__).with_name("Producao_por_Mangueira_GMS_x_MB51_16mai_16set.xlsx")
 wb.save(out)
 print("salvo", out.name, len(mats), "mangueiras")
-print("GMS boa %.1f ref %.1f | MB51 boa %.1f ref %.1f" % (sum(gms_boa.values()), sum(gms_ref.values()), sum(sap_boa.values()), sum(sap_ref.values())))
+print("GMS boa %.1f ref %.1f | MB51 boa %.1f ref %.1f" % tuple(sum(d[m] for m in mats) for d in (gms_boa, gms_ref, sap_boa, sap_ref)))
 print("refugo OP sem ficha:", dict(ops_sem_ficha))
 only = [m for m in mats if (gms_boa[m] + gms_ref[m] == 0) or (sap_boa[m] + sap_ref[m] == 0)]
 print("só de um lado:", only)
