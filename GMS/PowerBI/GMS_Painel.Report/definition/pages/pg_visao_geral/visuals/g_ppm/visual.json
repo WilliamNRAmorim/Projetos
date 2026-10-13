@@ -23,11 +23,11 @@
                       "Entity": "dCalendario"
                     }
                   },
-                  "Property": "Mês"
+                  "Property": "Mês Nº"
                 }
               },
-              "queryRef": "dCalendario.Mês",
-              "nativeQueryRef": "Mês",
+              "queryRef": "dCalendario.Mês Nº",
+              "nativeQueryRef": "Mês Nº",
               "active": true
             }
           ]
@@ -178,7 +178,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Refugo PPM por mês'"
+                  "Value": "'Refugo PPM por mês (nº do mês)'"
                 }
               }
             },
@@ -334,6 +334,62 @@
         }
       ]
     },
-    "drillFilterOtherVisuals": true
+    "drillFilterOtherVisuals": true,
+    "filterConfig": {
+      "filters": [
+        {
+          "name": "f_sem_vazio",
+          "field": {
+            "Column": {
+              "Expression": {
+                "SourceRef": {
+                  "Entity": "dCalendario"
+                }
+              },
+              "Property": "Mês Nº"
+            }
+          },
+          "type": "Advanced",
+          "filter": {
+            "Version": 2,
+            "From": [
+              {
+                "Name": "c",
+                "Entity": "dCalendario",
+                "Type": 0
+              }
+            ],
+            "Where": [
+              {
+                "Condition": {
+                  "Not": {
+                    "Expression": {
+                      "Comparison": {
+                        "ComparisonKind": 0,
+                        "Left": {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "c"
+                              }
+                            },
+                            "Property": "Mês Nº"
+                          }
+                        },
+                        "Right": {
+                          "Literal": {
+                            "Value": "null"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
   }
 }

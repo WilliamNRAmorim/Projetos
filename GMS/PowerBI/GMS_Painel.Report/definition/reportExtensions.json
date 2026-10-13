@@ -38,7 +38,7 @@
         {
           "name": "Δ Metragem vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
+          "expression": "VAR d = CALCULATE(MAX('ficha_producao'[DataProducao])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE([Metragem Produzida], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE([Metragem Produzida], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)",
           "references": {
@@ -53,7 +53,7 @@
         {
           "name": "Δ Disponibilidade vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
+          "expression": "VAR d = CALCULATE(MAX('Hora-Hora'[Data])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE([Disponibilidade %], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE([Disponibilidade %], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)",
           "references": {
@@ -68,7 +68,7 @@
         {
           "name": "Δ Tempo Parado vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], PREVIOUSMONTH(dCalendario[Date])) RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
+          "expression": "VAR d = CALCULATE(MAX('Hora-Hora'[Data])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE([% Tempo Parado], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE([% Tempo Parado], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)",
           "references": {
@@ -76,6 +76,21 @@
               {
                 "entity": "Medidas",
                 "name": "% Tempo Parado"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Δ Refugo PPM vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR d = CALCULATE(MAX('ficha_producao'[DataProducao])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE([Refugo PPM], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE([Refugo PPM], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
+          "formatString": "+#,0;-#,0;0",
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "Refugo PPM"
               }
             ]
           }

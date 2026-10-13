@@ -84,23 +84,41 @@ def proj(campo, ativo=False):
 # Regra: so nasce medida aqui quando o modelo nao tem (formato % e variacao vs mes anterior).
 # O DAX do modelo foi lido ao vivo em 13/10/2026 (DAX query view). Padrao de mes anterior = o mesmo
 # da medida "Refugo PPM vs Mes Anterior" do modelo (PREVIOUSMONTH em dCalendario[Date]).
-MES_ANT = "PREVIOUSMONTH(dCalendario[Date])"
 FMT_VAR = '+0.0%;-0.0%;0.0%'
+FMT_PPM = '+#,0;-#,0;0'
 M = "Medidas"
+
+
+def delta_mtd(medida, coluna_data, relativo=True):
+    """Variacao do mes corrente (1o dia ate o ultimo dia com dado no contexto) contra o MESMO periodo
+    do mes anterior. Funciona sem filtro de mes (usa o ultimo mes com dado) e com filtro (usa o mes escolhido).
+    REMOVEFILTERS(dCalendario) so dentro do CALCULATE: o ultimo dia (d) ja nasce do contexto da pagina."""
+    conta = "DIVIDE(a - b, b)" if relativo else "a - b"
+    guarda = "NOT ISBLANK(a) && NOT ISBLANK(b)" + (" && b <> 0" if relativo else "")
+    return (
+        f"VAR d = CALCULATE(MAX({coluna_data})) "
+        "VAR ini = DATE(YEAR(d), MONTH(d), 1) "
+        f"VAR a = CALCULATE([{medida}], REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) "
+        f"VAR b = CALCULATE([{medida}], REMOVEFILTERS(dCalendario), "
+        "DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) "
+        f"RETURN IF(NOT ISBLANK(d) && {guarda}, {conta})"
+    )
+
+
+DATA_FICHA = "'ficha_producao'[DataProducao]"
+DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
     # (nome, tipo, DAX, formato, [(entidade, medida) referenciadas])
     ("Disponibilidade", "Double", "[Disponibilidade %]", "0.0%", [(M, "Disponibilidade %")]),
     ("Tempo Parado %", "Double", "[% Tempo Parado]", "0.0%", [(M, "% Tempo Parado")]),
-    ("Δ Metragem vs mês ant.", "Double",
-     f"VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], {MES_ANT}) "
-     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))", FMT_VAR,
+    ("Δ Metragem vs mês ant.", "Double", delta_mtd("Metragem Produzida", DATA_FICHA), FMT_VAR,
      [("ficha_producao", "Metragem Produzida")]),
-    ("Δ Disponibilidade vs mês ant.", "Double",
-     f"VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], {MES_ANT}) "
-     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)", FMT_VAR, [(M, "Disponibilidade %")]),
-    ("Δ Tempo Parado vs mês ant.", "Double",
-     f"VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], {MES_ANT}) "
-     "RETURN IF(NOT ISBLANK(a) && NOT ISBLANK(b), a - b)", FMT_VAR, [(M, "% Tempo Parado")]),
+    ("Δ Disponibilidade vs mês ant.", "Double", delta_mtd("Disponibilidade %", DATA_HH, False), FMT_VAR,
+     [(M, "Disponibilidade %")]),
+    ("Δ Tempo Parado vs mês ant.", "Double", delta_mtd("% Tempo Parado", DATA_HH, False), FMT_VAR,
+     [(M, "% Tempo Parado")]),
+    ("Δ Refugo PPM vs mês ant.", "Double", delta_mtd("Refugo PPM", DATA_FICHA, False), FMT_PPM,
+     [(M, "Refugo PPM")]),
     ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
 ]
@@ -139,7 +157,7 @@ FILTRO_HH = lambda: [filtro_excluir("Hora-Hora", "Motivo", ["Almoço", "22 - Ref
 FILTRO_PM = lambda: [filtro_excluir("Paradas_Montagem", "Motivo", ["RF - Refeição"], "p", "f_refeicao_pm")]
 
 
-def container(titulo=None, fundo=True, tam_titulo=11, cor_titulo=ARDOSIA):
+def container(titulo=None, fundo=True, tam_titulo=11, cor_titulo=ARDOSIA, pad=(6, 6, 10, 10)):
     o = {}
     if titulo:
         o["title"] = [{"properties": {
@@ -150,7 +168,8 @@ def container(titulo=None, fundo=True, tam_titulo=11, cor_titulo=ARDOSIA):
     o["background"] = [{"properties": {"show": boo(fundo), "color": cor(BRANCO), "transparency": num(0)}}]
     o["border"] = [{"properties": {"show": boo(fundo), "color": cor(LINHA), "radius": num(8), "width": num(1)}}]
     o["dropShadow"] = [{"properties": {"show": boo(False)}}]
-    o["padding"] = [{"properties": {"top": num(6), "bottom": num(6), "left": num(10), "right": num(10)}}]
+    o["padding"] = [{"properties": {"top": num(pad[0]), "bottom": num(pad[1]),
+                                    "left": num(pad[2]), "right": num(pad[3])}}]
     return o
 
 
@@ -180,16 +199,20 @@ def card_delta(campo):
     }
 
 
-def slicer(campo, titulo, sync=None, unico=False):
+def slicer(campo, titulo, sync=None, unico=False, modo="Dropdown"):
+    """Slicer com titulo visivel e dropdown legivel (altura 46); cabecalho de ferramentas oculto."""
+    vc = container(titulo, tam_titulo=9, pad=(2, 2, 8, 8))
+    vc["visualHeader"] = [{"properties": {"show": boo(False)}}]
     v = {
         "visualType": "slicer",
         "query": {"queryState": {"Values": {"projections": [proj(campo, True)]}}},
         "objects": {
-            "data": [{"properties": {"mode": txt("Dropdown")}}],
+            "data": [{"properties": {"mode": txt(modo)}}],
             "header": [{"properties": {"show": boo(False)}}],
+            "items": [{"properties": {"fontSize": num(10)}}],
             **({"selection": [{"properties": {"strictSingleSelect": boo(True)}}]} if unico else {}),
         },
-        "visualContainerObjects": container(titulo, tam_titulo=9),
+        "visualContainerObjects": vc,
         "drillFilterOtherVisuals": True,
     }
     if sync:
@@ -197,8 +220,20 @@ def slicer(campo, titulo, sync=None, unico=False):
     return v
 
 
+def filtro_nao_vazio(campo, nome):
+    """Visual sem a categoria '(Em branco)' (fatos sem data)."""
+    k = "Column"
+    ent, prop = campo[k]["Expression"]["SourceRef"]["Entity"], campo[k]["Property"]
+    return {"name": nome, "field": campo, "type": "Advanced",
+            "filter": {"Version": 2, "From": [{"Name": "c", "Entity": ent, "Type": 0}],
+                       "Where": [{"Condition": {"Not": {"Expression": {"Comparison": {
+                           "ComparisonKind": 0,
+                           "Left": {"Column": {"Expression": {"SourceRef": {"Source": "c"}}, "Property": prop}},
+                           "Right": {"Literal": {"Value": "null"}}}}}}}]}}
+
+
 def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=None, legenda=False,
-            cores_turno=None):
+            cores_turno=None, sem_vazio=False):
     qs = {"Category": {"projections": [proj(categoria, True)]},
           "Y": {"projections": [proj(m) for m in valores]}}
     if segunda:
@@ -219,6 +254,8 @@ def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=
         } for t, c in COR_TURNO.items()]
     v = {"visualType": tipo, "query": {"queryState": qs}, "objects": obj,
          "visualContainerObjects": container(titulo), "drillFilterOtherVisuals": True}
+    if sem_vazio:
+        v["filterConfig"] = {"filters": [filtro_nao_vazio(categoria, "f_sem_vazio")]}
     if ordenar is not None:
         v["query"]["sortDefinition"] = {
             "sort": [{"field": ordenar, "direction": "Descending" if desc else "Ascending"}],
@@ -326,17 +363,21 @@ Y_KPI, Y_R1, Y_R2 = 102, 210, 464
 
 
 def cabecalho(p, titulo, slicers, larg_seg=168):
-    """Faixa vermelha com titulo/logo, navegador entre paginas e ate 3 slicers."""
+    """Faixa vermelha com titulo/logo, navegador entre paginas e ate 3 slicers (cada um com sua largura)."""
     p.add("faixa", 0, 0, 1280, 48, faixa(VERMELHO))
     p.add("titulo", MARGEM, 4, 720, 40, caixa_texto(f"GMS · {titulo}", 16))
     p.add("atualizado", 760, 8, 330, 32,
           card(med("Dado Atualizado até"), None, fonte=11, cor_valor=BRANCO, fundo=False))
     p.add("logo", 1100, 0, 180, 48, logo())
-    p.add("nav", MARGEM, 54, 760, 40, navegador())
+    larguras = [(sl[4] if len(sl) > 4 else larg_seg) for sl in slicers]
+    ocupado = sum(larguras) + VAO * len(slicers)
+    p.add("nav", MARGEM, 52, LARG_UTIL - ocupado, 46, navegador())
     x = W_PAG - MARGEM
-    for i, (campo, rotulo, sync, unico) in enumerate(reversed(slicers)):
-        x -= larg_seg
-        p.add(f"seg{i}", x, 54, larg_seg, 40, slicer(campo, rotulo, sync, unico))
+    for i, (sl, larg) in enumerate(reversed(list(zip(slicers, larguras)))):
+        x -= larg
+        campo, rotulo, sync, unico = sl[:4]
+        modo = sl[5] if len(sl) > 5 else "Dropdown"
+        p.add(f"seg{i}", x, 52, larg, 46, slicer(campo, rotulo, sync, unico, modo))
         x -= VAO
 
 
@@ -353,7 +394,7 @@ def kpis(p, itens, y=Y_KPI):
             p.add(f"kpi{i}_d", x, y + 72, w, 28, card_delta(delta))
 
 
-SEG_MES = (col("dCalendario", "Mês"), "Mês", "gms_mes", False)
+SEG_MES = (col("dCalendario", "Date"), "Período", "gms_data", False, 250, "Between")
 WL, WR = 626, 610
 FT = lambda prop: med(prop, "fFluxoEtapas")
 ET = lambda prop: med(prop, "Etapas")
@@ -368,11 +409,11 @@ def pg_visao_geral():
         ("Mangueiras Produzidas", fp("Qtd Mangueiras Produzidas"), None),
         ("Disponibilidade", med("Disponibilidade"), med("Δ Disponibilidade vs mês ant.")),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
-        ("Refugo PPM", med("Refugo PPM"), med("Refugo PPM vs Mês Anterior")),
+        ("Refugo PPM", med("Refugo PPM"), med("Δ Refugo PPM vs mês ant.")),
         ("OPs Ativas", fp("OPs Ativas"), None),
     ])
     p.add("g_tendencia", MARGEM, Y_R1, WL, 244, grafico(
-        "lineChart", col("dCalendario", "Mês"), [fp("Metragem Produzida")], "Metragem produzida por mês"))
+        "lineChart", col("dCalendario", "Date"), [fp("Metragem Produzida")], "Metragem produzida por dia"))
     p.add("g_etapa", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
         "clusteredBarChart", col("Etapas", "Etapa"), [ET("Realizado Etapa"), ET("Planejado Etapa")],
         "Realizado × planejado por etapa (m)", ordenar=col("Etapas", "OrdemEtapa"), legenda=True))
@@ -380,7 +421,8 @@ def pg_visao_geral():
         "clusteredBarChart", col("Hora-Hora", "Motivo"), [med("Tempo Parado (h)")],
         "Motivos de parada por tempo (h)", ordenar=med("Tempo Parado (h)"), desc=True))
     p.add("g_ppm", MARGEM + WL + VAO, Y_R2, WR, 240, grafico(
-        "lineChart", col("dCalendario", "Mês"), [med("Refugo PPM")], "Refugo PPM por mês"))
+        "lineChart", col("dCalendario", "Mês Nº"), [med("Refugo PPM")], "Refugo PPM por mês (nº do mês)",
+        sem_vazio=True))
     return p
 
 
@@ -413,13 +455,13 @@ def pg_paradas():
     p = Pagina("pg_paradas", "Paradas", FILTRO_HH())
     cabecalho(p, "Paradas e Qualidade (Mangueira)",
               [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno", False),
-               (col("Hora-Hora", "Motivo"), "Motivo", None, False)])
+               (col("Hora-Hora", "Motivo"), "Motivo", None, False, 200)])
     kpis(p, [
         ("Tempo Parado (h)", med("Tempo Parado (h)"), None),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
         ("Motivo Nº1", med("Motivo Nº1"), None),
         ("Horas Perdidas (Motivo Nº1)", med("Horas Perdidas Motivo Nº1"), None),
-        ("Refugo PPM", med("Refugo PPM"), med("Refugo PPM vs Mês Anterior")),
+        ("Refugo PPM", med("Refugo PPM"), med("Δ Refugo PPM vs mês ant.")),
         ("Refugo (m)", med("Refugo (m)"), None),
     ])
     wl, wr = 760, 476
