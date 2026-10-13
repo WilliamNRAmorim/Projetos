@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
-  "name": "t_motivos",
+  "name": "g_tipo",
   "position": {
     "x": 654,
     "y": 464,
@@ -10,25 +10,30 @@
     "tabOrder": 20
   },
   "visual": {
-    "visualType": "tableEx",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
-        "Values": {
+        "Category": {
           "projections": [
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Hora-Hora"
+                      "Entity": "dMotivoParada"
                     }
                   },
-                  "Property": "Motivo"
+                  "Property": "Tipo"
                 }
               },
-              "queryRef": "Hora-Hora.Motivo",
-              "nativeQueryRef": "Motivo"
-            },
+              "queryRef": "dMotivoParada.Tipo",
+              "nativeQueryRef": "Tipo",
+              "active": true
+            }
+          ]
+        },
+        "Y": {
+          "projections": [
             {
               "field": {
                 "Measure": {
@@ -42,79 +47,85 @@
               },
               "queryRef": "Medidas.Tempo Parado (h)",
               "nativeQueryRef": "Tempo Parado (h)"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "Medidas"
-                    }
-                  },
-                  "Property": "% Acumulado Paradas"
-                }
-              },
-              "queryRef": "Medidas.% Acumulado Paradas",
-              "nativeQueryRef": "% Acumulado Paradas"
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "Tempo Parado (h)"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
-      "grid": [
+      "legend": [
         {
           "properties": {
-            "gridVertical": {
+            "show": {
               "expr": {
                 "Literal": {
                   "Value": "false"
                 }
               }
             },
-            "gridHorizontal": {
+            "position": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "gridHorizontalColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#E5E7EB'"
-                    }
-                  }
-                }
-              }
-            },
-            "textSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "10D"
+                  "Value": "'Bottom'"
                 }
               }
             }
           }
         }
       ],
-      "columnHeaders": [
+      "categoryAxis": [
         {
           "properties": {
-            "fontColor": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            },
+            "labelColor": {
               "solid": {
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#475569'"
                     }
                   }
                 }
               }
+            }
+          }
+        }
+      ],
+      "valueAxis": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
             },
-            "backColor": {
+            "labelColor": {
               "solid": {
                 "color": {
                   "expr": {
@@ -125,17 +136,45 @@
                 }
               }
             },
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "10D"
+            "gridlineColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#E5E7EB'"
+                    }
+                  }
                 }
               }
-            },
-            "bold": {
+            }
+          }
+        }
+      ],
+      "labels": [
+        {
+          "properties": {
+            "show": {
               "expr": {
                 "Literal": {
                   "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "9D"
+                }
+              }
+            },
+            "color": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#1F2937'"
+                    }
+                  }
                 }
               }
             }
@@ -157,7 +196,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Motivos de parada'"
+                  "Value": "'Tempo parado por tipo (falha × programada × material…)'"
                 }
               }
             },

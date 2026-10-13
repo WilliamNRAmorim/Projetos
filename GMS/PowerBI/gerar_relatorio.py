@@ -161,7 +161,7 @@ def filtro_excluir(ent, prop, valores, alias, nome):
     }
 
 
-FILTRO_HH = lambda: [filtro_excluir("Hora-Hora", "Motivo", ["Almoço", "22 - Refeição"], "h", "f_refeicao_hh")]
+FILTRO_HH = lambda: [filtro_excluir("Hora-Hora", "Motivo Padrão", ["Almoço"], "h", "f_refeicao_hh")]
 FILTRO_PM = lambda: [filtro_excluir("Paradas_Montagem", "Motivo",
                                     ["RF - Refeição", "TE - Tempo Excedido"], "p", "f_refeicao_excedido_pm")]
 
@@ -427,7 +427,7 @@ def pg_visao_geral():
         "clusteredBarChart", col("Etapas", "Etapa"), [ET("Realizado Etapa"), ET("Planejado Etapa")],
         "Realizado × planejado por etapa (m)", ordenar=col("Etapas", "OrdemEtapa"), legenda=True))
     p.add("g_motivo", MARGEM, Y_R2, WL, 240, grafico(
-        "clusteredBarChart", col("Hora-Hora", "Motivo"), [med("Tempo Parado (h)")],
+        "clusteredBarChart", col("Hora-Hora", "Motivo Padrão"), [med("Tempo Parado (h)")],
         "Motivos de parada por tempo (h)", ordenar=med("Tempo Parado (h)"), desc=True))
     p.add("g_ppm", MARGEM + WL + VAO, Y_R2, WR, 240, grafico(
         "lineChart", col("dCalendario", "Mês Nº"), [med("Refugo PPM")], "Refugo PPM por mês (nº do mês)",
@@ -464,7 +464,7 @@ def pg_paradas():
     p = Pagina("pg_paradas", "Paradas", FILTRO_HH())
     cabecalho(p, "Paradas e Qualidade (Mangueira)",
               [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno", False),
-               (col("Hora-Hora", "Motivo"), "Motivo", None, False, 200)])
+               (col("Hora-Hora", "Motivo Padrão"), "Motivo", None, False, 200)])
     kpis(p, [
         ("Tempo Parado (h)", med("Tempo Parado (h)"), None),
         ("Tempo Parado", med("Tempo Parado %"), med("Δ Tempo Parado vs mês ant.")),
@@ -475,7 +475,7 @@ def pg_paradas():
     ])
     wl, wr = 760, 476
     p.add("g_pareto", MARGEM, Y_R1, wl, 244, grafico(
-        "lineClusteredColumnComboChart", col("Hora-Hora", "Motivo"), [med("Tempo Parado (h)")],
+        "lineClusteredColumnComboChart", col("Hora-Hora", "Motivo Padrão"), [med("Tempo Parado (h)")],
         "Pareto de paradas (h) e % acumulado", ordenar=med("Tempo Parado (h)"), desc=True,
         segunda=[med("% Acumulado Paradas")]))
     p.add("g_turno", MARGEM + wl + VAO, Y_R1, wr, 244, grafico(
@@ -485,9 +485,9 @@ def pg_paradas():
         "lineClusteredColumnComboChart", col("TiposErros", "CodigoErro"), [med("Refugo (m)")],
         "Pareto de refugo (m) e % acumulado", ordenar=med("Refugo (m)"), desc=True,
         segunda=[med("% Acumulado Refugo")]))
-    p.add("t_motivos", MARGEM + WL + VAO, Y_R2, WR, 240, tabela(
-        [col("Hora-Hora", "Motivo"), med("Tempo Parado (h)"), med("% Acumulado Paradas")],
-        "Motivos de parada"))
+    p.add("g_tipo", MARGEM + WL + VAO, Y_R2, WR, 240, grafico(
+        "clusteredBarChart", col("dMotivoParada", "Tipo"), [med("Tempo Parado (h)")],
+        "Tempo parado por tipo (falha × programada × material…)", ordenar=med("Tempo Parado (h)"), desc=True))
     return p
 
 
