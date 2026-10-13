@@ -22,7 +22,7 @@
         {
           "name": "Δ Metragem vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR a = [Metragem Média Diária] VAR b = CALCULATE([Metragem Média Diária], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
+          "expression": "VAR a = [Metragem Produzida] VAR b = CALCULATE([Metragem Produzida], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)"
         },
@@ -37,13 +37,6 @@
           "name": "Δ Tempo Parado vs mês ant.",
           "dataType": "Double",
           "expression": "VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b), a - b)",
-          "formatString": "+0.0%;-0.0%;0.0%",
-          "displayFolder": "Painel (relatório)"
-        },
-        {
-          "name": "Δ Produtividade vs mês ant.",
-          "dataType": "Double",
-          "expression": "VAR a = [Produtividade da Célula (m/h)] VAR b = CALCULATE([Produtividade da Célula (m/h)], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)"
         },
@@ -66,6 +59,20 @@
           "dataType": "Double",
           "expression": "AVERAGE(fFluxoEtapas[Lead_h])",
           "formatString": "0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Tempo Parado Montagem (min)",
+          "dataType": "Double",
+          "expression": "SUM(Paradas_Montagem[TempoParadoMin])",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Quantidade Produzida Montagem",
+          "dataType": "Double",
+          "expression": "SUM(Producao_Montagem[QtdProduzida])",
+          "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         }
       ]
