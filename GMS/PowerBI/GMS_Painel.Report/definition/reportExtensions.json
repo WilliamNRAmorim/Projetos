@@ -1,0 +1,74 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
+  "name": "extension",
+  "entities": [
+    {
+      "name": "Medidas",
+      "measures": [
+        {
+          "name": "Disponibilidade",
+          "dataType": "Double",
+          "expression": "[Disponibilidade %]",
+          "formatString": "0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Tempo Parado %",
+          "dataType": "Double",
+          "expression": "[% Tempo Parado]",
+          "formatString": "0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Δ Metragem vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR a = [Metragem Média Diária] VAR b = CALCULATE([Metragem Média Diária], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
+          "formatString": "+0.0%;-0.0%;0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Δ Disponibilidade vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR a = [Disponibilidade %] VAR b = CALCULATE([Disponibilidade %], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b), a - b)",
+          "formatString": "+0.0%;-0.0%;0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Δ Tempo Parado vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR a = [% Tempo Parado] VAR b = CALCULATE([% Tempo Parado], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b), a - b)",
+          "formatString": "+0.0%;-0.0%;0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Δ Produtividade vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR a = [Produtividade da Célula (m/h)] VAR b = CALCULATE([Produtividade da Célula (m/h)], DATEADD(dCalendario[Date], -1, MONTH)) RETURN IF(NOT ISBLANK(b) && b <> 0, DIVIDE(a - b, b))",
+          "formatString": "+0.0%;-0.0%;0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Fila Média (h)",
+          "dataType": "Double",
+          "expression": "AVERAGE(fFluxoEtapas[Fila_h])",
+          "formatString": "0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Processamento Médio (h)",
+          "dataType": "Double",
+          "expression": "AVERAGE(fFluxoEtapas[Proc_h])",
+          "formatString": "0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Lead Time Médio (h)",
+          "dataType": "Double",
+          "expression": "AVERAGE(fFluxoEtapas[Lead_h])",
+          "formatString": "0.0",
+          "displayFolder": "Painel (relatório)"
+        }
+      ]
+    }
+  ]
+}
