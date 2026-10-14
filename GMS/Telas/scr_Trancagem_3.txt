@@ -839,7 +839,8 @@ Screens:
                       FifoBobinadeira,
                       Status = "BC",
                       Trancadeira = gal_FilaTr3.Selected.Trançadeira,
-                      Metragem > 0
+                      Metragem > 0,
+                      DataHoraFinal >= DateAdd(Now(), -4, TimeUnit.Days)
                   )
               );
               With(
@@ -2160,7 +2161,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.3.1"
+            Text: ="Versão 0.3.2"
             Width: =183
             X: =1163
             Y: =715
@@ -3224,7 +3225,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =38
                   Size: =fx_FonteCorpo
-                  Text: ="Escolher uma bobina só copia o LI e o código do fio para a ficha. A bobina sai daqui quando o carrinho dela for devolvido num novo pedido."
+                  Text: ="Aparecem só as bobinas dos últimos 4 dias. Escolher uma bobina só copia o LI e o código do fio para a ficha. A bobina sai daqui quando o carrinho dela for devolvido num novo pedido."
                   Width: =900
                   X: =213
                   Y: =158
@@ -3501,7 +3502,7 @@ Screens:
                   Height: =60
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Nenhuma bobina pronta para a " & Coalesce(gal_FilaTr3.Selected.Trançadeira, "trançadeira") &
+                    ="Nenhuma bobina dos últimos 4 dias pronta para a " & Coalesce(gal_FilaTr3.Selected.Trançadeira, "trançadeira") &
                     ". Digite o LI e o código do fio pela etiqueta, ou peça bobina no menu lateral."
                   Visible: =IsEmpty(gal_BobinasTr3.AllItems)
                   Width: =940
