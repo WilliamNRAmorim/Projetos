@@ -17,7 +17,8 @@ Screens:
             ctxTodasBobinasTr3: false,
             ctxBobinaSelTr3: 0,
             ctxLiSugTr3: "",
-            ctxFioSugTr3: ""
+            ctxFioSugTr3: "",
+            ctxModalCancTr3: false
         });
         Set(varProcessando, false);
         ClearCollect(colTrancFiltroTr3, {Filtro: "Todas"});
@@ -90,7 +91,7 @@ Screens:
               =If(
                   !varProcessando && !ctxModalDelinTr3 && !ctxModalIniciarTr3 &&
                   !ctxModalEnviarTr3 && !ctxModalEditarTr3 && !ctxModalPedidoTr3 &&
-                  !ctxModalSugFioTr3,
+                  !ctxModalSugFioTr3 && !ctxModalCancTr3,
                   Select(btn_RecarregarTr3)
               )
             Repeat: =true
@@ -165,7 +166,7 @@ Screens:
               =If(
                   IsBlank(cmb_FiltroTr3.Selected.Filtro) || cmb_FiltroTr3.Selected.Filtro = "Todas",
                   Sort(
-                      Filter(ficha_producao, processo = "Trançadeira"),
+                      Filter(ficha_producao, processo = "Trançadeira", status_processo <> "Cancelado"),
                       OP,
                       SortOrder.Ascending
                   ),
@@ -173,6 +174,7 @@ Screens:
                       Filter(
                           ficha_producao,
                           processo = "Trançadeira",
+                          status_processo <> "Cancelado",
                           Trançadeira = cmb_FiltroTr3.Selected.Filtro
                       ),
                       OP,
@@ -4609,6 +4611,293 @@ Screens:
                   Width: =270
                   X: =514
                   Y: =453
+      - btn_CancelarOpTr3:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorErro
+            BorderThickness: =1
+            Color: =fx_CorErro
+            DisplayMode: =If(IsBlank(gal_FilaTr3.Selected.ID) || varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =fx_AlturaAcao
+            HoverFill: =fx_CorFundo
+            OnSelect: |-
+              =Reset(inp_MotivoCancTr3);
+              UpdateContext({ctxModalCancTr3: true})
+            PressedFill: =fx_CorFundo
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="Cancelar OP"
+            Visible: =fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO"
+            Width: =130
+            X: =420
+            Y: =700
+      - cntr_CancelarOpTr3:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorOverlay
+            Height: =768
+            Visible: =ctxModalCancTr3
+            Width: =1366
+          Children:
+            - btn_BgCancTr3:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Fill: =Color.Transparent
+                  Font: =fx_FonteFamilia
+                  Height: =768
+                  HoverFill: =Color.Transparent
+                  PressedFill: =Color.Transparent
+                  Text: =""
+                  Width: =1366
+            - btn_CardCancTr3:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =380
+                  HoverFill: =fx_CorSuperficie
+                  PressedFill: =fx_CorSuperficie
+                  RadiusBottomLeft: =fx_RaioG
+                  RadiusBottomRight: =fx_RaioG
+                  RadiusTopLeft: =fx_RaioG
+                  RadiusTopRight: =fx_RaioG
+                  Text: =""
+                  Width: =560
+                  X: =403
+                  Y: =190
+            - lbl_TituloCancTr3:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  Size: =fx_FonteTitulo
+                  Text: ="Cancelar esta OP?"
+                  Width: =500
+                  X: =433
+                  Y: =214
+            - lbl_SubCancTr3:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorTextoSuave
+                  Font: =fx_FonteFamilia
+                  Height: =72
+                  Size: =fx_FonteCorpo
+                  Text: ="A ficha é cancelada, o carretel de saída é liberado e o tubo que entrou volta para a fila como sobra. A OP volta para o plano sem OK. Não dá para desfazer."
+                  Width: =500
+                  X: =433
+                  Y: =254
+            - lbl_RotMotivoCancTr3:
+                Control: Label@2.5.1
+                Properties:
+                  Color: =fx_CorRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =20
+                  Size: =fx_FonteApoio
+                  Text: ="MOTIVO *"
+                  Width: =500
+                  X: =433
+                  Y: =340
+            - inp_MotivoCancTr3:
+                Control: Classic/TextInput@2.3.2
+                Properties:
+                  AccessibleLabel: ="Motivo do cancelamento da OP"
+                  BorderColor: =If(IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+                  Default: =""
+                  DelayOutput: =true
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaCampo
+                  HintText: ="Diga por que a OP está sendo cancelada"
+                  HoverFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Width: =500
+                  X: =433
+                  Y: =362
+            - btn_VoltarCancTr3:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =fx_CorBorda
+                  BorderThickness: =1
+                  Color: =fx_CorTextoSuave
+                  Fill: =fx_CorSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =fx_CorFundo
+                  OnSelect: |-
+                    =Reset(inp_MotivoCancTr3);
+                    UpdateContext({ctxModalCancTr3: false})
+                  PressedFill: =fx_CorFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Voltar"
+                  Width: =180
+                  X: =433
+                  Y: =490
+            - btn_ConfirmarCancTr3:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorSuperficie
+                  DisabledFill: =fx_CorBorda
+                  DisplayMode: =If(!varProcessando && !IsBlank(Trim(inp_MotivoCancTr3.Text)), DisplayMode.Edit, DisplayMode.Disabled)
+                  Fill: =fx_CorErro
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =fx_AlturaAcaoS
+                  HoverFill: =ColorFade(fx_CorErro, -20%)
+                  OnSelect: |-
+                    =Set(varProcessando, true);
+                    Refresh(ficha_producao);
+                    Refresh(lista_carreteis);
+                    With(
+                        {
+                            _r: LookUp(ficha_producao, ID = gal_FilaTr3.Selected.ID),
+                            _agora: Now(),
+                            _motivo: Trim(inp_MotivoCancTr3.Text),
+                            _quem: Coalesce(cmb_OperadorTr3.Selected.Nome, gal_FilaTr3.Selected.operador_trancagem, User().FullName)
+                        },
+                        With(
+                            { _min: fx_MinutosDoDia(_agora) },
+                            If(
+                                IsBlank(_r.ID),
+                                Notify("Esta OP não existe mais no servidor. Atualize a tela.", NotificationType.Error, 8000);
+                                Set(varProcessando, false),
+                                _r.Modified <> gal_FilaTr3.Selected.Modified,
+                                Notify("Registro alterado por outro usuário. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+                                UpdateContext({ctxModalCancTr3: false});
+                                Select(btn_RecarregarTr3);
+                                Set(varProcessando, false),
+                                fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
+                                Notify("Esta OP não está mais em processo. Atualize a tela.", NotificationType.Error, 8000);
+                                UpdateContext({ctxModalCancTr3: false});
+                                Select(btn_RecarregarTr3);
+                                Set(varProcessando, false),
+                                IsBlank(_motivo),
+                                Notify("Escreva o motivo antes de cancelar.", NotificationType.Warning, 6000);
+                                Set(varProcessando, false),
+                                Patch(
+                                    ficha_producao,
+                                    _r,
+                                    {
+                                        status_processo: "Cancelado",
+                                        data_hora_final_trancadeira: _agora,
+                                        Turno_Trançagem: Text(fx_Turno(_min)),
+                                        operador_trancagem: _quem,
+                                        Observação_Trançagem: Trim(
+                                            Coalesce(_r.Observação_Trançagem, "") &
+                                            "  [OP CANCELADA " & Text(_agora, "[$-pt-BR]dd/mm hh:mm") &
+                                            " por " & _quem & " - " & _motivo & "]"
+                                        )
+                                    }
+                                );
+                                If(
+                                    !IsEmpty(Errors(ficha_producao)),
+                                    Notify("Não cancelou a OP: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 15000);
+                                    Set(varProcessando, false),
+                                    If(
+                                        !IsBlank(_r.'Carretel Saida') && !IsBlank(LookUp(lista_carreteis, Title = _r.'Carretel Saida').Title),
+                                        Patch(
+                                            lista_carreteis,
+                                            LookUp(lista_carreteis, Title = _r.'Carretel Saida'),
+                                            {
+                                                op: Blank(),
+                                                etapa_processo: Blank(),
+                                                lote: Blank(),
+                                                metros_restantes: 0,
+                                                mangueira_atual: Blank()
+                                            }
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(lista_carreteis)),
+                                            Notify("OP cancelada, mas o carretel de saída NÃO foi liberado. Libere na tela de carretéis: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 15000)
+                                        )
+                                    );
+                                    If(
+                                        !IsBlank(_r.'Carretel Entrada') && !IsBlank(LookUp(lista_carreteis, Title = _r.'Carretel Entrada').Title),
+                                        Patch(
+                                            lista_carreteis,
+                                            LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
+                                            {
+                                                op: Blank(),
+                                                etapa_processo: Blank(),
+                                                lote: Blank(),
+                                                metros_restantes: Coalesce(_r.quantidade_tubo, 0),
+                                                mangueira_atual: Text(_r.Bitola)
+                                            }
+                                        );
+                                        If(
+                                            !IsEmpty(Errors(lista_carreteis)),
+                                            Notify("OP cancelada, mas o tubo NÃO voltou para a fila. Ajuste na tela de carretéis: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 15000)
+                                        ),
+                                        Notify("OP cancelada, mas o carretel de entrada não foi encontrado para devolver o tubo. Avise a supervisão.", NotificationType.Warning, 12000)
+                                    );
+                                    Patch(
+                                        Eventos_Producao,
+                                        Defaults(Eventos_Producao),
+                                        {
+                                            Title: Text(_r.ID) & "-Trancagem-Cancelado",
+                                            origem: {Value: "ficha_producao"},
+                                            origem_ID: _r.ID,
+                                            etapa: {Value: "Trançagem"},
+                                            tipo: {Value: "Cancelado"},
+                                            data_hora: _agora,
+                                            data_ref: fx_DataRefEm(_agora),
+                                            turno: fx_Turno(_min),
+                                            bitola: _r.Bitola,
+                                            metros: 0,
+                                            sobra: Coalesce(_r.quantidade_tubo, 0),
+                                            carretel: _r.'Carretel Saida',
+                                            recurso: _r.Trançadeira,
+                                            operador: _quem
+                                        }
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify("OP cancelada, mas o evento NÃO gravou. O histórico fica sem o motivo: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 15000)
+                                    );
+                                    Reset(inp_MotivoCancTr3);
+                                    Reset(gal_FilaTr3);
+                                    UpdateContext({ctxModalCancTr3: false});
+                                    Select(btn_RecarregarTr3);
+                                    Set(varProcessando, false);
+                                    Notify("OP " & Text(_r.OP) & " cancelada (" & _motivo & "). O tubo voltou para a fila e a OP volta ao plano.", NotificationType.Success, 10000)
+                                )
+                            )
+                        )
+                    )
+                  PressedFill: =ColorFade(fx_CorErro, -30%)
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteCorpo
+                  Text: ="Cancelar a OP"
+                  Width: =220
+                  X: =713
+                  Y: =490
       - rct_OverlayTr3:
           Control: Rectangle@2.3.0
           Properties:
