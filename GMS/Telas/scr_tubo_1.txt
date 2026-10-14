@@ -1099,7 +1099,7 @@ Screens:
             Items: |-
               =Filter(
                   colPlanoTubo,
-                  (!ProdTuboOK || OPnum = gal_FilaTubo_1.Selected.OP) &&
+                  (!(OPnum in colOPsUsadasTubo.OP) || OPnum = gal_FilaTubo_1.Selected.OP) &&
                   (
                       IsBlank(cmb_MangueiraTubo_1.Selected.NomeMangueira) ||
                       cmb_MangueiraTubo_1.Selected.NomeMangueira = fx_MangueiraOutra ||
@@ -1502,6 +1502,13 @@ Screens:
                   true,
                   Notify("Não consegui ler o plano de OPs. Toque em atualizar.", NotificationType.Error, 8000);
                   false
+              );
+              With(
+                  { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
+                  ClearCollect(
+                      colOPsUsadasTubo,
+                      ShowColumns(Filter(ficha_producao, OP >= _min, processo <> "Tubo"), OP)
+                  )
               );
               ClearCollect(
                   colKanbanTrancTubo,
