@@ -17,11 +17,7 @@ Screens:
             ctxTodasBobinasTr3: false,
             ctxBobinaSelTr3: 0,
             ctxLiSugTr3: "",
-            ctxFioSugTr3: "",
-            ctxModalTrama1Tr3: false,
-            ctxAlvoSugTr3: 2,
-            ctxLiSug1Tr3: "",
-            ctxFioSug1Tr3: ""
+            ctxFioSugTr3: ""
         });
         Set(varProcessando, false);
         ClearCollect(colTrancFiltroTr3, {Filtro: "Todas"});
@@ -44,34 +40,10 @@ Screens:
                     SortOrder.Ascending
                 )
             ),
-            If(
-                IsEmpty(colSpecTr3),
-                If(
-                    IsError(ClearCollect(colSpecTr3, DM_TRANÇAGEM)),
-                    Notify("Não consegui ler o delineamento (DM_TRANÇAGEM). Toque em atualizar.", NotificationType.Error, 8000)
-                )
-            ),
-            If(
-                IsEmpty(colEngrTr3),
-                If(
-                    IsError(ClearCollect(colEngrTr3, DM_ENGRENAGENS)),
-                    Notify("Não consegui ler o delineamento (DM_ENGRENAGENS). Toque em atualizar.", NotificationType.Error, 8000)
-                )
-            ),
-            If(
-                IsEmpty(colFiosTr3),
-                If(
-                    IsError(ClearCollect(colFiosTr3, DM_FIOS)),
-                    Notify("Não consegui ler o delineamento (DM_FIOS). Toque em atualizar.", NotificationType.Error, 8000)
-                )
-            ),
-            If(
-                IsEmpty(colWireTr3),
-                If(
-                    IsError(ClearCollect(colWireTr3, DM_WIREWINDING)),
-                    Notify("Não consegui ler o delineamento (DM_WIREWINDING). Toque em atualizar.", NotificationType.Error, 8000)
-                )
-            )
+            If(IsEmpty(colSpecTr3), ClearCollect(colSpecTr3, DM_TRANÇAGEM)),
+            If(IsEmpty(colEngrTr3), ClearCollect(colEngrTr3, DM_ENGRENAGENS)),
+            If(IsEmpty(colFiosTr3), ClearCollect(colFiosTr3, DM_FIOS)),
+            If(IsEmpty(colWireTr3), ClearCollect(colWireTr3, DM_WIREWINDING))
         );
         Select(btn_RecarregarTr3);
         Reset(cmb_FiltroTr3)
@@ -118,7 +90,7 @@ Screens:
               =If(
                   !varProcessando && !ctxModalDelinTr3 && !ctxModalIniciarTr3 &&
                   !ctxModalEnviarTr3 && !ctxModalEditarTr3 && !ctxModalPedidoTr3 &&
-                  !ctxModalSugFioTr3 && !ctxModalTrama1Tr3,
+                  !ctxModalSugFioTr3,
                   Select(btn_RecarregarTr3)
               )
             Repeat: =true
@@ -208,11 +180,7 @@ Screens:
                   )
               )
             OnSelect: |-
-              =UpdateContext({ctxLiSugTr3: "", ctxFioSugTr3: "", ctxLiSug1Tr3: "", ctxFioSug1Tr3: ""});
-              Reset(inp_LiT1Tr3);
-              Reset(inp_FioT1Tr3);
-              Reset(inp_PicksT1Tr3);
-              Reset(inp_DiametroT1Tr3);
+              =UpdateContext({ctxLiSugTr3: "", ctxFioSugTr3: ""});
               Reset(inp_LiTr3);
               Reset(inp_FioTr3);
               Reset(inp_QtdTr3);
@@ -468,7 +436,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =28
-            Size: =fx_FonteSecao
+            Size: =15
             Text: =Text(gal_FilaTr3.Selected.OP)
             Width: =115
             X: =365
@@ -541,7 +509,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =28
             Size: =fx_FonteDestaque
-            Text: =fx_MetrosUn(gal_FilaTr3.Selected.quantidade_tubo)
+            Text: =Text(Coalesce(gal_FilaTr3.Selected.quantidade_tubo, 0), "[$-pt-BR]#.##0")
             Width: =160
             X: =770
             Y: =158
@@ -624,19 +592,16 @@ Screens:
                           fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
                           (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                            fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST))))
+                      )
                   },
-                  If(
-                      fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), "") = "DIVERGE" || (_duas && fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), "") = "DIVERGE"),
-                      fx_CorErro,
-                      fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), "") = "OK" && (!_duas || fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), "") = "OK"),
-                      fx_CorOK,
+                  Switch(
+                      fx_ConfFio(
+                          inp_FioTr3.Text,
+                          Text(_s._10WIRE_PN_1ST),
+                          Text(_s._30WIRE_PN_2ST)
+                      ),
+                      "OK",      fx_CorOK,
+                      "DIVERGE", fx_CorErro,
                       fx_CorTextoSuave
                   )
               )
@@ -652,19 +617,17 @@ Screens:
                           fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
                           (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                            fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST))))
+                      )
                   },
-                  If(
-                      !_duas,
-                      Switch(fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), ""), "OK", "✓ bate com a spec", "DIVERGE", "✗ FIO DIVERGENTE", "sem conferência"),
-                      "1ª " & Switch(fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), ""), "OK", "✓", "DIVERGE", "✗", "—") & "   2ª " &
-                      Switch(fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), ""), "OK", "✓", "DIVERGE", "✗", "—")
+                  Switch(
+                      fx_ConfFio(
+                          inp_FioTr3.Text,
+                          Text(_s._10WIRE_PN_1ST),
+                          Text(_s._30WIRE_PN_2ST)
+                      ),
+                      "OK",      "✓ bate com a spec",
+                      "DIVERGE", "✗ FIO DIVERGENTE",
+                      "sem conferência"
                   )
               )
             Width: =200
@@ -688,7 +651,7 @@ Screens:
             Color: =fx_CorTextoSuave
             Font: =fx_FonteFamilia
             Height: =57
-            Size: =fx_FonteApoio
+            Size: =12
             Text: =fx_Ou(Text(gal_FilaTr3.Selected.Observação_tubo))
             Width: =298
             X: =820
@@ -807,16 +770,10 @@ Screens:
                           fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
                           (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                            fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST))))
+                      )
                   },
                   If(
-                      fx_ConfFio(Self.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), "") = "DIVERGE",
+                      fx_ConfFio(Self.Text, Text(_s._10WIRE_PN_1ST), Text(_s._30WIRE_PN_2ST)) = "DIVERGE",
                       fx_CorErro,
                       fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" &&
                       IsBlank(Trim(Self.Text)),
@@ -882,8 +839,7 @@ Screens:
                       FifoBobinadeira,
                       Status = "BC",
                       Trancadeira = gal_FilaTr3.Selected.Trançadeira,
-                      Metragem > 0,
-                      DataHoraFinal >= DateAdd(Now(), -4, TimeUnit.Days)
+                      Metragem > 0
                   )
               );
               With(
@@ -903,7 +859,7 @@ Screens:
                       )
                   )
               );
-              UpdateContext({ctxModalSugFioTr3: true, ctxBobinaSelTr3: 0, ctxModalTrama1Tr3: false})
+              UpdateContext({ctxModalSugFioTr3: true, ctxBobinaSelTr3: 0})
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -933,19 +889,14 @@ Screens:
             BorderColor: |-
               =If(
                   fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" &&
-                  !fx_MetragemOk(fx_Num(Self.Text)),
+                  Coalesce(Value(Self.Text), 0) <= 0,
                   fx_CorErro,
                   fx_CorBorda
               )
             Default: |-
-              =With(
-                  {
-                      _s: Coalesce(gal_FilaTr3.Selected.Qtd_Turno1, 0) +
-                          Coalesce(gal_FilaTr3.Selected.Qtd_Turno2, 0) +
-                          Coalesce(gal_FilaTr3.Selected.Qtd_Turno3, 0)
-                  },
-                  If(_s > 0, _s, "")
-              )
+              =Coalesce(gal_FilaTr3.Selected.Qtd_Turno1, 0) +
+              Coalesce(gal_FilaTr3.Selected.Qtd_Turno2, 0) +
+              Coalesce(gal_FilaTr3.Selected.Qtd_Turno3, 0)
             DelayOutput: =true
             DisplayMode: |-
               =If(
@@ -1013,48 +964,20 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =25
             Size: =fx_FonteApoio
-            Text: |-
-              =If((!IsBlank(Trim(Text(LookUp(
-                  colSpecTr3,
-                  fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                  (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                   fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-              )._30WIRE_PN_2ST)))), "Nº PICKS — 2ª TRAMA *", "Nº PICKS *")
+            Text: ="Nº PICKS — ÚLT. TRANÇA *"
             Width: =204
             X: =665
             Y: =388
       - inp_PicksTr3:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Número de picks da trama final"
+            AccessibleLabel: ="Número de picks da última trança"
             BorderColor: |-
-              =With(
-                  {
-                      _s: LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST)))),
-                      _v: Coalesce(Value(Self.Text), 0)
-                  },
-                  If(
-                      fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && _v <= 0,
-                      fx_CorErro,
-                      fx_ForaDaFaixa(
-                          _v,
-                          fx_NumSpec(Text(If(_duas, _s._35PICKS_2ST_MIN_5, _s._15PICKS_1ST_MIN_5))),
-                          fx_NumSpec(Text(If(_duas, _s._37PICKS_2ST_MAX_5, _s._17PICKS_1ST_MAX_5)))
-                      ),
-                      fx_CorAlerta,
-                      fx_CorBorda
-                  )
+              =If(
+                  fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" &&
+                  Coalesce(Value(Self.Text), 0) <= 0,
+                  fx_CorErro,
+                  fx_CorBorda
               )
             Default: =gal_FilaTr3.Selected.'N°Picks'
             DelayOutput: =true
@@ -1085,47 +1008,15 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: |-
-              =If((!IsBlank(Trim(Text(LookUp(
-                  colSpecTr3,
-                  fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                  (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                   fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-              )._30WIRE_PN_2ST)))), "Ø 2ª TRAMA (pol.)", "Ø TRANÇA (pol.)")
+            Text: ="Ø ÚLT. TRANÇA"
             Width: =162
             X: =369
             Y: =466
       - inp_DiametroTr3:
           Control: Classic/TextInput@2.3.2
           Properties:
-            AccessibleLabel: ="Diâmetro externo da trama final em polegadas"
-            BorderColor: |-
-              =With(
-                  {
-                      _s: LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST)))),
-                      _v: fx_DiametroPol(Self.Text)
-                  },
-                  If(
-                      fx_ForaDaFaixa(
-                          _v,
-                          fx_NumSpec(Text(If(_duas, _s._32OD_2ST_MIN_in, _s._12OD_1ST_MIN_in))),
-                          fx_NumSpec(Text(If(_duas, _s._34OD_2ST_MAX_in, _s._14OD_1ST_MAX_in)))
-                      ),
-                      fx_CorAlerta,
-                      fx_CorBorda
-                  )
-              )
+            AccessibleLabel: ="Diâmetro externo da última trança em polegadas"
+            BorderColor: =fx_CorBorda
             Default: =gal_FilaTr3.Selected.Diametro_Trançagem
             DelayOutput: =true
             DisplayMode: |-
@@ -1376,48 +1267,21 @@ Screens:
                           (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                            fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
                       ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST)))),
-                      _q: fx_Num(inp_QtdTr3.Text),
-                      _rec: gal_FilaTr3.Selected.quantidade_tubo,
-                      _p: Coalesce(Value(inp_PicksTr3.Text), 0),
-                      _p1: Coalesce(Value(inp_PicksT1Tr3.Text), 0),
-                      _d: fx_DiametroPol(inp_DiametroTr3.Text),
-                      _d1: fx_DiametroPol(inp_DiametroT1Tr3.Text)
+                      _q: Coalesce(Value(inp_QtdTr3.Text), 0),
+                      _rec: Coalesce(gal_FilaTr3.Selected.quantidade_tubo, 0)
                   },
                   With(
                       {
-                          _pmin: fx_NumSpec(Text(If(_duas, _s._35PICKS_2ST_MIN_5, _s._15PICKS_1ST_MIN_5))),
-                          _pmax: fx_NumSpec(Text(If(_duas, _s._37PICKS_2ST_MAX_5, _s._17PICKS_1ST_MAX_5))),
-                          _dmin: fx_NumSpec(Text(If(_duas, _s._32OD_2ST_MIN_in, _s._12OD_1ST_MIN_in))),
-                          _dmax: fx_NumSpec(Text(If(_duas, _s._34OD_2ST_MAX_in, _s._14OD_1ST_MAX_in))),
-                          _fioTxt: Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)),
-                          _confF: fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), ""),
-                          _conf1: If(_duas, fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), ""), "SEM_FIO"),
-                          _falta1: _duas && (IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || _p1 <= 0),
-                          _fora1: _duas && (
-                              fx_ForaDaFaixa(_p1, fx_NumSpec(Text(_s._15PICKS_1ST_MIN_5)), fx_NumSpec(Text(_s._17PICKS_1ST_MAX_5))) ||
-                              fx_ForaDaFaixa(_d1, fx_NumSpec(Text(_s._12OD_1ST_MIN_in)), fx_NumSpec(Text(_s._14OD_1ST_MAX_in)))
+                          _conf: fx_ConfFio(
+                              inp_FioTr3.Text,
+                              Text(_s._10WIRE_PN_1ST),
+                              Text(_s._30WIRE_PN_2ST)
                           )
                       },
-                      With(
-                          {
-                              _k: If(
-                                  _confF = "DIVERGE", 1,
-                                  _conf1 = "DIVERGE", 2,
-                                  fx_MetragemSubiu(_q, _rec), 3,
-                                  _falta1, 4,
-                                  fx_ForaDaFaixa(_p, _pmin, _pmax), 5,
-                                  fx_ForaDaFaixa(_d, _dmin, _dmax), 6,
-                                  _fora1, 7,
-                                  0
-                              )
-                          },
-                          If(_k in [1, 2], fx_CorErro, fx_CorAlerta)
+                      If(
+                          (_q > 0 && _rec > 0 && _q > _rec) || _conf = "DIVERGE",
+                          fx_CorErro,
+                          fx_CorAlerta
                       )
                   )
               )
@@ -1434,63 +1298,32 @@ Screens:
                           (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                            fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
                       ),
-                      _duas: (!IsBlank(Trim(Text(LookUp(
-                          colSpecTr3,
-                          fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                          (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                           fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                      )._30WIRE_PN_2ST)))),
-                      _q: fx_Num(inp_QtdTr3.Text),
-                      _rec: gal_FilaTr3.Selected.quantidade_tubo,
+                      _q: Coalesce(Value(inp_QtdTr3.Text), 0),
                       _p: Coalesce(Value(inp_PicksTr3.Text), 0),
-                      _p1: Coalesce(Value(inp_PicksT1Tr3.Text), 0),
-                      _d: fx_DiametroPol(inp_DiametroTr3.Text),
-                      _d1: fx_DiametroPol(inp_DiametroT1Tr3.Text)
+                      _rec: Coalesce(gal_FilaTr3.Selected.quantidade_tubo, 0)
                   },
                   With(
                       {
-                          _pmin: fx_NumSpec(Text(If(_duas, _s._35PICKS_2ST_MIN_5, _s._15PICKS_1ST_MIN_5))),
-                          _pmax: fx_NumSpec(Text(If(_duas, _s._37PICKS_2ST_MAX_5, _s._17PICKS_1ST_MAX_5))),
-                          _dmin: fx_NumSpec(Text(If(_duas, _s._32OD_2ST_MIN_in, _s._12OD_1ST_MIN_in))),
-                          _dmax: fx_NumSpec(Text(If(_duas, _s._34OD_2ST_MAX_in, _s._14OD_1ST_MAX_in))),
-                          _fioTxt: Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)),
-                          _confF: fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), ""),
-                          _conf1: If(_duas, fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), ""), "SEM_FIO"),
-                          _falta1: _duas && (IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || _p1 <= 0),
-                          _fora1: _duas && (
-                              fx_ForaDaFaixa(_p1, fx_NumSpec(Text(_s._15PICKS_1ST_MIN_5)), fx_NumSpec(Text(_s._17PICKS_1ST_MAX_5))) ||
-                              fx_ForaDaFaixa(_d1, fx_NumSpec(Text(_s._12OD_1ST_MIN_in)), fx_NumSpec(Text(_s._14OD_1ST_MAX_in)))
-                          )
+                          _p1min: fx_NumSpec(_s._15PICKS_1ST_MIN_5),
+                          _p1max: fx_NumSpec(_s._17PICKS_1ST_MAX_5),
+                          _p2min: fx_NumSpec(_s._35PICKS_2ST_MIN_5),
+                          _p2max: fx_NumSpec(_s._37PICKS_2ST_MAX_5)
                       },
-                      With(
-                          {
-                              _k: If(
-                                  _confF = "DIVERGE", 1,
-                                  _conf1 = "DIVERGE", 2,
-                                  fx_MetragemSubiu(_q, _rec), 3,
-                                  _falta1, 4,
-                                  fx_ForaDaFaixa(_p, _pmin, _pmax), 5,
-                                  fx_ForaDaFaixa(_d, _dmin, _dmax), 6,
-                                  _fora1, 7,
-                                  0
-                              )
-                          },
-                          Switch(
-                              _k,
-                              1, "⛔ Código do fio diverge do delineamento (spec: " & Coalesce(_fioTxt, "—") & "). Confira a etiqueta da bobina.",
-                              2, "⛔ Código do fio da 1ª trama diverge do delineamento (spec: " & Coalesce(Text(_s._10WIRE_PN_1ST), "—") & "). Abra 1ª trama e confira.",
-                              3, "⚠ Quantidade passa " & Text(Round((_q / _rec - 1) * 100, 0), "[$-en-US]0") & "% do recebido do Tubo (margem " & fx_MargemMetragemPct & "%). Confira a digitação.",
-                              4, "⚠ Falta preencher a 1ª trama (LI, fio e picks). Toque em 1ª trama, ao lado de Salvar.",
-                              5, "⚠ Nº de picks fora da faixa do delineamento (" & Text(_pmin, "[$-pt-BR]#.##0") & " a " & Text(_pmax, "[$-pt-BR]#.##0") & ").",
-                              6, "⚠ Diâmetro fora da faixa do delineamento (" & fx_MedidaBR(_dmin) & " a " & fx_MedidaBR(_dmax) & " pol.).",
-                              7, "⚠ A 1ª trama tem medida fora do delineamento. Abra 1ª trama e confira.",
-                              ""
-                          )
+                      If(
+                          _q > 0 && _rec > 0 && _q > _rec,
+                          "⛔ Quantidade (" & Text(_q, "[$-pt-BR]#.##0") & " m) maior que o recebido do Tubo (" & Text(_rec, "[$-pt-BR]#.##0") & " m).",
+                          fx_ConfFio(inp_FioTr3.Text, Text(_s._10WIRE_PN_1ST), Text(_s._30WIRE_PN_2ST)) = "DIVERGE",
+                          "⛔ Código do fio digitado diverge do delineamento (spec: " & Coalesce(Text(_s._10WIRE_PN_1ST), "—") & " / " & Coalesce(Text(_s._30WIRE_PN_2ST), "—") & "). Confira a etiqueta da bobina.",
+                          fx_ForaDaFaixa(_p, _p1min, _p1max) &&
+                          (_p2min <= 0 || fx_ForaDaFaixa(_p, _p2min, _p2max)),
+                          "⚠ Nº de picks fora da faixa do delineamento (1ª trama " & Text(_p1min, "[$-pt-BR]#.##0") & "–" & Text(_p1max, "[$-pt-BR]#.##0") & " · 2ª trama " & Text(_p2min, "[$-pt-BR]#.##0") & "–" & Text(_p2max, "[$-pt-BR]#.##0") & ").",
+                          ""
                       )
                   )
               )
             Visible: |-
-              =fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && !IsBlank(Self.Text)
+              =!IsBlank(Self.Text) &&
+              fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO"
             Width: =773
             X: =345
             Y: =619
@@ -1553,37 +1386,6 @@ Screens:
             Width: =360
             X: =549
             Y: =700
-      - btn_Trama1Tr3:
-          Control: Classic/Button@2.2.0
-          Properties:
-            BorderColor: =If(IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0, fx_CorAlerta, fx_CorBorda)
-            BorderThickness: =1
-            Color: =If(IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0, fx_CorAlerta, fx_CorOK)
-            DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-            Fill: =If(IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0, fx_CorAlertaSuave, fx_CorOKSuave)
-            Font: =fx_FonteFamilia
-            FontWeight: =FontWeight.Bold
-            Height: =fx_AlturaAcao
-            HoverFill: =fx_CorInfoSuave
-            OnSelect: |-
-              =UpdateContext({ctxModalTrama1Tr3: true})
-            PressedFill: =fx_CorInfoSuave
-            RadiusBottomLeft: =fx_RaioS
-            RadiusBottomRight: =fx_RaioS
-            RadiusTopLeft: =fx_RaioS
-            RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteCorpo
-            Text: =If(IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0, "1ª trama  ⚠", "1ª trama  ✓")
-            Visible: |-
-              =fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && (!IsBlank(Trim(Text(LookUp(
-                  colSpecTr3,
-                  fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                  (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                   fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-              )._30WIRE_PN_2ST))))
-            Width: =130
-            X: =420
-            Y: =700
       - btn_SalvarTr3:
           Control: Classic/Button@2.2.0
           Properties:
@@ -1608,7 +1410,7 @@ Screens:
                   {
                       _r: LookUp(ficha_producao, ID = gal_FilaTr3.Selected.ID),
                       _agora: Now(),
-                      _q: fx_Num(inp_QtdTr3.Text)
+                      _q: Coalesce(Value(inp_QtdTr3.Text), 0)
                   },
                   With(
                       {
@@ -1620,26 +1422,19 @@ Screens:
                           Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
                           Select(btn_RecarregarTr3);
                           Set(varProcessando, false),
-                          fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
+                          _r.status_processo <> "Em processo",
                           Notify("Esta OP não está em processo. Inicie antes de salvar.", NotificationType.Warning, 6000);
-                          Set(varProcessando, false),
-                          !fx_MetragemOk(_q),
-                          Notify("Informe a quantidade (maior que zero) antes de salvar o parcial.", NotificationType.Warning, 6000);
                           Set(varProcessando, false),
                           Patch(
                               ficha_producao,
                               _r,
                               {
                                   quantidade_trancagem: _q,
-                                  defeito_trancagem: Coalesce(fx_Num(inp_RefugoTr3.Text), 0),
+                                  defeito_trancagem: Coalesce(Value(inp_RefugoTr3.Text), 0),
                                   'N°Picks': Coalesce(Value(inp_PicksTr3.Text), Blank()),
-                                  Diametro_Trançagem: fx_DiametroPol(inp_DiametroTr3.Text),
+                                  Diametro_Trançagem: fx_NumMedida(inp_DiametroTr3.Text),
                                   Lote_Trançagem: Trim(inp_LiTr3.Text),
                                   Cod_Trançagem: Trim(inp_FioTr3.Text),
-                                  Lote_Tranc_1aTrama: Trim(inp_LiT1Tr3.Text),
-                                  Cod_Tranc_1aTrama: Trim(inp_FioT1Tr3.Text),
-                                  Picks_Tranc_1aTrama: Coalesce(Value(inp_PicksT1Tr3.Text), Blank()),
-                                  Diam_Tranc_1aTrama: fx_DiametroPol(inp_DiametroT1Tr3.Text),
                                   operador_trancagem: cmb_OperadorTr3.Selected.Nome,
                                   Observação_Trançagem: inp_ObsTr3.Text,
                                   Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
@@ -1684,14 +1479,8 @@ Screens:
                   !IsBlank(cmb_OperadorTr3.Selected.Nome) &&
                   !IsBlank(Trim(inp_LiTr3.Text)) &&
                   !IsBlank(Trim(inp_FioTr3.Text)) &&
-                  fx_MetragemOk(fx_Num(inp_QtdTr3.Text)) &&
-                  Coalesce(Value(inp_PicksTr3.Text), 0) > 0 &&
-                  (!(!IsBlank(Trim(Text(LookUp(
-                  colSpecTr3,
-                  fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                  (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                   fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-              )._30WIRE_PN_2ST)))) || !(IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0)),
+                  Coalesce(Value(inp_QtdTr3.Text), 0) > 0 &&
+                  Coalesce(Value(inp_PicksTr3.Text), 0) > 0,
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1975,7 +1764,7 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =50
             OnSelect: =Select(btn_CardHHTr3)
-            Size: =fx_FonteApoio
+            Size: =11
             Text: |-
               =With(
                   { _maq: fx_MaquinaFoco(Text(gal_FilaTr3.Selected.Trançadeira), Text(cmb_FiltroTr3.Selected.Filtro)) },
@@ -2015,10 +1804,7 @@ Screens:
             Height: =58
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =ClearCollect(colMangEditTr3, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
-              Reset(cmb_MangEditarTr3);
-              Reset(inp_OutraMangTr3);
-              UpdateContext({ctxModalEditarTr3: true})
+              =UpdateContext({ctxModalEditarTr3: true})
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -2273,7 +2059,7 @@ Screens:
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
-            Size: =fx_FonteCorpo
+            Size: =12
             Text: ="ㅤㅤRefugo de arame"
             Width: =183
             X: =1168
@@ -2374,7 +2160,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.4.1"
+            Text: ="Versão 0.3.1"
             Width: =183
             X: =1163
             Y: =715
@@ -2536,12 +2322,12 @@ Screens:
             - lbl_SemSpecDelinTr3:
                 Control: Label@2.5.1
                 Properties:
-                  Color: =fx_CorAlerta
+                  Color: =fx_CorErro
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =44
                   Size: =fx_FonteCorpo
-                  Text: ="⚠ Esta mangueira não tem delineamento em DM_TRANÇAGEM (amostra ou mangueira nova). Pode iniciar, sem faixa para conferir."
+                  Text: ="⛔ Esta mangueira não tem delineamento em DM_TRANÇAGEM. Chame a engenharia antes de iniciar."
                   Visible: |-
                     =IsBlank(
                         LookUp(
@@ -2975,7 +2761,18 @@ Screens:
                   BorderThickness: =0
                   Color: =fx_CorSuperficie
                   DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: |-
+                    =If(
+                        varProcessando ||
+                        IsBlank(
+                            LookUp(
+                                colSpecTr3,
+                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira)
+                            ).PARTNUMBER
+                        ),
+                        DisplayMode.Disabled,
+                        DisplayMode.Edit
+                    )
                   Fill: =fx_CorInfo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
@@ -3058,7 +2855,7 @@ Screens:
                   Text: |-
                     ="OP " & Text(gal_FilaTr3.Selected.OP) & "  ·  " &
                     Coalesce(gal_FilaTr3.Selected.Mangueira, "—") & "  ·  " &
-                    fx_MetrosUn(gal_FilaTr3.Selected.quantidade_tubo) & " recebidos do Tubo"
+                    Text(Coalesce(gal_FilaTr3.Selected.quantidade_tubo, 0), "[$-pt-BR]#.##0") & " m recebidos do Tubo"
                   Width: =700
                   X: =333
                   Y: =218
@@ -3259,18 +3056,15 @@ Screens:
                             _agora: Now()
                         },
                         With(
-                            {_turno: fx_TurnoEm(_agora)},
+                            {_min: fx_MinutosDoDia(_agora)},
                             If(
                                 _r.Modified <> gal_FilaTr3.Selected.Modified,
                                 Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
                                 Select(btn_RecarregarTr3);
                                 Set(varProcessando, false),
-                                fx_EstadoContinuo(_r.status_processo) = "PRODUZINDO",
+                                _r.status_processo = "Em processo",
                                 Notify("Esta OP já foi iniciada por outro operador. Atualize a fila.", NotificationType.Error, 8000);
                                 Select(btn_RecarregarTr3);
-                                Set(varProcessando, false),
-                                !fx_MetragemOk(_r.quantidade_tubo),
-                                Notify("OP sem metragem recebida do Tubo. Chame a Supervisão para corrigir antes de trançar.", NotificationType.Warning, 8000);
                                 Set(varProcessando, false),
                                 IsBlank(_c.Title) || !IsBlank(_c.op),
                                 Notify("Este carretel já está ocupado. Escolha outro carretel livre.", NotificationType.Error, 8000);
@@ -3284,7 +3078,7 @@ Screens:
                                         'Carretel Saida': _c.Title,
                                         data_hora_inicio_trancadeira: Coalesce(_r.data_hora_inicio_trancadeira, _agora),
                                         InicioEmProcesso_Trançagem: Coalesce(_r.InicioEmProcesso_Trançagem, _agora),
-                                        Turno_Trançagem: Text(_turno)
+                                        Turno_Trançagem: Text(fx_Turno(_min))
                                     }
                                 );
                                 If(
@@ -3312,10 +3106,6 @@ Screens:
                                             etapa_processo: "Trançagem"
                                         }
                                     );
-                                    If(
-                                        !IsEmpty(Errors(lista_carreteis)),
-                                        Notify("OP iniciada, mas o carretel NÃO foi marcado como ocupado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
-                                    );
                                     Patch(
                                         Historico_Carretel,
                                         Defaults(Historico_Carretel),
@@ -3324,7 +3114,7 @@ Screens:
                                             OP_ID: _r.OP,
                                             etapa: "Trançagem",
                                             mangueira: Text(_r.Bitola),
-                                            metros_entrada: _r.quantidade_tubo,
+                                            metros_entrada: Coalesce(_r.quantidade_tubo, 0),
                                             data_hora_entrada: _agora,
                                             operador: _r.operador_trancagem
                                         }
@@ -3344,9 +3134,9 @@ Screens:
                                             tipo: {Value: "Início"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: _turno,
+                                            turno: fx_Turno(_min),
                                             bitola: _r.Bitola,
-                                            metros: _r.quantidade_tubo,
+                                            metros: Coalesce(_r.quantidade_tubo, 0),
                                             recurso: _r.Trançadeira,
                                             operador: _r.operador_trancagem
                                         }
@@ -3375,439 +3165,6 @@ Screens:
                   Width: =220
                   X: =813
                   Y: =490
-      - cntr_Trama1Tr3:
-          Control: GroupContainer@1.5.0
-          Variant: ManualLayout
-          Properties:
-            Fill: =fx_CorOverlay
-            Height: =768
-            Visible: =ctxModalTrama1Tr3
-            Width: =1366
-          Children:
-            - btn_BgTrama1Tr3:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =Color.Transparent
-                  BorderThickness: =0
-                  Fill: =Color.Transparent
-                  Font: =fx_FonteFamilia
-                  Height: =768
-                  HoverFill: =Color.Transparent
-                  PressedFill: =Color.Transparent
-                  Text: =""
-                  Width: =1366
-            - btn_CardTrama1Tr3:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =fx_CorBorda
-                  BorderThickness: =1
-                  DisplayMode: =DisplayMode.View
-                  Fill: =fx_CorSuperficie
-                  Font: =fx_FonteFamilia
-                  Height: =500
-                  HoverFill: =fx_CorSuperficie
-                  PressedFill: =fx_CorSuperficie
-                  RadiusBottomLeft: =fx_RaioG
-                  RadiusBottomRight: =fx_RaioG
-                  RadiusTopLeft: =fx_RaioG
-                  RadiusTopRight: =fx_RaioG
-                  Text: =""
-                  Width: =600
-                  X: =383
-                  Y: =110
-            - lbl_TituloTrama1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorTexto
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Bold
-                  Height: =34
-                  Size: =fx_FonteTitulo
-                  Text: ="1ª trama — 1º deck"
-                  Width: =560
-                  X: =413
-                  Y: =134
-            - lbl_SubTrama1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorTextoSuave
-                  Font: =fx_FonteFamilia
-                  Height: =22
-                  Size: =fx_FonteCorpo
-                  Text: ="OP " & Text(gal_FilaTr3.Selected.OP) & "  ·  " & Coalesce(gal_FilaTr3.Selected.Mangueira, "—") & "  ·  a 2ª trama (final) fica na tela principal."
-                  Width: =560
-                  X: =413
-                  Y: =172
-            - lbl_SpecTrama1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorTextoSuave
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =40
-                  Size: =fx_FonteApoio
-                  Text: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        "Spec da 1ª trama: fio " & Coalesce(Text(_s._10WIRE_PN_1ST), "—") &
-                        "  ·  picks " & Coalesce(Text(_s._15PICKS_1ST_MIN_5), "—") & " a " & Coalesce(Text(_s._17PICKS_1ST_MAX_5), "—") &
-                        "  ·  Ø " & Coalesce(Text(_s._12OD_1ST_MIN_in), "—") & " a " & Coalesce(Text(_s._14OD_1ST_MAX_in), "—") & " pol."
-                    )
-                  Width: =560
-                  X: =413
-                  Y: =204
-            - lbl_RotLiT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="LI DA BOBINADEIRA *"
-                  Width: =170
-                  X: =413
-                  Y: =262
-            - inp_LiT1Tr3:
-                Control: Classic/TextInput@2.3.2
-                Properties:
-                  AccessibleLabel: ="LI da bobina da primeira trama"
-                  Align: =Align.Center
-                  BorderColor: =If(fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
-                  Default: =Coalesce(ctxLiSug1Tr3, gal_FilaTr3.Selected.Lote_Tranc_1aTrama)
-                  DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =fx_AlturaCampo
-                  HintText: ="Etiqueta da bobina"
-                  HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteDestaque
-                  Width: =170
-                  X: =413
-                  Y: =282
-            - lbl_RotFioT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="CÓD. DO FIO *"
-                  Width: =170
-                  X: =603
-                  Y: =262
-            - inp_FioT1Tr3:
-                Control: Classic/TextInput@2.3.2
-                Properties:
-                  AccessibleLabel: ="Código do fio da primeira trama"
-                  Align: =Align.Center
-                  BorderColor: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        If(
-                            fx_ConfFio(Self.Text, Text(_s._10WIRE_PN_1ST), "") = "DIVERGE",
-                            fx_CorErro,
-                            fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && IsBlank(Trim(Self.Text)),
-                            fx_CorErro,
-                            fx_CorBorda
-                        )
-                    )
-                  Default: =Coalesce(ctxFioSug1Tr3, gal_FilaTr3.Selected.Cod_Tranc_1aTrama)
-                  DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =fx_AlturaCampo
-                  HintText: ="Código do arame"
-                  HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteDestaque
-                  Width: =170
-                  X: =603
-                  Y: =282
-            - lbl_RotBobT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="BOBINA DO CARRINHO"
-                  Width: =170
-                  X: =793
-                  Y: =262
-            - btn_SugFioT1Tr3:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =fx_CorBorda
-                  BorderThickness: =1
-                  Color: =fx_CorInfo
-                  DisabledFill: =fx_CorFundo
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Fill: =fx_CorSuperficie
-                  Font: =fx_FonteFamilia
-                  Height: =fx_AlturaCampo
-                  HoverFill: =fx_CorInfoSuave
-                  OnSelect: |-
-                    =UpdateContext({ctxAlvoSugTr3: 1});
-                    Select(btn_SugFioTr3)
-                  PressedFill: =fx_CorInfoSuave
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteCorpo
-                  Text: ="Buscar LI e fio"
-                  Width: =160
-                  X: =793
-                  Y: =282
-            - lbl_RotPicksT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="Nº PICKS — 1ª TRAMA *"
-                  Width: =180
-                  X: =413
-                  Y: =350
-            - inp_PicksT1Tr3:
-                Control: Classic/TextInput@2.3.2
-                Properties:
-                  AccessibleLabel: ="Número de picks da primeira trama"
-                  Align: =Align.Center
-                  BorderColor: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        With(
-                            { _v: Coalesce(Value(Self.Text), 0) },
-                            If(
-                                fx_EstadoContinuo(gal_FilaTr3.Selected.status_processo) = "PRODUZINDO" && _v <= 0,
-                                fx_CorErro,
-                                fx_ForaDaFaixa(_v, fx_NumSpec(Text(_s._15PICKS_1ST_MIN_5)), fx_NumSpec(Text(_s._17PICKS_1ST_MAX_5))),
-                                fx_CorAlerta,
-                                fx_CorBorda
-                            )
-                        )
-                    )
-                  Default: =gal_FilaTr3.Selected.Picks_Tranc_1aTrama
-                  DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Format: =TextFormat.Number
-                  Height: =fx_AlturaCampo
-                  HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteDestaque
-                  Width: =170
-                  X: =413
-                  Y: =370
-            - lbl_RotDiamT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="Ø 1ª TRAMA (pol.)"
-                  Width: =170
-                  X: =603
-                  Y: =350
-            - inp_DiametroT1Tr3:
-                Control: Classic/TextInput@2.3.2
-                Properties:
-                  AccessibleLabel: ="Diâmetro externo da primeira trama em polegadas"
-                  Align: =Align.Center
-                  BorderColor: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        If(
-                            fx_ForaDaFaixa(fx_DiametroPol(Self.Text), fx_NumSpec(Text(_s._12OD_1ST_MIN_in)), fx_NumSpec(Text(_s._14OD_1ST_MAX_in))),
-                            fx_CorAlerta,
-                            fx_CorBorda
-                        )
-                    )
-                  Default: =gal_FilaTr3.Selected.Diam_Tranc_1aTrama
-                  DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =fx_AlturaCampo
-                  HintText: |-
-                    ="Ex: 0,375"
-                  HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteDestaque
-                  Width: =170
-                  X: =603
-                  Y: =370
-            - lbl_StatusT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        If(
-                            fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), "") = "DIVERGE",
-                            fx_CorErro,
-                            fx_CorTextoSuave
-                        )
-                    )
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Bold
-                  Height: =44
-                  Size: =fx_FonteCorpo
-                  Text: |-
-                    =With(
-                        {
-                            _s: LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
-                        },
-                        Switch(
-                            fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), ""),
-                            "OK", "✓ Fio bate com a 1ª trama do delineamento.",
-                            "DIVERGE", "✗ Fio diferente do delineamento da 1ª trama. Confira a etiqueta da bobina.",
-                            "Sem conferência do fio ainda."
-                        )
-                    )
-                  Width: =560
-                  X: =413
-                  Y: =440
-            - lbl_NotaT1Tr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorTextoSuave
-                  Font: =fx_FonteFamilia
-                  Height: =40
-                  Size: =fx_FonteApoio
-                  Text: ="Estes dados da 1ª trama são gravados quando você tocar em Salvar Parcial ou Enviar."
-                  Width: =560
-                  X: =413
-                  Y: =490
-            - btn_FecharTrama1Tr3:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =Color.Transparent
-                  BorderThickness: =0
-                  Color: =fx_CorSuperficie
-                  DisabledFill: =fx_CorBorda
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                  Fill: =fx_CorInfo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Bold
-                  Height: =fx_AlturaAcaoS
-                  HoverFill: =ColorFade(fx_CorInfo, -20%)
-                  OnSelect: |-
-                    =UpdateContext({ctxModalTrama1Tr3: false})
-                  PressedFill: =ColorFade(fx_CorInfo, -30%)
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteCorpo
-                  Text: ="Pronto"
-                  Width: =220
-                  X: =733
-                  Y: =544
       - cntr_SugFioTr3:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
@@ -3867,7 +3224,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =38
                   Size: =fx_FonteCorpo
-                  Text: ="Aparecem só as bobinas dos últimos 4 dias. Escolher uma bobina só copia o LI e o código do fio para a ficha. A bobina sai daqui quando o carrinho dela for devolvido num novo pedido."
+                  Text: ="Escolher uma bobina só copia o LI e o código do fio para a ficha. A bobina sai daqui quando o carrinho dela for devolvido num novo pedido."
                   Width: =900
                   X: =213
                   Y: =158
@@ -3933,9 +3290,8 @@ Screens:
                         {
                             _noCarro: Filter(
                                 colBobinasTr3 As _b,
-                                _b.DataHoraFinal >= DateAdd(ctxAgora, -4, TimeUnit.Days) &&
-                                (IsBlank(_b.Carrinho) ||
-                                 LookUp(colCarrinhos As _k, _k.Carrinho = _b.Carrinho).IdLinha = _b.ID)
+                                IsBlank(_b.Carrinho) ||
+                                LookUp(colCarrinhos As _k, _k.Carrinho = _b.Carrinho).IdLinha = _b.ID
                             )
                         },
                         If(
@@ -4145,7 +3501,7 @@ Screens:
                   Height: =60
                   Size: =fx_FonteCorpo
                   Text: |-
-                    ="Nenhuma bobina dos últimos 4 dias pronta para a " & Coalesce(gal_FilaTr3.Selected.Trançadeira, "trançadeira") &
+                    ="Nenhuma bobina pronta para a " & Coalesce(gal_FilaTr3.Selected.Trançadeira, "trançadeira") &
                     ". Digite o LI e o código do fio pela etiqueta, ou peça bobina no menu lateral."
                   Visible: =IsEmpty(gal_BobinasTr3.AllItems)
                   Width: =940
@@ -4173,7 +3529,7 @@ Screens:
                   Height: =fx_AlturaAcaoS
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =UpdateContext({ctxModalSugFioTr3: false, ctxBobinaSelTr3: 0, ctxModalTrama1Tr3: ctxAlvoSugTr3 = 1, ctxAlvoSugTr3: 2})
+                    =UpdateContext({ctxModalSugFioTr3: false, ctxBobinaSelTr3: 0})
                   PressedFill: =fx_CorFundo
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -4213,27 +3569,14 @@ Screens:
                                     Text(_w5.WIRE_YARN_PN)
                                 )
                             },
-                            If(
-                                ctxAlvoSugTr3 = 1,
-                                UpdateContext({
-                                    ctxLiSug1Tr3: Coalesce(Text(_b.LI), ""),
-                                    ctxFioSug1Tr3: Coalesce(_fio, ""),
-                                    ctxModalSugFioTr3: false,
-                                    ctxBobinaSelTr3: 0,
-                                    ctxModalTrama1Tr3: true,
-                                    ctxAlvoSugTr3: 2
-                                });
-                                Reset(inp_LiT1Tr3);
-                                Reset(inp_FioT1Tr3),
-                                UpdateContext({
-                                    ctxLiSugTr3: Coalesce(Text(_b.LI), ""),
-                                    ctxFioSugTr3: Coalesce(_fio, ""),
-                                    ctxModalSugFioTr3: false,
-                                    ctxBobinaSelTr3: 0
-                                });
-                                Reset(inp_LiTr3);
-                                Reset(inp_FioTr3)
-                            );
+                            UpdateContext({
+                                ctxLiSugTr3: Coalesce(Text(_b.LI), ""),
+                                ctxFioSugTr3: Coalesce(_fio, ""),
+                                ctxModalSugFioTr3: false,
+                                ctxBobinaSelTr3: 0
+                            });
+                            Reset(inp_LiTr3);
+                            Reset(inp_FioTr3);
                             Notify(
                                 If(
                                     IsBlank(_fio),
@@ -4317,7 +3660,7 @@ Screens:
                   Text: |-
                     ="OP " & Text(gal_FilaTr3.Selected.OP) & "  ·  " &
                     Coalesce(gal_FilaTr3.Selected.Mangueira, "—") & "  ·  " &
-                    fx_MetrosUn(fx_Num(inp_QtdTr3.Text)) & "  ·  carretel " &
+                    Text(Coalesce(Value(inp_QtdTr3.Text), 0), "[$-pt-BR]#.##0") & " m  ·  carretel " &
                     Coalesce(gal_FilaTr3.Selected.'Carretel Saida', "—")
                   Width: =480
                   X: =443
@@ -4339,16 +3682,9 @@ Screens:
                                 fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
                                 (IsBlank(cmb_ConstrTr3.Selected.Value) ||
                                  fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            ),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                                colSpecTr3,
-                                fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                                (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                                 fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                            )._30WIRE_PN_2ST))))
+                            )
                         },
-                        fx_ConfFio(inp_FioTr3.Text, Text(If(_duas, _s._30WIRE_PN_2ST, _s._10WIRE_PN_1ST)), "") = "DIVERGE" ||
-                        (_duas && fx_ConfFio(inp_FioT1Tr3.Text, Text(_s._10WIRE_PN_1ST), "") = "DIVERGE")
+                        fx_ConfFio(inp_FioTr3.Text, Text(_s._10WIRE_PN_1ST), Text(_s._30WIRE_PN_2ST)) = "DIVERGE"
                     )
                   Width: =480
                   X: =443
@@ -4500,19 +3836,13 @@ Screens:
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaTr3.Selected.ID),
                             _agora: Now(),
-                            _q: fx_Num(inp_QtdTr3.Text),
-                            _ref: Coalesce(fx_Num(inp_RefugoTr3.Text), 0),
-                            _sobra: Coalesce(fx_Num(inp_SobraTr3.Text), 0),
-                            _duas: (!IsBlank(Trim(Text(LookUp(
-                        colSpecTr3,
-                        fx_NormCodigo(PARTNUMBER) = fx_NormCodigo(gal_FilaTr3.Selected.Mangueira) &&
-                        (IsBlank(cmb_ConstrTr3.Selected.Value) ||
-                         fx_NormCodigo(_2BRD_CODE) = fx_NormCodigo(cmb_ConstrTr3.Selected.Value))
-                    )._30WIRE_PN_2ST))))
+                            _q: Coalesce(Value(inp_QtdTr3.Text), 0),
+                            _ref: Coalesce(Value(inp_RefugoTr3.Text), 0),
+                            _sobra: Coalesce(Value(inp_SobraTr3.Text), 0)
                         },
                         With(
                             {
-                                _turno: fx_TurnoEm(_agora),
+                                _min: fx_MinutosDoDia(_agora),
                                 _ja: Coalesce(_r.Qtd_Turno1, 0) + Coalesce(_r.Qtd_Turno2, 0) + Coalesce(_r.Qtd_Turno3, 0),
                                 _saida: _r.'Carretel Saida'
                             },
@@ -4521,20 +3851,16 @@ Screens:
                                 Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
                                 Select(btn_RecarregarTr3);
                                 Set(varProcessando, false),
-                                fx_EstadoContinuo(_r.status_processo) <> "PRODUZINDO",
+                                _r.status_processo <> "Em processo",
                                 Notify("Esta OP não está em processo. Atualize a fila.", NotificationType.Error, 8000);
                                 Select(btn_RecarregarTr3);
                                 Set(varProcessando, false),
                                 IsBlank(cmb_OperadorTr3.Selected.Nome) ||
                                 IsBlank(Trim(inp_LiTr3.Text)) ||
                                 IsBlank(Trim(inp_FioTr3.Text)) ||
-                                !fx_MetragemOk(_q) ||
+                                _q <= 0 ||
                                 Coalesce(Value(inp_PicksTr3.Text), 0) <= 0,
                                 Notify("Preencha LI, código do fio, quantidade, nº de picks e operador antes de enviar.", NotificationType.Warning, 6000);
-                                Set(varProcessando, false),
-                                _duas && (IsBlank(Trim(inp_LiT1Tr3.Text)) || IsBlank(Trim(inp_FioT1Tr3.Text)) || Coalesce(Value(inp_PicksT1Tr3.Text), 0) <= 0),
-                                Notify("Esta mangueira tem 2 tramas. Preencha LI, fio e picks da 1ª trama antes de enviar.", NotificationType.Warning, 8000);
-                                UpdateContext({ctxModalEnviarTr3: false, ctxModalTrama1Tr3: true});
                                 Set(varProcessando, false),
                                 Patch(
                                     ficha_producao,
@@ -4543,13 +3869,9 @@ Screens:
                                         quantidade_trancagem: _q,
                                         defeito_trancagem: _ref,
                                         'N°Picks': Coalesce(Value(inp_PicksTr3.Text), Blank()),
-                                        Diametro_Trançagem: fx_DiametroPol(inp_DiametroTr3.Text),
+                                        Diametro_Trançagem: fx_NumMedida(inp_DiametroTr3.Text),
                                         Lote_Trançagem: Trim(inp_LiTr3.Text),
                                         Cod_Trançagem: Trim(inp_FioTr3.Text),
-                                        Lote_Tranc_1aTrama: Trim(inp_LiT1Tr3.Text),
-                                        Cod_Tranc_1aTrama: Trim(inp_FioT1Tr3.Text),
-                                        Picks_Tranc_1aTrama: Coalesce(Value(inp_PicksT1Tr3.Text), Blank()),
-                                        Diam_Tranc_1aTrama: fx_DiametroPol(inp_DiametroT1Tr3.Text),
                                         operador_trancagem: cmb_OperadorTr3.Selected.Nome,
                                         Observação_Trançagem: inp_ObsTr3.Text,
                                         'Carretel Entrada': _saida,
@@ -4558,10 +3880,10 @@ Screens:
                                         status_processo: "Aguardando",
                                         data_hora_final_trancadeira: _agora,
                                         InicioAguardandoCobertura: _agora,
-                                        Qtd_Turno1: If(_turno = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
-                                        Qtd_Turno2: If(_turno = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
-                                        Qtd_Turno3: If(_turno = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3),
-                                        Turno_Trançagem: Text(_turno)
+                                        Qtd_Turno1: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
+                                        Qtd_Turno2: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
+                                        Qtd_Turno3: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3),
+                                        Turno_Trançagem: Text(fx_Turno(_min))
                                     }
                                 );
                                 If(
@@ -4582,7 +3904,7 @@ Screens:
                                             OP_ID: _r.OP,
                                             etapa: "Trançagem",
                                             mangueira: Text(_r.Bitola),
-                                            metros_entrada: _r.quantidade_tubo,
+                                            metros_entrada: Coalesce(_r.quantidade_tubo, 0),
                                             metros_saida: _q,
                                             data_hora_entrada: Coalesce(_r.data_hora_inicio_trancadeira, _agora),
                                             data_hora_saida: _agora,
@@ -4604,7 +3926,7 @@ Screens:
                                             tipo: {Value: "Fim"},
                                             data_hora: _agora,
                                             data_ref: fx_DataRefEm(_agora),
-                                            turno: _turno,
+                                            turno: fx_Turno(_min),
                                             bitola: _r.Bitola,
                                             metros: _q,
                                             refugo: _ref,
@@ -4618,27 +3940,16 @@ Screens:
                                     );
                                     If(
                                         !IsBlank(_r.'Carretel Entrada'),
-                                        With(
-                                            { _c: LookUp(lista_carreteis, Title = _r.'Carretel Entrada') },
-                                            If(
-                                                IsBlank(_c.Title),
-                                                Notify("Ficha enviada, mas o carretel de entrada " & _r.'Carretel Entrada' & " não foi encontrado para liberar. Avise a Supervisão.", NotificationType.Warning, 10000),
-                                                Patch(
-                                                    lista_carreteis,
-                                                    _c,
-                                                    {
-                                                        op: Blank(),
-                                                        etapa_processo: Blank(),
-                                                        lote: Blank(),
-                                                        metros_restantes: If(ctxUsouTudoTr3, 0, _sobra),
-                                                        mangueira_atual: If(ctxUsouTudoTr3, Blank(), _r.Bitola)
-                                                    }
-                                                );
-                                                If(
-                                                    !IsEmpty(Errors(lista_carreteis)),
-                                                    Notify("Ficha enviada, mas o carretel de entrada NÃO foi liberado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
-                                                )
-                                            )
+                                        Patch(
+                                            lista_carreteis,
+                                            LookUp(lista_carreteis, Title = _r.'Carretel Entrada'),
+                                            {
+                                                op: Blank(),
+                                                etapa_processo: Blank(),
+                                                lote: Blank(),
+                                                metros_restantes: If(ctxUsouTudoTr3, 0, _sobra),
+                                                mangueira_atual: If(ctxUsouTudoTr3, Blank(), _r.Bitola)
+                                            }
                                         )
                                     );
                                     Reset(inp_SobraTr3);
@@ -4646,9 +3957,7 @@ Screens:
                                         ctxModalEnviarTr3: false,
                                         ctxUsouTudoTr3: true,
                                         ctxLiSugTr3: "",
-                                        ctxFioSugTr3: "",
-                                        ctxLiSug1Tr3: "",
-                                        ctxFioSug1Tr3: ""
+                                        ctxFioSugTr3: ""
                                     });
                                     Select(btn_RecarregarTr3);
                                     Reset(gal_FilaTr3);
@@ -4780,36 +4089,21 @@ Screens:
                   Width: =260
                   X: =693
                   Y: =214
-            - cmb_MangEditarTr3:
-                Control: Classic/ComboBox@2.4.0
+            - inp_MangEditarTr3:
+                Control: Classic/TextInput@2.3.2
                 Properties:
-                  AccessibleLabel: ="Mangueira da ordem"
-                  BorderColor: =If(IsBlank(Self.Selected.NomeMangueira), fx_CorErro, fx_CorBorda)
-                  ChevronBackground: =Color.Transparent
-                  ChevronFill: =fx_CorRotulo
-                  ChevronHoverBackground: =fx_CorFundo
-                  ChevronHoverFill: =fx_CorRotulo
-                  DefaultSelectedItems: |-
-                    =Filter(
-                        colMangEditTr3,
-                        NomeMangueira = If(
-                            IsBlank(LookUp(colMangEditTr3, NomeMangueira = gal_FilaTr3.Selected.Mangueira)),
-                            fx_MangueiraOutra,
-                            gal_FilaTr3.Selected.Mangueira
-                        )
-                    )
-                  DisplayFields: =["NomeMangueira"]
+                  AccessibleLabel: ="Código da mangueira"
+                  BorderColor: =If(IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
+                  Default: =gal_FilaTr3.Selected.Mangueira
+                  DelayOutput: =true
                   Font: =fx_FonteFamilia
                   Height: =fx_AlturaCampo
                   HoverFill: =fx_CorInfoSuave
-                  InputTextPlaceholder: ="Buscar mangueira..."
-                  Items: =colMangEditTr3
-                  PressedColor: =fx_CorSuperficie
-                  PressedFill: =fx_CorInfo
-                  SearchFields: =["NomeMangueira"]
-                  SelectMultiple: =false
-                  SelectionColor: =fx_CorInfo
-                  SelectionFill: =fx_CorInfoSuave
+                  PaddingLeft: =10
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
                   Size: =fx_FonteCorpo
                   Width: =260
                   X: =693
@@ -4907,45 +4201,6 @@ Screens:
                   Width: =260
                   X: =413
                   Y: =402
-            - lbl_RotOutraMangTr3:
-                Control: Label@2.5.1
-                Properties:
-                  Color: =fx_CorRotulo
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Semibold
-                  Height: =18
-                  Size: =fx_FonteApoio
-                  Text: ="CÓDIGO DA MANGUEIRA *"
-                  Visible: =cmb_MangEditarTr3.Selected.NomeMangueira = fx_MangueiraOutra
-                  Width: =260
-                  X: =413
-                  Y: =470
-            - inp_OutraMangTr3:
-                Control: Classic/TextInput@2.3.2
-                Properties:
-                  AccessibleLabel: ="Código da amostra ou mangueira nova"
-                  BorderColor: =If(IsBlank(Trim(Self.Text)), fx_CorErro, fx_CorBorda)
-                  Default: |-
-                    =If(
-                        IsBlank(LookUp(colMangEditTr3, NomeMangueira = gal_FilaTr3.Selected.Mangueira)),
-                        gal_FilaTr3.Selected.Mangueira,
-                        ""
-                    )
-                  DelayOutput: =true
-                  Font: =fx_FonteFamilia
-                  Height: =fx_AlturaCampo
-                  HintText: ="Código da amostra ou da mangueira nova"
-                  HoverFill: =fx_CorInfoSuave
-                  PaddingLeft: =10
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteCorpo
-                  Visible: =cmb_MangEditarTr3.Selected.NomeMangueira = fx_MangueiraOutra
-                  Width: =260
-                  X: =413
-                  Y: =490
             - lbl_AvisoEditarTr3:
                 Control: Label@2.5.1
                 Properties:
@@ -4968,9 +4223,7 @@ Screens:
                   Height: =fx_AlturaAcaoS
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =Reset(cmb_MangEditarTr3);
-                    Reset(inp_OutraMangTr3);
-                    UpdateContext({ctxModalEditarTr3: false})
+                    =UpdateContext({ctxModalEditarTr3: false})
                   PressedFill: =fx_CorFundo
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -4993,8 +4246,7 @@ Screens:
                         !varProcessando &&
                         Len(Trim(inp_OpEditarTr3.Text)) = 8 &&
                         Coalesce(Value(inp_OpEditarTr3.Text), 0) > 0 &&
-                        !IsBlank(cmb_MangEditarTr3.Selected.NomeMangueira) &&
-                        (cmb_MangEditarTr3.Selected.NomeMangueira <> fx_MangueiraOutra || !IsBlank(Trim(inp_OutraMangTr3.Text))) &&
+                        !IsBlank(Trim(inp_MangEditarTr3.Text)) &&
                         !IsBlank(Trim(inp_TrancEditarTr3.Text)),
                         DisplayMode.Edit,
                         DisplayMode.Disabled
@@ -5029,11 +4281,7 @@ Screens:
                                     _r,
                                     {
                                         OP: _op,
-                                        Mangueira: If(
-                                            cmb_MangEditarTr3.Selected.NomeMangueira = fx_MangueiraOutra,
-                                            Upper(Trim(inp_OutraMangTr3.Text)),
-                                            cmb_MangEditarTr3.Selected.NomeMangueira
-                                        ),
+                                        Mangueira: Trim(inp_MangEditarTr3.Text),
                                         Trançadeira: Trim(inp_TrancEditarTr3.Text),
                                         'Carretel Entrada': Trim(inp_CarEntEditarTr3.Text),
                                         'Carretel Saida': Trim(inp_CarSaiEditarTr3.Text)
@@ -5219,7 +4467,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =fx_AlturaCampo
                   HintText: |-
-                    ="Ex: 500"
+                    ="Ex: P"
                   HoverFill: =fx_CorInfoSuave
                   PaddingLeft: =10
                   RadiusBottomLeft: =fx_RaioS
