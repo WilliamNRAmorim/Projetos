@@ -4037,7 +4037,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   Height: =22
                   Size: =fx_FonteCorpo
-                  Text: ="Corrige o plano desta ficha. ID " & Text(gal_FilaTr3.Selected.ID) & "."
+                  Text: ="Corrige mangueira, trançadeira e carretéis desta ficha. A OP não pode ser alterada. ID " & Text(gal_FilaTr3.Selected.ID) & "."
                   Width: =560
                   X: =413
                   Y: =178
@@ -4049,7 +4049,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="OP (8 DÍGITOS) *"
+                  Text: ="OP (NÃO EDITÁVEL)"
                   Width: =260
                   X: =413
                   Y: =214
@@ -4057,14 +4057,10 @@ Screens:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Número da ordem de produção"
-                  BorderColor: |-
-                    =If(
-                        Len(Trim(Self.Text)) <> 8 || Coalesce(Value(Self.Text), 0) <= 0,
-                        fx_CorErro,
-                        fx_CorBorda
-                    )
+                  BorderColor: =fx_CorBorda
                   Default: =Text(gal_FilaTr3.Selected.OP)
                   DelayOutput: =true
+                  DisplayMode: =DisplayMode.View
                   Font: =fx_FonteFamilia
                   Format: =TextFormat.Number
                   Height: =fx_AlturaCampo
@@ -4245,8 +4241,6 @@ Screens:
                   DisplayMode: |-
                     =If(
                         !varProcessando &&
-                        Len(Trim(inp_OpEditarTr3.Text)) = 8 &&
-                        Coalesce(Value(inp_OpEditarTr3.Text), 0) > 0 &&
                         !IsBlank(Trim(inp_MangEditarTr3.Text)) &&
                         !IsBlank(Trim(inp_TrancEditarTr3.Text)),
                         DisplayMode.Edit,
@@ -4261,42 +4255,30 @@ Screens:
                     =Set(varProcessando, true);
                     Refresh(ficha_producao);
                     With(
-                        {
-                            _r: LookUp(ficha_producao, ID = gal_FilaTr3.Selected.ID),
-                            _op: Value(inp_OpEditarTr3.Text)
-                        },
-                        With(
-                            {
-                                _dup: LookUp(ficha_producao As _f3, _f3.OP = _op && _f3.ID <> _r.ID)
-                            },
+                        { _r: LookUp(ficha_producao, ID = gal_FilaTr3.Selected.ID) },
+                        If(
+                            _r.Modified <> gal_FilaTr3.Selected.Modified,
+                            Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
+                            Select(btn_RecarregarTr3);
+                            Set(varProcessando, false),
+                            Patch(
+                                ficha_producao,
+                                _r,
+                                {
+                                    Mangueira: Trim(inp_MangEditarTr3.Text),
+                                    Trançadeira: Trim(inp_TrancEditarTr3.Text),
+                                    'Carretel Entrada': Trim(inp_CarEntEditarTr3.Text),
+                                    'Carretel Saida': Trim(inp_CarSaiEditarTr3.Text)
+                                }
+                            );
                             If(
-                                _r.Modified <> gal_FilaTr3.Selected.Modified,
-                                Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
+                                !IsEmpty(Errors(ficha_producao)),
+                                Notify("Falha ao salvar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                                Set(varProcessando, false),
+                                UpdateContext({ctxModalEditarTr3: false});
                                 Select(btn_RecarregarTr3);
-                                Set(varProcessando, false),
-                                !IsBlank(_dup.ID),
-                                Notify("Já existe outra ficha com a OP " & Text(_op) & " (ID " & Text(_dup.ID) & ").", NotificationType.Error, 8000);
-                                Set(varProcessando, false),
-                                Patch(
-                                    ficha_producao,
-                                    _r,
-                                    {
-                                        OP: _op,
-                                        Mangueira: Trim(inp_MangEditarTr3.Text),
-                                        Trançadeira: Trim(inp_TrancEditarTr3.Text),
-                                        'Carretel Entrada': Trim(inp_CarEntEditarTr3.Text),
-                                        'Carretel Saida': Trim(inp_CarSaiEditarTr3.Text)
-                                    }
-                                );
-                                If(
-                                    !IsEmpty(Errors(ficha_producao)),
-                                    Notify("Falha ao salvar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
-                                    Set(varProcessando, false),
-                                    UpdateContext({ctxModalEditarTr3: false});
-                                    Select(btn_RecarregarTr3);
-                                    Set(varProcessando, false);
-                                    Notify("Dados da OP atualizados.", NotificationType.Success, 4000)
-                                )
+                                Set(varProcessando, false);
+                                Notify("Dados da ficha atualizados.", NotificationType.Success, 4000)
                             )
                         )
                     )
