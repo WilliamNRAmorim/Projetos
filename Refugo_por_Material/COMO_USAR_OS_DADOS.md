@@ -51,6 +51,15 @@ SharePoint; o que está no repositório é uma fotografia (relatório base de 01
   `norm_material()` junta os dois. Confirme com o código SAP antes de afirmar. Seis materiais (EC215-08LRL,
   2583-12, HC139-7_S-GX, HC101-6, GH493-12, GH493-16) **não têm produção casada na MB51** (descrição diferente);
   ficam sem PPM por material.
+  **Resolvido em 14/10/2026:** a MB51 nova (`Producao_GMS_x_MB51/mb51 (5).xlsx`) traz a coluna `Material` (código) e a
+  `Order`. Nunca zere nem descarte uma mangueira por não achar o nome: ligue o nome do GMS ao material SAP **pela OP**
+  (a mesma OP nos dois lados). Tabela aprendida em `Producao_GMS_x_MB51/aliases_mangueira.csv`. Casos que já pegaram:
+  `2583-12` = **12055040** "Hose, 100R3Polyester Braid" (confirmado pelo William); `GH493-6/8/10/12/16` = descrição
+  genérica "HOSE R12" (o código é o nome); `HC101-6` tem descrição "-5" no SAP; `HC139-7_S-GX` e `EC215-08LRL`/`EC215-12LRL`
+  são códigos próprios (a descrição normalizada cai no HC139-7 / EC215-08L / EC215-12L, então compare pelo código);
+  `GH781-6-2`, `EC215-06L-2` e `FC735-4` são grafias do GMS do mesmo material. Quando o GMS diz uma mangueira e a OP
+  no SAP é de outra (ex.: OP 29878642 GH781-8 no GMS e FC735-08 no SAP), é divergência real da OP, não alias.
+  Script: `Producao_GMS_x_MB51/conferir_lances_por_op.py` (casamento lance a lance por OP).
 - **A coluna `Material` da MB51 vem vazia;** use `Material Description`.
 - **Unidades:** a MB51 mistura `M`, `PC` e `KG`. Metros de mangueira = só `M` (descarta ~6,6 mil linhas em peças).
 - **Formato dos CSVs do SharePoint:** datas `MM/DD/AAAA h:mm AM/PM`; números com vírgula de milhar na ficha
