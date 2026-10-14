@@ -590,6 +590,17 @@ fx_C39Bits(txt: Text): Text =
         Value
     );
 
+// PN que vai impresso e no código de barras da etiqueta (logística): tira o sufixo de variante "-N" quando o PN
+// já tem hífen (GH781-6-2 vira GH781-6) e troca o caso particular 2583-12 pelo código 12055040.
+fx_PNImpressao(pn: Text): Text =
+    With(
+        { _p: Upper(Trim(pn)) },
+        With(
+            { _b: If(IsMatch(_p, "^.+-.+-\d+$"), Left(_p, Find("-", _p, Find("-", _p) + 1) - 1), _p) },
+            If(_b = "2583-12", "12055040", _b)
+        )
+    );
+
 // SVG de 560 px de largura x `alt` de altura, igual ao tamanho do controle Image (sem escala fracionária).
 // O módulo é inteiro (n px) e as barras ficam centralizadas com zona de silêncio.
 fx_CodigoBarras39(txt: Text, alt: Number): Text =
