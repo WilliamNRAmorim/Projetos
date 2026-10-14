@@ -411,6 +411,15 @@ Fica antes do `rct_OverlayTubo_1`. Cola-se com o botão direito na tela > Colar 
 
 ## Como funciona
 - No dropdown da OP aparece, por último, **"Outra OP (pedir exceção)"**. Ao escolher, abre o modal (OP de 8 dígitos e motivo).
-- O pedido vai para `Excecoes_OP` com `Status = Pendente`. O fluxo `GMS_ExcecaoOP_Aprovacao` manda a aprovação para William e Carlos.
+- O pedido vai para `Excecoes_OP` com `Status = Pendente`. William e Carlos recebem o aviso por alerta nativo do SharePoint (sem Power Automate).
 - Aprovada, a OP entra no dropdown no próximo atualizar e o envio aceita. A exceção vale uma vez: depois que a OP entra numa ficha além do Tubo, ela some.
 - OP do plano e OP aprovada convivem no mesmo dropdown (a aprovada entra em `colPlanoTubo` com `Origem = Exceção`).
+
+## Como aprovar (William e Carlos)
+1. **Uma vez, cada um:** abrir a lista `Excecoes_OP` > `...` > **Alertar-me** (ou Regras > "Notificar-me quando um item for adicionado"), e-mail, **imediatamente**. Assim o pedido do operador chega por e-mail.
+2. Abrir a visão **Pendentes**: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta/Lists/Excecoes_OP/Pendentes.aspx
+3. Conferir OP, mangueira, motivo e quem pediu. Para aprovar, mudar **Status** de `Pendente` para `Aprovada` (para negar, `Rejeitada`). Quem decidiu fica em "Modificado por"; se quiser, preencha também `AprovadoPor` e `DataDecisao`.
+4. O operador toca em **atualizar** na tela do tubo e escolhe a OP na lista.
+- Urgência: William ou Carlos também podem criar a linha direto na lista já como `Aprovada` (Title = OP de 8 dígitos, Tela = Tubo).
+- Os textos de Status têm que ser exatamente `Pendente`, `Aprovada` ou `Rejeitada`.
+- Fluxo com botão Aprovar/Rejeitar (Power Automate) fica como melhoria futura, não é requisito.
