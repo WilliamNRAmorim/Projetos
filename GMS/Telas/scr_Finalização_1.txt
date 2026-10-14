@@ -2432,6 +2432,7 @@ Screens:
                     =Set(varProcessando, true);
                     IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
                     Refresh(ficha_producao);
+                    Refresh(Packing_Pallets);
                     With(
                         {
                             _r: LookUp(ficha_producao, ID = gal_FilaExt.Selected.ID),
@@ -2445,6 +2446,9 @@ Screens:
                             Set(varProcessando, false),
                             IsBlank(_operador),
                             Notify("Selecione o U-Number do operador antes de finalizar.", NotificationType.Warning, 6000);
+                            Set(varProcessando, false),
+                            IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID),
+                            Notify("Imprima o packing list (check list) desta OP antes de finalizar. Toque em Imprimir, confirme a impressão e volte.", NotificationType.Error, 10000);
                             Set(varProcessando, false),
                             !fx_MetragemOk(_total),
                             Notify("Nenhum lance aprovado nesta OP. Registre a inspeção antes de finalizar — a ficha não pode fechar com zero.", NotificationType.Error, 10000);
