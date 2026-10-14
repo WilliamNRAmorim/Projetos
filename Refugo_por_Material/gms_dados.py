@@ -12,9 +12,10 @@ from pathlib import Path
 
 import openpyxl
 
-GMS = Path(__file__).resolve().parents[2]
+RAIZ = Path(__file__).resolve().parents[1]
+GMS = RAIZ / "GMS"
 RELATORIO = GMS / "Relatorio_Conferencia_MB51_v3_2.xlsx"
-ALINHADO = GMS / "Analises" / "Refugo_SAP_vs_GMS" / "Refugo_GMS_alinhado_ao_SAP.xlsx"
+ALINHADO = RAIZ / "Refugo_SAP_vs_GMS" / "Refugo_GMS_alinhado_ao_SAP.xlsx"
 USUARIOS_REFUGO = {"U445131", "U452021"}  # lançam refugo (101) na MB51
 
 
