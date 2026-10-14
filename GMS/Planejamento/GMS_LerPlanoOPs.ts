@@ -1,5 +1,7 @@
 /**
  * GMS_LerPlanoOPs  v1.2.0  (14/10/2026)
+ * v1.2.1 (14/10/2026): corrige o id dos itens existentes. O Get items do SharePoint devolve "ID" (maiusculo); a v1.1.0/v1.2.0 liam "Id",
+ *   o id saia vazio e o MERGE falhava com BadRequest (items()). Agora aceita ID e Id.
  * v1.2.0: le a coluna J (Prod. Tubo) das abas das trançadoras; "OK" vira prodOK=true (campo ProdTuboOK da lista Plano_OPs).
  *   existentesJson agora tambem traz ProdTuboOK. A OP so some do dropdown do tubo quando ProdTuboOK = Sim.
  * v1.1.0 (08/10/2026)
@@ -13,7 +15,7 @@
  *   Aba COOIS (export SAP): A=Material, B=Order(OP), C=Qtd, N=System Status (TECO = encerrada)     -> tipo Tubo,      origem COOIS
  * OP so vale com 8 digitos. ES5 (sem for-of em Map/Set). mes = "OUTUBRO" (nome da aba Extrusora/Mes) ou "" para todos.
  */
-interface Existente { Id: number; Title: string; PN?: string; Trancadeira?: string; QtdPlanejada?: number; Tipo?: string; StatusSAP?: string; Encerrada?: boolean; Origem?: string; ProdTuboOK?: boolean; }
+interface Existente { Id?: number; ID?: number; Title: string; PN?: string; Trancadeira?: string; QtdPlanejada?: number; Tipo?: string; StatusSAP?: string; Encerrada?: boolean; Origem?: string; ProdTuboOK?: boolean; }
 interface OPSaida { id: number; op: string; pn: string; tr: string; mes: string; qtd: number; tipo: string; origem: string; status: string; enc: boolean; prodOK: boolean; }
 interface OPLinha { op: string; pn: string; tr: string; mes: string; qtd: number; tipo: string; origem: string; status: string; enc: boolean; prodOK: boolean; }
 
@@ -84,7 +86,7 @@ function main(workbook: ExcelScript.Workbook, mes: string, existentesJson: strin
     const b = porOP[a.op];
     const igual = b !== undefined && String(b.PN || "") === a.pn && String(b.Trancadeira || "") === a.tr && Number(b.QtdPlanejada || 0) === a.qtd
       && String(b.Tipo || "") === a.tipo && String(b.StatusSAP || "") === a.status && !!b.Encerrada === a.enc && String(b.Origem || "") === a.origem && !!b.ProdTuboOK === a.prodOK;
-    if (!igual) { saida.push({ id: b === undefined ? 0 : b.Id, op: a.op, pn: a.pn, tr: a.tr, mes: a.mes, qtd: a.qtd, tipo: a.tipo, origem: a.origem, status: a.status, enc: a.enc, prodOK: a.prodOK }); }
+    if (!igual) { saida.push({ id: b === undefined ? 0 : Number(b.ID !== undefined ? b.ID : (b.Id !== undefined ? b.Id : 0)), op: a.op, pn: a.pn, tr: a.tr, mes: a.mes, qtd: a.qtd, tipo: a.tipo, origem: a.origem, status: a.status, enc: a.enc, prodOK: a.prodOK }); }
   }
   return JSON.stringify(saida);
 }
