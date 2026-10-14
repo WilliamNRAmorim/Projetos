@@ -37,3 +37,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-14 | Comunicado curto da conferência GMS x MB51 (16/05-16/09) + lista de OPs para corrigir | chefe (Opus 5.5) direto | continuação da análise, contexto já carregado | custo não medido
 2026-10-14 | Divergência por mangueira (SAP - GMS) em aba da conferência | chefe (Opus 5.5) direto | continuação, contexto carregado | custo não medido
 2026-10-14 | Divergência por mangueira: OP só no SAP entra só se diminuir a divergência | chefe (Opus 5.5) direto | continuação | custo não medido
+2026-10-14 | Abas de lances duplicados (GMS com grau de certeza; MB51 só com certeza) | chefe (Opus 5.5) direto | continuação | custo não medido
