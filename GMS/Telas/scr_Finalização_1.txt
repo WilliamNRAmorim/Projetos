@@ -1468,12 +1468,16 @@ Screens:
               If(
                   CountRows(colLancesExt) > 0
                   && CountRows(colLancesExt) <= 26
-                  && IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID),
+                  && (
+                      IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID)
+                      || LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).QtdLances <> CountRows(colLancesExt)
+                      || LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).TotalM <> Sum(colLancesExt, Quantidade)
+                  ),
                   Set(varProcessando, true);
                   IfError(
                       Patch(
                           Packing_Pallets,
-                          Defaults(Packing_Pallets),
+                          Coalesce(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID), Defaults(Packing_Pallets)),
                           {
                               Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
                               FichaID: gal_FilaExt.Selected.ID,
@@ -2447,8 +2451,11 @@ Screens:
                             IsBlank(_operador),
                             Notify("Selecione o U-Number do operador antes de finalizar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
-                            IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID),
-                            Notify("Imprima o packing list (check list) desta OP antes de finalizar. Toque em Imprimir, confirme a impressão e volte.", NotificationType.Error, 10000);
+                            With(
+                                { _pk: LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
+                                IsBlank(_pk.ID) || _pk.QtdLances <> CountRows(colLancesExt) || Abs(_pk.TotalM - _total) > 0.005
+                            ),
+                            Notify("Imprima o pack list desta OP antes de finalizar (ou imprima de novo, se entrou lance depois da última impressão). Toque em Imprimir, confirme e volte.", NotificationType.Error, 10000);
                             Set(varProcessando, false),
                             !fx_MetragemOk(_total),
                             Notify("Nenhum lance aprovado nesta OP. Registre a inspeção antes de finalizar — a ficha não pode fechar com zero.", NotificationType.Error, 10000);
