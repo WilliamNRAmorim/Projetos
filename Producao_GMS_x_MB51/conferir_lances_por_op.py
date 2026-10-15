@@ -72,6 +72,10 @@ for r in ler_csv(AQUI.parent / "GMS" / "Sharepoint Data GMS" / "ficha_producao.c
     if r.get("OP") and r.get("Mangueira"):
         ficha[r["OP"].strip()] = nome_gms(r["Mangueira"])
 
+# lances do GMS tirados da conta por decisão do William (erro de digitação etc.)
+EXCL = {r["referencia"]: r for r in ler_csv(AQUI / "lances_excluidos.csv")} if (AQUI / "lances_excluidos.csv").exists() else {}
+excluidos = []
+
 gms = collections.defaultdict(list)
 nome_insp = collections.defaultdict(collections.Counter)
 zerados = 0
@@ -80,6 +84,9 @@ for i, r in enumerate(ler_csv(AQUI / "dados" / "inspecao_14out.csv"), start=2):
     if not q:
         zerados += 1; continue
     d = data_br(r["DataHoraInspecao"]) or data_br(r["Created"])
+    e = EXCL.get(f"Inspeção linha {i}")
+    if e and e["op"] == op and abs(num(e["quantidade"]) - q) < 0.01:
+        excluidos.append([e["referencia"], op, q, d, e["motivo"], e["decidido_por"], e["data"]]); continue
     if r["Mangueira"].strip():
         nome_insp[op][nome_gms(r["Mangueira"])] += 1
     gms[op].append(Lance("GMS", op, "boa", q, d, f"Inspeção linha {i}", r.get("Trançadeira", "")))
@@ -88,6 +95,9 @@ for i, r in enumerate(ler_csv(AQUI / "dados" / "refugo_14out.csv"), start=2):
     if not q:
         zerados += 1; continue
     d = data_br(r["Created"]) or data_br(r["DataHoraRefugo"])
+    e = EXCL.get(f"Refugo linha {i}")
+    if e and e["op"] == op and abs(num(e["quantidade"]) - q) < 0.01:
+        excluidos.append([e["referencia"], op, q, d, e["motivo"], e["decidido_por"], e["data"]]); continue
     gms[op].append(Lance("GMS", op, "refugo", q, d, f"Refugo linha {i}", r["CodigoErro"]))
 
 
@@ -276,6 +286,7 @@ cr = wb.create_sheet("Lance em outra OP")
 nm = wb.create_sheet("Nomes de mangueira")
 sg = wb.create_sheet("MB51 sem GMS")
 pmat = wb.create_sheet("Por material")
+ex = wb.create_sheet("Lances excluídos")
 pm = wb.create_sheet("Premissas")
 
 res.append(["OP", "Mangueira no GMS", "Material SAP", "Descrição SAP", "Nome", "1º lance GMS", "Último lance GMS",
@@ -356,6 +367,7 @@ for l in [
     "Dif. = MB51 - GMS: negativa = falta lançar no SAP; positiva = sobra no SAP. SAP é a fonte da verdade. Material não compensa com material.",
     "Nome da mangueira: o material SAP vem da própria OP na MB51 (código + descrição), não do nome. O nome do GMS foi ligado ao material SAP pelas OPs que existem nos dois lados (aba Nomes e aliases_mangueira.csv).",
     "OP sem lançamento na MB51 pode ser OP ainda em produção (veja a data do último lance) ou OP que nunca foi apontada no SAP.",
+    "Lances do GMS listados em lances_excluidos.csv (aba Lances excluídos) ficam fora de toda a conta, por decisão do William.",
     "Casamento por soma é uma inferência. Teste em 14/10: trocando o valor SAP por um valor falso (±4 a 5 m), só ~5% das somas ainda fechariam; ou seja, ~95% das somas são reais. Confira o grupo na aba Linha a linha.",
     "Lance de produção: 99% dos lances casados 1 a 1 têm a mesma data no GMS e no SAP; os casados por soma foram lançados no SAP 1 a 6 dias depois, quase sempre lances do mesmo turno (menos de 6 h entre o primeiro e o último).",
 ]:
@@ -385,6 +397,10 @@ pmat.append(["Material SAP", "Descrição SAP", "OPs", "OPs que divergem", "GMS 
 for (c, d), a in sorted(agg.items(), key=lambda kv: -(kv[1][4] + kv[1][6])):
     pmat.append([c, d, a[0], a[7], round(a[1], 2), round(a[2], 2), a[3], round(a[4], 2), a[5], round(a[6], 2)])
 formatar(pmat, [14, 36, 7, 10, 13, 13, 9, 14, 9, 14])
+ex.append(["Referência", "OP", "Qtd (m)", "Data", "Motivo", "Decidido por", "Em"])
+for e in excluidos:
+    ex.append(e)
+formatar(ex, [18, 11, 10, 16, 90, 12, 11])
 formatar(res, [11, 14, 12, 30, 22, 15, 15, 11, 11, 11, 11, 11, 8, 8, 8, 9, 8, 10, 8, 10, 22])
 formatar(lin, [11, 14, 12, 7, 8, 15, 10, 18, 22, 40, 7, 11, 11, 50])
 formatar(cr, [14, 11, 18, 15, 10, 13, 20, 15])
@@ -409,4 +425,4 @@ for L in list(gms.values()) + [mb[o] for o in todas_ops if o in mb]:
         tot[(x.lado, x.status.split(" (")[0])] += 1
 for k, v in sorted(tot.items()):
     print(k, v)
-print("lance em outra OP:", len(cruz), "| aliases:", sum(1 for g in alias for k in alias[g] if norm_material(k[1]).upper() != g and k[0].upper() != g))
+print("excluídos:", len(excluidos), "| lance em outra OP:", len(cruz), "| aliases:", sum(1 for g in alias for k in alias[g] if norm_material(k[1]).upper() != g and k[0].upper() != g))

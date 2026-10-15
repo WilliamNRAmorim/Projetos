@@ -33,3 +33,27 @@ Atualizado em 15/10/2026. Lance a lance em `tratativas_op.csv` (OP, referência 
 | Inspeção linha 3154 | 05/08/2026 20:43 | 11.1 | 3023325487/1 |
 
 Total: 13 lances, 521,1 m. Os demais lances (inclusive para 29059118, 29115542, 29118867, 29791112 e 30337761) estão em `tratativas_op.csv`.
+
+## Divergência do período 20/05 a 20/09/2026 (por mangueira, SAP − GMS)
+
+| | SAP a mais | SAP a menos | Total em módulo | Líquido |
+|---|---|---|---|---|
+| Antes das tratativas | 2.960,1 m | −1.571,1 m | 4.531,2 m | +1.389,0 m |
+| Depois das tratativas (OPs de `ops_tratadas.csv` zeradas) | 2.475,8 m | −804,9 m | 3.280,7 m | +1.670,9 m |
+
+Script: `divergencia_periodo.py`. As OPs 30276453 e 30337761 são depois de 20/09 e ficam fora desse período.
+
+## Segundo lote: 10 OPs mais divergentes de 20/05 a 20/09 (script `compensacao_por_lance.py`, lances em `tratativas_lote2.csv`)
+
+| OP | Mangueira | Dif. (m) | Onde estão os lances |
+|---|---|---|---|
+| 29733210 | EC215-08L | +452,6 | SAP lançou 4 lances (454,9 m, 03/08) e o GMS só tem 2 refugos (2,3 m). Sem OP candidata por lance. Investigar |
+| 29963502 | EC215-10L | −417,5 | 4 lances (415,2 m) lançados no SAP na **29963530** |
+| 29259772 | FC839B-04 | +389,0 | 6 lances (508,1 m) estão no GMS na **29259769** |
+| 29788415 | EC118-06L | −385,5 | 5 lances (387,0 m): 2 (264,8 m) no SAP na **29774167** e 3 (122,2 m) na **29774166** |
+| 29259769 | FC839B-04 | −352,0 | Par da 29259772: 6 lances (508,1 m) lançados no SAP na 29259772 |
+| 29048968 | GH681-6 | −328,8 | 2 lances (328,8 m): um de 177,4 m na **28913388** e outro de 151,4 m na **28913387** |
+| 30092889 | HC139-7_S-GX | +313,5 | 7 lances do SAP (24/09) sem lance igual no GMS. Investigar |
+| 29788884 | HC139-7 | +275,3 | 4 lances (173,7 m) no GMS na **30078414** (04/09); restante 101,6 m sem par |
+| 29260119 | EC215-08L | +270,1 | 6 lances do SAP (27/06) sem lance igual no GMS. Investigar |
+| 29774167 | EC118-06L | +264,8 | Par da 29788415: 2 lances (264,8 m) estão no GMS na 29788415 |

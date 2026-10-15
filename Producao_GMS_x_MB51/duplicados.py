@@ -39,6 +39,7 @@ for x in L:
         sap_por_op[x[0]].append(x)
 
 # ---------- GMS ----------
+EXCL = {r["referencia"] for r in ler(AQUI / "lances_excluidos.csv")} if (AQUI / "lances_excluidos.csv").exists() else set()
 regs = []
 for i, r in enumerate(ler(AQUI / "dados" / "inspecao_14out.csv"), start=2):
     regs.append(("Produção", f"Inspeção linha {i}", r["OP_ID"].strip(), num(r["Quantidade"]), data(r["Created"]),
@@ -49,7 +50,7 @@ for i, r in enumerate(ler(AQUI / "dados" / "refugo_14out.csv"), start=2):
 
 grupos = collections.defaultdict(list)
 for g in regs:
-    if g[3] > 0 and g[4]:
+    if g[3] > 0 and g[4] and g[1] not in EXCL:
         chave = (g[0], g[2], round(g[3], 2)) + ((g[5],) if g[0] == "Refugo" else ())
         grupos[chave].append(g)
 
