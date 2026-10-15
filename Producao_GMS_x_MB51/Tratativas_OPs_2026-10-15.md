@@ -97,3 +97,7 @@ Reconferência feita com os CSVs corrigidos (`aplicar_correcoes_gms_nos_csv.py`:
 Do que sobrou: 733,9 m são da OP 27002870 (OP de dez/2025 que entra no período só por causa de 1 m de refugo do GMS em 28/08; não é divergência real); cerca de 1.684 m são lances do SAP que você vai lançar no GMS (P08 454,9, P09 313,5, P10 270,1 e P16 645,3).
 
 Fichas: 3168 (OP corrigida de 28788420 para 29788420) e 3076 (OP vazia preenchida com 29733207).
+
+## Lote 3 de lances (15/10, noite): 57 de 68 gravados
+
+57 lances de `tratativas_lote3_lances.csv` já tiveram o OP_ID trocado no SharePoint; o sistema de permissões bloqueou os 11 restantes (itens 14984, 14986, 14352, 14355, 14357, 14401, 14406, 14408, 14760, 15186 e 14924: OPs 29963522, 29963533, 29994196, 30007593, 30063656 e 30063851). Os itens pendentes só serão gravados se a OP atual ainda for a de origem. Ficam pendentes também as exclusões do P22 e o ajuste de `quantidade_extracao` das fichas das 59 OPs envolvidas.
