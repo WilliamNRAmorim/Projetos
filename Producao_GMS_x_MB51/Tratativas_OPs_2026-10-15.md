@@ -59,3 +59,7 @@ Lances um a um em `tratativas_lote2.csv`; pendências em `pendencias_lancar.csv`
 | 29260119 (EC215-08L) | **Pendente (William).** 6 lances do SAP de 27/06 (270,1 m) sem lance no GMS: lançar no GMS |
 
 Divergência depois das tratativas dos dois lotes: SAP a mais 2.273,5 m, SAP a menos −701,9 m, total 2.975,4 m (as pendentes continuam contando).
+
+## Correções gravadas no GMS (15/10/2026)
+
+Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista RegistrosInspeção (conferido depois: 80 de 80 na OP nova). A boa do GMS agora é igual à boa do SAP em todas as OPs tocadas, exceto: 29788884 / 30078414 (51,0 m de lançamento duplicado no SAP) e 29963530 (−98,8 m: o SAP lançou o lance na 29878655, EC118-10L). Ficaram de fora: 30337761, 29878642, refugos e as pendentes 29733210, 30092889 e 29260119.
