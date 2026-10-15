@@ -78,3 +78,7 @@ Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista 
 - P03: item 14424 de `RegistrosInspeção` (98,8 m, 26/08 17:45) passou de OP 29963530 para 29878655 e a Mangueira do lance de EC215-10L para EC118-10L. Fichas: 3391 de 616,1 para 517,3 m; 3351 de 425,1 para 523,9 m. Para desfazer: OP_ID 29963530, Mangueira EC215-10L e as quantidades antigas.
 - P06: itens 14479, 14480, 14481, 14482 e 14483 (574,0 m, 27/08) passaram de OP 29878642 para 29820550. Fichas 3309 e 3213 aguardam decisão (P13).
 - P07: sem ação; o GMS já espelha o SAP (10,5 m na 29791112).
+
+## P13: fichas 3309 e 3213 (15/10)
+
+Ficha 3309 passou da OP 29878642 para 29820550 (574 m e packing mantidos). Ficha 3213 (500 m, sem lances e sem lançamento do SAP) foi para a lixeira; backup em `backup_ficha_3213_29820550.json`. O refugo de 1,5 m segue em `TiposErros` na 29878642, igual ao SAP (material FC735-08, pendência P05).
