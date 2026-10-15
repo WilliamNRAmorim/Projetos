@@ -1490,12 +1490,13 @@ Screens:
                           }
                       );
                       true,
-                      Set(varFalhaRegManual, true);
-                      Notify("Falha ao registrar o pallet: " & FirstError.Message, NotificationType.Error, 15000);
+                      Notify("A impressão segue. O registro do pallet será feito ao finalizar. (" & FirstError.Message & ")", NotificationType.Warning, 8000);
                       true
                   );
                   Set(varProcessando, false)
               );
+              Set(varImpQtd, CountRows(colLancesExt));
+              Set(varImpTotal, Sum(colLancesExt, Quantidade));
               Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
               Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
               Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colLancesExt, Quantidade), 0)));
@@ -2454,7 +2455,8 @@ Screens:
                             Set(varProcessando, false),
                             With(
                                 { _pks: Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
-                                IsEmpty(_pks) || Sum(_pks, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pks, TotalM) - _total) > 0.005
+                                (IsEmpty(_pks) || Sum(_pks, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pks, TotalM) - _total) > 0.005)
+                                && !(varFichaIDImp = gal_FilaExt.Selected.ID && varImpQtd = CountRows(colLancesExt) && Abs(varImpTotal - _total) <= 0.005)
                             ),
                             Notify("Imprima o pack list desta OP antes de finalizar (ou imprima de novo, se entrou lance depois da última impressão). Toque em Imprimir, confirme e volte.", NotificationType.Error, 10000);
                             Set(varProcessando, false),
@@ -2469,6 +2471,31 @@ Screens:
                             Set(varProcessando, false),
                             With(
                                 { _carretel: _r.'Carretel Entrada' },
+                                If(
+                                    With(
+                                        { _pk: Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
+                                        IsEmpty(_pk) || Sum(_pk, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pk, TotalM) - _total) > 0.005
+                                    ),
+                                    IfError(
+                                        Patch(
+                                            Packing_Pallets,
+                                            Coalesce(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID), Defaults(Packing_Pallets)),
+                                            {
+                                                Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
+                                                FichaID: gal_FilaExt.Selected.ID,
+                                                Pallet: 1,
+                                                LanceIDs: Concat(colLancesExt, Text(ID, "[$-en-US]0"), ";"),
+                                                QtdLances: CountRows(colLancesExt),
+                                                TotalM: _total,
+                                                Turno: fx_TurnoEm(_agora),
+                                                DataHoraImp: _agora
+                                            }
+                                        );
+                                        true,
+                                        Notify("OP finalizada, mas o pallet NÃO foi registrado: " & FirstError.Message & ". Avise a supervisão.", NotificationType.Warning, 12000);
+                                        true
+                                    )
+                                );
                                 Set(
                                     gvarRegistroExtracao,
                                     Patch(
