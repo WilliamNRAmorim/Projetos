@@ -72,3 +72,9 @@ Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista 
 
 - Refugos sem par no SAP excluídos do GMS (lixeira do SharePoint, `TiposErros`): id 2643 (29115542, 1,0 m O - Pontas, 02/06), id 3763 (29733210, 1,2 m O - Pontas) e id 3764 (29733210, 1,1 m A - Quebra de Fio, 03/08). Conferi que não há refugo de 1,2 ou 1,1 m dessa mangueira em 04/08, no GMS nem no SAP. Para restaurar: lixeira do site.
 - Com isso, os lances de produção boa e os refugos dos lotes 1 e 2 ficaram espelhando o SAP, exceto o que é do SAP (refugo duplicado, 51 m, 98,8 m) e as pendentes de lançar no GMS (29733210, 30092889 e 29260119).
+
+## P03 e P06 corrigidos no GMS (15/10, noite)
+
+- P03: item 14424 de `RegistrosInspeção` (98,8 m, 26/08 17:45) passou de OP 29963530 para 29878655 e a Mangueira do lance de EC215-10L para EC118-10L. Fichas: 3391 de 616,1 para 517,3 m; 3351 de 425,1 para 523,9 m. Para desfazer: OP_ID 29963530, Mangueira EC215-10L e as quantidades antigas.
+- P06: itens 14479, 14480, 14481, 14482 e 14483 (574,0 m, 27/08) passaram de OP 29878642 para 29820550. Fichas 3309 e 3213 aguardam decisão (P13).
+- P07: sem ação; o GMS já espelha o SAP (10,5 m na 29791112).
