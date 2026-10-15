@@ -4,7 +4,7 @@ Mesma regra do divergencia_por_mangueira.py: OP so no SAP entra apenas se diminu
 import sys, csv, collections, itertools, datetime as dt, openpyxl
 ini=dt.datetime.fromisoformat(sys.argv[1]) if len(sys.argv)>1 else dt.datetime(2026,5,20)
 fim=(dt.datetime.fromisoformat(sys.argv[2]) if len(sys.argv)>2 else dt.datetime(2026,9,20)).replace(hour=23,minute=59)
-TRAT={r['op'] for r in csv.DictReader(open('ops_tratadas.csv',encoding='utf-8'),delimiter=';')}
+TRAT={r['op'] for r in csv.DictReader(open('ops_tratadas.csv',encoding='utf-8'),delimiter=';') if r['estado']=='tratada'}  # pendentes continuam contando
 wb=openpyxl.load_workbook('Conferencia_Lances_por_OP.xlsx',read_only=True)
 res=list(wb['Resumo por OP'].iter_rows(min_row=2,values_only=True))
 sem=list(wb['MB51 sem GMS'].iter_rows(min_row=2,values_only=True))

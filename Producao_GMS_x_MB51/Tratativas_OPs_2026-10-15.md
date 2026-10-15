@@ -43,17 +43,19 @@ Total: 13 lances, 521,1 m. Os demais lances (inclusive para 29059118, 29115542, 
 
 Script: `divergencia_periodo.py`. As OPs 30276453 e 30337761 são depois de 20/09 e ficam fora desse período.
 
-## Segundo lote: 10 OPs mais divergentes de 20/05 a 20/09 (script `compensacao_por_lance.py`, lances em `tratativas_lote2.csv`)
+## Segundo lote (15/10): tratativas combinadas com o William
 
-| OP | Mangueira | Dif. (m) | Onde estão os lances |
-|---|---|---|---|
-| 29733210 | EC215-08L | +452,6 | SAP lançou 4 lances (454,9 m, 03/08) e o GMS só tem 2 refugos (2,3 m). Sem OP candidata por lance. Investigar |
-| 29963502 | EC215-10L | −417,5 | 4 lances (415,2 m) lançados no SAP na **29963530** |
-| 29259772 | FC839B-04 | +389,0 | 6 lances (508,1 m) estão no GMS na **29259769** |
-| 29788415 | EC118-06L | −385,5 | 5 lances (387,0 m): 2 (264,8 m) no SAP na **29774167** e 3 (122,2 m) na **29774166** |
-| 29259769 | FC839B-04 | −352,0 | Par da 29259772: 6 lances (508,1 m) lançados no SAP na 29259772 |
-| 29048968 | GH681-6 | −328,8 | 2 lances (328,8 m): um de 177,4 m na **28913388** e outro de 151,4 m na **28913387** |
-| 30092889 | HC139-7_S-GX | +313,5 | 7 lances do SAP (24/09) sem lance igual no GMS. Investigar |
-| 29788884 | HC139-7 | +275,3 | 4 lances (173,7 m) no GMS na **30078414** (04/09); restante 101,6 m sem par |
-| 29260119 | EC215-08L | +270,1 | 6 lances do SAP (27/06) sem lance igual no GMS. Investigar |
-| 29774167 | EC118-06L | +264,8 | Par da 29788415: 2 lances (264,8 m) estão no GMS na 29788415 |
+Lances um a um em `tratativas_lote2.csv`; pendências em `pendencias_lancar.csv`.
+
+| OP | O que é e o que fazer |
+|---|---|
+| 29733210 (EC215-08L) | **Pendente (William).** Os 4 lances do SAP (454,9 m, 03/08, docs 3023117833, 3023118150, 3023119144, 3023119428) não estão no GMS em outra OP: lançar no GMS. Os 2 refugos do GMS (1,2 + 1,1 m, 03/08 10:17) não existem no SAP, nessa OP nem em outra |
+| 29963502 → 29963530 (EC215-10L) | GMS: trocar a OP dos 4 lances de 25/08 (415,2 m, linhas 4632, 4635, 4639, 4640) para 29963530. Os 3 lances de 26/08 que o GMS tem na 29963530 (109,4 / 103,1 / 98,8 m) estão no SAP em **29894895**, **29894896** e **29878655** (EC118-10L, mangueira diferente: conferir). O refugo de 0,8 m da 29963530 está certo. O refugo da 29963502 (0,6 + 0,9 + 0,8 = 2,3 m) está no SAP na **29963527** (doc 3024755763, 27/08) |
+| 29259769 ↔ 29259772 (FC839B-04) | Troca de 6 lances (508,1 m): GMS 29259769 → 29259772 (linhas 1488, 1489, 1491, 1492, 1493, 1494). Falta fechar: o lance de 120,6 m (linha 1546, 24/06 00:16) do GMS na 29259772 está no SAP na **29259769**, e o de 35,5 m (linha 1487, 23/06 11:57) do GMS na **29259771** também está no SAP na 29259769. Refugo da 29259772 duplicado no SAP (1,5 m a mais) |
+| 29788415 (EC118-06L) | GMS: linhas 3182 (122,6) e 3186 (142,2) → OP 29774167; linhas 3187 (49,5), 3188 (34,2), 3189 (38,5) → OP 29774166 |
+| 29048968 (GH681-6) | GMS: linha 16627 (177,4 m) → OP 28913388; linha 16625 (151,4 m) → OP 28913387 |
+| 29788884 (HC139-7) | GMS: 5 lances de 30078414 (linhas 5601 a 5605, 224,3 m) → OP 29788884. Sobram 51,0 m do SAP na 29788884 sem par (o SAP tem dois lançamentos de 51 m, um em cada OP) |
+| 30092889 (HC139-7_S-GX) | **Pendente (William).** 7 lances do SAP de 24/09 (313,5 m) sem lance no GMS: lançar no GMS |
+| 29260119 (EC215-08L) | **Pendente (William).** 6 lances do SAP de 27/06 (270,1 m) sem lance no GMS: lançar no GMS |
+
+Divergência depois das tratativas dos dois lotes: SAP a mais 2.273,5 m, SAP a menos −701,9 m, total 2.975,4 m (as pendentes continuam contando).
