@@ -22,6 +22,7 @@ Exemplos da lógica (William):
 - Fontes brutas: `mb51 (5).xlsx`, `dados/inspecao_14out.csv`, `dados/refugo_14out.csv`.
 
 ## Regras de negócio (não mudar)
+0. **Período: só OPs com 1º lance no GMS a partir de 20/05/2026** (decisão do William, 15/10). Candidatas de compensação também só desse período. O script já aplica isso (`python -I top_ops_compensacao.py`; data opcional como argumento).
 1. Dif. = MB51 líquido − GMS total. Negativa = GMS tem a mais. Positiva = SAP tem a mais.
 2. Ignorar a OP `0` (lances sem OP, não é OP real).
 3. Ignorar OPs com 1º lance a partir de 13/10/2026: a MB51 ainda não recebeu (defasagem, não é divergência).
