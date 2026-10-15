@@ -1,0 +1,126 @@
+Set(varProcessando, true);
+IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000));
+Refresh(ficha_producao);
+Refresh(Packing_Pallets);
+With(
+    {
+        _r: LookUp(ficha_producao, ID = gal_FilaExt.Selected.ID),
+        _agora: Now(),
+        _operador: cmb_OperadorExt.Selected.Nome,
+        _total: Coalesce(Sum(colLancesExt, Quantidade), 0)
+    },
+    If(
+        IsBlank(ctxCabineExt.Posto),
+        Notify("Cabine não identificada. Volte ao menu e entre pelo card da sua cabine.", NotificationType.Error, 8000);
+        Set(varProcessando, false),
+        IsBlank(_operador),
+        Notify("Selecione o U-Number do operador antes de finalizar.", NotificationType.Warning, 6000);
+        Set(varProcessando, false),
+        With(
+            { _pks: Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
+            IsEmpty(_pks) || Sum(_pks, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pks, TotalM) - _total) > 0.005
+        ),
+        Notify("Imprima o pack list desta OP antes de finalizar (ou imprima de novo, se entrou lance depois da última impressão). Toque em Imprimir, confirme e volte.", NotificationType.Error, 10000);
+        Set(varProcessando, false),
+        !fx_MetragemOk(_total),
+        Notify("Nenhum lance aprovado nesta OP. Registre a inspeção antes de finalizar — a ficha não pode fechar com zero.", NotificationType.Error, 10000);
+        Set(varProcessando, false),
+        _r.Modified <> gal_FilaExt.Selected.Modified,
+        Notify("Registro desatualizado. A fila foi recarregada, tente de novo.", NotificationType.Error, 8000);
+        Set(varProcessando, false),
+        !IsBlank(_r.cabine_teste) && _r.cabine_teste <> varPostoAtivo,
+        Notify("Esta OP está sendo inspecionada na " & LookUp(fx_CabinesTeste, Posto = _r.cabine_teste).Rotulo & ". Finalize por lá.", NotificationType.Error, 8000);
+        Set(varProcessando, false),
+        With(
+            { _carretel: _r.'Carretel Entrada' },
+            Set(
+                gvarRegistroExtracao,
+                Patch(
+                    ficha_producao,
+                    _r,
+                    {
+                        'Carretel Entrada': Blank(),
+                        'Carretel Saida': Blank(),
+                        operador_extracao: _operador,
+                        quantidade_extracao: _total,
+                        cabine_teste: Coalesce(_r.cabine_teste, varPostoAtivo),
+                        DataFinalizacao: Today(),
+                        data_hora_final_extracao: _agora,
+                        status_processo: "Finalizado",
+                        processo: "Finalizado",
+                        'Turno_Extr/Teste': fx_TurnoEm(_agora)
+                    }
+                )
+            );
+            If(
+                !IsEmpty(Errors(ficha_producao)),
+                Notify("Falha ao finalizar: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                Set(varProcessando, false),
+                With(
+                    { _cust: LookUp(Historico_Carretel, etapa = "Extração" && Title = _carretel && OP_ID = gvarRegistroExtracao.OP) },
+                    Patch(
+                        Historico_Carretel,
+                        Coalesce(_cust, Defaults(Historico_Carretel)),
+                        {
+                            Title: _carretel,
+                            OP_ID: gvarRegistroExtracao.OP,
+                            etapa: "Extração",
+                            mangueira: Text(gvarRegistroExtracao.Bitola),
+                            metros_entrada: Coalesce(gvarRegistroExtracao.quantidade_debandagem, 0),
+                            metros_saida: _total,
+                            data_hora_entrada: Coalesce(_cust.data_hora_entrada, gvarRegistroExtracao.data_hora_inicio_extracao),
+                            data_hora_saida: _agora,
+                            operador: _operador
+                        }
+                    )
+                );
+                If(
+                    !IsEmpty(Errors(Historico_Carretel)),
+                    Notify("Ficha salva, mas o histórico do carretel NÃO gravou: " & First(Errors(Historico_Carretel)).Message, NotificationType.Error, 10000)
+                );
+                Patch(
+                    Eventos_Producao,
+                    Defaults(Eventos_Producao),
+                    {
+                        Title: Text(gvarRegistroExtracao.ID) & "-Extracao-Fim",
+                        origem: {Value: "ficha_producao"},
+                        origem_ID: gvarRegistroExtracao.ID,
+                        etapa: {Value: "Extração"},
+                        tipo: {Value: "Fim"},
+                        data_hora: _agora,
+                        data_ref: fx_DataRefEm(_agora),
+                        turno: fx_TurnoEm(_agora),
+                        bitola: gvarRegistroExtracao.Bitola,
+                        metros: _total,
+                        recurso: gvarRegistroExtracao.cabine_teste,
+                        operador: _operador
+                    }
+                );
+                If(
+                    !IsEmpty(Errors(Eventos_Producao)),
+                    Notify("Evento de fim não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                );
+                If(
+                    !IsBlank(_carretel),
+                    With(
+                        { _c: LookUp(lista_carreteis, Title = Text(_carretel)) },
+                        If(
+                            IsBlank(_c),
+                            Notify("Ficha salva, mas o carretel " & Text(_carretel) & " não foi encontrado para liberar. Avise a Supervisão.", NotificationType.Warning, 10000),
+                            Patch(lista_carreteis, _c, {op: Blank(), etapa_processo: Blank()});
+                            If(
+                                !IsEmpty(Errors(lista_carreteis)),
+                                Notify("Ficha salva, mas o carretel NÃO foi liberado: " & First(Errors(lista_carreteis)).Message, NotificationType.Error, 10000)
+                            )
+                        )
+                    )
+                );
+                Refresh(ficha_producao);
+                Reset(cmb_OperadorExt);
+                UpdateContext({ctxModalFinalizarExt: false, ctxAgora: _agora, ctxSincExt: _agora});
+                Set(varProcessando, false);
+                Notify("Ordem finalizada com " & fx_QtdBR(_total) & " m aprovados.", NotificationType.Success, 6000)
+            )
+        )
+    )
+)

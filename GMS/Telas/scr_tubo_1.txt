@@ -130,7 +130,7 @@ Screens:
             BorderColor: =fx_CorBorda
             Fill: =Color.Transparent
             Height: =700
-            Items: =Filter(ficha_producao, processo = "Tubo", status_processo <> "Cancelado")
+            Items: =Filter(Filter(ficha_producao, processo = "Tubo"), Coalesce(status_processo, "") <> "Cancelado")
             OnSelect: |-
               =Reset(inp_CodTubo_1);
               Reset(inp_LoteTubo_1);
@@ -1501,7 +1501,7 @@ Screens:
                   ClearCollect(
                       colFilaTrancTubo,
                       AddColumns(
-                          Filter(ficha_producao, processo = "Trançadeira", status_processo <> "Cancelado"),
+                          Filter(ficha_producao, processo = "Trançadeira"),
                           TrN, If(Trançadeira = "TE-01" || Trançadeira = "TE.01", "Spiral", Trançadeira)
                       )
                   ),
@@ -1551,7 +1551,7 @@ Screens:
                   { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
                   ClearCollect(
                       colOPsUsadasTubo,
-                      ShowColumns(Filter(ficha_producao, OP >= _min, processo <> "Tubo", status_processo <> "Cancelado", status_processo <> "Cancelada"), OP)
+                      ShowColumns(Filter(Filter(ficha_producao, OP >= _min, processo <> "Tubo"), Coalesce(status_processo, "") <> "Cancelado", Coalesce(status_processo, "") <> "Cancelada"), OP)
                   )
               );
               ClearCollect(

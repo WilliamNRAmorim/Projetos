@@ -2452,8 +2452,8 @@ Screens:
                             Notify("Selecione o U-Number do operador antes de finalizar.", NotificationType.Warning, 6000);
                             Set(varProcessando, false),
                             With(
-                                { _pk: LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
-                                IsBlank(_pk.ID) || _pk.QtdLances <> CountRows(colLancesExt) || Abs(_pk.TotalM - _total) > 0.005
+                                { _pks: Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
+                                IsEmpty(_pks) || Sum(_pks, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pks, TotalM) - _total) > 0.005
                             ),
                             Notify("Imprima o pack list desta OP antes de finalizar (ou imprima de novo, se entrou lance depois da última impressão). Toque em Imprimir, confirme e volte.", NotificationType.Error, 10000);
                             Set(varProcessando, false),

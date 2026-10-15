@@ -166,16 +166,18 @@ Screens:
               =If(
                   IsBlank(cmb_FiltroTr3.Selected.Filtro) || cmb_FiltroTr3.Selected.Filtro = "Todas",
                   Sort(
-                      Filter(ficha_producao, processo = "Trançadeira", status_processo <> "Cancelado"),
+                      Filter(Filter(ficha_producao, processo = "Trançadeira"), Coalesce(status_processo, "") <> "Cancelado"),
                       OP,
                       SortOrder.Ascending
                   ),
                   Sort(
                       Filter(
-                          ficha_producao,
-                          processo = "Trançadeira",
-                          status_processo <> "Cancelado",
-                          Trançadeira = cmb_FiltroTr3.Selected.Filtro
+                          Filter(
+                              ficha_producao,
+                              processo = "Trançadeira",
+                              Trançadeira = cmb_FiltroTr3.Selected.Filtro
+                          ),
+                          Coalesce(status_processo, "") <> "Cancelado"
                       ),
                       OP,
                       SortOrder.Ascending

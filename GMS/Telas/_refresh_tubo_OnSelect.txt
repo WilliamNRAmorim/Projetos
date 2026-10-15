@@ -1,0 +1,129 @@
+IfError(
+    Concurrent(
+        Refresh(ficha_producao),
+        Refresh(lista_carreteis),
+        Refresh('Hora-Hora'),
+        Refresh(Plano_OPs),
+        Refresh(Excecoes_OP)
+    ),
+    Notify("Não consegui atualizar do servidor. Confira a conexão e toque em atualizar.", NotificationType.Error, 8000)
+);
+Concurrent(
+    ClearCollect(colCarreteisTubo, lista_carreteis),
+    ClearCollect(
+        colFilaTrancTubo,
+        AddColumns(
+            Filter(ficha_producao, processo = "Trançadeira"),
+            TrN, If(Trançadeira = "TE-01" || Trançadeira = "TE.01", "Spiral", Trançadeira)
+        )
+    ),
+    ClearCollect(
+        colHHDiaTubo,
+        Filter('Hora-Hora', Data = fx_DataRefEm(Now()))
+    )
+);
+IfError(
+    ClearCollect(
+        colPlanoTubo,
+        AddColumns(
+            Filter(Plano_OPs, Tipo = "Tubo", Encerrada = false),
+            OPnum, Value(Title),
+            OPtxt, Title,
+            TrDrp, If(Trancadeira = "TE.01", "Spiral", Substitute(Trancadeira, ".", ""))
+        )
+    );
+    true,
+    Notify("Não consegui ler o plano de OPs. Toque em atualizar.", NotificationType.Error, 8000);
+    false
+);
+IfError(
+    ForAll(
+        Filter(Excecoes_OP, Status = "Aprovada", Tela = "Tubo") As _e,
+        If(
+            IsBlank(LookUp(colPlanoTubo, OPtxt = _e.Title)),
+            Collect(
+                colPlanoTubo,
+                {
+                    Title: _e.Title,
+                    OPnum: Value(_e.Title),
+                    OPtxt: _e.Title,
+                    PN: _e.PN,
+                    Tipo: "Tubo",
+                    Encerrada: false,
+                    Origem: "Exceção"
+                }
+            )
+        )
+    );
+    true,
+    Notify("Não consegui ler as exceções de OP. Toque em atualizar.", NotificationType.Warning, 6000);
+    false
+);
+With(
+    { _min: Coalesce(Min(colPlanoTubo, OPnum), 0) },
+    ClearCollect(
+        colOPsUsadasTubo,
+        ShowColumns(Filter(Filter(ficha_producao, OP >= _min, processo <> "Tubo"), Coalesce(status_processo, "") <> "Cancelado", Coalesce(status_processo, "") <> "Cancelada"), OP)
+    )
+);
+ClearCollect(
+    colKanbanTrancTubo,
+    ForAll(
+        fx_CelulasTrancagem As _c,
+        With(
+            {
+                _rodando: CountRows(
+                    Filter(
+                        colFilaTrancTubo As _f,
+                        _f.TrN = _c.Celula &&
+                        _f.status_processo = "Em processo"
+                    )
+                ) > 0,
+                _qtd: CountRows(
+                    Filter(
+                        colFilaTrancTubo As _g,
+                        _g.TrN = _c.Celula &&
+                        _g.status_processo = "Aguardando" &&
+                        !IsBlank(_g.'Carretel Entrada')
+                    )
+                ),
+                _hh: CountRows(
+                    Filter(
+                        colHHDiaTubo As _h,
+                        _h.Célula = _c.Celula &&
+                        (Coalesce(_h.'Real. Hora', 0) > 0 || !IsBlank(_h.Mangueira))
+                    )
+                ) > 0
+            },
+            {
+                Celula:  _c.Celula,
+                Tipo:    "MAQ",
+                Rodando: _rodando,
+                Qtd:     _qtd,
+                Ativa:   _rodando || _hh
+            }
+        )
+    )
+);
+With(
+    {
+        _orf: CountRows(
+            Filter(
+                colFilaTrancTubo As _o,
+                _o.status_processo = "Aguardando" &&
+                !IsBlank(_o.'Carretel Entrada') &&
+                IsBlank(
+                    LookUp(fx_CelulasTrancagem As _c2, _c2.Celula = _o.TrN).Celula
+                )
+            )
+        )
+    },
+    If(
+        _orf > 0,
+        Collect(
+            colKanbanTrancTubo,
+            { Celula: "fora da grade", Tipo: "ORF", Rodando: false, Qtd: _orf, Ativa: true }
+        )
+    )
+);
+UpdateContext({ctxAgora: Now()})
