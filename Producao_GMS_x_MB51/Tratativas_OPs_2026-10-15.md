@@ -82,3 +82,18 @@ Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista 
 ## P13: fichas 3309 e 3213 (15/10)
 
 Ficha 3309 passou da OP 29878642 para 29820550 (574 m e packing mantidos). Ficha 3213 (500 m, sem lances e sem lançamento do SAP) foi para a lixeira; backup em `backup_ficha_3213_29820550.json`. O refugo de 1,5 m segue em `TiposErros` na 29878642, igual ao SAP (material FC735-08, pendência P05).
+
+## Divergência geral de 20/05 a 20/09/2026, recalculada com o GMS de 15/10
+
+Reconferência feita com os CSVs corrigidos (`aplicar_correcoes_gms_nos_csv.py`: 86 lances movidos de OP, 3 refugos movidos e 3 excluídos). A divergência concreta mantém os erros do SAP.
+
+| | 14/10 (antes) | 15/10 (agora) |
+|---|---|---|
+| SAP a mais | 2.960,1 m | 2.725,9 m |
+| SAP a menos | −1.571,1 m | −706,1 m |
+| Total em módulo | 4.531,2 m | 3.432,0 m (−24%) |
+| OPs divergentes | 235 | 216 |
+
+Do que sobrou: 733,9 m são da OP 27002870 (OP de dez/2025 que entra no período só por causa de 1 m de refugo do GMS em 28/08; não é divergência real); cerca de 1.684 m são lances do SAP que você vai lançar no GMS (P08 454,9, P09 313,5, P10 270,1 e P16 645,3).
+
+Fichas: 3168 (OP corrigida de 28788420 para 29788420) e 3076 (OP vazia preenchida com 29733207).
