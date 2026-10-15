@@ -41,3 +41,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-15 | corrigir filtros Cancelado, finalizar OP nas cabines, testar ao vivo no Studio/SharePoint | chefe (Sonnet) sozinho, sem subagente | tarefas pequenas e dependentes de leitura ao vivo | custo não medido
 2026-10-15 | Top 10 OPs divergentes MB51 x GMS + busca de OPs que compensam a diferenca (script top_ops_compensacao.py) | chefe (Sonnet 5.5) direto, sem subagente | tarefa de analise em um script so | custo baixo
 2026-10-15 | Correcao no GMS de 80 lances (OP_ID em RegistrosInspecao) das tratativas dos lotes 1 e 2, conferida 80/80 | chefe (Sonnet 5.5) direto, navegador embutido | autorizado pelo William | custo baixo
+2026-10-15 | Fichas ficha_producao: 2 trocas de OP para a do SAP, 17 quantidade_extracao corrigidas, ficha 3378 para a lixeira; objetivo do William: GMS espelho do SAP | chefe (Sonnet 5.5) direto, navegador embutido, autorizado pelo William | custo baixo
