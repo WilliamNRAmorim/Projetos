@@ -63,3 +63,9 @@ Divergência depois das tratativas dos dois lotes: SAP a mais 2.273,5 m, SAP a m
 ## Correções gravadas no GMS (15/10/2026)
 
 Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista RegistrosInspeção (conferido depois: 80 de 80 na OP nova). A boa do GMS agora é igual à boa do SAP em todas as OPs tocadas, exceto: 29788884 / 30078414 (51,0 m de lançamento duplicado no SAP) e 29963530 (−98,8 m: o SAP lançou o lance na 29878655, EC118-10L). Ficaram de fora: 30337761, 29878642, refugos e as pendentes 29733210, 30092889 e 29260119.
+
+## Refugo e fichas (15/10, fim do dia)
+
+- `TiposErros` ids 4311, 4312 e 4313 (refugo 0,6 + 0,9 + 0,8 m de 25/08): OP_ID trocado de 29963502 para 29963527, igual ao SAP (doc 3024755763). Para desfazer, voltar o OP_ID para 29963502.
+- 29115542: o refugo de 1,0 m (O - Pontas, 02/06 17:36) não foi lançado no SAP, nem na 29115542 nem na 29133080. Pendente de lançamento no SAP.
+- 29733210: refugos do GMS (1,2 + 1,1 m) aguardam o aprendiz lançar no SAP; falta definir a OP.
