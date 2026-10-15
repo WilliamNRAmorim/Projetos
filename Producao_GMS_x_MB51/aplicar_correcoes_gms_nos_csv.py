@@ -36,6 +36,14 @@ for r in csv.reader(open('pendencias_lancar_lote4.csv',encoding='utf-8-sig'),del
         linha=[r[0],r[3],'','','',r[2]+' 12:00','',r[2]+' 12:00',mat[r[0]],'','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo']
         ins.append(linha); novos+=1
 print('lances reconstruidos:',novos)
+for r in csv.reader(open('tratativas_lote5_lances.csv',encoding='utf-8-sig'),delimiter=';'):
+    if r[0].startswith('OP no GMS'): continue
+    for row in ins:
+        if row[0]==r[0] and row[1]==r[6] and row[5][:16]==r[5]:
+            row[0]=r[1]
+            if r[3] and r[3]!=r[2]: row[8]=r[3]
+            feitos+=1; break
+    else: print('NAO ACHEI lote5',r[:2],r[5],r[6])
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
