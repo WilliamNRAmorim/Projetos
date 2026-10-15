@@ -25,6 +25,17 @@ for de,para,q,dh,mang in mov:
             if mang: r[8]=mang
             break
     else: print('NAO ACHEI',de,para,q,dh)
+# troca 29048972 -> 29032972 (6 lances) e lances reconstruidos a partir do SAP
+for q in ('100,7','55','62,2','99,8','101,6','104,6'):
+    for r in ins:
+        if r[0]=='29048972' and r[1]==q and r[5][:10]=='28/05/2026': r[0]='29032972'; feitos+=1; break
+mat={'29347123':'GH781-4','29102387':'HC139-7','29160712':'GH681-4','29118863':'FC735-06','29145242':'GH681-4','29133128':'FC735-06','28970615':'EC115-08L','29820546':'GH781-8'}
+novos=0
+for r in csv.reader(open('pendencias_lancar_lote4.csv',encoding='utf-8-sig'),delimiter=';'):
+    if r[0] in mat:
+        linha=[r[0],r[3],'','','',r[2]+' 12:00','',r[2]+' 12:00',mat[r[0]],'','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo']
+        ins.append(linha); novos+=1
+print('lances reconstruidos:',novos)
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
