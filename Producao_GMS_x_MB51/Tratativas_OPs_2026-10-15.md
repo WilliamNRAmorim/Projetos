@@ -69,3 +69,6 @@ Os 80 lances de `correcoes_gms_2026-10-15.csv` tiveram o OP_ID trocado na lista 
 - `TiposErros` ids 4311, 4312 e 4313 (refugo 0,6 + 0,9 + 0,8 m de 25/08): OP_ID trocado de 29963502 para 29963527, igual ao SAP (doc 3024755763). Para desfazer, voltar o OP_ID para 29963502.
 - 29115542: o refugo de 1,0 m (O - Pontas, 02/06 17:36) não foi lançado no SAP, nem na 29115542 nem na 29133080. Pendente de lançamento no SAP.
 - 29733210: refugos do GMS (1,2 + 1,1 m) aguardam o aprendiz lançar no SAP; falta definir a OP.
+
+- Refugos sem par no SAP excluídos do GMS (lixeira do SharePoint, `TiposErros`): id 2643 (29115542, 1,0 m O - Pontas, 02/06), id 3763 (29733210, 1,2 m O - Pontas) e id 3764 (29733210, 1,1 m A - Quebra de Fio, 03/08). Conferi que não há refugo de 1,2 ou 1,1 m dessa mangueira em 04/08, no GMS nem no SAP. Para restaurar: lixeira do site.
+- Com isso, os lances de produção boa e os refugos dos lotes 1 e 2 ficaram espelhando o SAP, exceto o que é do SAP (refugo duplicado, 51 m, 98,8 m) e as pendentes de lançar no GMS (29733210, 30092889 e 29260119).
