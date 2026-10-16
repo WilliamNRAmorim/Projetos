@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.9 · 2026-10-06
+//  GMS · App.Formulas · v3.0.10 · 2026-10-16
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11).
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -878,7 +878,7 @@ fx_MotivosParada =
         {Motivo: "Falta de Lenon",              Tipo: "Material"},
         {Motivo: "Troca de Lenon",              Tipo: "Processo"},
         {Motivo: "Falta de Mangueira",          Tipo: "Material"},
-        {Motivo: "Almoço",                      Tipo: "Programada"},
+        {Motivo: "Refeição",                      Tipo: "Programada"},
         {Motivo: "Troca de Carretel",           Tipo: "Processo"},
         {Motivo: "Emenda de Fita",              Tipo: "Processo"},
         {Motivo: "Divergência do Tempo Padrão", Tipo: "Organizacional"},
@@ -888,7 +888,8 @@ fx_MotivosParada =
         {Motivo: "Resto de fio",                Tipo: "Material"},
         {Motivo: "Motivo Não Declarado",        Tipo: "Organizacional"},
         {Motivo: "Sem apontamento",             Tipo: "Organizacional"},
-        {Motivo: "Análise/Problema no tubo",             Tipo: "Falha"}
+        {Motivo: "Análise/Problema no tubo",             Tipo: "Falha"},
+        {Motivo: "Registro de Pick",            Tipo: "Engenharia"}
     );
 
 // Trançadeiras que apontam Hora-Hora, na ordem física da célula.
@@ -1044,9 +1045,9 @@ fx_VelocidadeComFallback(maquina: Text, construcao: Text, mangueira: Text): Numb
         If(_v > 0, _v, fx_VelocidadeFallbackSpiral(mangueira))
     );
 
-// [v2.8.0] Mangueira de DUAS PASSAGENS na trançadeira = construção DD (dupla trama). O operador digita
+// [v3.0.10 · MEL-241] Mangueira de DUAS PASSAGENS na trançadeira = construção DD (dupla trama). O operador digita
 // o TOTAL das duas passagens; o app grava a METADE (metros de mangueira produzida). Construção SD = passagem única.
-// Critério deduzido da planilha DM_ENGRENAGENS (DD…/SD…); William confirma antes de publicar.
+// DD = double deck, SD = single deck (William, 16/10/2026).
 fx_DuasPassagens(construcao: Text): Boolean =
     Left(Upper(Trim(construcao)), 2) = "DD";
 
