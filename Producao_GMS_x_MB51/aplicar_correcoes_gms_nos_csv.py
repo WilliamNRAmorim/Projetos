@@ -57,6 +57,14 @@ for de,para,q in (('29702384','29102384','40,7'),('30036777','30063848','165,4')
 for r in ins:   # move144: lance de 14,4 m da 29162764 para a 29162763
     if r[0]=='29162764' and r[1]=='14,4': r[0]='29162763'; feitos+=1; break
 print('lances movidos:',feitos,'de',len(mov))
+# refugo16b / 29733207 / 29949228 e 29949591 espelhando o SAP
+ins=[r for r in ins if not (r[0]=='29733207' and r[1]=='520') and r[0] not in('29949228','29949591')]
+for q,h in (('96,6','14:29'),('73,8','14:53'),('8,2','14:45'),('16,1','14:54'),('21,3','15:11'),('51,3','15:12'),('16,4','15:13'),('78,9','15:36'),('13','15:37'),('57,6','15:53'),('29','15:54')):
+    ins.append(['29733207',q,'','','','03/08/2026 '+h,'','03/08/2026 '+h,'EC215-08LRL','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
+for q in ('11,2','12,5','14','15,1','29,1','30,3','30,9','31,2','37,2','43,9','88','162'):
+    ins.append(['29949228',q,'','','','22/08/2026 12:00','','22/08/2026 12:00','EC118-06L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
+for q in ('10,3','11,1','13,6','26,5','56','75,5','78,2','83,2','156,3','161,8'):
+    ins.append(['29949591',q,'','','','24/08/2026 12:00','','24/08/2026 12:00','EC118-06L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
 saida=[]
@@ -67,5 +75,10 @@ for r in ref:
     if (r[0]=='29115542' and r[1]=='O - Pontas' and r[2]=='1') or (r[0]=='29733210' and r[3][:10]=='03/08/2026' and r[2] in('1,2','1,1')) or (r[0]=='27002870' and r[1].startswith('D - Marca') and r[2]=='1'): continue
     saida.append(r)
 print('refugos:',len(ref),'->',len(saida))
+for r in saida:   # refugo16b: pares de refugo lancados em outra OP
+    if r[0]=='29422610': r[0]='29367063'
+    elif r[0]=='30063849': r[0]='30063850'
+    elif r[0]=='30120931': r[0]='30120930'
+    elif r[0]=='29395275': r[0]='29305868'
 gravar('dados/refugo_14out.csv',cab,saida)
 # fichas: OP corrigida em 3168 e 3076 nao afeta a conferencia (lista de inspecao)
