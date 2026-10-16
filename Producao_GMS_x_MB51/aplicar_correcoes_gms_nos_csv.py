@@ -47,6 +47,9 @@ for r in csv.reader(open('tratativas_lote5_lances.csv',encoding='utf-8-sig'),del
 for r in csv.reader(open('reconstrucao_lances_lote6.csv',encoding='utf-8-sig'),delimiter=';'):
     if r[0]=='OP': continue
     ins.append([r[0],r[3],'','','',r[2],'',r[2],r[1],'','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
+# lance14161: lance solto de 18,3 m da 29949597 vai para a 29978233 (ficha 3324)
+for r in ins:
+    if r[0]=='29949597' and r[1]=='18,3': r[0]='29978233'; feitos+=1; break
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
