@@ -1111,7 +1111,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.6.2"
+            Text: ="Versão 0.6.3"
             Width: =140
             X: =1226
             Y: =728
@@ -1181,9 +1181,14 @@ Screens:
                               ) As _q,
                               With(
                               {
-                                  _nd: _q.Ativa &&
+                                  _dev: _q.Ativa &&
                                       fx_FaixaVencida(_q.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT) &&
-                                      _q.Meta > 0 && _q.Real < _q.Meta && IsBlank(Trim(_q.Motivo))
+                                      _q.Meta > 0 && _q.Real < _q.Meta
+                              },
+                              With(
+                              {
+                                  _nd: _dev && IsBlank(Trim(_q.Motivo)),
+                                  _nt: _dev && !IsBlank(Trim(_q.Motivo)) && _q.TempoParado <= 0
                               },
                               {
                                   cIDsp:       _q.IDsp,
@@ -1196,7 +1201,7 @@ Screens:
                                   cMetaAc:     Sum(Filter(colLinhasHHT As _c3, _c3.Ord <= _q.Ord), Meta),
                                   cRealAc:     Sum(Filter(colLinhasHHT As _c4, _c4.Ord <= _q.Ord), Real),
                                   cParado:     If(
-                                      _nd && _q.TempoParado <= 0,
+                                      (_nd || _nt) && _q.TempoParado <= 0,
                                       Min(_q.Minutos, Round(_q.Minutos * (_q.Meta - _q.Real) / _q.Meta, 0)),
                                       Min(_q.TempoParado, _q.Minutos)
                                   ),
@@ -1206,8 +1211,10 @@ Screens:
                                   cCelula:     _q.RCelula,
                                   cTurno:      _q.RTurno,
                                   cData:       _q.RData,
-                                  cND:         _nd
+                                  cND:         _nd,
+                                  cNT:         _nt
                               }
+                              )
                               )
                           )
                       );
@@ -1275,20 +1282,29 @@ Screens:
                           IsEmpty(colFalhasHHT),
                           UpdateContext({ctxAlteradoHHT: false});
                           ForAll(
-                              Filter(colGravarHHT, cND) As _gn,
+                              Filter(colGravarHHT, cND || cNT) As _gn,
                               UpdateIf(colLinhasHHT, Hora = _gn.cHora, { Motivo: _gn.cMotivo, TempoParado: _gn.cParado })
                           );
                           With(
-                              { _n: CountRows(Filter(colGravarHHT, cND)) },
+                              {
+                                  _n: CountRows(Filter(colGravarHHT, cND)),
+                                  _t: CountRows(Filter(colGravarHHT, cNT))
+                              },
                               Notify(
                                   "Turno fechado nesta máquina." &
                                   If(
                                       _n > 0,
                                       "  " & Text(_n) & " janela(s) abaixo da meta sem motivo foram gravadas como Motivo Não Declarado, com o tempo parado proporcional ao que faltou.",
                                       ""
-                                  ),
+                                  ) &
+                                  If(
+                                      _t > 0,
+                                      "  " & Text(_t) & " janela(s) com motivo e sem tempo parado receberam o tempo proporcional ao que faltou.",
+                                      ""
+                                  ) &
+                                  If(_n + _t > 0, "  Dá para trocar o motivo e o tempo depois, tocando em Abrir.", ""),
                                   NotificationType.Success,
-                                  If(_n > 0, 12000, 6000)
+                                  If(_n + _t > 0, 14000, 6000)
                               )
                           ),
                           Notify(
