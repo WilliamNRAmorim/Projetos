@@ -65,6 +65,10 @@ for q in ('11,2','12,5','14','15,1','29,1','30,3','30,9','31,2','37,2','43,9','8
     ins.append(['29949228',q,'','','','22/08/2026 12:00','','22/08/2026 12:00','EC118-06L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
 for q in ('10,3','11,1','13,6','26,5','56','75,5','78,2','83,2','156,3','161,8'):
     ins.append(['29949591',q,'','','','24/08/2026 12:00','','24/08/2026 12:00','EC118-06L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
+# espelho29050557 + lances removidos (29864099 e 29963526)
+ins=[r for r in ins if r[0]!='29050557' and not (r[0]=='29864099' and r[1] in('39,6','36,9')) and not (r[0]=='29963526' and r[1]=='45,3')]
+for q,h in (('40,9','07:09'),('133,6','07:10'),('128,1','07:11')):
+    ins.append(['29050557',q,'','','','01/06/2026 '+h,'','01/06/2026 '+h,'EC215-10L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
 saida=[]
