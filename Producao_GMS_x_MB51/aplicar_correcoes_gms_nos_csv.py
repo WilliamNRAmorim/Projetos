@@ -50,6 +50,10 @@ for r in csv.reader(open('reconstrucao_lances_lote6.csv',encoding='utf-8-sig'),d
 # lance14161: lance solto de 18,3 m da 29949597 vai para a 29978233 (ficha 3324)
 for r in ins:
     if r[0]=='29949597' and r[1]=='18,3': r[0]='29978233'; feitos+=1; break
+# duplicados16: originais do GMS movidos para a OP do SAP (os duplicados reconstruidos sairam da lista)
+for de,para,q in (('29702384','29102384','40,7'),('30036777','30063848','165,4'),('30036777','30063848','9,2'),('29112843','28880785','39,5'),('29422872','29422873','34,6')):
+    for r in ins:
+        if r[0]==de and r[1]==q: r[0]=para; feitos+=1; break
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
