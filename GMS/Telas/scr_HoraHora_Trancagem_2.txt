@@ -346,7 +346,7 @@ Screens:
                       )
                   },
                   If(_f > 0, "⚠ " & Text(_f) & " janela(s) já fechada(s) sem apontamento.   ", "") &
-                  If(_m > 0, "⛔ " & Text(_m) & " janela(s) abaixo da meta sem motivo de parada — o turno não fecha assim.", "")
+                  If(_m > 0, "⛔ " & Text(_m) & " janela(s) abaixo da meta sem motivo de parada — se fechar assim, vão como Motivo Não Declarado, com o tempo parado proporcional.", "")
               )
             Visible: =rct_FaixaAlertaHHT.Visible
             Width: =1330
@@ -1111,7 +1111,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.6.1"
+            Text: ="Versão 0.6.2"
             Width: =140
             X: =1226
             Y: =728
@@ -1134,7 +1134,7 @@ Screens:
                               _f1.Ativa,
                               fx_FaixaVencida(_f1.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                               _f1.Mangueira, _f1.Meta, _f1.Real, _f1.Motivo
-                          ) <> ""
+                          ) = "SEM_APONTAMENTO"
                       )
                   ) > 0,
                   DisplayMode.Disabled,
@@ -1155,14 +1155,14 @@ Screens:
                                   _f2.Ativa,
                                   fx_FaixaVencida(_f2.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                                   _f2.Mangueira, _f2.Meta, _f2.Real, _f2.Motivo
-                              ) <> ""
+                              ) = "SEM_APONTAMENTO"
                           )
                       )
                   },
                   If(
                       _pend > 0,
                       Notify(
-                          "Faltam " & Text(_pend) & " linha(s): janela fechada sem apontamento, ou abaixo da meta sem motivo de parada.",
+                          "Faltam " & Text(_pend) & " janela(s) fechada(s) sem apontamento: informe a mangueira e os metros, ou o motivo de a máquina não ter produzido.",
                           NotificationType.Error,
                           10000
                       ),
@@ -1179,6 +1179,12 @@ Screens:
                                   colLinhasHHT As _p,
                                   _p.IDsp > 0 || !IsBlank(_p.Mangueira) || _p.Real > 0 || _p.TempoParado > 0
                               ) As _q,
+                              With(
+                              {
+                                  _nd: _q.Ativa &&
+                                      fx_FaixaVencida(_q.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT) &&
+                                      _q.Meta > 0 && _q.Real < _q.Meta && IsBlank(Trim(_q.Motivo))
+                              },
                               {
                                   cIDsp:       _q.IDsp,
                                   cHora:       _q.Hora,
@@ -1189,14 +1195,20 @@ Screens:
                                   cReal:       _q.Real,
                                   cMetaAc:     Sum(Filter(colLinhasHHT As _c3, _c3.Ord <= _q.Ord), Meta),
                                   cRealAc:     Sum(Filter(colLinhasHHT As _c4, _c4.Ord <= _q.Ord), Real),
-                                  cParado:     Min(_q.TempoParado, _q.Minutos),
-                                  cMotivo:     _q.Motivo,
+                                  cParado:     If(
+                                      _nd && _q.TempoParado <= 0,
+                                      Min(_q.Minutos, Round(_q.Minutos * (_q.Meta - _q.Real) / _q.Meta, 0)),
+                                      Min(_q.TempoParado, _q.Minutos)
+                                  ),
+                                  cMotivo:     If(_nd, "Motivo Não Declarado", _q.Motivo),
                                   cMotivo2:    _q.Motivo2,
                                   cComentario: _q.Comentario,
                                   cCelula:     _q.RCelula,
                                   cTurno:      _q.RTurno,
-                                  cData:       _q.RData
+                                  cData:       _q.RData,
+                                  cND:         _nd
                               }
+                              )
                           )
                       );
 
@@ -1262,10 +1274,22 @@ Screens:
                       If(
                           IsEmpty(colFalhasHHT),
                           UpdateContext({ctxAlteradoHHT: false});
-                          Notify(
-                              "Turno fechado nesta máquina: todas as janelas vencidas estão apontadas e justificadas.",
-                              NotificationType.Success,
-                              6000
+                          ForAll(
+                              Filter(colGravarHHT, cND) As _gn,
+                              UpdateIf(colLinhasHHT, Hora = _gn.cHora, { Motivo: _gn.cMotivo, TempoParado: _gn.cParado })
+                          );
+                          With(
+                              { _n: CountRows(Filter(colGravarHHT, cND)) },
+                              Notify(
+                                  "Turno fechado nesta máquina." &
+                                  If(
+                                      _n > 0,
+                                      "  " & Text(_n) & " janela(s) abaixo da meta sem motivo foram gravadas como Motivo Não Declarado, com o tempo parado proporcional ao que faltou.",
+                                      ""
+                                  ),
+                                  NotificationType.Success,
+                                  If(_n > 0, 12000, 6000)
+                              )
                           ),
                           Notify(
                               "⚠ Turno NÃO fechou por inteiro: " & Text(CountRows(colFalhasHHT)) &
