@@ -1044,6 +1044,12 @@ fx_VelocidadeComFallback(maquina: Text, construcao: Text, mangueira: Text): Numb
         If(_v > 0, _v, fx_VelocidadeFallbackSpiral(mangueira))
     );
 
+// [v2.8.0] Mangueira de DUAS PASSAGENS na trançadeira = construção DD (dupla trama). O operador digita
+// o TOTAL das duas passagens; o app grava a METADE (metros de mangueira produzida). Construção SD = passagem única.
+// Critério deduzido da planilha DM_ENGRENAGENS (DD…/SD…); William confirma antes de publicar.
+fx_DuasPassagens(construcao: Text): Boolean =
+    Left(Upper(Trim(construcao)), 2) = "DD";
+
 
 //  §12 · EVENTOS DE PRODUÇÃO  ═════════════════════════════════════════
 //  Fonte: lista Eventos_Producao. Grão: 1 linha por OP × etapa × tipo.

@@ -12,6 +12,8 @@ Screens:
             ctxSobrescreverHHT: false,
             ctxOrdOrigemHHT: 0,
             ctxCelulaCarregadaHHT: "",
+            ctxCarregandoHHT: false,
+            ctxIniCargaHHT: Now(),
             ctxTurnoCarregadoHHT: 0,
             ctxDataCarregadaHHT: fx_DataRefEm(Now())
         });
@@ -174,6 +176,7 @@ Screens:
             DisplayMode: |-
               =If(
                   varProcessando ||
+                  ctxCarregandoHHT ||
                   IsBlank(cmb_CelulaHHT.Selected.Celula) ||
                   (
                       cmb_TurnoHHT.Selected.Value = varTurnoHHT &&
@@ -545,6 +548,8 @@ Screens:
                     =If(
                         !IsBlank(LookUp(colFalhasHHT As _fl, _fl.fRotulo = ThisItem.Rotulo)),
                         fx_CorErro,
+                        ThisItem.Fora,
+                        fx_CorAlerta,
                         Switch(
                             fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo),
                             "SEM_MOTIVO",      fx_CorErro,
@@ -554,7 +559,7 @@ Screens:
                     )
                   BorderThickness: |-
                     =If(
-                        !IsBlank(LookUp(colFalhasHHT As _fb, _fb.fRotulo = ThisItem.Rotulo)),
+                        ThisItem.Fora || !IsBlank(LookUp(colFalhasHHT As _fb, _fb.fRotulo = ThisItem.Rotulo)),
                         3,
                         fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "",
                         1,
@@ -602,6 +607,7 @@ Screens:
                     =If(
                         varProcessando ||
                         IsBlank(ThisItem.Mangueira) ||
+                        ThisItem.Fora ||
                         ThisItem.Ord >= CountRows(colLinhasHHT),
                         DisplayMode.Disabled,
                         DisplayMode.Edit
@@ -677,9 +683,11 @@ Screens:
                         fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_APONTAMENTO" ||
                         (ThisItem.Meta > 0 && ThisItem.Real > ThisItem.Meta * (1 + fx_MargemMetragemPct / 100)),
                         fx_CorAlerta,
+                        ThisItem.DP,
+                        fx_CorInfo,
                         fx_CorBorda
                     )
-                  Default: =If(ThisItem.Real = 0 && IsBlank(ThisItem.Mangueira), "", Text(ThisItem.Real))
+                  Default: =If(ThisItem.Real = 0 && IsBlank(ThisItem.Mangueira), "", Text(If(ThisItem.DP, ThisItem.Real * 2, ThisItem.Real)))
                   DelayOutput: =true
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
@@ -691,11 +699,11 @@ Screens:
                     =With(
                         { _v: Coalesce(fx_Num(Self.Text), 0) },
                         If(
-                            _v <> ThisItem.Real,
+                            _v <> If(ThisItem.DP, ThisItem.Real * 2, ThisItem.Real),
                             Patch(
                                 colLinhasHHT,
                                 LookUp(colLinhasHHT As _lp, _lp.Ord = ThisItem.Ord),
-                                { Real: _v }
+                                { Real: If(ThisItem.DP, _v / 2, _v) }
                             );
                             If(_v > 0, UpdateIf(colLinhasHHT, Ord > 0, { Ativa: true }));
                             UpdateContext({ctxAlteradoHHT: true})
@@ -804,17 +812,40 @@ Screens:
                     =With(
                         {
                             _m: Coalesce(Self.Selected.Mangueira, ""),
-                            _f: Coalesce(Self.Selected.MFG, 0)
+                            _f: Coalesce(Self.Selected.MFG, 0),
+                            _dp: Coalesce(Self.Selected.DP, false),
+                            _tot: If(ThisItem.DP, ThisItem.Real * 2, ThisItem.Real)
                         },
                         If(
-                            !IsBlank(_m) && _m <> ThisItem.Mangueira,
+                            IsBlank(_m),
+                            If(
+                                !IsBlank(ThisItem.Mangueira) && !ThisItem.Fora,
+                                Patch(
+                                    colLinhasHHT,
+                                    LookUp(colLinhasHHT As _lp3, _lp3.Ord = ThisItem.Ord),
+                                    {
+                                        Mangueira: "",
+                                        MFG: 0,
+                                        Meta: 0,
+                                        DP: false,
+                                        Fora: false,
+                                        Real: _tot
+                                    }
+                                );
+                                UpdateContext({ctxAlteradoHHT: true})
+                            ),
+
+                            _m <> ThisItem.Mangueira,
                             Patch(
                                 colLinhasHHT,
                                 LookUp(colLinhasHHT As _lp3, _lp3.Ord = ThisItem.Ord),
                                 {
                                     Mangueira: _m,
                                     MFG: _f,
-                                    Meta: If(_f > 0, fx_MetaFaixa(_f, ThisItem.Minutos), 0)
+                                    DP: _dp,
+                                    Fora: false,
+                                    Meta: If(_f > 0, fx_MetaFaixa(_f, ThisItem.Minutos), 0),
+                                    Real: If(_dp, _tot / 2, _tot)
                                 }
                             );
                             UpdateIf(colLinhasHHT, Ord > 0, { Ativa: true });
@@ -823,7 +854,7 @@ Screens:
                     )
                   PressedColor: =fx_CorSuperficie
                   PressedFill: =fx_CorInfo
-                  SearchFields: =["Chave"]
+                  SearchFields: =["Mangueira","Chave"]
                   SelectMultiple: =false
                   SelectionColor: =fx_CorInfo
                   SelectionFill: =fx_CorInfoSuave
@@ -1015,10 +1046,11 @@ Screens:
               =If(
                   !IsEmpty(colFalhasHHT), fx_CorErro,
                   ctxAlteradoHHT,         fx_CorAlerta,
+                  !IsEmpty(Filter(colLinhasHHT As _fo5, _fo5.Fora)), fx_CorAlerta,
                   fx_CorTextoSuave
               )
             Font: =fx_FonteFamilia
-            FontWeight: =If(!IsEmpty(colFalhasHHT) || ctxAlteradoHHT, FontWeight.Bold, FontWeight.Normal)
+            FontWeight: =If(!IsEmpty(colFalhasHHT) || ctxAlteradoHHT || !IsEmpty(Filter(colLinhasHHT As _fo6, _fo6.Fora)), FontWeight.Bold, FontWeight.Normal)
             Height: =50
             Size: =fx_FonteApoio
             Text: |-
@@ -1030,6 +1062,11 @@ Screens:
                   ctxAlteradoHHT,
                   "⚠ Alterações ainda NÃO gravadas. Nada vai para o SharePoint até você tocar em Salvar ou Fechar turno.",
 
+                  CountRows(Filter(colLinhasHHT As _fo3, _fo3.Fora)) > 0,
+                  "⚠ Mangueira sem velocidade cadastrada para esta máquina em: " &
+                  Concat(Filter(colLinhasHHT As _fo4, _fo4.Fora), Rotulo & " (" & Mangueira & ")", ", ") &
+                  ".  Dá para salvar; a meta dessas janelas é a gravada antes. Avise a engenharia para cadastrar a velocidade no DM_ENGRENAGENS.",
+
                   CountRows(Filter(colLinhasHHT As _q0, _q0.Meta > 0 && _q0.Real > _q0.Meta * (1 + fx_MargemMetragemPct / 100))) > 0,
                   "⚠ " & Text(CountRows(Filter(colLinhasHHT As _q9, _q9.Meta > 0 && _q9.Real > _q9.Meta * (1 + fx_MargemMetragemPct / 100)))) &
                   " janela(s) com Real acima da meta em mais de " & Text(fx_MargemMetragemPct) & "% (borda laranja). Confira se não foi digitação; se estiver certo, pode salvar.",
@@ -1040,7 +1077,12 @@ Screens:
                   With(
                       { _m: Sum(colLinhasHHT, Minutos) },
                       "Este turno tem " & Text(_m) & " minutos de janela em " & Text(CountRows(colLinhasHHT)) &
-                      " linhas. O botão ↓ repete a mangueira nas janelas seguintes."
+                      " linhas. O botão ↓ repete a mangueira nas janelas seguintes." &
+                      If(
+                          CountRows(Filter(colLinhasHHT As _dp1, _dp1.DP)) > 0,
+                          "  Borda azul no REAL = mangueira de duas passagens: digite o TOTAL das duas; o sistema grava a metade.",
+                          ""
+                      )
                   )
               )
             Visible: =!IsBlank(ctxCelulaCarregadaHHT)
@@ -1069,7 +1111,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.6.0"
+            Text: ="Versão 0.6.1"
             Width: =140
             X: =1226
             Y: =728
@@ -1083,6 +1125,7 @@ Screens:
             DisplayMode: |-
               =If(
                   varProcessando ||
+                  ctxCarregandoHHT ||
                   IsBlank(ctxCelulaCarregadaHHT) ||
                   CountRows(
                       Filter(
@@ -1149,7 +1192,10 @@ Screens:
                                   cParado:     Min(_q.TempoParado, _q.Minutos),
                                   cMotivo:     _q.Motivo,
                                   cMotivo2:    _q.Motivo2,
-                                  cComentario: _q.Comentario
+                                  cComentario: _q.Comentario,
+                                  cCelula:     _q.RCelula,
+                                  cTurno:      _q.RTurno,
+                                  cData:       _q.RData
                               }
                           )
                       );
@@ -1160,10 +1206,13 @@ Screens:
                           colGravarHHT As _u,
                           With(
                               {
-                                  _base: If(
-                                      _u.cIDsp > 0,
-                                      LookUp('Hora-Hora', ID = _u.cIDsp),
-                                      Defaults('Hora-Hora')
+                                  _base: With(
+                                      { _b0: If(_u.cIDsp > 0, LookUp('Hora-Hora', ID = _u.cIDsp)) },
+                                      If(
+                                          !IsBlank(_b0) && _b0.Célula = _u.cCelula && _b0.Turno = _u.cTurno && _b0.Hora = _u.cHora,
+                                          _b0,
+                                          Defaults('Hora-Hora')
+                                      )
                                   )
                               },
                               IfError(
@@ -1173,10 +1222,10 @@ Screens:
                                               'Hora-Hora',
                                               If(IsBlank(_base), Defaults('Hora-Hora'), _base),
                                               {
-                                                  Title: Text(ctxDataCarregadaHHT, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHT & " - " & ctxCelulaCarregadaHHT,
-                                                  Data: ctxDataCarregadaHHT,
-                                                  Turno: varTurnoHHT,
-                                                  Célula: ctxCelulaCarregadaHHT,
+                                                  Title: Text(_u.cData, "[$-pt-BR]dd/mm/yyyy") & " - " & _u.cTurno & " - " & _u.cCelula,
+                                                  Data: _u.cData,
+                                                  Turno: _u.cTurno,
+                                                  Célula: _u.cCelula,
                                                   Hora: _u.cHora,
                                                   Minutos: _u.cMinutos,
                                                   Mangueira: _u.cMangueira,
@@ -1251,7 +1300,7 @@ Screens:
             DisabledFill: =fx_CorBorda
             DisplayMode: |-
               =If(
-                  varProcessando || IsBlank(ctxCelulaCarregadaHHT),
+                  varProcessando || ctxCarregandoHHT || IsBlank(ctxCelulaCarregadaHHT),
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
@@ -1286,7 +1335,10 @@ Screens:
                           cParado:     Min(_q.TempoParado, _q.Minutos),
                           cMotivo:     _q.Motivo,
                           cMotivo2:    _q.Motivo2,
-                          cComentario: _q.Comentario
+                          cComentario: _q.Comentario,
+                          cCelula:     _q.RCelula,
+                          cTurno:      _q.RTurno,
+                          cData:       _q.RData
                       }
                   )
               );
@@ -1297,10 +1349,13 @@ Screens:
                   colGravarHHT As _u,
                   With(
                       {
-                          _base: If(
-                              _u.cIDsp > 0,
-                              LookUp('Hora-Hora', ID = _u.cIDsp),
-                              Defaults('Hora-Hora')
+                          _base: With(
+                              { _b0: If(_u.cIDsp > 0, LookUp('Hora-Hora', ID = _u.cIDsp)) },
+                              If(
+                                  !IsBlank(_b0) && _b0.Célula = _u.cCelula && _b0.Turno = _u.cTurno && _b0.Hora = _u.cHora,
+                                  _b0,
+                                  Defaults('Hora-Hora')
+                              )
                           )
                       },
                       IfError(
@@ -1310,10 +1365,10 @@ Screens:
                                       'Hora-Hora',
                                       If(IsBlank(_base), Defaults('Hora-Hora'), _base),
                                       {
-                                          Title: Text(ctxDataCarregadaHHT, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHT & " - " & ctxCelulaCarregadaHHT,
-                                          Data: ctxDataCarregadaHHT,
-                                          Turno: varTurnoHHT,
-                                          Célula: ctxCelulaCarregadaHHT,
+                                          Title: Text(_u.cData, "[$-pt-BR]dd/mm/yyyy") & " - " & _u.cTurno & " - " & _u.cCelula,
+                                          Data: _u.cData,
+                                          Turno: _u.cTurno,
+                                          Célula: _u.cCelula,
                                           Hora: _u.cHora,
                                           Minutos: _u.cMinutos,
                                           Mangueira: _u.cMangueira,
@@ -1647,7 +1702,10 @@ Screens:
                                 {
                                     Mangueira: _o.Mangueira,
                                     MFG: _o.MFG,
-                                    Meta: fx_MetaFaixa(_o.MFG, Minutos)
+                                    DP: _o.DP,
+                                    Fora: _o.Fora,
+                                    Meta: fx_MetaFaixa(_o.MFG, Minutos),
+                                    Real: If(_o.DP, If(DP, Real, Real / 2), If(DP, Real * 2, Real))
                                 }
                             );
                             UpdateContext({ctxModalReplicaHHT: false, ctxAlteradoHHT: true});
@@ -1849,7 +1907,7 @@ Screens:
           Properties:
             Fill: =fx_CorOverlayForte
             Height: =768
-            Visible: =varProcessando
+            Visible: =varProcessando || ctxCarregandoHHT
             Width: =1366
       - lbl_ProcessandoHHT:
           Control: Label@2.5.1
@@ -1860,8 +1918,8 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =74
             Size: =fx_FonteTitulo
-            Text: ="Gravando... não feche a tela."
-            Visible: =varProcessando
+            Text: =If(ctxCarregandoHHT && !varProcessando, "Carregando a máquina... aguarde.", "Gravando... não feche a tela.")
+            Visible: =varProcessando || ctxCarregandoHHT
             Width: =409
             X: =483
             Y: =403
@@ -1874,7 +1932,7 @@ Screens:
             PaddingLeft: =362
             PaddingRight: =362
             PaddingTop: =362
-            Visible: =varProcessando
+            Visible: =varProcessando || ctxCarregandoHHT
             Width: =1366
       - tmr_RelogioHHT:
           Control: Timer@2.1.0
@@ -1888,7 +1946,12 @@ Screens:
             Height: =1
             HoverFill: =Color.Transparent
             OnTimerEnd: |-
-              =UpdateContext({ctxAgoraHHT: Now()})
+              =UpdateContext({ctxAgoraHHT: Now()});
+              If(
+                  ctxCarregandoHHT && DateDiff(ctxIniCargaHHT, Now(), TimeUnit.Seconds) > 60,
+                  UpdateContext({ctxCarregandoHHT: false});
+                  Notify("O carregamento demorou mais de 60 s e foi liberado. Toque em Abrir de novo para recarregar esta máquina.", NotificationType.Warning, 10000)
+              )
             PressedFill: =Color.Transparent
             Repeat: =true
             Text: =""
@@ -1928,7 +1991,8 @@ Screens:
             Height: =0
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =IfError(
+              =UpdateContext({ctxCarregandoHHT: true, ctxIniCargaHHT: Now()});
+              IfError(
                   Concurrent(
                       Refresh('Hora-Hora'),
                       Refresh(ficha_producao),
@@ -2005,13 +2069,16 @@ Screens:
                                               Chave,
                                               fx_MangCanon(PARTNUMBER),
                                               MFG,
-                                             fx_VelocidadeComFallback(_maq, _2BRD_CODE, PARTNUMBER)
+                                              fx_VelocidadeComFallback(_maq, _2BRD_CODE, PARTNUMBER),
+                                              DP,
+                                              fx_DuasPassagens(_2BRD_CODE)
                                           ),
                                           MFG > 0
                                       ),
                                       Mangueira,
                                       Chave,
-                                      MFG
+                                      MFG,
+                                      DP
                                   ),
                                   Mangueira
                               )
@@ -2083,6 +2150,24 @@ Screens:
                                                   ""
                                               ),
                                               MFG: _mfg,
+                                              DP: Coalesce(
+                                                  LookUp(
+                                                      colMangMaqHHT As _vd,
+                                                      _vd.Chave = fx_MangCanon(Text(_r.Mangueira)),
+                                                      _vd.DP
+                                                  ),
+                                                  false
+                                              ),
+                                              Fora: !IsBlank(Text(_r.Mangueira)) &&
+                                                  IsBlank(
+                                                      LookUp(
+                                                          colMangMaqHHT As _vf,
+                                                          _vf.Chave = fx_MangCanon(Text(_r.Mangueira))
+                                                      )
+                                                  ),
+                                              RCelula: _c,
+                                              RTurno: _tl,
+                                              RData: _d,
                                               Meta: If(
                                                   _mfg > 0,
                                                   fx_MetaFaixa(
@@ -2229,7 +2314,8 @@ Screens:
                               NotificationType.Error,
                               20000
                           )
-                      )
+                      );
+                      UpdateContext({ctxCarregandoHHT: false})
                   )
               )
             PressedFill: =Color.Transparent
@@ -2296,7 +2382,10 @@ Screens:
                           cIDsp:    _s2.IDsp,
                           cHora:    _s2.Hora,
                           cRotulo:  _s2.Rotulo,
-                          cMinutos: _s2.Minutos
+                          cMinutos: _s2.Minutos,
+                          cCelula:  _s2.RCelula,
+                          cTurno:   _s2.RTurno,
+                          cData:    _s2.RData
                       }
                   )
               );
@@ -2305,10 +2394,13 @@ Screens:
                   colGravarSemProdHHT As _s,
                   With(
                       {
-                          _base: If(
-                              _s.cIDsp > 0,
-                              LookUp('Hora-Hora', ID = _s.cIDsp),
-                              Defaults('Hora-Hora')
+                          _base: With(
+                              { _b0: If(_s.cIDsp > 0, LookUp('Hora-Hora', ID = _s.cIDsp)) },
+                              If(
+                                  !IsBlank(_b0) && _b0.Célula = _s.cCelula && _b0.Turno = _s.cTurno && _b0.Hora = _s.cHora,
+                                  _b0,
+                                  Defaults('Hora-Hora')
+                              )
                           )
                       },
                       IfError(
@@ -2318,10 +2410,10 @@ Screens:
                                       'Hora-Hora',
                                       If(IsBlank(_base), Defaults('Hora-Hora'), _base),
                                       {
-                                          Title: Text(ctxDataCarregadaHHT, "[$-pt-BR]dd/mm/yyyy") & " - " & varTurnoHHT & " - " & ctxCelulaCarregadaHHT,
-                                          Data: ctxDataCarregadaHHT,
-                                          Turno: varTurnoHHT,
-                                          Célula: ctxCelulaCarregadaHHT,
+                                          Title: Text(_s.cData, "[$-pt-BR]dd/mm/yyyy") & " - " & _s.cTurno & " - " & _s.cCelula,
+                                          Data: _s.cData,
+                                          Turno: _s.cTurno,
+                                          Célula: _s.cCelula,
                                           Hora: _s.cHora,
                                           Minutos: _s.cMinutos,
                                           Mangueira: "",
