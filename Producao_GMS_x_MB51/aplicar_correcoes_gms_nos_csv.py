@@ -54,6 +54,8 @@ for r in ins:
 for de,para,q in (('29702384','29102384','40,7'),('30036777','30063848','165,4'),('30036777','30063848','9,2'),('29112843','28880785','39,5'),('29422872','29422873','34,6')):
     for r in ins:
         if r[0]==de and r[1]==q: r[0]=para; feitos+=1; break
+for r in ins:   # move144: lance de 14,4 m da 29162764 para a 29162763
+    if r[0]=='29162764' and r[1]=='14,4': r[0]='29162763'; feitos+=1; break
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
