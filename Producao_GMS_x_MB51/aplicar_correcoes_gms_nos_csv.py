@@ -94,5 +94,18 @@ for r in saida:
     if r[0]=='29001442' and r[2]=='13,2': r[2]='1,3'
     tmp.append(r)
 saida=tmp
+# refugo16d: refugo que nao existe apagado, movidos e linhas em excesso
+APAGAR={'28932205','28913669','29185930','30007587','30036776','29051561','29051562','29702384','29086343','29050560','28946426','28946429','28946437','28946422','30065594','28975549'}
+tmp=[]
+tirar={('29260336','8'):1,('30092601','1,3'):1,('28913658','0,9'):1}
+for r in saida:
+    if r[0] in APAGAR: continue
+    k=(r[0],r[2])
+    if tirar.get(k):
+        tirar[k]-=1; continue
+    if r[0]=='28913388': r[0]='28757194'
+    elif r[0]=='29102521': r[0]='29102530'
+    tmp.append(r)
+saida=tmp
 gravar('dados/refugo_14out.csv',cab,saida)
 # fichas: OP corrigida em 3168 e 3076 nao afeta a conferencia (lista de inspecao)
