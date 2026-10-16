@@ -44,6 +44,9 @@ for r in csv.reader(open('tratativas_lote5_lances.csv',encoding='utf-8-sig'),del
             if r[3] and r[3]!=r[2]: row[8]=r[3]
             feitos+=1; break
     else: print('NAO ACHEI lote5',r[:2],r[5],r[6])
+for r in csv.reader(open('reconstrucao_lances_lote6.csv',encoding='utf-8-sig'),delimiter=';'):
+    if r[0]=='OP': continue
+    ins.append([r[0],r[3],'','','',r[2],'',r[2],r[1],'','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
 print('lances movidos:',feitos,'de',len(mov))
 gravar('dados/inspecao_14out.csv',cab,ins)
 cab,ref=ler('dados/refugo_14out_antes_tratativas.csv')
