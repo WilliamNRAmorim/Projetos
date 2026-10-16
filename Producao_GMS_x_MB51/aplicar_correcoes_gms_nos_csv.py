@@ -84,5 +84,15 @@ for r in saida:   # refugo16b: pares de refugo lancados em outra OP
     elif r[0]=='30063849': r[0]='30063850'
     elif r[0]=='30120931': r[0]='30120930'
     elif r[0]=='29395275': r[0]='29305868'
+# refugo16c: refugos que nao existem / excesso apagado
+tmp=[]
+rem28975588=['3,2','1,5','1,6','6,3','5,1','1,8','8,5','17']
+for r in saida:
+    if r[0] in('29072011','29162767','29185934'): continue
+    if r[0]=='28975588' and r[2] in rem28975588: rem28975588.remove(r[2]); continue
+    if r[0]=='30024695' and r[2]=='15': r[2]='1,5'
+    if r[0]=='29001442' and r[2]=='13,2': r[2]='1,3'
+    tmp.append(r)
+saida=tmp
 gravar('dados/refugo_14out.csv',cab,saida)
 # fichas: OP corrigida em 3168 e 3076 nao afeta a conferencia (lista de inspecao)
