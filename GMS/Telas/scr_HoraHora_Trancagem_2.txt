@@ -1080,7 +1080,7 @@ Screens:
                       " linhas. O botão ↓ repete a mangueira nas janelas seguintes." &
                       If(
                           CountRows(Filter(colLinhasHHT As _dp1, _dp1.DP)) > 0,
-                          "  Borda azul no REAL = mangueira de duas passagens: digite o TOTAL das duas; o sistema grava a metade.",
+                          "  Borda azul no REAL = mangueira de duas passagens: digite o TOTAL das duas; o sistema grava a metade, e a meta também é a metade da velocidade da máquina.",
                           ""
                       )
                   )
@@ -1111,7 +1111,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.6.4"
+            Text: ="Versão 0.6.5"
             Width: =140
             X: =1226
             Y: =728
@@ -2109,7 +2109,8 @@ Screens:
                                               Chave,
                                               fx_MangCanon(PARTNUMBER),
                                               MFG,
-                                              fx_VelocidadeComFallback(_maq, _2BRD_CODE, PARTNUMBER),
+                                              fx_VelocidadeComFallback(_maq, _2BRD_CODE, PARTNUMBER) /
+                                                  If(fx_DuasPassagens(_maq, _2BRD_CODE), 2, 1),
                                               DP,
                                               fx_DuasPassagens(_maq, _2BRD_CODE)
                                           ),
