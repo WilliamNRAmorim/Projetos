@@ -21,6 +21,8 @@ const GRUPOS: { titulo: string; campos: Campo[] }[] = [
       { k: 'parcela', rotulo: 'Valor da parcela mensal (R$)' },
       { k: 'diaParcela', rotulo: 'Dia aproximado do Pix (opcional)' },
       { k: 'parcelasRestantes', rotulo: 'Parcelas restantes (opcional)' },
+      { k: 'parcelasMin', rotulo: 'Se incerto: mínimo de parcelas restantes (opcional)' },
+      { k: 'parcelasMax', rotulo: 'Se incerto: máximo de parcelas restantes (opcional)' },
     ],
   },
   {

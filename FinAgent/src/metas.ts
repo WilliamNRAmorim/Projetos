@@ -10,6 +10,8 @@ export type PerfilTexto = {
   parcela: string;
   diaParcela: string;
   parcelasRestantes: string;
+  parcelasMin: string; // faixa de parcelas restantes (incerteza), opcional
+  parcelasMax: string;
   cofrinho: string;
   separadoAparelho: string;
   limiteCartao: string;
@@ -19,14 +21,14 @@ export type PerfilTexto = {
 };
 
 export const PERFIL_VAZIO: PerfilTexto = {
-  salario: '', diaSalario: '', parcela: '', diaParcela: '', parcelasRestantes: '',
+  salario: '', diaSalario: '', parcela: '', diaParcela: '', parcelasRestantes: '', parcelasMin: '', parcelasMax: '',
   cofrinho: '', separadoAparelho: '', limiteCartao: '', faturaAberta: '', diaFechamento: '', diaVencimento: '',
 };
 
 export type PerfilNum = { [K in keyof PerfilTexto]: number | null };
 
 const CAMPOS_DIA: (keyof PerfilTexto)[] = ['diaSalario', 'diaParcela', 'diaFechamento', 'diaVencimento'];
-const CAMPOS_INTEIRO: (keyof PerfilTexto)[] = [...CAMPOS_DIA, 'parcelasRestantes'];
+const CAMPOS_INTEIRO: (keyof PerfilTexto)[] = [...CAMPOS_DIA, 'parcelasRestantes', 'parcelasMin', 'parcelasMax'];
 
 /** Valida um campo. Retorna mensagem de erro ou null (vazio é válido). */
 export function validarCampo(campo: keyof PerfilTexto, texto: string): string | null {
@@ -45,6 +47,9 @@ export function validarPerfil(p: PerfilTexto): Partial<Record<keyof PerfilTexto,
     const e = validarCampo(k, p[k]);
     if (e) erros[k] = e;
   }
+  const min = parseValorBR(p.parcelasMin);
+  const max = parseValorBR(p.parcelasMax);
+  if (!erros.parcelasMax && min !== null && max !== null && max < min) erros.parcelasMax = 'O máximo não pode ser menor que o mínimo.';
   return erros;
 }
 
