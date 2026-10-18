@@ -5,6 +5,7 @@ import { resumoMercadoParaIA } from '../mercado/resumoParaIA';
 import { lerRegras } from '../gastos/gastosStore';
 import { lerExtrato, lerNome } from '../mp/extratoStore';
 import { lerPerfil } from '../perfil';
+import { lerInicioCorte } from '../cortesStore';
 import { montarContexto, type ContextoEconomista } from './contexto';
 
 export async function carregarContexto(hoje = new Date()): Promise<ContextoEconomista> {
@@ -21,6 +22,7 @@ export async function carregarContexto(hoje = new Date()): Promise<ContextoEcono
     trans,
     meuNome,
     regras,
+    inicioCorte: await lerInicioCorte(hoje),
     mercadoResumo,
     mercadoAtualizadoEm: cache.atualizadoEm,
   });

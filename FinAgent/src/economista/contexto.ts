@@ -2,6 +2,7 @@
 // Nunca nomes de contrapartes, CPF, endereço,
 // descrições de transações nem chaves. Funções puras (testáveis em node).
 import { comprometidoDoMes, mediaGastoMensal, mesesDeReserva, usoLimite, type PerfilNum } from '../metas.ts';
+import { dataLocal, resumoPadroesPct, type ResumoPadroes } from '../padroes.ts';
 import { classificarExtrato, mesAnteriorDe, mesesDisponiveis, totaisMes, type RegrasUsuario, type Transacao } from '../mp/extrato.ts';
 
 export type EntradaContexto = {
@@ -12,6 +13,7 @@ export type EntradaContexto = {
   mercadoResumo: string; // texto de mercado já agregado (montarResumo)
   mercadoAtualizadoEm: string | null;
   regras?: RegrasUsuario; // recategorizações do usuário
+  inicioCorte?: string; // mês de início do plano de corte (YYYY-MM); sem ele, sem padrões semanais
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -59,6 +61,8 @@ export type ContextoEconomista = {
     gasto_vs_mes_anterior_pct: number | null;
     categorias_que_mais_subiram: { categoria: string; variacao_pct_salario: number | null }[];
   };
+  /** Padrões de semana contida/solta (Uber/99, iFood): SÓ percentuais e nomes de dia. Vazio sem histórico suficiente. */
+  padroes_semanais: ResumoPadroes[];
   mercado: { atualizado_em: string | null; resumo: string };
 };
 
@@ -125,6 +129,7 @@ export function montarContexto(e: EntradaContexto): ContextoEconomista {
     mes_atual: tRef ? sanitizar(partes.join(' | ')) : 'sem extrato importado',
     ultimos_meses: ultimos,
     tendencias: { gasto_vs_mes_anterior_pct: tRef?.variacaoGasto ?? null, categorias_que_mais_subiram: subiram },
+    padroes_semanais: e.inicioCorte ? resumoPadroesPct(lancs, e.inicioCorte, dataLocal(e.hoje)) : [],
     mercado: { atualizado_em: e.mercadoAtualizadoEm, resumo: sanitizar(e.mercadoResumo) },
   };
 }

@@ -12,7 +12,7 @@ export const GRUPOS_CORTE: GrupoCorte[] = [
 ];
 
 /** Saída real deste grupo? Movimento interno e estorno ficam de fora. */
-const noGrupo = (l: Lancamento, g: GrupoCorte) =>
+export const noGrupo = (l: Lancamento, g: GrupoCorte) =>
   l.valor < 0 && !l.excluida && l.categoria !== CAT.INTERNO && g.palavras.some((p) => contemPalavra(norm(`${l.contraparte} ${l.tipo}`), p));
 
 export function gastoDoGrupo(lancs: Lancamento[], g: GrupoCorte, mes: string): number {

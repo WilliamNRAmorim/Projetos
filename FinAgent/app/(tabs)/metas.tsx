@@ -1,6 +1,6 @@
 import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text } from 'react-native';
 import {
   PERFIL_VAZIO, comprometidoDoMes, dataCurta, faixaLimite, livreAteSalario, mediaGastoMensal, mesesDeReserva,
   metaReserva, perfilParaNumeros, progressoReserva, retiradasCofrinho, usoLimite, type PerfilTexto,
@@ -13,7 +13,8 @@ import { lerRegras } from '@/src/gastos/gastosStore';
 import { REGRAS_VAZIAS, type RegrasSalvas } from '@/src/gastos/gastos';
 import { lerPerfil } from '@/src/perfil';
 import { basesParaCongelar, cartaoCobreABase, metasDeCorte, type BasesCorte } from '@/src/cortes';
-import { lerBasesCorte, lerInicioCorte, salvarBasesCorte } from '@/src/cortesStore';
+import { lerBasesCorte, lerInicioCorte, reiniciarPlanoCorte, salvarBasesCorte } from '@/src/cortesStore';
+import { DIAS_SEMANA, analisarTodos, dataLocal } from '@/src/padroes';
 import { classificarExtrato } from '@/src/mp/extrato';
 import {
   amostrarSerie, faixaDeParcelas, fimDoAparelho, formatarMesAno, mediaLiquidoMensal, mesesCobertos, projetarCofrinho,
@@ -22,7 +23,7 @@ import {
 import { carregarCdi, dataBR, lerCdiManual, salvarCdiManual, type CdiInfo } from '@/src/simulador/cdi';
 import { CampoNumero, Nota, Par } from '@/src/simulador/componentes';
 import {
-  BarChart, Badge, Card, InsightCard, Linha, MetricCard, ProgressBar, SectionHeader, cores, espaco, fonte,
+  BarChart, Badge, Botao, Card, InsightCard, Linha, MetricCard, ProgressBar, SectionHeader, cores, espaco, fonte,
 } from '@/src/ui';
 
 const pct = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
@@ -79,6 +80,19 @@ export default function Metas() {
   const lancsCorte = inicioCorte && extrato.length > 0 ? classificarExtrato(extrato, nome, regras) : [];
   const cortes = inicioCorte && lancsCorte.length > 0 ? metasDeCorte(lancsCorte, inicioCorte, mesAtual, basesCorte) : [];
   const novasBases = basesLidas && inicioCorte ? basesParaCongelar(cortes, basesCorte, cartaoCobreABase(lancsCorte, inicioCorte)) : {};
+  const padroes = inicioCorte && lancsCorte.length > 0 ? analisarTodos(lancsCorte, inicioCorte, dataLocal(hoje)) : [];
+  const reiniciarPlano = () =>
+    Alert.alert('Reiniciar o plano de corte?', 'O plano recomeça neste mês e a base dos tetos é recalculada com as faturas importadas.', [
+      { text: 'Cancelar', style: 'cancel' },
+      {
+        text: 'Reiniciar',
+        style: 'destructive',
+        onPress: async () => {
+          setInicioCorte(await reiniciarPlanoCorte());
+          setBasesCorte({});
+        },
+      },
+    ]);
   const chaveNovas = JSON.stringify(novasBases);
   useEffect(() => {
     const novas = JSON.parse(chaveNovas) as BasesCorte;
@@ -341,6 +355,43 @@ export default function Metas() {
             <Nota>{`Corte progressivo a partir de ${inicioCorte}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores ao início, congelada na primeira vez que as faturas do cartão estão importadas. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
           </>
         )}
+      </Card>
+
+      {/* Ritmo semanal: aprende o seu padrão */}
+      <SectionHeader titulo="Seu ritmo semanal" />
+      <Card>
+        {padroes.length === 0 ? (
+          <Nota>Para aprender seu padrão preciso de pelo menos 8 semanas de histórico, com gasto em Uber/99 ou iFood, antes do plano. Importe mais faturas do cartão.</Nota>
+        ) : (
+          <>
+            {padroes.map((a) => {
+              const cor = a.atual.restante < 0 ? cores.perigo : a.atual.gasto >= a.plano.alvoEfetivo * 0.8 ? cores.alerta : cores.sucesso;
+              const dia = DIAS_SEMANA[a.atual.diaIndice];
+              const ritmo = a.atual.ritmo === 'solto' ? 'de semana solta' : a.atual.ritmo === 'contido' ? 'de semana contida' : 'intermediário';
+              return (
+                <Card key={a.grupo.id} style={s.interno}>
+                  <Text style={s.rotulo}>{a.grupo.nome}</Text>
+                  <Linha>
+                    <MetricCard rotulo="Alvo da semana" valor={brl(a.plano.alvoEfetivo)} nota={`nível ${a.plano.nivel} de 3`} />
+                    <MetricCard rotulo="Gasto até hoje" valor={brl(a.atual.gasto)} cor={cor} />
+                  </Linha>
+                  <ProgressBar pct={a.plano.alvoEfetivo > 0 ? (a.atual.gasto / a.plano.alvoEfetivo) * 100 : 100} cor={cor} />
+                  <Text style={s.texto}>
+                    {a.atual.restante < 0 ? `Passou ${brl(-a.atual.restante)} do alvo desta semana.` : `Ainda cabem ${brl(a.atual.restante)} nesta semana.`}
+                  </Text>
+                  <Nota>{`Até ${dia}, nas suas semanas soltas você já tinha gasto ${brl(a.atual.tipicoSolta)}; nas contidas, ${brl(a.atual.tipicoContida)}. Esta semana está em ritmo ${ritmo}.`}</Nota>
+                  <Nota>{`Suas semanas contidas ficam em cerca de ${brl(a.perfil.contida)} e as soltas em ${brl(a.perfil.solta)} (${a.perfil.semanas} semanas analisadas). Você solta mais no(a) ${DIAS_SEMANA[a.diaMaisSolto]} (${a.dias[a.diaMaisSolto]}% do gasto).`}</Nota>
+                  {a.transicao.aposContida && (
+                    <Nota>{`Depois de uma semana contida, a chance de a próxima ser solta é ${a.transicao.aposContida.pSolta}%.`}</Nota>
+                  )}
+                  {a.plano.compensacao > 0 && <Nota>{`O excesso da semana passada tira ${brl(a.plano.compensacao)} do alvo desta, para compensar em parte.`}</Nota>}
+                </Card>
+              );
+            })}
+            <Nota>O alvo aprende com você: desce um nível depois de 2 semanas seguidas dentro dele e só sobe depois de 2 estouradas seguidas. Uma semana solta isolada não muda o nível. Nunca passa do corte máximo de 30% da sua semana típica.</Nota>
+          </>
+        )}
+        <Botao texto="Reiniciar plano de corte" secundario aoPressionar={reiniciarPlano} />
       </Card>
 
       {/* 5. Se continuar assim */}

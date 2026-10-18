@@ -40,3 +40,15 @@ export async function salvarBasesCorte(bases: BasesCorte): Promise<void> {
     // sem armazenamento: a base segue calculada do extrato
   }
 }
+
+/** Recomeça o plano no mês atual e descarta as bases congeladas (serão recalculadas e congeladas de novo). */
+export async function reiniciarPlanoCorte(hoje = new Date()): Promise<string> {
+  const mes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  try {
+    await AsyncStorage.setItem(K_INICIO, mes);
+    await AsyncStorage.removeItem(K_BASES);
+  } catch {
+    // sem armazenamento: o plano segue como estava
+  }
+  return mes;
+}
