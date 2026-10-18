@@ -6,6 +6,7 @@ export const CAT = {
   OUTRA_CONTA: 'Entrada da sua outra conta',
   RENDIMENTO: 'Rendimento',
   INTERNO: 'Movimento interno',
+  SAIDA_OUTRA_CONTA: 'Saída para sua outra conta',
   ESTORNO: 'Estorno/cancelado',
   FATURA: 'Fatura do cartão',
   COMIDA: 'Comida/delivery',
@@ -16,6 +17,9 @@ export const CAT = {
   PIX_PESSOAS: 'Pix para pessoas',
   OUTROS: 'Outros comércio',
 } as const;
+
+/** Movimento entre contas/reservas do próprio usuário: fora dos gastos e da média. */
+export const ehMovimentoInterno = (categoria: string) => categoria === CAT.INTERNO || categoria === CAT.SAIDA_OUTRA_CONTA;
 
 /** Categorias de gasto por palavra-chave na contraparte (ordem importa). */
 export const PALAVRAS_GASTO: [string, string[]][] = [

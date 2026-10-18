@@ -1,5 +1,5 @@
 // Funções puras para o extrato CSV do Mercado Pago (sem React Native).
-import { CAT, PREFIXOS, categoriaPorPalavra, norm } from './categorias.ts';
+import { CAT, PREFIXOS, categoriaPorPalavra, ehMovimentoInterno, norm } from './categorias.ts';
 
 export type Transacao = {
   data: string; // YYYY-MM-DD
@@ -129,6 +129,7 @@ function classificarUma(t: Transacao, meuNome: string): Pick<Lancamento, 'catego
   p = comecaCom(n, PREFIXOS.pixEnviado);
   if (p) {
     const contra = resto(p);
+    if (mesmaPessoa(contra, meuNome)) return { ...base, contraparte: contra, categoria: CAT.SAIDA_OUTRA_CONTA };
     return { ...base, contraparte: contra, categoria: categoriaPorPalavra(contra) ?? CAT.PIX_PESSOAS };
   }
 
@@ -183,7 +184,7 @@ function gastosDoMes(lancs: Lancamento[], mes: string): number {
   let g = 0;
   for (const l of lancs) {
     if (mesDe(l.data) !== mes || l.excluida || l.valor >= 0) continue;
-    if (l.categoria === CAT.INTERNO || l.categoria === CAT.FATURA) continue;
+    if (ehMovimentoInterno(l.categoria) || l.categoria === CAT.FATURA) continue;
     g += -l.valor;
   }
   return r2(g);
@@ -205,7 +206,7 @@ export function totaisMes(lancs: Lancamento[], mes: string): TotaisExtrato {
       entradas += l.valor;
       if (l.categoria === CAT.OUTRA_CONTA) outra += l.valor;
     } else if (l.categoria === CAT.FATURA) fatura += -l.valor;
-    else if (l.categoria !== CAT.INTERNO && l.valor < 0) cats.set(l.categoria, (cats.get(l.categoria) ?? 0) + -l.valor);
+    else if (!ehMovimentoInterno(l.categoria) && l.valor < 0) cats.set(l.categoria, (cats.get(l.categoria) ?? 0) + -l.valor);
   }
   const gastos = gastosDoMes(lancs, mes);
   const ant = gastosDoMes(lancs, mesAnteriorDe(mes));

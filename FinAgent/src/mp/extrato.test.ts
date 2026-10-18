@@ -55,6 +55,21 @@ assert.equal(cat('1007').categoria, 'Entrada da sua outra conta');
 assert.equal(cat('1008').categoria, 'Pix para pessoas');
 assert.equal(cat('1006').categoria, 'Fatura do cartão');
 
+// Pix enviado para o próprio nome = movimento interno (fora dos gastos e da média)
+{
+  const tt = (data: string, tipo: string, valor: number, ref: string) => ({ data, tipo, ref, valor, saldo: 0, seq: 0 });
+  const proprio = classificarExtrato(
+    [tt('2026-10-02', 'Pix enviado Joao Silva Santos', -300, 'p1'), tt('2026-10-03', 'Pix enviado Fulano de Tal', -40, 'p2'), tt('2026-10-04', 'Pix enviado Joao Silva', -10, 'p3')],
+    'Joao Silva Santos',
+  );
+  assert.equal(proprio[0].categoria, 'Saída para sua outra conta');
+  assert.equal(proprio[1].categoria, 'Pix para pessoas');
+  assert.equal(proprio[2].categoria, 'Pix para pessoas', 'nome incompleto não casa');
+  const tp = totaisMes(proprio, '2026-10');
+  assert.equal(tp.gastos, 50, 'saída para a própria conta fica fora dos gastos');
+  assert.ok(!tp.porCategoria.some((c) => c.nome === 'Saída para sua outra conta'));
+}
+
 // par pagamento + estorno some dos totais
 assert.equal(l.filter((x) => x.ref === '1003' && x.excluida).length, 2);
 

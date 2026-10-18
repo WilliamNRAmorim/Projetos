@@ -1,5 +1,5 @@
 // Lógica pura da aba Gastos (sem React Native): orçamento, períodos, filtros, regras.
-import { CAT, norm } from '../mp/categorias.ts';
+import { CAT, ehMovimentoInterno, norm } from '../mp/categorias.ts';
 import { chaveTransacao, mesAnteriorDe, mesDe, mesesDisponiveis, totaisMes, type Lancamento, type RegrasUsuario } from '../mp/extrato.ts';
 
 export const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -105,7 +105,7 @@ export function filtrarTransacoes(lancs: Lancamento[], f: Filtro): Lancamento[] 
   const q = norm(f.busca ?? '');
   return lancs
     .filter((l) => {
-      if (!f.mostrarInternos && l.categoria === CAT.INTERNO) return false;
+      if (!f.mostrarInternos && ehMovimentoInterno(l.categoria)) return false;
       if (f.mes && mesDe(l.data) !== f.mes) return false;
       if (f.categoria && l.categoria !== f.categoria) return false;
       if (q && !norm(`${descricaoLimpa(l)} ${l.tipo} ${l.categoria}`).includes(q)) return false;

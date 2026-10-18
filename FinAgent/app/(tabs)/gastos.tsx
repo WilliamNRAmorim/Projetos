@@ -10,7 +10,7 @@ import {
 } from '@/src/gastos/gastos';
 import { lerRegras, lerTetos, salvarRegras, salvarTetos } from '@/src/gastos/gastosStore';
 import { brl } from '@/src/mp/analise';
-import { CAT } from '@/src/mp/categorias';
+import { CAT, ehMovimentoInterno } from '@/src/mp/categorias';
 import { classificarExtrato, mesesDisponiveis, type Lancamento, type Transacao } from '@/src/mp/extrato';
 import { lerExtrato, lerNome } from '@/src/mp/extratoStore';
 import {
@@ -79,7 +79,7 @@ export default function Gastos() {
   );
   const grupos = useMemo(() => agruparPorDia(filtradas.slice(0, limite)), [filtradas, limite]);
   const categoriasPresentes = useMemo(
-    () => [...new Set(lancs.filter((l) => internos || l.categoria !== CAT.INTERNO).map((l) => l.categoria))].sort(),
+    () => [...new Set(lancs.filter((l) => internos || !ehMovimentoInterno(l.categoria)).map((l) => l.categoria))].sort(),
     [lancs, internos],
   );
 
