@@ -12,6 +12,9 @@ import { lerExtrato, lerNome } from '@/src/mp/extratoStore';
 import { lerRegras } from '@/src/gastos/gastosStore';
 import { REGRAS_VAZIAS, type RegrasSalvas } from '@/src/gastos/gastos';
 import { lerPerfil } from '@/src/perfil';
+import { metasDeCorte } from '@/src/cortes';
+import { lerInicioCorte } from '@/src/cortesStore';
+import { classificarExtrato } from '@/src/mp/extrato';
 import {
   amostrarSerie, faixaDeParcelas, fimDoAparelho, formatarMesAno, mediaLiquidoMensal, mesesCobertos, projetarCofrinho,
   projetarConta, redirecionarParcela, simularCofrinho, taxaAnualDoProduto, taxaMensal,
@@ -37,6 +40,7 @@ export default function Metas() {
   const [aporteTxt, setAporteTxt] = useState<string | null>(null); // null = usa a parcela do Perfil
   const [prazoTxt, setPrazoTxt] = useState('12');
   const [pctCdiTxt, setPctCdiTxt] = useState('100');
+  const [inicioCorte, setInicioCorte] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -45,6 +49,7 @@ export default function Metas() {
         setExtrato(await lerExtrato());
         setNome(await lerNome());
         setRegras(await lerRegras());
+        setInicioCorte(await lerInicioCorte());
         const manual = await lerCdiManual();
         setCdiManual(manual);
         setAuto(await carregarCdi(num(manual)));
@@ -66,6 +71,8 @@ export default function Metas() {
   const faixa = uso !== null ? faixaLimite(uso) : null;
   const gasto = mediaGastoMensal(extrato, nome, hoje, undefined, regras);
   const retiradas = retiradasCofrinho(extrato);
+  const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  const cortes = inicioCorte && extrato.length > 0 ? metasDeCorte(classificarExtrato(extrato, nome, regras), inicioCorte, mesAtual) : [];
   const mesesRes = mesesDeReserva(p.cofrinho, gasto?.media ?? null);
 
   // CDI efetivo: BC (hoje) > valor manual > cache antigo
@@ -286,6 +293,38 @@ export default function Metas() {
             ) : (
               <Nota>Informe a parcela no Perfil e o CDI para ver o cenário de redirecionar a parcela ao Cofrinho.</Nota>
             )}
+          </>
+        )}
+      </Card>
+
+      {/* Corte de gastos */}
+      <SectionHeader titulo="Corte de gastos (Uber, 99 e iFood)" />
+      <Card>
+        {cortes.length === 0 ? (
+          <Nota>Importe o extrato e as faturas do cartão para calcular a base do corte.</Nota>
+        ) : (
+          <>
+            {cortes.map((c) => (
+              <Card key={c.grupo.id} style={s.interno}>
+                <Text style={s.rotulo}>{c.grupo.nome}</Text>
+                {c.base === null || c.teto === null ? (
+                  <Nota>Sem gasto nos meses anteriores ao plano para calcular a base.</Nota>
+                ) : (
+                  <>
+                    <Linha>
+                      <MetricCard rotulo="Gasto no mês" valor={brl(c.gasto)} cor={c.faixa === 'estourou' ? cores.perigo : c.faixa === 'atencao' ? cores.alerta : cores.sucesso} />
+                      <MetricCard rotulo={`Teto (-${c.degrau}%)`} valor={brl(c.teto)} nota={`base ${brl(c.base)}`} />
+                    </Linha>
+                    {c.pct !== null && <ProgressBar pct={c.pct} cor={c.faixa === 'estourou' ? cores.perigo : c.faixa === 'atencao' ? cores.alerta : cores.sucesso} />}
+                    <Text style={s.texto}>
+                      {c.faixa === 'estourou' ? `Passou ${brl(c.gasto - c.teto)} do teto.` : `Ainda cabem ${brl(c.teto - c.gasto)} neste mês.`}
+                    </Text>
+                    <Nota>{`Mês que vem: teto de ${brl(c.proximoTeto ?? 0)} (-${c.proximoDegrau}%).`}</Nota>
+                  </>
+                )}
+              </Card>
+            ))}
+            <Nota>{`Corte progressivo a partir de ${inicioCorte}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
           </>
         )}
       </Card>
