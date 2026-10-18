@@ -142,9 +142,21 @@ function classificarUma(t: Transacao, meuNome: string): Pick<Lancamento, 'catego
   return { ...base, categoria: t.valor > 0 ? CAT.ENTRADA : categoriaPorPalavra(n) ?? CAT.OUTROS };
 }
 
-/** Classifica as linhas e anula pares pagamento+estorno (mesma referência e valor oposto). */
-export function classificarExtrato(trans: Transacao[], meuNome = ''): Lancamento[] {
-  const lancs: Lancamento[] = trans.map((t) => ({ ...t, ...classificarUma(t, meuNome) }));
+/** Regras do usuário (recategorização). Têm prioridade sobre as palavras-chave. */
+export type RegrasUsuario = {
+  porContraparte?: Record<string, string>; // contraparte normalizada -> categoria
+  porTransacao?: Record<string, string>; // chaveTransacao -> categoria (vale só para aquela linha)
+};
+
+function aplicarRegras(l: Lancamento, regras?: RegrasUsuario): Lancamento {
+  if (!regras || l.excluida) return l;
+  const cat = regras.porTransacao?.[chaveTransacao(l)] ?? (l.contraparte ? regras.porContraparte?.[l.contraparte] : undefined);
+  return cat ? { ...l, categoria: cat } : l;
+}
+
+/** Classifica as linhas e anula pares pagamento+estorno (mesma referência e valor oposto). `regras` é opcional. */
+export function classificarExtrato(trans: Transacao[], meuNome = '', regras?: RegrasUsuario): Lancamento[] {
+  const lancs: Lancamento[] = trans.map((t) => aplicarRegras({ ...t, ...classificarUma(t, meuNome) }, regras));
   for (const e of lancs) {
     if (e.categoria !== CAT.ESTORNO || e.valor <= 0) continue;
     const par = lancs.find(
