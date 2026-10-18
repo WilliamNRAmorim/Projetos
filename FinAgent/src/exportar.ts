@@ -86,10 +86,10 @@ const PIX_ENTRE_PESSOAS = [...PREFIXOS.pixEnviado, ...PREFIXOS.entrada.filter((p
 export function descricaoExport(l: Lancamento, meuNome: string): string {
   const n = norm(l.tipo);
   if (comecaCom(n, [...PREFIXOS.rendimento, ...PREFIXOS.interno, ...PREFIXOS.fatura, ...PREFIXOS.emprestimo])) return celula(limparTexto(l.tipo, meuNome));
+  if (comecaCom(n, PREFIXOS.estorno)) return 'Estorno/cancelamento';
   if (ehCompraCartao(l.tipo)) return celula(descricaoCartao(l.tipo.replace(/^pagamento com cart[aã]o visa /i, ''), meuNome));
   if (l.categoria === CAT.SAIDA_OUTRA_CONTA) return 'Saída para sua outra conta';
   if (l.categoria === CAT.OUTRA_CONTA) return 'Entrada da sua outra conta';
-  if (comecaCom(n, PREFIXOS.estorno)) return 'Estorno/cancelamento';
   if (comecaCom(n, PIX_ENTRE_PESSOAS)) {
     const entrada = comecaCom(n, PREFIXOS.entrada);
     if (entrada) return 'Entrada (Pix/transferência recebida)';

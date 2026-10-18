@@ -62,6 +62,9 @@ assert.equal(descricaoExport(l[l.length - 3], 'Joao Teste Silva'), 'Pagamento QR
 assert.equal(descricaoExport(l[l.length - 2], 'Joao Teste Silva'), 'Estorno/cancelamento');
 assert.equal(limparTexto('CPF 123.456.789-09', ''), 'CPF (removido)');
 
+// estorno do cartão: sem nome de loja
+assert.equal(descricaoExport(classificarExtrato([tx('2026-08-24', 'Estorno cartão Visa MP*FULANO', 26.62)])[0], ''), 'Estorno/cancelamento');
+
 // descrições do cartão: pessoa física some, marca fica
 assert.equal(descricaoCartao('DL*UberRides', ''), 'DL*UberRides');
 assert.equal(descricaoCartao('MP*CAUANBRIAN', ''), 'Mercado Pago (vendedor)');

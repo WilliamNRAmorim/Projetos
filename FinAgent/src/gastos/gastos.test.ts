@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { CAT } from '../mp/categorias.ts';
 import { classificarExtrato, type Transacao } from '../mp/extrato.ts';
 import {
-  REGRAS_VAZIAS, adicionarRegra, agruparPorDia, faixaOrcamento, filtrarTransacoes, linhasOrcamento,
+  REGRAS_VAZIAS, adicionarRegra, comprasNoCartao, agruparPorDia, faixaOrcamento, filtrarTransacoes, linhasOrcamento,
   mediaUltimos3Meses, mesesDoPeriodo, porCategoriaNoPeriodo,
 } from './gastos.ts';
 
@@ -112,5 +112,38 @@ assert.equal(lista[0].data, '2026-10-05');
 const g = agruparPorDia(lista);
 assert.deepEqual(g.map((x) => x.data), ['2026-10-05', '2026-10-04', '2026-10-03', '2026-10-02']);
 assert.equal(g[3].itens.length, 2);
+
+// ---- cartão importado: a "fatura" do orçamento vira compras do mês, sem contar em dobro; estorno anula a compra ----
+{
+  const c = (data: string, nome: string, v: number, ref: string): Transacao => ({ data, tipo: `Pagamento com cartão Visa ${nome}`, ref, valor: -v, saldo: 0, seq: seq++ });
+  const estorno = (data: string, nome: string, v: number, ref: string): Transacao => ({ data, tipo: `Estorno cartão Visa ${nome}`, ref, valor: v, saldo: 0, seq: seq++ });
+  const t2: Transacao[] = [
+    c('2026-08-10', 'DL*UberRides', 40, 'CARTAO-2026-08-2026-08-10-40.00-1'),
+    c('2026-08-24', 'MP*MP', 26.62, 'CARTAO-2026-08-2026-08-24-26.62-1'),
+    estorno('2026-08-24', 'MP*MP', 26.62, 'CARTAO-2026-08-2026-08-24-26.62-1'),
+    tx('2026-08-20', 'Pagamento com QR Pix Ifood Restaurante', -60),
+    tx('2026-08-05', 'Pagamento de fatura Cartão de crédito', -70), // quita a fatura de jul, NÃO importada: segue aparecendo
+    tx('2026-09-06', 'Pagamento de fatura Cartão de crédito', -40),
+  ];
+  const l2 = classificarExtrato(t2);
+  assert.equal(comprasNoCartao(l2, '2026-08'), 40); // a compra de 26,62 foi estornada
+  const orc2 = linhasOrcamento(l2, '2026-08', { [CAT.FATURA]: 100, [CAT.COMIDA]: 100 });
+  const lf = orc2.linhas.find((x) => x.categoria === CAT.FATURA)!;
+  assert.equal(lf.gasto, 110); // 40 de compras no cartão + 70 da fatura antiga (não importada) paga em ago
+  assert.equal(lf.rotulo, 'Cartão de crédito (compras do mês)');
+  assert.equal(lf.incluidaNasCategorias, true);
+  assert.equal(orc2.totalOrcado, 100); // só a categoria; a linha do cartão fica fora dos totais
+  assert.equal(orc2.totalGasto, 60); // iFood no Pix (60); o Uber de 40 no cartão está em Transporte
+  assert.equal(orc2.linhas.find((x) => x.categoria === CAT.TRANSPORTE)!.gasto, 40);
+  // o pagamento de set quita a fatura de ago (importada): não aparece como "fatura paga" em set
+  const orcSet = linhasOrcamento(l2, '2026-09', { [CAT.FATURA]: 100 });
+  assert.equal(orcSet.linhas.find((x) => x.categoria === CAT.FATURA)?.gasto ?? 0, 0);
+  // sem cartão importado, tudo como antes
+  const antigo = linhasOrcamento(base, '2026-10', { [CAT.FATURA]: 800 }).linhas.find((x) => x.categoria === CAT.FATURA)!;
+  assert.equal(antigo.rotulo, 'Fatura do cartão (paga no mês)');
+  assert.equal(antigo.incluidaNasCategorias, false);
+  // sugestão de teto da fatura: média das compras no cartão dos meses anteriores
+  assert.equal(mediaUltimos3Meses(l2, '2026-09', CAT.FATURA), 110);
+}
 
 console.log('gastos.test.ts: ok');

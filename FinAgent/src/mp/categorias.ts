@@ -33,7 +33,7 @@ export const PALAVRAS_GASTO: [string, string[]][] = [
 export const PREFIXOS = {
   rendimento: ['rendimentos'],
   interno: ['dinheiro reservado', 'dinheiro retirado', 'reserva por gastos', 'reserva programada'],
-  estorno: ['reembolso', 'pagamento com codigo qr pix - cancelado', 'pagamento com qr pix - cancelado'],
+  estorno: ['reembolso', 'estorno cartao visa', 'pagamento com codigo qr pix - cancelado', 'pagamento com qr pix - cancelado'],
   fatura: ['pagamento de fatura cartao de credito', 'pagamento cartao de credito'],
   emprestimo: ['pagamento de parcela emprestimos'],
   entrada: [
@@ -44,9 +44,14 @@ export const PREFIXOS = {
   pagamento: ['pagamento com qr pix', 'pagamento com codigo qr', 'pagamento de conta', 'pagamento'],
 };
 
-/** Compra do cartão de crédito importada das faturas (scripts/faturas_para_csv.py). Já é o gasto de fato. */
+/** Linhas do cartão de crédito importadas das faturas (scripts/faturas_para_csv.py): compras (já são o gasto de fato) e estornos. */
 export const PREFIXO_COMPRA_CARTAO = 'pagamento com cartao visa ';
-export const ehCompraCartao = (tipo: string) => norm(tipo).startsWith(PREFIXO_COMPRA_CARTAO);
+export const PREFIXO_ESTORNO_CARTAO = 'estorno cartao visa ';
+/** Compra OU estorno do cartão importado: nenhuma das duas é movimento da conta. */
+export const ehCompraCartao = (tipo: string) => {
+  const n = norm(tipo);
+  return n.startsWith(PREFIXO_COMPRA_CARTAO) || n.startsWith(PREFIXO_ESTORNO_CARTAO);
+};
 /** Mês (YYYY-MM) da fatura de uma compra de cartão importada (ref "CARTAO-<fatura>-..."); outra linha: null. */
 export const faturaDaCompra = (ref: string): string | null => /^CARTAO-(\d{4}-\d{2})-/.exec(ref)?.[1] ?? null;
 

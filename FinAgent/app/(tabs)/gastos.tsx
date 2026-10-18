@@ -161,7 +161,7 @@ export default function Gastos() {
           {orc.linhas.map((l) => (
             <Card key={l.categoria}>
               <View style={s.linha}>
-                <Text style={s.nome}>{l.categoria}</Text>
+                <Text style={s.nome}>{l.rotulo}</Text>
                 <Text style={s.valor}>{brl(l.gasto)}{l.teto ? ` de ${brl(l.teto)}` : ''}</Text>
               </View>
               {l.teto && l.pct !== null && l.faixa ? (
@@ -177,6 +177,7 @@ export default function Gastos() {
               ) : (
                 <Pressable onPress={() => abrirTeto(l.categoria, null)} hitSlop={8}><Text style={s.link}>Definir teto</Text></Pressable>
               )}
+              {l.incluidaNasCategorias && <Text style={s.nota}>Já está somado nas categorias acima, por isso fica fora de Orçado e Gasto.</Text>}
               {formTeto(l.categoria)}
             </Card>
           ))}

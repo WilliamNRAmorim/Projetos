@@ -1,5 +1,5 @@
 // Lógica pura da aba Gastos (sem React Native): orçamento, períodos, filtros, regras.
-import { CAT, ehMovimentoInterno, norm } from '../mp/categorias.ts';
+import { CAT, ehCompraCartao, ehMovimentoInterno, norm } from '../mp/categorias.ts';
 import { chaveTransacao, mesAnteriorDe, mesDe, mesesDisponiveis, totaisMes, type Lancamento, type RegrasUsuario } from '../mp/extrato.ts';
 
 export const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -21,23 +21,43 @@ export function faixaOrcamento(pct: number): Faixa {
   return 'ok';
 }
 
-export type LinhaOrcamento = { categoria: string; teto: number | null; gasto: number; pct: number | null; faixa: Faixa | null };
+export type LinhaOrcamento = {
+  categoria: string;
+  rotulo: string; // nome para mostrar (a linha da fatura muda de sentido quando as compras do cartão foram importadas)
+  teto: number | null;
+  gasto: number;
+  pct: number | null;
+  faixa: Faixa | null;
+  incluidaNasCategorias: boolean; // já está somada nas outras linhas: fica fora dos totais
+};
+
+/** Compras no cartão no mês (estorno já descontado, pois compra anulada sai de `excluida`). 0 se não há cartão importado. */
+export function comprasNoCartao(lancs: Lancamento[], mes: string): number {
+  return r2(lancs.filter((l) => mesDe(l.data) === mes && !l.excluida && l.valor < 0 && ehCompraCartao(l.tipo)).reduce((s, l) => s - l.valor, 0));
+}
+/** Há COMPRA de cartão importada no mês (um estorno solto não conta). */
+const temCartaoNoMes = (lancs: Lancamento[], mes: string) => lancs.some((l) => mesDe(l.data) === mes && l.valor < 0 && ehCompraCartao(l.tipo));
 
 export function linhasOrcamento(lancs: Lancamento[], mes: string, tetos: Tetos): { linhas: LinhaOrcamento[]; totalOrcado: number; totalGasto: number } {
   const tot = totaisMes(lancs, mes);
   const gasto = new Map<string, number>(tot.porCategoria.map((c) => [c.nome, c.total]));
-  gasto.set(CAT.FATURA, tot.fatura);
+  // Com as compras do cartão importadas, a "fatura" do mês é o que foi COMPRADO no cartão (competência), não o pagamento.
+  const cartao = temCartaoNoMes(lancs, mes);
+  // `tot.fatura` só tem pagamento de fatura NÃO importada (as importadas viram movimento interno): continua aparecendo.
+  gasto.set(CAT.FATURA, cartao ? r2(comprasNoCartao(lancs, mes) + tot.fatura) : tot.fatura);
   const cats = new Set<string>([...gasto.keys(), ...Object.keys(tetos)]);
   const linhas: LinhaOrcamento[] = [...cats]
     .map((categoria) => {
       const g = gasto.get(categoria) ?? 0;
       const t = tetos[categoria] > 0 ? tetos[categoria] : null;
       const pct = t ? r2((g / t) * 100) : null;
-      return { categoria, teto: t, gasto: r2(g), pct, faixa: pct === null ? null : faixaOrcamento(pct) };
+      const ehFatura = categoria === CAT.FATURA;
+      const rotulo = ehFatura ? (cartao ? 'Cartão de crédito (compras do mês)' : 'Fatura do cartão (paga no mês)') : categoria;
+      return { categoria, rotulo, teto: t, gasto: r2(g), pct, faixa: pct === null ? null : faixaOrcamento(pct), incluidaNasCategorias: ehFatura && cartao };
     })
     .filter((l) => l.teto !== null || l.gasto > 0)
     .sort((a, b) => (a.categoria === CAT.FATURA ? 1 : 0) - (b.categoria === CAT.FATURA ? 1 : 0) || b.gasto - a.gasto);
-  const comTeto = linhas.filter((l) => l.teto !== null);
+  const comTeto = linhas.filter((l) => l.teto !== null && !l.incluidaNasCategorias);
   return {
     linhas,
     totalOrcado: r2(comTeto.reduce((s, l) => s + (l.teto ?? 0), 0)),
@@ -57,7 +77,8 @@ export function mediaUltimos3Meses(lancs: Lancamento[], mes: string, categoria: 
   if (comDados.length === 0) return null;
   const soma = comDados.reduce((s, x) => {
     const t = totaisMes(lancs, x);
-    return s + (categoria === CAT.FATURA ? t.fatura : t.porCategoria.find((c) => c.nome === categoria)?.total ?? 0);
+    if (categoria === CAT.FATURA) return s + (temCartaoNoMes(lancs, x) ? r2(comprasNoCartao(lancs, x) + t.fatura) : t.fatura);
+    return s + (t.porCategoria.find((c) => c.nome === categoria)?.total ?? 0);
   }, 0);
   const media = soma / comDados.length;
   return media > 0 ? Math.round(media) : null;
