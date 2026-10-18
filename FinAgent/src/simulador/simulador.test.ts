@@ -136,6 +136,21 @@ for (const m of ['2026-07', '2026-08', '2026-09']) {
 assert.equal(mediaLiquidoMensal(salProprio, 'Joao Silva Teste', hoje)!.media, 2300);
 assert.equal(mediaLiquidoMensal(trans, 'Joao Silva Teste', hoje, 1)!.meses.length, 1);
 
+// com as compras do cartão importadas, o líquido continua em CAIXA: o mesmo de antes (3000 - 200 - 500)
+const comCartao: Transacao[] = [];
+for (const m of ['2026-06', '2026-07', '2026-08', '2026-09']) {
+  const [a, mm] = m.split('-').map(Number);
+  const seguinte = mm === 12 ? `${a + 1}-01` : `${a}-${String(mm + 1).padStart(2, '0')}`;
+  comCartao.push(t(`${m}-05`, 'Pix recebido Empresa Alfa', 3000));
+  comCartao.push(t(`${m}-10`, 'Pagamento com QR Pix IFOOD', -200));
+  comCartao.push({ ...t(`${m}-15`, 'Pagamento com cartão Visa LOJA X', -500), ref: `CARTAO-${m}-${m}-15-500-1` }); // compra do cartão
+  comCartao.push(t(`${seguinte}-05`, 'Pagamento de fatura cartão de crédito', -500)); // quita a fatura do mês anterior
+}
+const mc = mediaLiquidoMensal(comCartao, '', hoje)!;
+perto(mc.media, 2300);
+perto(mc.fatura, 500);
+perto(mc.gastos, 200);
+
 // médias de entradas, gastos e fatura acompanham o líquido
 assert.equal(media.entradas, 3166.67);
 assert.equal(media.gastos, 200);

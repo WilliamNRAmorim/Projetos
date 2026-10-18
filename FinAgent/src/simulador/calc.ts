@@ -1,4 +1,5 @@
 // Funções puras do simulador do Cofrinho e projeções (sem React Native). Valores em reais.
+import { CAT, ehCompraCartao, ehMovimentoInterno } from '../mp/categorias.ts';
 import { classificarExtrato, mesDe, mesesDisponiveis, totaisMes, type RegrasUsuario, type Transacao } from '../mp/extrato.ts';
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -165,6 +166,8 @@ export type MediaLiquida = { media: number; meses: string[]; entradas: number; g
 /**
  * Média do líquido mensal dos últimos `n` meses fechados: entradas (inclui transferências da própria
  * conta: o salário costuma chegar assim) - gastos - fatura paga; movimento interno (Cofrinho, Emergências) fica fora. Sem mês fechado, null.
+ * É CAIXA, não competência: com as compras do cartão importadas, `gastos` é só o que sai da conta no dia a dia
+ * (sem as compras no cartão) e `fatura` é o que foi pago de fatura no mês, também quando as compras foram importadas.
  */
 export function mediaLiquidoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = 3, regras?: RegrasUsuario): MediaLiquida | null {
   const atual = mesDe(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`);
@@ -176,9 +179,11 @@ export function mediaLiquidoMensal(trans: Transacao[], meuNome: string, hoje: Da
   let fat = 0;
   for (const m of fechados) {
     const t = totaisMes(lancs, m);
+    const noCartao = lancs.reduce((s, l) => (mesDe(l.data) === m && !l.excluida && l.valor < 0 && ehCompraCartao(l.tipo) && !ehMovimentoInterno(l.categoria) && l.categoria !== CAT.FATURA ? s - l.valor : s), 0);
+    const faturaQuitada = lancs.reduce((s, l) => (mesDe(l.data) === m && !l.excluida && l.faturaQuitada && l.valor < 0 ? s - l.valor : s), 0);
     ent += t.entradas;
-    gas += t.gastos;
-    fat += t.fatura;
+    gas += t.gastos - noCartao;
+    fat += t.fatura + faturaQuitada;
   }
   const n2 = fechados.length;
   return { media: r2((ent - gas - fat) / n2), meses: fechados, entradas: r2(ent / n2), gastos: r2(gas / n2), fatura: r2(fat / n2) };

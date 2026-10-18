@@ -15,6 +15,7 @@ export type Lancamento = Transacao & {
   contraparte: string;
   excluida: boolean; // estorno ou par anulado: fora dos totais
   reserva: boolean; // movimento da reserva Emergências
+  faturaQuitada?: boolean; // pagamento de fatura cujas compras foram importadas: saída de caixa, mas não é gasto
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -165,7 +166,10 @@ export function classificarExtrato(trans: Transacao[], meuNome = '', regras?: Re
   // seria contar em dobro: vira movimento interno. Fatura não importada: o pagamento segue como gasto.
   const faturasImportadas = new Set(trans.map((t) => faturaDaCompra(t.ref)).filter((f): f is string => f !== null));
   for (const l of lancs) {
-    if (l.categoria === CAT.FATURA && faturasImportadas.has(mesAnteriorDe(mesDe(l.data)))) l.categoria = CAT.INTERNO;
+    if (l.categoria === CAT.FATURA && faturasImportadas.has(mesAnteriorDe(mesDe(l.data)))) {
+      l.categoria = CAT.INTERNO;
+      l.faturaQuitada = true;
+    }
   }
   for (const e of lancs) {
     if (e.categoria !== CAT.ESTORNO || e.valor <= 0) continue;
