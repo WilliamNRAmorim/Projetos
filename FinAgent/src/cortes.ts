@@ -1,5 +1,5 @@
 // Metas de corte progressivo de gastos (Uber/99 e iFood/99Food). Funções puras, sem React Native.
-import { CAT, contemPalavra, norm } from './mp/categorias.ts';
+import { CAT, contemPalavra, ehCompraCartao, norm } from './mp/categorias.ts';
 import { mesAnteriorDe, mesDe, type Lancamento } from './mp/extrato.ts';
 import { CORTE_DEGRAUS_PCT, CORTE_MESES_BASE } from './metasConfig.ts';
 import { faixaOrcamento, r2, type Faixa } from './gastos/gastos.ts';
@@ -63,8 +63,11 @@ export type MetaCorte = {
   proximoTeto: number | null;
 };
 
-export function metaDeCorte(lancs: Lancamento[], g: GrupoCorte, inicio: string, mes: string): MetaCorte {
-  const base = baseDoGrupo(lancs, g, inicio);
+/** Bases congeladas no início do plano, por grupo. Sem base congelada, calcula do extrato. */
+export type BasesCorte = Partial<Record<GrupoCorte['id'], number>>;
+
+export function metaDeCorte(lancs: Lancamento[], g: GrupoCorte, inicio: string, mes: string, bases: BasesCorte = {}): MetaCorte {
+  const base = bases[g.id] ?? baseDoGrupo(lancs, g, inicio);
   const degrau = degrauDoMes(inicio, mes);
   const proximoDegrau = degrauDoMes(inicio, proximoMes(mes));
   const aplicar = (b: number, d: number) => r2(b * (1 - d / 100));
@@ -79,5 +82,24 @@ export function metaDeCorte(lancs: Lancamento[], g: GrupoCorte, inicio: string, 
   };
 }
 
-export const metasDeCorte = (lancs: Lancamento[], inicio: string, mes: string): MetaCorte[] =>
-  GRUPOS_CORTE.map((g) => metaDeCorte(lancs, g, inicio, mes));
+export const metasDeCorte = (lancs: Lancamento[], inicio: string, mes: string, bases: BasesCorte = {}): MetaCorte[] =>
+  GRUPOS_CORTE.map((g) => metaDeCorte(lancs, g, inicio, mes, bases));
+
+/** A base só é confiável se CADA um dos meses que a formam tem compras de cartão importadas. */
+export function cartaoCobreABase(lancs: Lancamento[], inicio: string, n = CORTE_MESES_BASE): boolean {
+  let m = inicio;
+  for (let i = 0; i < n; i++) {
+    m = mesAnteriorDe(m);
+    if (!lancs.some((l) => mesDe(l.data) === m && ehCompraCartao(l.tipo))) return false;
+  }
+  return true;
+}
+
+/** Bases a gravar agora: as que ainda não estão congeladas e já têm valor. `cartaoCompleto` (cartaoCobreABase) evita
+ * travar uma base baixa calculada com meses só de Pix. */
+export function basesParaCongelar(metas: MetaCorte[], congeladas: BasesCorte, cartaoCompleto: boolean): BasesCorte {
+  const novas: BasesCorte = {};
+  if (!cartaoCompleto) return novas;
+  for (const m of metas) if (congeladas[m.grupo.id] === undefined && m.base !== null) novas[m.grupo.id] = m.base;
+  return novas;
+}

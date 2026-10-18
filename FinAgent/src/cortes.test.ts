@@ -1,7 +1,7 @@
 // Rodar: node src/cortes.test.ts. Fixtures FICTÍCIOS.
 import assert from 'node:assert/strict';
 import { classificarExtrato, mesesDisponiveis, saldoFinal, type Transacao } from './mp/extrato.ts';
-import { GRUPOS_CORTE, baseDoGrupo, degrauDoMes, gastoDoGrupo, metaDeCorte, metasDeCorte, proximoMes } from './cortes.ts';
+import { GRUPOS_CORTE, baseDoGrupo, basesParaCongelar, cartaoCobreABase, degrauDoMes, gastoDoGrupo, metaDeCorte, metasDeCorte, proximoMes } from './cortes.ts';
 
 let seq = 0;
 const tx = (data: string, tipo: string, valor: number, saldo = 0): Transacao => ({ data, tipo, ref: `r${seq}`, valor, saldo, seq: seq++ });
@@ -63,5 +63,16 @@ const e = metaDeCorte(lancs, deliv, '2026-10', '2026-10');
 assert.equal(e.teto, 54);
 assert.equal(e.faixa, 'ok'); // 40 de 54 = 74%
 assert.equal(metasDeCorte(lancs, '2026-10', '2026-10').length, 2);
+
+// base congelada não muda quando entram mais dados; só congela com cartão importado
+const metasAgora = metasDeCorte(lancs, '2026-10', '2026-10');
+assert.equal(cartaoCobreABase(lancs, '2026-10'), true); // jul, ago e set têm cartão
+assert.equal(cartaoCobreABase(lancs, '2026-11'), false); // out não tem cartão importado
+assert.deepEqual(basesParaCongelar(metasAgora, {}, true), { transporte: 166.67, delivery: 60 });
+assert.deepEqual(basesParaCongelar(metasAgora, {}, false), {});
+assert.deepEqual(basesParaCongelar(metasAgora, { transporte: 100 }, true), { delivery: 60 }); // não sobrescreve
+const fixa = metaDeCorte(lancs, transp, '2026-10', '2026-10', { transporte: 300 });
+assert.equal(fixa.base, 300);
+assert.equal(fixa.teto, 270); // -10% sobre a base congelada, não sobre a recalculada
 
 console.log('cortes: ok');

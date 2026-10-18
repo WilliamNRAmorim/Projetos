@@ -1,5 +1,5 @@
 import { Link, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import {
   PERFIL_VAZIO, comprometidoDoMes, dataCurta, faixaLimite, livreAteSalario, mediaGastoMensal, mesesDeReserva,
@@ -12,8 +12,8 @@ import { lerExtrato, lerNome } from '@/src/mp/extratoStore';
 import { lerRegras } from '@/src/gastos/gastosStore';
 import { REGRAS_VAZIAS, type RegrasSalvas } from '@/src/gastos/gastos';
 import { lerPerfil } from '@/src/perfil';
-import { metasDeCorte } from '@/src/cortes';
-import { lerInicioCorte } from '@/src/cortesStore';
+import { basesParaCongelar, cartaoCobreABase, metasDeCorte, type BasesCorte } from '@/src/cortes';
+import { lerBasesCorte, lerInicioCorte, salvarBasesCorte } from '@/src/cortesStore';
 import { classificarExtrato } from '@/src/mp/extrato';
 import {
   amostrarSerie, faixaDeParcelas, fimDoAparelho, formatarMesAno, mediaLiquidoMensal, mesesCobertos, projetarCofrinho,
@@ -41,6 +41,8 @@ export default function Metas() {
   const [prazoTxt, setPrazoTxt] = useState('12');
   const [pctCdiTxt, setPctCdiTxt] = useState('100');
   const [inicioCorte, setInicioCorte] = useState<string | null>(null);
+  const [basesCorte, setBasesCorte] = useState<BasesCorte>({});
+  const [basesLidas, setBasesLidas] = useState(false); // só congela depois de ler o que já estava gravado
 
   useFocusEffect(
     useCallback(() => {
@@ -50,6 +52,8 @@ export default function Metas() {
         setNome(await lerNome());
         setRegras(await lerRegras());
         setInicioCorte(await lerInicioCorte());
+        setBasesCorte(await lerBasesCorte());
+        setBasesLidas(true);
         const manual = await lerCdiManual();
         setCdiManual(manual);
         setAuto(await carregarCdi(num(manual)));
@@ -72,7 +76,17 @@ export default function Metas() {
   const gasto = mediaGastoMensal(extrato, nome, hoje, undefined, regras);
   const retiradas = retiradasCofrinho(extrato);
   const mesAtual = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
-  const cortes = inicioCorte && extrato.length > 0 ? metasDeCorte(classificarExtrato(extrato, nome, regras), inicioCorte, mesAtual) : [];
+  const lancsCorte = inicioCorte && extrato.length > 0 ? classificarExtrato(extrato, nome, regras) : [];
+  const cortes = inicioCorte && lancsCorte.length > 0 ? metasDeCorte(lancsCorte, inicioCorte, mesAtual, basesCorte) : [];
+  const novasBases = basesLidas && inicioCorte ? basesParaCongelar(cortes, basesCorte, cartaoCobreABase(lancsCorte, inicioCorte)) : {};
+  const chaveNovas = JSON.stringify(novasBases);
+  useEffect(() => {
+    const novas = JSON.parse(chaveNovas) as BasesCorte;
+    if (Object.keys(novas).length === 0) return;
+    const todas = { ...basesCorte, ...novas };
+    setBasesCorte(todas);
+    salvarBasesCorte(todas);
+  }, [chaveNovas]); // eslint-disable-line react-hooks/exhaustive-deps
   const mesesRes = mesesDeReserva(p.cofrinho, gasto?.media ?? null);
 
   // CDI efetivo: BC (hoje) > valor manual > cache antigo
@@ -324,7 +338,7 @@ export default function Metas() {
                 )}
               </Card>
             ))}
-            <Nota>{`Corte progressivo a partir de ${inicioCorte}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
+            <Nota>{`Corte progressivo a partir de ${inicioCorte}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores ao início, congelada na primeira vez que as faturas do cartão estão importadas. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
           </>
         )}
       </Card>
