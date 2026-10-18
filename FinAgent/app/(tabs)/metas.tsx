@@ -9,6 +9,8 @@ import { COR_FAIXA, FATURA_SAUDAVEL_PCT, MESES_RESERVA } from '@/src/metasConfig
 import { brl } from '@/src/mp/analise';
 import { parseValorBR, saldoFinal, type Transacao } from '@/src/mp/extrato';
 import { lerExtrato, lerNome } from '@/src/mp/extratoStore';
+import { lerRegras } from '@/src/gastos/gastosStore';
+import { REGRAS_VAZIAS, type RegrasSalvas } from '@/src/gastos/gastos';
 import { lerPerfil } from '@/src/perfil';
 import {
   amostrarSerie, faixaDeParcelas, fimDoAparelho, formatarMesAno, mediaLiquidoMensal, mesesCobertos, projetarCofrinho,
@@ -29,6 +31,7 @@ export default function Metas() {
   const [texto, setTexto] = useState<PerfilTexto>(PERFIL_VAZIO);
   const [extrato, setExtrato] = useState<Transacao[]>([]);
   const [nome, setNome] = useState('');
+  const [regras, setRegras] = useState<RegrasSalvas>(REGRAS_VAZIAS);
   const [auto, setAuto] = useState<CdiInfo | null>(null);
   const [cdiManual, setCdiManual] = useState('');
   const [aporteTxt, setAporteTxt] = useState<string | null>(null); // null = usa a parcela do Perfil
@@ -41,6 +44,7 @@ export default function Metas() {
         setTexto(await lerPerfil());
         setExtrato(await lerExtrato());
         setNome(await lerNome());
+        setRegras(await lerRegras());
         const manual = await lerCdiManual();
         setCdiManual(manual);
         setAuto(await carregarCdi(num(manual)));
@@ -60,7 +64,7 @@ export default function Metas() {
   const livre = saldoConta !== null ? livreAteSalario(saldoConta, p, hoje) : null;
   const uso = usoLimite(p.limiteCartao, p.faturaAberta);
   const faixa = uso !== null ? faixaLimite(uso) : null;
-  const gasto = mediaGastoMensal(extrato, nome, hoje);
+  const gasto = mediaGastoMensal(extrato, nome, hoje, undefined, regras);
   const retiradas = retiradasCofrinho(extrato);
   const mesesRes = mesesDeReserva(p.cofrinho, gasto?.media ?? null);
 
@@ -84,7 +88,7 @@ export default function Metas() {
   const fim = faixaParc ? fimDoAparelho(hoje, faixaParc) : null;
 
   // Se continuar assim
-  const liq = mediaLiquidoMensal(extrato, nome, hoje);
+  const liq = mediaLiquidoMensal(extrato, nome, hoje, undefined, regras);
   const proj = liq && saldoConta !== null ? projetarConta(saldoConta, liq.media, hoje) : null;
   const mesesFimMes = proj ? Math.round((proj.mesesAteDezembro - (11 - hoje.getMonth())) * 100) / 100 : 0;
 

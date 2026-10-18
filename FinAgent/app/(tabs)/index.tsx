@@ -7,6 +7,8 @@ import { alertasDoInicio, gerarInsights, nomeMes, serieEntrouSaiu, chaveMesDe } 
 import { PERFIL_VAZIO, comprometidoDoMes, faixaLimite, livreAteSalario, mediaGastoMensal, mesesDeReserva, perfilParaNumeros, usoLimite, type PerfilTexto } from '@/src/metas';
 import { COR_FAIXA } from '@/src/metasConfig';
 import { brl } from '@/src/mp/analise';
+import { lerRegras } from '@/src/gastos/gastosStore';
+import type { RegrasSalvas } from '@/src/gastos/gastos';
 import { classificarExtrato, saldoFinal, type Transacao } from '@/src/mp/extrato';
 import { importarExtratos, lerExtrato, lerNome, salvarNome } from '@/src/mp/extratoStore';
 import { lerPerfil } from '@/src/perfil';
@@ -24,15 +26,17 @@ export default function Inicio() {
   const [texto, setTexto] = useState<PerfilTexto>(PERFIL_VAZIO);
   const [extrato, setExtrato] = useState<Transacao[]>([]);
   const [nome, setNome] = useState('');
+  const [regras, setRegras] = useState<RegrasSalvas>({ porContraparte: {}, porTransacao: {} });
   const [aviso, setAviso] = useState<string | null>(null);
   const [atualizando, setAtualizando] = useState(false);
 
   const carregar = useCallback(async () => {
     setAtualizando(true);
-    const [p, ex, n] = await Promise.all([lerPerfil(), lerExtrato(), lerNome()]);
+    const [p, ex, n, rg] = await Promise.all([lerPerfil(), lerExtrato(), lerNome(), lerRegras()]);
     setTexto(p);
     setExtrato(ex);
     setNome(n);
+    setRegras(rg);
     setAtualizando(false);
   }, []);
 
@@ -56,9 +60,9 @@ export default function Inicio() {
   const temExtrato = extrato.length > 0;
 
   const d = useMemo(() => {
-    const lancs = classificarExtrato(extrato, nome);
+    const lancs = classificarExtrato(extrato, nome, regras);
     const saldo = saldoFinal(extrato)?.saldo ?? null;
-    const media = mediaGastoMensal(extrato, nome, new Date())?.media ?? null;
+    const media = mediaGastoMensal(extrato, nome, new Date(), undefined, regras)?.media ?? null;
     return {
       lancs,
       saldo,
@@ -68,7 +72,7 @@ export default function Inicio() {
       serie: serieEntrouSaiu(lancs, extrato),
       reserva: mesesDeReserva(p.cofrinho, media),
     };
-  }, [extrato, nome, p]);
+  }, [extrato, nome, p, regras]);
 
   const comp = comprometidoDoMes(p);
   const uso = usoLimite(p.limiteCartao, p.faturaAberta);

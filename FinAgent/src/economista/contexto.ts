@@ -1,7 +1,7 @@
 // Contexto enviado ao Gemini: SOMENTE agregados. Nunca nomes de contrapartes, CPF, endereço,
 // descrições de transações nem chaves. Funções puras (testáveis em node).
 import { comprometidoDoMes, mediaGastoMensal, mesesDeReserva, resumoMetas, usoLimite, type PerfilNum } from '../metas.ts';
-import { classificarExtrato, mesAnteriorDe, mesesDisponiveis, totaisMes, type Transacao } from '../mp/extrato.ts';
+import { classificarExtrato, mesAnteriorDe, mesesDisponiveis, totaisMes, type RegrasUsuario, type Transacao } from '../mp/extrato.ts';
 import { resumoParaIA } from '../mp/resumoParaIA.ts';
 
 export type EntradaContexto = {
@@ -11,6 +11,7 @@ export type EntradaContexto = {
   meuNome: string; // usado só para classificar o extrato; NUNCA vai no contexto
   mercadoResumo: string; // texto de mercado já agregado (montarResumo)
   mercadoAtualizadoEm: string | null;
+  regras?: RegrasUsuario; // recategorizações do usuário
 };
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
@@ -49,11 +50,11 @@ export type ContextoEconomista = {
 };
 
 export function montarContexto(e: EntradaContexto): ContextoEconomista {
-  const lancs = classificarExtrato(e.trans, e.meuNome);
+  const lancs = classificarExtrato(e.trans, e.meuNome, e.regras);
   const meses = mesesDisponiveis(e.trans); // mais recente primeiro
   const atual = chaveMes(e.hoje);
   const ref = meses.includes(atual) ? atual : meses[0] ?? atual;
-  const media = mediaGastoMensal(e.trans, e.meuNome, e.hoje)?.media ?? null;
+  const media = mediaGastoMensal(e.trans, e.meuNome, e.hoje, undefined, e.regras)?.media ?? null;
   const metas = resumoMetas(e.perfil, media);
 
   const ultimos = meses

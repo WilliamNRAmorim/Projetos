@@ -1,6 +1,6 @@
 // Funções puras das Metas (sem React Native). Valores monetários em reais.
 import { norm } from './mp/categorias.ts';
-import { classificarExtrato, mesDe, mesesDisponiveis, parseValorBR, totaisMes, type Transacao } from './mp/extrato.ts';
+import { classificarExtrato, mesDe, mesesDisponiveis, parseValorBR, totaisMes, type RegrasUsuario, type Transacao } from './mp/extrato.ts';
 import { LIMITE_ATENCAO_ATE, LIMITE_OK_ATE, MESES_NA_MEDIA } from './metasConfig.ts';
 
 /** Perfil como o usuário digitou (texto). Padrão vazio. */
@@ -116,13 +116,13 @@ export type MediaGasto = { media: number; meses: string[] };
  * Média mensal de gasto (gastos sem movimento interno + fatura paga) dos últimos `n` meses do extrato.
  * O mês corrente (incompleto) fica de fora se houver outros meses.
  */
-export function mediaGastoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = MESES_NA_MEDIA): MediaGasto | null {
+export function mediaGastoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = MESES_NA_MEDIA, regras?: RegrasUsuario): MediaGasto | null {
   const todos = mesesDisponiveis(trans);
   if (todos.length === 0) return null;
   const atual = mesDe(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`);
   const fechados = todos.filter((m) => m !== atual);
   const usar = (fechados.length > 0 ? fechados : todos).slice(0, n);
-  const lancs = classificarExtrato(trans, meuNome);
+  const lancs = classificarExtrato(trans, meuNome, regras);
   const soma = usar.reduce((acc, m) => {
     const t = totaisMes(lancs, m);
     return acc + t.gastos + t.fatura;

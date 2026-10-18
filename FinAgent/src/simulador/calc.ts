@@ -1,5 +1,5 @@
 // Funções puras do simulador do Cofrinho e projeções (sem React Native). Valores em reais.
-import { classificarExtrato, mesDe, mesesDisponiveis, totaisMes, type Transacao } from '../mp/extrato.ts';
+import { classificarExtrato, mesDe, mesesDisponiveis, totaisMes, type RegrasUsuario, type Transacao } from '../mp/extrato.ts';
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -147,17 +147,17 @@ export function redirecionarParcela(p: {
 export type MediaLiquida = { media: number; meses: string[] };
 
 /**
- * Média do líquido mensal dos últimos `n` meses fechados: entradas (sem transferência de outra conta
- * própria) - gastos - fatura paga; movimento interno (Cofrinho, Emergências) fica fora. Sem mês fechado, null.
+ * Média do líquido mensal dos últimos `n` meses fechados: entradas (inclui transferências da própria
+ * conta: o salário costuma chegar assim) - gastos - fatura paga; movimento interno (Cofrinho, Emergências) fica fora. Sem mês fechado, null.
  */
-export function mediaLiquidoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = 3): MediaLiquida | null {
+export function mediaLiquidoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = 3, regras?: RegrasUsuario): MediaLiquida | null {
   const atual = mesDe(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`);
   const fechados = mesesDisponiveis(trans).filter((m) => m < atual).slice(0, n);
   if (fechados.length === 0) return null;
-  const lancs = classificarExtrato(trans, meuNome);
+  const lancs = classificarExtrato(trans, meuNome, regras);
   const soma = fechados.reduce((acc, m) => {
     const t = totaisMes(lancs, m);
-    return acc + (t.entradas - t.entradasOutraConta) - t.gastos - t.fatura;
+    return acc + t.entradas - t.gastos - t.fatura;
   }, 0);
   return { media: r2(soma / fechados.length), meses: fechados };
 }

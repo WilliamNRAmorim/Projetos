@@ -98,12 +98,21 @@ for (const m of ['2026-07', '2026-08', '2026-09']) {
   trans.push(t(`${m}-10`, 'Pagamento com QR Pix IFOOD', -200));
   trans.push(t(`${m}-20`, 'Pagamento de fatura cartão de crédito', -500));
 }
-trans.push(t('2026-09-12', 'Pix recebido Joao Silva Teste', 500)); // própria conta: fora da média
+trans.push(t('2026-09-12', 'Pix recebido Joao Silva Teste', 500)); // própria conta: entra na média (salário chega assim)
 trans.push(t('2026-10-05', 'Pix recebido Empresa Alfa', 3000)); // mês corrente: fora da média
 const media = mediaLiquidoMensal(trans, 'Joao Silva Teste', hoje)!;
-assert.equal(media.media, 2300);
+perto(media.media, 2466.67); // (2300 + 2800 + 2300) / 3: a entrada própria de 500 em setembro agora conta
 assert.deepEqual(media.meses, ['2026-09', '2026-08', '2026-07']);
 assert.equal(mediaLiquidoMensal([], '', hoje), null);
+
+// salário que chega como transferência da própria conta ("Entrada da sua outra conta") conta como renda
+const salProprio: Transacao[] = [];
+for (const m of ['2026-07', '2026-08', '2026-09']) {
+  salProprio.push(t(`${m}-05`, 'Pix recebido Joao Silva Teste', 3000));
+  salProprio.push(t(`${m}-10`, 'Pagamento com QR Pix IFOOD', -200));
+  salProprio.push(t(`${m}-20`, 'Pagamento de fatura cartão de crédito', -500));
+}
+assert.equal(mediaLiquidoMensal(salProprio, 'Joao Silva Teste', hoje)!.media, 2300);
 assert.equal(mediaLiquidoMensal(trans, 'Joao Silva Teste', hoje, 1)!.meses.length, 1);
 
 // projeção da conta: 13 dias de 31 restantes em outubro, 2 meses inteiros até dezembro
