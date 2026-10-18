@@ -9,3 +9,4 @@ export function ask(messages: Message[], context: AiContext = {}): Promise<strin
 }
 
 export type { AiContext, AiProvider, Message } from './types';
+export { AiError, mensagemDoErro, type TipoErroIA } from './erros';

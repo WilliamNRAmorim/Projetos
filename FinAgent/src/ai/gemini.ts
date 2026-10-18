@@ -1,4 +1,6 @@
 import { getSecret } from '../secrets';
+import { AiError, erroPorStatus } from './erros';
+import { extrairTexto, montarCorpoGemini } from './payload';
 import { AiContext, AiProvider, Message } from './types';
 
 const MODEL = 'gemini-2.5-flash';
@@ -7,25 +9,25 @@ const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:ge
 export const gemini: AiProvider = {
   async ask(messages: Message[], context: AiContext): Promise<string> {
     const apiKey = await getSecret('gemini');
-    if (!apiKey) throw new Error('Chave do Gemini não configurada (Configurações).');
+    if (!apiKey) throw new AiError('sem_chave', 'Chave do Gemini não configurada.');
 
-    const systemText = [context.system, context.data].filter(Boolean).join('\n\n');
-    const body: Record<string, unknown> = {
-      contents: messages.map((m) => ({
-        role: m.role === 'assistant' ? 'model' : 'user',
-        parts: [{ text: m.content }],
-      })),
-    };
-    if (systemText) body.systemInstruction = { parts: [{ text: systemText }] };
-
-    const res = await fetch(URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) throw new Error(`Gemini respondeu ${res.status}`);
-    const json = await res.json();
-    const parts: { text?: string }[] = json?.candidates?.[0]?.content?.parts ?? [];
-    return parts.map((p) => p.text ?? '').join('');
+    let res: Response;
+    try {
+      res = await fetch(URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify(montarCorpoGemini(messages, context)),
+      });
+    } catch {
+      throw new AiError('rede', 'Sem conexão com a internet. Verifique e tente de novo.');
+    }
+    if (!res.ok) throw erroPorStatus(res.status);
+    const { texto, bloqueado } = extrairTexto(await res.json());
+    if (!texto) {
+      throw bloqueado
+        ? new AiError('bloqueado', 'O Gemini não quis responder a essa pergunta. Tente reformular.')
+        : new AiError('vazio', 'O Gemini não devolveu resposta. Tente de novo.');
+    }
+    return texto;
   },
 };
