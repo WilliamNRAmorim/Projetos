@@ -85,11 +85,11 @@ export default function Metas() {
 
   // Fim do aparelho
   const faixaParc = faixaDeParcelas(p.parcelasMin, p.parcelasMax, p.parcelasRestantes);
-  const fim = faixaParc ? fimDoAparelho(hoje, faixaParc) : null;
+  const fim = faixaParc ? fimDoAparelho(hoje, faixaParc, p.diaParcela) : null;
 
   // Se continuar assim
   const liq = mediaLiquidoMensal(extrato, nome, hoje, undefined, regras);
-  const proj = liq && saldoConta !== null ? projetarConta(saldoConta, liq.media, hoje) : null;
+  const proj = liq && saldoConta !== null ? projetarConta(saldoConta, liq, hoje, p.diaSalario) : null;
   const mesesFimMes = proj ? Math.round((proj.mesesAteDezembro - (11 - hoje.getMonth())) * 100) / 100 : 0;
 
   const alertas: { texto: string; variante: 'alerta' | 'perigo' }[] = [];
@@ -247,6 +247,7 @@ export default function Metas() {
             />
             <Nota>Eixo: mês do prazo. Juros compostos mensais pela taxa equivalente ((1 + CDI x %)^(1/12) - 1), aporte no fim de cada mês.</Nota>
             <Nota>IR é estimativa: tabela regressiva de renda fixa (22,5% até 180 dias, 20% até 360, 17,5% até 720, 15% acima) aplicada pelo prazo total sobre o rendimento. Educativo, não é consultoria de investimentos.</Nota>
+            <Nota>Estimativa: aportes recentes pagam alíquota maior; IOF só em resgates antes de 30 dias.</Nota>
           </>
         )}
       </Card>
@@ -275,8 +276,8 @@ export default function Metas() {
                     <Card key={n} style={s.interno}>
                       <Par nome={`Se terminar em ${formatarMesAno(n === faixaParc.min ? fim.de! : fim.ate!)}`} valor={`${n} parcelas`} />
                       <Par nome="Cofrinho no fim do aparelho" valor={brl(r.saldoNoFim)} />
-                      <Par nome={`Mais 12 aportes de ${brl(p.parcela!)}`} valor={brl(r.depois.liquido)} forte />
-                      <Nota>{`Valor líquido estimado depois de 12 meses (aportado ${brl(r.depois.aportado)}, rendimento bruto ${brl(r.depois.rendimentoBruto)}).`}</Nota>
+                      <Par nome={`Mais 12 aportes de ${brl(p.parcela!)} (bruto)`} valor={brl(r.depois.saldoBruto)} forte />
+                      <Nota>{`Valor bruto, antes do IR, depois de 12 meses (aportado ${brl(r.depois.aportado)}, rendimento bruto ${brl(r.depois.rendimentoBruto)}).`}</Nota>
                     </Card>
                   );
                 })}
@@ -300,16 +301,16 @@ export default function Metas() {
               {`Se o padrão dos últimos ${liq.meses.length} ${liq.meses.length === 1 ? 'mês fechado' : 'meses fechados'} se repetir, sobra em média ${brl(liq.media)} por mês (entradas menos gastos e fatura, sem movimento interno).`}
             </Text>
             <Linha>
-              <MetricCard rotulo="Conta no fim do mês" valor={brl(proj.fimDoMes)} nota="projeção" />
-              <MetricCard rotulo="Conta em dezembro" valor={brl(proj.dezembro)} nota="projeção" />
+              <MetricCard rotulo="Conta no fim do mês" valor={brl(proj.fimDoMes)} nota="projeção da conta" />
+              <MetricCard rotulo="Conta em dezembro" valor={brl(proj.dezembro)} nota="projeção da conta" />
             </Linha>
             {p.cofrinho !== null && taxaM !== null && (
               <Linha>
-                <MetricCard rotulo="Cofrinho no fim do mês" valor={brl(projetarCofrinho(p.cofrinho, taxaM, mesesFimMes))} nota="só rendimento" />
-                <MetricCard rotulo="Cofrinho em dezembro" valor={brl(projetarCofrinho(p.cofrinho, taxaM, proj.mesesAteDezembro))} nota="só rendimento" />
+                <MetricCard rotulo="Cofrinho no fim do mês" valor={brl(projetarCofrinho(p.cofrinho, taxaM, mesesFimMes))} nota="só rendimento, bruto" />
+                <MetricCard rotulo="Cofrinho em dezembro" valor={brl(projetarCofrinho(p.cofrinho, taxaM, proj.mesesAteDezembro))} nota="só rendimento, bruto" />
               </Linha>
             )}
-            <Nota>A conta parte do saldo do extrato e soma o líquido médio proporcional ao tempo que falta. O Cofrinho não recebe aportes (meta: não mexer) e rende pelo CDI e % do simulador, antes do IR. Estimativa, não promessa.</Nota>
+            <Nota>{`A projeção é da conta, sem o Cofrinho (a reserva fica fora do saldo do extrato). Parte do saldo do extrato; ${proj.salarioPendente ? 'o salário (menos a fatura, paga no mesmo dia) ainda vai cair neste mês e entra inteiro' : 'o salário deste mês já caiu e não entra de novo'}; os gastos do dia a dia entram proporcionais ao tempo que falta. O Cofrinho não recebe aportes (meta: não mexer) e rende pelo CDI e % do simulador, valor bruto, antes do IR. Estimativa, não promessa.`}</Nota>
           </>
         )}
       </Card>

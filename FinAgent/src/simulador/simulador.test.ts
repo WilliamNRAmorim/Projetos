@@ -1,7 +1,7 @@
 // Rodar: node src/simulador/simulador.test.ts (e npm test). Números FICTÍCIOS.
 import assert from 'node:assert/strict';
 import {
-  aliquotaIR, amostrarSerie, faixaDeParcelas, fimDoAparelho, formatarMesAno, lerRespostaCdi, mediaLiquidoMensal,
+  aliquotaIR, amostrarSerie, diasDoPrazo, taxaAnualDoProduto, faixaDeParcelas, fimDoAparelho, formatarMesAno, lerRespostaCdi, mediaLiquidoMensal,
   mesDaUltimaParcela, mesesCobertos, projetarConta, projetarCofrinho, redirecionarParcela, simular, simularCofrinho,
   taxaMensal,
 } from './calc.ts';
@@ -35,21 +35,35 @@ assert.equal(s0.liquido, 1000);
 
 // atalho pelo CDI: 12% ao ano, 100% do CDI, 12 meses, saldo 1000 sem aporte = 1000 x 1,12
 perto(simularCofrinho({ saldoInicial: 1000, aporte: 0, meses: 12, cdiAnualPct: 12, pctCdi: 100 }).saldoBruto, 1120);
-// 110% do CDI = 13,2% ao ano
-perto(simularCofrinho({ saldoInicial: 1000, aporte: 0, meses: 12, cdiAnualPct: 12, pctCdi: 110 }).saldoBruto, 1132);
+// % do CDI incide na taxa DIÁRIA: 100% devolve o CDI; CDI 14,9% a 120% = 18,14% ao ano (não 17,88%)
+perto(taxaAnualDoProduto(12, 100), 12, 1e-9);
+perto(taxaAnualDoProduto(14.9, 100), 14.9, 1e-9);
+perto(taxaAnualDoProduto(14.9, 120), 18.14, 0.01);
+assert.ok(taxaAnualDoProduto(14.9, 120) > 14.9 * 1.2, 'capitalização diária rende mais que a multiplicação simples');
+assert.equal(taxaAnualDoProduto(14.9, 0), 0);
+// mensal = (1 + anual)^(1/12) - 1
+perto(taxaMensal(taxaAnualDoProduto(14.9, 120)), Math.pow(1.1814, 1 / 12) - 1, 1e-5);
+perto(simularCofrinho({ saldoInicial: 1000, aporte: 0, meses: 12, cdiAnualPct: 14.9, pctCdi: 120 }).saldoBruto, 1181.4, 0.2);
 
-// faixas do IR pelo prazo (meses x 30 dias)
+// prazo em dias: meses x 365,25 / 12
+assert.equal(diasDoPrazo(6), 183);
+assert.equal(diasDoPrazo(12), 365);
+assert.equal(diasDoPrazo(24), 731); // 730,5 arredonda para cima; a faixa (15%) é a mesma de 730
+// faixas do IR pelo prazo em dias
 assert.equal(aliquotaIR(180), 0.225);
 assert.equal(aliquotaIR(181), 0.2);
 assert.equal(aliquotaIR(360), 0.2);
 assert.equal(aliquotaIR(361), 0.175);
 assert.equal(aliquotaIR(720), 0.175);
 assert.equal(aliquotaIR(721), 0.15);
-assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 6, taxaMensal: 0.01 }).aliquota, 0.225);
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 5, taxaMensal: 0.01 }).aliquota, 0.225); // 152 dias
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 6, taxaMensal: 0.01 }).aliquota, 0.2); // 183 dias
 assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 7, taxaMensal: 0.01 }).aliquota, 0.2);
-assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 12, taxaMensal: 0.01 }).aliquota, 0.2);
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 11, taxaMensal: 0.01 }).aliquota, 0.2); // 335 dias
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 12, taxaMensal: 0.01 }).aliquota, 0.175); // 365 dias
 assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 13, taxaMensal: 0.01 }).aliquota, 0.175);
-assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 24, taxaMensal: 0.01 }).aliquota, 0.175);
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 23, taxaMensal: 0.01 }).aliquota, 0.175); // 700 dias
+assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 24, taxaMensal: 0.01 }).aliquota, 0.15); // 731 dias
 assert.equal(simular({ saldoInicial: 100, aporte: 0, meses: 25, taxaMensal: 0.01 }).aliquota, 0.15);
 
 // meses de reserva e amostragem do gráfico
@@ -77,6 +91,13 @@ assert.deepEqual(faixa, { min: 6, max: 10 });
 const fim = fimDoAparelho(hoje, faixa);
 assert.equal(formatarMesAno(fim.de!), '03/2027');
 assert.equal(formatarMesAno(fim.ate!), '07/2027');
+// dia da parcela: se a deste mês já passou (hoje 18), ela não conta como restante
+assert.equal(formatarMesAno(mesDaUltimaParcela(hoje, 4, 10)!), '02/2027'); // passou: out já paga, restam nov, dez, jan, fev
+assert.equal(formatarMesAno(mesDaUltimaParcela(hoje, 4, 25)!), '01/2027'); // ainda vai cair em out
+assert.equal(formatarMesAno(mesDaUltimaParcela(hoje, 4, 18)!), '01/2027'); // é hoje: ainda conta
+assert.equal(formatarMesAno(mesDaUltimaParcela(hoje, 1, 10)!), '11/2026');
+assert.equal(mesDaUltimaParcela(hoje, 0, 10), null);
+assert.equal(formatarMesAno(fimDoAparelho(hoje, { min: 6, max: 10 }, 10).ate!), '08/2027');
 assert.deepEqual(faixaDeParcelas(10, 6, null), { min: 6, max: 10 }); // invertido
 assert.deepEqual(faixaDeParcelas(null, 8, null), { min: 8, max: 8 });
 assert.deepEqual(faixaDeParcelas(null, null, 5), { min: 5, max: 5 });
@@ -115,12 +136,30 @@ for (const m of ['2026-07', '2026-08', '2026-09']) {
 assert.equal(mediaLiquidoMensal(salProprio, 'Joao Silva Teste', hoje)!.media, 2300);
 assert.equal(mediaLiquidoMensal(trans, 'Joao Silva Teste', hoje, 1)!.meses.length, 1);
 
-// projeção da conta: 13 dias de 31 restantes em outubro, 2 meses inteiros até dezembro
-const pj = projetarConta(1000, 2300, hoje);
-perto(pj.fimDoMes, 1964.52);
-perto(pj.dezembro, 6564.52);
+// médias de entradas, gastos e fatura acompanham o líquido
+assert.equal(media.entradas, 3166.67);
+assert.equal(media.gastos, 200);
+assert.equal(media.fatura, 500);
+
+// projeção da conta (sem o Cofrinho): 13 dias de 31 restantes em outubro, 2 meses inteiros até dezembro.
+// entradas 3000, gastos 200, fatura 500 (líquido 2300); salário dia 30 ainda não caiu em 18/10:
+// o salário (menos a fatura, paga no mesmo dia) entra inteiro e os gastos entram pela fração do mês.
+const med = { entradas: 3000, gastos: 200, fatura: 500 };
+const pj = projetarConta(1000, med, hoje, 30);
+assert.equal(pj.salarioPendente, true);
+perto(pj.fimDoMes, 1000 + 3000 - 500 - 200 * (13 / 31)); // 3416,13
+perto(pj.dezembro, pj.fimDoMes + 2300 * 2);
 perto(pj.mesesAteDezembro, 2.42);
-const dez = projetarConta(1000, 2300, new Date(2026, 11, 10));
+// salário dia 5 já caiu em 18/10: NÃO soma salário de novo, só os gastos do resto do mês
+const pj2 = projetarConta(1000, med, hoje, 5);
+assert.equal(pj2.salarioPendente, false);
+perto(pj2.fimDoMes, 1000 - 200 * (13 / 31)); // 916,13
+perto(pj2.dezembro, pj2.fimDoMes + 4600);
+// é o dia do salário: o saldo do extrato já o considera
+assert.equal(projetarConta(1000, med, new Date(2026, 9, 30), 30).salarioPendente, false);
+// sem dia do salário: projeção linear antiga (líquido x fração)
+perto(projetarConta(1000, med, hoje, null).fimDoMes, 1964.52);
+const dez = projetarConta(1000, med, new Date(2026, 11, 10), 30);
 assert.equal(dez.dezembro, dez.fimDoMes);
 perto(projetarCofrinho(1000, 0.01, 2), 1020.1);
 assert.equal(projetarCofrinho(1000, 0.01, 0), 1000);

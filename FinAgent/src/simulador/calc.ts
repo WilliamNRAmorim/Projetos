@@ -8,8 +8,19 @@ export function taxaMensal(anualPct: number): number {
   return Math.pow(1 + anualPct / 100, 1 / 12) - 1;
 }
 
-/** Taxa anual efetiva do produto = CDI anual x (% do CDI / 100). */
-export const taxaAnualDoProduto = (cdiAnualPct: number, pctCdi: number) => cdiAnualPct * (pctCdi / 100);
+/**
+ * Taxa anual efetiva (%) de um produto que paga `pctCdi`% do CDI. O % incide sobre a taxa DIÁRIA do CDI
+ * (252 dias úteis), depois capitaliza: diária = ((1 + CDI)^(1/252) - 1) x pct; anual = (1 + diária)^252 - 1.
+ * Com 100% do CDI devolve o próprio CDI; com 120% e CDI de 14,9% dá cerca de 18,14% ao ano (não 17,88%).
+ */
+export function taxaAnualDoProduto(cdiAnualPct: number, pctCdi: number): number {
+  const diariaCdi = Math.pow(1 + cdiAnualPct / 100, 1 / 252) - 1;
+  const diariaProduto = diariaCdi * (pctCdi / 100);
+  return (Math.pow(1 + diariaProduto, 252) - 1) * 100;
+}
+
+/** Prazo em dias corridos de um prazo em meses (ano de 365,25 dias): 6 meses = 183, 12 = 365, 24 = 731. */
+export const diasDoPrazo = (meses: number) => Math.round((meses * 365.25) / 12);
 
 /** Tabela regressiva de renda fixa pelo prazo em dias: 22,5% até 180; 20% até 360; 17,5% até 720; 15% acima. */
 export function aliquotaIR(dias: number): number {
@@ -33,7 +44,7 @@ export type SimResultado = {
 
 /**
  * Juros compostos mensais: a cada mês o saldo rende pela taxa e o aporte entra no fim do mês.
- * saldo(n) = saldo(n-1) x (1 + i) + aporte. IR: alíquota do prazo total (meses x 30 dias) sobre o rendimento (estimativa).
+ * saldo(n) = saldo(n-1) x (1 + i) + aporte. IR: alíquota do prazo total (meses x 365,25/12 dias) sobre o rendimento (estimativa: cada aporte tem prazo próprio).
  */
 export function simular(e: SimEntrada): SimResultado {
   const meses = Math.max(0, Math.floor(e.meses));
@@ -45,7 +56,7 @@ export function simular(e: SimEntrada): SimResultado {
   }
   const aportado = r2(e.aporte * meses);
   const rend = Math.max(0, saldo - e.saldoInicial - aportado);
-  const aliquota = aliquotaIR(meses * 30);
+  const aliquota = aliquotaIR(diasDoPrazo(meses));
   const ir = r2(rend * aliquota);
   return {
     serie, aportado, saldoBruto: r2(saldo), rendimentoBruto: r2(rend), aliquota, ir, liquido: r2(saldo - ir),
@@ -98,12 +109,14 @@ export function somarMeses(base: MesAno, n: number): MesAno {
 }
 
 /**
- * Mês da última parcela. Supõe que as `restantes` parcelas incluem a deste mês:
- * a última cai em (mês atual + restantes - 1). Restantes <= 0: já terminou (null).
+ * Mês da última parcela. Supõe que as `restantes` parcelas incluem a deste mês (a última cai em mês atual + restantes - 1),
+ * a menos que o dia da parcela deste mês já tenha passado: aí a deste mês está paga e a última cai em mês atual + restantes. Restantes <= 0: já terminou (null).
  */
-export function mesDaUltimaParcela(hoje: Date, restantes: number): MesAno | null {
+export function mesDaUltimaParcela(hoje: Date, restantes: number, diaParcela: number | null = null): MesAno | null {
   if (!Number.isInteger(restantes) || restantes <= 0) return null;
-  return somarMeses({ ano: hoje.getFullYear(), mes: hoje.getMonth() + 1 }, restantes - 1);
+  // Se a parcela deste mês já passou (dia da parcela < hoje), ela não conta como restante: a contagem começa no mês seguinte.
+  const jaPassou = diaParcela !== null && hoje.getDate() > diaParcela;
+  return somarMeses({ ano: hoje.getFullYear(), mes: hoje.getMonth() + 1 }, jaPassou ? restantes : restantes - 1);
 }
 
 export type FaixaParcelas = { min: number; max: number };
@@ -118,14 +131,17 @@ export function faixaDeParcelas(min: number | null, max: number | null, exato: n
 
 export type FimAparelho = { de: MesAno | null; ate: MesAno | null };
 
-export function fimDoAparelho(hoje: Date, f: FaixaParcelas): FimAparelho {
-  return { de: mesDaUltimaParcela(hoje, f.min), ate: mesDaUltimaParcela(hoje, f.max) };
+export function fimDoAparelho(hoje: Date, f: FaixaParcelas, diaParcela: number | null = null): FimAparelho {
+  return { de: mesDaUltimaParcela(hoje, f.min, diaParcela), ate: mesDaUltimaParcela(hoje, f.max, diaParcela) };
 }
 
 export type Redirecionamento = {
   /** Saldo do Cofrinho no fim do aparelho (só rendimento, sem aportes). */
   saldoNoFim: number;
-  /** Depois do fim: a parcela vai para o Cofrinho por `meses` meses. */
+  /**
+   * Depois do fim: a parcela vai para o Cofrinho por `meses` meses. Valores BRUTOS: `depois.saldoBruto` e
+   * `rendimentoBruto` vêm antes do IR; mostrar como "bruto" (o `liquido` do SimResultado é só uma estimativa grosseira).
+   */
   depois: SimResultado;
 };
 
@@ -144,7 +160,7 @@ export function redirecionarParcela(p: {
 
 // ---- Se continuar assim ----
 
-export type MediaLiquida = { media: number; meses: string[] };
+export type MediaLiquida = { media: number; meses: string[]; entradas: number; gastos: number; fatura: number };
 
 /**
  * Média do líquido mensal dos últimos `n` meses fechados: entradas (inclui transferências da própria
@@ -155,31 +171,53 @@ export function mediaLiquidoMensal(trans: Transacao[], meuNome: string, hoje: Da
   const fechados = mesesDisponiveis(trans).filter((m) => m < atual).slice(0, n);
   if (fechados.length === 0) return null;
   const lancs = classificarExtrato(trans, meuNome, regras);
-  const soma = fechados.reduce((acc, m) => {
+  let ent = 0;
+  let gas = 0;
+  let fat = 0;
+  for (const m of fechados) {
     const t = totaisMes(lancs, m);
-    return acc + t.entradas - t.gastos - t.fatura;
-  }, 0);
-  return { media: r2(soma / fechados.length), meses: fechados };
+    ent += t.entradas;
+    gas += t.gastos;
+    fat += t.fatura;
+  }
+  const n2 = fechados.length;
+  return { media: r2((ent - gas - fat) / n2), meses: fechados, entradas: r2(ent / n2), gastos: r2(gas / n2), fatura: r2(fat / n2) };
 }
 
-export type Projecao = { fimDoMes: number; dezembro: number; mesesAteDezembro: number };
+export type Projecao = { fimDoMes: number; dezembro: number; mesesAteDezembro: number; salarioPendente: boolean };
 
 /**
- * Projeção linear: saldo + líquido médio x tempo. Fim do mês = fração dos dias que faltam; dezembro soma os meses
- * inteiros seguintes. Se hoje já é dezembro, dezembro = fim do mês.
+ * Projeção da CONTA (saldo do extrato; não inclui o Cofrinho). Separa o que cai de uma vez do gasto diário:
+ * - gastos do dia a dia: média mensal x fração do mês que falta (gasta-se aos poucos);
+ * - se o dia do salário ainda NÃO passou neste mês: soma as entradas médias e subtrai a fatura média (paga no dia do salário);
+ * - se já passou: o salário e a fatura já estão no saldo, não entram de novo (não soma fração de salário já recebido).
+ * Sem o dia do salário, cai na projeção linear antiga (líquido x fração). Dezembro soma os meses inteiros seguintes
+ * (líquido médio). Hoje em dezembro: dezembro = fim do mês.
  */
-export function projetarConta(saldo: number, liquidoMensal: number, hoje: Date): Projecao {
+export function projetarConta(
+  saldo: number,
+  media: { entradas: number; gastos: number; fatura: number },
+  hoje: Date,
+  diaSalario: number | null,
+): Projecao {
   const diasMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
   const fracao = (diasMes - hoje.getDate()) / diasMes;
   const inteiros = 11 - hoje.getMonth();
+  const liquido = media.entradas - media.gastos - media.fatura;
+  const salarioPendente = diaSalario !== null && Math.min(diaSalario, diasMes) > hoje.getDate();
+  const fimDoMes =
+    diaSalario === null
+      ? saldo + liquido * fracao
+      : saldo + (salarioPendente ? media.entradas - media.fatura : 0) - media.gastos * fracao;
   return {
-    fimDoMes: r2(saldo + liquidoMensal * fracao),
-    dezembro: r2(saldo + liquidoMensal * (fracao + inteiros)),
+    fimDoMes: r2(fimDoMes),
+    dezembro: r2(fimDoMes + liquido * inteiros),
     mesesAteDezembro: r2(fracao + inteiros),
+    salarioPendente,
   };
 }
 
-/** Cofrinho sem novos aportes (meta: não mexer): só rende pela taxa mensal. Tempo em meses (pode ser fracionado). */
+/** Cofrinho sem novos aportes (meta: não mexer): só rende pela taxa mensal. Valor BRUTO (antes do IR). Tempo em meses (pode ser fracionado). */
 export function projetarCofrinho(saldo: number, taxa: number, meses: number): number {
   return r2(saldo * Math.pow(1 + taxa, Math.max(0, meses)));
 }
