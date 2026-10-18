@@ -51,6 +51,8 @@ assert.deepEqual(gerarInsights({ trans: [], lancs: [], perfil, hoje }), []);
 // alertas do sino: retirada, limite 65%, saldo não cobre (500 - 650 - 300)
 const al = alertasDoInicio({ trans, perfil, saldoConta: 500, hoje });
 assert.equal(al.length, 3);
+// fatura vence dia 5 e o salário é dia 30: o vencimento cai depois do salário, então não entra no "saldo não cobre"
+assert.equal(alertasDoInicio({ trans, perfil: { ...perfil, diaVencimento: 5 }, saldoConta: 500, hoje }).length, 2);
 assert.equal(alertasDoInicio({ trans: [], perfil: perfilParaNumeros(PERFIL_VAZIO), saldoConta: null, hoje }).length, 0);
 
 // série do gráfico: meses em ordem crescente, saiu = gastos + fatura

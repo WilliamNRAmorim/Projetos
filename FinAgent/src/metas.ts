@@ -82,17 +82,36 @@ export function diasAteSalario(hoje: Date, dia: number): number {
   return Math.round((t.getTime() - ini.getTime()) / 86400000);
 }
 
+/** Próxima data (hoje inclusive) em que cai o dia `dia` do mês; mês curto cai no último dia. */
+function proximaData(hoje: Date, dia: number): Date {
+  const ini = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+  const alvo = (ano: number, mes: number) => new Date(ano, mes, Math.min(dia, new Date(ano, mes + 1, 0).getDate()));
+  const t = alvo(ini.getFullYear(), ini.getMonth());
+  return t < ini ? alvo(ini.getFullYear(), ini.getMonth() + 1) : t;
+}
+
+/** Vence antes do próximo salário? Sem o dia do vencimento (ou do salário), assume que sim (conservador). */
+function venceAntesDoSalario(hoje: Date, diaVenc: number | null, diaSalario: number): boolean {
+  if (diaVenc === null) return true;
+  return proximaData(hoje, diaVenc) < proximaData(hoje, diaSalario);
+}
+
 export type Livre = { valor: number; porDia: number | null; dias: number };
 
 /**
  * Livre até o salário = saldo da conta (extrato) - fatura aberta - parte da parcela que o separado do aparelho não cobre.
- * Estimativa: não inclui o Cofrinho (reserva) e supõe que o saldo do extrato é o da conta.
+ * Só entra o que sai da conta ANTES do próximo salário: a fatura aberta só é subtraída se o vencimento cai antes do
+ * salário (senão sai do próximo salário) e a parcela só se o dia dela ainda não passou neste ciclo (a próxima data
+ * da parcela vem antes do salário). Sem o dia do vencimento/da parcela, subtrai (conservador).
+ * Estimativa: não inclui o Cofrinho nem o separado do aparelho (ficam na reserva, fora do saldo da conta).
  */
 export function livreAteSalario(saldoConta: number, p: PerfilNum, hoje: Date): Livre | null {
   if (p.diaSalario === null) return null;
-  const parcela = p.parcelasRestantes === 0 ? 0 : p.parcela ?? 0;
-  const faltaParcela = Math.max(0, parcela - (p.separadoAparelho ?? 0));
-  const valor = r2(saldoConta - (p.faturaAberta ?? 0) - faltaParcela);
+  const parcelaCheia = p.parcelasRestantes === 0 ? 0 : p.parcela ?? 0;
+  const parcelaNoCiclo = p.diaParcela === null || proximaData(hoje, p.diaParcela) < proximaData(hoje, p.diaSalario) ? parcelaCheia : 0;
+  const faltaParcela = Math.max(0, parcelaNoCiclo - (p.separadoAparelho ?? 0));
+  const fatura = venceAntesDoSalario(hoje, p.diaVencimento, p.diaSalario) ? p.faturaAberta ?? 0 : 0;
+  const valor = r2(saldoConta - fatura - faltaParcela);
   const dias = diasAteSalario(hoje, p.diaSalario);
   return { valor, dias, porDia: dias > 0 ? r2(valor / dias) : null };
 }
@@ -110,24 +129,29 @@ export function faixaLimite(pct: number): Faixa {
   return pct <= LIMITE_ATENCAO_ATE ? 'atencao' : 'alerta';
 }
 
-export type MediaGasto = { media: number; meses: string[] };
+/** `parcial`: só havia meses incompletos; a média é uma estimativa. */
+export type MediaGasto = { media: number; meses: string[]; parcial?: boolean };
 
 /**
  * Média mensal de gasto (gastos sem movimento interno + fatura paga) dos últimos `n` meses do extrato.
- * O mês corrente (incompleto) fica de fora se houver outros meses.
+ * Meses parciais ficam de fora: o mês corrente e o primeiro mês do extrato quando ele não começa nos dias 1 a 3.
+ * Se só houver meses parciais, usa todos e devolve `parcial: true` (estimativa com mês incompleto).
  */
 export function mediaGastoMensal(trans: Transacao[], meuNome: string, hoje: Date, n = MESES_NA_MEDIA, regras?: RegrasUsuario): MediaGasto | null {
   const todos = mesesDisponiveis(trans);
   if (todos.length === 0) return null;
   const atual = mesDe(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`);
-  const fechados = todos.filter((m) => m !== atual);
-  const usar = (fechados.length > 0 ? fechados : todos).slice(0, n);
+  const primeiraData = trans.reduce((min, t) => (t.data < min ? t.data : min), trans[0].data);
+  const primeiroParcial = Number(primeiraData.slice(8)) > 3 ? mesDe(primeiraData) : null;
+  const completos = todos.filter((m) => m !== atual && m !== primeiroParcial);
+  const parcial = completos.length === 0;
+  const usar = (parcial ? todos : completos).slice(0, n);
   const lancs = classificarExtrato(trans, meuNome, regras);
   const soma = usar.reduce((acc, m) => {
     const t = totaisMes(lancs, m);
     return acc + t.gastos + t.fatura;
   }, 0);
-  return { media: r2(soma / usar.length), meses: usar };
+  return parcial ? { media: r2(soma / usar.length), meses: usar, parcial: true } : { media: r2(soma / usar.length), meses: usar };
 }
 
 export const metaReserva = (media: number, meses: number) => r2(media * meses);

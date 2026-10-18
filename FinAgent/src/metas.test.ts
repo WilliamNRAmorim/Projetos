@@ -39,6 +39,18 @@ assert.equal(diasAteSalario(new Date(2026, 1, 10), 30), 18); // fevereiro: dia 2
 assert.deepEqual(livreAteSalario(2000, perfil, new Date(2026, 9, 18)), { valor: 1350, dias: 12, porDia: 112.5 });
 assert.equal(livreAteSalario(2000, { ...perfil, diaSalario: null }, new Date(2026, 9, 18)), null);
 
+// fatura vence dia 5, salário dia 30: em 18/10 o vencimento (05/11) cai DEPOIS do salário (30/10): não subtrai a fatura
+assert.equal(livreAteSalario(2000, { ...perfil, diaVencimento: 5 }, new Date(2026, 9, 18))?.valor, 1800); // 2000 - 0 - (300-100)
+// em 02/11 o vencimento (05/11) cai ANTES do próximo salário (30/11): subtrai
+assert.equal(livreAteSalario(2000, { ...perfil, diaVencimento: 5 }, new Date(2026, 10, 2))?.valor, 1350);
+// parcela dia 10: em 18/10 a próxima (10/11) cai depois do salário (30/10): não subtrai; dia 25 ainda vai cair: subtrai
+assert.equal(livreAteSalario(2000, { ...perfil, diaVencimento: 5, diaParcela: 10 }, new Date(2026, 9, 18))?.valor, 2000);
+assert.equal(livreAteSalario(2000, { ...perfil, diaVencimento: 5, diaParcela: 25 }, new Date(2026, 9, 18))?.valor, 1800);
+// dia da parcela é hoje: ainda conta
+assert.equal(livreAteSalario(2000, { ...perfil, diaVencimento: 5, diaParcela: 18 }, new Date(2026, 9, 18))?.valor, 1800);
+// sem dia de vencimento nem da parcela: subtrai tudo (conservador)
+assert.equal(livreAteSalario(2000, perfil, new Date(2026, 9, 18))?.valor, 1350);
+
 // limite
 assert.equal(usoLimite(1000, 450), 45);
 assert.equal(usoLimite(null, 450), null);
@@ -50,7 +62,7 @@ assert.equal(faixaLimite(60.1), 'alerta');
 // extrato fictício de 4 meses
 const t = (data: string, tipo: string, ref: string, valor: number): Transacao => ({ data, tipo, ref, valor, saldo: 0, seq: 0 });
 const trans: Transacao[] = [
-  t('2026-07-05', 'Pix enviado Loja Teste', '1', -400),
+  t('2026-07-02', 'Pix enviado Loja Teste', '1', -400),
   t('2026-07-20', 'Pagamento de fatura Cartão de crédito', '2', -200),
   t('2026-08-05', 'Pix enviado Loja Teste', '3', -600),
   t('2026-08-20', 'Pagamento de fatura Cartão de crédito', '4', -400),
@@ -67,6 +79,24 @@ assert.equal(mediaGastoMensal(trans, '', new Date(2026, 9, 18), 2)?.media, 900);
 assert.equal(mediaGastoMensal([], '', new Date(2026, 9, 18)), null);
 // com um só mês (o corrente) usa-o mesmo assim
 assert.equal(mediaGastoMensal([trans[8]], '', new Date(2026, 9, 18))?.media, 50);
+assert.equal(mediaGastoMensal([trans[8]], '', new Date(2026, 9, 18))?.parcial, true);
+assert.equal(media?.parcial, undefined, 'com meses completos não é parcial');
+
+// mês parcial: o extrato começa em 20/07 (parcial, jul fica de fora); out é o corrente (fora). Média = ago e set.
+{
+  const parc = trans.filter((x) => x.data >= '2026-08').concat([t('2026-07-20', 'Pix enviado Loja Teste', '0', -90)]);
+  const m = mediaGastoMensal(parc, '', new Date(2026, 9, 18));
+  assert.deepEqual(m, { media: 900, meses: ['2026-09', '2026-08'] });
+  // só meses parciais (primeiro mês incompleto + mês corrente): usa todos e marca como parcial
+  const so = mediaGastoMensal([t('2026-09-20', 'Pix enviado Loja Teste', '0', -100), t('2026-10-02', 'Pix enviado Loja Teste', '0', -50)], '', new Date(2026, 9, 18));
+  assert.equal(so?.parcial, true);
+  assert.deepEqual(so?.meses, ['2026-10', '2026-09']);
+  assert.equal(so?.media, 75);
+  // extrato que começa no dia 1 a 3 não é parcial
+  const ini3 = mediaGastoMensal([t('2026-09-03', 'Pix enviado Loja Teste', '0', -100), t('2026-10-02', 'Pix enviado Loja Teste', '0', -50)], '', new Date(2026, 9, 18));
+  assert.equal(ini3?.parcial, undefined);
+  assert.equal(ini3?.media, 100);
+}
 
 // reserva
 assert.equal(metaReserva(800, 3), 2400);

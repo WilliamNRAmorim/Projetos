@@ -131,7 +131,7 @@ export default function Metas() {
                 </Card>
               );
             })}
-            <Nota>{`Gasto médio mensal: ${brl(gasto.media)} (últimos ${gasto.meses.length} ${gasto.meses.length === 1 ? 'mês' : 'meses'}, com fatura paga, sem movimentos internos).`}</Nota>
+            <Nota>{`Gasto médio mensal: ${brl(gasto.media)} (últimos ${gasto.meses.length} ${gasto.meses.length === 1 ? 'mês' : 'meses'}, com fatura paga, sem movimentos internos)${gasto.parcial ? ' (estimativa com mês incompleto)' : ''}.`}</Nota>
           </>
         )}
       </Card>
@@ -236,7 +236,7 @@ export default function Metas() {
             <Par nome={`IR estimado (${dec(sim.aliquota * 100)}%)`} valor={brl(sim.ir)} />
             <Par nome="Saldo bruto final" valor={brl(sim.saldoBruto)} />
             {gasto && (
-              <Text style={s.texto}>{`Isso daria cerca de ${dec(mesesCobertos(sim.liquido, gasto.media) ?? 0)} meses de reserva (gasto médio de ${brl(gasto.media)}).`}</Text>
+              <Text style={s.texto}>{`Isso daria cerca de ${dec(mesesCobertos(sim.liquido, gasto.media) ?? 0)} meses de reserva (gasto médio de ${brl(gasto.media)}${gasto.parcial ? ', estimativa com mês incompleto' : ''}).`}</Text>
             )}
             <BarChart
               dados={amostrarSerie(sim.serie, 12).map((x) => ({ rotulo: String(x.mes), a: saldoIni + x.aportado, b: x.saldo }))}
