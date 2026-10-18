@@ -45,3 +45,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-15 | Planilha Pendentes_GMS_x_SAP.xlsx criada para o chefe alimentar a cada tratativa | chefe direto | pedido do William | custo baixo
 2026-10-16 | GMS Hora-Hora Trançagem v0.6.1 (carimbo da linha, trava de carga, mangueira fora da lista, duas passagens DD÷2, limpar dropdown zera meta): patch local nos .txt, QA ok, NÃO commitado | chefe (Sonnet 5.5) direto, sem subagente; revisor indisponível nesta sessão (não registrado) | tela única, editada por script; revisão do cálculo pendente | custo médio (sessão longa)
 2026-10-18 | FinAgent etapa 2: base Expo com 4 abas, config de chaves, módulo Gemini | executor (Sonnet) | plano aprovado, mais de um arquivo | custo n/d
+2026-10-18 | FinAgent etapas 3, 3b, 4 e 6a: Painel, importação de extrato, Metas/Perfil e Mercado | executor (Sonnet) em 4 chamadas | mais de um arquivo, plano aprovado; SDK rebaixado para 57 pelo chefe | custo n/d
