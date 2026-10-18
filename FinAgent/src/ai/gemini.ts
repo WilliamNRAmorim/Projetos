@@ -3,7 +3,7 @@ import { AiError, erroPorStatus } from './erros';
 import { extrairTexto, montarCorpoGemini } from './payload';
 import { AiContext, AiProvider, Message } from './types';
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3.8-flash';
 const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 export const gemini: AiProvider = {
