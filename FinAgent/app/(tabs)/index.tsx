@@ -1,10 +1,14 @@
 import { Link } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '@/src/theme';
 import {
   brl, chaveMes, classificar, gastoPorCategoria, gastoPorTipo, maioresGastos, mesAnterior, totaisDoMes,
 } from '@/src/mp/analise';
+import {
+  classificarExtrato, mesesDisponiveis, saldoFinal, totaisMes, type Transacao,
+} from '@/src/mp/extrato';
+import { importarExtratos, lerExtrato, lerNome, salvarNome } from '@/src/mp/extratoStore';
 import { DadosMP, SemTokenError, atualizar, lerCache, lerSaldo, parseValor, salvarSaldo } from '@/src/mp/api';
 
 export default function Painel() {
@@ -12,6 +16,22 @@ export default function Painel() {
   const [erro, setErro] = useState<'token' | string | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [saldo, setSaldo] = useState('');
+  const [extrato, setExtrato] = useState<Transacao[]>([]);
+  const [meuNome, setMeuNome] = useState('');
+  const [mesSel, setMesSel] = useState<string | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
+
+  const importar = async () => {
+    setAviso(null);
+    try {
+      const r = await importarExtratos();
+      if (!r) return;
+      setExtrato(r.total);
+      setAviso(r.linhas === 0 ? 'Nenhuma linha válida encontrada no arquivo.' : `${r.arquivos} arquivo(s) importado(s), ${r.linhas} linhas lidas.`);
+    } catch {
+      setAviso('Não foi possível ler o arquivo.');
+    }
+  };
 
   const carregar = useCallback(async () => {
     setErro(null);
@@ -27,6 +47,8 @@ export default function Painel() {
   useEffect(() => {
     (async () => {
       setSaldo(await lerSaldo());
+      setExtrato(await lerExtrato());
+      setMeuNome(await lerNome());
       const c = await lerCache();
       if (c) setDados(c);
       await carregar();
@@ -46,6 +68,14 @@ export default function Painel() {
     };
   }, [dados, mesAtual]);
 
+  const meses = useMemo(() => mesesDisponiveis(extrato), [extrato]);
+  const mesExt = mesSel && meses.includes(mesSel) ? mesSel : meses[0] ?? null;
+  const ext = useMemo(() => {
+    if (extrato.length === 0 || !mesExt) return null;
+    const lancs = classificarExtrato(extrato, meuNome);
+    return { totais: totaisMes(lancs, mesExt), saldo: saldoFinal(extrato) };
+  }, [extrato, meuNome, mesExt]);
+
   const saldoNum = parseValor(saldo);
 
   return (
@@ -57,7 +87,7 @@ export default function Painel() {
       <Text style={s.titulo}>Painel</Text>
 
       <View style={s.card}>
-        <Text style={s.rotulo}>Saldo (informe manualmente)</Text>
+        <Text style={s.rotulo}>{ext ? 'Reserva Emergências/Cofrinho (informe manualmente)' : 'Saldo (informe manualmente)'}</Text>
         <TextInput
           style={s.input}
           value={saldo}
@@ -69,13 +99,65 @@ export default function Painel() {
         {saldoNum !== null && <Text style={s.grande}>{brl(saldoNum)}</Text>}
       </View>
 
-      {erro === 'token' && (
+      <View style={s.card}>
+        <Pressable style={s.botao} onPress={importar}>
+          <Text style={s.botaoTxt}>Importar extrato</Text>
+        </Pressable>
+        <Text style={s.mudo}>Escolha o(s) CSV de extrato do Mercado Pago (um por mês). Reimportar não duplica.</Text>
+        {aviso && <Text style={s.mudo}>{aviso}</Text>}
+        <TextInput
+          style={s.input}
+          value={meuNome}
+          onChangeText={(t) => { setMeuNome(t); salvarNome(t); }}
+          placeholder="Seu nome completo (para reconhecer transferências entre suas contas)"
+          placeholderTextColor={theme.muted}
+        />
+      </View>
+
+      {ext && (
+        <>
+          <View style={s.card}>
+            <Text style={s.rotulo}>Saldo no extrato até {ext.saldo ? `${ext.saldo.data.slice(8)}/${ext.saldo.data.slice(5, 7)}` : '-'}</Text>
+            <Text style={s.grande}>{brl(ext.saldo?.saldo ?? 0)}</Text>
+            <Text style={s.mudo}>{meses.length} {meses.length === 1 ? 'mês importado' : 'meses importados'}.</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+            {meses.map((m) => (
+              <Pressable key={m} style={[s.chip, m === mesExt && s.chipOn]} onPress={() => setMesSel(m)}>
+                <Text style={[s.texto, m === mesExt && { color: theme.bg }]}>{m.slice(5)}/{m.slice(0, 4)}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+          <View style={s.card}>
+            <Text style={s.rotulo}>Mês {mesExt}</Text>
+            <Linha nome="Entradas" valor={brl(ext.totais.entradas)} cor={theme.tint} />
+            {ext.totais.entradasOutraConta > 0 && (
+              <Text style={s.mudo}>Inclui {brl(ext.totais.entradasOutraConta)} da sua outra conta.</Text>
+            )}
+            <Linha nome="Gastos" valor={brl(ext.totais.gastos)} cor="#ef7b7b" />
+            <Linha nome="Fatura do cartão" valor={brl(ext.totais.fatura)} />
+            <Linha nome="Rendimentos" valor={brl(ext.totais.rendimentos)} />
+            <Linha
+              nome={ext.totais.reservaLiquida >= 0 ? 'Foi para a reserva Emergências' : 'Saiu da reserva Emergências'}
+              valor={brl(Math.abs(ext.totais.reservaLiquida))}
+            />
+            {ext.totais.variacaoGasto !== null && (
+              <Text style={s.mudo}>
+                Gastos {ext.totais.variacaoGasto >= 0 ? '+' : ''}{ext.totais.variacaoGasto.toFixed(1).replace('.', ',')}% contra o mês anterior.
+              </Text>
+            )}
+          </View>
+          <Barras titulo="Gasto por categoria" itens={ext.totais.porCategoria} />
+        </>
+      )}
+
+      {!ext && erro === 'token' && (
         <View style={s.card}>
           <Text style={s.texto}>Configure o token do Mercado Pago para ver seus dados.</Text>
           <Link href="/configuracoes" style={s.link}>Abrir Configurações</Link>
         </View>
       )}
-      {erro && erro !== 'token' && (
+      {!ext && erro && erro !== 'token' && (
         <View style={s.card}>
           <Text style={[s.texto, { color: '#ef7b7b' }]}>{erro}</Text>
           <Text style={s.mudo}>Puxe a tela para baixo para tentar de novo.</Text>
@@ -83,11 +165,11 @@ export default function Painel() {
       )}
       {carregando && !dados && !erro && <ActivityIndicator color={theme.tint} />}
 
-      {analise && analise.atual.recebido === 0 && analise.atual.gasto === 0 && (
+      {!ext && analise && analise.atual.recebido === 0 && analise.atual.gasto === 0 && (
         <Text style={s.mudo}>Nenhuma movimentação neste mês ainda.</Text>
       )}
 
-      {analise && (
+      {!ext && analise && (
         <>
           <View style={s.card}>
             <Text style={s.rotulo}>Este mês ({mesAtual})</Text>
@@ -166,5 +248,9 @@ const s = StyleSheet.create({
   input: { backgroundColor: theme.bg, color: theme.text, borderColor: theme.border, borderWidth: 1, borderRadius: 8, padding: 10 },
   linha: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
   trilho: { height: 6, backgroundColor: theme.border, borderRadius: 3 },
+  botao: { backgroundColor: theme.tint, borderRadius: 8, padding: 12, alignItems: 'center' },
+  botaoTxt: { color: theme.bg, fontSize: 15, fontWeight: '700' },
+  chip: { borderColor: theme.border, borderWidth: 1, borderRadius: 16, paddingVertical: 6, paddingHorizontal: 12 },
+  chipOn: { backgroundColor: theme.tint },
   barra: { height: 6, backgroundColor: theme.tint, borderRadius: 3 },
 });
