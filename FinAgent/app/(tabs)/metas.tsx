@@ -86,7 +86,7 @@ export default function Metas() {
           </>
         ) : (
           <Text style={s.mudo}>
-            {p.diaSalario === null ? 'Informe o dia do salário no Perfil para ver quanto está livre.' : 'Importe o extrato no Painel para ver quanto está livre até o salário.'}
+            {p.diaSalario === null ? 'Informe o dia do salário no Perfil para ver quanto está livre.' : 'Importe o extrato no Início para ver quanto está livre até o salário.'}
           </Text>
         )}
       </View>
@@ -112,7 +112,7 @@ export default function Metas() {
       <View style={s.card}>
         <Text style={s.rotulo}>Meta de reserva (Cofrinho)</Text>
         {!gasto ? (
-          <Text style={s.mudo}>Importe o extrato do Mercado Pago no Painel para calcular seu gasto médio mensal.</Text>
+          <Text style={s.mudo}>Importe o extrato do Mercado Pago no Início para calcular seu gasto médio mensal.</Text>
         ) : (
           <>
             <Text style={s.mudo}>
@@ -142,7 +142,7 @@ export default function Metas() {
       <View style={s.card}>
         <Text style={s.rotulo}>Cofrinho: guardar e não mexer</Text>
         {extrato.length === 0 ? (
-          <Text style={s.mudo}>Importe o extrato no Painel para acompanhar retiradas.</Text>
+          <Text style={s.mudo}>Importe o extrato no Início para acompanhar retiradas.</Text>
         ) : retiradas.length === 0 ? (
           <Text style={s.mudo}>Nenhuma retirada do Cofrinho no extrato importado.</Text>
         ) : (

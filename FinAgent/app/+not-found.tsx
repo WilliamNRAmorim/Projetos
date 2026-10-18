@@ -6,7 +6,7 @@ export default function NotFound() {
     <>
       <Stack.Screen options={{ title: 'Ops!' }} />
       <Tela titulo="Tela não encontrada">
-        <Link href="/" style={{ color: '#4fc3a1' }}>Voltar ao Painel</Link>
+        <Link href="/" style={{ color: '#4fc3a1' }}>Voltar ao Início</Link>
       </Tela>
     </>
   );

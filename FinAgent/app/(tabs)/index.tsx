@@ -1,28 +1,42 @@
-import { Link, useFocusEffect } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { theme } from '@/src/theme';
-import {
-  brl, chaveMes, classificar, gastoPorCategoria, gastoPorTipo, maioresGastos, mesAnterior, totaisDoMes,
-} from '@/src/mp/analise';
-import {
-  classificarExtrato, mesesDisponiveis, saldoFinal, totaisMes, type Transacao,
-} from '@/src/mp/extrato';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { alertasDoInicio, gerarInsights, nomeMes, serieEntrouSaiu, chaveMesDe } from '@/src/insights';
+import { PERFIL_VAZIO, comprometidoDoMes, faixaLimite, livreAteSalario, mediaGastoMensal, mesesDeReserva, perfilParaNumeros, usoLimite, type PerfilTexto } from '@/src/metas';
+import { COR_FAIXA } from '@/src/metasConfig';
+import { brl } from '@/src/mp/analise';
+import { classificarExtrato, saldoFinal, type Transacao } from '@/src/mp/extrato';
 import { importarExtratos, lerExtrato, lerNome, salvarNome } from '@/src/mp/extratoStore';
-import { DadosMP, SemTokenError, atualizar, lerCache } from '@/src/mp/api';
-import { parseValorBR } from '@/src/mp/extrato';
-import { PERFIL_VAZIO, validarCampo, type PerfilTexto } from '@/src/metas';
-import { lerPerfil, salvarPerfil } from '@/src/perfil';
+import { lerPerfil } from '@/src/perfil';
+import {
+  BarChart, Botao, Card, EmptyState, InsightCard, Linha, MetricCard, SectionHeader, StackedBar,
+  cores, espaco, fonte, paleta,
+} from '@/src/ui';
 
-export default function Painel() {
-  const [dados, setDados] = useState<DadosMP | null>(null);
-  const [erro, setErro] = useState<'token' | string | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [perfil, setPerfil] = useState<PerfilTexto>(PERFIL_VAZIO);
+const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const maiuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
+
+export default function Inicio() {
+  const router = useRouter();
+  const topo = useSafeAreaInsets().top;
+  const [texto, setTexto] = useState<PerfilTexto>(PERFIL_VAZIO);
   const [extrato, setExtrato] = useState<Transacao[]>([]);
-  const [meuNome, setMeuNome] = useState('');
-  const [mesSel, setMesSel] = useState<string | null>(null);
+  const [nome, setNome] = useState('');
   const [aviso, setAviso] = useState<string | null>(null);
+  const [atualizando, setAtualizando] = useState(false);
+
+  const carregar = useCallback(async () => {
+    setAtualizando(true);
+    const [p, ex, n] = await Promise.all([lerPerfil(), lerExtrato(), lerNome()]);
+    setTexto(p);
+    setExtrato(ex);
+    setNome(n);
+    setAtualizando(false);
+  }, []);
+
+  useFocusEffect(useCallback(() => { carregar(); }, [carregar]));
 
   const importar = async () => {
     setAviso(null);
@@ -36,247 +50,165 @@ export default function Painel() {
     }
   };
 
-  const carregar = useCallback(async () => {
-    setErro(null);
-    try {
-      setDados(await atualizar());
-    } catch (e) {
-      setErro(e instanceof SemTokenError ? 'token' : e instanceof Error ? e.message : 'Falha ao atualizar.');
-    } finally {
-      setCarregando(false);
-    }
-  }, []);
+  const hoje = new Date();
+  const p = useMemo(() => perfilParaNumeros(texto), [texto]);
+  const temPerfil = p.diaSalario !== null;
+  const temExtrato = extrato.length > 0;
 
-  useEffect(() => {
-    (async () => {
-      setExtrato(await lerExtrato());
-      setMeuNome(await lerNome());
-      const c = await lerCache();
-      if (c) setDados(c);
-      await carregar();
-    })();
-  }, [carregar]);
-
-  useFocusEffect(
-    useCallback(() => {
-      lerPerfil().then(setPerfil);
-    }, []),
-  );
-
-  const mudarReserva = (k: 'cofrinho' | 'separadoAparelho', v: string) => {
-    const novo = { ...perfil, [k]: v };
-    setPerfil(novo);
-    if (!validarCampo(k, v)) salvarPerfil(novo);
-  };
-
-  const mesAtual = chaveMes(new Date().toISOString());
-  const analise = useMemo(() => {
-    if (!dados) return null;
-    const movs = classificar(dados.pagamentos, dados.userId);
+  const d = useMemo(() => {
+    const lancs = classificarExtrato(extrato, nome);
+    const saldo = saldoFinal(extrato)?.saldo ?? null;
+    const media = mediaGastoMensal(extrato, nome, new Date())?.media ?? null;
     return {
-      atual: totaisDoMes(movs, mesAtual),
-      anterior: totaisDoMes(movs, mesAnterior(mesAtual)),
-      cats: gastoPorCategoria(movs, mesAtual),
-      tipos: gastoPorTipo(movs, mesAtual),
-      maiores: maioresGastos(movs, mesAtual, 8),
+      lancs,
+      saldo,
+      livre: saldo !== null ? livreAteSalario(saldo, p, new Date()) : null,
+      insights: gerarInsights({ trans: extrato, lancs, perfil: p, hoje: new Date() }),
+      alertas: alertasDoInicio({ trans: extrato, perfil: p, saldoConta: saldo, hoje: new Date() }),
+      serie: serieEntrouSaiu(lancs, extrato),
+      reserva: mesesDeReserva(p.cofrinho, media),
     };
-  }, [dados, mesAtual]);
+  }, [extrato, nome, p]);
 
-  const meses = useMemo(() => mesesDisponiveis(extrato), [extrato]);
-  const mesExt = mesSel && meses.includes(mesSel) ? mesSel : meses[0] ?? null;
-  const ext = useMemo(() => {
-    if (extrato.length === 0 || !mesExt) return null;
-    const lancs = classificarExtrato(extrato, meuNome);
-    return { totais: totaisMes(lancs, mesExt), saldo: saldoFinal(extrato) };
-  }, [extrato, meuNome, mesExt]);
-
-  const cofrinhoNum = parseValorBR(perfil.cofrinho);
-  const aparelhoNum = parseValorBR(perfil.separadoAparelho);
+  const comp = comprometidoDoMes(p);
+  const uso = usoLimite(p.limiteCartao, p.faturaAberta);
+  const mes = nomeMes(chaveMesDe(hoje));
+  const dias = d.livre?.dias;
+  const salario = p.salario ?? 0;
+  const livreSeg = Math.max(0, salario - comp.total);
 
   return (
     <ScrollView
       style={s.root}
-      contentContainerStyle={s.content}
-      refreshControl={<RefreshControl refreshing={carregando} onRefresh={() => { setCarregando(true); carregar(); }} tintColor={theme.tint} />}
-    >
-      <Text style={s.titulo}>Painel</Text>
-
-      <View style={s.card}>
-        <Text style={s.rotulo}>Cofrinho (reserva, informe manualmente)</Text>
-        <TextInput
-          style={s.input}
-          value={perfil.cofrinho}
-          onChangeText={(t) => mudarReserva('cofrinho', t)}
-          placeholder="0,00"
-          placeholderTextColor={theme.muted}
-          keyboardType="decimal-pad"
-        />
-        {cofrinhoNum !== null && <Text style={s.grande}>{brl(cofrinhoNum)}</Text>}
-        <Text style={s.rotulo}>Separado para a parcela do aparelho (Emergências)</Text>
-        <TextInput
-          style={s.input}
-          value={perfil.separadoAparelho}
-          onChangeText={(t) => mudarReserva('separadoAparelho', t)}
-          placeholder="0,00"
-          placeholderTextColor={theme.muted}
-          keyboardType="decimal-pad"
-        />
-        {aparelhoNum !== null && <Text style={s.grande}>{brl(aparelhoNum)}</Text>}
-        <Link href="/perfil" style={s.link}>Perfil financeiro</Link>
-      </View>
-
-      <View style={s.card}>
-        <Pressable style={s.botao} onPress={importar}>
-          <Text style={s.botaoTxt}>Importar extrato</Text>
+      contentContainerStyle={[s.content, { paddingTop: topo + espaco.md }]}
+      refreshControl={<RefreshControl refreshing={atualizando} onRefresh={carregar} tintColor={cores.primaria} />}>
+      <View style={s.topo}>
+        <Text style={s.mes} numberOfLines={1}>
+          {maiuscula(mes)}{temPerfil ? ` · faltam ${dias ?? '-'} ${dias === 1 ? 'dia' : 'dias'} pro salário` : ''}
+        </Text>
+        <Pressable onPress={() => router.push('/metas')} hitSlop={10} style={s.sino} accessibilityLabel="Alertas">
+          <Ionicons name={d.alertas.length > 0 ? 'notifications' : 'notifications-outline'} size={24} color={cores.texto} />
+          {d.alertas.length > 0 && (
+            <View style={s.contador}><Text style={s.contadorTxt}>{d.alertas.length}</Text></View>
+          )}
         </Pressable>
-        <Text style={s.mudo}>Escolha o(s) CSV de extrato do Mercado Pago (um por mês). Reimportar não duplica.</Text>
-        {aviso && <Text style={s.mudo}>{aviso}</Text>}
-        <TextInput
-          style={s.input}
-          value={meuNome}
-          onChangeText={(t) => { setMeuNome(t); salvarNome(t); }}
-          placeholder="Seu nome completo (para reconhecer transferências entre suas contas)"
-          placeholderTextColor={theme.muted}
-        />
       </View>
 
-      {ext && (
+      {!temPerfil && (
+        <EmptyState
+          icone="person-circle-outline"
+          titulo="Preencha seu perfil financeiro"
+          texto="Salário, dia do pagamento, parcela e cartão: com isso o app mostra quanto está livre até o salário."
+          botao="Abrir Perfil"
+          aoBotao={() => router.push('/perfil')}
+        />
+      )}
+
+      {!temExtrato && (
+        <EmptyState
+          icone="document-text-outline"
+          titulo="Importe o extrato do Mercado Pago"
+          texto="Escolha o(s) CSV de extrato, um por mês. Reimportar não duplica."
+          botao="Importar extrato"
+          aoBotao={importar}
+        />
+      )}
+
+      {temPerfil && d.livre && (
+        <Card>
+          <Text style={s.rotulo}>Livre até dia {texto.diaSalario}</Text>
+          <Text style={[s.heroi, d.livre.valor < 0 && { color: cores.perigo }]} numberOfLines={1} adjustsFontSizeToFit>
+            {d.livre.valor < 0 ? `-${brl(-d.livre.valor)}` : brl(d.livre.valor)}
+          </Text>
+          <Text style={s.sub}>
+            {d.livre.porDia !== null && d.livre.valor >= 0 ? `≈ ${brl(d.livre.porDia)} por dia` : d.livre.valor < 0 ? 'O saldo não cobre fatura e parcela até o salário.' : 'Hoje é dia de salário.'}
+          </Text>
+        </Card>
+      )}
+
+      {salario > 0 && comp.total > 0 && (
+        <Card>
+          <Text style={s.rotulo}>Salário já comprometido · {comp.pctSalario !== null ? comp.pctSalario.toFixed(0) : 0}%</Text>
+          <StackedBar
+            segmentos={[
+              { rotulo: 'Fatura aberta', valor: comp.fatura, cor: paleta[4], texto: brl(comp.fatura) },
+              { rotulo: 'Parcela do aparelho', valor: comp.parcela, cor: paleta[2], texto: brl(comp.parcela) },
+              { rotulo: 'Livre', valor: livreSeg, cor: paleta[0], texto: brl(livreSeg) },
+            ]}
+          />
+        </Card>
+      )}
+
+      <Linha>
+        <MetricCard rotulo="Cofrinho" valor={p.cofrinho !== null ? brl(p.cofrinho) : '-'} />
+        <MetricCard
+          rotulo="Limite usado"
+          valor={uso !== null ? `${uso.toFixed(0)}%` : '-'}
+          cor={uso !== null ? COR_FAIXA[faixaLimite(uso)] : undefined}
+        />
+        <MetricCard rotulo="Reserva" valor={d.reserva !== null ? `${String(d.reserva).replace('.', ',')} m` : '-'} nota="meses de gasto" />
+      </Linha>
+
+      {d.serie.length > 0 && (
         <>
-          <View style={s.card}>
-            <Text style={s.rotulo}>Saldo no extrato até {ext.saldo ? `${ext.saldo.data.slice(8)}/${ext.saldo.data.slice(5, 7)}` : '-'}</Text>
-            <Text style={s.grande}>{brl(ext.saldo?.saldo ?? 0)}</Text>
-            <Text style={s.mudo}>{meses.length} {meses.length === 1 ? 'mês importado' : 'meses importados'}.</Text>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-            {meses.map((m) => (
-              <Pressable key={m} style={[s.chip, m === mesExt && s.chipOn]} onPress={() => setMesSel(m)}>
-                <Text style={[s.texto, m === mesExt && { color: theme.bg }]}>{m.slice(5)}/{m.slice(0, 4)}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-          <View style={s.card}>
-            <Text style={s.rotulo}>Mês {mesExt}</Text>
-            <Linha nome="Entradas" valor={brl(ext.totais.entradas)} cor={theme.tint} />
-            {ext.totais.entradasOutraConta > 0 && (
-              <Text style={s.mudo}>Inclui {brl(ext.totais.entradasOutraConta)} da sua outra conta.</Text>
-            )}
-            <Linha nome="Gastos" valor={brl(ext.totais.gastos)} cor="#ef7b7b" />
-            <Linha nome="Fatura do cartão" valor={brl(ext.totais.fatura)} />
-            <Linha nome="Rendimentos" valor={brl(ext.totais.rendimentos)} />
-            <Linha
-              nome={ext.totais.reservaLiquida >= 0 ? 'Foi para o separado do aparelho (Emergências)' : 'Saiu do separado do aparelho (Emergências)'}
-              valor={brl(Math.abs(ext.totais.reservaLiquida))}
+          <SectionHeader titulo="Entrou x saiu" />
+          <Card>
+            <BarChart
+              dados={d.serie.map((x) => ({ rotulo: MES_CURTO[Number(x.mes.slice(5)) - 1], a: x.entrou, b: x.saiu }))}
+              rotuloA="Entrou"
+              rotuloB="Saiu (gastos + fatura)"
             />
-            {ext.totais.variacaoGasto !== null && (
-              <Text style={s.mudo}>
-                Gastos {ext.totais.variacaoGasto >= 0 ? '+' : ''}{ext.totais.variacaoGasto.toFixed(1).replace('.', ',')}% contra o mês anterior.
-              </Text>
-            )}
-          </View>
-          <Barras titulo="Gasto por categoria" itens={ext.totais.porCategoria} />
+          </Card>
         </>
       )}
 
-      {!ext && erro === 'token' && (
-        <View style={s.card}>
-          <Text style={s.texto}>Configure o token do Mercado Pago para ver seus dados.</Text>
-          <Link href="/configuracoes" style={s.link}>Abrir Configurações</Link>
-        </View>
-      )}
-      {!ext && erro && erro !== 'token' && (
-        <View style={s.card}>
-          <Text style={[s.texto, { color: '#ef7b7b' }]}>{erro}</Text>
-          <Text style={s.mudo}>Puxe a tela para baixo para tentar de novo.</Text>
-        </View>
-      )}
-      {carregando && !dados && !erro && <ActivityIndicator color={theme.tint} />}
-
-      {!ext && analise && analise.atual.recebido === 0 && analise.atual.gasto === 0 && (
-        <Text style={s.mudo}>Nenhuma movimentação neste mês ainda.</Text>
-      )}
-
-      {!ext && analise && (
+      {d.insights.length > 0 && (
         <>
-          <View style={s.card}>
-            <Text style={s.rotulo}>Este mês ({mesAtual})</Text>
-            <Linha nome="Recebido" valor={brl(analise.atual.recebido)} cor={theme.tint} />
-            <Linha nome="Gasto" valor={brl(analise.atual.gasto)} cor="#ef7b7b" />
-            <Linha
-              nome={analise.atual.sobra >= 0 ? 'Sobra' : 'Falta'}
-              valor={brl(Math.abs(analise.atual.sobra))}
-              cor={analise.atual.sobra >= 0 ? theme.tint : '#ef7b7b'}
-            />
-            <Text style={s.mudo}>
-              Mês anterior: recebido {brl(analise.anterior.recebido)}, gasto {brl(analise.anterior.gasto)}.
-            </Text>
-            {analise.atual.interno > 0 && (
-              <Text style={s.mudo}>Movimentação interna (fora dos totais): {brl(analise.atual.interno)}.</Text>
-            )}
-          </View>
-
-          <Barras titulo="Gasto por categoria" itens={analise.cats} />
-          <Barras titulo="Gasto por tipo de pagamento" itens={analise.tipos} />
-
-          <View style={s.card}>
-            <Text style={s.rotulo}>Maiores gastos do mês</Text>
-            {analise.maiores.length === 0 && <Text style={s.mudo}>Sem gastos.</Text>}
-            {analise.maiores.map((m) => (
-              <Linha key={m.id} nome={`${m.dia.slice(8)}/${m.dia.slice(5, 7)} ${m.descricao || m.categoria}`} valor={brl(m.valor)} />
-            ))}
-          </View>
-          {dados && <Text style={s.mudo}>Atualizado em {new Date(dados.atualizadoEm).toLocaleString('pt-BR')}</Text>}
+          <SectionHeader titulo="O que chamou atenção" />
+          {d.insights.map((i) => (
+            <InsightCard key={i.id} texto={i.texto} variante={i.tipo} icone={i.icone as never} />
+          ))}
         </>
       )}
 
-      <Link href="/configuracoes" style={s.link}>Configurações (chaves de API)</Link>
-      <Text style={s.mudo}>App educativo. Não é consultoria de investimentos registrada.</Text>
+      <View style={s.botoes}>
+        <View style={{ flex: 1 }}><Botao texto="Importar extrato" icone="cloud-upload-outline" secundario aoPressionar={importar} /></View>
+        <View style={{ flex: 1 }}><Botao texto="Atualizar" icone="refresh" secundario aoPressionar={carregar} /></View>
+      </View>
+      {aviso && <Text style={s.mudo}>{aviso}</Text>}
+
+      <Card>
+        <Text style={s.rotulo}>Seu nome (para reconhecer transferências entre suas contas)</Text>
+        <TextInput
+          style={s.input}
+          value={nome}
+          onChangeText={(t) => { setNome(t); salvarNome(t); }}
+          placeholder="Nome completo"
+          placeholderTextColor={cores.texto2}
+        />
+        <Pressable onPress={() => router.push('/perfil')}><Text style={s.link}>Perfil financeiro</Text></Pressable>
+        <Pressable onPress={() => router.push('/configuracoes')}><Text style={s.link}>Configurações (chaves de API)</Text></Pressable>
+      </Card>
+
+      <Text style={s.rodape}>Educativo, não é consultoria de investimentos.</Text>
     </ScrollView>
   );
 }
 
-function Linha({ nome, valor, cor }: { nome: string; valor: string; cor?: string }) {
-  return (
-    <View style={s.linha}>
-      <Text style={[s.texto, { flex: 1 }]} numberOfLines={1}>{nome}</Text>
-      <Text style={[s.texto, cor ? { color: cor } : null]}>{valor}</Text>
-    </View>
-  );
-}
-
-function Barras({ titulo, itens }: { titulo: string; itens: { nome: string; total: number }[] }) {
-  const max = Math.max(1, ...itens.map((i) => i.total));
-  return (
-    <View style={s.card}>
-      <Text style={s.rotulo}>{titulo}</Text>
-      {itens.length === 0 && <Text style={s.mudo}>Sem gastos.</Text>}
-      {itens.map((i) => (
-        <View key={i.nome} style={{ gap: 4 }}>
-          <Linha nome={i.nome} valor={brl(i.total)} />
-          <View style={s.trilho}>
-            <View style={[s.barra, { width: `${(i.total / max) * 100}%` }]} />
-          </View>
-        </View>
-      ))}
-    </View>
-  );
-}
-
 const s = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.bg },
-  content: { padding: 20, gap: 12 },
-  titulo: { color: theme.text, fontSize: 24, fontWeight: '700' },
-  card: { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderRadius: 10, padding: 14, gap: 8 },
-  rotulo: { color: theme.muted, fontSize: 13, fontWeight: '600' },
-  texto: { color: theme.text, fontSize: 15 },
-  mudo: { color: theme.muted, fontSize: 12 },
-  grande: { color: theme.text, fontSize: 22, fontWeight: '700' },
-  link: { color: theme.tint, fontSize: 16 },
-  input: { backgroundColor: theme.bg, color: theme.text, borderColor: theme.border, borderWidth: 1, borderRadius: 8, padding: 10 },
-  linha: { flexDirection: 'row', gap: 8, justifyContent: 'space-between' },
-  trilho: { height: 6, backgroundColor: theme.border, borderRadius: 3 },
-  botao: { backgroundColor: theme.tint, borderRadius: 8, padding: 12, alignItems: 'center' },
-  botaoTxt: { color: theme.bg, fontSize: 15, fontWeight: '700' },
-  chip: { borderColor: theme.border, borderWidth: 1, borderRadius: 16, paddingVertical: 6, paddingHorizontal: 12 },
-  chipOn: { backgroundColor: theme.tint },
-  barra: { height: 6, backgroundColor: theme.tint, borderRadius: 3 },
+  root: { flex: 1, backgroundColor: cores.fundo },
+  content: { paddingHorizontal: espaco.lg, paddingBottom: espaco.xl, gap: espaco.md },
+  topo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  mes: { color: cores.texto, fontSize: fonte.titulo, fontWeight: '700', flex: 1 },
+  sino: { padding: 4 },
+  contador: { position: 'absolute', top: -2, right: -4, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: cores.perigo, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+  contadorTxt: { color: cores.fundo, fontSize: 11, fontWeight: '800' },
+  rotulo: { color: cores.texto2, fontSize: fonte.corpo, fontWeight: '600' },
+  heroi: { color: cores.texto, fontSize: fonte.heroi, fontWeight: '800' },
+  sub: { color: cores.texto2, fontSize: fonte.corpo },
+  botoes: { flexDirection: 'row', gap: espaco.sm },
+  mudo: { color: cores.texto2, fontSize: fonte.pequena },
+  input: { backgroundColor: cores.fundo, color: cores.texto, borderColor: cores.borda, borderWidth: 1, borderRadius: 8, padding: 10 },
+  link: { color: cores.primaria, fontSize: fonte.corpo },
+  rodape: { color: cores.texto2, fontSize: 11, textAlign: 'center', opacity: 0.7 },
 });
