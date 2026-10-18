@@ -23,8 +23,8 @@ export const ehMovimentoInterno = (categoria: string) => categoria === CAT.INTER
 
 /** Categorias de gasto por palavra-chave na contraparte (ordem importa). */
 export const PALAVRAS_GASTO: [string, string[]][] = [
-  [CAT.COMIDA, ['ifood', '99 food', '99food', 'lanchonete', 'lanche', 'pizza', 'pizzaria', 'restaurante', 'acai', 'hamburgueria', 'padaria']],
-  [CAT.TRANSPORTE, ['uber']],
+  [CAT.COMIDA, ['ifood', '99 food', '99food', 'lanchonete', 'lanche', 'pizza', 'pizzaria', 'restaurante', 'acai', 'hamburgueria', 'padaria', 'ifd']],
+  [CAT.TRANSPORTE, ['uber', 'uberrides', '99pop', '99 pop', '99 tecnologia', '99tecnologia']],
   [CAT.TELEFONIA, ['tim', 'vivo', 'claro']],
   [CAT.ASSINATURAS, ['google', 'mp*melimais', 'melimais']],
 ];
@@ -43,6 +43,12 @@ export const PREFIXOS = {
   pixEnviado: ['pix enviado', 'transferencia pix enviada'],
   pagamento: ['pagamento com qr pix', 'pagamento com codigo qr', 'pagamento de conta', 'pagamento'],
 };
+
+/** Compra do cartão de crédito importada das faturas (scripts/faturas_para_csv.py). Já é o gasto de fato. */
+export const PREFIXO_COMPRA_CARTAO = 'pagamento com cartao visa ';
+export const ehCompraCartao = (tipo: string) => norm(tipo).startsWith(PREFIXO_COMPRA_CARTAO);
+/** Mês (YYYY-MM) da fatura de uma compra de cartão importada (ref "CARTAO-<fatura>-..."); outra linha: null. */
+export const faturaDaCompra = (ref: string): string | null => /^CARTAO-(\d{4}-\d{2})-/.exec(ref)?.[1] ?? null;
 
 /** Minúsculas, sem acento, espaços normalizados. */
 export function norm(t: string): string {

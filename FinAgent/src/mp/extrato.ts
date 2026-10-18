@@ -1,5 +1,5 @@
 // Funções puras para o extrato CSV do Mercado Pago (sem React Native).
-import { CAT, PREFIXOS, categoriaPorPalavra, ehMovimentoInterno, norm } from './categorias.ts';
+import { CAT, PREFIXOS, categoriaPorPalavra, ehCompraCartao, ehMovimentoInterno, faturaDaCompra, norm } from './categorias.ts';
 
 export type Transacao = {
   data: string; // YYYY-MM-DD
@@ -78,14 +78,17 @@ export function mesclar(existentes: Transacao[], novas: Transacao[]): Transacao[
 /** Saldo da conta = saldo parcial da última linha cronológica. */
 export function saldoFinal(trans: Transacao[]): { saldo: number; data: string } | null {
   if (trans.length === 0) return null;
-  const u = [...trans].sort((a, b) => a.data.localeCompare(b.data) || a.seq - b.seq)[trans.length - 1];
+  const conta = trans.filter((t) => !ehCompraCartao(t.tipo)); // compra de cartão não mexe no saldo da conta
+  if (conta.length === 0) return null;
+  const u = [...conta].sort((a, b) => a.data.localeCompare(b.data) || a.seq - b.seq)[conta.length - 1];
   return { saldo: u.saldo, data: u.data };
 }
 
 export const mesDe = (data: string) => data.slice(0, 7);
 
+/** Meses com movimento na conta. Compras de cartão importadas não contam (um mês só de cartão não é mês do extrato). */
 export function mesesDisponiveis(trans: Transacao[]): string[] {
-  return [...new Set(trans.map((t) => mesDe(t.data)))].sort().reverse();
+  return [...new Set(trans.filter((t) => !ehCompraCartao(t.tipo)).map((t) => mesDe(t.data)))].sort().reverse();
 }
 
 export function mesAnteriorDe(mes: string): string {
@@ -135,7 +138,7 @@ function classificarUma(t: Transacao, meuNome: string): Pick<Lancamento, 'catego
 
   p = comecaCom(n, PREFIXOS.pagamento);
   if (p) {
-    const contra = resto(p);
+    const contra = resto(p).replace(/^com cartao visa /, '');
     return { ...base, contraparte: contra, categoria: categoriaPorPalavra(contra) ?? CAT.OUTROS };
   }
 
@@ -158,6 +161,12 @@ function aplicarRegras(l: Lancamento, regras?: RegrasUsuario): Lancamento {
 /** Classifica as linhas e anula pares pagamento+estorno (mesma referência e valor oposto). `regras` é opcional. */
 export function classificarExtrato(trans: Transacao[], meuNome = '', regras?: RegrasUsuario): Lancamento[] {
   const lancs: Lancamento[] = trans.map((t) => aplicarRegras({ ...t, ...classificarUma(t, meuNome) }, regras));
+  // O pagamento do mês M quita a fatura de M-1. Se as compras dessa fatura foram importadas, contar o pagamento
+  // seria contar em dobro: vira movimento interno. Fatura não importada: o pagamento segue como gasto.
+  const faturasImportadas = new Set(trans.map((t) => faturaDaCompra(t.ref)).filter((f): f is string => f !== null));
+  for (const l of lancs) {
+    if (l.categoria === CAT.FATURA && faturasImportadas.has(mesAnteriorDe(mesDe(l.data)))) l.categoria = CAT.INTERNO;
+  }
   for (const e of lancs) {
     if (e.categoria !== CAT.ESTORNO || e.valor <= 0) continue;
     const par = lancs.find(

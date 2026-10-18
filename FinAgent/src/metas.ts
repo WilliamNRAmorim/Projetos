@@ -1,5 +1,5 @@
 // Funções puras das Metas (sem React Native). Valores monetários em reais.
-import { norm } from './mp/categorias.ts';
+import { ehCompraCartao, norm } from './mp/categorias.ts';
 import { classificarExtrato, mesDe, mesesDisponiveis, parseValorBR, totaisMes, type RegrasUsuario, type Transacao } from './mp/extrato.ts';
 import { LIMITE_ATENCAO_ATE, LIMITE_OK_ATE, MESES_NA_MEDIA } from './metasConfig.ts';
 
@@ -141,7 +141,8 @@ export function mediaGastoMensal(trans: Transacao[], meuNome: string, hoje: Date
   const todos = mesesDisponiveis(trans);
   if (todos.length === 0) return null;
   const atual = mesDe(`${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-01`);
-  const primeiraData = trans.reduce((min, t) => (t.data < min ? t.data : min), trans[0].data);
+  const daConta = trans.filter((t) => !ehCompraCartao(t.tipo));
+  const primeiraData = daConta.reduce((min, t) => (t.data < min ? t.data : min), daConta[0].data);
   const primeiroParcial = Number(primeiraData.slice(8)) > 3 ? mesDe(primeiraData) : null;
   const completos = todos.filter((m) => m !== atual && m !== primeiroParcial);
   const parcial = completos.length === 0;
