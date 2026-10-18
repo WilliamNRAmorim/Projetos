@@ -6,11 +6,14 @@ export const AVISO_LEITURA = 'Indicador não prevê o futuro. Educativo, não é
 
 const pct = (n: number) => `${Math.abs(n).toFixed(1).replace('.', ',')}%`;
 
+const RESERVA_FRASE = 'Antes de renda variável vem a reserva. ';
+const RESERVA_PRIMEIRO: Record<TipoAtivo, string> = { moeda: '', cripto: RESERVA_FRASE, acao: RESERVA_FRASE };
+
 const SUJEITO: Record<TipoAtivo, string> = { moeda: 'A cotação', cripto: 'O preço', acao: 'O preço' };
 
 export function gerarLeitura(nome: string, tipo: TipoAtivo, ind: Indicadores | null): string {
   if (!ind || ind.pontos < 10) {
-    return `Ainda não há histórico suficiente de ${nome} para calcular indicadores. ${AVISO_LEITURA}`;
+    return `Ainda não há histórico suficiente de ${nome} para calcular indicadores. ${RESERVA_PRIMEIRO[tipo]}${AVISO_LEITURA}`;
   }
   const partes: string[] = [];
 
@@ -29,7 +32,7 @@ export function gerarLeitura(nome: string, tipo: TipoAtivo, ind: Indicadores | n
     } else {
       partes.push(
         `${SUJEITO[tipo]} de ${nome} está ${pct(dif)} abaixo d${ref}. ` +
-          'Estar abaixo da média pode indicar desconto, mas também pode refletir uma queda que continua; por isso muita gente prefere fracionar as decisões.',
+          'Estar abaixo da média pode indicar que o preço caiu recentemente, mas também pode refletir uma queda que continua; por isso muita gente prefere fracionar as decisões.',
       );
     }
   }
@@ -62,6 +65,7 @@ export function gerarLeitura(nome: string, tipo: TipoAtivo, ind: Indicadores | n
   }
 
   partes.push('Essa leitura muda se o preço romper a faixa recente ou se o cenário econômico mudar.');
+  if (RESERVA_PRIMEIRO[tipo]) partes.push(RESERVA_PRIMEIRO[tipo].trim());
   partes.push(AVISO_LEITURA);
   return partes.join(' ');
 }
@@ -72,6 +76,9 @@ function tipoVol(v: number): string {
 
 export type ItemResumo = { nome: string; tipo: TipoAtivo; ind: Indicadores | null };
 
+/** Texto vindo de API vai para o contexto da IA sem colchetes (não forja os delimitadores do bloco de dados). */
+export const semColchetes = (t: string) => t.replace(/[[\]]/g, ' ').replace(/\s+/g, ' ').trim();
+
 /** Agregados da watchlist, sem dados pessoais, para o Economista. */
 export function montarResumo(itens: ItemResumo[]): string {
   const f = (n: number | null, d = 1) => (n == null ? 'n/d' : n.toFixed(d));
@@ -79,7 +86,7 @@ export function montarResumo(itens: ItemResumo[]): string {
     .filter((i) => i.ind)
     .map((i) => {
       const x = i.ind!;
-      return `- ${i.nome} (${i.tipo}): preço ${f(x.preco, 2)}, 1d ${f(x.var1d)}%, 7d ${f(x.var7d)}%, 30d ${f(x.var30d)}%, 90d ${f(x.var90d)}%, RSI ${f(x.rsi14, 0)}, posição no intervalo ${f(x.posicao, 0)}%, vol. diária ${f(x.volatilidade)}%, tendência ${x.tendencia}`;
+      return `- ${semColchetes(i.nome)} (${i.tipo}): preço ${f(x.preco, 2)}, 1d ${f(x.var1d)}%, 7d ${f(x.var7d)}%, 30d ${f(x.var30d)}%, 90d ${f(x.var90d)}%, RSI ${f(x.rsi14, 0)}, posição no intervalo ${f(x.posicao, 0)}%, vol. diária ${f(x.volatilidade)}%, tendência ${x.tendencia}`;
     });
   if (!linhas.length) return 'Mercado: sem dados de mercado disponíveis.';
   return ['Mercado (indicadores da watchlist, sem dados pessoais; indicador não prevê o futuro):', ...linhas].join('\n');
