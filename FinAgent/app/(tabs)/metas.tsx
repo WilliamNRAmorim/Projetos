@@ -29,7 +29,9 @@ import {
 const pct = (n: number) => `${n.toFixed(1).replace('.', ',')}%`;
 const dec = (n: number) => String(n).replace('.', ',');
 const num = (t: string) => (t.trim() ? parseValorBR(t) : null);
-const fmtCampo = (n: number | null) => (n === null ? '' : dec(n));
+/** "2026-10" -> "10/2026"; "2026-10-18" -> "18/10/2026". */
+const formatarInicio = (i: string) => (i.length === 10 ? `${i.slice(8)}/${i.slice(5, 7)}/${i.slice(0, 4)}` : `${i.slice(5)}/${i.slice(0, 4)}`);
+const fmtCampo =(n: number | null) => (n === null ? '' : dec(n));
 
 export default function Metas() {
   const [texto, setTexto] = useState<PerfilTexto>(PERFIL_VAZIO);
@@ -352,7 +354,7 @@ export default function Metas() {
                 )}
               </Card>
             ))}
-            <Nota>{`Corte progressivo a partir de ${inicioCorte}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores ao início, congelada na primeira vez que as faturas do cartão estão importadas. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
+            <Nota>{`Corte progressivo a partir de ${formatarInicio(inicioCorte ?? '')}: -10% no 1º mês, -20% no 2º, -30% no 3º, depois mantém. A base é a média dos 3 meses anteriores ao início, congelada na primeira vez que as faturas do cartão estão importadas. O mês atual só inclui o cartão depois de importar a fatura dele.`}</Nota>
           </>
         )}
       </Card>

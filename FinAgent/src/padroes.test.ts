@@ -17,6 +17,10 @@ assert.equal(inicioDaSemana('2026-10-11'), '2026-10-05'); // domingo
 assert.equal(somarDias('2026-12-30', 3), '2027-01-02');
 assert.equal(primeiraSemanaDoPlano('2026-10'), '2026-10-05'); // 1/10 é quinta
 assert.equal(primeiraSemanaDoPlano('2026-06'), '2026-06-01'); // já é segunda
+// plano reiniciado em uma data: vale a próxima segunda (ou o próprio dia, se for segunda)
+assert.equal(primeiraSemanaDoPlano('2026-10-18'), '2026-10-19'); // domingo
+assert.equal(primeiraSemanaDoPlano('2026-10-19'), '2026-10-19'); // segunda
+assert.equal(primeiraSemanaDoPlano('2026-10-21'), '2026-10-26'); // quarta
 
 // 12 semanas de histórico (13/07 a 04/10): semana solta (>=100) no sábado, as outras na terça
 const hist = [100, 40, 150, 30, 160, 50, 170, 40, 140, 60, 150, 30];
@@ -61,6 +65,14 @@ assert.equal(bom.diaMaisSolto, 5);
 assert.equal(bom.dias[5], 78);
 assert.deepEqual(bom.transicao.aposContida, { amostra: 3, pSolta: 67 });
 assert.deepEqual(bom.transicao.aposSolta, { amostra: 4, pSolta: 0 });
+
+// reiniciar o plano no meio do mês (domingo 18/10): o nível volta a zero e as semanas de out passam a ser histórico
+const lancsBom = monta([['2026-10-06', 60], ['2026-10-13', 70], ['2026-10-19', 20], ['2026-10-20', 30]]);
+const reiniciado = analisarPadroes(lancsBom, transp, '2026-10-18', '2026-10-21')!;
+assert.equal(reiniciado.plano.nivel, 0);
+assert.equal(reiniciado.plano.semanasNoPlano, 0);
+assert.equal(reiniciado.plano.alvo, reiniciado.perfil.mediana);
+assert.equal(reiniciado.atual.gasto, 50); // a semana em andamento continua sendo medida
 
 // uma semana solta isolada NÃO muda o nível; só compensa parte do excesso na seguinte (50% do excesso, máx. 20% do alvo)
 const solta1 = analisarPadroes(monta([['2026-10-11', 200]]), transp, '2026-10', '2026-10-14')!;

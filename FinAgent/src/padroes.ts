@@ -232,9 +232,9 @@ export type AnalisePadroes = {
   atual: SemanaAtual;
 };
 
-/** Primeira segunda-feira em ou depois do dia 1 do mês de início do plano. */
-export function primeiraSemanaDoPlano(inicioMes: string): string {
-  const d = `${inicioMes}-01`;
+/** Primeira segunda-feira em ou depois do início do plano. `inicio` é "YYYY-MM" (vale o dia 1) ou "YYYY-MM-DD" (plano reiniciado nesse dia). */
+export function primeiraSemanaDoPlano(inicio: string): string {
+  const d = inicio.length === 10 ? inicio : `${inicio}-01`;
   const dow = diaDaSemana(d);
   return dow === 0 ? d : somarDias(d, 7 - dow);
 }

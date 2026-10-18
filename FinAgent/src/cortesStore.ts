@@ -9,7 +9,7 @@ export async function lerInicioCorte(hoje = new Date()): Promise<string> {
   const padrao = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
   try {
     const t = await AsyncStorage.getItem(K_INICIO);
-    if (t && /^\d{4}-\d{2}$/.test(t)) return t;
+    if (t && /^\d{4}-\d{2}(-\d{2})?$/.test(t)) return t;
     await AsyncStorage.setItem(K_INICIO, padrao);
   } catch {
     // sem armazenamento: usa o mês atual
@@ -41,9 +41,13 @@ export async function salvarBasesCorte(bases: BasesCorte): Promise<void> {
   }
 }
 
-/** Recomeça o plano no mês atual e descarta as bases congeladas (serão recalculadas e congeladas de novo). */
+/**
+ * Recomeça o plano HOJE: o início passa a ser a data de hoje (YYYY-MM-DD). O nível semanal volta a zero e só conta as semanas
+ * a partir da próxima segunda-feira (ou de hoje, se for segunda); o degrau mensal recomeça em -10% neste mês.
+ * Descarta as bases congeladas (serão recalculadas e congeladas de novo).
+ */
 export async function reiniciarPlanoCorte(hoje = new Date()): Promise<string> {
-  const mes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+  const mes = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
   try {
     await AsyncStorage.setItem(K_INICIO, mes);
     await AsyncStorage.removeItem(K_BASES);

@@ -1,6 +1,6 @@
 // Rodar: node src/cortes.test.ts. Fixtures FICTÍCIOS.
 import assert from 'node:assert/strict';
-import { classificarExtrato, mesesDisponiveis, saldoFinal, type Transacao } from './mp/extrato.ts';
+import { classificarExtrato, mesclar, mesesDisponiveis, saldoFinal, type Transacao } from './mp/extrato.ts';
 import { GRUPOS_CORTE, baseDoGrupo, basesParaCongelar, cartaoCobreABase, degrauDoMes, gastoDoGrupo, metaDeCorte, metasDeCorte, proximoMes } from './cortes.ts';
 
 let seq = 0;
@@ -74,5 +74,15 @@ assert.deepEqual(basesParaCongelar(metasAgora, { transporte: 100 }, true), { del
 const fixa = metaDeCorte(lancs, transp, '2026-10', '2026-10', { transporte: 300 });
 assert.equal(fixa.base, 300);
 assert.equal(fixa.teto, 270); // -10% sobre a base congelada, não sobre a recalculada
+
+// importar SÓ a fatura nova soma ao que já está no app, sem duplicar nem perder (ref inclui o mês da fatura)
+const cartaoDaFatura = (fatura: string, data: string, v: number, n = 1): Transacao => ({
+  data, tipo: 'Pagamento com cartão Visa DL*UberRides', ref: `CARTAO-${fatura}-${data}-${v.toFixed(2)}-${n}`, valor: -v, saldo: 0, seq: seq++,
+});
+const jaNoApp = [cartaoDaFatura('2026-09', '2026-09-20', 25), cartaoDaFatura('2026-09', '2026-09-28', 30)];
+const faturaOutubro = [cartaoDaFatura('2026-10', '2026-09-30', 25), cartaoDaFatura('2026-10', '2026-10-03', 12)]; // 25,00 de novo, outra fatura
+const somado = mesclar(jaNoApp, faturaOutubro);
+assert.equal(somado.length, 4); // a compra de 25,00 repetida em outra fatura NÃO é descartada
+assert.equal(mesclar(somado, faturaOutubro).length, 4); // importar a mesma fatura de novo não duplica
 
 console.log('cortes: ok');
