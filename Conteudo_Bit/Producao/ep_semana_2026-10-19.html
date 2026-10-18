@@ -1,0 +1,59 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>semana 19-10</title>
+<script src="brand.js"></script><script src="bit_art.js"></script><script src="ep_kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222;padding:16px}canvas{width:360px}</style></head><body>
+<script>
+// Semana 19–25/10: 14 vídeos SEM voz (cota do ElevenLabs esgotada: a API devolve 401 para qualquer fala). ?ep=<chave>.
+// Textos das falas: falas_2026-10-19.json (mesma ordem de EPS[chave].falas). Fatos e fontes: Semanal/semana-2026-10-19/plano.md.
+const { W, H, clamp, out, inout, txt, rnd } = EpKit;
+const P = BRAND.paper, A = BRAND.accent, MU = BRAND.mute, I2 = BRAND.ink2, INK = BRAND.ink, OK = '#3DDC97';
+const ART = {};
+const bit = (g, k, cx, bottom, h) => BitArt.draw(g, ART[k], cx, bottom, h);
+const bitEsq = (g, k, cx, bottom, h) => { g.save(); g.translate(cx, 0); g.scale(-1, 1); BitArt.draw(g, ART[k], 0, bottom, h); g.restore(); };
+const et = (g, s, x, y, col = MU, size = 30) => txt(g, s, x, y, size, col, { mono: true, w: 700 });
+const X0 = 90, XR = 940, CW = XR - X0;
+const ap = (k, a, d = 0.12) => clamp((k - a) / d);
+const fade = (g, a, fn) => { if (a <= 0) return; g.save(); g.globalAlpha *= a; fn(); g.restore(); };
+function caixa(g, x, y, w, h, col = P, lw = 5) { g.strokeStyle = col; g.lineWidth = lw; g.strokeRect(x, y, w, h); }
+function painel(g, x, y, w, h, col = P, fill = I2) { g.fillStyle = fill; g.fillRect(x, y, w, h); caixa(g, x, y, w, h, col); }
+function tremor(g, u, t0, amt = 14) { const d = u - t0; if (d < 0 || d > 0.35) return; const a = amt * (1 - d / 0.35); g.translate((rnd(u * 97) - 0.5) * 2 * a, (rnd(u * 53) - 0.5) * 2 * a); }
+function linhas(g, L, x, y, k, k0 = 0.05, passo = 0.14, size = 120) { let yy = y; L.forEach(([s, c, sz], i) => { const z = sz || size; if (i) yy += z * 1.08; const y0 = yy; fade(g, ap(k, k0 + i * passo, 0.08), () => txt(g, s, x, y0, z, c)); }); }
+function terminal(g, x, y, w, h, L, k, k0 = 0.05, passo = 0.1, size = 30) { painel(g, x, y, w, h, MU); L.forEach(([s, c], i) => fade(g, ap(k, k0 + i * passo, 0.05), () => et(g, s, x + 30, y + 60 + i * size * 1.6, c || P, size))); }
+function tecla(g, x, y, w, s, on, size = 64, h = 190) { g.fillStyle = MU; g.fillRect(x, y + 20, w, h); g.fillStyle = on ? A : P; g.fillRect(x, y + (on ? 14 : 0), w, h); txt(g, s, x + w / 2, y + h * 0.63 + (on ? 14 : 0), size, INK, { align: 'center' }); }
+function relogio(g, cx, cy, r, hh, mm, col = P) { g.strokeStyle = col; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+  for (let i = 0; i < 12; i++) { const a = i * Math.PI / 6; g.fillStyle = col; g.fillRect(cx + Math.sin(a) * r * 0.82 - 5, cy - Math.cos(a) * r * 0.82 - 5, 10, 10); }
+  const ah = ((hh % 12) + mm / 60) * Math.PI / 6, am = mm * Math.PI / 30; g.lineCap = 'butt';
+  g.lineWidth = 14; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(ah) * r * 0.5, cy - Math.cos(ah) * r * 0.5); g.stroke();
+  g.strokeStyle = A; g.lineWidth = 8; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(am) * r * 0.75, cy - Math.cos(am) * r * 0.75); g.stroke(); }
+function envelope(g, x, y, w, col = P, fill = I2) { const h = w * 0.66; g.fillStyle = fill; g.fillRect(x, y, w, h); g.strokeStyle = col; g.lineWidth = Math.max(2, w / 22); g.strokeRect(x, y, w, h); g.beginPath(); g.moveTo(x, y); g.lineTo(x + w / 2, y + h * 0.55); g.lineTo(x + w, y); g.stroke(); }
+function xis(g, cx, cy, s, col = A, lw = 12) { g.strokeStyle = col; g.lineWidth = lw; g.beginPath(); g.moveTo(cx - s, cy - s); g.lineTo(cx + s, cy + s); g.moveTo(cx + s, cy - s); g.lineTo(cx - s, cy + s); g.stroke(); }
+function cursor(g, x, y, s = 1) { g.fillStyle = P; g.beginPath(); g.moveTo(x, y); g.lineTo(x, y + 60 * s); g.lineTo(x + 16 * s, y + 46 * s); g.lineTo(x + 30 * s, y + 76 * s); g.lineTo(x + 42 * s, y + 70 * s); g.lineTo(x + 28 * s, y + 42 * s); g.lineTo(x + 48 * s, y + 40 * s); g.closePath(); g.fill(); g.strokeStyle = INK; g.lineWidth = 3; g.stroke(); }
+function servidor(g, x, y, w, h, col, lab) { painel(g, x, y, w, h, col); for (let i = 0; i < 3; i++) { g.fillStyle = col; g.fillRect(x + 12, y + 14 + i * 22, w - 24, 8); } if (lab) et(g, lab, x + w / 2 - 8, y + h + 36, col, 26); }
+function ipodDesenho(g, x, y, s, rot = 0, tela = true) { const w = 300 * s, h = 480 * s; g.fillStyle = P; g.fillRect(x, y, w, h); g.strokeStyle = MU; g.lineWidth = 4; g.strokeRect(x, y, w, h);
+  g.fillStyle = INK; g.fillRect(x + 30 * s, y + 36 * s, w - 60 * s, 170 * s); if (tela) { g.fillStyle = A; g.fillRect(x + 44 * s, y + 52 * s + (rot % 3) * 0, 40 * s, 14 * s); g.fillStyle = MU; for (let i = 0; i < 4; i++) g.fillRect(x + 44 * s, y + 84 * s + i * 26 * s, (w - 100 * s) * (0.5 + 0.4 * rnd(i + Math.floor(rot))), 10 * s); }
+  g.strokeStyle = MU; g.lineWidth = 6 * s; g.beginPath(); g.arc(x + w / 2, y + 330 * s, 100 * s, 0, 7); g.stroke(); g.fillStyle = A; const a = rot; g.beginPath(); g.arc(x + w / 2 + Math.cos(a) * 100 * s, y + 330 * s + Math.sin(a) * 100 * s, 12 * s, 0, 7); g.fill(); g.strokeStyle = MU; g.beginPath(); g.arc(x + w / 2, y + 330 * s, 34 * s, 0, 7); g.stroke(); }
+function carrega(src) { return carregar(src); }
+</script>
+<script src="eps19_a.js"></script>
+<script src="eps19_b.js"></script>
+<script>
+const EPS = { ...EPSA, ...EPSB };
+const abre = src => new Promise((ok, erro) => { const im = new Image(); im.onload = () => ok(im); im.onerror = erro; im.src = src; }); // onload: decode() trava com a aba oculta
+async function carregar(src) { const im = await abre(src); const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0); return BitArt.cutout(await abre(c.toDataURL())); }
+const q = new URLSearchParams(location.search), CH = q.get('ep') || 'tesler', E = EPS[CH];
+(async () => {
+  const J = await (await fetch('/w/falas_2026-10-19.json')).json();
+  E.falas.forEach((f, i) => f.txt = J[CH][i]);
+  if (E.falas.some(f => !f.txt)) throw new Error('falas do JSON não batem com ' + CH);
+  const longo = E.falas.length > 6;
+  await EpKit.run({
+    falas: E.falas, cenas: E.cenas, semVoz: true, lead: 0.05, gap: 0.3, tail: 1.0, grao: 0.04, bitrate: longo ? 1.35e6 : 2.4e6, cbr: true, abitrate: 96000,
+    dir: 'semana-2026-10-19', out: E.out, musica: () => 0.2,
+    prep: async () => {
+      for (const k of ['bit_surpreso', 'bit_joinha', 'bit_confuso', 'bit_comemorando', 'bit_apontando', 'bit_rindo']) ART[k] = await carregar(`/Marca/banco/${k}.png`);
+      for (const k of ['bit_lupa', 'bit_pensando', 'bit_dev_alibi']) ART[k] = await carregar(`/Marca/bit/${k}.png`);
+    },
+  });
+})().catch(e => { document.title = 'ERROR ' + e.message; console.error(e); });
+</script></body></html>
