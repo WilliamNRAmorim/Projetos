@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { Fragment, useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
 import { Tela } from '@/src/Tela';
@@ -25,6 +26,7 @@ export default function Configuracoes() {
 
   return (
     <Tela titulo="Configurações" texto="Cole cada chave abaixo. Elas ficam só no armazenamento seguro do aparelho e nunca são exibidas de volta.">
+      <Link href="/perfil" style={s.link}>Perfil financeiro (salário, parcela, cartão, reservas)</Link>
       {CHAVES.map((c) => (
         <Fragment key={c.nome}>
           <Text style={s.rotulo}>
@@ -50,6 +52,7 @@ export default function Configuracoes() {
 }
 
 const s = StyleSheet.create({
+  link: { color: theme.tint, fontSize: 16 },
   rotulo: { color: theme.text, fontSize: 15, marginTop: 8 },
   input: { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, borderWidth: 1, borderRadius: 8, padding: 12 },
   botao: { backgroundColor: theme.tint, borderRadius: 8, padding: 12, alignItems: 'center' },

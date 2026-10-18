@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { theme } from '@/src/theme';
@@ -9,13 +9,16 @@ import {
   classificarExtrato, mesesDisponiveis, saldoFinal, totaisMes, type Transacao,
 } from '@/src/mp/extrato';
 import { importarExtratos, lerExtrato, lerNome, salvarNome } from '@/src/mp/extratoStore';
-import { DadosMP, SemTokenError, atualizar, lerCache, lerSaldo, parseValor, salvarSaldo } from '@/src/mp/api';
+import { DadosMP, SemTokenError, atualizar, lerCache } from '@/src/mp/api';
+import { parseValorBR } from '@/src/mp/extrato';
+import { PERFIL_VAZIO, validarCampo, type PerfilTexto } from '@/src/metas';
+import { lerPerfil, salvarPerfil } from '@/src/perfil';
 
 export default function Painel() {
   const [dados, setDados] = useState<DadosMP | null>(null);
   const [erro, setErro] = useState<'token' | string | null>(null);
   const [carregando, setCarregando] = useState(true);
-  const [saldo, setSaldo] = useState('');
+  const [perfil, setPerfil] = useState<PerfilTexto>(PERFIL_VAZIO);
   const [extrato, setExtrato] = useState<Transacao[]>([]);
   const [meuNome, setMeuNome] = useState('');
   const [mesSel, setMesSel] = useState<string | null>(null);
@@ -46,7 +49,6 @@ export default function Painel() {
 
   useEffect(() => {
     (async () => {
-      setSaldo(await lerSaldo());
       setExtrato(await lerExtrato());
       setMeuNome(await lerNome());
       const c = await lerCache();
@@ -54,6 +56,18 @@ export default function Painel() {
       await carregar();
     })();
   }, [carregar]);
+
+  useFocusEffect(
+    useCallback(() => {
+      lerPerfil().then(setPerfil);
+    }, []),
+  );
+
+  const mudarReserva = (k: 'cofrinho' | 'separadoAparelho', v: string) => {
+    const novo = { ...perfil, [k]: v };
+    setPerfil(novo);
+    if (!validarCampo(k, v)) salvarPerfil(novo);
+  };
 
   const mesAtual = chaveMes(new Date().toISOString());
   const analise = useMemo(() => {
@@ -76,7 +90,8 @@ export default function Painel() {
     return { totais: totaisMes(lancs, mesExt), saldo: saldoFinal(extrato) };
   }, [extrato, meuNome, mesExt]);
 
-  const saldoNum = parseValor(saldo);
+  const cofrinhoNum = parseValorBR(perfil.cofrinho);
+  const aparelhoNum = parseValorBR(perfil.separadoAparelho);
 
   return (
     <ScrollView
@@ -87,16 +102,27 @@ export default function Painel() {
       <Text style={s.titulo}>Painel</Text>
 
       <View style={s.card}>
-        <Text style={s.rotulo}>{ext ? 'Reserva Emergências/Cofrinho (informe manualmente)' : 'Saldo (informe manualmente)'}</Text>
+        <Text style={s.rotulo}>Cofrinho (reserva, informe manualmente)</Text>
         <TextInput
           style={s.input}
-          value={saldo}
-          onChangeText={(t) => { setSaldo(t); salvarSaldo(t); }}
+          value={perfil.cofrinho}
+          onChangeText={(t) => mudarReserva('cofrinho', t)}
           placeholder="0,00"
           placeholderTextColor={theme.muted}
           keyboardType="decimal-pad"
         />
-        {saldoNum !== null && <Text style={s.grande}>{brl(saldoNum)}</Text>}
+        {cofrinhoNum !== null && <Text style={s.grande}>{brl(cofrinhoNum)}</Text>}
+        <Text style={s.rotulo}>Separado para a parcela do aparelho (Emergências)</Text>
+        <TextInput
+          style={s.input}
+          value={perfil.separadoAparelho}
+          onChangeText={(t) => mudarReserva('separadoAparelho', t)}
+          placeholder="0,00"
+          placeholderTextColor={theme.muted}
+          keyboardType="decimal-pad"
+        />
+        {aparelhoNum !== null && <Text style={s.grande}>{brl(aparelhoNum)}</Text>}
+        <Link href="/perfil" style={s.link}>Perfil financeiro</Link>
       </View>
 
       <View style={s.card}>
@@ -138,7 +164,7 @@ export default function Painel() {
             <Linha nome="Fatura do cartão" valor={brl(ext.totais.fatura)} />
             <Linha nome="Rendimentos" valor={brl(ext.totais.rendimentos)} />
             <Linha
-              nome={ext.totais.reservaLiquida >= 0 ? 'Foi para a reserva Emergências' : 'Saiu da reserva Emergências'}
+              nome={ext.totais.reservaLiquida >= 0 ? 'Foi para o separado do aparelho (Emergências)' : 'Saiu do separado do aparelho (Emergências)'}
               valor={brl(Math.abs(ext.totais.reservaLiquida))}
             />
             {ext.totais.variacaoGasto !== null && (
