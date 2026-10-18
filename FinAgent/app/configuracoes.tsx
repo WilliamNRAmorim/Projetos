@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { Fragment, useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, TextInput } from 'react-native';
+import { Alert, Pressable, Share, StyleSheet, Text, TextInput } from 'react-native';
+import { gerarExport } from '@/src/exportarCarregar';
 import { Tela } from '@/src/Tela';
 import { CHAVES, NomeChave, getSecret, setSecret } from '@/src/secrets';
 import { theme } from '@/src/theme';
@@ -24,9 +25,32 @@ export default function Configuracoes() {
     Alert.alert('Pronto', 'Chave guardada com segurança neste aparelho.');
   }
 
+  const exportar = () =>
+    Alert.alert(
+      'Exportar para o Claude',
+      'Gera um texto com seu perfil, gastos, metas, padrões e transações. Chaves, CPF, e-mail e seu nome não vão. Nomes de pessoas em Pix viram "pessoa", e vendedores de marketplace e restaurantes de app viram só a marca. Você escolhe para onde enviar (ex.: você mesmo) e cola na conversa com o Claude.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Gerar e compartilhar',
+          onPress: async () => {
+            try {
+              const texto = await gerarExport();
+              await Share.share({ title: 'FinAgent: exportação para o economista', message: texto });
+            } catch {
+              Alert.alert('Não foi possível exportar', 'Tente de novo.');
+            }
+          },
+        },
+      ],
+    );
+
   return (
     <Tela titulo="Configurações" texto="Cole cada chave abaixo. Elas ficam só no armazenamento seguro do aparelho e nunca são exibidas de volta.">
       <Link href="/perfil" style={s.link}>Perfil financeiro (salário, parcela, cartão, reservas)</Link>
+      <Pressable style={s.botao} onPress={exportar}>
+        <Text style={s.botaoTxt}>Exportar tudo para o Claude (economista)</Text>
+      </Pressable>
       {CHAVES.map((c) => (
         <Fragment key={c.nome}>
           <Text style={s.rotulo}>
