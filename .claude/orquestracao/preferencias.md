@@ -27,3 +27,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-10-15: objetivo da divergencia GMS x MB51: o GMS deve ser espelho do SAP (OP do SAP manda; ficha de OP so-SAP troca a OP pela do SAP; metragem do SAP fica na ficha). Autorizou escrita no SharePoint por conversa; apagar so para a lixeira.
 - 2026-10-16: reconstruir OPs so do SAP de 5 em 5 (os piores) e mostrar antes de aprovar o lote todo; o BD Packing List (GMS/Sharepoint Data GMS) e a fonte dos lances perdidos; GMS ja ficou fora do ar em datas que ele nao lembra.
 - 2026-10-18 | FinAgent: aceitou as recomendadas — Expo/React Native, sem servidor, Gemini gratuito em vez de API paga, escopo completo do redesenho, IA recebe só faixas e percentuais, guarda bloqueia e refaz.
+2026-10-18 | economista/metas: William aceitou plano completo e deu os degraus 10/20/30 e duas metas separadas (escolha de estilo)
