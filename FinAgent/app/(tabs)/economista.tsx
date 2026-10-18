@@ -8,9 +8,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ask, mensagemDoErro, type TipoErroIA } from '@/src/ai';
 import { carregarContexto } from '@/src/economista/carregar';
 import { contextoParaJson } from '@/src/economista/contexto';
-import { aplicarGuarda } from '@/src/economista/guarda';
 import { lerHistorico, limparHistorico, salvarHistorico, type MensagemChat } from '@/src/economista/historico';
 import { PERSONA } from '@/src/economista/persona';
+import { responderComGuarda } from '@/src/economista/responder';
 import { Botao, Card, cores, espaco, fonte, raio } from '@/src/ui';
 
 const SUGESTOES = [
@@ -53,11 +53,12 @@ export default function Economista() {
       } catch {
         dados = undefined; // sem contexto: a persona manda pedir os dados que faltam
       }
-      const resposta = await ask(
+      // Se a guarda disparar, a resposta é descartada e o Gemini é chamado UMA vez de novo com um lembrete;
+      // só a segunda aparece (com aviso se ela também disparar). A primeira nunca é mostrada.
+      const g = await responderComGuarda(
+        (m) => ask(m, { system: PERSONA, data: dados, temperature: 0.4, maxOutputTokens: 3072, thinkingBudget: 1024 }),
         comUser.slice(-MAX_API).map((m) => ({ role: m.role, content: m.content })),
-        { system: PERSONA, data: dados, temperature: 0.4, maxOutputTokens: 3072, thinkingBudget: 1024 },
       );
-      const g = aplicarGuarda(resposta);
       const final = [...comUser, { id: novoId(), role: 'assistant' as const, content: g.texto, aviso: g.aviso, flags: g.flags }];
       setMsgs(final);
       await salvarHistorico(final);
@@ -98,7 +99,7 @@ export default function Economista() {
 
       <Pressable onPress={abrirDados}>
         <Card style={s.aviso}>
-          <Text style={s.avisoTxt}>Educativo, não é consultoria de investimentos. Seus números enviados ao Gemini são só totais, sem nomes.</Text>
+          <Text style={s.avisoTxt}>Educativo, não é consultoria de investimentos. Os dados enviados ao Gemini são só faixas e percentuais, sem nomes.</Text>
           <Text style={s.avisoLink}>Toque para ver exatamente o que é enviado</Text>
         </Card>
       </Pressable>
@@ -169,7 +170,7 @@ export default function Economista() {
         <View style={s.modalFundo}>
           <View style={s.modal}>
             <Text style={s.modalTitulo}>Dados enviados ao Gemini</Text>
-            <Text style={s.modalSub}>Só totais e indicadores. Nenhum nome, CPF, descrição de transação ou chave.</Text>
+            <Text style={s.modalSub}>Só faixas e percentuais (nenhum valor exato de salário, saldo, limite ou fatura). Nenhum nome, CPF, descrição de transação ou chave.</Text>
             <ScrollView style={s.modalCorpo}>
               <Text style={s.json} selectable>{verDados}</Text>
             </ScrollView>
