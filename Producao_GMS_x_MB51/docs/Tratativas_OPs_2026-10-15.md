@@ -130,3 +130,9 @@ Troca de 4 lances entre as duas OPs corrigida no GMS (itens 13538, 13539 -> 2984
 - 30479026 → 30424233: lances 18468, 18506 a 18510, 18513, 18515, 18518, 18520 (231,8 m).
 - 30462708 → 30447069: 18339, 18340; → 30433752: 18337, 18338; refugos 6026 a 6029 de 30433752 para 30462708.
 Para desfazer, voltar o OP_ID ao de origem. Pendentes: lance 17870 (86,8 m, OP 30447770) e SAP 67,8 m na 30406468; troca 17734/17735/17869 não aplicada; 21 OPs finalizadas sem packlist (cabine).
+
+### Segunda rodada Conferencia_SAP (19/10/2026)
+- 17734, 17735 (30406468 → 30447770) e 17869 (30447770 → 30406468). Fichas 3888 e 3902. Pendente: 17870 (86,8 m) e SAP 67,8 m na 30406468.
+- Troca completa 30424231 ↔ 30351277: 31 lances (676,0 m) e 14 lances (506,5 m). Fichas 3887 e 3806.
+- Lance 18709 (30529216): 16,9 → 16,1 m, igual ao SAP. Ficha 3996 (532,0 m).
+- Fora: 126/109 (SAP lançou refugo de 12,5 m como boa na 30223117), 140, 147 e os 21 sem packlist.
