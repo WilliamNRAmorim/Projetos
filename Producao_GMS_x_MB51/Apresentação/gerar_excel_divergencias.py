@@ -1,7 +1,8 @@
 """Gera Divergencias_GMS_x_SAP.xlsx (todas as OPs que ainda divergem, 20/05 a 20/09/2026) a partir de
 Conferencia_Lances_por_OP.xlsx e Pendentes_GMS_x_SAP.xlsx.
-Rodar na pasta Producao_GMS_x_MB51: python -I Apresentação/gerar_excel_divergencias.py"""
-import openpyxl, datetime, re, collections
+Rodar de qualquer pasta: python -I Producao_GMS_x_MB51/Apresentação/gerar_excel_divergencias.py"""
+import openpyxl, datetime, re, collections, os, pathlib
+os.chdir(pathlib.Path(__file__).resolve().parents[1])  # roda sempre a partir de Producao_GMS_x_MB51
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.table import Table, TableStyleInfo

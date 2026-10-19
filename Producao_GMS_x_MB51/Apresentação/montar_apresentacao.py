@@ -1,6 +1,7 @@
 """Monta a apresentação das tratativas GMS x SAP (MB51) no template Danfoss.
 Rodar nesta pasta: python -I montar_apresentacao.py (gera Tratativas_GMS_x_SAP.pptx a partir de template_base.pptx)."""
-import copy, io
+import copy, io, os, pathlib
+os.chdir(pathlib.Path(__file__).resolve().parent)
 from pptx import Presentation
 from pptx.util import Emu, Pt
 from pptx.dml.color import RGBColor
