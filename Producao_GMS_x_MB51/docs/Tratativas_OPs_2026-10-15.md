@@ -121,3 +121,12 @@ Divergência bruta por OP (soma do módulo de cada OP, incluindo OPs só no SAP)
 
 ## 19/10 - 29847619 / 29847701
 Troca de 4 lances entre as duas OPs corrigida no GMS (itens 13538, 13539 -> 29847701; 13525, 13528 -> 29847619). Fichas 3239 = 524,1 m e 3249 = 475,1 m. Confere com SAP e BD Packing List (958 e 960).
+
+## Conferencia_SAP: trocas aplicadas em 19/10/2026
+
+29 lances de RegistrosInspeção e 4 refugos (TiposErros 6026 a 6029) trocaram de OP para espelhar o SAP; fichas ajustadas (3919, 3924, 3932, 3921, 3973, 3895, 3958, 3940).
+- 30433523 ↔ 30433525: lances 18152 a 18160 (6) para a 30433525; 18063 a 18072 (8) para a 30433523.
+- 30447656 → 30424228: lance 18017 (137,6 m).
+- 30479026 → 30424233: lances 18468, 18506 a 18510, 18513, 18515, 18518, 18520 (231,8 m).
+- 30462708 → 30447069: 18339, 18340; → 30433752: 18337, 18338; refugos 6026 a 6029 de 30433752 para 30462708.
+Para desfazer, voltar o OP_ID ao de origem. Pendentes: lance 17870 (86,8 m, OP 30447770) e SAP 67,8 m na 30406468; troca 17734/17735/17869 não aplicada; 21 OPs finalizadas sem packlist (cabine).
