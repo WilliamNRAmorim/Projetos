@@ -105,6 +105,12 @@ wr.cell(lin, 1, 'Evolução da divergência bruta (soma de |dif| por OP)').font 
 bruta = round(sum(abs(r[11]) for r in D.values()), 1)
 for i, (a, b) in enumerate([('14/10 (antes das tratativas)', 37087), ('Depois das correções em lote', 13383), ('19/10 (hoje)', bruta)], 1):
     wr.cell(lin + i, 1, a).font = FN; c = wr.cell(lin + i, 2, b); c.font = FN; c.number_format = '#,##0.0'
-for i, w in enumerate([52, 8, 16, 16, 14, 14], 1): wr.column_dimensions[get_column_letter(i)].width = w
+prod = sum(r[9] for r in res if r[5] and ini <= r[5] < fim and str(r[0]) != '0' and r[9] is not None)
+l2 = lin + 5
+wr.cell(l2, 1, 'Divergência sobre a produção do período').font = Font(name='Segoe UI', size=11, bold=True)
+for i, (a, b, f) in enumerate([('Produção total no GMS (m)', round(prod, 1), '#,##0.0'), ('Divergência bruta hoje (m)', bruta, '#,##0.0'), ('% da produção', bruta / prod, '0.00%'),
+                               ('% em 14/10 (37.087 m)', 37087 / prod, '0.00%')], 1):
+    wr.cell(l2 + i, 1, a).font = FN; c = wr.cell(l2 + i, 2, b); c.font = FN; c.number_format = f
+for i, w in enumerate([52, 12, 16, 16, 14, 14], 1): wr.column_dimensions[get_column_letter(i)].width = w
 out.save('Apresentação/Divergencias_GMS_x_SAP.xlsx'); print('ok', len(D), bruta)
 for cat, a in agg.items(): print(cat, a)

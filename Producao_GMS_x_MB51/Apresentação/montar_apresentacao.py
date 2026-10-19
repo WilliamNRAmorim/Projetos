@@ -121,6 +121,7 @@ txt(s, 6900000, 3750000, 4880000, 2500000, [
     'SAP a mais: 564,5 m',
     'SAP a menos: −209,4 m',
     'Líquido: +355,1 m',
+    ('Produção do período: 515.465 m. Divergência bruta de 774 m = 0,15% (era 7,19% em 14/10).', {'b': True}),
     ('Tudo que sobrou tem causa identificada e está nas próximas páginas.', {'s': 13, 'c': GREY})], size=15, space=6)
 rodape(s, 'Divergência bruta por OP = soma de |MB51 − GMS| de cada OP no período. Fonte: Conferencia_Lances_por_OP.xlsx, recalculada em 19/10/2026.')
 
