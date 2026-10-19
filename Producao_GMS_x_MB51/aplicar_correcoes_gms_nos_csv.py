@@ -67,6 +67,10 @@ for q in ('10,3','11,1','13,6','26,5','56','75,5','78,2','83,2','156,3','161,8')
     ins.append(['29949591',q,'','','','24/08/2026 12:00','','24/08/2026 12:00','EC118-06L','','','','Item','sites/OperationsGuaratingueta/Lists/RegistrosInspeo'])
 # final16: lances 29118858 (26,6) e 29407672 (23,9) removidos
 ins=[r for r in ins if not (r[0]=='29118858' and r[1]=='26,6') and not (r[0]=='29407672' and r[1]=='23,9')]
+# final19: lances 47,7 e 13,5 da 29247847 vao para a 29305874
+for q in ('47,7','13,5'):
+    for r in ins:
+        if r[0]=='29247847' and r[1]==q: r[0]='29305874'; break
 # espelho29050557 + lances removidos (29864099 e 29963526)
 ins=[r for r in ins if r[0]!='29050557' and not (r[0]=='29864099' and r[1] in('39,6','36,9')) and not (r[0]=='29963526' and r[1]=='45,3')]
 for q,h in (('40,9','07:09'),('133,6','07:10'),('128,1','07:11')):

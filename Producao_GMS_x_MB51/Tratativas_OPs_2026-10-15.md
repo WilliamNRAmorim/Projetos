@@ -118,3 +118,6 @@ Gravados no SharePoint: 68 lances com OP trocada, 57 fichas com `quantidade_extr
 43 lances trocados de OP no GMS (`tratativas_lote5_lances.csv`), 21 OPs, 15 fichas com `quantidade_extracao` ajustada; ficha 3050 passou para a OP 29701289 (SAP, 233,4 m); ficha 2612 (29086344) foi para a lixeira (todos os lances foram para outras OPs). Foram deixados fora 14 lances de 22/09 (OPs 30206907, 30206908, 30206915, 30206916), porque a OP é posterior a 20/09.
 
 Divergência bruta por OP (soma do módulo de cada OP, incluindo OPs só no SAP), 20/05 a 20/09: 37.087 m (14/10) para 13.383 m (agora), −64%. SAP a mais 26.960 → 12.356 m; SAP a menos −10.128 → −1.027 m.
+
+## 19/10 - 29847619 / 29847701
+Troca de 4 lances entre as duas OPs corrigida no GMS (itens 13538, 13539 -> 29847701; 13525, 13528 -> 29847619). Fichas 3239 = 524,1 m e 3249 = 475,1 m. Confere com SAP e BD Packing List (958 e 960).
