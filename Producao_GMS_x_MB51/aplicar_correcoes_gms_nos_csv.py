@@ -115,3 +115,18 @@ for r in saida:
 saida=tmp
 gravar('dados/refugo_14out.csv',cab,saida)
 # fichas: OP corrigida em 3168 e 3076 nao afeta a conferencia (lista de inspecao)
+
+# ---- 19/10: troca de 4 lances 29847619<->29847701, lance 30121886 e refugo do Apontamento ----
+cab,ins=ler('dados/inspecao_14out.csv')
+for r in ins:
+    if r[0]=='29847619' and r[2:3] is not None and r[1] in('101,8','35,1') and r[5][:10]=='13/08/2026': r[0]='29847701'
+    elif r[0]=='29847701' and r[1] in('101','100,9') and r[5][:10]=='13/08/2026': r[0]='29847619'
+    elif r[0]=='30121886' and r[1]=='36,7' and r[5][:10]=='11/09/2026': r[1]='37,2'
+gravar('dados/inspecao_14out.csv',cab,ins)
+cab,ref=ler('dados/refugo_14out.csv')
+NEW=[('30223117','B - Set Up / Alimentação de Fio','5,7','09/10/2026'),('30223117','C - Caroço / Ondulação','1,9','09/10/2026'),('30223117','O - Pontas','4,9','09/10/2026'),
+('30078602','G - Falha na Bandagem','3','04/09/2026'),('30078602','O - Pontas','1,8','04/09/2026'),('29118845','B - Set Up / Alimentação de Fio','0,9','10/06/2026'),
+('29118845','O - Pontas','2','10/06/2026'),('29321285','O - Pontas','1','01/07/2026'),('29788415','E - Trança Aparente','0,5','07/08/2026'),('29788415','O - Pontas','1','07/08/2026')]
+for op,cod,q,d in NEW:
+    ref.append([op,cod,q,d+' 12:00',d,'','','','Item',ref[0][-1]])
+gravar('dados/refugo_14out.csv',cab,ref)
