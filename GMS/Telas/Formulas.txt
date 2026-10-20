@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.11 · 2026-10-16
+//  GMS · App.Formulas · v3.0.12 · 2026-10-20
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO).
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_Janelas, fx_AMDM02_Folhas, fx_AMDM02_ChaveFolha, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1506,3 +1506,115 @@ fx_CorConf(prioridade: Number): Color =
 
 fx_CorConfSuave(prioridade: Number): Color =
     If(prioridade <= 5, fx_CorErroSuave, prioridade <= 10, fx_CorAlertaSuave, prioridade <= 13, fx_CorInfoSuave, fx_CorOKSuave);
+
+
+//  §17 · CONTROLE DE TRANÇAGEM AM-DM-02 (MEL-114)  ════════════════════
+//  Tela scr_AMDM02_Trancagem_1. Só ACRESCENTA: nenhuma fórmula acima muda.
+//  Diâmetro sempre em POLEGADA, como no papel. Nenhuma regra de turno nova: o turno de cada
+//  janela de 2 h é o fx_Turno (§4) aplicado ao MINUTO DE INÍCIO da janela.
+
+// As 12 janelas FIXAS de 2 h do formulário (00:00, 02:00 … 22:00) com o turno do instante de início.
+fx_AMDM02_Janelas =
+    ForAll(
+        Sequence(12, 0, 1) As _s,
+        {
+            Janela: _s.Value,
+            Rotulo: Text(_s.Value * 2, "00") & ":00",
+            MinIni: _s.Value * 120,
+            Turno:  fx_Turno(_s.Value * 120)
+        }
+    );
+
+// As 16 combinações máquina x trança do formulário (11 trançadeiras; 5 delas com 1ª e 2ª trança).
+// Tranca = 1 ou 2; máquina de trança única fica só com 1 e sem sufixo no rótulo.
+fx_AMDM02_Folhas =
+    Table(
+        {Maquina: "TH01", Tranca: 1, Rotulo: "TH01"},
+        {Maquina: "TH02", Tranca: 1, Rotulo: "TH02 · 1ª trança"},
+        {Maquina: "TH02", Tranca: 2, Rotulo: "TH02 · 2ª trança"},
+        {Maquina: "TH03", Tranca: 1, Rotulo: "TH03 · 1ª trança"},
+        {Maquina: "TH03", Tranca: 2, Rotulo: "TH03 · 2ª trança"},
+        {Maquina: "TH04", Tranca: 1, Rotulo: "TH04 · 1ª trança"},
+        {Maquina: "TH04", Tranca: 2, Rotulo: "TH04 · 2ª trança"},
+        {Maquina: "TH05", Tranca: 1, Rotulo: "TH05"},
+        {Maquina: "TH06", Tranca: 1, Rotulo: "TH06 · 1ª trança"},
+        {Maquina: "TH06", Tranca: 2, Rotulo: "TH06 · 2ª trança"},
+        {Maquina: "TM01", Tranca: 1, Rotulo: "TM01 · 1ª trança"},
+        {Maquina: "TM01", Tranca: 2, Rotulo: "TM01 · 2ª trança"},
+        {Maquina: "TM02", Tranca: 1, Rotulo: "TM02 · 1ª trança"},
+        {Maquina: "TM02", Tranca: 2, Rotulo: "TM02 · 2ª trança"},
+        {Maquina: "TM04", Tranca: 1, Rotulo: "TM04"},
+        {Maquina: "TO04", Tranca: 1, Rotulo: "TO04"}
+    );
+
+// Chave única da folha (coluna Title de AMDM02_Folha): "2026-10-20|TH02|1".
+fx_AMDM02_ChaveFolha(data: Date, maquina: Text, tranca: Number): Text =
+    Text(data, "[$-en-US]yyyy-mm-dd") & "|" & maquina & "|" & Text(tranca);
+
+// Amostra digitada em polegada (aceita 0,673 / 0.673 / 673). Vazio, lixo e zero viram Blank.
+fx_AMDM02_Pol(txt: Text): Number =
+    With({ _v: fx_DiametroPol(txt) }, If(_v > 0, _v, Blank()));
+
+// Soma das amostras preenchidas da janela (a planilha: SUM). Blank se nenhuma foi digitada.
+fx_AMDM02_Soma(t1: Text, t2: Text, t3: Text, t4: Text, t5: Text): Number =
+    With(
+        {
+            _v: Table(
+                {v: fx_AMDM02_Pol(t1)}, {v: fx_AMDM02_Pol(t2)}, {v: fx_AMDM02_Pol(t3)},
+                {v: fx_AMDM02_Pol(t4)}, {v: fx_AMDM02_Pol(t5)}
+            )
+        },
+        If(CountRows(Filter(_v, !IsBlank(v))) = 0, Blank(), Round(Sum(_v, v), 3))
+    );
+
+// X̄ = média das amostras preenchidas (a planilha: AVERAGE, que ignora célula vazia).
+fx_AMDM02_Media(t1: Text, t2: Text, t3: Text, t4: Text, t5: Text): Number =
+    With(
+        {
+            _v: Table(
+                {v: fx_AMDM02_Pol(t1)}, {v: fx_AMDM02_Pol(t2)}, {v: fx_AMDM02_Pol(t3)},
+                {v: fx_AMDM02_Pol(t4)}, {v: fx_AMDM02_Pol(t5)}
+            )
+        },
+        With(
+            { _n: CountRows(Filter(_v, !IsBlank(v))) },
+            If(_n = 0, Blank(), Round(Sum(_v, v) / _n, 4))
+        )
+    );
+
+// R = máximo − mínimo das amostras preenchidas (a planilha: MAX − MIN).
+fx_AMDM02_Amp(t1: Text, t2: Text, t3: Text, t4: Text, t5: Text): Number =
+    With(
+        {
+            _v: Table(
+                {v: fx_AMDM02_Pol(t1)}, {v: fx_AMDM02_Pol(t2)}, {v: fx_AMDM02_Pol(t3)},
+                {v: fx_AMDM02_Pol(t4)}, {v: fx_AMDM02_Pol(t5)}
+            )
+        },
+        If(CountRows(Filter(_v, !IsBlank(v))) = 0, Blank(), Round(Max(_v, v) - Min(_v, v), 3))
+    );
+
+// Posição vertical (0 = topo) de X̄ na carta. Escala: LIE − meia tolerância até LSE + meia tolerância,
+// ou seja, LIE a 75% da altura e LSE a 25%. Fora da escala fica preso na borda.
+fx_AMDM02_YMedia(valor: Number, lie: Number, lse: Number, altura: Number): Number =
+    If(
+        IsBlank(valor) || lie <= 0 || lse <= lie,
+        altura / 2,
+        altura * (1 - Max(0, Min(1, (valor - (lie - (lse - lie) / 2)) / (2 * (lse - lie)))))
+    );
+
+// Posição vertical (0 = topo) de R na carta, de 0 até o teto da escala.
+fx_AMDM02_YAmp(valor: Number, teto: Number, altura: Number): Number =
+    If(IsBlank(valor) || teto <= 0, altura, altura * (1 - Max(0, Min(1, valor / teto))));
+
+// Número para texto de campo, com vírgula decimal e casas fixas; vazio fica vazio.
+fx_AMDM02_Txt(valor: Number, casas: Number): Text =
+    If(
+        IsBlank(valor),
+        "",
+        If(
+            casas = 0,
+            Text(valor, "[$-en-US]0"),
+            Substitute(Text(valor, "[$-en-US]0." & Left("000000", casas)), ".", ",")
+        )
+    );
