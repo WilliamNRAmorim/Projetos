@@ -242,7 +242,7 @@ def filtro_nao_vazio(campo, nome):
 
 
 def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=None, legenda=False,
-            cores_turno=None, sem_vazio=False):
+            cores_turno=None, sem_vazio=False, categorico=False):
     qs = {"Category": {"projections": [proj(categoria, True)]},
           "Y": {"projections": [proj(m) for m in valores]}}
     if segunda:
@@ -253,6 +253,8 @@ def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=
         "valueAxis": [{"properties": {"fontSize": num(9), "labelColor": cor(ARDOSIA), "gridlineColor": cor(LINHA)}}],
         "labels": [{"properties": {"show": boo(tipo != "lineChart"), "fontSize": num(9), "color": cor(GRAFITE)}}],
     }
+    if categorico:  # eixo por categoria: um ponto por dia/valor, sem escala de tempo (sem horas)
+        obj["categoryAxis"][0]["properties"]["axisType"] = txt("Categorical")
     if cores_turno:
         ent = categoria["Column"]["Expression"]["SourceRef"]["Entity"]
         obj["dataPoint"] = [{
@@ -422,7 +424,8 @@ def pg_visao_geral():
         ("OPs Ativas", fp("OPs Ativas"), None),
     ])
     p.add("g_tendencia", MARGEM, Y_R1, WL, 244, grafico(
-        "lineChart", col("dCalendario", "Date"), [fp("Metragem Produzida")], "Metragem produzida por dia"))
+        "lineChart", col("dCalendario", "Date"), [fp("Metragem Produzida")], "Metragem produzida por dia",
+        categorico=True))
     p.add("g_etapa", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
         "clusteredBarChart", col("Etapas", "Etapa"), [ET("Realizado Etapa"), ET("Planejado Etapa")],
         "Realizado × planejado por etapa (m)", ordenar=col("Etapas", "OrdemEtapa"), legenda=True))
@@ -572,10 +575,11 @@ def pg_extrusora():
         ("Refugo kg por 1.000 m", EX("Refugo kg por 1000 m"), None),
     ])
     p.add("g_dia", MARGEM, Y_R1, WL, 244, grafico(
-        "lineChart", col("dCalendario", "Date"), [EX("Qtd Extrusora Mandril")], "Metros extrudados por dia"))
+        "lineChart", col("dCalendario", "Date"), [EX("Qtd Extrusora Mandril")], "Metros extrudados por dia",
+        categorico=True))
     p.add("g_bitola", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
         "clusteredColumnChart", col("ControleExtrusora_estrutura", "Bitola"), [EX("Qtd Extrusora Mandril")],
-        "Metros extrudados por bitola"))
+        "Metros extrudados por bitola", categorico=True))
     p.add("g_turno", MARGEM, Y_R2, 400, 240, grafico(
         "clusteredColumnChart", col("ControleExtrusora_estrutura", "Turno"), [EX("Qtd Extrusora Mandril")],
         "Metros extrudados por turno", cores_turno=True))
@@ -583,7 +587,7 @@ def pg_extrusora():
         "clusteredBarChart", col("RefugoExtrusora_Mandril", "CodigoErro"), [EX("Refugo Extrusora Mandril")],
         "Refugo (kg) por tipo de erro", ordenar=EX("Refugo Extrusora Mandril"), desc=True))
     p.add("g_ref_dia", MARGEM + 844, Y_R2, 392, 240, grafico(
-        "lineChart", col("dCalendario", "Date"), [EX("Refugo Extrusora Mandril")], "Refugo (kg) por dia"))
+        "lineChart", col("dCalendario", "Date"), [EX("Refugo Extrusora Mandril")], "Refugo (kg) por dia", categorico=True))
     return p
 
 
