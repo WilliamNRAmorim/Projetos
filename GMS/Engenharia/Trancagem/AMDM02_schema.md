@@ -43,20 +43,23 @@ Cada linha traz as duas tranças; o app escolhe a da última (OD2_MED > 0 → OD
 
 Criado em / Criado por (colunas do sistema) registram quem abriu a folha. Índices: Title, Data, Maquina.
 
-## 3. AMDM02_Janela (uma por folha + janela de 2 h, criada no 1º Salvar com amostra)
+## 3. AMDM02_Janela (uma por folha + coleta de 5 amostras, na hora real do operador; criada no 1º Salvar com amostra)
 
 | Coluna (nome interno) | Tipo | Quem grava |
 |---|---|---|
 | Title | Texto (padrão) | App. Chave `IdFolha|Janela` (ex.: `57|3`). **Impor valores exclusivos: Sim** |
 | IdFolha | Número, 0 casas | App. ID do item da AMDM02_Folha. **Indexada** |
-| Janela | Número, 0 casas | App. 0 a 11 (0 = 00:00, 1 = 02:00 … 11 = 22:00). **Indexada** |
-| Turno | Número, 0 casas | App. 1, 2 ou 3 = `fx_Turno` aplicado ao minuto de INÍCIO da janela (00:00, 02:00 e 04:00 = 3º; 06:00 a 12:00 = 1º; 14:00 a 22:00 = 2º). Nenhuma regra nova |
+| Janela | Número, 0 casas | App. **Número de ordem da coleta na folha** (0, 1, 2…, sem limite). Desde a v0.3.0 NÃO é mais a janela fixa de 2 h; linhas antigas (0 a 11) seguem válidas. Não é renumerado depois de gravado. **Indexada** |
+| HoraColeta | Data e hora | App. **Hora real da coleta** (`Now()` no momento do lançamento). Se a linha já existe, a hora original é preservada. A carta X̄-R e o prazo de +2 h usam esta coluna. Linha antiga sem HoraColeta cai em 00:00 + Janela × 2 h na tela. **Indexada** |
+| Turno | Número, 0 casas | App. 1, 2 ou 3 = `fx_TurnoEm` aplicado à HoraColeta. Nenhuma regra nova |
 | Amostra1 … Amostra5 | Número, 3 casas | App. ∅ ext. em polegada; vazio = não medida |
 | Soma | Número, 3 casas | App. Soma das amostras preenchidas |
 | Media | Número, 4 casas | App. X̄ = Soma ÷ nº de amostras preenchidas |
 | Amplitude | Número, 3 casas | App. R = máximo − mínimo das amostras preenchidas |
 | LancadoPor | Texto | App. Responsável escolhido na tela (cai para o usuário do app) |
 | LancadoEm | Data e hora | App. Carimbo do último Salvar da janela |
+
+O dia da folha (coluna Data de AMDM02_Folha) é o dia produtivo do GMS, de 05:20 a 05:20 (`fx_DataRefEm`); coletas depois da meia-noite e antes das 05:20 pertencem à folha do dia anterior.
 
 Fora de LIE/LSE não é gravado: é calculado na tela e no BI a partir de Amostra/Media e das colunas ODLie/ODLse da folha.
 

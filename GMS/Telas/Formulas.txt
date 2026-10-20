@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_Janelas, fx_AMDM02_ChaveFolha (Data + Máquina, sem trança), fx_AMDM02_UltimaTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex.
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina, sem trança), fx_AMDM02_UltimaTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1511,18 +1511,25 @@ fx_CorConfSuave(prioridade: Number): Color =
 //  §17 · CONTROLE DE TRANÇAGEM AM-DM-02 (MEL-114)  ════════════════════
 //  Tela scr_AMDM02_Trancagem_1. Só ACRESCENTA: nenhuma fórmula acima muda.
 //  Diâmetro sempre em POLEGADA, como no papel. Nenhuma regra de turno nova: o turno de cada
-//  janela de 2 h é o fx_Turno (§4) aplicado ao MINUTO DE INÍCIO da janela.
+//  coleta é o fx_TurnoEm (§4) aplicado à HORA REAL da coleta (coluna HoraColeta da AMDM02_Janela).
+//  v0.3.0: a coleta (5 amostras de ∅) é lançada na hora do operador, com prazo de +2 h para a próxima;
+//  o dia da folha é o dia produtivo do GMS (05:20 às 05:20, fx_DataRefEm/fx_JanelaInicioEm da §4).
 
-// As 12 janelas FIXAS de 2 h do formulário (00:00, 02:00 … 22:00) com o turno do instante de início.
-fx_AMDM02_Janelas =
-    ForAll(
-        Sequence(12, 0, 1) As _s,
-        {
-            Janela: _s.Value,
-            Rotulo: Text(_s.Value * 2, "00") & ":00",
-            MinIni: _s.Value * 120,
-            Turno:  fx_Turno(_s.Value * 120)
-        }
+// Prazo da próxima coleta: última HoraColeta + 2 h. A tela pinta de vermelho quando o relógio passa disso.
+fx_AMDM02_PrazoColeta(ultima: DateTime): DateTime =
+    DateAdd(ultima, 2, TimeUnit.Hours);
+
+// Posição horizontal (0 = esquerda) de uma coleta nas cartas X̄-R: proporcional ao minuto desde o início do
+// dia produtivo (fx_JanelaInicioEm, 05:20) numa janela de 24 h, na largura útil informada. Preso a 7 px das bordas
+// para o ponto não ser cortado.
+fx_AMDM02_XHora(hora: DateTime, largura: Number): Number =
+    Max(7, Min(largura - 7, largura * DateDiff(fx_JanelaInicioEm(hora), hora, TimeUnit.Minutes) / 1440));
+
+// Rótulos fixos do eixo das cartas, de 4 em 4 h; Minuto = minutos desde as 05:20 (06:00 = 40 … 02:00 = 1240).
+fx_AMDM02_EixoHoras =
+    Table(
+        { H: "06", Minuto: 40 },  { H: "10", Minuto: 280 }, { H: "14", Minuto: 520 },
+        { H: "18", Minuto: 760 }, { H: "22", Minuto: 1000 }, { H: "02", Minuto: 1240 }
     );
 
 // Folha = Data + Máquina. Não existe 1ª/2ª trança: a AM-DM-02 registra sempre a ÚLTIMA trança, como a ficha.

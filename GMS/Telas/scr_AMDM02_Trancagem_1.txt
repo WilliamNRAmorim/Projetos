@@ -6,7 +6,7 @@ Screens:
       OnVisible: |-
         =UpdateContext({
             ctxAgoraAM: Now(),
-            ctxDataAM: DateValue(Now()),
+            ctxDataAM: fx_DataRefEm(Now()),
             ctxAbaAM: 1,
             ctxAlteradoAM: false,
             ctxCarregandoAM: false,
@@ -124,16 +124,16 @@ Screens:
               ClearCollect(colFalhasAM, {fRotulo: "", fMsg: ""});
               Clear(colFalhasAM);
 
-              // ── A · O que vai gravar. Congelado antes de tocar na rede.
+              // ── A · O que vai gravar. Congelado antes de tocar na rede. Só coleta com hora lançada (Tem).
               ClearCollect(
                   colGravarAM,
                   ForAll(
-                      Filter(colJanAM As _p, !IsBlank(_p.Soma) || _p.IdSp > 0) As _q,
+                      Filter(colJanAM As _p, _p.Tem && (!IsBlank(_p.Soma) || _p.IdSp > 0)) As _q,
                       {
                           cIdSp:   _q.IdSp,
                           cJanela: _q.Janela,
-                          cRotulo: _q.Rotulo,
-                          cTurno:  _q.Turno,
+                          cHora:   _q.Hora,
+                          cRotulo: Text(_q.Hora, "[$-en-US]hh:mm"),
                           cA1:     fx_AMDM02_Pol(_q.T1),
                           cA2:     fx_AMDM02_Pol(_q.T2),
                           cA3:     fx_AMDM02_Pol(_q.T3),
@@ -216,7 +216,8 @@ Screens:
                   )
               );
 
-              // ── C · Uma janela por vez. Base lida por ID AGORA; se o item sumiu da lista, a janela é recriada.
+              // ── C · Uma coleta por vez. Base lida por ID AGORA; se o item sumiu da lista, a coleta é recriada.
+              // HoraColeta: a hora real lançada na tela; se a linha já existe com hora, a original é preservada.
               ForAll(
                   colGravarAM As _u,
                   With(
@@ -224,33 +225,37 @@ Screens:
                           _base: If(_u.cIdSp > 0, LookUp(AMDM02_Janela, ID = _u.cIdSp)),
                           _quem: Coalesce(cmb_RespAM.Selected.Nome, User().FullName)
                       },
-                      IfError(
-                          With(
-                              {
-                                  _res: Patch(
-                                      AMDM02_Janela,
-                                      If(IsBlank(_base), Defaults(AMDM02_Janela), _base),
-                                      {
-                                          Title:      Text(ctxIdFolhaAM) & "|" & Text(_u.cJanela),
-                                          IdFolha:    ctxIdFolhaAM,
-                                          Janela:     _u.cJanela,
-                                          Turno:      _u.cTurno,
-                                          Amostra1:   _u.cA1,
-                                          Amostra2:   _u.cA2,
-                                          Amostra3:   _u.cA3,
-                                          Amostra4:   _u.cA4,
-                                          Amostra5:   _u.cA5,
-                                          Soma:       _u.cSoma,
-                                          Media:      _u.cMedia,
-                                          Amplitude:  _u.cAmp,
-                                          LancadoPor: _quem,
-                                          LancadoEm:  Now()
-                                      }
-                                  )
-                              },
-                              UpdateIf(colJanAM, Janela = _u.cJanela, {IdSp: _res.ID})
-                          ),
-                          Collect(colFalhasAM, {fRotulo: _u.cRotulo, fMsg: FirstError.Message})
+                      With(
+                          { _hora: If(IsBlank(_base.HoraColeta), _u.cHora, _base.HoraColeta) },
+                          IfError(
+                              With(
+                                  {
+                                      _res: Patch(
+                                          AMDM02_Janela,
+                                          If(IsBlank(_base), Defaults(AMDM02_Janela), _base),
+                                          {
+                                              Title:      Text(ctxIdFolhaAM) & "|" & Text(_u.cJanela),
+                                              IdFolha:    ctxIdFolhaAM,
+                                              Janela:     _u.cJanela,
+                                              HoraColeta: _hora,
+                                              Turno:      fx_TurnoEm(_hora),
+                                              Amostra1:   _u.cA1,
+                                              Amostra2:   _u.cA2,
+                                              Amostra3:   _u.cA3,
+                                              Amostra4:   _u.cA4,
+                                              Amostra5:   _u.cA5,
+                                              Soma:       _u.cSoma,
+                                              Media:      _u.cMedia,
+                                              Amplitude:  _u.cAmp,
+                                              LancadoPor: _quem,
+                                              LancadoEm:  Now()
+                                          }
+                                      )
+                                  },
+                                  UpdateIf(colJanAM, Janela = _u.cJanela, {IdSp: _res.ID})
+                              ),
+                              Collect(colFalhasAM, {fRotulo: _u.cRotulo, fMsg: FirstError.Message})
+                          )
                       )
                   )
               );
@@ -260,7 +265,7 @@ Screens:
               // ── D · Resultado. Só o que falhou continua pendente.
               If(
                   IsEmpty(colFalhasAM),
-                  UpdateContext({ctxAlteradoAM: false});
+                  UpdateContext({ctxAlteradoAM: false, ctxAgoraAM: Now()});
                   Notify("Folha salva.", NotificationType.Success, 4000),
                   Notify(
                       "⚠ Não gravou: " & Concat(colFalhasAM, fRotulo, ", ") &
@@ -396,7 +401,7 @@ Screens:
             DisabledFill: =fx_CorChip
             DisplayMode: |-
               =If(
-                  varProcessando || ctxCarregandoAM || ctxDataAM >= DateValue(ctxAgoraAM),
+                  varProcessando || ctxCarregandoAM || ctxDataAM >= fx_DataRefEm(ctxAgoraAM),
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
@@ -583,8 +588,8 @@ Screens:
             Height: =32
             Size: =fx_FonteCorpo
             Text: |-
-              ="∅ EXT. (pol)    LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "   ·   Nominal " & fx_AMDM02_Txt(ctxNomAM, 3) & "   ·   LSE " & fx_AMDM02_Txt(ctxLseAM, 3) &
-              "          PICK ESPECIFICADO    LIE " & If(IsBlank(ctxPkLieAM), "—", Text(ctxPkLieAM)) & "   ·   LSE " & If(IsBlank(ctxPkLseAM), "—", Text(ctxPkLseAM))
+              ="∅ EXT. DA " & If(ctxTrAM > 0, Text(ctxTrAM) & "ª TRANÇA", "ÚLTIMA TRANÇA") & " (pol)    LIE " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRLieAM, ctxLieAM), 3) & "   ·   Nominal " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRNomAM, ctxNomAM), 3) & "   ·   LSE " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRLseAM, ctxLseAM), 3) &
+              "          PICK ESPECIFICADO    LIE " & If(IsBlank(If(ctxTrAM > 0, ctxRPkLieAM, Text(ctxPkLieAM))), "—", If(ctxTrAM > 0, ctxRPkLieAM, Text(ctxPkLieAM))) & "   ·   LSE " & If(IsBlank(If(ctxTrAM > 0, ctxRPkLseAM, Text(ctxPkLseAM))), "—", If(ctxTrAM > 0, ctxRPkLseAM, Text(ctxPkLseAM)))
             VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxIdFolhaAM > 0
             Width: =1300
@@ -617,14 +622,14 @@ Screens:
             Height: =36
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =UpdateContext({ctxAbaAM: 1})
+              =UpdateContext({ctxAbaAM: 1, ctxAgoraAM: Now()})
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteCorpo
-            Text: ="Janelas e carta X̄-R"
+            Text: ="Coletas e carta X̄-R"
             Visible: =ctxIdFolhaAM > 0
             Width: =230
             X: =16
@@ -684,9 +689,9 @@ Screens:
                       ClearCollect(
                           colJanAM,
                           ForAll(
-                              fx_AMDM02_Janelas As _j,
+                              colJanSpAM As _s,
                               With(
-                                  { _s: LookUp(colJanSpAM, Janela = _j.Janela) },
+                                  { _h: Coalesce(_s.HoraColeta, DateAdd(ctxDataAM, _s.Janela * 120, TimeUnit.Minutes)) },
                                   With(
                                       {
                                           _a1: fx_AMDM02_Txt(_s.Amostra1, 3),
@@ -696,10 +701,10 @@ Screens:
                                           _a5: fx_AMDM02_Txt(_s.Amostra5, 3)
                                       },
                                       {
-                                          Janela: _j.Janela,
-                                          Rotulo: _j.Rotulo,
-                                          Turno:  _j.Turno,
-                                          IdSp:   Coalesce(_s.ID, 0),
+                                          Janela: _s.Janela,
+                                          Hora:   _h,
+                                          Tem:    true,
+                                          IdSp:   _s.ID,
                                           T1: _a1, T2: _a2, T3: _a3, T4: _a4, T5: _a5,
                                           Soma:  fx_AMDM02_Soma(_a1, _a2, _a3, _a4, _a5),
                                           Media: fx_AMDM02_Media(_a1, _a2, _a3, _a4, _a5),
@@ -709,6 +714,20 @@ Screens:
                               )
                           )
                       );
+                      Collect(
+                          colJanAM,
+                          {
+                              Janela: If(CountRows(colJanSpAM) = 0, 0, Max(colJanSpAM, Janela) + 1),
+                              Hora:   DateAdd(Now(), 1, TimeUnit.Years),
+                              Tem:    false,
+                              IdSp:   0,
+                              T1: "", T2: "", T3: "", T4: "", T5: "",
+                              Soma:  Blank(),
+                              Media: Blank(),
+                              Amp:   Blank()
+                          }
+                      );
+                      UpdateContext({ctxUltAM: Last(Sort(Filter(colJanAM, Tem), Hora, SortOrder.Ascending)).Hora});
                       ClearCollect(
                           colLatAM,
                           ForAll(
@@ -792,6 +811,55 @@ Screens:
             Width: =0
             X: =1366
             Y: =768
+      - btn_NovaColetaAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderThickness: =0
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =If(
+                  CountRows(Filter(colJanAM, !Tem)) = 0,
+                  Collect(
+                      colJanAM,
+                      {
+                          Janela: Max(colJanAM, Janela) + 1,
+                          Hora:   DateAdd(Now(), 1, TimeUnit.Years),
+                          Tem:    false,
+                          IdSp:   0,
+                          T1: "", T2: "", T3: "", T4: "", T5: "",
+                          Soma:  Blank(),
+                          Media: Blank(),
+                          Amp:   Blank()
+                      }
+                  )
+              );
+              UpdateContext({ctxAgoraAM: Now(), ctxUltAM: Last(Sort(Filter(colJanAM, Tem), Hora, SortOrder.Ascending)).Hora})
+            PressedFill: =Color.Transparent
+            Text: =""
+            Width: =0
+            X: =1366
+            Y: =768
+      - lbl_ProxColetaAM:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =If(!IsBlank(ctxUltAM) && ctxAgoraAM > fx_AMDM02_PrazoColeta(ctxUltAM), fx_CorErro, fx_CorBorda)
+            BorderThickness: =1
+            Color: =If(IsBlank(ctxUltAM), fx_CorOK, If(ctxAgoraAM > fx_AMDM02_PrazoColeta(ctxUltAM), fx_CorErro, fx_CorTexto))
+            Fill: =If(!IsBlank(ctxUltAM) && ctxAgoraAM > fx_AMDM02_PrazoColeta(ctxUltAM), fx_CorErroSuave, fx_CorInfoSuave)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingLeft: =12
+            Size: =fx_FonteDestaque
+            Text: |-
+              =If(IsBlank(ctxUltAM), "Primeira coleta do dia: livre", "Próxima coleta até " & Text(fx_AMDM02_PrazoColeta(ctxUltAM), "[$-en-US]hh:mm"))
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 1 && ctxDataAM = fx_DataRefEm(ctxAgoraAM)
+            Width: =850
+            X: =500
+            Y: =214
       - cntr_Aba1AM:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
@@ -952,8 +1020,8 @@ Screens:
                   BorderColor: =fx_CorBorda
                   Fill: =Color.Transparent
                   Height: =456
-                  Items: =colJanAM
-                  ShowScrollbar: =false
+                  Items: =Sort(colJanAM, Hora, SortOrder.Ascending)
+                  ShowScrollbar: =true
                   TemplateFill: =Color.Transparent
                   TemplateSize: =38
                   Width: =770
@@ -966,7 +1034,7 @@ Screens:
                         BorderColor: =fx_CorBorda
                         BorderThickness: =1
                         DisplayMode: =DisplayMode.View
-                        Fill: =If(ctxDataAM = DateValue(ctxAgoraAM) && ThisItem.Janela = Int(fx_MinutosDoDia(ctxAgoraAM) / 120), fx_CorInfoSuave, fx_CorSuperficie)
+                        Fill: =If(!ThisItem.Tem, fx_CorInfoSuave, fx_CorSuperficie)
                         Font: =fx_FonteFamilia
                         Height: =36
                         HoverFill: =Self.Fill
@@ -988,7 +1056,7 @@ Screens:
                         FontWeight: =FontWeight.Semibold
                         Height: =30
                         Size: =fx_FonteCorpo
-                        Text: =ThisItem.Rotulo
+                        Text: =If(ThisItem.Tem, Text(ThisItem.Hora, "[$-en-US]hh:mm"), "NOVA")
                         VerticalAlign: =VerticalAlign.Middle
                         Width: =56
                         X: =6
@@ -1002,8 +1070,8 @@ Screens:
                         FontWeight: =FontWeight.Normal
                         Height: =30
                         Size: =fx_FonteCorpo
-                        Text: =Text(ThisItem.Turno) & "º"
-                        Tooltip: ="Turno do início da janela (fx_Turno)"
+                        Text: =If(ThisItem.Tem, Text(fx_TurnoEm(ThisItem.Hora)) & "º", "—")
+                        Tooltip: ="Turno da hora real da coleta (fx_TurnoEm)"
                         VerticalAlign: =VerticalAlign.Middle
                         Width: =40
                         X: =64
@@ -1026,17 +1094,23 @@ Screens:
                         OnChange: |-
                           =If(
                               Self.Text <> ThisItem.T1,
-                              Patch(
-                                  colJanAM,
-                                  LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
-                                  {
-                                      T1: Self.Text,
-                                      Soma: fx_AMDM02_Soma(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5),
-                                      Media: fx_AMDM02_Media(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5),
-                                      Amp: fx_AMDM02_Amp(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5)
-                                  }
-                              );
-                              UpdateContext({ctxAlteradoAM: true})
+                              With(
+                                  { _novo: !ThisItem.Tem },
+                                  Patch(
+                                      colJanAM,
+                                      LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
+                                      {
+                                          T1: Self.Text,
+                                          Soma: fx_AMDM02_Soma(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Media: fx_AMDM02_Media(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Amp: fx_AMDM02_Amp(Self.Text, ThisItem.T2, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Tem: true,
+                                          Hora: If(ThisItem.Tem, ThisItem.Hora, Now())
+                                      }
+                                  );
+                                  If(_novo, Select(btn_NovaColetaAM));
+                                  UpdateContext({ctxAlteradoAM: true})
+                              )
                           )
                         PaddingLeft: =6
                         RadiusBottomLeft: =fx_RaioS
@@ -1065,17 +1139,23 @@ Screens:
                         OnChange: |-
                           =If(
                               Self.Text <> ThisItem.T2,
-                              Patch(
-                                  colJanAM,
-                                  LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
-                                  {
-                                      T2: Self.Text,
-                                      Soma: fx_AMDM02_Soma(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5),
-                                      Media: fx_AMDM02_Media(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5),
-                                      Amp: fx_AMDM02_Amp(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5)
-                                  }
-                              );
-                              UpdateContext({ctxAlteradoAM: true})
+                              With(
+                                  { _novo: !ThisItem.Tem },
+                                  Patch(
+                                      colJanAM,
+                                      LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
+                                      {
+                                          T2: Self.Text,
+                                          Soma: fx_AMDM02_Soma(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Media: fx_AMDM02_Media(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Amp: fx_AMDM02_Amp(ThisItem.T1, Self.Text, ThisItem.T3, ThisItem.T4, ThisItem.T5),
+                                          Tem: true,
+                                          Hora: If(ThisItem.Tem, ThisItem.Hora, Now())
+                                      }
+                                  );
+                                  If(_novo, Select(btn_NovaColetaAM));
+                                  UpdateContext({ctxAlteradoAM: true})
+                              )
                           )
                         PaddingLeft: =6
                         RadiusBottomLeft: =fx_RaioS
@@ -1104,17 +1184,23 @@ Screens:
                         OnChange: |-
                           =If(
                               Self.Text <> ThisItem.T3,
-                              Patch(
-                                  colJanAM,
-                                  LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
-                                  {
-                                      T3: Self.Text,
-                                      Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5),
-                                      Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5),
-                                      Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5)
-                                  }
-                              );
-                              UpdateContext({ctxAlteradoAM: true})
+                              With(
+                                  { _novo: !ThisItem.Tem },
+                                  Patch(
+                                      colJanAM,
+                                      LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
+                                      {
+                                          T3: Self.Text,
+                                          Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5),
+                                          Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5),
+                                          Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, Self.Text, ThisItem.T4, ThisItem.T5),
+                                          Tem: true,
+                                          Hora: If(ThisItem.Tem, ThisItem.Hora, Now())
+                                      }
+                                  );
+                                  If(_novo, Select(btn_NovaColetaAM));
+                                  UpdateContext({ctxAlteradoAM: true})
+                              )
                           )
                         PaddingLeft: =6
                         RadiusBottomLeft: =fx_RaioS
@@ -1143,17 +1229,23 @@ Screens:
                         OnChange: |-
                           =If(
                               Self.Text <> ThisItem.T4,
-                              Patch(
-                                  colJanAM,
-                                  LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
-                                  {
-                                      T4: Self.Text,
-                                      Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5),
-                                      Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5),
-                                      Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5)
-                                  }
-                              );
-                              UpdateContext({ctxAlteradoAM: true})
+                              With(
+                                  { _novo: !ThisItem.Tem },
+                                  Patch(
+                                      colJanAM,
+                                      LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
+                                      {
+                                          T4: Self.Text,
+                                          Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5),
+                                          Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5),
+                                          Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, ThisItem.T3, Self.Text, ThisItem.T5),
+                                          Tem: true,
+                                          Hora: If(ThisItem.Tem, ThisItem.Hora, Now())
+                                      }
+                                  );
+                                  If(_novo, Select(btn_NovaColetaAM));
+                                  UpdateContext({ctxAlteradoAM: true})
+                              )
                           )
                         PaddingLeft: =6
                         RadiusBottomLeft: =fx_RaioS
@@ -1182,17 +1274,23 @@ Screens:
                         OnChange: |-
                           =If(
                               Self.Text <> ThisItem.T5,
-                              Patch(
-                                  colJanAM,
-                                  LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
-                                  {
-                                      T5: Self.Text,
-                                      Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text),
-                                      Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text),
-                                      Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text)
-                                  }
-                              );
-                              UpdateContext({ctxAlteradoAM: true})
+                              With(
+                                  { _novo: !ThisItem.Tem },
+                                  Patch(
+                                      colJanAM,
+                                      LookUp(colJanAM As _lp, _lp.Janela = ThisItem.Janela),
+                                      {
+                                          T5: Self.Text,
+                                          Soma: fx_AMDM02_Soma(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text),
+                                          Media: fx_AMDM02_Media(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text),
+                                          Amp: fx_AMDM02_Amp(ThisItem.T1, ThisItem.T2, ThisItem.T3, ThisItem.T4, Self.Text),
+                                          Tem: true,
+                                          Hora: If(ThisItem.Tem, ThisItem.Hora, Now())
+                                      }
+                                  );
+                                  If(_novo, Select(btn_NovaColetaAM));
+                                  UpdateContext({ctxAlteradoAM: true})
+                              )
                           )
                         PaddingLeft: =6
                         RadiusBottomLeft: =fx_RaioS
@@ -1273,7 +1371,7 @@ Screens:
                   Height: =20
                   Size: =fx_FonteApoio
                   Text: |-
-                    ="X̄ POR JANELA (pol)  ·  linhas: LIE, nominal, LSE"
+                    ="X̄ POR COLETA (pol)  ·  limites da última trança"
                   Width: =520
                   X: =816
                   Y: =8
@@ -1352,32 +1450,36 @@ Screens:
                   Height: =170
                   Image: |-
                     =With(
-                        { _ok: ctxLseAM > ctxLieAM && ctxLieAM > 0 },
+                        {
+                            _ok:  ctxLseAM > ctxLieAM && ctxLieAM > 0,
+                            _pts: Sort(Filter(colJanAM, Tem && !IsBlank(Media)), Hora, SortOrder.Ascending)
+                        },
                         "data:image/svg+xml;utf8," & EncodeUrl(
                             "<svg xmlns='http://www.w3.org/2000/svg' width='456' height='170' viewBox='0 0 456 170'>" &
                             If(
-                                _ok && CountRows(Filter(Sort(colJanAM, Janela), !IsBlank(Media))) > 1,
+                                _ok && CountRows(_pts) > 1,
                                 "<polyline fill='none' stroke-width='2' stroke-linejoin='round' stroke='" & fx_CorHex(fx_CorInfo) & "' points='" &
-                                    Concat(Filter(Sort(colJanAM, Janela), !IsBlank(Media)), Text(19 + 38 * Janela) & "," & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0"), " ") & "'/>",
+                                    Concat(_pts, Text(fx_AMDM02_XHora(Hora, 456), "[$-en-US]0.0") & "," & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0"), " ") & "'/>",
                                 ""
                             ) &
                             If(
                                 _ok,
                                 Concat(
-                                    Filter(Sort(colJanAM, Janela), !IsBlank(Media)),
-                                    "<circle r='7' stroke-width='2' cx='" & Text(19 + 38 * Janela) & "' cy='" & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0") &
+                                    _pts,
+                                    "<circle r='7' stroke-width='2' cx='" & Text(fx_AMDM02_XHora(Hora, 456), "[$-en-US]0.0") & "' cy='" & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0") &
                                         "' stroke='" & fx_CorHex(fx_CorSuperficie) & "' fill='" & fx_CorHex(If(fx_ForaDaFaixa(Media, ctxLieAM, ctxLseAM), fx_CorErro, fx_CorInfo)) & "'/>"
                                 ),
                                 ""
                             ) &
                             Concat(
-                                Sort(colJanAM, Janela),
-                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(19 + 38 * Janela) &
-                                    "' y='166' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & Left(Rotulo, 2) & "</text>"
+                                fx_AMDM02_EixoHoras,
+                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(456 * Minuto / 1440, "[$-en-US]0.0") &
+                                    "' y='166' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & H & "</text>"
                             ) &
                             "</svg>"
                         )
                     )
+                  Tooltip: =Concat(Sort(Filter(colJanAM, Tem && !IsBlank(Media)), Hora, SortOrder.Ascending), Text(Hora, "[$-en-US]hh:mm") & "  X̄ " & fx_AMDM02_Txt(Media, 4), Char(10))
                   Width: =456
                   X: =880
                   Y: =40
@@ -1390,7 +1492,7 @@ Screens:
                   Height: =18
                   Size: =fx_FonteApoio
                   Text: |-
-                    =If(ctxLseAM > ctxLieAM && ctxLieAM > 0, "Ponto vermelho: X̄ fora de LIE/LSE. Escala: meia tolerância além de cada limite.", "Sem especificação de ∅ nesta folha: carta indisponível.")
+                    =If(ctxLseAM > ctxLieAM && ctxLieAM > 0, "Linhas: LIE, nominal, LSE · eixo 05:20 a 05:20 · vermelho: X̄ fora do limite", "Sem especificação de ∅ nesta folha: carta indisponível.")
                   Width: =520
                   X: =816
                   Y: =222
@@ -1421,7 +1523,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =20
                   Size: =fx_FonteApoio
-                  Text: ="R POR JANELA (máx − mín, pol)"
+                  Text: ="R POR COLETA (máx − mín, pol)  ·  eixo 05:20 a 05:20"
                   Width: =520
                   X: =816
                   Y: =266
@@ -1465,32 +1567,32 @@ Screens:
                   Height: =130
                   Image: |-
                     =With(
-                        { _ok: true },
+                        {
+                            _teto: Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005),
+                            _pts:  Sort(Filter(colJanAM, Tem && !IsBlank(Amp)), Hora, SortOrder.Ascending)
+                        },
                         "data:image/svg+xml;utf8," & EncodeUrl(
                             "<svg xmlns='http://www.w3.org/2000/svg' width='456' height='130' viewBox='0 0 456 130'>" &
                             If(
-                                _ok && CountRows(Filter(Sort(colJanAM, Janela), !IsBlank(Amp))) > 1,
+                                CountRows(_pts) > 1,
                                 "<polyline fill='none' stroke-width='2' stroke-linejoin='round' stroke='" & fx_CorHex(fx_CorInfo) & "' points='" &
-                                    Concat(Filter(Sort(colJanAM, Janela), !IsBlank(Amp)), Text(19 + 38 * Janela) & "," & Text(fx_AMDM02_YAmp(Amp, Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 110), "[$-en-US]0.0"), " ") & "'/>",
-                                ""
-                            ) &
-                            If(
-                                _ok,
-                                Concat(
-                                    Filter(Sort(colJanAM, Janela), !IsBlank(Amp)),
-                                    "<circle r='7' stroke-width='2' cx='" & Text(19 + 38 * Janela) & "' cy='" & Text(fx_AMDM02_YAmp(Amp, Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 110), "[$-en-US]0.0") &
-                                        "' stroke='" & fx_CorHex(fx_CorSuperficie) & "' fill='" & fx_CorHex(fx_CorInfo) & "'/>"
-                                ),
+                                    Concat(_pts, Text(fx_AMDM02_XHora(Hora, 456), "[$-en-US]0.0") & "," & Text(fx_AMDM02_YAmp(Amp, _teto, 110), "[$-en-US]0.0"), " ") & "'/>",
                                 ""
                             ) &
                             Concat(
-                                Sort(colJanAM, Janela),
-                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(19 + 38 * Janela) &
-                                    "' y='126' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & Left(Rotulo, 2) & "</text>"
+                                _pts,
+                                "<circle r='7' stroke-width='2' cx='" & Text(fx_AMDM02_XHora(Hora, 456), "[$-en-US]0.0") & "' cy='" & Text(fx_AMDM02_YAmp(Amp, _teto, 110), "[$-en-US]0.0") &
+                                    "' stroke='" & fx_CorHex(fx_CorSuperficie) & "' fill='" & fx_CorHex(fx_CorInfo) & "'/>"
+                            ) &
+                            Concat(
+                                fx_AMDM02_EixoHoras,
+                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(456 * Minuto / 1440, "[$-en-US]0.0") &
+                                    "' y='126' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & H & "</text>"
                             ) &
                             "</svg>"
                         )
                     )
+                  Tooltip: =Concat(Sort(Filter(colJanAM, Tem && !IsBlank(Amp)), Hora, SortOrder.Ascending), Text(Hora, "[$-en-US]hh:mm") & "  R " & fx_AMDM02_Txt(Amp, 3), Char(10))
                   Width: =456
                   X: =880
                   Y: =292
