@@ -25,23 +25,6 @@ Screens:
             ctxPickLseNovoAM: ""
         });
         Set(varProcessando, false);
-        Concurrent(
-            ClearCollect(
-                colColabAM,
-                Sort(
-                    Filter(
-                        ForAll(
-                            Colaboradores As _c2,
-                            { Nome: Trim(Text(_c2.Nome)) }
-                        ) As _n,
-                        !IsBlank(_n.Nome)
-                    ),
-                    Nome,
-                    SortOrder.Ascending
-                )
-            ),
-            ClearCollect(colSpecAM, AMDM02_Spec)
-        );
         Reset(cmb_MaqTrAM);
         Select(btn_CarregarAM)
     Children:
@@ -505,15 +488,15 @@ Screens:
             ChevronFill: =fx_CorRotulo
             ChevronHoverBackground: =fx_CorFundo
             ChevronHoverFill: =fx_CorRotulo
-            DefaultSelectedItems: =Filter(colColabAM, Nome = ctxRespAM)
-            DisplayFields: =["Nome"]
+            DefaultSelectedItems: =Filter(Colaboradores, Nome = ctxRespAM)
+            DisplayFields: =["field_1"]
             DisplayMode: =If(varProcessando || ctxCarregandoAM, DisplayMode.Disabled, DisplayMode.Edit)
             Fill: =fx_CorSuperficie
             Font: =fx_FonteFamilia
             Height: =44
             HoverFill: =fx_CorInfoSuave
             InputTextPlaceholder: ="Buscar colaborador..."
-            Items: =colColabAM
+            Items: =Sort(Colaboradores, Nome, SortOrder.Ascending)
             OnChange: |-
               =If(
                   Coalesce(Self.Selected.Nome, "") <> ctxRespAM,
@@ -521,7 +504,7 @@ Screens:
               )
             PressedColor: =fx_CorSuperficie
             PressedFill: =fx_CorInfo
-            SearchFields: =["Nome"]
+            SearchFields: =["field_1"]
             SelectMultiple: =false
             SelectionColor: =fx_CorInfo
             SelectionFill: =fx_CorInfoSuave
@@ -2037,10 +2020,10 @@ Screens:
                   Height: =44
                   HoverFill: =fx_CorInfoSuave
                   InputTextPlaceholder: ="Buscar código..."
-                  Items: =Sort(colSpecAM, PARTNUMBER, SortOrder.Ascending)
+                  Items: =Sort(AMDM02_Spec, PARTNUMBER, SortOrder.Ascending)
                   PressedColor: =fx_CorSuperficie
                   PressedFill: =fx_CorInfo
-                  SearchFields: =["PARTNUMBER"]
+                  SearchFields: =["PARTNUMBER", "BRD_CODE"]
                   SelectMultiple: =false
                   SelectionColor: =fx_CorInfo
                   SelectionFill: =fx_CorInfoSuave
