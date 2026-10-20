@@ -11,8 +11,10 @@ Screens:
             ctxAlteradoAM: false,
             ctxCarregandoAM: false,
             ctxIdFolhaAM: 0,
-            ctxTrancaAM: 1,
-            ctxMaqAM: Coalesce(LookUp(fx_AMDM02_Folhas, Maquina = varMaqAM).Maquina, "TH01"),
+            ctxMaqAM: Coalesce(
+                LookUp(Filter(fx_LayoutBalizas, tranc), Trançadeira = varMaqAM).Trançadeira,
+                First(Filter(fx_LayoutBalizas, tranc)).Trançadeira
+            ),
             ctxRespAM: "",
             ctxPNAM: "",
             ctxBRDAM: "",
@@ -21,9 +23,6 @@ Screens:
             ctxObsAM: "",
             ctxPickLieNovoAM: "",
             ctxPickLseNovoAM: ""
-        });
-        UpdateContext({
-            ctxRotuloAM: LookUp(fx_AMDM02_Folhas, Maquina = ctxMaqAM && Tranca = 1).Rotulo
         });
         Set(varProcessando, false);
         Concurrent(
@@ -94,7 +93,7 @@ Screens:
             FontWeight: =FontWeight.Normal
             Height: =24
             Size: =fx_FonteCorpo
-            Text: ="Diâmetro externo  ·  REV. 5  ·  " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & "  ·  " & ctxRotuloAM
+            Text: ="Diâmetro externo  ·  REV. 5  ·  " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & "  ·  " & ctxMaqAM
             Width: =640
             X: =72
             Y: =54
@@ -264,39 +263,35 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =16
             Size: =fx_FonteApoio
-            Text: ="MÁQUINA · TRANÇA"
+            Text: ="MÁQUINA"
             Width: =210
             X: =16
             Y: =104
       - cmb_MaqTrAM:
           Control: Classic/DropDown@2.3.1
           Properties:
-            AccessibleLabel: ="Máquina e trança da folha"
+            AccessibleLabel: ="Máquina da folha"
             BorderColor: =fx_CorBorda
             ChevronBackground: =Color.Transparent
             ChevronFill: =fx_CorRotulo
             ChevronHoverBackground: =fx_CorFundo
             ChevronHoverFill: =fx_CorRotulo
-            Default: =ctxRotuloAM
+            Default: =ctxMaqAM
             DisplayMode: =If(varProcessando || ctxCarregandoAM, DisplayMode.Disabled, DisplayMode.Edit)
             Fill: =fx_CorSuperficie
             Font: =fx_FonteFamilia
             Height: =44
             HoverFill: =fx_CorInfoSuave
-            Items: =fx_AMDM02_Folhas
-            Items.Value: =Rotulo
+            Items: =Filter(fx_LayoutBalizas, tranc)
+            Items.Value: =Trançadeira
             OnChange: |-
               =If(
-                  Self.Selected.Rotulo <> ctxRotuloAM,
+                  Self.Selected.Trançadeira <> ctxMaqAM,
                   If(
                       ctxAlteradoAM,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000);
                       Reset(cmb_MaqTrAM),
-                      UpdateContext({
-                          ctxRotuloAM: Self.Selected.Rotulo,
-                          ctxMaqAM: Self.Selected.Maquina,
-                          ctxTrancaAM: Self.Selected.Tranca
-                      });
+                      UpdateContext({ctxMaqAM: Self.Selected.Trançadeira});
                       Select(btn_CarregarAM)
                   )
               )
@@ -645,7 +640,7 @@ Screens:
               =UpdateContext({ctxCarregandoAM: true, ctxAgoraAM: Now()});
               IfError(
                   With(
-                      { _f: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrancaAM)) },
+                      { _f: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM)) },
                       UpdateContext({
                           ctxIdFolhaAM: Coalesce(_f.ID, 0),
                           ctxPNAM:      Text(_f.PN),
@@ -1998,7 +1993,7 @@ Screens:
                   FontWeight: =FontWeight.Bold
                   Height: =28
                   Size: =fx_FonteDestaque
-                  Text: ="Folha ainda não aberta · " & ctxRotuloAM & " · " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy")
+                  Text: ="Folha ainda não aberta · " & ctxMaqAM & " · " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy")
                   Width: =790
                   X: =32
                   Y: =12
@@ -2042,7 +2037,7 @@ Screens:
                   Height: =44
                   HoverFill: =fx_CorInfoSuave
                   InputTextPlaceholder: ="Buscar código..."
-                  Items: =Sort(Filter(colSpecAM, ctxTrancaAM = 1 || OD2_MED > 0), PARTNUMBER, SortOrder.Ascending)
+                  Items: =Sort(colSpecAM, PARTNUMBER, SortOrder.Ascending)
                   PressedColor: =fx_CorSuperficie
                   PressedFill: =fx_CorInfo
                   SearchFields: =["PARTNUMBER"]
@@ -2066,9 +2061,9 @@ Screens:
                         IsBlank(cmb_PNAM.Selected.PARTNUMBER),
                         "",
                         "BRD CODE " & cmb_PNAM.Selected.BRD_CODE & "   ·   ∅ ext. (pol)  LIE " &
-                        fx_AMDM02_Txt(If(ctxTrancaAM = 1, cmb_PNAM.Selected.OD1_MIN, cmb_PNAM.Selected.OD2_MIN), 3) & "  ·  Nominal " &
-                        fx_AMDM02_Txt(If(ctxTrancaAM = 1, cmb_PNAM.Selected.OD1_MED, cmb_PNAM.Selected.OD2_MED), 3) & "  ·  LSE " &
-                        fx_AMDM02_Txt(If(ctxTrancaAM = 1, cmb_PNAM.Selected.OD1_MAX, cmb_PNAM.Selected.OD2_MAX), 3)
+                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MIN, cmb_PNAM.Selected.OD2_MIN, cmb_PNAM.Selected.OD2_MED), 3) & "  ·  Nominal " &
+                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MED, cmb_PNAM.Selected.OD2_MED, cmb_PNAM.Selected.OD2_MED), 3) & "  ·  LSE " &
+                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MAX, cmb_PNAM.Selected.OD2_MAX, cmb_PNAM.Selected.OD2_MED), 3)
                     )
                   Width: =790
                   X: =32
@@ -2091,7 +2086,7 @@ Screens:
                   AccessibleLabel: ="Pick especificado, limite inferior"
                   Align: =Align.Left
                   BorderColor: =fx_CorBorda
-                  Default: =Text(If(ctxTrancaAM = 1, cmb_PNAM.Selected.PICK1_MIN, cmb_PNAM.Selected.PICK2_MIN))
+                  Default: =Text(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.PICK1_MIN, cmb_PNAM.Selected.PICK2_MIN, cmb_PNAM.Selected.OD2_MED))
                   DelayOutput: =true
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
@@ -2129,7 +2124,7 @@ Screens:
                   AccessibleLabel: ="Pick especificado, limite superior"
                   Align: =Align.Left
                   BorderColor: =fx_CorBorda
-                  Default: =Text(If(ctxTrancaAM = 1, cmb_PNAM.Selected.PICK1_MAX, cmb_PNAM.Selected.PICK2_MAX))
+                  Default: =Text(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.PICK1_MAX, cmb_PNAM.Selected.PICK2_MAX, cmb_PNAM.Selected.OD2_MED))
                   DelayOutput: =true
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
@@ -2190,17 +2185,16 @@ Screens:
                                 AMDM02_Folha,
                                 Defaults(AMDM02_Folha),
                                 {
-                                    Title:          fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrancaAM),
+                                    Title:          fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM),
                                     Data:           ctxDataAM,
                                     Maquina:        ctxMaqAM,
-                                    Tranca:         ctxTrancaAM,
                                     PN:             _s.PARTNUMBER,
                                     BRDCode:        _s.BRD_CODE,
                                     Caracteristica: "Diâmetro",
                                     Responsavel:    cmb_RespAM.Selected.Nome,
-                                    ODLie:          If(ctxTrancaAM = 1, _s.OD1_MIN, _s.OD2_MIN),
-                                    ODNom:          If(ctxTrancaAM = 1, _s.OD1_MED, _s.OD2_MED),
-                                    ODLse:          If(ctxTrancaAM = 1, _s.OD1_MAX, _s.OD2_MAX),
+                                    ODLie:          fx_AMDM02_UltimaTranca(_s.OD1_MIN, _s.OD2_MIN, _s.OD2_MED),
+                                    ODNom:          fx_AMDM02_UltimaTranca(_s.OD1_MED, _s.OD2_MED, _s.OD2_MED),
+                                    ODLse:          fx_AMDM02_UltimaTranca(_s.OD1_MAX, _s.OD2_MAX, _s.OD2_MED),
                                     PickLie:        fx_NumMedida(inp_PickLieAM.Text),
                                     PickLse:        fx_NumMedida(inp_PickLseAM.Text)
                                 }

@@ -1,6 +1,6 @@
 # AM-DM-02 · Controle de Trançagem: listas SharePoint (MEL-114)
 
-Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.1.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12).
+Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.1.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12). Não existe 1ª/2ª trança: a folha registra sempre a ÚLTIMA trança, como a ficha.
 Coleta digital em paralelo ao papel. Diâmetro sempre em **polegada**, como no formulário.
 Criar as 3 listas à mão, com os **nomes internos exatos** abaixo (sem acento, sem espaço). Os nomes das listas no app são `AMDM02_Folha`, `AMDM02_Janela` e `AMDM02_Spec`.
 
@@ -18,21 +18,20 @@ Gerada da aba oculta "Dados Mang" da planilha, com o pick vindo do `DM_TRANÇAGE
 | PICK1_MIN, PICK1_MAX | Número, 1 casa | Pick LIE/LSE da 1ª trança (`_15PICKS_1ST_MIN_5` e `_17PICKS_1ST_MAX_5` do DM_TRANÇAGEM). Vazio nos 4 Spiral (GH493-6/-8/-12/-16) |
 | PICK2_MIN, PICK2_MAX | Número, 1 casa | Pick da 2ª trança (`_35...` e `_37...`). Vazio quando não há 2ª trança |
 
-O app só **lê** esta lista (carrega em `colSpecAM` ao abrir a tela). Manutenção: atualizar quando a Engenharia mudar o DM_TRANÇAGEM (regerar o CSV pelo mesmo cruzamento e reimportar).
+Cada linha traz as duas tranças; o app escolhe a da última (OD2_MED > 0 → OD2/PICK2; senão OD1/PICK1). O app só **lê** esta lista (carrega em `colSpecAM` ao abrir a tela). Manutenção: atualizar quando a Engenharia mudar o DM_TRANÇAGEM (regerar o CSV pelo mesmo cruzamento e reimportar).
 
-## 2. AMDM02_Folha (uma por Data + Máquina + Trança)
+## 2. AMDM02_Folha (uma por Data + Máquina)
 
 | Coluna (nome interno) | Tipo | Quem grava |
 |---|---|---|
-| Title | Texto (padrão) | App, na abertura. Chave `yyyy-mm-dd|Maquina|Tranca` (ex.: `2026-10-20|TH02|1`). **Impor valores exclusivos: Sim.** Indexada |
+| Title | Texto (padrão) | App, na abertura. Chave `yyyy-mm-dd|Maquina` (ex.: `2026-10-20|TH02`). **Impor valores exclusivos: Sim.** Indexada |
 | Data | Data (só data) | App, na abertura. Indexada |
-| Maquina | Texto | App, na abertura. Indexada. TH01…TO04 (11 máquinas) |
-| Tranca | Número, 0 casas | App, na abertura. 1 ou 2 (máquina de trança única = 1) |
+| Maquina | Texto | App, na abertura. Indexada. Nome da trançadeira como no cadastro (`fx_LayoutBalizas`, `tranc = true`) |
 | PN | Texto | App, na abertura (código de produto) |
 | BRDCode | Texto | App, na abertura |
 | Caracteristica | Texto | App, na abertura ("Diâmetro") |
 | Responsavel | Texto | App, na abertura e em cada Salvar (nome da lista `Colaboradores`) |
-| ODLie, ODNom, ODLse | Número, 3 casas | App, na abertura: spec copiada da AMDM02_Spec (OD1 ou OD2, conforme a trança). Não muda depois |
+| ODLie, ODNom, ODLse | Número, 3 casas | App, na abertura: spec da ÚLTIMA trança copiada da AMDM02_Spec (OD2 se o produto tem 2ª trança, senão OD1). Não muda depois |
 | PickLie, PickLse | Número, 1 casa | App, na abertura (vem da AMDM02_Spec; se vier vazio, o operador digita) |
 | Tensao1 … Tensao5 | Número, 2 casas | App, em cada Salvar (tabela lateral, tensão nas bonecas) |
 | Fios1 … Fios5 | Número, 0 casas | App, em cada Salvar (nº de fios) |
@@ -67,6 +66,6 @@ Aba "TH02 (1ª Trança)" da planilha, janelas 06:00, 08:00, 10:00 e 12:00 (colun
 
 ## Pendências de dados
 
-- TM02 não consta no cadastro `fx_LayoutBalizas` nem em `fx_CelulasTrancagem` (a TH07 e a Spiral constam, mas não têm folha no AM-DM-02). A lista das 16 folhas está em `fx_AMDM02_Folhas`, copiada do formulário.
-- Na planilha, a aba TO04 (GH781-16) tem a spec digitada como 1300 / 1315 / 1330 (o ∅ da 2ª trança ×1000, não o da 1ª). A tela usa a 1ª trança (1,225 / 1,240 / 1,255) para máquina de trança única. William confirma qual vale na TO04.
+- TM02 não consta no cadastro `fx_LayoutBalizas`: por isso não aparece na lista de máquinas da tela. Se a TM02 precisar de folha, entra primeiro no cadastro (William decide).
+- A lista de máquinas da tela é `Filter(fx_LayoutBalizas, tranc)`: inclui TH07 e Spiral, que não tinham folha no formulário em papel.
 - Pick da Spiral (GH493-6/-8/-12/-16) não existe no DM_TRANÇAGEM: o operador digita ao abrir a folha.
