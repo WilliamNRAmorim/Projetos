@@ -733,7 +733,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="TURNO"
+                  Text: ="TUR."
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =40
                   X: =80
                   Y: =2
@@ -746,7 +748,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="AMOSTRA 1"
+                  Text: ="AMOST. 1"
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =74
                   X: =124
                   Y: =2
@@ -759,7 +763,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="AMOSTRA 2"
+                  Text: ="AMOST. 2"
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =74
                   X: =204
                   Y: =2
@@ -772,7 +778,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="AMOSTRA 3"
+                  Text: ="AMOST. 3"
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =74
                   X: =284
                   Y: =2
@@ -785,7 +793,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="AMOSTRA 4"
+                  Text: ="AMOST. 4"
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =74
                   X: =364
                   Y: =2
@@ -798,7 +808,9 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =18
                   Size: =fx_FonteApoio
-                  Text: ="AMOSTRA 5"
+                  Text: ="AMOST. 5"
+                  PaddingLeft: =0
+                  Wrap: =false
                   Width: =74
                   X: =444
                   Y: =2
@@ -1242,56 +1254,41 @@ Screens:
                   Width: =70
                   X: =806
                   Y: =fx_AMDM02_YMedia(ctxLieAM, ctxLieAM, ctxLseAM, 150) + 40 - 8
-            - gal_CartaXAM:
-                Control: Gallery@2.15.0
-                Variant: Vertical
+            - img_CartaXAM:
+                Control: Image@2.2.3
                 Properties:
-                  BorderColor: =Color.Transparent
-                  Fill: =Color.Transparent
                   Height: =170
-                  Items: =colJanAM
-                  ShowScrollbar: =false
-                  TemplateFill: =Color.Transparent
-                  TemplatePadding: =0
-                  TemplateSize: =170
+                  Image: |-
+                    =With(
+                        { _ok: ctxLseAM > ctxLieAM && ctxLieAM > 0 },
+                        "data:image/svg+xml;utf8," & EncodeUrl(
+                            "<svg xmlns='http://www.w3.org/2000/svg' width='456' height='170' viewBox='0 0 456 170'>" &
+                            If(
+                                _ok && CountRows(Filter(Sort(colJanAM, Janela), !IsBlank(Media))) > 1,
+                                "<polyline fill='none' stroke-width='2' stroke-linejoin='round' stroke='" & fx_CorHex(fx_CorInfo) & "' points='" &
+                                    Concat(Filter(Sort(colJanAM, Janela), !IsBlank(Media)), Text(19 + 38 * Janela) & "," & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0"), " ") & "'/>",
+                                ""
+                            ) &
+                            If(
+                                _ok,
+                                Concat(
+                                    Filter(Sort(colJanAM, Janela), !IsBlank(Media)),
+                                    "<circle r='7' stroke-width='2' cx='" & Text(19 + 38 * Janela) & "' cy='" & Text(fx_AMDM02_YMedia(Media, ctxLieAM, ctxLseAM, 150), "[$-en-US]0.0") &
+                                        "' stroke='" & fx_CorHex(fx_CorSuperficie) & "' fill='" & fx_CorHex(If(fx_ForaDaFaixa(Media, ctxLieAM, ctxLseAM), fx_CorErro, fx_CorInfo)) & "'/>"
+                                ),
+                                ""
+                            ) &
+                            Concat(
+                                Sort(colJanAM, Janela),
+                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(19 + 38 * Janela) &
+                                    "' y='166' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & Left(Rotulo, 2) & "</text>"
+                            ) &
+                            "</svg>"
+                        )
+                    )
                   Width: =456
-                  WrapCount: =12
                   X: =880
                   Y: =40
-                Children:
-                  - btn_PontoXAM:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderColor: =fx_CorSuperficie
-                        BorderThickness: =0
-                        DisplayMode: =DisplayMode.View
-                        Fill: =If(fx_ForaDaFaixa(ThisItem.Media, ctxLieAM, ctxLseAM), fx_CorErro, fx_CorInfo)
-                        Font: =fx_FonteFamilia
-                        Height: =16
-                        HoverFill: =Self.Fill
-                        PressedFill: =Self.Fill
-                        RadiusBottomLeft: =fx_Raio
-                        RadiusBottomRight: =fx_Raio
-                        RadiusTopLeft: =fx_Raio
-                        RadiusTopRight: =fx_Raio
-                        Text: =""
-                        Visible: =!IsBlank(ThisItem.Media) && ctxLseAM > ctxLieAM && ctxLieAM > 0
-                        Width: =16
-                        X: =11
-                        Y: =fx_AMDM02_YMedia(ThisItem.Media, ctxLieAM, ctxLseAM, 150) - 8
-                  - lbl_HoraXAM:
-                      Control: Label@2.5.1
-                      Properties:
-                        Align: =Align.Center
-                        Color: =fx_CorRotulo
-                        Font: =fx_FonteFamilia
-                        FontWeight: =FontWeight.Semibold
-                        Height: =16
-                        Size: =fx_FonteApoio
-                        Text: =Left(ThisItem.Rotulo, 2)
-                        Width: =38
-                        X: =0
-                        Y: =152
             - lbl_LegXAM:
                 Control: Label@2.5.1
                 Properties:
@@ -1370,56 +1367,41 @@ Screens:
                   Width: =456
                   X: =880
                   Y: =402
-            - gal_CartaRAM:
-                Control: Gallery@2.15.0
-                Variant: Vertical
+            - img_CartaRAM:
+                Control: Image@2.2.3
                 Properties:
-                  BorderColor: =Color.Transparent
-                  Fill: =Color.Transparent
                   Height: =130
-                  Items: =colJanAM
-                  ShowScrollbar: =false
-                  TemplateFill: =Color.Transparent
-                  TemplatePadding: =0
-                  TemplateSize: =130
+                  Image: |-
+                    =With(
+                        { _ok: true },
+                        "data:image/svg+xml;utf8," & EncodeUrl(
+                            "<svg xmlns='http://www.w3.org/2000/svg' width='456' height='130' viewBox='0 0 456 130'>" &
+                            If(
+                                _ok && CountRows(Filter(Sort(colJanAM, Janela), !IsBlank(Amp))) > 1,
+                                "<polyline fill='none' stroke-width='2' stroke-linejoin='round' stroke='" & fx_CorHex(fx_CorInfo) & "' points='" &
+                                    Concat(Filter(Sort(colJanAM, Janela), !IsBlank(Amp)), Text(19 + 38 * Janela) & "," & Text(fx_AMDM02_YAmp(Amp, Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 110), "[$-en-US]0.0"), " ") & "'/>",
+                                ""
+                            ) &
+                            If(
+                                _ok,
+                                Concat(
+                                    Filter(Sort(colJanAM, Janela), !IsBlank(Amp)),
+                                    "<circle r='7' stroke-width='2' cx='" & Text(19 + 38 * Janela) & "' cy='" & Text(fx_AMDM02_YAmp(Amp, Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 110), "[$-en-US]0.0") &
+                                        "' stroke='" & fx_CorHex(fx_CorSuperficie) & "' fill='" & fx_CorHex(fx_CorInfo) & "'/>"
+                                ),
+                                ""
+                            ) &
+                            Concat(
+                                Sort(colJanAM, Janela),
+                                "<text text-anchor='middle' font-family='Segoe UI, sans-serif' font-weight='600' x='" & Text(19 + 38 * Janela) &
+                                    "' y='126' font-size='" & Text(Round(fx_FonteApoio * 4 / 3, 0)) & "' fill='" & fx_CorHex(fx_CorRotulo) & "'>" & Left(Rotulo, 2) & "</text>"
+                            ) &
+                            "</svg>"
+                        )
+                    )
                   Width: =456
-                  WrapCount: =12
                   X: =880
                   Y: =292
-                Children:
-                  - btn_PontoRAM:
-                      Control: Classic/Button@2.2.0
-                      Properties:
-                        BorderColor: =fx_CorSuperficie
-                        BorderThickness: =0
-                        DisplayMode: =DisplayMode.View
-                        Fill: =fx_CorInfo
-                        Font: =fx_FonteFamilia
-                        Height: =16
-                        HoverFill: =Self.Fill
-                        PressedFill: =Self.Fill
-                        RadiusBottomLeft: =fx_Raio
-                        RadiusBottomRight: =fx_Raio
-                        RadiusTopLeft: =fx_Raio
-                        RadiusTopRight: =fx_Raio
-                        Text: =""
-                        Visible: =!IsBlank(ThisItem.Amp)
-                        Width: =16
-                        X: =11
-                        Y: =fx_AMDM02_YAmp(ThisItem.Amp, Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 110) - 8
-                  - lbl_HoraRAM:
-                      Control: Label@2.5.1
-                      Properties:
-                        Align: =Align.Center
-                        Color: =fx_CorRotulo
-                        Font: =fx_FonteFamilia
-                        FontWeight: =FontWeight.Semibold
-                        Height: =16
-                        Size: =fx_FonteApoio
-                        Text: =Left(ThisItem.Rotulo, 2)
-                        Width: =38
-                        X: =0
-                        Y: =112
       - cntr_Aba2AM:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
