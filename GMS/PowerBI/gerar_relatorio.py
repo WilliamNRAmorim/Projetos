@@ -557,6 +557,36 @@ def pg_plano():
     return p
 
 
+def pg_extrusora():
+    """Extrusora de Mandril: producao (m) e refugo (kg). Unidades diferentes: nunca somadas nem em % sobre metros.
+    As duas listas nao tem relacionamento com dCalendario; as medidas fazem a data virtual (INT do datetime),
+    entao o slicer de periodo vale para todos os visuais."""
+    p = Pagina("pg_extrusora", "Extrusora")
+    cabecalho(p, "Extrusora de Mandril (produção e refugo)", [SEG_MES])
+    EX = lambda prop: med(prop, "ControleExtrusora_estrutura")
+    kpis(p, [
+        ("Metros Extrudados", EX("Qtd Extrusora Mandril"), None),
+        ("Extrusões (carretéis)", EX("Extrusoes Mandril"), None),
+        ("Metros por Dia com Extrusão", EX("Metros por Dia Extrusora"), None),
+        ("Refugo (kg)", EX("Refugo Extrusora Mandril"), None),
+        ("Refugo kg por 1.000 m", EX("Refugo kg por 1000 m"), None),
+    ])
+    p.add("g_dia", MARGEM, Y_R1, WL, 244, grafico(
+        "lineChart", col("dCalendario", "Date"), [EX("Qtd Extrusora Mandril")], "Metros extrudados por dia"))
+    p.add("g_bitola", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
+        "clusteredColumnChart", col("ControleExtrusora_estrutura", "Bitola"), [EX("Qtd Extrusora Mandril")],
+        "Metros extrudados por bitola"))
+    p.add("g_turno", MARGEM, Y_R2, 400, 240, grafico(
+        "clusteredColumnChart", col("ControleExtrusora_estrutura", "Turno"), [EX("Qtd Extrusora Mandril")],
+        "Metros extrudados por turno", cores_turno=True))
+    p.add("g_ref_causa", MARGEM + 412, Y_R2, 420, 240, grafico(
+        "clusteredBarChart", col("RefugoExtrusora_Mandril", "CodigoErro"), [EX("Refugo Extrusora Mandril")],
+        "Refugo (kg) por tipo de erro", ordenar=EX("Refugo Extrusora Mandril"), desc=True))
+    p.add("g_ref_dia", MARGEM + 844, Y_R2, 392, 240, grafico(
+        "lineChart", col("dCalendario", "Date"), [EX("Refugo Extrusora Mandril")], "Refugo (kg) por dia"))
+    return p
+
+
 # ---- gravacao ------------------------------------------------------------
 def grava(caminho, obj):
     caminho.parent.mkdir(parents=True, exist_ok=True)
@@ -623,7 +653,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_gargalo(), pg_paradas(), pg_paradas_montagem(), pg_produtividade(), pg_plano()]
+    paginas = [pg_visao_geral(), pg_gargalo(), pg_paradas(), pg_paradas_montagem(), pg_produtividade(), pg_extrusora(), pg_plano()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})
