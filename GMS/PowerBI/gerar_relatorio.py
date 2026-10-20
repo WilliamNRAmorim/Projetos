@@ -133,6 +133,10 @@ NOMES_EXT = {e[0] for e in EXT}
 
 
 # ---- infraestrutura -------------------------------------------------------
+# Layout salvo no Desktop em 20/10/2026 (filtros cabem): norma, nao reposicionar. Regerar com extracao do projeto.
+LAYOUT_SALVO = json.loads((RAIZ / "layout_salvo.json").read_text(encoding="utf-8"))
+
+
 class Pagina:
     def __init__(self, nome, titulo, filtros=None):
         self.nome, self.titulo, self.filtros = nome, titulo, filtros or []
@@ -140,10 +144,12 @@ class Pagina:
 
     def add(self, nome, x, y, w, h, visual):
         self.z += 1
+        pos = {"x": x, "y": y, "z": self.z, "height": h, "width": w, "tabOrder": self.z}
+        pos.update(LAYOUT_SALVO.get(self.nome, {}).get(nome, {}))  # posicao salva pelo William no Desktop vence
         self.visuais.append({
-            "$schema": f"{SCH}/visualContainer/2.13.0/schema.json",
+            "$schema": f"{SCH}/visualContainer/2.14.0/schema.json",
             "name": nome,
-            "position": {"x": x, "y": y, "z": self.z, "height": h, "width": w, "tabOrder": self.z},
+            "position": pos,
             "visual": visual,
         })
 
@@ -201,7 +207,7 @@ def card_delta(campo):
         "query": {"queryState": {"Values": {"projections": [proj(campo)]}}},
         "objects": {
             "labels": [{"properties": {"fontSize": num(11), "color": cor(ARDOSIA), "bold": boo(True)}}],
-            "categoryLabels": [{"properties": {"show": boo(True), "fontSize": num(8), "color": cor(CINZA)}}],
+            "categoryLabels": [{"properties": {"show": boo(False)}}],  # rotulo de categoria bugava (decisao 20/10)
         },
         "visualContainerObjects": container(None),
         "drillFilterOtherVisuals": True,
@@ -516,50 +522,6 @@ def pg_paradas_montagem():
     return p
 
 
-def pg_produtividade():
-    p = Pagina("pg_produtividade", "Prod. Mont.")
-    cabecalho(p, "Produtividade da Montagem",
-              [(col("Producao_Montagem", "Turno"), "Turno", None, False),
-               (col("Producao_Montagem", "Celula"), "Célula", None, False),
-               (col("Producao_Montagem", "Status"), "Status", None, False)])
-    kpis(p, [
-        ("Real (OPs finalizadas)", PM("Real Montagem"), None),
-        ("Meta do Dia", PM("Meta Montagem Dia"), None),
-        ("Atingimento", PM("% Montagem c/ Seta"), None),
-        ("OPs Finalizadas", PM("OPs Finalizadas Montagem"), None),
-        ("Ordens em Andamento", med("Ordens em Andamento"), None),
-    ])
-    p.add("g_status", MARGEM, Y_R1, 380, 494, pizza(
-        col("Producao_Montagem", "Status"), med("Quantidade Produzida Montagem"), "Quantidade por status"))
-    p.add("t_meta", MARGEM + 392, Y_R1, 856, 244, tabela(
-        [col("dMetaMontagem", "Celula"), col("dMetaMontagem", "Turno"), PM("Meta Montagem Dia"),
-         PM("Real Montagem"), PM("% Montagem c/ Seta")], "Meta × real por célula e turno"))
-    p.add("t_ops", MARGEM + 392, Y_R2, 856, 240, tabela(
-        [col("Producao_Montagem", c) for c in ("Celula", "PN", "MetaHora", "QtdProduzida", "Status", "Turno")],
-        "Ordens de montagem"))
-    return p
-
-
-def pg_plano():
-    p = Pagina("pg_plano", "Plano")
-    cabecalho(p, "Plano de Produção (Hose)",
-              [(col("ficha_producao", "AnoMes_Producao"), "Mês do plano (escolha 1)", None, True)], larg_seg=240)
-    kpis(p, [
-        ("Meta do Mês", fp("Meta Plan"), None),
-        ("Realizado (GMS)", fp("Realizado MTD"), None),
-        ("Atingimento", fp("% Atingimento Meta"), None),
-        ("Em Atraso (m)", fp("Atraso"), None),
-        ("Meta Diária", fp("Meta Diaria Planejada"), None),
-        ("Dias Úteis", fp("Dias Uteis Mes"), None),
-    ])
-    p.add("ritmo", MARGEM, Y_R1, LARG_UTIL, 56, card(fp("Status Ritmo Texto"), None, fonte=16))
-    p.add("m_tipo", MARGEM, 274, LARG_UTIL, 430, matriz(
-        [col("Part Number x Construction", "Tipo_Plan")],
-        [fp("Meta Plan"), fp("Realizado MTD"), fp("% Atingimento Meta"), fp("Atraso")],
-        "Plano por tipo de mangueira"))
-    return p
-
-
 def pg_extrusora():
     """Extrusora de Mandril: producao (m) e refugo (kg). Unidades diferentes: nunca somadas nem em % sobre metros.
     As duas listas nao tem relacionamento com dCalendario; as medidas fazem a data virtual (INT do datetime),
@@ -598,8 +560,12 @@ def grava(caminho, obj):
 
 
 def main():
+    platform = (REL / ".platform").read_bytes() if (REL / ".platform").exists() else None
     if REL.exists():
         shutil.rmtree(REL)
+    if platform:  # id do item criado pelo Desktop: nao perder
+        REL.mkdir(parents=True)
+        (REL / ".platform").write_bytes(platform)
     grava(RAIZ / "GMS_Painel.pbip", {
         "$schema": "https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json",
         "version": "1.0",
@@ -657,7 +623,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_gargalo(), pg_paradas(), pg_paradas_montagem(), pg_produtividade(), pg_extrusora(), pg_plano()]
+    paginas = [pg_visao_geral(), pg_gargalo(), pg_paradas(), pg_paradas_montagem(), pg_extrusora()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})
