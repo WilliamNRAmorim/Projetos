@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """Gera o projeto Power BI (PBIR) do painel GMS.
 
-Uso:  python gerar_relatorio.py
+Uso:  python gerar_relatorio.py            (gera o projeto, usando layout_salvo.json)
+      python gerar_relatorio.py --extrair-layout   (le o projeto salvo no Desktop e atualiza layout_salvo.json)
 Saida: GMS_Painel.Report/ (relatorio "thin" ligado ao modelo semantico "(GMS)" do workspace
        "Controle de Fabricação"). Nada de dado e gravado aqui.
 Base:  pares campo x medida validados no relatorio antigo "(GMS) (4).pbix" (mesma pasta),
@@ -642,5 +643,15 @@ def main():
     print("ok:", sum(len(p.visuais) for p in paginas), "visuais em", len(paginas), "paginas")
 
 
+def extrair_layout():
+    """Le posicao/tamanho de cada visual do projeto salvo e grava layout_salvo.json (nao gera nada)."""
+    out = {}
+    for f in sorted((DEF / "pages").glob("*/visuals/*/visual.json")):
+        out.setdefault(f.parts[-4], {})[f.parts[-2]] = json.loads(f.read_text(encoding="utf-8"))["position"]
+    (RAIZ / "layout_salvo.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    print("layout_salvo.json atualizado:", {k: len(v) for k, v in out.items()})
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    extrair_layout() if "--extrair-layout" in sys.argv else main()
