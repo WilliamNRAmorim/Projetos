@@ -1,8 +1,8 @@
 # AM-DM-02 · Controle de Trançagem: listas SharePoint (MEL-114)
 
-Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.1.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12). Não existe 1ª/2ª trança: a folha registra sempre a ÚLTIMA trança, como a ficha.
+Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.2.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12). A folha (AMDM02_Folha) tem a spec da ÚLTIMA trança e as janelas/carta X̄-R; o registro de pick, ∅ da trança e foto é POR TRANÇA (1ª ou 2ª) na `AMDM02_Registro` (MEL-114, v0.2.0).
 Coleta digital em paralelo ao papel. Diâmetro sempre em **polegada**, como no formulário.
-Criar as 3 listas à mão, com os **nomes internos exatos** abaixo (sem acento, sem espaço). Os nomes das listas no app são `AMDM02_Folha`, `AMDM02_Janela` e `AMDM02_Spec`.
+Criar as 4 listas à mão, com os **nomes internos exatos** abaixo (sem acento, sem espaço). Os nomes das listas no app são `AMDM02_Folha`, `AMDM02_Janela`, `AMDM02_Spec` e `AMDM02_Registro`.
 
 ## 1. AMDM02_Spec (cadastro de especificação, 58 linhas)
 
@@ -37,8 +37,8 @@ Cada linha traz as duas tranças; o app escolhe a da última (OD2_MED > 0 → OD
 | Fios1 … Fios5 | Número, 0 casas | App, em cada Salvar (nº de fios) |
 | ODTubo1 … ODTubo5 | Número, 3 casas | App, em cada Salvar (∅ ext. do tubo, polegada) |
 | FiosSobrepostos | Número, 0 casas | App, em cada Salvar (fios sobrepostos em 150 mm) |
-| NPicks | Número, 1 casa | App, em cada Salvar (nº de picks medido) |
-| ODTranca1 … ODTranca5 | Número, 3 casas | App, em cada Salvar (5 medidas de ∅ ext. da trança, polegada) |
+| NPicks | Número, 1 casa | **OBSOLETA desde v0.2.0** (agora na AMDM02_Registro). Não apagar; sem uso |
+| ODTranca1 … ODTranca5 | Número, 3 casas | **OBSOLETAS desde v0.2.0** (agora na AMDM02_Registro). Não apagar; sem uso |
 | Observacoes | Várias linhas de texto (texto simples) | App, em cada Salvar |
 
 Criado em / Criado por (colunas do sistema) registram quem abriu a folha. Índices: Title, Data, Maquina.
@@ -59,6 +59,25 @@ Criado em / Criado por (colunas do sistema) registram quem abriu a folha. Índic
 | LancadoEm | Data e hora | App. Carimbo do último Salvar da janela |
 
 Fora de LIE/LSE não é gravado: é calculado na tela e no BI a partir de Amostra/Media e das colunas ODLie/ODLse da folha.
+
+## 4. AMDM02_Registro (uma por folha + trança; seção "3. REGISTROS" do formulário em papel)
+
+Criada à mão (nomes internos exatos). Chave `IdFolha|Tranca` (ex.: `57|2`). Criada no 1º Salvar com algum dado ou foto daquela trança; depois só atualizada (o app lê pelo Title antes de gravar, então não duplica). **Anexos habilitados**: a foto da mangueira com o pickômetro vai como anexo do item.
+
+| Coluna (nome interno) | Tipo | Quem grava |
+|---|---|---|
+| Title | Texto (padrão) | App. `IdFolha|Tranca`. **Impor valores exclusivos: Sim** |
+| IdFolha | Número, 0 casas | App. ID da AMDM02_Folha. **Indexada** |
+| Tranca | Número, 0 casas | App. 1 ou 2 |
+| PickLie, PickLse | Número, 1 casa | App. Pick especificado da trança (vem da AMDM02_Spec; se vazio, o operador digita) |
+| ODLie, ODNom, ODLse | Número, 3 casas | App. ∅ ext. especificado da trança, polegada (OD1_* na 1ª, OD2_* na 2ª) |
+| NPicks | Número, 1 casa | App. "Raspadinha": nº de picks medido em 5 pol |
+| ODTranca1 … ODTranca5 | Número, 3 casas | App. 5 medidas de ∅ ext. da trança, polegada |
+| Operador | Texto | App. Responsável da folha (cmb_RespAM) |
+| LancadoEm | Data e hora | App. Carimbo do último Salvar da trança |
+| Anexos | (do sistema) | App, pelo controle de anexos do formulário `frm_RegAM`; mostra a última foto na parte de baixo da aba |
+
+A 2ª trança só é habilitada se o PN da folha tiver 2ª trança (`OD2_MED > 0` na AMDM02_Spec, casando por PN + BRD CODE). Fora de LIE/LSE (pick e ∅) é calculado na tela, não gravado.
 
 ## Conferência de cálculo
 
