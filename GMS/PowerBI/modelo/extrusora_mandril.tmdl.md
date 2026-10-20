@@ -98,3 +98,12 @@ createOrReplace
 5. NÃO verificado: refugo. A partição ficou em estado "sem dados" mesmo após atualização manual (9h42–9h50). Falta uma
    atualização que processe a tabela (a agendada de 10h30 ou o Atualizar do Desktop) e conferir contagem e soma de kg
    contra a lista do SharePoint.
+
+## Correção do refugo em branco (20/10/2026, 11h)
+- Causa: o `SharePoint.Tables` não achou a lista por `[Name = "RefugoExtrusora_estrutura"]` (Key didn't match any rows),
+  porque o Name interno difere do título. A tabela de produção usa o Id da lista; a de refugo passou a usar o Id
+  `a89c744f-95a8-4007-944b-d3faafcb8aca` (lido na API do SharePoint; Title RefugoExtrusora_estrutura, 124 itens).
+- Resultado após atualizar o modelo: estado Ready, 124 linhas (= itens da lista), 1.420,9 kg, 21/05 a 20/10/2026,
+  0 linhas sem data, 15,51 kg por 1.000 m no total.
+- Atenção: `CodigoErro` tem prefixo numérico repetido com textos diferentes: "2 - Defeito superficial" e "2- Set-Up";
+  "6 - Outros" e "7 - Outros". É o mesmo problema de posição de dropdown que mudou, visto na MEL-107. Não padronizado.
