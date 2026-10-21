@@ -26,7 +26,6 @@ Screens:
             ctxTrAM: 1,
             ctxTem2AM: false,
             ctxRegAM: Blank(),
-            ctxNFotosAM: 0,
             ctxRPkDigAM: false,
             ctxRPkLieAM: "",
             ctxRPkLseAM: ""
@@ -53,7 +52,7 @@ Screens:
             Icon: =Icon.ArrowLeft
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                   Notify(
                       "Há alterações não salvas nesta folha. Toque em Salvar antes de sair.",
                       NotificationType.Warning,
@@ -98,7 +97,7 @@ Screens:
             Height: =28
             Size: =fx_FonteCorpo
             Text: ="Alterações não salvas"
-            Visible: =ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM
+            Visible: =ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default)
             Width: =310
             X: =780
             Y: =34
@@ -211,10 +210,8 @@ Screens:
                                       }
                                   )
                               },
-                              UpdateContext({
-                                  ctxRegAM:    LookUp(AMDM02_Registro, ID = _rr.ID),
-                                  ctxNFotosAM: Coalesce(CountRows(LookUp(AMDM02_Registro, ID = _rr.ID).Attachments), 0)
-                              })
+                              UpdateContext({ctxRegAM: LookUp(AMDM02_Registro, ID = _rr.ID)});
+                              Reset(frm_RegAM)
                           )
                       );
                       true,
@@ -327,7 +324,7 @@ Screens:
               =If(
                   Self.Selected.Trançadeira <> ctxMaqAM,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000);
                       Reset(cmb_MaqTrAM),
                       UpdateContext({ctxMaqAM: Self.Selected.Trançadeira});
@@ -369,7 +366,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, -1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -421,7 +418,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, 1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -597,7 +594,7 @@ Screens:
               =If(
                   ctxTrAM <> 1,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 1});
                       Select(btn_CarregarAM)
@@ -635,7 +632,7 @@ Screens:
               =If(
                   ctxTrAM <> 2,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 2});
                       Select(btn_CarregarAM)
@@ -780,7 +777,6 @@ Screens:
                               ctxObsAM:     Text(_f.Observacoes),
                               ctxTem2AM:    Coalesce(_sp.OD2_MED, 0) > 0,
                               ctxRegAM:     _r,
-                              ctxNFotosAM:  Coalesce(CountRows(_r.Attachments), 0),
                               ctxRPkDigAM:  IsBlank(_f.PickLie) || IsBlank(_f.PickLse),
                               ctxRPkLieAM:  Text(_f.PickLie),
                               ctxRPkLseAM:  Text(_f.PickLse),
@@ -2300,7 +2296,7 @@ Screens:
                   Size: =fx_FonteApoio
                   Text: |-
                     =With(
-                        { _n: Max(CountRows(att_FotoRegAM.Attachments), Coalesce(CountRows(ctxRegAM.Attachments), 0)) },
+                        { _n: Max(CountRows(att_FotoRegAM.Attachments), CountRows(dc_FotoRegAM.Default)) },
                         If(_n = 0, "SEM FOTO AINDA", "FOTO " & Text(_n) & " DE " & Text(_n) & "  ·  A ÚLTIMA ANEXADA")
                     )
                   Width: =488
@@ -2315,9 +2311,9 @@ Screens:
                     =If(
                         CountRows(att_FotoRegAM.Attachments) > 0,
                         Last(att_FotoRegAM.Attachments).Value,
-                        Last(ctxRegAM.Attachments).Value
+                        Last(dc_FotoRegAM.Default).Value
                     )
-                  Visible: =CountRows(att_FotoRegAM.Attachments) > 0 || Coalesce(CountRows(ctxRegAM.Attachments), 0) > 0
+                  Visible: =CountRows(att_FotoRegAM.Attachments) > 0 || CountRows(dc_FotoRegAM.Default) > 0
                   Width: =488
                   X: =862
                   Y: =364
