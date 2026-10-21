@@ -147,7 +147,7 @@
         {
           "name": "HH Principal Parada",
           "dataType": "String",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), \"@min\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [@min] > 0), [@min], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), \"MinParado\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))",
           "displayFolder": "Painel (relatório)"
         }
       ]

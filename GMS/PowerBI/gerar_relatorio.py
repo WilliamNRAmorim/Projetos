@@ -136,8 +136,8 @@ EXT = [
     ("HH Parado (min)", "Double", "SUM('Hora-Hora'[Tempo Parado (min)])", "#,0", []),
     ("HH Principal Parada", "String",
      "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), "
-     "\"@min\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) "
-     "VAR topo = TOPN(1, FILTER(t, [@min] > 0), [@min], DESC) "
+     "\"MinParado\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) "
+     "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
      "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))", None, []),
 ]
 NOMES_EXT = {e[0] for e in EXT}
