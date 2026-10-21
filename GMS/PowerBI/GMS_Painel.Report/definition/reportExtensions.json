@@ -115,6 +115,40 @@
           "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\")",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Meta (m)",
+          "dataType": "Double",
+          "expression": "SUM('Hora-Hora'[Meta Hora])",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Real (m)",
+          "dataType": "Double",
+          "expression": "SUM('Hora-Hora'[Real. Hora])",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Aderência",
+          "dataType": "Double",
+          "expression": "DIVIDE(SUM('Hora-Hora'[Real. Hora]), SUM('Hora-Hora'[Meta Hora]))",
+          "formatString": "0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Parado (min)",
+          "dataType": "Double",
+          "expression": "SUM('Hora-Hora'[Tempo Parado (min)])",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Principal Parada",
+          "dataType": "String",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), \"@min\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [@min] > 0), [@min], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))",
+          "displayFolder": "Painel (relatório)"
         }
       ]
     }
