@@ -157,12 +157,16 @@ class Pagina:
         self.z += 1
         pos = {"x": x, "y": y, "z": self.z, "height": h, "width": w, "tabOrder": self.z}
         pos.update(LAYOUT_SALVO.get(self.nome, {}).get(nome, {}))  # posicao salva pelo William no Desktop vence
-        self.visuais.append({
+        filtros = visual.pop("filterConfig", None)  # filterConfig fica no container, nao dentro de "visual"
+        cont = {
             "$schema": f"{SCH}/visualContainer/2.14.0/schema.json",
             "name": nome,
             "position": pos,
             "visual": visual,
-        })
+        }
+        if filtros:
+            cont["filterConfig"] = filtros
+        self.visuais.append(cont)
 
 
 def filtro_excluir(ent, prop, valores, alias, nome):
