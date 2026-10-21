@@ -1138,3 +1138,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-21 | LIÇÃO | scr_AMDM02_Trancagem_1 | v0.4.2 | MEL-114 | Anexos (.Attachments) de lista SharePoint só são legíveis dentro do Form (ThisItem.'{Attachments}' no card) ou no controle de anexos; em record de LookUp ou variável dão 'column is not accessible in this context' e derrubam a fórmula inteira #F1
 2026-10-21 | RESOLVIDO | scr_AMDM02_Trancagem_1 | v0.4.2 | MEL-114 | Pendência da carga da folha (21/10) resolvida pela v0.4.2 #F1
 2026-10-21 | ENTREGUE | scr_AMDM02_Trancagem_1 | v0.4.3 | MEL-114 | 'Value isn't recognized' em Last(dc_FotoRegAM.Default).Value: o Studio não tipa o Default do card. Foto e contador leem só att_FotoRegAM.Attachments (já traz salvas + novas) e a pendência de foto não salva usa frm_RegAM.Unsaved #F1
+2026-10-21 | ENTREGUE | scr_AMDM02_Trancagem_1 | v0.4.4 | MEL-114 | Reset(frm_RegAM) → ResetForm(frm_RegAM): Form não é controle resetável #F1
