@@ -171,8 +171,10 @@ Screens:
                           FiosSobrepostos: fx_NumMedida(ctxFiosSobAM),
                           Observacoes:     ctxObsAM
                       }
-                  ),
-                  Collect(colFalhasAM, {fRotulo: "Cabeçalho e rodapé", fMsg: FirstError.Message})
+                  );
+                  true,
+                  Collect(colFalhasAM, {fRotulo: "Cabeçalho e rodapé", fMsg: FirstError.Message});
+                  false
               );
 
               // ── B2 · Registro da trança selecionada (pick, ∅ da trança e foto). Um Patch só: anexos do formulário + campos.
@@ -211,8 +213,10 @@ Screens:
                               }
                           )
                       );
-                      Select(btn_CarregarRegAM),
-                      Collect(colFalhasAM, {fRotulo: "Registro da " & Text(ctxTrAM) & "ª trança", fMsg: FirstError.Message})
+                      Select(btn_CarregarRegAM);
+                      true,
+                      Collect(colFalhasAM, {fRotulo: "Registro da " & Text(ctxTrAM) & "ª trança", fMsg: FirstError.Message});
+                      false
                   )
               );
 
@@ -252,9 +256,11 @@ Screens:
                                           }
                                       )
                                   },
-                                  UpdateIf(colJanAM, Janela = _u.cJanela, {IdSp: _res.ID})
+                                  UpdateIf(colJanAM, Janela = _u.cJanela, {IdSp: _res.ID});
+                                  true
                               ),
-                              Collect(colFalhasAM, {fRotulo: _u.cRotulo, fMsg: FirstError.Message})
+                              Collect(colFalhasAM, {fRotulo: _u.cRotulo, fMsg: FirstError.Message});
+                              false
                           )
                       )
                   )
