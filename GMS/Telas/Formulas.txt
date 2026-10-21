@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina, sem trança), fx_AMDM02_UltimaTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex.
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1532,17 +1532,16 @@ fx_AMDM02_EixoHoras =
         { H: "18", Minuto: 760 }, { H: "22", Minuto: 1000 }, { H: "02", Minuto: 1240 }
     );
 
-// Folha = Data + Máquina. Não existe 1ª/2ª trança: a AM-DM-02 registra sempre a ÚLTIMA trança, como a ficha.
+// v0.4.0: a folha é POR TRANÇA, como no papel (uma aba por trança). Folha = Data + Máquina + Trança (1 ou 2).
 // A lista de máquinas vem do cadastro (Filter(fx_LayoutBalizas, tranc)), não de tabela própria.
-// Chave única da folha (coluna Title de AMDM02_Folha): "2026-10-20|TH02".
-fx_AMDM02_ChaveFolha(data: Date, maquina: Text): Text =
-    Text(data, "[$-en-US]yyyy-mm-dd") & "|" & maquina;
+// Chave única da folha (coluna Title de AMDM02_Folha): "2026-10-20|TH02|1".
+fx_AMDM02_ChaveFolha(data: Date, maquina: Text, tranca: Number): Text =
+    Text(data, "[$-en-US]yyyy-mm-dd") & "|" & maquina & "|" & Text(tranca);
 
-// Especificação da ÚLTIMA trança. Se o produto tem 2ª trança (OD2_MED > 0), vale o valor da 2ª (v2);
-// se não tem, vale o da 1ª (v1). Usar para OD1/OD2 e PICK1/PICK2, sempre passando OD2_MED em od2med.
-// Ex.: GH781-16 (TO04) tem OD2 1,300 / 1,315 / 1,330 e é essa a spec que vale.
-fx_AMDM02_UltimaTranca(v1: Number, v2: Number, od2med: Number): Number =
-    If(od2med > 0, v2, v1);
+// Escolhe o valor da trança pedida: 2 → v2 (OD2/PICK2); qualquer outra → v1 (OD1/PICK1).
+// Ex.: GH781-16 (TO04) 2ª trança: OD2 1,300 / 1,315 / 1,330. A tela só habilita a 2ª se OD2_MED > 0.
+fx_AMDM02_PorTranca(v1: Number, v2: Number, tranca: Number): Number =
+    If(tranca = 2, v2, v1);
 
 // Amostra digitada em polegada (aceita 0,673 / 0.673 / 673). Vazio, lixo e zero viram Blank.
 fx_AMDM02_Pol(txt: Text): Number =

@@ -23,7 +23,7 @@ Screens:
             ctxObsAM: "",
             ctxPickLieNovoAM: "",
             ctxPickLseNovoAM: "",
-            ctxTrAM: 0,
+            ctxTrAM: 1,
             ctxTem2AM: false,
             ctxRegAM: Blank(),
             ctxNFotosAM: 0,
@@ -31,6 +31,7 @@ Screens:
             ctxRPkLieAM: "",
             ctxRPkLseAM: ""
         });
+        ClearCollect(colODTrAM, ForAll(Sequence(5) As _o0, {Ord: _o0.Value, T: ""}));
         Set(varProcessando, false);
         Reset(cmb_MaqTrAM);
         Select(btn_CarregarAM)
@@ -83,7 +84,7 @@ Screens:
             FontWeight: =FontWeight.Normal
             Height: =24
             Size: =fx_FonteCorpo
-            Text: ="Diâmetro externo  ·  REV. 5  ·  " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & "  ·  " & ctxMaqAM
+            Text: ="Diâmetro externo  ·  REV. 5  ·  " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & "  ·  " & ctxMaqAM & "  ·  " & Text(ctxTrAM) & "ª trança"
             Width: =640
             X: =72
             Y: =54
@@ -169,6 +170,8 @@ Screens:
                           ODTubo4:         fx_AMDM02_Pol(LookUp(colLatAM, Ord = 4).ODTubo),
                           ODTubo5:         fx_AMDM02_Pol(LookUp(colLatAM, Ord = 5).ODTubo),
                           FiosSobrepostos: fx_NumMedida(ctxFiosSobAM),
+                          PickLie:         fx_NumMedida(ctxRPkLieAM),
+                          PickLse:         fx_NumMedida(ctxRPkLseAM),
                           Observacoes:     ctxObsAM
                       }
                   );
@@ -177,43 +180,43 @@ Screens:
                   false
               );
 
-              // ── B2 · Registro da trança selecionada (pick, ∅ da trança e foto). Um Patch só: anexos do formulário + campos.
-              // Se o Patch passou, recarrega do SharePoint na hora: a próxima tentativa não anexa a mesma foto de novo.
+              // ── B2 · Registro da trança desta folha (raspadinha, 5 medidas de ∅ e foto). Um Patch só: anexos do formulário + campos.
+              // Se o Patch passou, recarrega só este registro na hora: a próxima tentativa não anexa a mesma foto de novo.
               If(
-                  ctxTrAM > 0 && (
-                      !IsBlank(ctxRegAM) ||
-                      !IsBlank(fx_NumMedida(ctxNPicksAM)) ||
-                      CountRows(Filter(colODTrAM, !IsBlank(fx_AMDM02_Pol(T)))) > 0 ||
-                      CountRows(att_FotoRegAM.Attachments) > 0
-                  ),
+                  !IsBlank(ctxRegAM) ||
+                  !IsBlank(fx_NumMedida(ctxNPicksAM)) ||
+                  CountRows(Filter(colODTrAM, !IsBlank(fx_AMDM02_Pol(T)))) > 0 ||
+                  CountRows(att_FotoRegAM.Attachments) > 0,
                   IfError(
                       With(
                           { _baseR: LookUp(AMDM02_Registro, Title = Text(ctxIdFolhaAM) & "|" & Text(ctxTrAM)) },
-                          Patch(
-                              AMDM02_Registro,
-                              If(IsBlank(_baseR), Defaults(AMDM02_Registro), _baseR),
-                              frm_RegAM.Updates,
+                          With(
                               {
-                                  Title:      Text(ctxIdFolhaAM) & "|" & Text(ctxTrAM),
-                                  IdFolha:    ctxIdFolhaAM,
-                                  Tranca:     ctxTrAM,
-                                  PickLie:    fx_NumMedida(ctxRPkLieAM),
-                                  PickLse:    fx_NumMedida(ctxRPkLseAM),
-                                  ODLie:      ctxRLieAM,
-                                  ODNom:      ctxRNomAM,
-                                  ODLse:      ctxRLseAM,
-                                  NPicks:     fx_NumMedida(ctxNPicksAM),
-                                  ODTranca1:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 1).T),
-                                  ODTranca2:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 2).T),
-                                  ODTranca3:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 3).T),
-                                  ODTranca4:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 4).T),
-                                  ODTranca5:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 5).T),
-                                  Operador:   cmb_RespAM.Selected.Nome,
-                                  LancadoEm:  Now()
-                              }
+                                  _rr: Patch(
+                                      AMDM02_Registro,
+                                      If(IsBlank(_baseR), Defaults(AMDM02_Registro), _baseR),
+                                      frm_RegAM.Updates,
+                                      {
+                                          Title:      Text(ctxIdFolhaAM) & "|" & Text(ctxTrAM),
+                                          IdFolha:    ctxIdFolhaAM,
+                                          Tranca:     ctxTrAM,
+                                          NPicks:     fx_NumMedida(ctxNPicksAM),
+                                          ODTranca1:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 1).T),
+                                          ODTranca2:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 2).T),
+                                          ODTranca3:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 3).T),
+                                          ODTranca4:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 4).T),
+                                          ODTranca5:  fx_AMDM02_Pol(LookUp(colODTrAM, Ord = 5).T),
+                                          Operador:   cmb_RespAM.Selected.Nome,
+                                          LancadoEm:  Now()
+                                      }
+                                  )
+                              },
+                              UpdateContext({
+                                  ctxRegAM:    LookUp(AMDM02_Registro, ID = _rr.ID),
+                                  ctxNFotosAM: Coalesce(CountRows(LookUp(AMDM02_Registro, ID = _rr.ID).Attachments), 0)
+                              })
                           )
                       );
-                      Select(btn_CarregarRegAM);
                       true,
                       Collect(colFalhasAM, {fRotulo: "Registro da " & Text(ctxTrAM) & "ª trança", fMsg: FirstError.Message});
                       false
@@ -529,7 +532,7 @@ Screens:
             Height: =16
             Size: =fx_FonteApoio
             Text: ="RESPONSÁVEL"
-            Width: =250
+            Width: =230
             X: =952
             Y: =104
       - cmb_RespAM:
@@ -562,8 +565,91 @@ Screens:
             SelectionColor: =fx_CorInfo
             SelectionFill: =fx_CorInfoSuave
             Size: =fx_FonteCorpo
-            Width: =250
+            Width: =230
             X: =952
+            Y: =122
+      - lbl_RotTrAM:
+          Control: Label@2.5.1
+          Properties:
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            Size: =fx_FonteApoio
+            Text: ="TRANÇA"
+            Width: =160
+            X: =1190
+            Y: =104
+      - btn_Tr1AM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =If(ctxTrAM = 1, fx_CorSuperficie, fx_CorTexto)
+            DisabledFill: =fx_CorChip
+            DisplayMode: =If(varProcessando || ctxCarregandoAM, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =If(ctxTrAM = 1, fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =If(
+                  ctxTrAM <> 1,
+                  If(
+                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                      Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
+                      UpdateContext({ctxTrAM: 1});
+                      Select(btn_CarregarAM)
+                  )
+              )
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="1ª"
+            Width: =76
+            X: =1190
+            Y: =122
+      - btn_Tr2AM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorBorda
+            BorderThickness: =1
+            Color: =If(ctxTrAM = 2, fx_CorSuperficie, fx_CorTexto)
+            DisabledFill: =fx_CorChip
+            DisplayMode: |-
+              =If(
+                  varProcessando || ctxCarregandoAM || !If(ctxIdFolhaAM > 0, ctxTem2AM, Coalesce(cmb_PNAM.Selected.OD2_MED, 0) > 0),
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =If(ctxTrAM = 2, fx_CorInfo, fx_CorSuperficie)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =fx_CorInfoSuave
+            OnSelect: |-
+              =If(
+                  ctxTrAM <> 2,
+                  If(
+                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
+                      Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
+                      UpdateContext({ctxTrAM: 2});
+                      Select(btn_CarregarAM)
+                  )
+              )
+            PressedFill: =fx_CorInfoSuave
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="2ª"
+            Width: =76
+            X: =1274
             Y: =122
       - btn_FaixaSpecAM:
           Control: Classic/Button@2.2.0
@@ -594,8 +680,8 @@ Screens:
             Height: =32
             Size: =fx_FonteCorpo
             Text: |-
-              ="∅ EXT. DA " & If(ctxTrAM > 0, Text(ctxTrAM) & "ª TRANÇA", "ÚLTIMA TRANÇA") & " (pol)    LIE " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRLieAM, ctxLieAM), 3) & "   ·   Nominal " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRNomAM, ctxNomAM), 3) & "   ·   LSE " & fx_AMDM02_Txt(If(ctxTrAM > 0, ctxRLseAM, ctxLseAM), 3) &
-              "          PICK ESPECIFICADO    LIE " & If(IsBlank(If(ctxTrAM > 0, ctxRPkLieAM, Text(ctxPkLieAM))), "—", If(ctxTrAM > 0, ctxRPkLieAM, Text(ctxPkLieAM))) & "   ·   LSE " & If(IsBlank(If(ctxTrAM > 0, ctxRPkLseAM, Text(ctxPkLseAM))), "—", If(ctxTrAM > 0, ctxRPkLseAM, Text(ctxPkLseAM)))
+              ="∅ EXT. DA " & Text(ctxTrAM) & "ª TRANÇA (pol)    LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "   ·   Nominal " & fx_AMDM02_Txt(ctxNomAM, 3) & "   ·   LSE " & fx_AMDM02_Txt(ctxLseAM, 3) &
+              "          PICK ESPECIFICADO    LIE " & If(IsBlank(ctxRPkLieAM), "—", ctxRPkLieAM) & "   ·   LSE " & If(IsBlank(ctxRPkLseAM), "—", ctxRPkLseAM)
             VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxIdFolhaAM > 0
             Width: =1300
@@ -676,21 +762,41 @@ Screens:
               =UpdateContext({ctxCarregandoAM: true, ctxAgoraAM: Now()});
               IfError(
                   With(
-                      { _f: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM)) },
-                      UpdateContext({
-                          ctxIdFolhaAM: Coalesce(_f.ID, 0),
-                          ctxPNAM:      Text(_f.PN),
-                          ctxBRDAM:     Text(_f.BRDCode),
-                          ctxRespAM:    Text(_f.Responsavel),
-                          ctxLieAM:     _f.ODLie,
-                          ctxNomAM:     _f.ODNom,
-                          ctxLseAM:     _f.ODLse,
-                          ctxPkLieAM:   _f.PickLie,
-                          ctxPkLseAM:   _f.PickLse,
-                          ctxFiosSobAM: Text(_f.FiosSobrepostos),
-                          ctxTrAM:      0,
-                          ctxObsAM:     Text(_f.Observacoes)
-                      });
+                      { _f: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrAM)) },
+                      With(
+                          {
+                              _sp: LookUp(AMDM02_Spec, PARTNUMBER = _f.PN && BRD_CODE = _f.BRDCode),
+                              _r:  LookUp(AMDM02_Registro, Title = Text(Coalesce(_f.ID, 0)) & "|" & Text(ctxTrAM))
+                          },
+                          UpdateContext({
+                              ctxIdFolhaAM: Coalesce(_f.ID, 0),
+                              ctxPNAM:      Text(_f.PN),
+                              ctxBRDAM:     Text(_f.BRDCode),
+                              ctxRespAM:    Text(_f.Responsavel),
+                              ctxLieAM:     _f.ODLie,
+                              ctxNomAM:     _f.ODNom,
+                              ctxLseAM:     _f.ODLse,
+                              ctxFiosSobAM: Text(_f.FiosSobrepostos),
+                              ctxObsAM:     Text(_f.Observacoes),
+                              ctxTem2AM:    Coalesce(_sp.OD2_MED, 0) > 0,
+                              ctxRegAM:     _r,
+                              ctxNFotosAM:  Coalesce(CountRows(_r.Attachments), 0),
+                              ctxRPkDigAM:  IsBlank(_f.PickLie) || IsBlank(_f.PickLse),
+                              ctxRPkLieAM:  Text(_f.PickLie),
+                              ctxRPkLseAM:  Text(_f.PickLse),
+                              ctxNPicksAM:  Text(_r.NPicks)
+                          });
+                          ClearCollect(
+                              colODTrAM,
+                              ForAll(
+                                  Sequence(5) As _o2,
+                                  {
+                                      Ord: _o2.Value,
+                                      T:   fx_AMDM02_Txt(Switch(_o2.Value, 1, _r.ODTranca1, 2, _r.ODTranca2, 3, _r.ODTranca3, 4, _r.ODTranca4, _r.ODTranca5), 3)
+                                  }
+                              )
+                          )
+                      );
                       ClearCollect(colJanSpAM, Filter(AMDM02_Janela, IdFolha = Coalesce(_f.ID, 0)));
                       ClearCollect(
                           colJanAM,
@@ -749,68 +855,10 @@ Screens:
                   );
                   Reset(cmb_RespAM);
                   UpdateContext({ctxAlteradoAM: false, ctxCarregandoAM: false});
-                  Select(btn_CarregarRegAM),
+                  true,
                   UpdateContext({ctxCarregandoAM: false});
-                  Notify("Não consegui carregar a folha. Confira a rede e troque de dia ou de máquina para tentar de novo.", NotificationType.Error, 10000)
-              )
-            PressedFill: =Color.Transparent
-            Text: =""
-            Width: =0
-            X: =1366
-            Y: =768
-      - btn_CarregarRegAM:
-          Control: Classic/Button@2.2.0
-          Properties:
-            BorderThickness: =0
-            Fill: =Color.Transparent
-            Font: =fx_FonteFamilia
-            HoverFill: =Color.Transparent
-            OnSelect: |-
-              =If(
-                  ctxIdFolhaAM > 0,
-                  IfError(
-                      With(
-                          { _sp: LookUp(AMDM02_Spec, PARTNUMBER = ctxPNAM && BRD_CODE = ctxBRDAM) },
-                          With(
-                              { _tem2: Coalesce(_sp.OD2_MED, 0) > 0 },
-                              With(
-                                  { _tr: If(ctxTrAM = 1 || !_tem2, 1, 2) },
-                                  With(
-                                      {
-                                          _r:  LookUp(AMDM02_Registro, Title = Text(ctxIdFolhaAM) & "|" & Text(_tr)),
-                                          _pl: If(_tr = 2, _sp.PICK2_MIN, _sp.PICK1_MIN),
-                                          _ph: If(_tr = 2, _sp.PICK2_MAX, _sp.PICK1_MAX)
-                                      },
-                                      UpdateContext({
-                                          ctxTem2AM:   _tem2,
-                                          ctxTrAM:     _tr,
-                                          ctxRegAM:    _r,
-                                          ctxNFotosAM: Coalesce(CountRows(_r.Attachments), 0),
-                                          ctxRLieAM:   Coalesce(If(_tr = 2, _sp.OD2_MIN, _sp.OD1_MIN), _r.ODLie),
-                                          ctxRNomAM:   Coalesce(If(_tr = 2, _sp.OD2_MED, _sp.OD1_MED), _r.ODNom),
-                                          ctxRLseAM:   Coalesce(If(_tr = 2, _sp.OD2_MAX, _sp.OD1_MAX), _r.ODLse),
-                                          ctxRPkDigAM: IsBlank(_pl) || IsBlank(_ph),
-                                          ctxRPkLieAM: Text(Coalesce(_pl, _r.PickLie)),
-                                          ctxRPkLseAM: Text(Coalesce(_ph, _r.PickLse)),
-                                          ctxNPicksAM: Text(_r.NPicks),
-                                          ctxAlteradoAM: false
-                                      });
-                                      ClearCollect(
-                                          colODTrAM,
-                                          ForAll(
-                                              Sequence(5) As _o2,
-                                              {
-                                                  Ord: _o2.Value,
-                                                  T:   fx_AMDM02_Txt(Switch(_o2.Value, 1, _r.ODTranca1, 2, _r.ODTranca2, 3, _r.ODTranca3, 4, _r.ODTranca4, _r.ODTranca5), 3)
-                                              }
-                                          )
-                                      )
-                                  )
-                              )
-                          )
-                      ),
-                      Notify("Não consegui carregar o registro da trança. Troque de trança ou de dia para tentar de novo.", NotificationType.Error, 10000)
-                  )
+                  Notify("Não consegui carregar a folha. Confira a rede e troque de dia, de máquina ou de trança para tentar de novo.", NotificationType.Error, 10000);
+                  false
               )
             PressedFill: =Color.Transparent
             Text: =""
@@ -1377,7 +1425,7 @@ Screens:
                   Height: =20
                   Size: =fx_FonteApoio
                   Text: |-
-                    ="X̄ POR COLETA (pol)  ·  limites da última trança"
+                    ="X̄ POR COLETA (pol)  ·  " & Text(ctxTrAM) & "ª TRANÇA"
                   Width: =520
                   X: =816
                   Y: =8
@@ -1640,7 +1688,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =20
                   Size: =fx_FonteApoio
-                  Text: ="TABELA LATERAL"
+                  Text: ="TABELA LATERAL · " & Text(ctxTrAM) & "ª TRANÇA"
                   Width: =400
                   X: =32
                   Y: =8
@@ -1834,7 +1882,8 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: ="Média"
                   VerticalAlign: =VerticalAlign.Middle
-                  Width: =60
+                  Width: =68
+                  Wrap: =false
                   X: =32
                   Y: =296
             - lbl_MediaTensaoAM:
@@ -1848,8 +1897,8 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: =fx_AMDM02_Txt(IfError(Average(colLatAM, fx_NumMedida(Tensao)), Blank()), 2)
                   VerticalAlign: =VerticalAlign.Middle
-                  Width: =200
-                  X: =68
+                  Width: =136
+                  X: =100
                   Y: =296
             - lbl_MediaFiosAM:
                 Control: Label@2.5.1
@@ -1906,7 +1955,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =20
                   Size: =fx_FonteApoio
-                  Text: ="RODAPÉ"
+                  Text: ="RODAPÉ · " & Text(ctxTrAM) & "ª TRANÇA"
                   Width: =400
                   X: =688
                   Y: =8
@@ -1918,8 +1967,8 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =16
                   Size: =fx_FonteApoio
-                  Text: ="FIOS SOBREPOSTOS EM 150 mm"
-                  Width: =300
+                  Text: ="FIOS SOBREP. EM 150 mm"
+                  Width: =214
                   X: =688
                   Y: =36
             - inp_FiosSobAM:
@@ -1960,7 +2009,7 @@ Screens:
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: ="RASPADINHA · PICKS EM 5 pol"
-                  Width: =220
+                  Width: =214
                   X: =912
                   Y: =36
             - inp_NPicksAM:
@@ -2089,7 +2138,7 @@ Screens:
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: |-
-                    ="LIE " & fx_AMDM02_Txt(ctxRLieAM, 3) & "  ·  Nom " & fx_AMDM02_Txt(ctxRNomAM, 3) & "  ·  LSE " & fx_AMDM02_Txt(ctxRLseAM, 3)
+                    ="LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "  ·  Nom " & fx_AMDM02_Txt(ctxNomAM, 3) & "  ·  LSE " & fx_AMDM02_Txt(ctxLseAM, 3)
                   Width: =338
                   X: =1000
                   Y: =108
@@ -2115,11 +2164,11 @@ Screens:
                       Properties:
                         AccessibleLabel: ="Diâmetro externo da trança, em polegada"
                         Align: =Align.Center
-                        BorderColor: =If(fx_ForaDaFaixa(fx_AMDM02_Pol(ThisItem.T), ctxRLieAM, ctxRLseAM), fx_CorErro, fx_CorBorda)
+                        BorderColor: =If(fx_ForaDaFaixa(fx_AMDM02_Pol(ThisItem.T), ctxLieAM, ctxLseAM), fx_CorErro, fx_CorBorda)
                         Default: =ThisItem.T
                         DelayOutput: =true
                         DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
-                        Fill: =If(fx_ForaDaFaixa(fx_AMDM02_Pol(ThisItem.T), ctxRLieAM, ctxRLseAM), fx_CorErroSuave, fx_CorSuperficie)
+                        Fill: =If(fx_ForaDaFaixa(fx_AMDM02_Pol(ThisItem.T), ctxLieAM, ctxLseAM), fx_CorErroSuave, fx_CorSuperficie)
                         Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
                         Height: =40
@@ -2181,72 +2230,6 @@ Screens:
                   Width: =646
                   X: =688
                   Y: =208
-            - btn_Tr1AM:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =fx_CorBorda
-                  BorderThickness: =1
-                  Color: =If(ctxTrAM = 1, fx_CorSuperficie, fx_CorTexto)
-                  DisabledFill: =fx_CorChip
-                  DisplayMode: =If(varProcessando || ctxCarregandoAM, DisplayMode.Disabled, DisplayMode.Edit)
-                  Fill: =If(ctxTrAM = 1, fx_CorInfo, fx_CorSuperficie)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  HoverFill: =fx_CorInfoSuave
-                  OnSelect: |-
-                    =If(
-                        ctxTrAM <> 1,
-                        If(
-                            ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
-                            Notify("Há alterações não salvas nesta trança. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
-                            UpdateContext({ctxTrAM: 1});
-                            Select(btn_CarregarRegAM)
-                        )
-                    )
-                  PressedFill: =fx_CorInfoSuave
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteCorpo
-                  Text: ="1ª trança"
-                  Width: =160
-                  X: =1008
-                  Y: =4
-            - btn_Tr2AM:
-                Control: Classic/Button@2.2.0
-                Properties:
-                  BorderColor: =fx_CorBorda
-                  BorderThickness: =1
-                  Color: =If(ctxTrAM = 2, fx_CorSuperficie, fx_CorTexto)
-                  DisabledFill: =fx_CorChip
-                  DisplayMode: =If(varProcessando || ctxCarregandoAM || !ctxTem2AM, DisplayMode.Disabled, DisplayMode.Edit)
-                  Fill: =If(ctxTrAM = 2, fx_CorInfo, fx_CorSuperficie)
-                  Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Bold
-                  Height: =30
-                  HoverFill: =fx_CorInfoSuave
-                  OnSelect: |-
-                    =If(
-                        ctxTrAM <> 2,
-                        If(
-                            ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> ctxNFotosAM,
-                            Notify("Há alterações não salvas nesta trança. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
-                            UpdateContext({ctxTrAM: 2});
-                            Select(btn_CarregarRegAM)
-                        )
-                    )
-                  PressedFill: =fx_CorInfoSuave
-                  RadiusBottomLeft: =fx_RaioS
-                  RadiusBottomRight: =fx_RaioS
-                  RadiusTopLeft: =fx_RaioS
-                  RadiusTopRight: =fx_RaioS
-                  Size: =fx_FonteCorpo
-                  Text: ="2ª trança"
-                  Width: =160
-                  X: =1180
-                  Y: =4
             - frm_RegAM:
                 Control: Form@2.4.4
                 Variant: Classic
@@ -2376,7 +2359,7 @@ Screens:
                   FontWeight: =FontWeight.Bold
                   Height: =28
                   Size: =fx_FonteDestaque
-                  Text: ="Folha ainda não aberta · " & ctxMaqAM & " · " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy")
+                  Text: ="Folha ainda não aberta · " & ctxMaqAM & " · " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & " · " & Text(ctxTrAM) & "ª trança"
                   Width: =790
                   X: =32
                   Y: =12
@@ -2443,10 +2426,10 @@ Screens:
                     =If(
                         IsBlank(cmb_PNAM.Selected.PARTNUMBER),
                         "",
-                        "BRD CODE " & cmb_PNAM.Selected.BRD_CODE & "   ·   ∅ ext. (pol)  LIE " &
-                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MIN, cmb_PNAM.Selected.OD2_MIN, cmb_PNAM.Selected.OD2_MED), 3) & "  ·  Nominal " &
-                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MED, cmb_PNAM.Selected.OD2_MED, cmb_PNAM.Selected.OD2_MED), 3) & "  ·  LSE " &
-                        fx_AMDM02_Txt(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.OD1_MAX, cmb_PNAM.Selected.OD2_MAX, cmb_PNAM.Selected.OD2_MED), 3)
+                        "BRD CODE " & cmb_PNAM.Selected.BRD_CODE & "   ·   ∅ ext. da " & Text(ctxTrAM) & "ª trança (pol)  LIE " &
+                        fx_AMDM02_Txt(fx_AMDM02_PorTranca(cmb_PNAM.Selected.OD1_MIN, cmb_PNAM.Selected.OD2_MIN, ctxTrAM), 3) & "  ·  Nominal " &
+                        fx_AMDM02_Txt(fx_AMDM02_PorTranca(cmb_PNAM.Selected.OD1_MED, cmb_PNAM.Selected.OD2_MED, ctxTrAM), 3) & "  ·  LSE " &
+                        fx_AMDM02_Txt(fx_AMDM02_PorTranca(cmb_PNAM.Selected.OD1_MAX, cmb_PNAM.Selected.OD2_MAX, ctxTrAM), 3)
                     )
                   Width: =790
                   X: =32
@@ -2469,7 +2452,7 @@ Screens:
                   AccessibleLabel: ="Pick especificado, limite inferior"
                   Align: =Align.Left
                   BorderColor: =fx_CorBorda
-                  Default: =Text(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.PICK1_MIN, cmb_PNAM.Selected.PICK2_MIN, cmb_PNAM.Selected.OD2_MED))
+                  Default: =Text(fx_AMDM02_PorTranca(cmb_PNAM.Selected.PICK1_MIN, cmb_PNAM.Selected.PICK2_MIN, ctxTrAM))
                   DelayOutput: =true
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
@@ -2507,7 +2490,7 @@ Screens:
                   AccessibleLabel: ="Pick especificado, limite superior"
                   Align: =Align.Left
                   BorderColor: =fx_CorBorda
-                  Default: =Text(fx_AMDM02_UltimaTranca(cmb_PNAM.Selected.PICK1_MAX, cmb_PNAM.Selected.PICK2_MAX, cmb_PNAM.Selected.OD2_MED))
+                  Default: =Text(fx_AMDM02_PorTranca(cmb_PNAM.Selected.PICK1_MAX, cmb_PNAM.Selected.PICK2_MAX, ctxTrAM))
                   DelayOutput: =true
                   DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
@@ -2550,7 +2533,7 @@ Screens:
                   DisabledFill: =fx_CorChip
                   DisplayMode: |-
                     =If(
-                        varProcessando || IsBlank(cmb_PNAM.Selected.PARTNUMBER) || IsBlank(cmb_RespAM.Selected.Nome),
+                        varProcessando || IsBlank(cmb_PNAM.Selected.PARTNUMBER) || IsBlank(cmb_RespAM.Selected.Nome) || (ctxTrAM = 2 && Coalesce(cmb_PNAM.Selected.OD2_MED, 0) <= 0),
                         DisplayMode.Disabled,
                         DisplayMode.Edit
                     )
@@ -2568,16 +2551,17 @@ Screens:
                                 AMDM02_Folha,
                                 Defaults(AMDM02_Folha),
                                 {
-                                    Title:          fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM),
+                                    Title:          fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrAM),
+                                    Tranca:         ctxTrAM,
                                     Data:           ctxDataAM,
                                     Maquina:        ctxMaqAM,
                                     PN:             _s.PARTNUMBER,
                                     BRDCode:        _s.BRD_CODE,
                                     Caracteristica: "Diâmetro",
                                     Responsavel:    cmb_RespAM.Selected.Nome,
-                                    ODLie:          fx_AMDM02_UltimaTranca(_s.OD1_MIN, _s.OD2_MIN, _s.OD2_MED),
-                                    ODNom:          fx_AMDM02_UltimaTranca(_s.OD1_MED, _s.OD2_MED, _s.OD2_MED),
-                                    ODLse:          fx_AMDM02_UltimaTranca(_s.OD1_MAX, _s.OD2_MAX, _s.OD2_MED),
+                                    ODLie:          fx_AMDM02_PorTranca(_s.OD1_MIN, _s.OD2_MIN, ctxTrAM),
+                                    ODNom:          fx_AMDM02_PorTranca(_s.OD1_MED, _s.OD2_MED, ctxTrAM),
+                                    ODLse:          fx_AMDM02_PorTranca(_s.OD1_MAX, _s.OD2_MAX, ctxTrAM),
                                     PickLie:        fx_NumMedida(inp_PickLieAM.Text),
                                     PickLse:        fx_NumMedida(inp_PickLseAM.Text)
                                 }
@@ -2606,7 +2590,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =48
                   Size: =fx_FonteCorpo
-                  Text: =If(IsBlank(cmb_RespAM.Selected.Nome), "Falta escolher o responsável.", If(IsBlank(cmb_PNAM.Selected.PARTNUMBER), "Falta escolher o código de produto.", ""))
+                  Text: =If(IsBlank(cmb_RespAM.Selected.Nome), "Falta escolher o responsável.", If(IsBlank(cmb_PNAM.Selected.PARTNUMBER), "Falta escolher o código de produto.", If(ctxTrAM = 2 && Coalesce(cmb_PNAM.Selected.OD2_MED, 0) <= 0, "Este código não tem 2ª trança.", "")))
                   VerticalAlign: =VerticalAlign.Middle
                   Width: =500
                   X: =292

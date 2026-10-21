@@ -1,6 +1,6 @@
 # AM-DM-02 · Controle de Trançagem: listas SharePoint (MEL-114)
 
-Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.2.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12). A folha (AMDM02_Folha) tem a spec da ÚLTIMA trança e as janelas/carta X̄-R; o registro de pick, ∅ da trança e foto é POR TRANÇA (1ª ou 2ª) na `AMDM02_Registro` (MEL-114, v0.2.0).
+Tela: `GMS/Telas/scr_AMDM02_Trancagem_1.txt` (v0.4.0). Fórmulas novas: `Telas/Formulas.txt` §17 (v3.0.12). Desde a v0.4.0 a FOLHA INTEIRA é POR TRANÇA, como no papel (uma aba por trança): cada par Data + Máquina tem até duas folhas (1ª e 2ª trança), cada uma com a sua spec, coletas, carta X̄-R, tabela lateral, rodapé e um registro (raspadinha, 5 medidas de ∅ e foto) na `AMDM02_Registro` (MEL-114).
 Coleta digital em paralelo ao papel. Diâmetro sempre em **polegada**, como no formulário.
 Criar as 4 listas à mão, com os **nomes internos exatos** abaixo (sem acento, sem espaço). Os nomes das listas no app são `AMDM02_Folha`, `AMDM02_Janela`, `AMDM02_Spec` e `AMDM02_Registro`.
 
@@ -18,21 +18,22 @@ Gerada da aba oculta "Dados Mang" da planilha, com o pick vindo do `DM_TRANÇAGE
 | PICK1_MIN, PICK1_MAX | Número, 1 casa | Pick LIE/LSE da 1ª trança (`_15PICKS_1ST_MIN_5` e `_17PICKS_1ST_MAX_5` do DM_TRANÇAGEM). Vazio nos 4 Spiral (GH493-6/-8/-12/-16) |
 | PICK2_MIN, PICK2_MAX | Número, 1 casa | Pick da 2ª trança (`_35...` e `_37...`). Vazio quando não há 2ª trança |
 
-Cada linha traz as duas tranças; o app escolhe a da última (OD2_MED > 0 → OD2/PICK2; senão OD1/PICK1). O app só **lê** esta lista (carrega em `colSpecAM` ao abrir a tela). Manutenção: atualizar quando a Engenharia mudar o DM_TRANÇAGEM (regerar o CSV pelo mesmo cruzamento e reimportar).
+Cada linha traz as duas tranças; o app escolhe pela trança da folha (1ª → OD1/PICK1; 2ª → OD2/PICK2, `fx_AMDM02_PorTranca`). O app só **lê** esta lista (carrega em `colSpecAM` ao abrir a tela). Manutenção: atualizar quando a Engenharia mudar o DM_TRANÇAGEM (regerar o CSV pelo mesmo cruzamento e reimportar).
 
-## 2. AMDM02_Folha (uma por Data + Máquina)
+## 2. AMDM02_Folha (uma por Data + Máquina + Trança)
 
 | Coluna (nome interno) | Tipo | Quem grava |
 |---|---|---|
-| Title | Texto (padrão) | App, na abertura. Chave `yyyy-mm-dd|Maquina` (ex.: `2026-10-20|TH02`). **Impor valores exclusivos: Sim.** Indexada |
+| Title | Texto (padrão) | App, na abertura. Chave `yyyy-mm-dd|Maquina|Tranca` (ex.: `2026-10-20|TH02|1`). **Impor valores exclusivos: Sim.** Indexada |
 | Data | Data (só data) | App, na abertura. Indexada |
 | Maquina | Texto | App, na abertura. Indexada. Nome da trançadeira como no cadastro (`fx_LayoutBalizas`, `tranc = true`) |
+| Tranca | Número, 0 casas | App, na abertura. 1 ou 2 (trança da folha). **NOVA na v0.4.0: criar à mão.** **Indexada** |
 | PN | Texto | App, na abertura (código de produto) |
 | BRDCode | Texto | App, na abertura |
 | Caracteristica | Texto | App, na abertura ("Diâmetro") |
 | Responsavel | Texto | App, na abertura e em cada Salvar (nome da lista `Colaboradores`) |
-| ODLie, ODNom, ODLse | Número, 3 casas | App, na abertura: spec da ÚLTIMA trança copiada da AMDM02_Spec (OD2 se o produto tem 2ª trança, senão OD1). Não muda depois |
-| PickLie, PickLse | Número, 1 casa | App, na abertura (vem da AMDM02_Spec; se vier vazio, o operador digita) |
+| ODLie, ODNom, ODLse | Número, 3 casas | App, na abertura: spec da trança da folha copiada da AMDM02_Spec (OD1 na 1ª, OD2 na 2ª). Não muda depois |
+| PickLie, PickLse | Número, 1 casa | App, na abertura (PICK1 na 1ª, PICK2 na 2ª, da AMDM02_Spec; se vier vazio, o operador digita) e em cada Salvar |
 | Tensao1 … Tensao5 | Número, 2 casas | App, em cada Salvar (tabela lateral, tensão nas bonecas) |
 | Fios1 … Fios5 | Número, 0 casas | App, em cada Salvar (nº de fios) |
 | ODTubo1 … ODTubo5 | Número, 3 casas | App, em cada Salvar (∅ ext. do tubo, polegada) |
@@ -41,7 +42,7 @@ Cada linha traz as duas tranças; o app escolhe a da última (OD2_MED > 0 → OD
 | ODTranca1 … ODTranca5 | Número, 3 casas | **OBSOLETAS desde v0.2.0** (agora na AMDM02_Registro). Não apagar; sem uso |
 | Observacoes | Várias linhas de texto (texto simples) | App, em cada Salvar |
 
-Criado em / Criado por (colunas do sistema) registram quem abriu a folha. Índices: Title, Data, Maquina.
+Criado em / Criado por (colunas do sistema) registram quem abriu a folha. Índices: Title, Data, Maquina, Tranca. Folhas antigas (chave sem trança, até a v0.3.1) não são mais encontradas pela tela; são dados de teste e podem ser apagadas.
 
 ## 3. AMDM02_Janela (uma por folha + coleta de 5 amostras, na hora real do operador; criada no 1º Salvar com amostra)
 
@@ -63,24 +64,23 @@ O dia da folha (coluna Data de AMDM02_Folha) é o dia produtivo do GMS, de 05:20
 
 Fora de LIE/LSE não é gravado: é calculado na tela e no BI a partir de Amostra/Media e das colunas ODLie/ODLse da folha.
 
-## 4. AMDM02_Registro (uma por folha + trança; seção "3. REGISTROS" do formulário em papel)
+## 4. AMDM02_Registro (uma por folha; como a folha já é de uma trança, é uma linha por folha; seção "3. REGISTROS" do formulário em papel)
 
-Criada à mão (nomes internos exatos). Chave `IdFolha|Tranca` (ex.: `57|2`). Criada no 1º Salvar com algum dado ou foto daquela trança; depois só atualizada (o app lê pelo Title antes de gravar, então não duplica). **Anexos habilitados**: a foto da mangueira com o pickômetro vai como anexo do item.
+Criada à mão (nomes internos exatos). Chave `IdFolha|Tranca` (ex.: `57|2`). Carregada junto com a folha (btn_CarregarAM). Criada no 1º Salvar com algum dado ou foto da folha; depois só atualizada (o app lê pelo Title antes de gravar, então não duplica). **Anexos habilitados**: a foto da mangueira com o pickômetro vai como anexo do item.
 
 | Coluna (nome interno) | Tipo | Quem grava |
 |---|---|---|
 | Title | Texto (padrão) | App. `IdFolha|Tranca`. **Impor valores exclusivos: Sim** |
 | IdFolha | Número, 0 casas | App. ID da AMDM02_Folha. **Indexada** |
-| Tranca | Número, 0 casas | App. 1 ou 2 |
-| PickLie, PickLse | Número, 1 casa | App. Pick especificado da trança (vem da AMDM02_Spec; se vazio, o operador digita) |
-| ODLie, ODNom, ODLse | Número, 3 casas | App. ∅ ext. especificado da trança, polegada (OD1_* na 1ª, OD2_* na 2ª) |
+| Tranca | Número, 0 casas | App. 1 ou 2 (a mesma da folha) |
+| PickLie, PickLse, ODLie, ODNom, ODLse | — | **OBSOLETAS desde v0.4.0** (a spec e o pick ficam na AMDM02_Folha). Não apagar; sem uso |
 | NPicks | Número, 1 casa | App. "Raspadinha": nº de picks medido em 5 pol |
 | ODTranca1 … ODTranca5 | Número, 3 casas | App. 5 medidas de ∅ ext. da trança, polegada |
 | Operador | Texto | App. Responsável da folha (cmb_RespAM) |
 | LancadoEm | Data e hora | App. Carimbo do último Salvar da trança |
 | Anexos | (do sistema) | App, pelo controle de anexos do formulário `frm_RegAM`; mostra a última foto na parte de baixo da aba |
 
-A 2ª trança só é habilitada se o PN da folha tiver 2ª trança (`OD2_MED > 0` na AMDM02_Spec, casando por PN + BRD CODE). Fora de LIE/LSE (pick e ∅) é calculado na tela, não gravado.
+O seletor 1ª/2ª fica no cabeçalho da tela; a 2ª só é habilitada se o PN tiver 2ª trança (`OD2_MED > 0` na AMDM02_Spec, casando por PN + BRD CODE; antes de a folha abrir vale o PN escolhido no combo). Fora de LIE/LSE (pick e ∅) é calculado na tela, não gravado.
 
 ## Conferência de cálculo
 
