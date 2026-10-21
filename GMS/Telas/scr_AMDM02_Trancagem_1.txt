@@ -57,7 +57,7 @@ Screens:
             Icon: =Icon.ArrowLeft
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || frm_RegAM.Unsaved,
+                  ctxAlteradoAM,
                   Notify(
                       "Há alterações não salvas nesta folha. Toque em Salvar antes de sair.",
                       NotificationType.Warning,
@@ -102,7 +102,7 @@ Screens:
             Height: =28
             Size: =fx_FonteCorpo
             Text: ="Alterações não salvas"
-            Visible: =ctxAlteradoAM || frm_RegAM.Unsaved
+            Visible: =ctxAlteradoAM
             Width: =310
             X: =780
             Y: =34
@@ -329,7 +329,7 @@ Screens:
               =If(
                   Self.Selected.Trançadeira <> ctxMaqAM,
                   If(
-                      ctxAlteradoAM || frm_RegAM.Unsaved,
+                      ctxAlteradoAM,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000);
                       Reset(cmb_MaqTrAM),
                       UpdateContext({ctxMaqAM: Self.Selected.Trançadeira});
@@ -371,7 +371,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || frm_RegAM.Unsaved,
+                  ctxAlteradoAM,
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, -1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -386,20 +386,37 @@ Screens:
             Width: =40
             X: =242
             Y: =122
-      - lbl_DataAM:
-          Control: Label@2.5.1
+      - dte_DataAM:
+          Control: Classic/DatePicker@2.6.0
           Properties:
-            Align: =Align.Center
+            AccessibleLabel: ="Data da folha (dia produtivo)"
             BorderColor: =fx_CorBorda
-            BorderThickness: =1
-            Color: =fx_CorTexto
-            Fill: =fx_CorSuperficie
+            DefaultDate: =ctxDataAM
+            DisplayMode: =If(varProcessando || ctxCarregandoAM, DisplayMode.Disabled, DisplayMode.Edit)
+            EndYear: =Year(Today())
             Font: =fx_FonteFamilia
-            FontWeight: =FontWeight.Semibold
+            Format: ="dd/mm/yyyy"
             Height: =44
+            IconBackground: =fx_CorInfo
+            IconFill: =fx_CorSuperficie
+            IsEditable: =false
+            OnChange: |-
+              =If(
+                  !IsBlank(Self.SelectedDate) && Self.SelectedDate <> ctxDataAM,
+                  If(
+                      ctxAlteradoAM,
+                      Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000);
+                      Reset(Self),
+                      Self.SelectedDate > fx_DataRefEm(Now()),
+                      Notify("Não existe folha de dia futuro.", NotificationType.Warning, 4000);
+                      Reset(Self),
+                      UpdateContext({ctxDataAM: Self.SelectedDate});
+                      Select(btn_CarregarAM)
+                  )
+              )
+            PaddingLeft: =8
             Size: =fx_FonteCorpo
-            Text: =Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy")
-            VerticalAlign: =VerticalAlign.Middle
+            StartYear: =2026
             Width: =118
             X: =286
             Y: =122
@@ -423,7 +440,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || frm_RegAM.Unsaved,
+                  ctxAlteradoAM,
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, 1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -599,7 +616,7 @@ Screens:
               =If(
                   ctxTrAM <> 1,
                   If(
-                      ctxAlteradoAM || frm_RegAM.Unsaved,
+                      ctxAlteradoAM,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 1});
                       Select(btn_CarregarAM)
@@ -637,7 +654,7 @@ Screens:
               =If(
                   ctxTrAM <> 2,
                   If(
-                      ctxAlteradoAM || frm_RegAM.Unsaved,
+                      ctxAlteradoAM,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 2});
                       Select(btn_CarregarAM)
@@ -2287,6 +2304,10 @@ Screens:
                               Font: =fx_FonteFamilia
                               Height: =116
                               Items: =Parent.Default
+                              OnAddFile: |-
+                                =UpdateContext({ctxAlteradoAM: true})
+                              OnRemoveFile: |-
+                                =UpdateContext({ctxAlteradoAM: true})
                               NoAttachmentsText: ="Nenhuma foto. Toque em Anexar para abrir a câmera ou a galeria."
                               Size: =fx_FonteCorpo
                               Width: =Parent.Width - 40
