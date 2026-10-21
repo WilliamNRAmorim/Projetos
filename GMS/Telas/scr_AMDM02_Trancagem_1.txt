@@ -52,7 +52,7 @@ Screens:
             Icon: =Icon.ArrowLeft
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                  ctxAlteradoAM || frm_RegAM.Unsaved,
                   Notify(
                       "Há alterações não salvas nesta folha. Toque em Salvar antes de sair.",
                       NotificationType.Warning,
@@ -97,7 +97,7 @@ Screens:
             Height: =28
             Size: =fx_FonteCorpo
             Text: ="Alterações não salvas"
-            Visible: =ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default)
+            Visible: =ctxAlteradoAM || frm_RegAM.Unsaved
             Width: =310
             X: =780
             Y: =34
@@ -324,7 +324,7 @@ Screens:
               =If(
                   Self.Selected.Trançadeira <> ctxMaqAM,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                      ctxAlteradoAM || frm_RegAM.Unsaved,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000);
                       Reset(cmb_MaqTrAM),
                       UpdateContext({ctxMaqAM: Self.Selected.Trançadeira});
@@ -366,7 +366,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                  ctxAlteradoAM || frm_RegAM.Unsaved,
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, -1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -418,7 +418,7 @@ Screens:
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
               =If(
-                  ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                  ctxAlteradoAM || frm_RegAM.Unsaved,
                   Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de máquina ou de dia.", NotificationType.Warning, 6000),
                   UpdateContext({ctxDataAM: DateAdd(ctxDataAM, 1, TimeUnit.Days)});
                   Select(btn_CarregarAM)
@@ -594,7 +594,7 @@ Screens:
               =If(
                   ctxTrAM <> 1,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                      ctxAlteradoAM || frm_RegAM.Unsaved,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 1});
                       Select(btn_CarregarAM)
@@ -632,7 +632,7 @@ Screens:
               =If(
                   ctxTrAM <> 2,
                   If(
-                      ctxAlteradoAM || CountRows(att_FotoRegAM.Attachments) <> CountRows(dc_FotoRegAM.Default),
+                      ctxAlteradoAM || frm_RegAM.Unsaved,
                       Notify("Há alterações não salvas nesta folha. Toque em Salvar antes de trocar de trança.", NotificationType.Warning, 6000),
                       UpdateContext({ctxTrAM: 2});
                       Select(btn_CarregarAM)
@@ -2296,7 +2296,7 @@ Screens:
                   Size: =fx_FonteApoio
                   Text: |-
                     =With(
-                        { _n: Max(CountRows(att_FotoRegAM.Attachments), CountRows(dc_FotoRegAM.Default)) },
+                        { _n: CountRows(att_FotoRegAM.Attachments) },
                         If(_n = 0, "SEM FOTO AINDA", "FOTO " & Text(_n) & " DE " & Text(_n) & "  ·  A ÚLTIMA ANEXADA")
                     )
                   Width: =488
@@ -2308,12 +2308,8 @@ Screens:
                   BorderColor: =fx_CorBorda
                   Height: =140
                   Image: |-
-                    =If(
-                        CountRows(att_FotoRegAM.Attachments) > 0,
-                        Last(att_FotoRegAM.Attachments).Value,
-                        Last(dc_FotoRegAM.Default).Value
-                    )
-                  Visible: =CountRows(att_FotoRegAM.Attachments) > 0 || CountRows(dc_FotoRegAM.Default) > 0
+                    =Last(att_FotoRegAM.Attachments).Value
+                  Visible: =CountRows(att_FotoRegAM.Attachments) > 0
                   Width: =488
                   X: =862
                   Y: =364

@@ -56,7 +56,7 @@
 | Tubo | `scr_tubo_1` | v0.4.0 | COLAR v0.4.1 + PATCH v0.4.1a | — |
 | Trançagem | `scr_Trancagem_3` | v0.5.0 | COLAR v0.5.1 ComboOperador, v0.5.2 FiltroMaquina | — |
 | Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | v0.5.8 | COLAR v0.5.9 VelocidadeViva | — |
-| AM-DM-02 Controle de Trançagem | `scr_AMDM02_Trancagem_1` | **v0.4.2** (21/10, `Telas/`) — folha por trança (seletor 1ª/2ª no cabeçalho, chave Data|Máquina|Trança), coleta na hora real com prazo +2 h, dia produtivo 05:20–05:20, carta X̄-R pela hora; listas em `Engenharia/Trancagem/AMDM02_schema.md` (MEL-114) | — | Criar a coluna Tranca (número, indexada) na AMDM02_Folha; HoraColeta já feita; colar Formulas v3.0.12 (§17 nova) e a tela no Studio |
+| AM-DM-02 Controle de Trançagem | `scr_AMDM02_Trancagem_1` | **v0.4.3** (21/10, `Telas/`) — folha por trança (seletor 1ª/2ª no cabeçalho, chave Data|Máquina|Trança), coleta na hora real com prazo +2 h, dia produtivo 05:20–05:20, carta X̄-R pela hora; listas em `Engenharia/Trancagem/AMDM02_schema.md` (MEL-114) | — | Criar a coluna Tranca (número, indexada) na AMDM02_Folha; HoraColeta já feita; colar Formulas v3.0.12 (§17 nova) e a tela no Studio |
 | Hora-Hora Cobertura | `scr_HoraHora_Cobertura_1` (manual) e `scr_HoraHora_CoberturaGMS_1` (derivada) | v0.1.0 | — | — |
 | Cobertura | `scr_Cobertura_2` | v0.3.0 | COLAR v0.4.0 Delineamento | — |
 | Bandagem | `scr_Bandagem_2` | v0.3.0 | — | — |
