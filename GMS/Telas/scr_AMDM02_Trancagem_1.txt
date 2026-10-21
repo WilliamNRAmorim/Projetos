@@ -857,7 +857,7 @@ Screens:
                   UpdateContext({ctxAlteradoAM: false, ctxCarregandoAM: false});
                   true,
                   UpdateContext({ctxCarregandoAM: false});
-                  Notify("Não consegui carregar a folha. Confira a rede e troque de dia, de máquina ou de trança para tentar de novo.", NotificationType.Error, 10000);
+                  Notify("Não consegui carregar a folha: " & FirstError.Message & ". Troque de dia, de máquina ou de trança para tentar de novo.", NotificationType.Error, 15000);
                   false
               )
             PressedFill: =Color.Transparent
@@ -2546,8 +2546,15 @@ Screens:
                     =Set(varProcessando, true);
                     IfError(
                         With(
-                            { _s: cmb_PNAM.Selected },
-                            Patch(
+                            {
+                                _s:  cmb_PNAM.Selected,
+                                _ex: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrAM))
+                            },
+                            If(
+                                !IsBlank(_ex),
+                                Notify("Esta folha já estava aberta. Carregando.", NotificationType.Information, 3000),
+                                With(
+                                    { _nova: Patch(
                                 AMDM02_Folha,
                                 Defaults(AMDM02_Folha),
                                 {
@@ -2565,10 +2572,15 @@ Screens:
                                     PickLie:        fx_NumMedida(inp_PickLieAM.Text),
                                     PickLse:        fx_NumMedida(inp_PickLseAM.Text)
                                 }
+                            ) },
+                                    UpdateContext({ctxIdFolhaAM: _nova.ID});
+                                    Notify("Folha aberta.", NotificationType.Success, 3000)
+                                )
                             )
                         );
-                        Notify("Folha aberta.", NotificationType.Success, 3000),
-                        Notify("Não consegui abrir a folha: " & FirstError.Message, NotificationType.Error, 10000)
+                        true,
+                        Notify("Não consegui abrir a folha: " & FirstError.Message, NotificationType.Error, 10000);
+                        false
                     );
                     Set(varProcessando, false);
                     Select(btn_CarregarAM)
