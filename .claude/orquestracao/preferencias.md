@@ -31,3 +31,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-10-20 | AM-DM-02: aceitou a recomendada de 12 janelas fixas de 2h (não por turno)
 2026-10-20 | AM-DM-02: aceitou a recomendada de manter o papel em paralelo no começo
 2026-10-20 | AM-DM-02: aceitou a recomendada de usar o dia produtivo 05:20 (janela de 24h como a Bobinadeira)
+2026-10-21 | AM-DM-02: aceitou a recomendada de separar a folha inteira por trança
