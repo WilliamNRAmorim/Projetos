@@ -19,6 +19,7 @@ VERSOES_OK = {
  "Timer":"2.1.0","Image":"2.2.3","Spinner":"1.4.6","HtmlViewer":"2.1.0",
  "ModernText":"1.0.0","ModernIcon":"1.1.1","BarcodeReader":"1.0.25",
  "Form":"2.4.4","Attachments":"2.3.0","FormViewer":"2.3.4","TypedDataCard":"1.0.7","ModernButton":"1.0.0",
+ "PenInput":"2.1.0",  # [21/10] MEL-114 caneta do zoom da foto; versao NAO provada no Studio
 }
 
 nomes = []
@@ -55,7 +56,7 @@ print("\n=== 4. Nome sem espaco / prefixo (1.1) ===")
 comesp=[n for n in nomes if " " in n]
 print("Com espaco (legado mantido):", comesp if comesp else "nenhum")
 PREFIX = ("scr_","gal_","frm_","ctn_","cntr_","btn_","ico_","rct_","lbl_","tmr_",
-          "cmb_","inp_","spr_","html_","dc_","bcr_","chk_","tgl_","dte_","img_","cmp_","att_")
+          "cmb_","inp_","spr_","html_","dc_","bcr_","chk_","tgl_","dte_","img_","cmp_","att_","pen_")
 sem_prefixo=[n for n in nomes if not n.startswith(PREFIX)]
 print("Sem prefixo de tipo:", sem_prefixo if sem_prefixo else "nenhum")
 
@@ -177,6 +178,7 @@ PERMITIDAS = {
    "BorderColor","DisplayMode","Tooltip","Rotation"},
  "GroupContainer": {"Fill","Height","Visible","Width","X","Y","LayoutMode","LayoutDirection"},
  "Spinner": {"Height","SpinnerSize","Visible","Width","X","Y"},
+ "PenInput": {"Height","Width","X","Y","Visible","Color","Size","Fill","DisplayMode"},
  "Image": {"Height","Width","X","Y","Visible","Image","OnSelect","BorderColor","DisplayMode","Tooltip"},
  "HtmlViewer": COMUM|PAD|{"HtmlText","DisplayMode","AutoHeight"},
  "BarcodeReader": {"Height","Width","X","Y","Visible","OnScan","BarcodeType","Text","Font","Size"},

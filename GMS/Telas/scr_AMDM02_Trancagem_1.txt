@@ -28,7 +28,12 @@ Screens:
             ctxRegAM: Blank(),
             ctxRPkDigAM: false,
             ctxRPkLieAM: "",
-            ctxRPkLseAM: ""
+            ctxRPkLseAM: "",
+            ctxFotoZoomAM: false,
+            ctxZoomAM: 1,
+            ctxPanXAM: 0,
+            ctxPanYAM: 0,
+            ctxPenAM: false
         });
         ClearCollect(colODTrAM, ForAll(Sequence(5) As _o0, {Ord: _o0.Value, T: ""}));
         Set(varProcessando, false);
@@ -756,7 +761,8 @@ Screens:
             Font: =fx_FonteFamilia
             HoverFill: =Color.Transparent
             OnSelect: |-
-              =UpdateContext({ctxCarregandoAM: true, ctxAgoraAM: Now()});
+              =UpdateContext({ctxCarregandoAM: true, ctxAgoraAM: Now(), ctxFotoZoomAM: false, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false});
+              Reset(pen_ZoomAM);
               IfError(
                   With(
                       { _f: LookUp(AMDM02_Folha, Title = fx_AMDM02_ChaveFolha(ctxDataAM, ctxMaqAM, ctxTrAM)) },
@@ -2309,6 +2315,8 @@ Screens:
                   Height: =140
                   Image: |-
                     =Last(att_FotoRegAM.Attachments).Value
+                  OnSelect: |-
+                    =UpdateContext({ctxFotoZoomAM: true, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false})
                   Visible: =CountRows(att_FotoRegAM.Attachments) > 0
                   Width: =488
                   X: =862
@@ -2599,3 +2607,359 @@ Screens:
                   Width: =500
                   X: =292
                   Y: =292
+      - lbl_DicaZoomAM:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Fill: =fx_CorOverlay
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =18
+            OnSelect: |-
+              =UpdateContext({ctxFotoZoomAM: true, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false})
+            Size: =fx_FonteApoio
+            Text: ="Toque na foto para ampliar"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 2 && !ctxFotoZoomAM && CountRows(att_FotoRegAM.Attachments) > 0
+            Width: =488
+            X: =862
+            Y: =742
+      - rct_ZoomFundoAM:
+          Control: Rectangle@2.3.0
+          Properties:
+            Fill: =fx_CorOverlayForte
+            Height: =768
+            Visible: =ctxFotoZoomAM
+            Width: =1366
+            X: =0
+            Y: =0
+      - cntr_ZoomAM:
+          Control: GroupContainer@1.5.0
+          Variant: ManualLayout
+          Properties:
+            Fill: =fx_CorTexto
+            Height: =640
+            Visible: =ctxFotoZoomAM
+            Width: =1334
+            X: =16
+            Y: =68
+          Children:
+            - img_ZoomFotoAM:
+                Control: Image@2.2.3
+                Properties:
+                  Height: =Parent.Height * ctxZoomAM
+                  Image: |-
+                    =Last(att_FotoRegAM.Attachments).Value
+                  Width: =Parent.Width * ctxZoomAM
+                  X: =(Parent.Width - Self.Width) / 2 + ctxPanXAM
+                  Y: =(Parent.Height - Self.Height) / 2 + ctxPanYAM
+            - pen_ZoomAM:
+                Control: PenInput@2.1.0
+                Properties:
+                  Color: =fx_CorErro
+                  DisplayMode: =If(ctxPenAM, DisplayMode.Edit, DisplayMode.View)
+                  Fill: =Color.Transparent
+                  Height: =Parent.Height * ctxZoomAM
+                  Size: =4
+                  Width: =Parent.Width * ctxZoomAM
+                  X: =(Parent.Width - Self.Width) / 2 + ctxPanXAM
+                  Y: =(Parent.Height - Self.Height) / 2 + ctxPanYAM
+      - btn_ZoomMenosAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            DisplayMode: =If(ctxZoomAM <= 1, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =With(
+                  { _z: Switch(ctxZoomAM, 4, 3, 3, 2, 2, 1.5, 1) },
+                  UpdateContext({
+                      ctxZoomAM: _z,
+                      ctxPanXAM: Max(-(_z - 1) * cntr_ZoomAM.Width / 2, Min((_z - 1) * cntr_ZoomAM.Width / 2, ctxPanXAM)),
+                      ctxPanYAM: Max(-(_z - 1) * cntr_ZoomAM.Height / 2, Min((_z - 1) * cntr_ZoomAM.Height / 2, ctxPanYAM))
+                  })
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="−"
+            Visible: =ctxFotoZoomAM
+            Width: =52
+            X: =16
+            Y: =12
+      - lbl_ZoomValAM:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            Size: =fx_FonteDestaque
+            Text: =Text(ctxZoomAM) & "x"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =ctxFotoZoomAM
+            Width: =72
+            X: =72
+            Y: =12
+      - btn_ZoomMaisAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            DisplayMode: =If(ctxZoomAM >= 4, DisplayMode.Disabled, DisplayMode.Edit)
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =With(
+                  { _z: Switch(ctxZoomAM, 1, 1.5, 1.5, 2, 2, 3, 4) },
+                  UpdateContext({
+                      ctxZoomAM: _z,
+                      ctxPanXAM: Max(-(_z - 1) * cntr_ZoomAM.Width / 2, Min((_z - 1) * cntr_ZoomAM.Width / 2, ctxPanXAM)),
+                      ctxPanYAM: Max(-(_z - 1) * cntr_ZoomAM.Height / 2, Min((_z - 1) * cntr_ZoomAM.Height / 2, ctxPanYAM))
+                  })
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="+"
+            Visible: =ctxFotoZoomAM
+            Width: =52
+            X: =148
+            Y: =12
+      - btn_ZoomAjustarAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Ajustar"
+            Visible: =ctxFotoZoomAM
+            Width: =100
+            X: =208
+            Y: =12
+      - btn_CanetaAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =If(ctxPenAM, fx_CorErro, fx_CorInfo)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxPenAM: !ctxPenAM})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: |-
+              =If(ctxPenAM, "Caneta ligada", "Caneta desligada")
+            Visible: =ctxFotoZoomAM
+            Width: =190
+            X: =336
+            Y: =12
+      - btn_CanetaLimparAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Reset(pen_ZoomAM)
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Limpar"
+            Visible: =ctxFotoZoomAM
+            Width: =100
+            X: =534
+            Y: =12
+      - btn_ZoomFecharAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorErro
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxFotoZoomAM: false, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false});
+              Reset(pen_ZoomAM)
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="X"
+            Visible: =ctxFotoZoomAM
+            Width: =52
+            X: =1298
+            Y: =12
+      - btn_PanEsqAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorOverlayForte
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxPanXAM: Min((ctxZoomAM - 1) * cntr_ZoomAM.Width / 2, ctxPanXAM + cntr_ZoomAM.Width / 4)})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="←"
+            Visible: =ctxFotoZoomAM && ctxZoomAM > 1
+            Width: =52
+            X: =24
+            Y: =362
+      - btn_PanDirAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorOverlayForte
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxPanXAM: Max(-(ctxZoomAM - 1) * cntr_ZoomAM.Width / 2, ctxPanXAM - cntr_ZoomAM.Width / 4)})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="→"
+            Visible: =ctxFotoZoomAM && ctxZoomAM > 1
+            Width: =52
+            X: =1290
+            Y: =362
+      - btn_PanCimaAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorOverlayForte
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxPanYAM: Min((ctxZoomAM - 1) * cntr_ZoomAM.Height / 2, ctxPanYAM + cntr_ZoomAM.Height / 4)})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="↑"
+            Visible: =ctxFotoZoomAM && ctxZoomAM > 1
+            Width: =52
+            X: =657
+            Y: =76
+      - btn_PanBaixoAM:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorChip
+            Fill: =fx_CorOverlayForte
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =52
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =UpdateContext({ctxPanYAM: Max(-(ctxZoomAM - 1) * cntr_ZoomAM.Height / 2, ctxPanYAM - cntr_ZoomAM.Height / 4)})
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="↓"
+            Visible: =ctxFotoZoomAM && ctxZoomAM > 1
+            Width: =52
+            X: =657
+            Y: =648
+      - lbl_ZoomAvisoAM:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            Color: =fx_CorSuperficie
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Normal
+            Height: =24
+            Size: =fx_FonteApoio
+            Text: ="O rabisco não é salvo, serve para apontar na hora"
+            VerticalAlign: =VerticalAlign.Middle
+            Visible: =ctxFotoZoomAM
+            Width: =1334
+            X: =16
+            Y: =720
