@@ -134,7 +134,7 @@ EXT = [
     ("HH Real (m)", "Double", "SUM('Hora-Hora'[Real. Hora])", "#,0", []),
     ("HH Aderência", "Double", "DIVIDE(SUM('Hora-Hora'[Real. Hora]), SUM('Hora-Hora'[Meta Hora]))", "0%", []),
     ("HH Parado (min)", "Double", "SUM('Hora-Hora'[Tempo Parado (min)])", "#,0", []),
-    ("HH Principal Parada", "String",
+    ("HH Principal Parada", "Text",
      "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), "
      "\"MinParado\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) "
      "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
