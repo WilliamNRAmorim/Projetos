@@ -130,15 +130,15 @@ EXT = [
      'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
      'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
-    ("HH Meta (m)", "Double", "SUM('Hora-Hora'[Meta Hora])", "#,0", []),
-    ("HH Real (m)", "Double", "SUM('Hora-Hora'[Real. Hora])", "#,0", []),
-    ("HH Aderência", "Double", "DIVIDE(SUM('Hora-Hora'[Real. Hora]), SUM('Hora-Hora'[Meta Hora]))", "0%", []),
-    ("HH Parado (min)", "Double", "SUM('Hora-Hora'[Tempo Parado (min)])", "#,0", []),
+    ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora])", "#,0", []),
+    ("HH Real (m)", "Double", "SUM(fHoraHora[Real. Hora])", "#,0", []),
+    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora]))", "0%", []),
+    ("HH Parado (min)", "Double", "SUM(fHoraHora[Tempo Parado (min)])", "#,0", []),
     ("HH Principal Parada", "Text",
-     "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), "
-     "\"MinParado\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) "
+     "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão])), "
+     "\"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) "
      "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
-     "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))", None, []),
+     "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))", None, []),
 ]
 NOMES_EXT = {e[0] for e in EXT}
 
@@ -529,10 +529,10 @@ def pg_paradas():
 def pg_horahora():
     """Hora-Hora de UMA trancadeira por vez: producao por hora (esq.), motivos (dir.), 5 cartoes."""
     p = Pagina("pg_horahora", "Hora-Hora Trançagem",
-               FILTRO_HH() + [filtro_incluir("Hora-Hora", "Célula", TRANCADEIRAS, "c", "f_trancadeiras")])
+               [filtro_excluir("fHoraHora", "Motivo Padrão", ["Almoço"], "h", "f_refeicao_hh")] + [filtro_incluir("fHoraHora", "Célula", TRANCADEIRAS, "c", "f_trancadeiras")])
     cabecalho(p, "Hora-Hora · Trançagem",
-              [SEG_MES, (col("Hora-Hora", "Turno"), "Turno", "gms_turno", False),
-               (col("Hora-Hora", "Célula"), "Máquina", "gms_maquina_hh", True, 150)])
+              [SEG_MES, (col("fHoraHora", "Turno"), "Turno", "gms_turno_hh", False),
+               (col("fHoraHora", "Célula"), "Máquina", "gms_maquina_hh", True, 150)])
     kpis(p, [
         ("Meta (m)", med("HH Meta (m)"), None),
         ("Real (m)", med("HH Real (m)"), None),
@@ -543,14 +543,14 @@ def pg_horahora():
     wl, wr = 760, 476
     alt = 720 - MARGEM - Y_R1
     p.add("g_prod_hora", MARGEM, Y_R1, wl, alt, grafico(
-        "lineClusteredColumnComboChart", col("Hora-Hora", "Hora"), [med("HH Real (m)")],
-        "Produção por hora (m): Real × Meta", ordenar=col("Hora-Hora", "Hora"),
+        "lineClusteredColumnComboChart", col("fHoraHora", "Hora"), [med("HH Real (m)")],
+        "Produção por hora (m): Real × Meta", ordenar=col("fHoraHora", "Hora"),
         segunda=[med("HH Meta (m)")], legenda=True, categorico=True))
     p.add("g_motivo", MARGEM + wl + VAO, Y_R1, wr, 290, grafico(
-        "clusteredBarChart", col("Hora-Hora", "Motivo Padrão"), [med("HH Parado (min)")],
+        "clusteredBarChart", col("fHoraHora", "Motivo Padrão"), [med("HH Parado (min)")],
         "Motivos de parada (min)", ordenar=med("HH Parado (min)"), desc=True, sem_vazio=True))
     p.add("g_motivo2", MARGEM + wl + VAO, Y_R1 + 290 + VAO, wr, alt - 290 - VAO, grafico(
-        "clusteredBarChart", col("Hora-Hora", "Motivo 2 Padrão"), [med("HH Parado (min)")],
+        "clusteredBarChart", col("fHoraHora", "Motivo 2 Padrão"), [med("HH Parado (min)")],
         "2º motivo (min)", ordenar=med("HH Parado (min)"), desc=True, sem_vazio=True))
     return p
 

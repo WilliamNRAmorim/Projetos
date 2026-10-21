@@ -119,35 +119,35 @@
         {
           "name": "HH Meta (m)",
           "dataType": "Double",
-          "expression": "SUM('Hora-Hora'[Meta Hora])",
+          "expression": "SUM(fHoraHora[Meta Hora])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Real (m)",
           "dataType": "Double",
-          "expression": "SUM('Hora-Hora'[Real. Hora])",
+          "expression": "SUM(fHoraHora[Real. Hora])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Aderência",
           "dataType": "Double",
-          "expression": "DIVIDE(SUM('Hora-Hora'[Real. Hora]), SUM('Hora-Hora'[Meta Hora]))",
+          "expression": "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora]))",
           "formatString": "0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Parado (min)",
           "dataType": "Double",
-          "expression": "SUM('Hora-Hora'[Tempo Parado (min)])",
+          "expression": "SUM(fHoraHora[Tempo Parado (min)])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Principal Parada",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES('Hora-Hora'[Motivo Padrão]), NOT ISBLANK('Hora-Hora'[Motivo Padrão])), \"MinParado\", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, 'Hora-Hora'[Motivo Padrão]))",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão])), \"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))",
           "displayFolder": "Painel (relatório)"
         }
       ]
