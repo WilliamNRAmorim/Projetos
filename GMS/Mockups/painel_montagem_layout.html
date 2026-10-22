@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Painel da Montagem · mockup</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* MOCKUP do scr_PainelMontagem_1 (proposta, 22/10/2026). DADOS FICTÍCIOS.
+   Canvas do app: 1366x768 (esticado para 1920x1080 na TV, fator 1,406).
+   Tamanho em pt do Power Apps -> px aqui: pt x 1,333.
+   Tokens propostos (Formulas §18, aditiva):
+     fx_FontePainelApoio 16 · fx_FontePainelRotulo 20 · fx_FontePainelTexto 24
+     fx_FontePainelNumero 36 · fx_FontePainelKPI 44
+   Cores de texto de parede (>= 4,5:1 sobre #1E293B e #0F172A):
+     OK #4ADE80 8,4 · Alerta #FB923C 6,5 · Erro #F87171 5,3 · Info #60A5FA 5,8 · Rotulo #94A3B8 5,7 */
+:root{
+  --fundo:#0F172A; --sup:#1E293B; --borda:#334155; --texto:#F5F7FA; --rotulo:#94A3B8;
+  --ok:#4ADE80; --alerta:#FB923C; --erro:#F87171; --info:#60A5FA;
+  --apoio:21px; --rot:27px; --txt:32px; --num:48px; --kpi:59px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#05080f;font-family:'Open Sans',Segoe UI,sans-serif;color:var(--texto);padding:16px}
+.nota{max-width:1366px;margin:0 auto 12px;color:#cbd5e1;font-size:14px;line-height:1.5}
+.nota b{color:#fff}
+.tela{position:relative;width:1366px;height:768px;margin:0 auto;background:var(--fundo);overflow:hidden;outline:1px solid #475569}
+.abs{position:absolute}
+/* cabeçalho */
+.hdr{left:0;top:0;width:1366px;height:64px;background:var(--sup);border-bottom:1px solid var(--borda)}
+.hdr .tit{left:16px;top:10px;font-size:var(--txt);font-weight:700;letter-spacing:.5px}
+.hdr .tit span{color:var(--rotulo);font-weight:600}
+.hdr .turno{left:600px;top:10px;font-size:var(--txt);font-weight:700}
+.hdr .rel{left:1000px;top:6px;font-size:var(--num);font-weight:700;line-height:52px}
+.hdr .idade{left:1150px;top:16px;width:200px;height:32px;border-radius:16px;background:#14532d;color:var(--ok);font-size:var(--apoio);font-weight:700;text-align:center;line-height:32px}
+/* faixa de KPIs */
+.kpi{top:72px;width:216px;height:100px;background:var(--sup);border-radius:12px;padding:8px 12px}
+.kpi .r{font-size:var(--apoio);color:var(--rotulo);font-weight:700;letter-spacing:.3px;white-space:nowrap}
+.kpi .v{font-size:var(--num);font-weight:700;line-height:58px;white-space:nowrap}
+.kpi .v small{font-size:var(--rot);color:var(--rotulo);font-weight:600}
+/* cards */
+.card{width:238px;height:182px;background:var(--sup);border-radius:12px;overflow:hidden}
+.card .bar{position:absolute;left:0;top:0;width:238px;height:30px;padding-left:12px;font-size:var(--apoio);font-weight:700;line-height:30px;color:#0F172A;white-space:nowrap}
+.card .cel{position:absolute;left:12px;top:32px;font-size:var(--txt);font-weight:700;white-space:nowrap}
+.card .ot{position:absolute;left:12px;top:68px;width:216px;font-size:var(--rot);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .big{position:absolute;left:12px;top:96px;font-size:var(--num);font-weight:700;line-height:50px;white-space:nowrap}
+.card .big small{font-size:var(--rot);color:var(--rotulo);font-weight:600}
+.card .trilho{position:absolute;left:12px;top:148px;width:214px;height:8px;border-radius:4px;background:var(--borda)}
+.card .fill{position:absolute;left:0;top:0;height:8px;border-radius:4px}
+.card .rod{position:absolute;left:12px;top:158px;font-size:var(--apoio);color:var(--rotulo);font-weight:600;white-space:nowrap}
+.card.apagado .cel{color:var(--rotulo)}
+/* andon */
+.andon{left:1010px;top:180px;width:340px;height:564px;background:var(--sup);border-radius:12px}
+.andon .h{position:absolute;left:14px;top:10px;font-size:var(--rot);font-weight:700}
+.andon .q{position:absolute;right:14px;top:10px;width:36px;height:36px;border-radius:18px;background:var(--alerta);color:#0F172A;font-size:var(--rot);font-weight:700;text-align:center;line-height:36px}
+.it{position:absolute;left:10px;width:320px;height:84px;background:var(--fundo);border-radius:8px;padding:6px 10px 0 34px}
+.it .s{position:absolute;left:8px;top:6px;font-size:var(--rot);font-weight:700;line-height:30px}
+.it .t{font-size:var(--rot);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:32px}
+.it .d{font-size:var(--apoio);color:var(--rotulo);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mais{position:absolute;left:14px;top:528px;font-size:var(--apoio);color:var(--rotulo);font-weight:700}
+.ver{right:16px;bottom:4px;font-size:13px;color:var(--rotulo)}
+.leg{max-width:1366px;margin:12px auto 0;color:#cbd5e1;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+<p class="nota"><b>Mockup do Painel da Montagem (scr_PainelMontagem_1) · proposta de 22/10/2026 · DADOS FICTÍCIOS.</b>
+Tamanho real da tela do app (1366×768), que a TV estica para 1920×1080. Menor texto da tela = 16 pt (faixa de estado e rodapés); OT e rótulos 20 pt; célula 24 pt; números 36 pt. O PN da OT fica fora do card (detalhe de perto).
+Cor de célula (fx_CelulasMontagem.Cor) não é usada: na TV, cor é estado (FIRE vermelho seria lido como parada).</p>
+
+<div class="tela">
+  <div class="abs hdr">
+    <div class="abs tit">MONTAGEM <span>· painel do turno</span></div>
+    <div class="abs turno">22/10 · 2º Turno</div>
+    <div class="abs rel">15:42</div>
+    <div class="abs idade">dados de 15:41</div>
+  </div>
+
+  <div class="abs kpi" style="left:16px"><div class="r">PRODUZINDO</div><div class="v">7 <small>de 12</small></div></div>
+  <div class="abs kpi" style="left:240px"><div class="r">ACIMA DA META</div><div class="v" style="color:var(--alerta)">2</div></div>
+  <div class="abs kpi" style="left:464px"><div class="r">PEÇAS NO TURNO</div><div class="v">184 <small>pç</small></div></div>
+  <div class="abs kpi" style="left:688px"><div class="r">EFICIÊNCIA</div><div class="v">87<small>%</small></div></div>
+  <div class="abs kpi" style="left:912px"><div class="r">PARADA REAL</div><div class="v">35 <small>min</small></div></div>
+  <div class="abs kpi" style="left:1136px;width:214px"><div class="r">TEMPO EXCEDIDO</div><div class="v" style="color:var(--alerta)">52 <small>min</small></div></div>
+
+  <!-- linha 1 -->
+  <div class="abs card" style="left:16px;top:180px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">AUW</div><div class="ot">OT 41203398</div><div class="big">38 <small>/ 60 min</small></div><div class="trilho"><div class="fill" style="width:63%;background:var(--ok)"></div></div><div class="rod">Turno: 3 OT · 46 pç</div></div>
+  <div class="abs card" style="left:262px;top:180px"><div class="bar" style="background:var(--alerta)">ACIMA DA META</div><div class="cel">FF1</div><div class="ot">OT 41203401</div><div class="big" style="color:var(--alerta)">74 <small>/ 60 min</small></div><div class="trilho"><div class="fill" style="width:100%;background:var(--alerta)"></div></div><div class="rod">+14 min da meta</div></div>
+  <div class="abs card" style="left:508px;top:180px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">FF2</div><div class="ot">OT 41203377</div><div class="big">12 <small>/ 45 min</small></div><div class="trilho"><div class="fill" style="width:27%;background:var(--ok)"></div></div><div class="rod">Turno: 4 OT · 52 pç</div></div>
+  <div class="abs card" style="left:754px;top:180px"><div class="bar" style="background:var(--alerta)">SEM OT</div><div class="cel">HIGH</div><div class="ot" style="color:var(--rotulo)">fechou às 15:07</div><div class="big" style="color:var(--alerta)">35 <small>min</small></div><div class="trilho"></div><div class="rod">Turno: 2 OT · 18 pç</div></div>
+
+  <!-- linha 2 -->
+  <div class="abs card" style="left:16px;top:370px"><div class="bar" style="background:var(--erro)">OT DE ONTEM</div><div class="cel">FIRE</div><div class="ot">OT 41203102</div><div class="big" style="color:var(--erro)">+24 h</div><div class="trilho"><div class="fill" style="width:100%;background:var(--erro)"></div></div><div class="rod">aberta em 21/10</div></div>
+  <div class="abs card" style="left:262px;top:370px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">AGCO</div><div class="ot">OT 41203405</div><div class="big">21 <small>/ 30 min</small></div><div class="trilho"><div class="fill" style="width:70%;background:var(--ok)"></div></div><div class="rod">OT do 1º turno</div></div>
+  <div class="abs card" style="left:508px;top:370px"><div class="bar" style="background:var(--info)">SEM META</div><div class="cel">BUNDLE</div><div class="ot">OT 41203390</div><div class="big">26 <small>min</small></div><div class="trilho"></div><div class="rod">PN sem tempo padrão</div></div>
+  <div class="abs card" style="left:754px;top:370px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">PRENSAS</div><div class="ot">OT 41203411</div><div class="big">5 <small>/ 20 min</small></div><div class="trilho"><div class="fill" style="width:25%;background:var(--ok)"></div></div><div class="rod">Turno: 6 OT · 22 pç</div></div>
+
+  <!-- linha 3 -->
+  <div class="abs card" style="left:16px;top:560px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">CORTE-FF</div><div class="ot">OT 41203414</div><div class="big">9 <small>/ 25 min</small></div><div class="trilho"><div class="fill" style="width:36%;background:var(--ok)"></div></div><div class="rod">Turno: 5 OT · 16 pç</div></div>
+  <div class="abs card" style="left:262px;top:560px"><div class="bar" style="background:var(--alerta)">ACIMA DA META</div><div class="cel">CORTE-H/F</div><div class="ot">OT 41203399</div><div class="big" style="color:var(--alerta)">48 <small>/ 40 min</small></div><div class="trilho"><div class="fill" style="width:100%;background:var(--alerta)"></div></div><div class="rod">+8 min da meta</div></div>
+  <div class="abs card apagado" style="left:508px;top:560px"><div class="bar" style="background:var(--borda);color:var(--rotulo)">SEM APONTAMENTO</div><div class="cel">CORTE-AUW</div><div class="ot" style="color:var(--rotulo)">nada no turno</div><div class="big" style="color:var(--rotulo)">—</div><div class="trilho"></div><div class="rod"></div></div>
+  <div class="abs card" style="left:754px;top:560px"><div class="bar" style="background:var(--ok)">PRODUZINDO</div><div class="cel">CORTE-AGCO</div><div class="ot">OT 41203416</div><div class="big">17 <small>/ 50 min</small></div><div class="trilho"><div class="fill" style="width:34%;background:var(--ok)"></div></div><div class="rod">Turno: 2 OT · 40 pç</div></div>
+
+  <!-- andon -->
+  <div class="abs andon">
+    <div class="h">ONDE OLHAR</div><div class="q">5</div>
+    <div class="it" style="top:52px"><div class="s" style="color:var(--erro)">▲</div><div class="t">FIRE</div><div class="d">OT aberta desde 21/10</div></div>
+    <div class="it" style="top:144px"><div class="s" style="color:var(--erro)">▲</div><div class="t">FF1</div><div class="d">+14 min acima da meta</div></div>
+    <div class="it" style="top:236px"><div class="s" style="color:var(--alerta)">●</div><div class="t">HIGH</div><div class="d">sem OT há 35 min</div></div>
+    <div class="it" style="top:328px"><div class="s" style="color:var(--alerta)">●</div><div class="t">CORTE-H/F</div><div class="d">+8 min acima da meta</div></div>
+    <div class="it" style="top:420px"><div class="s" style="color:var(--info)">■</div><div class="t">BUNDLE</div><div class="d">PN sem tempo padrão</div></div>
+    <div class="mais">▲ urgente · ● atenção · ■ aviso</div>
+  </div>
+  <div class="abs ver">Versão 0.1.0</div>
+</div>
+
+<p class="leg">Estados do card (texto + cor, nunca só cor): PRODUZINDO · ACIMA DA META (real líquido &gt; meta da OT) · SEM OT (célula com sinal no turno, sem OT aberta; laranja depois de X min) · OT DE ONTEM (OT aberta de dia produtivo anterior) · SEM META (PN sem tempo padrão) · cinza = sem apontamento no turno.
+"PARADA REAL" e "TEMPO EXCEDIDO" ficam em quadros separados e nunca se somam. Não existe estado PARADA ao vivo: a Montagem lança parada depois, só com minutos.
+Cabeçalho "dados de HH:MM" fica vermelho com a idade quando a carga passar de 5 min sem atualizar.</p>
+</body>
+</html>
