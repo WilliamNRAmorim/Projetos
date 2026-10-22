@@ -14,13 +14,10 @@ Screens:
             ctxBaseBob: ""
         });
         Set(varProcessando, false);
-        IfError(
-            Concurrent(
-                ClearCollect(colDM_LIST_BOBINAGEM, DM_LIST_BOBINAGEM),
-                ClearCollect(colDM_WIREWINDING, DM_WIREWINDING),
-                ClearCollect(colDM_FIOS, DM_FIOS)
-            ),
-            Notify("Não consegui carregar o delineamento. Confira a rede e reabra a tela.", NotificationType.Error, 10000)
+        Concurrent(
+            ClearCollect(colDM_LIST_BOBINAGEM, DM_LIST_BOBINAGEM),
+            ClearCollect(colDM_WIREWINDING, DM_WIREWINDING),
+            ClearCollect(colDM_FIOS, DM_FIOS)
         )
     Children:
       - tmr_RelogioBob_1:
@@ -47,21 +44,6 @@ Screens:
             Start: =varProcessando
             Visible: =false
             X: =1206
-      - tmr_AutoRefreshBob:
-          Control: Timer@2.1.0
-          Properties:
-            AutoStart: =true
-            Duration: =120000
-            Fill: =fx_CorInfo
-            Font: =fx_FonteFamilia
-            OnTimerEnd: |-
-              =If(
-                  !varProcessando && !ctxModalDelinBob && !ctxModalEnviarBob && !ctxModalCancelarBob,
-                  Select(ico_RefreshBob_1)
-              )
-            Repeat: =true
-            Visible: =false
-            X: =1206
       - rct_HeaderFilaBob:
           Control: Rectangle@2.3.0
           Properties:
@@ -72,7 +54,7 @@ Screens:
           Control: ModernText@1.0.0
           Properties:
             Color: =fx_CorSuperficie
-            Font: =fx_FonteFamilia
+            Font: =Font.Arial
             FontWeight: =FontWeight.Bold
             Height: =65
             PaddingBottom: =0
@@ -279,7 +261,7 @@ Screens:
             DisplayMode: =If(varAcessoRestrito, DisplayMode.Disabled, DisplayMode.Edit)
             Height: =59
             Icon: =Icon.ArrowLeft
-            OnSelect: =Navigate(scr_Trancagem_3)
+            OnSelect: =Navigate(scr_Trancagem_4)
             Width: =49
             X: =338
             Y: =4
@@ -288,7 +270,7 @@ Screens:
           Properties:
             Align: =Align.Center
             Color: =fx_CorTexto
-            Font: =fx_FonteFamilia
+            Font: =Font.'Segoe UI'
             FontWeight: =FontWeight.Bold
             Height: =59
             Size: =fx_FonteTitulo
@@ -713,7 +695,7 @@ Screens:
             AccessibleLabel: ="Metragem bobinada em metros"
             BorderColor: |-
               =If(
-                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && !fx_MetragemOk(fx_Num(Self.Text)),
+                  fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" && (IsBlank(Self.Text) || Value(Self.Text) <= 0),
                   fx_CorErro,
                   fx_CorBorda
               )
@@ -1013,7 +995,7 @@ Screens:
                           ),
                           0
                       ),
-                      _lido: Coalesce(fx_Num(inp_MetragemBob.Text), 0)
+                      _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
                   },
                   fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" &&
                   _spec > 0 && _lido > 0 &&
@@ -1053,7 +1035,7 @@ Screens:
                           ),
                           0
                       ),
-                      _lido: Coalesce(fx_Num(inp_NFiosBob.Text), 0)
+                      _lido: Coalesce(Value(inp_NFiosBob.Text), 0)
                   },
                   fx_EstadoBob(gal_FilaBob.Selected.Status) = "BOBINANDO" &&
                   _spec > 0 && _lido > 0 && _lido <> _spec
@@ -1296,10 +1278,7 @@ Screens:
             Height: =60
             Icon: =Icon.Reload
             OnSelect: |-
-              =IfError(
-                  Refresh(FifoBobinadeira),
-                  Notify("Não consegui atualizar a fila. Confira a rede.", NotificationType.Warning, 5000)
-              );
+              =Refresh(FifoBobinadeira);
               UpdateContext({ctxAgora: Now()})
             Width: =85
             X: =325
@@ -1424,9 +1403,9 @@ Screens:
                           FifoBobinadeira,
                           _r,
                           {
-                              QtdBobinas: If(fx_EhNum(inp_BobinasBob.Text), fx_Num(inp_BobinasBob.Text), Blank()),
-                              Metragem: If(fx_EhNum(inp_MetragemBob.Text), fx_Num(inp_MetragemBob.Text), Blank()),
-                              NFios: If(fx_EhNum(inp_NFiosBob.Text), fx_Num(inp_NFiosBob.Text), Blank()),
+                              QtdBobinas: Value(inp_BobinasBob.Text),
+                              Metragem: Value(inp_MetragemBob.Text),
+                              NFios: Value(inp_NFiosBob.Text),
                               RT: inp_RtBob.Text,
                               LI: inp_LiBob.Text,
                               'Maquina de Bobinagem': cmb_MaquinaBob_1.Selected.Value,
@@ -1470,7 +1449,7 @@ Screens:
                   !varProcessando &&
                   !IsBlank(inp_OperadorBob.Text) &&
                   !IsBlank(cmb_MaquinaBob_1.Selected.Value) &&
-                  fx_MetragemOk(fx_Num(inp_MetragemBob.Text)),
+                  Coalesce(Value(inp_MetragemBob.Text), 0) > 0,
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1717,7 +1696,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.5.0"
+            Text: ="Versão 0.4.1"
             Width: =183
             X: =1168
             Y: =710
@@ -1754,7 +1733,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =fx_FonteFamilia
+                  Font: =Font.'Segoe UI'
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -2800,7 +2779,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorTexto
-                  Font: =fx_FonteFamilia
+                  Font: =Font.'Segoe UI'
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
@@ -2840,8 +2819,8 @@ Screens:
                   RadiusTopRight: =fx_RaioS
                   Size: =fx_FonteCorpo
                   Text: |-
-                    =If(fx_EhNum(inp_MetragemBob.Text), Text(fx_Num(inp_MetragemBob.Text), "[$-pt-BR]#.##0"), "—") & " m   ·   " &
-                    If(fx_EhNum(inp_BobinasBob.Text), Text(fx_Num(inp_BobinasBob.Text), "[$-pt-BR]#.##0"), "—") & " bobinas   ·   " &
+                    =Coalesce(Value(inp_MetragemBob.Text), 0) & " m   ·   " &
+                    Coalesce(Value(inp_BobinasBob.Text), 0) & " bobinas   ·   " &
                     Coalesce(cmb_MaquinaBob_1.Selected.Value, "—") & "   ·   " &
                     Coalesce(inp_OperadorBob.Text, "—")
                   Width: =560
@@ -2863,7 +2842,7 @@ Screens:
                                 ),
                                 0
                             ),
-                            _lido: Coalesce(fx_Num(inp_MetragemBob.Text), 0)
+                            _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
                         },
                         If(
                             _spec > 0 && Abs(_lido - _spec) / _spec > 0.05,
@@ -2888,7 +2867,7 @@ Screens:
                                 ),
                                 0
                             ),
-                            _lido: Coalesce(fx_Num(inp_MetragemBob.Text), 0)
+                            _lido: Coalesce(Value(inp_MetragemBob.Text), 0)
                         },
                         If(
                             _spec > 0 && Abs(_lido - _spec) / _spec > 0.05,
@@ -2934,7 +2913,7 @@ Screens:
                         !varProcessando &&
                         !IsBlank(inp_OperadorBob.Text) &&
                         !IsBlank(cmb_MaquinaBob_1.Selected.Value) &&
-                        fx_MetragemOk(fx_Num(inp_MetragemBob.Text)),
+                        Coalesce(Value(inp_MetragemBob.Text), 0) > 0,
                         DisplayMode.Edit,
                         DisplayMode.Disabled
                     )
@@ -2958,16 +2937,13 @@ Screens:
                             _r.Status <> "EP",
                             Notify("Esta linha não está em bobinagem. Atualize a fila.", NotificationType.Error, 8000);
                             Set(varProcessando, false),
-                            !fx_MetragemOk(fx_Num(inp_MetragemBob.Text)),
-                            Notify("Informe a metragem bobinada (maior que zero) antes de concluir.", NotificationType.Error, 8000);
-                            Set(varProcessando, false),
                             Patch(
                                 FifoBobinadeira,
                                 _r,
                                 {
-                                    QtdBobinas: If(fx_EhNum(inp_BobinasBob.Text), fx_Num(inp_BobinasBob.Text), Blank()),
-                                    Metragem: If(fx_EhNum(inp_MetragemBob.Text), fx_Num(inp_MetragemBob.Text), Blank()),
-                                    NFios: If(fx_EhNum(inp_NFiosBob.Text), fx_Num(inp_NFiosBob.Text), Blank()),
+                                    QtdBobinas: Value(inp_BobinasBob.Text),
+                                    Metragem: Value(inp_MetragemBob.Text),
+                                    NFios: Value(inp_NFiosBob.Text),
                                     RT: inp_RtBob.Text,
                                     LI: inp_LiBob.Text,
                                     'Maquina de Bobinagem': cmb_MaquinaBob_1.Selected.Value,
@@ -3041,7 +3017,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   Color: =fx_CorErro
-                  Font: =fx_FonteFamilia
+                  Font: =Font.'Segoe UI'
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteTitulo
