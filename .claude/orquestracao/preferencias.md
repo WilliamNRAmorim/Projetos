@@ -33,3 +33,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-10-20 | AM-DM-02: aceitou a recomendada de usar o dia produtivo 05:20 (janela de 24h como a Bobinadeira)
 2026-10-21 | AM-DM-02: aceitou a recomendada de separar a folha inteira por trança
 2026-10-21 | AM-DM-02: aceitou a recomendada de zoom + caneta só na tela (sem salvar rabisco)
+2026-10-22 | Painéis da Célula e da Montagem (Auditoria 26): aceitou as recomendadas 1 a 3 (PARADA com OP aberta e PAUSA para motivo programado; parada real da Montagem sem TE e RF, como o BI; meta pela MetaHora da OT). Pediu produção do turno visível na Célula e histórico (dia anterior, turno, dia inteiro ou hora) nos dois painéis. TV de parede é menor que 55" (polegada desconhecida). Execução em sessão nova em Sonnet a partir do plano escrito, de novo.
