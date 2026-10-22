@@ -172,15 +172,24 @@ O código vale. O painel usa a régua certa (`fx_TurnoEm`), menos onde lê o tex
   - OT que cruza turno conta no turno de início (sem encerramento parcial);
   - ClearCollect fora do `IfError` (SEL L31).
 
-## 7. Plano (aguarda o "sim" do William)
+## 7. Plano (revisão 2, aguarda o "sim" do William)
 
-Mockup do painel novo: `GMS/Mockups/painel_montagem_layout.html` (dados fictícios, tamanho real 1366×768).
+Mockup do painel novo: `GMS/Mockups/painel_montagem_layout.html` (dados fictícios, tamanho real 1366×768). Ele mostra duas telas: AO VIVO e HISTÓRICO (21/10, 2º turno).
+
+**O que mudou na revisão 2 (pedido do William em 22/10):**
+- **TV menor que 55":** a polegada é desconhecida, então tudo foi recalibrado para 43". Altura da maiúscula ≈ Size × 0,65 mm. Os tokens viraram 20, 24, 28, 40 e 48. O texto mais importante fica em 24 pt ou mais (16 mm, lido a 4 m). O que for medido na TV real ajusta só a §18.
+- **Produção do turno na Célula:** na v0.11.0 ela entra em 28 pt no lugar do total do dia repetido. Por etapa (realizado × meta) entra na v1.0.
+- **Voltar no tempo** (dia anterior; turno, dia inteiro ou hora): entra no Painel da Montagem v0.1.0 e no Painel da Célula v1.0. Na Célula precisa refazer a carga, explicado na Fase 5.
 
 ### Fase 1 · Formulas v3.0.13, §18 nova (só aditiva)
 
 - **Arquivo:** `Telas/Formulas.txt`.
 - **Conteúdo:**
-  - Tipografia de parede: `fx_FontePainelApoio` 16, `fx_FontePainelRotulo` 20, `fx_FontePainelTexto` 24, `fx_FontePainelNumero` 36, `fx_FontePainelKPI` 44.
+  - Tipografia de parede, calibrada para TV de 43": `fx_FontePainelApoio` 20, `fx_FontePainelRotulo` 24, `fx_FontePainelTexto` 28, `fx_FontePainelNumero` 40, `fx_FontePainelKPI` 48.
+  - Histórico:
+    - `fx_HistVoltaMin` = 5 (volta ao vivo sozinho);
+    - `fx_HistDiasMax` = 31;
+    - `fx_PeriodoIniEm(dataRef, periodo, hora)` e `fx_PeriodoFimEm(dataRef, periodo, hora)`, que usam só `fx_JanelaInicioEm`, `fx_InicioTurnoMin` e `fx_GradeHoraHora`, sem hora escrita à mão. Passam pelo revisor.
   - Cores de texto de parede: `fx_CorPainelTextoOK` #4ADE80 (8,4:1), `…Alerta` #FB923C (6,5:1), `…Erro` #F87171 (5,3:1), `…Info` #60A5FA (5,8:1), `…Gelo` #38BDF8 (6,8:1). Contraste calculado sobre #1E293B; sobre #0F172A é maior.
   - `fx_CorEstadoTextoPainel(estado)` e `fx_CronoLongo(inicio, agora)` ("3 d 04 h").
   - Limites: `fx_PainelIdadeAlertaMin` = 5 e `fx_PainelLinhasAlerta` = 1.800.
@@ -237,6 +246,7 @@ Itens em ordem de valor e risco:
    - turno ativo em branco e negrito;
    - legenda com PARADA, e "COM FILA" no lugar de "PARADA COM FILA" (2 controles novos);
    - " m" nos turnos e "—" no turno futuro;
+   - **produção do turno visível:** no card da Extração, o "SAÍDA DA CÉLULA NO DIA" (repete o total do cabeçalho) vira "SAÍDA DO 2º TURNO" (turno corrente), no mesmo label de 28 pt, sem mexer em geometria;
    - tamanhos escritos à mão trocados por tokens;
    - timers com `Visible: false`;
    - ficha com `fx_CronoLongo` e toque que reinicia a contagem.
@@ -271,6 +281,13 @@ Itens em ordem de valor e risco:
 - **Reaproveita:**
   - da Célula: carga central, 2 timers, falha e idade, tokens §14 e padrão do andon;
   - da Montagem: `fx_CelulasMontagem`, `fx_RealMontagemMin`, `fx_ExcedeuMeta`, `fx_MotivoTempoExcedido` e os filtros do menu com `Upper(Trim())`.
+- **Modo histórico:**
+  - Seletor no topo: AO VIVO · ‹ dia › (até 31 dias) · 1º · 2º · 3º · DIA · HORA ‹ › (passo de 1 h).
+  - Turno ou dia: cada card mostra as OTs fechadas no período, a eficiência da célula, as peças e os minutos de parada real. Os KPIs são do período e o andon vira "NO TURNO" (OTs acima da meta e paradas longas).
+  - Hora H: igual ao AO VIVO, mas com as OTs abertas naquela hora (`InicioEm` ≤ H e `FimEm` vazio ou depois de H). O real é calculado até H.
+  - Fora do AO VIVO, a borda do topo fica laranja e escrito HISTÓRICO, e a tela volta ao vivo sozinha em 5 min sem toque.
+  - Carga do histórico: as mesmas 2 listas com `Data` entre D − 2 e D (delegável), uma vez por escolha, sem timer.
+  - Exige mouse ou toque na TV. Sem isso, o histórico fica para quem abre o painel no PC.
 - **Depende de lista ou coluna nova (fica fora da v0.1.0):**
   - PARADA ao vivo (início e fim em Paradas_Montagem);
   - peças por hora (apontamento parcial);
@@ -292,6 +309,20 @@ Itens em ordem de valor e risco:
 - Saída com código 1 quando houver FALHOU.
 - Revisão pelo revisor-leve.
 
+### Fase 5 · Painel da Célula v1.0 (tela nova `scr_PainelCelula_2`): desenho neste ciclo, código depois do OK no mockup
+
+- **Por que tela nova:** a fonte de TV não cabe no layout atual. E o histórico muda a carga inteira: hoje ela lê o status ATUAL das OPs (Em processo / Aguardando), e o passado não existe nesse status.
+- **Dados para voltar no tempo (conferidos no código):**
+  - `Eventos_Producao` tem `data_hora`, `data_ref`, `turno`, `etapa`, `tipo` (Início/Fim/Parcial), `metros` e `origem_ID` (uma linha por OP × etapa × tipo);
+  - `ficha_producao` tem `data_hora_inicio_<etapa>` e `data_hora_final_<etapa>` das 8 etapas;
+  - `Hora-Hora` tem Real, Meta, Motivo e tempo parado por janela.
+- **O que mostra:**
+  - Produção do turno por etapa, em metros: realizado × meta (a meta da trançagem vem do Hora-Hora).
+  - Paradas do turno, separando parada real, pausa programada e tempo excedido.
+  - Mapa de postos com fonte de TV.
+  - Mesmo seletor da Montagem. Na hora H, o estado dos postos é reconstruído pelos eventos (Início sem Fim até H = processando; Fim da etapa anterior sem Início = na fila).
+- **Entrega deste ciclo:** mockup e plano. O código vem depois do seu OK no mockup. A v0.x fica publicada até a v1.0 ser validada, e então sai.
+
 ### Fecho
 
 - QA em tudo, revisor (regra) e revisor-leve (resto).
@@ -304,7 +335,7 @@ Itens em ordem de valor e risco:
 1. **Célula:** parada apontada com OP aberta vira PARADA? E os motivos programados (Refeição, Reunião, Set-up declarado, Preventiva, Check List) viram PAUSA cinza, fora do andon e do "parado"? Recomendado: sim e sim.
 2. **Montagem:** o que entra em "parada real"? Recomendado: o critério do BI (fora TE e RF) até o MEL-107 trazer o Tipo para o app.
 3. **Montagem:** meta pela `MetaHora` gravada na OT; eficiência = Σ meta ÷ Σ real líquido das OTs finalizadas carimbadas no turno. Recomendado: sim.
-4. **Suposição:** TV da Montagem de 55", lida a 4 m, sem toque. Corrigir se for outra.
+4. **TV:** é menor que 55" (William, 22/10). Calibrado para 43", lida a 4 m. Para usar o histórico na própria TV, ela precisa de mouse ou toque. Medir a diagonal (canto a canto da tela, em cm) quando puder: o ajuste é só na §18.
 
 ## Apêndice A · Achados verificados (146)
 
