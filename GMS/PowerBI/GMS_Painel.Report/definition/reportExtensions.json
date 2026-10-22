@@ -124,6 +124,13 @@
           "displayFolder": "Painel (relatório)"
         },
         {
+          "name": "HH Meta Útil (m)",
+          "dataType": "Double",
+          "expression": "SUM(fHoraHora[Meta Hora]) * 1295 / 1440",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
           "name": "HH Real (m)",
           "dataType": "Double",
           "expression": "SUM(fHoraHora[Real. Hora])",
@@ -133,8 +140,16 @@
         {
           "name": "HH Aderência",
           "dataType": "Double",
-          "expression": "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora]))",
+          "expression": "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])",
           "formatString": "0%",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "HH Meta Útil (m)"
+              }
+            ]
+          },
           "displayFolder": "Painel (relatório)"
         },
         {

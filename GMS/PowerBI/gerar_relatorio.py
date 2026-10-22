@@ -131,8 +131,11 @@ EXT = [
      'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
     ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora])", "#,0", []),
+    # Meta dos cartoes: a grade soma 24 h (1.440 min), mas o dia util e 21h35 (1.295 min, ja sem as pausas de almoco).
+    # Meta continua 100%: produzir acima dela e ganho (Aderencia passa de 100%). O grafico por hora segue com HH Meta (m).
+    ("HH Meta Útil (m)", "Double", "SUM(fHoraHora[Meta Hora]) * 1295 / 1440", "#,0", []),
     ("HH Real (m)", "Double", "SUM(fHoraHora[Real. Hora])", "#,0", []),
-    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora]))", "0%", []),
+    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
     ("HH Parado (min)", "Double", "SUM(fHoraHora[Tempo Parado (min)])", "#,0", []),
     ("HH Principal Parada", "Text",
      "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão])), "
@@ -538,7 +541,7 @@ def pg_horahora():
               [SEG_MES, (col("fHoraHora", "Turno"), "Turno", "gms_turno_hh", False),
                (col("fHoraHora", "Célula"), "Máquina", "gms_maquina_hh", True, 150)])
     kpis(p, [
-        ("Meta (m)", med("HH Meta (m)"), None),
+        ("Meta (m)", med("HH Meta Útil (m)"), None),
         ("Real (m)", med("HH Real (m)"), None),
         ("Aderência", med("HH Aderência"), None),
         ("Parado (min)", med("HH Parado (min)"), None),
