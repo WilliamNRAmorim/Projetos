@@ -559,6 +559,7 @@ def pg_horahora():
     p.add("g_motivo2", MARGEM + wl + VAO, Y_R1 + 290 + VAO, wr, alt - 290 - VAO, grafico(
         "clusteredBarChart", col("fHoraHora", "Motivo 2 Padrão"), [med("HH Parado (min)")],
         "2º motivo (min)", ordenar=med("HH Parado (min)"), desc=True, sem_vazio=True))
+    # NOTA: o filtro "Motivo 2 Padrão ≠ Almoço" do g_motivo2 foi acrescentado direto no visual.json (Desktop); regerar apaga.
     return p
 
 
