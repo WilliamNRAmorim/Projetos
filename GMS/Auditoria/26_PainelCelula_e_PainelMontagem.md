@@ -172,20 +172,139 @@ O código vale. O painel usa a régua certa (`fx_TurnoEm`), menos onde lê o tex
   - OT que cruza turno conta no turno de início (sem encerramento parcial);
   - ClearCollect fora do `IfError` (SEL L31).
 
-## 7. Proposta (aguarda aprovação)
+## 7. Plano (aguarda o "sim" do William)
 
-Ver o plano entregue no chat em 22/10/2026 e o mockup `GMS/Mockups/painel_montagem_layout.html` (dados fictícios). Resumo:
+Mockup do painel novo: `GMS/Mockups/painel_montagem_layout.html` (dados fictícios, tamanho real 1366×768).
 
-- **Formulas v3.0.13, §18 nova (aditiva):**
-  - tipografia de parede: 16, 20, 24, 36, 44;
-  - cores de texto de parede: #4ADE80, #FB923C, #F87171, #60A5FA, #38BDF8, todas acima de 4,5:1;
-  - `fx_CorEstadoTextoPainel`, `fx_CronoLongo`;
-  - limites de idade e truncamento;
-  - meta da OT da Montagem pela `MetaHora`;
-  - rótulo curto de célula.
-- **Painel da Célula v0.11.0:** dado e estado certos (A1, A3, M1-M12), andon que não esconde, contraste e legenda. Só 8 controles mudam de X/Y (bateladas e Bobinagem).
-- **Painel da Montagem v0.1.0:** tela nova `scr_PainelMontagem_1` com 3 consultas delegáveis por ciclo e nenhum `LookUp` em pintura. Entrada por um botão novo no cabeçalho do menu da Montagem.
-- **Depois:** relayout da Célula para tipografia de TV, como tela nova, com mockup, depois que a Montagem validar os tamanhos na TV.
+### Fase 1 · Formulas v3.0.13, §18 nova (só aditiva)
+
+- **Arquivo:** `Telas/Formulas.txt`.
+- **Conteúdo:**
+  - Tipografia de parede: `fx_FontePainelApoio` 16, `fx_FontePainelRotulo` 20, `fx_FontePainelTexto` 24, `fx_FontePainelNumero` 36, `fx_FontePainelKPI` 44.
+  - Cores de texto de parede: `fx_CorPainelTextoOK` #4ADE80 (8,4:1), `…Alerta` #FB923C (6,5:1), `…Erro` #F87171 (5,3:1), `…Info` #60A5FA (5,8:1), `…Gelo` #38BDF8 (6,8:1). Contraste calculado sobre #1E293B; sobre #0F172A é maior.
+  - `fx_CorEstadoTextoPainel(estado)` e `fx_CronoLongo(inicio, agora)` ("3 d 04 h").
+  - Limites: `fx_PainelIdadeAlertaMin` = 5 e `fx_PainelLinhasAlerta` = 1.800.
+  - Montagem:
+    - `fx_MetaMontagemMin(qtdOT, metaHora)`, com a meta pela `MetaHora` gravada na OT;
+    - `fx_MontSemOTAlertaMin` = 30;
+    - `fx_RotuloCelulaTV(celula)` (CORTE-HIGH/FIRE → CORTE-H/F);
+    - `fx_ParadaRealMontagem(motivo)`, conforme a decisão 2.
+- **Verificação:**
+  - `fx_` de regra passam pelo revisor;
+  - colar no Studio sem erro antes de qualquer tela.
+
+### Fase 2 · Painel da Célula v0.11.0 (patch por bloco, sem reimport)
+
+- **Arquivos:**
+  - `Telas/scr_PainelCelula_1.txt` inteiro (versão nova);
+  - `Telas/_patch_PainelCelula_v0.11.0.md` com cada propriedade completa, na ordem de colar;
+  - o YAML dos 2 controles novos da legenda.
+
+Itens em ordem de valor e risco:
+
+1. **Janela atual e início da parada pela grade oficial** (`fx_GradeHoraHora` + `fx_JanelaHHIni/Fim`), janela deduplicada pelo maior ID, um único instante por ciclo (A1, M3, M4, M10).
+   - Propriedade: `btn_RecarregarPnl.OnSelect`.
+   - Revisor.
+   - Verificação: tabela de horários-limite (05:19, 05:21, 13:56, 13:58, 22:30, 22:42, 23:59, 00:01) conferida pelo revisor; na TV, uma trançadeira parada às 22:30 tem que aparecer PARADA.
+2. **Falha visível, idade do dado e medidor do ciclo** (A3, M12, CARGA-01, VIS-15):
+   - `IfError` com ramos fechados no `Concurrent` e na Fifo;
+   - cadastro de velocidade só troca se a leitura nova vier cheia;
+   - guarda de truncamento;
+   - "célula em dia" só com carga ok;
+   - rodapé com a idade (vermelho acima de 5 min) e a duração da última carga em segundos: é a medida real do custo por ciclo na TV.
+   - Propriedades: `OnVisible`, `OnSelect`, `lbl_AndonQtdPnl`, `lbl_FontePnl`, textos "sem fonte" da Bobinagem.
+   - Verificação: Preview com a rede desligada → rodapé vermelho e andon "sem dado"; religada → volta.
+3. **Andon que não esconde** (A2, M5 a M9):
+   - páginas de 3 itens que giram a cada 30 s, com "1/3" no contador, sem mexer em geometria;
+   - bitolas num item só;
+   - idade do problema no detalhe;
+   - regras de fila caladas em turno não trabalhado, com o critério "Apontada";
+   - MEL-190 trocada por autonomia menor que 1 turno útil;
+   - metragem vazia separada da implausível;
+   - item clicável abre a ficha.
+   - Revisor (turno trabalhado).
+4. **PARADA com OP aberta e PAUSA programada** (M1, M2), conforme a decisão 1. Revisor.
+5. **Rede mais leve** (M11):
+   - Refresh em paralelo;
+   - Eventos numa consulta só, com 3 filtros locais;
+   - Fifo numa consulta, dentro do `Concurrent`;
+   - chave do DM normalizada antes do laço;
+   - fora os 6 `Set` mortos.
+   - Resultado: de 12 para 9 chamadas por ciclo, e o trecho sequencial vira um bloco paralelo.
+   - Verificação: medidor do item 2 antes e depois; mesmos números da v0.10.3 em Preview.
+6. **Contraste e rótulos sem mexer em geometria** (A5, M14, M15, parte de M20, baixas de norma):
+   - cores de texto de parede;
+   - turno ativo em branco e negrito;
+   - legenda com PARADA, e "COM FILA" no lugar de "PARADA COM FILA" (2 controles novos);
+   - " m" nos turnos e "—" no turno futuro;
+   - tamanhos escritos à mão trocados por tokens;
+   - timers com `Visible: false`;
+   - ficha com `fx_CronoLongo` e toque que reinicia a contagem.
+7. **Geometria (com aviso), 8 controles** (A6, M16):
+   - `lbl_BatH1Pnl` a `lbl_BatH5Pnl`: X e Width alinhados às colunas;
+   - `btn_B5BobPnl`, `btn_B6BobPnl` e `lbl_MaisBobPnl`: X e Y em 3 × 2 dentro do card.
+   - Verificação: print.
+
+**Fora deste ciclo:**
+- A4 (fonte grande na Célula): exige relayout. Vira tela nova `scr_PainelCelula_2`, com mockup, depois que a Montagem validar os tamanhos na TV.
+- Meta do mandril (M13).
+- Consumo da janela aberta (M18).
+- Bateladas acima de 5 (M19).
+- Kanban por bitola (M7).
+- Ficha de Mandril e Bobinagem.
+
+### Fase 3 · Painel da Montagem v0.1.0 (tela nova)
+
+- **Arquivos:**
+  - `Telas/scr_PainelMontagem_1.txt` (novo);
+  - `Telas/scr_selecaosetor_Montagem.txt`: botão novo "Painel de TV" no cabeçalho (X ≈ 640, Y 24, espaço livre); nenhum controle existente se mexe.
+- **Indicadores:**
+  - Cabeçalho: turno pelo relógio, relógio, selo "dados de HH:MM" (vermelho acima de 5 min).
+  - 6 KPIs do turno: produzindo X de 12, acima da meta, peças no turno, eficiência, parada real e tempo excedido. Parada e excedido ficam separados e nunca se somam.
+  - 12 cards numa galeria 4 × 3: faixa de estado escrita, célula, OT, real/meta em minutos com barra, rodapé do turno.
+  - "Onde olhar": OT de ontem, acima da meta (+min), sem OT há mais de 30 min, PN sem meta. Contador sem esconder itens.
+- **Origem:**
+  - `Producao_Montagem`: `Status = "EmAndamento"`, e `Data` = dia produtivo;
+  - `Paradas_Montagem`: `Data` ≥ dia − 2.
+  - São 3 consultas delegáveis num `Concurrent` a cada 2 min. Meta pela `MetaHora` (nenhum `LookUp(Tempos)`). Turno por `fx_TurnoLabelEm` e `fx_DataRefEm`.
+- **Estados:** carregando, sem dado/atrasado, sem apontamento (cinza), sem OT há X min, produzindo, acima da meta, OT de ontem, sem meta.
+- **Reaproveita:**
+  - da Célula: carga central, 2 timers, falha e idade, tokens §14 e padrão do andon;
+  - da Montagem: `fx_CelulasMontagem`, `fx_RealMontagemMin`, `fx_ExcedeuMeta`, `fx_MotivoTempoExcedido` e os filtros do menu com `Upper(Trim())`.
+- **Depende de lista ou coluna nova (fica fora da v0.1.0):**
+  - PARADA ao vivo (início e fim em Paradas_Montagem);
+  - peças por hora (apontamento parcial);
+  - meta de turno por célula;
+  - motivo com Tipo no app (MEL-107).
+- **Verificação:**
+  - QA;
+  - Preview lado a lado com o menu da Montagem no mesmo minuto ("produzindo" e "acima da meta" iguais);
+  - eficiência conferida à mão em 2 OTs;
+  - OT aberta de ontem aparece como OT DE ONTEM.
+
+### Fase 4 · QA (`gms_qa_yaml.py`)
+
+- `Focused*` na lista do `Classic/Button` (tira o falso positivo).
+- Coleções e alias declarados no teste 7.
+- Teste novo: `fx_` usada × definida no `Formulas.txt`.
+- Teste 17 olhando também o fallback do `IfError`.
+- Size escrito à mão como alerta.
+- Saída com código 1 quando houver FALHOU.
+- Revisão pelo revisor-leve.
+
+### Fecho
+
+- QA em tudo, revisor (regra) e revisor-leve (resto).
+- Diário, com MEL novo pelo `gms.py --novo`, e Índice.
+- Commit por assunto e push.
+- Ordem de colar no Studio: Formulas → `scr_PainelMontagem_1` → menu da Montagem → blocos do Painel da Célula.
+
+### Decisões do William
+
+1. **Célula:** parada apontada com OP aberta vira PARADA? E os motivos programados (Refeição, Reunião, Set-up declarado, Preventiva, Check List) viram PAUSA cinza, fora do andon e do "parado"? Recomendado: sim e sim.
+2. **Montagem:** o que entra em "parada real"? Recomendado: o critério do BI (fora TE e RF) até o MEL-107 trazer o Tipo para o app.
+3. **Montagem:** meta pela `MetaHora` gravada na OT; eficiência = Σ meta ÷ Σ real líquido das OTs finalizadas carimbadas no turno. Recomendado: sim.
+4. **Suposição:** TV da Montagem de 55", lida a 4 m, sem toque. Corrigir se for outra.
 
 ## Apêndice A · Achados verificados (146)
 
