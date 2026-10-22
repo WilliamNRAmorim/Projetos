@@ -46,8 +46,6 @@ Screens:
             Fill: =fx_CorHeader
             Height: =96
             Width: =1366
-            X: =0
-            Y: =0
       - ico_VoltarAM:
           Control: Classic/Icon@2.5.0
           Properties:
@@ -63,7 +61,7 @@ Screens:
                       NotificationType.Warning,
                       6000
                   ),
-                  Navigate(scr_Trancagem_3)
+                  Navigate(scr_Trancagem_4)
               )
             Width: =44
             X: =16
@@ -85,7 +83,6 @@ Screens:
           Properties:
             Color: =fx_CorRotulo
             Font: =fx_FonteFamilia
-            FontWeight: =FontWeight.Normal
             Height: =24
             Size: =fx_FonteCorpo
             Text: ="Diâmetro externo  ·  REV. 5  ·  " & Text(ctxDataAM, "[$-pt-BR]dd/mm/yyyy") & "  ·  " & ctxMaqAM & "  ·  " & Text(ctxTrAM) & "ª trança"
@@ -399,7 +396,6 @@ Screens:
             Height: =44
             IconBackground: =fx_CorInfo
             IconFill: =fx_CorSuperficie
-            IsEditable: =false
             OnChange: |-
               =If(
                   !IsBlank(Self.SelectedDate) && Self.SelectedDate <> ctxDataAM,
@@ -480,7 +476,6 @@ Screens:
             Height: =44
             Size: =fx_FonteCorpo
             Text: =If(ctxIdFolhaAM > 0, ctxPNAM, "—")
-            VerticalAlign: =VerticalAlign.Middle
             Width: =170
             X: =464
             Y: =122
@@ -493,7 +488,6 @@ Screens:
             Height: =16
             Size: =fx_FonteApoio
             Text: ="BRD CODE"
-            Width: =150
             X: =650
             Y: =104
       - lbl_BRDAM:
@@ -509,8 +503,6 @@ Screens:
             Height: =44
             Size: =fx_FonteCorpo
             Text: =If(ctxIdFolhaAM > 0, ctxBRDAM, "—")
-            VerticalAlign: =VerticalAlign.Middle
-            Width: =150
             X: =650
             Y: =122
       - lbl_RotCaracAM:
@@ -519,10 +511,10 @@ Screens:
             Color: =fx_CorRotulo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
-            Height: =16
+            Height: =18
             Size: =fx_FonteApoio
             Text: ="CARACTERÍSTICA"
-            Width: =120
+            Width: =136
             X: =816
             Y: =104
       - lbl_CaracAM:
@@ -538,7 +530,6 @@ Screens:
             Height: =44
             Size: =fx_FonteCorpo
             Text: ="Diâmetro"
-            VerticalAlign: =VerticalAlign.Middle
             Width: =120
             X: =816
             Y: =122
@@ -701,7 +692,6 @@ Screens:
             Text: |-
               ="∅ EXT. DA " & Text(ctxTrAM) & "ª TRANÇA (pol)    LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "   ·   Nominal " & fx_AMDM02_Txt(ctxNomAM, 3) & "   ·   LSE " & fx_AMDM02_Txt(ctxLseAM, 3) &
               "          PICK ESPECIFICADO    LIE " & If(IsBlank(ctxRPkLieAM), "—", ctxRPkLieAM) & "   ·   LSE " & If(IsBlank(ctxRPkLseAM), "—", ctxRPkLseAM)
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxIdFolhaAM > 0
             Width: =1300
             X: =28
@@ -715,7 +705,6 @@ Screens:
             Height: =32
             Size: =fx_FonteCorpo
             Text: ="Carregando a folha..."
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxCarregandoAM
             Width: =400
             X: =16
@@ -883,7 +872,7 @@ Screens:
             Text: =""
             Width: =0
             X: =1366
-            Y: =768
+            Y: =728
       - btn_NovaColetaAM:
           Control: Classic/Button@2.2.0
           Properties:
@@ -913,7 +902,7 @@ Screens:
             Text: =""
             Width: =0
             X: =1366
-            Y: =768
+            Y: =728
       - lbl_ProxColetaAM:
           Control: Label@2.5.1
           Properties:
@@ -928,7 +917,6 @@ Screens:
             Size: =fx_FonteDestaque
             Text: |-
               =If(IsBlank(ctxUltAM), "Primeira coleta do dia: livre", "Próxima coleta até " & Text(fx_AMDM02_PrazoColeta(ctxUltAM), "[$-en-US]hh:mm"))
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 1 && ctxDataAM = fx_DataRefEm(ctxAgoraAM)
             Width: =850
             X: =500
@@ -941,7 +929,6 @@ Screens:
             Height: =512
             Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 1
             Width: =1366
-            X: =0
             Y: =256
           Children:
             - lbl_ColAM1:
@@ -965,11 +952,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="TUR."
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =40
+                  Wrap: =false
                   X: =80
                   Y: =2
             - lbl_ColAM3:
@@ -980,11 +967,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="AMOST. 1"
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =74
+                  Wrap: =false
                   X: =124
                   Y: =2
             - lbl_ColAM4:
@@ -995,11 +982,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="AMOST. 2"
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =74
+                  Wrap: =false
                   X: =204
                   Y: =2
             - lbl_ColAM5:
@@ -1010,11 +997,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="AMOST. 3"
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =74
+                  Wrap: =false
                   X: =284
                   Y: =2
             - lbl_ColAM6:
@@ -1025,11 +1012,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="AMOST. 4"
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =74
+                  Wrap: =false
                   X: =364
                   Y: =2
             - lbl_ColAM7:
@@ -1040,11 +1027,11 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
+                  PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: ="AMOST. 5"
-                  PaddingLeft: =0
-                  Wrap: =false
                   Width: =74
+                  Wrap: =false
                   X: =444
                   Y: =2
             - lbl_ColAM8:
@@ -1094,7 +1081,6 @@ Screens:
                   Fill: =Color.Transparent
                   Height: =456
                   Items: =Sort(colJanAM, Hora, SortOrder.Ascending)
-                  ShowScrollbar: =true
                   TemplateFill: =Color.Transparent
                   TemplateSize: =38
                   Width: =770
@@ -1117,8 +1103,7 @@ Screens:
                         RadiusTopLeft: =fx_RaioS
                         RadiusTopRight: =fx_RaioS
                         Text: =""
-                        Width: =764
-                        X: =0
+                        Width: =760
                         Y: =1
                   - lbl_HoraAM:
                       Control: Label@2.5.1
@@ -1127,12 +1112,10 @@ Screens:
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
-                        Height: =30
+                        Height: =33
                         Size: =fx_FonteCorpo
                         Text: =If(ThisItem.Tem, Text(ThisItem.Hora, "[$-en-US]hh:mm"), "NOVA")
-                        VerticalAlign: =VerticalAlign.Middle
-                        Width: =56
-                        X: =6
+                        Width: =62
                         Y: =4
                   - lbl_TurnoAM:
                       Control: Label@2.5.1
@@ -1140,12 +1123,10 @@ Screens:
                         Align: =Align.Center
                         Color: =fx_CorTextoSuave
                         Font: =fx_FonteFamilia
-                        FontWeight: =FontWeight.Normal
                         Height: =30
                         Size: =fx_FonteCorpo
                         Text: =If(ThisItem.Tem, Text(fx_TurnoEm(ThisItem.Hora)) & "º", "—")
                         Tooltip: ="Turno da hora real da coleta (fx_TurnoEm)"
-                        VerticalAlign: =VerticalAlign.Middle
                         Width: =40
                         X: =64
                         Y: =4
@@ -1380,11 +1361,9 @@ Screens:
                         Align: =Align.Center
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
-                        FontWeight: =FontWeight.Normal
                         Height: =30
                         Size: =fx_FonteCorpo
                         Text: =If(IsBlank(ThisItem.Soma), "—", fx_AMDM02_Txt(ThisItem.Soma, 3))
-                        VerticalAlign: =VerticalAlign.Middle
                         Width: =76
                         X: =508
                         Y: =4
@@ -1398,7 +1377,6 @@ Screens:
                         Height: =30
                         Size: =fx_FonteCorpo
                         Text: =If(IsBlank(ThisItem.Media), "—", fx_AMDM02_Txt(ThisItem.Media, 4))
-                        VerticalAlign: =VerticalAlign.Middle
                         Width: =80
                         X: =588
                         Y: =4
@@ -1408,11 +1386,9 @@ Screens:
                         Align: =Align.Center
                         Color: =fx_CorTexto
                         Font: =fx_FonteFamilia
-                        FontWeight: =FontWeight.Normal
                         Height: =30
                         Size: =fx_FonteCorpo
                         Text: =If(IsBlank(ThisItem.Amp), "—", fx_AMDM02_Txt(ThisItem.Amp, 3))
-                        VerticalAlign: =VerticalAlign.Middle
                         Width: =76
                         X: =672
                         Y: =4
@@ -1434,7 +1410,6 @@ Screens:
                   Text: =""
                   Width: =550
                   X: =800
-                  Y: =0
             - lbl_TituloXAM:
                 Control: Label@2.5.1
                 Properties:
@@ -1443,8 +1418,7 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   Height: =20
                   Size: =fx_FonteApoio
-                  Text: |-
-                    ="X̄ POR COLETA (pol)  ·  " & Text(ctxTrAM) & "ª TRANÇA"
+                  Text: ="X̄ POR COLETA (pol)  ·  " & Text(ctxTrAM) & "ª TRANÇA" & "ㅤ" & "GRÁFICO DAS MÉDIAS"
                   Width: =520
                   X: =816
                   Y: =8
@@ -1463,7 +1437,6 @@ Screens:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: =fx_AMDM02_Txt(ctxLseAM, 3)
@@ -1486,7 +1459,6 @@ Screens:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: =fx_AMDM02_Txt(ctxNomAM, 3)
@@ -1509,7 +1481,6 @@ Screens:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: =fx_AMDM02_Txt(ctxLieAM, 3)
@@ -1561,7 +1532,6 @@ Screens:
                 Properties:
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =18
                   Size: =fx_FonteApoio
                   Text: |-
@@ -1594,19 +1564,18 @@ Screens:
                   Color: =fx_CorRotulo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =20
-                  Size: =fx_FonteApoio
-                  Text: ="R POR COLETA (máx − mín, pol)  ·  eixo 05:20 a 05:20"
-                  Width: =520
+                  Height: =18
+                  Size: =10
+                  Text: ="R POR COLETA (máx − mín, pol)  ·  eixo 05:20 a 05:20" &"ㅤ" & "GRÁFICOS DAS AMPLITUDES"
+                  Width: =534
                   X: =816
-                  Y: =266
+                  Y: =259
             - lbl_ValTetoRAM:
                 Control: Label@2.5.1
                 Properties:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: =fx_AMDM02_Txt(Max(Coalesce(Max(colJanAM, Amp), 0) * 1.2, Coalesce(ctxLseAM - ctxLieAM, 0) / 2, 0.005), 3)
@@ -1619,7 +1588,6 @@ Screens:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: ="0,000"
@@ -1677,7 +1645,6 @@ Screens:
             Height: =512
             Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 2
             Width: =1366
-            X: =0
             Y: =256
           Children:
             - btn_CardLatAM:
@@ -1698,7 +1665,6 @@ Screens:
                   Text: =""
                   Width: =640
                   X: =16
-                  Y: =0
             - lbl_TituloLatAM:
                 Control: Label@2.5.1
                 Properties:
@@ -1747,7 +1713,6 @@ Screens:
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: ="Nº DE FIOS"
-                  Width: =150
                   X: =288
                   Y: =36
             - lbl_ColLat3:
@@ -1789,9 +1754,7 @@ Screens:
                         Height: =32
                         Size: =fx_FonteCorpo
                         Text: =Text(ThisItem.Ord)
-                        VerticalAlign: =VerticalAlign.Middle
                         Width: =30
-                        X: =0
                         Y: =6
                   - inp_TensaoAM:
                       Control: Classic/TextInput@2.3.2
@@ -1900,7 +1863,6 @@ Screens:
                   Height: =28
                   Size: =fx_FonteCorpo
                   Text: ="Média"
-                  VerticalAlign: =VerticalAlign.Middle
                   Width: =68
                   Wrap: =false
                   X: =32
@@ -1915,7 +1877,6 @@ Screens:
                   Height: =28
                   Size: =fx_FonteCorpo
                   Text: =fx_AMDM02_Txt(IfError(Average(colLatAM, fx_NumMedida(Tensao)), Blank()), 2)
-                  VerticalAlign: =VerticalAlign.Middle
                   Width: =136
                   X: =100
                   Y: =296
@@ -1929,8 +1890,6 @@ Screens:
                   Height: =28
                   Size: =fx_FonteCorpo
                   Text: =fx_AMDM02_Txt(IfError(Average(colLatAM, fx_NumMedida(Fios)), Blank()), 1)
-                  VerticalAlign: =VerticalAlign.Middle
-                  Width: =150
                   X: =288
                   Y: =296
             - lbl_MediaODTuboAM:
@@ -1943,7 +1902,6 @@ Screens:
                   Height: =28
                   Size: =fx_FonteCorpo
                   Text: =fx_AMDM02_Txt(IfError(Average(colLatAM, fx_AMDM02_Pol(ODTubo)), Blank()), 3)
-                  VerticalAlign: =VerticalAlign.Middle
                   Width: =180
                   X: =458
                   Y: =296
@@ -1965,7 +1923,6 @@ Screens:
                   Text: =""
                   Width: =678
                   X: =672
-                  Y: =0
             - lbl_TituloRodapeAM:
                 Control: Label@2.5.1
                 Properties:
@@ -1994,7 +1951,6 @@ Screens:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Fios sobrepostos em 150 milímetros"
-                  Align: =Align.Left
                   BorderColor: =fx_CorBorda
                   Default: =ctxFiosSobAM
                   DelayOutput: =true
@@ -2002,7 +1958,6 @@ Screens:
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="0"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2028,14 +1983,13 @@ Screens:
                   Height: =16
                   Size: =fx_FonteApoio
                   Text: ="RASPADINHA · PICKS EM 5 pol"
-                  Width: =214
+                  Width: =227
                   X: =912
                   Y: =36
             - inp_NPicksAM:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Número de picks medido"
-                  Align: =Align.Left
                   BorderColor: =If(fx_ForaDaFaixa(fx_NumMedida(ctxNPicksAM), fx_NumMedida(ctxRPkLieAM), fx_NumMedida(ctxRPkLseAM)), fx_CorErro, fx_CorBorda)
                   Default: =ctxNPicksAM
                   DelayOutput: =true
@@ -2043,7 +1997,6 @@ Screens:
                   Fill: =If(fx_ForaDaFaixa(fx_NumMedida(ctxNPicksAM), fx_NumMedida(ctxRPkLieAM), fx_NumMedida(ctxRPkLseAM)), fx_CorErroSuave, fx_CorSuperficie)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="0"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2065,12 +2018,8 @@ Screens:
                 Properties:
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
-                  Height: =40
                   Size: =fx_FonteCorpo
-                  Text: |-
-                    ="Pick  LIE " & ctxRPkLieAM & "  ·  LSE " & ctxRPkLseAM
-                  VerticalAlign: =VerticalAlign.Middle
+                  Text: ="Pick  LIE " & ctxRPkLieAM & "  ·  LSE " & ctxRPkLseAM
                   Visible: =!ctxRPkDigAM
                   Width: =210
                   X: =1128
@@ -2087,7 +2036,6 @@ Screens:
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="Pick LIE"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2117,7 +2065,6 @@ Screens:
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="Pick LSE"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2153,11 +2100,9 @@ Screens:
                   Align: =Align.Right
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
                   Height: =16
                   Size: =fx_FonteApoio
-                  Text: |-
-                    ="LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "  ·  Nom " & fx_AMDM02_Txt(ctxNomAM, 3) & "  ·  LSE " & fx_AMDM02_Txt(ctxLseAM, 3)
+                  Text: ="LIE " & fx_AMDM02_Txt(ctxLieAM, 3) & "  ·  Nom " & fx_AMDM02_Txt(ctxNomAM, 3) & "  ·  LSE " & fx_AMDM02_Txt(ctxLseAM, 3)
                   Width: =338
                   X: =1000
                   Y: =108
@@ -2190,7 +2135,6 @@ Screens:
                         Fill: =If(fx_ForaDaFaixa(fx_AMDM02_Pol(ThisItem.T), ctxLieAM, ctxLseAM), fx_CorErroSuave, fx_CorSuperficie)
                         Font: =fx_FonteFamilia
                         FontWeight: =FontWeight.Semibold
-                        Height: =40
                         HintText: ="0,000"
                         HoverFill: =fx_CorInfoSuave
                         OnChange: |-
@@ -2224,7 +2168,6 @@ Screens:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Observações gerais da folha"
-                  Align: =Align.Left
                   BorderColor: =fx_CorBorda
                   Default: =ctxObsAM
                   DelayOutput: =true
@@ -2256,7 +2199,6 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorBorda
                   DataSource: =AMDM02_Registro
-                  DefaultMode: =FormMode.Edit
                   Height: =164
                   Item: =If(IsBlank(ctxRegAM), Defaults(AMDM02_Registro), ctxRegAM)
                   NumberOfColumns: =1
@@ -2304,11 +2246,11 @@ Screens:
                               Font: =fx_FonteFamilia
                               Height: =116
                               Items: =Parent.Default
+                              NoAttachmentsText: ="Nenhuma foto. Toque em Anexar para abrir a câmera ou a galeria."
                               OnAddFile: |-
                                 =UpdateContext({ctxAlteradoAM: true})
                               OnRemoveFile: |-
                                 =UpdateContext({ctxAlteradoAM: true})
-                              NoAttachmentsText: ="Nenhuma foto. Toque em Anexar para abrir a câmera ou a galeria."
                               Size: =fx_FonteCorpo
                               Width: =Parent.Width - 40
                               X: =20
@@ -2334,8 +2276,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorBorda
                   Height: =140
-                  Image: |-
-                    =Last(att_FotoRegAM.Attachments).Value
+                  Image: =Last(att_FotoRegAM.Attachments).Value
                   OnSelect: |-
                     =UpdateContext({ctxFotoZoomAM: true, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false})
                   Visible: =CountRows(att_FotoRegAM.Attachments) > 0
@@ -2350,7 +2291,6 @@ Screens:
             Height: =394
             Visible: =ctxIdFolhaAM = 0 && !ctxCarregandoAM
             Width: =1366
-            X: =0
             Y: =214
           Children:
             - btn_CardNovaAM:
@@ -2371,7 +2311,6 @@ Screens:
                   Text: =""
                   Width: =830
                   X: =16
-                  Y: =0
             - lbl_TituloNovaAM:
                 Control: Label@2.5.1
                 Properties:
@@ -2389,8 +2328,6 @@ Screens:
                 Properties:
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
-                  Height: =40
                   Size: =fx_FonteCorpo
                   Text: ="Escolha o responsável no campo acima e o código de produto abaixo. A especificação é copiada do cadastro no momento da abertura."
                   Width: =790
@@ -2427,7 +2364,7 @@ Screens:
                   Items: =Sort(AMDM02_Spec, PARTNUMBER, SortOrder.Ascending)
                   PressedColor: =fx_CorSuperficie
                   PressedFill: =fx_CorInfo
-                  SearchFields: =["PARTNUMBER", "BRD_CODE"]
+                  SearchFields: =["PARTNUMBER","BRD_CODE"]
                   SelectMultiple: =false
                   SelectionColor: =fx_CorInfo
                   SelectionFill: =fx_CorInfoSuave
@@ -2471,7 +2408,6 @@ Screens:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Pick especificado, limite inferior"
-                  Align: =Align.Left
                   BorderColor: =fx_CorBorda
                   Default: =Text(fx_AMDM02_PorTranca(cmb_PNAM.Selected.PICK1_MIN, cmb_PNAM.Selected.PICK2_MIN, ctxTrAM))
                   DelayOutput: =true
@@ -2479,7 +2415,6 @@ Screens:
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="0"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2509,7 +2444,6 @@ Screens:
                 Control: Classic/TextInput@2.3.2
                 Properties:
                   AccessibleLabel: ="Pick especificado, limite superior"
-                  Align: =Align.Left
                   BorderColor: =fx_CorBorda
                   Default: =Text(fx_AMDM02_PorTranca(cmb_PNAM.Selected.PICK1_MAX, cmb_PNAM.Selected.PICK2_MAX, ctxTrAM))
                   DelayOutput: =true
@@ -2517,7 +2451,6 @@ Screens:
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   HintText: ="0"
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -2536,12 +2469,9 @@ Screens:
                 Properties:
                   Color: =fx_CorTextoSuave
                   Font: =fx_FonteFamilia
-                  FontWeight: =FontWeight.Normal
-                  Height: =40
                   Size: =fx_FonteApoio
                   Text: |-
                     ="O pick vem do cadastro da Engenharia. Se vier vazio (ex.: Spiral), digite o valor do delineamento."
-                  VerticalAlign: =VerticalAlign.Middle
                   Width: =430
                   X: =392
                   Y: =226
@@ -2624,7 +2554,6 @@ Screens:
                   Height: =48
                   Size: =fx_FonteCorpo
                   Text: =If(IsBlank(cmb_RespAM.Selected.Nome), "Falta escolher o responsável.", If(IsBlank(cmb_PNAM.Selected.PARTNUMBER), "Falta escolher o código de produto.", If(ctxTrAM = 2 && Coalesce(cmb_PNAM.Selected.OD2_MED, 0) <= 0, "Este código não tem 2ª trança.", "")))
-                  VerticalAlign: =VerticalAlign.Middle
                   Width: =500
                   X: =292
                   Y: =292
@@ -2641,7 +2570,6 @@ Screens:
               =UpdateContext({ctxFotoZoomAM: true, ctxZoomAM: 1, ctxPanXAM: 0, ctxPanYAM: 0, ctxPenAM: false})
             Size: =fx_FonteApoio
             Text: ="Toque na foto para ampliar"
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxIdFolhaAM > 0 && ctxAbaAM = 2 && !ctxFotoZoomAM && CountRows(att_FotoRegAM.Attachments) > 0
             Width: =488
             X: =862
@@ -2653,8 +2581,6 @@ Screens:
             Height: =768
             Visible: =ctxFotoZoomAM
             Width: =1366
-            X: =0
-            Y: =0
       - cntr_ZoomAM:
           Control: GroupContainer@1.5.0
           Variant: ManualLayout
@@ -2670,13 +2596,12 @@ Screens:
                 Control: Image@2.2.3
                 Properties:
                   Height: =Parent.Height * ctxZoomAM
-                  Image: |-
-                    =Last(att_FotoRegAM.Attachments).Value
+                  Image: =Last(att_FotoRegAM.Attachments).Value
                   Width: =Parent.Width * ctxZoomAM
                   X: =(Parent.Width - Self.Width) / 2 + ctxPanXAM
                   Y: =(Parent.Height - Self.Height) / 2 + ctxPanYAM
             - pen_ZoomAM:
-                Control: PenInput@2.1.0
+                Control: PenInput@2.3.0
                 Properties:
                   Color: =fx_CorErro
                   DisplayMode: =If(ctxPenAM, DisplayMode.Edit, DisplayMode.View)
@@ -2729,7 +2654,6 @@ Screens:
             Height: =44
             Size: =fx_FonteDestaque
             Text: =Text(ctxZoomAM) & "x"
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxFotoZoomAM
             Width: =72
             X: =72
@@ -2812,8 +2736,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            Text: |-
-              =If(ctxPenAM, "Caneta ligada", "Caneta desligada")
+            Text: =If(ctxPenAM, "Caneta ligada", "Caneta desligada")
             Visible: =ctxFotoZoomAM
             Width: =190
             X: =336
@@ -2830,8 +2753,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =44
             HoverFill: =ColorFade(Self.Fill, -20%)
-            OnSelect: |-
-              =Reset(pen_ZoomAM)
+            OnSelect: =Reset(pen_ZoomAM)
             PressedFill: =ColorFade(Self.Fill, -30%)
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
@@ -2975,11 +2897,9 @@ Screens:
             Align: =Align.Center
             Color: =fx_CorSuperficie
             Font: =fx_FonteFamilia
-            FontWeight: =FontWeight.Normal
             Height: =24
             Size: =fx_FonteApoio
             Text: ="O rabisco não é salvo, serve para apontar na hora"
-            VerticalAlign: =VerticalAlign.Middle
             Visible: =ctxFotoZoomAM
             Width: =1334
             X: =16
