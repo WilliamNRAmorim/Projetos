@@ -172,7 +172,9 @@ O código vale. O painel usa a régua certa (`fx_TurnoEm`), menos onde lê o tex
   - OT que cruza turno conta no turno de início (sem encerramento parcial);
   - ClearCollect fora do `IfError` (SEL L31).
 
-## 7. Plano (revisão 2, aguarda o "sim" do William)
+## 7. Plano (revisão 2)
+
+> **APROVADO pelo William em 22/10/2026**, com as decisões 1, 2 e 3 como recomendadas e a TV calibrada para 43". A execução vai para uma sessão nova em Sonnet, a partir deste texto.
 
 Mockup do painel novo: `GMS/Mockups/painel_montagem_layout.html` (dados fictícios, tamanho real 1366×768). Ele mostra duas telas: AO VIVO e HISTÓRICO (21/10, 2º turno).
 
