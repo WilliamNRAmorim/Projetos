@@ -1,0 +1,1603 @@
+# scr_PainelMontagem_1 · Painel da Montagem v0.1.0 (Fase 3 da Auditoria 26) · 23/10/2026
+# PENDENCIA (confirmar nomes internos): os nomes de coluna de Producao_Montagem, Paradas_Montagem usados aqui sao os de
+# EXIBICAO que o menu e a scr_Montagem_HoraHora ja usam (Celula, PN, OT, QtdOT, InicioEm, QtdProduzida, MetaHora, Status,
+# FimEm, DuracaoMin, DescontoMin, DuracaoRealMin, Data, Turno, Motivo, TempoParadoMin, OPVinculada, RegistradoEm, ID).
+# Nenhum field_N confirmado. Conferir na lista (/_api/web/lists/getbytitle('X')/fields?$select=InternalName,Title) antes de publicar.
+# Colar no Studio: Formulas v3.0.13 (§18) ANTES desta tela. Depois, o menu da Montagem (botao Painel de TV).
+Screens:
+  scr_PainelMontagem_1:
+    Properties:
+      Fill: =fx_CorPainelFundo
+      LoadingSpinnerColor: =fx_CorInfo
+      OnVisible: |-
+        =UpdateContext({ ctxModoMon: "VIVO", ctxCarregouMon: false, ctxFalhaMon: false, ctxTruncMon: false, ctxHoraMon: 1 });
+        Select(btn_RecarregarMon)
+    Children:
+      - btn_RecarregarMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =With(
+                  { _agora: Now() },
+                  With(
+                      { _dia: fx_DataRefEm(_agora) },
+                      UpdateContext({ ctxFalhaMon: false, ctxModoMon: "VIVO", ctxDiaMon: _dia, ctxHoraMon: 1, ctxAgoraMon: _agora, ctxToqueMon: _agora });
+                      // Atualiza o cache do conector. Ramos fechados: valor "; true", falha "; false" (mesmo tipo).
+                      IfError(
+                          Refresh(Producao_Montagem);
+                          Refresh(Paradas_Montagem);
+                          true,
+                          UpdateContext({ ctxFalhaMon: true });
+                          false
+                      );
+                      // 3 consultas DELEGAVEIS, em paralelo. Sem Search, sem "in", sem ShowColumns.
+                      // colAbertasMon pega a OT esquecida de dias anteriores; colDiaMon pega o dia produtivo (fechadas).
+                      IfError(
+                          Concurrent(
+                              ClearCollect(colAbertasMon, Filter(Producao_Montagem, Status = "EmAndamento")),
+                              ClearCollect(colDiaMon, Filter(Producao_Montagem, Data >= _dia)),
+                              ClearCollect(colParMon, Filter(Paradas_Montagem, Data >= DateAdd(_dia, -2, TimeUnit.Days)))
+                          );
+                          true,
+                          UpdateContext({ ctxFalhaMon: true });
+                          false
+                      );
+                      // Uniao LOCAL (sem rede): aberta de qualquer dia + o dia produtivo, sem repetir a mesma OT.
+                      ClearCollect(colProdMon, colAbertasMon);
+                      Collect(colProdMon, Filter(colDiaMon As _d, IsBlank(LookUp(colAbertasMon As _a, _a.ID = _d.ID))));
+                      UpdateContext({
+                          ctxTruncMon: CountRows(colAbertasMon) >= fx_PainelLinhasAlerta || CountRows(colDiaMon) >= fx_PainelLinhasAlerta || CountRows(colParMon) >= fx_PainelLinhasAlerta,
+                          ctxCarregouMon: true,
+                          ctxSincMon: _agora,
+                          ctxUltOkMon: If(ctxFalhaMon, ctxUltOkMon, _agora)
+                      });
+                      Select(btn_CalcMon)
+                  )
+              )
+            PressedFill: =Color.Transparent
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =1
+            X: =1358
+            Y: =2
+      - btn_HistMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =With(
+                  { _d: ctxDiaMon },
+                  // Historico: as mesmas 2 listas, Data entre D-2 e D, UMA vez por escolha. Sem timer de carga, sem Refresh.
+                  UpdateContext({ ctxFalhaMon: false });
+                  IfError(
+                      Concurrent(
+                          ClearCollect(colProdMon, Filter(Producao_Montagem, Data >= DateAdd(_d, -2, TimeUnit.Days), Data <= _d)),
+                          ClearCollect(colParMon, Filter(Paradas_Montagem, Data >= DateAdd(_d, -2, TimeUnit.Days), Data <= _d))
+                      );
+                      true,
+                      UpdateContext({ ctxFalhaMon: true });
+                      false
+                  );
+                  UpdateContext({
+                      ctxTruncMon: CountRows(colProdMon) >= fx_PainelLinhasAlerta || CountRows(colParMon) >= fx_PainelLinhasAlerta,
+                      ctxCarregouMon: true,
+                      ctxSincMon: ctxAgoraMon
+                  });
+                  Select(btn_CalcMon)
+              )
+            PressedFill: =Color.Transparent
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =1
+            X: =1356
+            Y: =2
+      - btn_CalcMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =If(
+                  // Nenhuma rede aqui: so le colProdMon e colParMon. Roda depois de cada carga e a cada 30 s (relogio).
+                  // Sem Now() aqui: o instante e ctxAgoraMon, gravado UMA vez por ciclo.
+                  ctxCarregouMon && !IsBlank(ctxAgoraMon),
+                  With(
+                      {
+                          _vivo: ctxModoMon = "VIVO",
+                          _per:  If(ctxModoMon = "VIVO", Text(fx_TurnoEm(ctxAgoraMon), "[$-en-US]0"), ctxModoMon),
+                          _dia:  If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon)
+                      },
+                      With(
+                          {
+                              _ini:    fx_PeriodoIniEm(_dia, _per, ctxHoraMon),
+                              _fim:    fx_PeriodoFimEm(_dia, _per, ctxHoraMon),
+                              _iniDia: fx_PeriodoIniEm(_dia, "DIA", 1),
+                              _vh:     ctxModoMon = "VIVO" || ctxModoMon = "HORA"
+                          },
+                          With(
+                              {
+                                  // Instante de referencia: agora; na hora H (passada) e o fim da janela.
+                                  _ref: If(_per = "HORA" && _fim <= ctxAgoraMon, _fim, ctxAgoraMon)
+                              },
+                              With(
+                                  {
+                                      _tRef: Text(fx_TurnoEm(DateAdd(_ref, -1, TimeUnit.Minutes)), "[$-en-US]0")
+                                  },
+                                  With(
+                                      { _iniT: fx_PeriodoIniEm(_dia, _tRef, 1) },
+                                      ClearCollect(
+                                          colEstMon,
+                                          ForAll(
+                                              fx_CelulasMontagem As _c,
+                                              With(
+                                                  {
+                                                      // OTs ABERTAS: ao vivo = Status EmAndamento; hora H = InicioEm <= H e FimEm vazio ou depois de H.
+                                                      _ab: Sort(
+                                                          Filter(
+                                                              colProdMon As _a,
+                                                              Upper(Trim(_a.Celula)) = Upper(_c.Celula) &&
+                                                              If(
+                                                                  _vivo,
+                                                                  _a.Status = "EmAndamento",
+                                                                  _per = "HORA" && _a.InicioEm <= _ref && (IsBlank(_a.FimEm) || _a.FimEm > _ref)
+                                                              )
+                                                          ),
+                                                          InicioEm,
+                                                          SortOrder.Ascending
+                                                      ),
+                                                      // OTs FECHADAS no periodo com a meta pela MetaHora da OT. Turno e dia: carimbo Data + Turno do INICIAR (decisao 3, como o menu). Hora: FimEm (inicio fechado, fim aberto).
+                                                      _fe: AddColumns(
+                                                          Filter(
+                                                              colProdMon As _b,
+                                                              Upper(Trim(_b.Celula)) = Upper(_c.Celula) && _b.Status = "Finalizado" &&
+                                                              If(
+                                                                  _per = "HORA",
+                                                                  !IsBlank(_b.FimEm) && _b.FimEm >= _ini && _b.FimEm < _fim,
+                                                                  _b.Data = _dia && (_per = "DIA" || fx_TurnoNum(_b.Turno) = fx_TurnoNum(_per))
+                                                              )
+                                                          ),
+                                                          MetaMin,
+                                                          fx_MetaMontagemMin(QtdOT, MetaHora)
+                                                      ),
+                                                      // Paradas do periodo: hora = RegistradoEm na janela; turno/dia = Data (+ Turno).
+                                                      _pa: Filter(
+                                                          colParMon As _p,
+                                                          Upper(Trim(_p.Celula)) = Upper(_c.Celula) &&
+                                                          If(
+                                                              _per = "HORA",
+                                                              !IsBlank(_p.RegistradoEm) && _p.RegistradoEm >= _ini && _p.RegistradoEm < _fim,
+                                                              _p.Data = _dia && (_per = "DIA" || fx_TurnoNum(_p.Turno) = fx_TurnoNum(_per))
+                                                          )
+                                                      ),
+                                                      _ult: First(
+                                                          Sort(
+                                                              Filter(
+                                                                  colProdMon As _u,
+                                                                  Upper(Trim(_u.Celula)) = Upper(_c.Celula) && _u.Status = "Finalizado" &&
+                                                                  !IsBlank(_u.FimEm) && _u.FimEm <= _ref
+                                                              ),
+                                                              FimEm,
+                                                              SortOrder.Descending
+                                                          )
+                                                      ).FimEm
+                                                  },
+                                                  With(
+                                                      { _f: First(_ab) },
+                                                      With(
+                                                          {
+                                                              _chave: _f.PN & " (OT " & Text(_f.OT, "[$-en-US]0") & ")",
+                                                              _meta:  fx_MetaMontagemMin(_f.QtdOT, _f.MetaHora),
+                                                              _ontem: !IsBlank(_f.ID) && _f.InicioEm < _iniDia
+                                                          },
+                                                          With(
+                                                              {
+                                                                  // Desconto = paradas vinculadas a OT que NAO sao TE (mesma conta do menu).
+                                                                  _desc: If(
+                                                                      IsBlank(_f.ID),
+                                                                      0,
+                                                                      Sum(
+                                                                          Filter(
+                                                                              colParMon As _d,
+                                                                              Upper(Trim(_d.Celula)) = Upper(_c.Celula) && _d.OPVinculada = _chave &&
+                                                                              _d.Motivo <> fx_MotivoTempoExcedido &&
+                                                                              (IsBlank(_d.RegistradoEm) || _d.RegistradoEm <= _ref)
+                                                                          ),
+                                                                          TempoParadoMin
+                                                                      )
+                                                                  )
+                                                              },
+                                                              With(
+                                                                  {
+                                                                      _real: fx_RealMontagemMin(_f.InicioEm, _desc, _ref),
+                                                                      _nF:   CountRows(_fe),
+                                                                      _sM:   Sum(Filter(_fe, MetaMin > 0), MetaMin),
+                                                                      _sR:   Sum(Filter(_fe, MetaMin > 0), DuracaoRealMin),
+                                                                      _ac:   CountRows(Filter(_fe As _x, fx_ExcedeuMeta(_x.DuracaoRealMin, _x.MetaMin))),
+                                                                      _acM:  Sum(Filter(_fe As _y, fx_ExcedeuMeta(_y.DuracaoRealMin, _y.MetaMin)), DuracaoRealMin - MetaMin),
+                                                                      _smF:  CountRows(Filter(_fe, MetaMin <= 0)),
+                                                                      _pc:   Sum(_fe, QtdProduzida),
+                                                                      // PARADA REAL e TEMPO EXCEDIDO: duas somas separadas, nunca somadas entre si.
+                                                                      _par:  Sum(Filter(_pa As _q, fx_ParadaRealMontagem(_q.Motivo)), TempoParadoMin),
+                                                                      _te:   Sum(Filter(_pa, Motivo = fx_MotivoTempoExcedido), TempoParadoMin),
+                                                                      _atv:  (!IsBlank(_ult) && _ult >= _iniT) ||
+                                                                             CountRows(
+                                                                                 Filter(
+                                                                                     colParMon As _z,
+                                                                                     Upper(Trim(_z.Celula)) = Upper(_c.Celula) && _z.Data = _dia &&
+                                                                                     fx_TurnoNum(_z.Turno) = fx_TurnoNum(_tRef)
+                                                                                 )
+                                                                             ) > 0
+                                                                  },
+                                                                  With(
+                                                                      {
+                                                                          _abN:  CountRows(_ab),
+                                                                          _exc:  !IsBlank(_f.ID) && fx_ExcedeuMeta(_real, _meta),
+                                                                          _eff:  If(_sR > 0, _sM / _sR * 100, Blank())
+                                                                      },
+                                                                      With(
+                                                                          {
+                                                                              _est: If(
+                                                                                  _vh,
+                                                                                  If(
+                                                                                      _abN > 0,
+                                                                                      If(_ontem, "OT DE ONTEM", _meta <= 0, "SEM META", _exc, "ACIMA DA META", "PRODUZINDO"),
+                                                                                      _atv, "SEM OT",
+                                                                                      "SEM REGISTRO"
+                                                                                  ),
+                                                                                  If(
+                                                                                      _nF = 0 && _par = 0 && _te = 0, "SEM REGISTRO",
+                                                                                      _nF = 0,                        "SEM OT",
+                                                                                      _ac > 0,                        "ACIMA DA META",
+                                                                                      _sR = 0,                        "SEM META",
+                                                                                      "PRODUZINDO"
+                                                                                  )
+                                                                              )
+                                                                          },
+                                                                          {
+                                                                              Ord:      _c.Ord,
+                                                                              Celula:   _c.Celula,
+                                                                              Estado:   _est,
+                                                                              Faixa:    If(
+                                                                                            _vh || _est = "SEM REGISTRO",
+                                                                                            _est,
+                                                                                            Text(_nF, "[$-en-US]0") & " OT" &
+                                                                                            If(
+                                                                                                _ac > 0, " · " & Text(_ac, "[$-en-US]0") & " acima",
+                                                                                                _sR > 0, " · " & Text(Round(_sM / _sR * 100, 0), "[$-en-US]0") & "%",
+                                                                                                " · sem meta"
+                                                                                            )
+                                                                                        ),
+                                                                              Num:      If(
+                                                                                            _vh,
+                                                                                            If(
+                                                                                                _abN > 0,
+                                                                                                If(_ontem, fx_CronoLongo(_f.InicioEm, _ref), Text(_real, "[$-en-US]0")),
+                                                                                                _atv,
+                                                                                                If(IsBlank(_ult), "—", Text(DateDiff(_ult, _ref, TimeUnit.Minutes), "[$-en-US]0")),
+                                                                                                "—"
+                                                                                            ),
+                                                                                            If(_est = "SEM REGISTRO", "—", Text(_pc, "[$-en-US]0"))
+                                                                                        ),
+                                                                              Uni:      If(
+                                                                                            _vh,
+                                                                                            If(
+                                                                                                _abN > 0,
+                                                                                                If(_ontem, "", _meta > 0, "/ " & Text(_meta, "[$-en-US]0") & " min", "min"),
+                                                                                                _atv && !IsBlank(_ult), "min",
+                                                                                                ""
+                                                                                            ),
+                                                                                            If(_est = "SEM REGISTRO", "", "pç")
+                                                                                        ),
+                                                                              Prog:     If(
+                                                                                            _vh,
+                                                                                            If(_abN > 0, If(_ontem, 1, _meta > 0, Min(1, _real / _meta), Blank()), Blank()),
+                                                                                            If(_sR > 0, Min(1, _sM / _sR), Blank())
+                                                                                        ),
+                                                                              OTTxt:    If(
+                                                                                            _vh,
+                                                                                            If(
+                                                                                                _abN > 0,
+                                                                                                "OT " & Text(_f.OT, "[$-en-US]0") & If(_abN > 1, "  +" & Text(_abN - 1, "[$-en-US]0"), ""),
+                                                                                                _atv,
+                                                                                                If(IsBlank(_ult), "sem OT aberta", "fechou " & Text(_ult, "hh:mm")),
+                                                                                                "nada no turno"
+                                                                                            ),
+                                                                                            If(_est = "SEM REGISTRO", "nada no período", "parada " & Text(_par, "[$-en-US]0") & " min")
+                                                                                        ),
+                                                                              Abertas:  _abN,
+                                                                              Ontem:    _ontem,
+                                                                              Excede:   _exc,
+                                                                              MetaMin:  _meta,
+                                                                              RealMin:  _real,
+                                                                              Inicio:   _f.InicioEm,
+                                                                              OT:       _f.OT,
+                                                                              PN:       _f.PN,
+                                                                              Ativa:    _atv,
+                                                                              UltFim:   _ult,
+                                                                              Fechadas: _nF,
+                                                                              Pecas:    _pc,
+                                                                              SomaMeta: _sM,
+                                                                              SomaReal: _sR,
+                                                                              Acima:    _ac,
+                                                                              AcimaMin: _acM,
+                                                                              SemMetaF: _smF,
+                                                                              ParadaReal: _par,
+                                                                              Excedido: _te
+                                                                          }
+                                                                      )
+                                                                  )
+                                                              )
+                                                          )
+                                                      )
+                                                  )
+                                              )
+                                          )
+                                      );
+                                      // ---- ANDON: uma linha por problema; Sev 1 vermelho, 2 laranja, 3 azul.
+                                      ClearCollect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && _e.Ontem),
+                                              {
+                                                  Ord: 100 + _e.Ord, Sev: 1, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: "aberta desde " & Text(_e.Inicio, "dd/mm") & " · OT " & Text(_e.OT, "[$-en-US]0")
+                                              }
+                                          )
+                                      );
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && !_e.Ontem && _e.Excede),
+                                              {
+                                                  Ord: 200 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: "+" & Text(_e.RealMin - _e.MetaMin, "[$-en-US]0") & " min da meta"
+                                              }
+                                          )
+                                      );
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(
+                                                  colEstMon As _e,
+                                                  _vh && _e.Abertas = 0 && _e.Ativa && !IsBlank(_e.UltFim) &&
+                                                  DateDiff(_e.UltFim, _ref, TimeUnit.Minutes) >= fx_MontSemOTAlertaMin
+                                              ),
+                                              {
+                                                  Ord: 300 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: "sem OT há " & Text(DateDiff(_e.UltFim, _ref, TimeUnit.Minutes), "[$-en-US]0") & " min"
+                                              }
+                                          )
+                                      );
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && !_e.Ontem && _e.MetaMin <= 0),
+                                              {
+                                                  Ord: 400 + _e.Ord, Sev: 3, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: "PN sem meta · " & _e.PN
+                                              }
+                                          )
+                                      );
+                                      // ---- Historico por turno/dia ("NO TURNO"): parada real longa, OTs acima da meta, OTs sem meta.
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, !_vh && _e.ParadaReal >= fx_MontSemOTAlertaMin),
+                                              {
+                                                  Ord: 100 + _e.Ord, Sev: 1, Celula: fx_RotuloCelulaTV(_e.Celula) & " · parada",
+                                                  Detalhe: Text(_e.ParadaReal, "[$-en-US]0") & " min de parada real"
+                                              }
+                                          )
+                                      );
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, !_vh && _e.Acima > 0),
+                                              {
+                                                  Ord: 200 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: Text(_e.Acima, "[$-en-US]0") & " OT acima · +" & Text(_e.AcimaMin, "[$-en-US]0") & " min"
+                                              }
+                                          )
+                                      );
+                                      Collect(
+                                          colAndonMon,
+                                          ForAll(
+                                              Filter(colEstMon As _e, !_vh && _e.SemMetaF > 0),
+                                              {
+                                                  Ord: 400 + _e.Ord, Sev: 3, Celula: fx_RotuloCelulaTV(_e.Celula),
+                                                  Detalhe: Text(_e.SemMetaF, "[$-en-US]0") & " OT sem meta"
+                                              }
+                                          )
+                                      )
+                                  )
+                              )
+                          )
+                      )
+                  )
+              )
+            PressedFill: =Color.Transparent
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =1
+            X: =1354
+            Y: =2
+      - tmr_DadosMon:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =120000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: =If(ctxModoMon = "VIVO", Select(btn_RecarregarMon))
+            Repeat: =true
+            Text: =""
+            Visible: =false
+            Width: =1
+            X: =1360
+            Y: =2
+      - tmr_RelogioMon:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =30000
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            OnTimerEnd: |-
+              =With(
+                  { _n: Now() },
+                  // Um Now() por tick. Sem Patch. Fora do AO VIVO, volta sozinho depois de fx_HistVoltaMin sem toque.
+                  UpdateContext({ ctxAgoraMon: _n });
+                  If(
+                      ctxModoMon <> "VIVO" && DateDiff(ctxToqueMon, _n, TimeUnit.Minutes) >= fx_HistVoltaMin,
+                      Select(btn_RecarregarMon),
+                      Select(btn_CalcMon)
+                  )
+              )
+            Repeat: =true
+            Text: =""
+            Visible: =false
+            Width: =1
+            X: =1362
+            Y: =2
+      - rct_HeaderMon:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =fx_CorPainelSuperficie
+            Fill: =fx_CorPainelSuperficie
+            Height: =72
+            Width: =1366
+            X: =0
+            Y: =0
+      - rct_BordaTopoMon:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =Color.Transparent
+            Fill: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            Height: =If(ctxModoMon <> "VIVO", 4, 1)
+            Width: =1366
+            X: =0
+            Y: =If(ctxModoMon <> "VIVO", 68, 71)
+      - btn_VoltarMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =fx_CorHoverSutil
+            OnSelect: =Navigate(scr_selecaosetor_Montagem, ScreenTransition.None)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Size: =fx_FontePainelRotulo
+            Text: ="‹ MONTAGEM"
+            Width: =210
+            X: =8
+            Y: =14
+      - btn_VivoMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "VIVO", fx_CorPainelTextoOK, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "VIVO", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "VIVO", fx_CorPainelTextoOK, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "VIVO", fx_CorPainelTextoOK, fx_CorPainelFundo)
+            OnSelect: =Select(btn_RecarregarMon)
+            PressedFill: =If(ctxModoMon = "VIVO", fx_CorPainelTextoOK, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="AO VIVO"
+            Width: =120
+            X: =222
+            Y: =14
+      - btn_DiaAntMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(false, fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =With(
+                  { _hoje: fx_DataRefEm(ctxAgoraMon), _atual: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon) },
+                  If(
+                      DateDiff(_atual, _hoje, TimeUnit.Days) < fx_HistDiasMax,
+                      UpdateContext({ ctxDiaMon: DateAdd(_atual, -1, TimeUnit.Days), ctxModoMon: If(ctxModoMon = "VIVO", "DIA", ctxModoMon), ctxToqueMon: ctxAgoraMon });
+                      Select(btn_HistMon)
+                  )
+              )
+            PressedFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="‹"
+            Width: =40
+            X: =348
+            Y: =14
+      - btn_DiaMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon <> "VIVO", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            DisplayMode: =DisplayMode.View
+            Fill: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            PressedFill: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: =Text(If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon), "dd/mm")
+            Width: =84
+            X: =392
+            Y: =14
+      - btn_DiaProxMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(false, fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =With(
+                  { _hoje: fx_DataRefEm(ctxAgoraMon), _atual: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon) },
+                  If(
+                      _atual < _hoje,
+                      UpdateContext({ ctxDiaMon: DateAdd(_atual, 1, TimeUnit.Days), ctxToqueMon: ctxAgoraMon });
+                      Select(btn_HistMon)
+                  )
+              )
+            PressedFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="›"
+            Width: =40
+            X: =480
+            Y: =14
+      - btn_T1Mon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "1", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "1", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "1", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "1", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxModoMon: "1", ctxDiaMon: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(ctxModoMon = "1", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="1º"
+            Width: =52
+            X: =526
+            Y: =14
+      - btn_T2Mon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "2", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "2", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "2", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "2", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxModoMon: "2", ctxDiaMon: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(ctxModoMon = "2", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="2º"
+            Width: =52
+            X: =584
+            Y: =14
+      - btn_T3Mon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "3", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "3", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "3", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "3", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxModoMon: "3", ctxDiaMon: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(ctxModoMon = "3", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="3º"
+            Width: =52
+            X: =642
+            Y: =14
+      - btn_DiaTotMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "DIA", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "DIA", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "DIA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "DIA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxModoMon: "DIA", ctxDiaMon: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(ctxModoMon = "DIA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="DIA"
+            Width: =66
+            X: =700
+            Y: =14
+      - btn_HoraMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoMon = "HORA", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(ctxModoMon = "HORA", fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            Fill: =If(ctxModoMon = "HORA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(ctxModoMon = "HORA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({
+                  ctxHoraMon: If(ctxModoMon = "HORA", ctxHoraMon, Min(CountRows(fx_GradeHoraHora), With(
+                      { _t: fx_TurnoEm(ctxAgoraMon) },
+                      CountRows(Filter(fx_GradeHoraHora, Turno < _t)) +
+                      CountRows(Filter(fx_GradeHoraHora, Turno = _t, Fim <= fx_MinNoTurno(ctxAgoraMon, _t))) + 1
+                  ))),
+                  ctxDiaMon: If(ctxModoMon = "VIVO", fx_DataRefEm(ctxAgoraMon), ctxDiaMon),
+                  ctxModoMon: "HORA",
+                  ctxToqueMon: ctxAgoraMon
+              });
+              Select(btn_HistMon)
+            PressedFill: =If(ctxModoMon = "HORA", fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: =If(ctxModoMon = "HORA", "HORA " & Left(Index(fx_GradeHoraHora, Max(1, Min(CountRows(fx_GradeHoraHora), ctxHoraMon))).Rotulo, 2) & "h", "HORA")
+            Width: =132
+            X: =772
+            Y: =14
+      - btn_HoraAntMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(false, fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            DisplayMode: =If(ctxModoMon = "HORA", DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxHoraMon: Max(1, ctxHoraMon - 1), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="‹"
+            Width: =44
+            X: =908
+            Y: =14
+      - btn_HoraProxMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelBorda)
+            BorderThickness: =1
+            Color: =If(false, fx_CorPainelFundo, fx_CorPainelTextoRotulo)
+            DisplayMode: =If(ctxModoMon = "HORA", DisplayMode.Edit, DisplayMode.Disabled)
+            Fill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            HoverFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            OnSelect: |-
+              =UpdateContext({ ctxHoraMon: Min(CountRows(fx_GradeHoraHora), ctxHoraMon + 1), ctxToqueMon: ctxAgoraMon });
+              Select(btn_HistMon)
+            PressedFill: =If(false, fx_CorPainelTextoAlerta, fx_CorPainelFundo)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelApoio
+            Text: ="›"
+            Width: =44
+            X: =956
+            Y: =14
+      - lbl_RelogioMon:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =Text(ctxAgoraMon, "hh:mm")
+            Visible: =ctxModoMon = "VIVO"
+            Width: =150
+            X: =1008
+            Y: =8
+      - lbl_HistMon:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoAlerta
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =44
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="HISTÓRICO"
+            Visible: =ctxModoMon <> "VIVO"
+            Width: =156
+            X: =1004
+            Y: =14
+      - lbl_SeloMon:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Center
+            BorderColor: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, !ctxCarregouMon, fx_CorPainelBorda, If(ctxFalhaMon || IsBlank(ctxUltOkMon) || DateDiff(ctxUltOkMon, ctxAgoraMon, TimeUnit.Minutes) > fx_PainelIdadeAlertaMin, fx_CorPainelTextoErro, fx_CorPainelTextoOK))
+            BorderThickness: =1
+            Color: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, !ctxCarregouMon, fx_CorPainelTextoRotulo, If(ctxFalhaMon || IsBlank(ctxUltOkMon) || DateDiff(ctxUltOkMon, ctxAgoraMon, TimeUnit.Minutes) > fx_PainelIdadeAlertaMin, fx_CorPainelTextoErro, fx_CorPainelTextoOK))
+            Fill: =fx_CorPainelFundo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =36
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: =If(ctxModoMon <> "VIVO", "volta em " & Text(Max(0, fx_HistVoltaMin - DateDiff(ctxToqueMon, ctxAgoraMon, TimeUnit.Minutes)), "[$-en-US]0") & " min", !ctxCarregouMon, If(ctxFalhaMon, "sem dado", "carregando"), "dados " & Text(ctxUltOkMon, "hh:mm"))
+            Width: =186
+            X: =1166
+            Y: =18
+      - btn_KpiBgMon1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =216
+            X: =16
+            Y: =80
+      - lbl_KpiRotMon1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: =If(Or(ctxModoMon = "VIVO", ctxModoMon = "HORA"), "PRODUZINDO", "OT FECHADAS")
+            Width: =192
+            X: =28
+            Y: =84
+      - lbl_KpiValMon1:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =If(!ctxCarregouMon, "—", If(Or(ctxModoMon = "VIVO", ctxModoMon = "HORA"), Text(CountRows(Filter(colEstMon As _e, _e.Abertas > 0)), "[$-en-US]0") & " de " & Text(CountRows(fx_CelulasMontagem), "[$-en-US]0"), Text(Sum(colEstMon, Fechadas), "[$-en-US]0")))
+            Width: =192
+            X: =28
+            Y: =112
+      - btn_KpiBgMon2:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =216
+            X: =240
+            Y: =80
+      - lbl_KpiRotMon2:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="ACIMA META"
+            Width: =192
+            X: =252
+            Y: =84
+      - lbl_KpiValMon2:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(ctxCarregouMon && If(Or(ctxModoMon = "VIVO", ctxModoMon = "HORA"), CountRows(Filter(colEstMon As _e, _e.Excede)), Sum(colEstMon, Acima)) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTexto)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =If(!ctxCarregouMon, "—", Text(If(Or(ctxModoMon = "VIVO", ctxModoMon = "HORA"), CountRows(Filter(colEstMon As _e, _e.Excede)), Sum(colEstMon, Acima)), "[$-en-US]0"))
+            Width: =192
+            X: =252
+            Y: =112
+      - btn_KpiBgMon3:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =216
+            X: =464
+            Y: =80
+      - lbl_KpiRotMon3:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="PEÇAS"
+            Width: =192
+            X: =476
+            Y: =84
+      - lbl_KpiValMon3:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, Pecas), "[$-en-US]0") & " pç")
+            Width: =192
+            X: =476
+            Y: =112
+      - btn_KpiBgMon4:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =216
+            X: =688
+            Y: =80
+      - lbl_KpiRotMon4:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="EFICIÊNCIA"
+            Width: =192
+            X: =700
+            Y: =84
+      - lbl_KpiValMon4:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: |-
+              =If(!ctxCarregouMon, "—", With({ _m: Sum(colEstMon, SomaMeta), _r: Sum(colEstMon, SomaReal) }, If(_r > 0, Text(Round(_m / _r * 100, 0), "[$-en-US]0") & "%", "—")))
+            Width: =192
+            X: =700
+            Y: =112
+      - btn_KpiBgMon5:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =216
+            X: =912
+            Y: =80
+      - lbl_KpiRotMon5:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="PARADA REAL"
+            Width: =192
+            X: =924
+            Y: =84
+      - lbl_KpiValMon5:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, ParadaReal), "[$-en-US]0") & " min")
+            Width: =192
+            X: =924
+            Y: =112
+      - btn_KpiBgMon6:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =92
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =214
+            X: =1136
+            Y: =80
+      - lbl_KpiRotMon6:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: ="EXCEDIDO"
+            Width: =190
+            X: =1148
+            Y: =84
+      - lbl_KpiValMon6:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(ctxCarregouMon && Sum(colEstMon, Excedido) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTexto)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =56
+            PaddingLeft: =0
+            Size: =fx_FontePainelNumero
+            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, Excedido), "[$-en-US]0") & " min")
+            Width: =190
+            X: =1148
+            Y: =112
+      - gal_CardsMon:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            DisplayMode: =DisplayMode.View
+            Fill: =Color.Transparent
+            Height: =576
+            Items: =fx_CelulasMontagem
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =0
+            TemplateSize: =192
+            Width: =984
+            WrapCount: =4
+            X: =16
+            Y: =180
+          Children:
+            - btn_FundoCardMon:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(_st = "ACIMA DA META" || _st = "OT DE ONTEM" || _st = "SEM DADO", fx_CorEstadoTextoPainel(_st), fx_CorPainelBorda)
+                        )
+                    )
+                  BorderThickness: =1
+                  Color: =fx_CorPainelTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorPainelSuperficie
+                  Font: =fx_FonteFamilia
+                  Height: =186
+                  HoverFill: =fx_CorPainelSuperficie
+                  PressedFill: =fx_CorPainelSuperficie
+                  RadiusBottomLeft: =fx_Raio
+                  RadiusBottomRight: =fx_Raio
+                  RadiusTopLeft: =fx_Raio
+                  RadiusTopRight: =fx_Raio
+                  Text: =""
+                  Width: =238
+                  X: =0
+                  Y: =0
+            - btn_FaixaCardMon:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorPainelTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            fx_CorEstadoTextoPainel(_st)
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  Height: =34
+                  HoverFill: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            fx_CorEstadoTextoPainel(_st)
+                        )
+                    )
+                  PressedFill: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            fx_CorEstadoTextoPainel(_st)
+                        )
+                    )
+                  RadiusBottomLeft: =0
+                  RadiusBottomRight: =0
+                  RadiusTopLeft: =0
+                  RadiusTopRight: =0
+                  Text: =""
+                  Width: =238
+                  X: =0
+                  Y: =0
+            - lbl_FaixaCardMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =fx_CorPainelFundo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(_s.Faixa = "", _st, Coalesce(_s.Faixa, _st))
+                        )
+                    )
+                  Width: =222
+                  X: =12
+                  Y: =0
+            - lbl_CelCardMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(_st = "SEM REGISTRO", fx_CorPainelTextoRotulo, fx_CorPainelTexto)
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =34
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelRotulo
+                  Text: =fx_RotuloCelulaTV(ThisItem.Celula)
+                  Width: =214
+                  X: =12
+                  Y: =38
+            - lbl_OTCardMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(_st = "PRODUZINDO" || _st = "ACIMA DA META" || _st = "OT DE ONTEM" || _st = "SEM META", fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =30
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            Coalesce(_s.OTTxt, "")
+                        )
+                    )
+                  Width: =214
+                  X: =12
+                  Y: =76
+            - lbl_NumCardMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(_st = "ACIMA DA META" || _st = "SEM OT" || _st = "OT DE ONTEM", fx_CorEstadoTextoPainel(_st), _st = "SEM REGISTRO" || _st = "CARREGANDO" || _st = "SEM DADO", fx_CorPainelTextoRotulo, fx_CorPainelTexto)
+                        )
+                    )
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =56
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelNumero
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            Coalesce(_s.Num, "—")
+                        )
+                    )
+                  Width: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(IsBlank(_s.Uni) || _s.Uni = "", 214, 96)
+                        )
+                    )
+                  X: =12
+                  Y: =106
+            - lbl_UniCardMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =fx_CorPainelTextoRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =44
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelApoio
+                  Text: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            Coalesce(_s.Uni, "")
+                        )
+                    )
+                  VerticalAlign: =VerticalAlign.Bottom
+                  Width: =126
+                  X: =108
+                  Y: =114
+            - rct_TrilhoCardMon:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Fill: =fx_CorPainelBorda
+                  Height: =8
+                  Width: =214
+                  X: =12
+                  Y: =168
+            - rct_BarraCardMon:
+                Control: Rectangle@2.3.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  Fill: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            fx_CorEstadoTextoPainel(_st)
+                        )
+                    )
+                  Height: =8
+                  Width: |-
+                    =With(
+                        { _s: LookUp(colEstMon As _e, _e.Celula = ThisItem.Celula) },
+                        With(
+                            { _st: Coalesce(_s.Estado, If(ctxFalhaMon, "SEM DADO", "CARREGANDO")) },
+                            If(IsBlank(_s.Prog), 0, Round(214 * _s.Prog, 0))
+                        )
+                    )
+                  X: =12
+                  Y: =168
+      - btn_CardAndonMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTexto
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorPainelSuperficie
+            Font: =fx_FonteFamilia
+            Height: =576
+            HoverFill: =fx_CorPainelSuperficie
+            PressedFill: =fx_CorPainelSuperficie
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =350
+            X: =1000
+            Y: =180
+      - lbl_AndonTitMon:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            PaddingLeft: =0
+            Size: =fx_FontePainelRotulo
+            Text: =If(ctxModoMon = "VIVO" || ctxModoMon = "HORA", "ONDE OLHAR", "NO TURNO")
+            Width: =260
+            X: =1014
+            Y: =190
+      - btn_AndonQtdMon:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelFundo
+            DisplayMode: =DisplayMode.View
+            Fill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =40
+            HoverFill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
+            PressedFill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Size: =fx_FontePainelRotulo
+            Text: =If(ctxCarregouMon, Text(CountRows(colAndonMon), "[$-en-US]0"), "")
+            Visible: =ctxCarregouMon
+            Width: =44
+            X: =1296
+            Y: =190
+      - lbl_AndonVazioMon:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(ctxCarregouMon, fx_CorPainelTextoOK, ctxFalhaMon, fx_CorPainelTextoErro, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =80
+            PaddingLeft: =0
+            Size: =fx_FontePainelRotulo
+            Text: =If(ctxCarregouMon, "Nada a olhar agora", If(ctxFalhaMon, "Sem dado", "Carregando..."))
+            Visible: =CountRows(colAndonMon) = 0
+            Width: =322
+            X: =1014
+            Y: =250
+      - gal_AndonMon:
+          Control: Gallery@2.15.0
+          Variant: Vertical
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            DisplayMode: =DisplayMode.View
+            Fill: =Color.Transparent
+            Height: =480
+            Items: =FirstN(Sort(colAndonMon, Ord, SortOrder.Ascending), 5)
+            ShowScrollbar: =false
+            TemplateFill: =Color.Transparent
+            TemplatePadding: =0
+            TemplateSize: =96
+            Width: =330
+            X: =1010
+            Y: =238
+          Children:
+            - btn_FundoAnMon:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =fx_CorPainelTexto
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorPainelFundo
+                  Font: =fx_FonteFamilia
+                  Height: =92
+                  HoverFill: =fx_CorPainelFundo
+                  PressedFill: =fx_CorPainelFundo
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Text: =""
+                  Width: =330
+                  X: =0
+                  Y: =2
+            - lbl_SimboloAnMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =Switch(ThisItem.Sev, 1, fx_CorPainelTextoErro, 2, fx_CorPainelTextoAlerta, fx_CorPainelTextoInfo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelRotulo
+                  Text: =Switch(ThisItem.Sev, 1, "▲", 2, "●", "■")
+                  Width: =28
+                  X: =10
+                  Y: =6
+            - lbl_TitAnMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =fx_CorPainelTexto
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =40
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelRotulo
+                  Text: =ThisItem.Celula
+                  Width: =286
+                  X: =40
+                  Y: =6
+            - lbl_DetAnMon:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =fx_CorPainelTextoRotulo
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Semibold
+                  Height: =42
+                  PaddingLeft: =0
+                  Size: =fx_FontePainelApoio
+                  Text: =ThisItem.Detalhe
+                  Width: =286
+                  X: =40
+                  Y: =46
+      - lbl_MaisAndonMon:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =30
+            PaddingLeft: =0
+            Size: =fx_FontePainelApoio
+            Text: =If(CountRows(colAndonMon) > 5, "+" & Text(CountRows(colAndonMon) - 5, "[$-en-US]0") & " mais", "")
+            Width: =322
+            X: =1014
+            Y: =722
+      - lbl_AvisoMon:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(ctxFalhaMon, fx_CorPainelTextoErro, fx_CorPainelTextoAlerta)
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              =If(ctxFalhaMon, "⚠ Sem conexão com o servidor — dados das " & Text(ctxUltOkMon, "hh:mm") & " · tentando de novo a cada 2 min", ctxTruncMon, "⚠ Lista no limite do conector: números podem estar cortados", "")
+            Width: =960
+            X: =16
+            Y: =752
+      - lbl_VersaoTelaMon:
+          Control: Label@2.5.1
+          Properties:
+            Align: =Align.Right
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTextoRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =16
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="Versão 0.1.0"
+            Width: =106
+            X: =1244
+            Y: =752
