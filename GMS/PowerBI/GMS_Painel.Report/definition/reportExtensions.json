@@ -147,7 +147,7 @@
         {
           "name": "HH Parado (min)",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), fHoraHora[Motivo Padrão] <> \"Almoço\")",
+          "expression": "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
@@ -155,6 +155,12 @@
           "name": "HH Principal Parada",
           "dataType": "Text",
           "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), \"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "HH Dia Produtivo",
+          "dataType": "Text",
+          "expression": "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1 - 1, \"dd/mm\") & \" 22:20 até \" & FORMAT(d1, \"dd/mm\") & \" 22:20\", \"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 22:20 da véspera às 22:20\")",
           "displayFolder": "Painel (relatório)"
         }
       ]
