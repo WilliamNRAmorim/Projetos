@@ -1,3 +1,5 @@
+# scr_PainelCelula_1 · Painel da Célula v0.11.0 (Fase 2 da Auditoria 26) · 23/10/2026
+# Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md
 Screens:
   scr_PainelCelula_1:
     Properties:
@@ -8,6 +10,10 @@ Screens:
         Set(varDetAbertoPnl, false);
         // v0.10.0: abrir a tela recarrega o cadastro de velocidade (DM_*). TV aberta recarrega 1x por dia.
         Set(varVelDiaPnl, Blank());
+        // v0.11.0: ao abrir, o painel NAO esta em dia ate a 1a carga terminar ("carregando", nunca "celula em dia").
+        Set(varCargaOkPnl, false);
+        Set(varUltOkPnl, Blank());
+        Set(varAndonPagPnl, 0);
         Select(btn_RecarregarPnl)
     Children:
       - btn_RecarregarPnl:
@@ -21,11 +27,20 @@ Screens:
             HoverFill: =Color.Transparent
             OnSelect: |-
               =Set(varFalhaPnl, false);
-              IfError(
-                  Refresh(ficha_producao);
-                  Refresh(Eventos_Producao);
-                  Refresh('Hora-Hora'),
-                  Set(varFalhaPnl, true)
+              Set(varTruncaPnl, false);
+              // v0.11.0 · UM instante por ciclo: toda a carga (turno, janela, data de referencia, consumo,
+              // andon) usa varAgoraPnl. Antes eram ~25 leituras de Now() misturadas com ctxAgoraPnl.
+              Set(varAgoraPnl, Now());
+              // v0.11.0 (item 5 · M11): os Refresh rodam em PARALELO, e nao mais 3 em serie. Cada um fecha
+              // o IfError com "true" / "false" (licao 2.23: valor e fallback do mesmo tipo).
+              Concurrent(
+                  IfError(Refresh(ficha_producao); true, Set(varFalhaPnl, true); false),
+                  IfError(Refresh(Eventos_Producao); true, Set(varFalhaPnl, true); false),
+                  IfError(Refresh('Hora-Hora'); true, Set(varFalhaPnl, true); false),
+                  If(
+                      IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
+                      IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
+                  )
               );
               // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
               // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
@@ -34,126 +49,173 @@ Screens:
               // SharePoint por linha (11 maquinas x a cada 2 min).
               // Ordem externa = DM_TRANCAGEM, igual ao colMangMaqHHT: mangueira com duas construcoes na mesma
               // maquina pega a MESMA velocidade que o Hora-Hora pega.
+              // v0.11.0: (item 5) a chave da DM_TRANCAGEM e normalizada UMA vez por linha, antes do laco, e nao
+              // a cada linha da DM_ENGRENAGENS; (item 2) o cadastro so e TROCADO se a leitura nova vier cheia
+              // (antes um ClearCollect com leitura vazia apagava as velocidades) e a leitura grande demais
+              // acende o aviso de truncamento.
               If(
-                  IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(Now()),
+                  IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
                   IfError(
-                      Refresh(DM_TRANÇAGEM);
-                      Refresh(DM_ENGRENAGENS),
-                      Set(varFalhaPnl, true)
-                  );
-                  With(
-                      {
-                          _eng: ForAll(
-                              DM_ENGRENAGENS As _e,
-                              {
-                                  MaqN: fx_NormCodigo(_e._4MAQUINA),
-                                  ConsN: fx_NormCodigo(_e._1CONSTRUCAO),
-                                  MFG: fx_NumVelocidade(Text(_e._13TEORICA_M_H))
-                              }
-                          )
-                      },
-                      ClearCollect(
-                          colVelTrPnl,
-                          Filter(
-                              Ungroup(
-                                  ForAll(
-                                      Filter(DM_TRANÇAGEM, !IsBlank(PARTNUMBER) && !IsBlank(_2BRD_CODE)) As _d,
-                                      {
-                                          Linhas: ForAll(
-                                              Filter(_eng As _e2, _e2.ConsN = fx_NormCodigo(_d._2BRD_CODE)) As _e3,
-                                              {
-                                                  MaqN: _e3.MaqN,
-                                                  Chave: fx_MangCanon(_d.PARTNUMBER),
-                                                  MFG: _e3.MFG
-                                              }
-                                          )
-                                      }
-                                  ),
-                                  Linhas
+                      With(
+                          {
+                              _eng: ForAll(
+                                  DM_ENGRENAGENS As _e,
+                                  {
+                                      MaqN: fx_NormCodigo(_e._4MAQUINA),
+                                      ConsN: fx_NormCodigo(_e._1CONSTRUCAO),
+                                      MFG: fx_NumVelocidade(Text(_e._13TEORICA_M_H))
+                                  }
                               ),
-                              MFG > 0
+                              _trc: ForAll(
+                                  DM_TRANÇAGEM As _d0,
+                                  {
+                                      Chave: fx_MangCanon(_d0.PARTNUMBER),
+                                      ConsN: fx_NormCodigo(_d0._2BRD_CODE)
+                                  }
+                              )
+                          },
+                          With(
+                              {
+                                  _novo: Filter(
+                                      Ungroup(
+                                          ForAll(
+                                              Filter(_trc As _t1, !IsBlank(_t1.Chave) && !IsBlank(_t1.ConsN)) As _d,
+                                              {
+                                                  Linhas: ForAll(
+                                                      Filter(_eng As _e2, _e2.ConsN = _d.ConsN) As _e3,
+                                                      {
+                                                          MaqN: _e3.MaqN,
+                                                          Chave: _d.Chave,
+                                                          MFG: _e3.MFG
+                                                      }
+                                                  )
+                                              }
+                                          ),
+                                          Linhas
+                                      ),
+                                      MFG > 0
+                                  )
+                              },
+                              // Leitura vazia (rede caiu): mantem o cadastro anterior, NAO marca o dia e o proximo
+                              // ciclo de 2 min tenta de novo.
+                              If(
+                                  IsEmpty(_novo),
+                                  Set(varFalhaPnl, true),
+                                  ClearCollect(colVelTrPnl, _novo);
+                                  Set(varVelDiaPnl, fx_DataRefEm(varAgoraPnl))
+                              );
+                              If(
+                                  CountRows(_eng) >= fx_PainelLinhasAlerta || CountRows(_trc) >= fx_PainelLinhasAlerta,
+                                  Set(varTruncaPnl, true)
+                              );
+                              true
                           )
-                      )
-                  );
-                  // Carga vazia (rede caiu) NAO marca o dia: o proximo ciclo de 2 min tenta de novo.
-                  If(!IsEmpty(colVelTrPnl), Set(varVelDiaPnl, fx_DataRefEm(Now())))
+                      ),
+                      Set(varFalhaPnl, true); false
+                  )
               );
               With(
-                  { _hoje: fx_DataRefEm(Now()) },
+                  { _hoje: fx_DataRefEm(varAgoraPnl) },
+                  // v0.11.0 (item 2 · A3): cada ClearCollect do Concurrent fecha o IfError com "true" / "false".
+                  // Antes so os Refresh estavam protegidos: carga que falhava deixava varSincPnl avancar e o
+                  // andon dizia "celula em dia" sem dado.
                   Concurrent(
                       // v0.10.1: Hora-Hora de ONTEM e de HOJE, uma consulta por dia, em paralelo. Um dia cheio
                       // chega a ~300 linhas; dois dias numa consulta so passariam do limite de linhas e a
                       // lista viria CORTADA sem aviso. O turno atual (colHHPnl) sai daqui, local, logo abaixo.
-                      ClearCollect(
-                          colHHOntemPnl,
-                          Filter(
-                              'Hora-Hora',
-                              Data = DateAdd(_hoje, -1, TimeUnit.Days)
-                          )
-                      ),
-                      ClearCollect(
-                          colHHHojePnl,
-                          Filter(
-                              'Hora-Hora',
-                              Data = _hoje
-                          )
-                      ),
-                      ClearCollect(
-                          colAtivasPnl,
-                          Filter(ficha_producao, status_processo = "Em processo")
-                      ),
-                      ClearCollect(
-                          colAguardPnl,
-                          Filter(ficha_producao, status_processo = "Aguardando")
-                      ),
-                      ClearCollect(
-                          colEvVulcPnl,
-                          AddColumns(
+                      IfError(
+                          ClearCollect(
+                              colHHOntemPnl,
                               Filter(
-                                  Eventos_Producao,
-                                  etapa.Value = "Vulcanização",
-                                  data_ref = _hoje
-                              ),
-                              TipoTxt,
-                              Text(tipo.Value)
-                          )
+                                  'Hora-Hora',
+                                  Data = DateAdd(_hoje, -1, TimeUnit.Days)
+                              )
+                          );
+                          true,
+                          Set(varFalhaPnl, true); false
                       ),
-                      ClearCollect(
-                          colEvMandPnl,
-                          AddColumns(
+                      IfError(
+                          ClearCollect(
+                              colHHHojePnl,
                               Filter(
-                                  Eventos_Producao,
-                                  etapa.Value = "Mandril",
-                                  data_ref = _hoje
-                              ),
-                              TipoTxt,
-                              Text(tipo.Value),
-                              TurnoTxt,
-                              Text(turno)
-                          )
+                                  'Hora-Hora',
+                                  Data = _hoje
+                              )
+                          );
+                          true,
+                          Set(varFalhaPnl, true); false
                       ),
-                      ClearCollect(
-                          colEvSaidaPnl,
-                          AddColumns(
-                              Filter(
-                                  Eventos_Producao,
-                                  etapa.Value = "Extração",
-                                  data_ref = _hoje
-                              ),
-                              TipoTxt,
-                              Text(tipo.Value),
-                              TurnoTxt,
-                              Text(turno)
-                          )
+                      IfError(
+                          ClearCollect(
+                              colAtivasPnl,
+                              Filter(ficha_producao, status_processo = "Em processo")
+                          );
+                          true,
+                          Set(varFalhaPnl, true); false
+                      ),
+                      IfError(
+                          ClearCollect(
+                              colAguardPnl,
+                              Filter(ficha_producao, status_processo = "Aguardando")
+                          );
+                          true,
+                          Set(varFalhaPnl, true); false
+                      ),
+                      // v0.11.0 (item 5 · M11): Eventos numa consulta SO (antes 3, com a mesma data). Os tres
+                      // recortes por etapa (Vulcanizacao, Mandril, Extracao) saem daqui, locais, logo abaixo.
+                      IfError(
+                          ClearCollect(
+                              colEvDiaPnl,
+                              AddColumns(
+                                  Filter(
+                                      Eventos_Producao,
+                                      data_ref = _hoje
+                                  ),
+                                  EtapaTxt,
+                                  Text(etapa.Value),
+                                  TipoTxt,
+                                  Text(tipo.Value),
+                                  TurnoTxt,
+                                  Text(turno)
+                              )
+                          );
+                          true,
+                          Set(varFalhaPnl, true); false
+                      ),
+                      // v0.11.0 (item 5 · M11): FifoBobinadeira numa consulta so (EP + AB), DENTRO do Concurrent.
+                      // Falhou = "sem fonte" de verdade (antes varBobSemFontePnl era sempre false).
+                      IfError(
+                          ClearCollect(
+                              colBobFifoPnl,
+                              Filter(FifoBobinadeira, Status = "EP" || Status = "AB")
+                          );
+                          Set(varBobSemFontePnl, false);
+                          true,
+                          Set(varBobSemFontePnl, true);
+                          Set(varFalhaPnl, true);
+                          false
                       )
                   )
+              );
+              ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
+              ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
+              ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
+              // v0.11.0 (item 2 · M12): guarda de truncamento. Lista lida com fx_PainelLinhasAlerta linhas ou
+              // mais = suspeita de corte no limite do conector: a carga deixa de contar como "ok".
+              If(
+                  CountRows(colHHOntemPnl) >= fx_PainelLinhasAlerta ||
+                  CountRows(colHHHojePnl) >= fx_PainelLinhasAlerta ||
+                  CountRows(colAtivasPnl) >= fx_PainelLinhasAlerta ||
+                  CountRows(colAguardPnl) >= fx_PainelLinhasAlerta ||
+                  CountRows(colEvDiaPnl) >= fx_PainelLinhasAlerta,
+                  Set(varTruncaPnl, true)
               );
               ClearCollect(colHH2dPnl, colHHOntemPnl, colHHHojePnl);
               ClearCollect(
                   colHHPnl,
                   Filter(
                       colHH2dPnl As _z,
-                      _z.Data = fx_DataRefEm(Now()) && _z.Turno = fx_TurnoLabelEm(Now())
+                      _z.Data = fx_DataRefEm(varAgoraPnl) && _z.Turno = fx_TurnoLabelEm(varAgoraPnl)
                   )
               );
               // v0.10.1 · CONSUMO DO CARRETEL PELO HORA-HORA (C13 · C10).
@@ -190,14 +252,27 @@ Screens:
                       Apontada
                   )
               );
-              // Turnos TRABALHADOS: tiveram qualquer linha no Hora-Hora, de qualquer celula. Turno sem linha
-              // nenhuma = a fabrica nao rodou (3o turno de 29/09): nao consome tubo.
+              // Turnos que tiveram QUALQUER linha no Hora-Hora (criterio ANTIGO da v0.10.3, inclui linha pre-preenchida):
+              // so o CONSUMO de tubo usa esta colecao (colJanTrPnl.Trabalhado), para a autonomia ficar igual a v0.10.3.
+              ClearCollect(
+                  colTurnosHHConsPnl,
+                  Distinct(
+                      ForAll(
+                          colHH2dPnl As _y0,
+                          { K: Text(_y0.Data, "yyyy-mm-dd") & "|" & Text(fx_TurnoNum(Text(_y0.Turno)), "[$-en-US]0") }
+                      ),
+                      K
+                  )
+              );
+              // Turnos TRABALHADOS para o ANDON: tiveram janela APONTADA (metro, parada ou motivo) numa trancadeira.
+              // Turno sem apontamento nenhum = a fabrica nao rodou (3o turno de 29/09): calam as regras de FILA.
+              // v0.11.0 (item 3 · M5). NAO e usada no consumo de tubo (ali vale colTurnosHHConsPnl, acima).
               ClearCollect(
                   colTurnosHHPnl,
                   Distinct(
                       ForAll(
-                          colHH2dPnl As _y,
-                          { K: Text(_y.Data, "yyyy-mm-dd") & "|" & Text(fx_TurnoNum(Text(_y.Turno)), "[$-en-US]0") }
+                          colHHConsPnl As _y,
+                          { K: Text(_y.DataRef, "yyyy-mm-dd") & "|" & Text(_y.Turno, "[$-en-US]0") }
                       ),
                       K
                   )
@@ -206,8 +281,8 @@ Screens:
               // conta sempre como trabalhado (as 05:25 ainda ninguem apontou, mas a fabrica esta rodando).
               With(
                   {
-                      _dh: fx_DataRefEm(Now()),
-                      _ta: fx_TurnoEm(Now())
+                      _dh: fx_DataRefEm(varAgoraPnl),
+                      _ta: fx_TurnoEm(varAgoraPnl)
                   },
                   ClearCollect(
                       colJanTrPnl,
@@ -222,7 +297,7 @@ Screens:
                                   Minutos: _g1.Minutos,
                                   Ini: fx_JanelaHHIni(_dr1, _g1.Turno, _g1.Fim, _g1.Minutos),
                                   Fim: fx_JanelaHHFim(_dr1, _g1.Turno, _g1.Fim),
-                                  Trabalhado: (Text(_dr1, "yyyy-mm-dd") & "|" & Text(_g1.Turno, "[$-en-US]0")) in colTurnosHHPnl.Value
+                                  Trabalhado: (Text(_dr1, "yyyy-mm-dd") & "|" & Text(_g1.Turno, "[$-en-US]0")) in colTurnosHHConsPnl.Value
                               }
                           )
                       )
@@ -239,52 +314,62 @@ Screens:
                               Ini: fx_JanelaHHIni(_dh, _g2.Turno, _g2.Fim, _g2.Minutos),
                               Fim: fx_JanelaHHFim(_dh, _g2.Turno, _g2.Fim),
                               Trabalhado: _g2.Turno = _ta ||
-                                  (Text(_dh, "yyyy-mm-dd") & "|" & Text(_g2.Turno, "[$-en-US]0")) in colTurnosHHPnl.Value
+                                  (Text(_dh, "yyyy-mm-dd") & "|" & Text(_g2.Turno, "[$-en-US]0")) in colTurnosHHConsPnl.Value
                           }
                       )
                   )
               );
-              // Hora-Hora: vale a janela que contem o HORARIO ATUAL (v0.6.1).
-              // O operador pre-preenche as janelas futuras (botao repetir), entao "ultima
-              // janela salva" apontava para 13:00 - 13:57 e escondia a parada das 11h.
-              // Hora vem como "11:00 - 12:00": inicio = chars 1-5, fim = chars 9-13.
+              // v0.11.0 · JANELA ATUAL PELA GRADE OFICIAL (A1, M3, M4). Antes a janela "atual" era achada lendo o
+              // TEXTO da chave ("22:00 - 22:20"), que desde a v3.0.5 dura ate 22:41: das 22:20 as 22:40 nenhuma
+              // janela era "atual" e a trancadeira parada sumia. Agora Ini/Fim vem de fx_GradeHoraHora +
+              // fx_JanelaHHIni/Fim (mesma regua do Hora-Hora), o instante e o do ciclo (varAgoraPnl) e a janela
+              // duplicada na lista fica so com a de MAIOR ID (igual ao colHHConsPnl).
               With(
-                  { _agMin: Hour(Now()) * 60 + Minute(Now()) },
+                  { _dh: fx_DataRefEm(varAgoraPnl) },
                   ClearCollect(
                       colHHJanPnl,
                       ForAll(
-                          colHHPnl As _h,
+                          GroupBy(
+                              AddColumns(colHHPnl, ChaveJan, Text(Célula) & "|" & Hora),
+                              ChaveJan,
+                              LinhasJan
+                          ) As _gj,
                           With(
                               {
-                                  _iniJ: Value(Left(_h.Hora, 2)) * 60 + Value(Mid(_h.Hora, 4, 2)),
-                                  _fimJ: Value(Mid(_h.Hora, 9, 2)) * 60 + Value(Mid(_h.Hora, 12, 2))
+                                  _h: First(Sort(_gj.LinhasJan, ID, SortOrder.Descending))
                               },
-                              {
-                                  Celula: Text(_h.Célula),
-                                  IniMin: _iniJ,
-                                  // Janela que cruza a meia-noite (fim < inicio) no 3o turno.
-                                  Atual: If(
-                                      _iniJ <= _fimJ,
-                                      _agMin >= _iniJ && _agMin < _fimJ,
-                                      _agMin >= _iniJ || _agMin < _fimJ
-                                  ),
-                                  Motivo: Coalesce(Text(_h.Motivo), ""),
-                                  Parado: Coalesce(_h.'Tempo Parado (min)', 0),
-                                  // v0.9.0: meta e real da janela para a ficha de consulta.
-                                  // Janela fechada pela MESMA regra do Hora-Hora (fx_FaixaVencida):
-                                  // janela aberta nunca entra na conta.
-                                  Meta: Coalesce(_h.'Meta Hora', 0),
-                                  Real: Coalesce(_h.'Real. Hora', 0),
-                                  Fechada: With(
+                              With(
+                                  {
+                                      _gr: LookUp(
+                                          fx_GradeHoraHora As _gr0,
+                                          _gr0.Hora = _h.Hora && _gr0.Turno = fx_TurnoNum(Text(_h.Turno))
+                                      )
+                                  },
+                                  With(
                                       {
-                                          _gh: LookUp(
-                                              fx_GradeHoraHora As _gr,
-                                              _gr.Hora = _h.Hora && _gr.Turno = fx_TurnoEm(Now())
-                                          )
+                                          _ini: fx_JanelaHHIni(_dh, _gr.Turno, _gr.Fim, _gr.Minutos),
+                                          _fim: fx_JanelaHHFim(_dh, _gr.Turno, _gr.Fim)
                                       },
-                                      !IsBlank(_gh.Fim) && fx_FaixaVencida(_gh.Fim, _gh.Turno, Now())
+                                      {
+                                          Celula: Text(_h.Célula),
+                                          Ini: _ini,
+                                          Fim: _fim,
+                                          Atual: !IsBlank(_gr.Fim) && varAgoraPnl >= _ini && varAgoraPnl < _fim,
+                                          Motivo: Coalesce(Text(_h.Motivo), ""),
+                                          // v0.11.0 (item 4 · M2): motivo com Tipo "Programada" na fx_MotivosParada
+                                          // (Refeicao, Reuniao, Set-up, Preventiva, Check List, Amostra, MPT, Teste
+                                          // Engenharia) e PAUSA, nao parada real.
+                                          Prog: !IsBlank(Trim(Text(_h.Motivo))) &&
+                                              LookUp(fx_MotivosParada As _mp, Trim(_mp.Motivo) = Trim(Text(_h.Motivo))).Tipo = "Programada",
+                                          Parado: Coalesce(_h.'Tempo Parado (min)', 0),
+                                          // v0.9.0: meta e real da janela para a ficha de consulta.
+                                          // Janela fechada = o instante do ciclo passou do fim da janela da grade.
+                                          Meta: Coalesce(_h.'Meta Hora', 0),
+                                          Real: Coalesce(_h.'Real. Hora', 0),
+                                          Fechada: !IsBlank(_gr.Fim) && varAgoraPnl >= _fim
+                                      }
                                   )
-                              }
+                              )
                           )
                       )
                   )
@@ -358,16 +443,26 @@ Screens:
                                       colHHJanPnl As _j,
                                       _j.Celula = _b.Trançadeira && _j.Atual
                                   ),
+                                  // v0.11.0 (item 4): "parado no turno" soma so parada REAL; a pausa programada
+                                  // (Refeicao, Reuniao...) tem soma propria e nunca entra na parada.
                                   _parMin: Sum(
-                                      Filter(colHHJanPnl As _j2, _j2.Celula = _b.Trançadeira),
+                                      Filter(colHHJanPnl As _j2, _j2.Celula = _b.Trançadeira && !_j2.Prog),
+                                      Parado
+                                  ),
+                                  _pauMin: Sum(
+                                      Filter(colHHJanPnl As _j3, _j3.Celula = _b.Trançadeira && _j3.Prog),
                                       Parado
                                   ),
                                   _maqN: fx_NormCodigo(fx_MaquinaEngrenagens(_b.Trançadeira))
                               },
                               With(
                               {
+                                  // v0.11.0 (item 4 · M1 · M2 · decisao 1 de 22/10): parada apontada no Hora-Hora
+                                  // na janela de agora vira PARADA mesmo com OP aberta; motivo Programado vira PAUSA.
                                   _est: If(
-                                      IsBlank(_f.ID) && !IsBlank(_ult.Motivo),
+                                      !IsBlank(_ult.Motivo) && _ult.Prog,
+                                      "PAUSA",
+                                      !IsBlank(_ult.Motivo),
                                       "PARADA",
                                       fx_EstadoPosto(!IsBlank(_f.ID), _n)
                                   ),
@@ -404,8 +499,8 @@ Screens:
                                       With(
                                           {
                                               _I: _f.data_hora_inicio_trancadeira,
-                                              _N: Now(),
-                                              _C: DateAdd(fx_JanelaInicioEm(Now()), -1, TimeUnit.Days)
+                                              _N: varAgoraPnl,
+                                              _C: DateAdd(fx_JanelaInicioEm(varAgoraPnl), -1, TimeUnit.Days)
                                           },
                                           If(_I < _C, _vAtiva * DateDiff(_I, _C, TimeUnit.Minutes) / 60, 0) +
                                           Sum(
@@ -479,18 +574,11 @@ Screens:
                                   Produzindo: !IsBlank(_f.ID),
                                   Estado: _est,
                                   Cor: If(_est = "PARADA", fx_CorErro, fx_CorEstadoPosto(_est)),
-                                  Motivo: If(_est = "PARADA", _ult.Motivo, ""),
+                                  Motivo: If(_est = "PARADA" || _est = "PAUSA", _ult.Motivo, ""),
                                   ParadoMin: _parMin,
-                                  // Inicio da janela parada: o cronometro vermelho conta a partir dele.
-                                  InicioParada: If(
-                                      _est = "PARADA",
-                                      DateAdd(
-                                          If(Hour(Now()) * 60 + Minute(Now()) < _ult.IniMin, Today() - 1, Today()),
-                                          _ult.IniMin,
-                                          TimeUnit.Minutes
-                                      ),
-                                      Blank()
-                                  ),
+                                  PausaMin: _pauMin,
+                                  // Inicio da janela parada pela grade oficial (v0.11.0): 13:57 e 22:41 nas fronteiras de turno.
+                                  InicioParada: If(_est = "PARADA" || _est = "PAUSA", _ult.Ini, Blank()),
                                   // Fila = CARRETEIS atras. OpsFila so alimenta o detalhe do andon.
                                   Fila: _n,
                                   OpsFila: Sum(_fila, NOps),
@@ -514,9 +602,9 @@ Screens:
                                   SemApontar: CountRows(
                                       Filter(
                                           colJanTrPnl As _w5,
-                                          _w5.DataRef = fx_DataRefEm(Now()) &&
-                                          _w5.Turno = fx_TurnoEm(Now()) &&
-                                          _w5.Fim <= Now() &&
+                                          _w5.DataRef = fx_DataRefEm(varAgoraPnl) &&
+                                          _w5.Turno = fx_TurnoEm(varAgoraPnl) &&
+                                          _w5.Fim <= varAgoraPnl &&
                                           IsBlank(
                                               LookUp(
                                                   _hhMaq As _hm5,
@@ -602,7 +690,7 @@ Screens:
                                           fx_EstadoVulca(
                                               Text(_f.status_processo),
                                               _f.InicioResfriamento_Vulcanizacao,
-                                              ctxAgoraPnl
+                                              varAgoraPnl
                                           ),
                                           fx_EstadoPosto(!IsBlank(_f.ID), _n)
                                       )
@@ -649,18 +737,12 @@ Screens:
                       _ft: LookUp(colAtivasPnl As _a4, _a4.processo = "Tubo"),
                       _fe: LookUp(colAtivasPnl As _a5, _a5.processo = "Extr./Teste")
                   },
-                  Set(varMandOPPnl, Coalesce(_fm.OP, 0));
-                  Set(varMandBitolaPnl, Coalesce(_fm.Bitola, 0));
-                  Set(varMandInicioPnl, _fm.data_hora_inicio_mandril);
                   Set(varMandAtivoPnl, !IsBlank(_fm.ID));
                   Set(varTuboOPPnl, Coalesce(_ft.OP, 0));
                   Set(varTuboMangPnl, Coalesce(Text(_ft.Mangueira), ""));
                   Set(varTuboInicioPnl, _ft.data_hora_inicio_tubo);
                   Set(varTuboAtivoPnl, !IsBlank(_ft.ID));
                   Set(varTuboIDPnl, _ft.ID);
-                  Set(varExtrOPPnl, Coalesce(_fe.OP, 0));
-                  Set(varExtrMangPnl, Coalesce(Text(_fe.Mangueira), ""));
-                  Set(varExtrInicioPnl, _fe.data_hora_inicio_extracao);
                   Set(varExtrAtivoPnl, !IsBlank(_fe.ID))
               );
               ClearCollect(
@@ -734,7 +816,7 @@ Screens:
                   Sum(
                       Filter(
                           colEvMandPnl As _m1,
-                          _m1.TurnoTxt = Text(fx_TurnoEm(ctxAgoraPnl), "[$-en-US]0") &&
+                          _m1.TurnoTxt = Text(fx_TurnoEm(varAgoraPnl), "[$-en-US]0") &&
                           (_m1.TipoTxt = "Fim" || _m1.TipoTxt = "Parcial")
                       ),
                       metros
@@ -771,12 +853,13 @@ Screens:
               // Bobinagem (v0.7.0) — FifoBobinadeira. AB = pedido aberto, EP = bobinando,
               // BC = bobinado, CO = consumido. BC ainda NAO entra: o consumo nao e gravado
               // (OP_Consumo vazio), entao BC acumula desde junho. Carrinho fisico entra depois.
+              // v0.11.0 (item 5): EP e AB vem da UMA consulta da FifoBobinadeira feita no Concurrent (colBobFifoPnl);
+              // aqui so o recorte local. Falha da consulta = varBobSemFontePnl true (setado la).
               ClearCollect(
                   colBobEPPnl,
-                  Sort(Filter(FifoBobinadeira, Status = "EP"), DataHoraInicio, SortOrder.Ascending)
+                  Sort(Filter(colBobFifoPnl, Status = "EP"), DataHoraInicio, SortOrder.Ascending)
               );
-              Set(varBobAbertosPnl, CountRows(Filter(FifoBobinadeira, Status = "AB")));
-              Set(varBobSemFontePnl, false);
+              Set(varBobAbertosPnl, CountRows(Filter(colBobFifoPnl, Status = "AB")));
               Set(varBobCarrinhoPnl, CountRows(colBobEPPnl));
               Set(varBobInicioPnl, First(colBobEPPnl).DataHoraInicio);
               // Estado no vocabulario do fx_CorEstadoPosto: cor igual as outras etapas.
@@ -841,7 +924,7 @@ Screens:
                   { Ord: 5, Hora: "19:50" }
               );
               With(
-                  { _dr: fx_DataRefEm(ctxAgoraPnl) },
+                  { _dr: fx_DataRefEm(varAgoraPnl) },
                   // v0.9.2: cada bolinha e UM carretel, e cada carretel vem de UMA fonte so.
                   // Na autoclave agora (ficha Em processo) -> entra pelo inicio gravado na ficha e
                   // fica AZUL. Ja saiu -> entra pelo evento de Inicio do dia. Antes a grade lia so
@@ -861,7 +944,7 @@ Screens:
                       ForAll(
                           colVulcAtivasPnl As _va,
                           {
-                              MinIni: DateDiff(_dr, Coalesce(_va.data_hora_inicio_vulcanizacao, ctxAgoraPnl), TimeUnit.Minutes),
+                              MinIni: DateDiff(_dr, Coalesce(_va.data_hora_inicio_vulcanizacao, varAgoraPnl), TimeUnit.Minutes),
                               NaAuto: true
                           }
                       )
@@ -992,182 +1075,292 @@ Screens:
                       ""
                   )
               );
-              ClearCollect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          colPostosTrancPnl As _p1,
-                          !_p1.Produzindo && (_p1.Fila > 0 || _p1.Estado = "PARADA")
-                      ) As _q1,
+              // ONDE OLHAR AGORA (v0.11.0 · itens 3 e 4). Todo item leva as mesmas 7 colunas:
+              //   Sev, Titulo, Detalhe, IdadeMin (ha quantos min o problema existe; 0 = nao medido) e
+              //   Tipo/Chave/N, que dizem a ficha de consulta o que abrir quando o item e tocado (Tipo vazio = sem ficha).
+              // Regras de FILA (sem OP + carretel esperando) ficam caladas em turno NAO trabalhado: sem janela
+              // apontada no turno de agora (criterio "Apontada", mesmo do consumo de tubo). Na 1a janela do turno
+              // vale a tolerancia (ainda ninguem apontou). Parada apontada, tubo, metragem e OP zumbi nao calam.
+              With(
+                  {
+                      _ta: fx_TurnoEm(varAgoraPnl),
+                      _dh: fx_DataRefEm(varAgoraPnl)
+                  },
+                  With(
                       {
-                          Sev: 1,
-                          Titulo: If(
-                              _q1.Estado = "PARADA",
-                              _q1.Rotulo & " · " & _q1.Motivo,
-                              _q1.Rotulo & " parada com fila"
-                          ),
-                          Detalhe: If(
-                              _q1.Fila > 0,
-                              Text(_q1.Fila, "[$-en-US]0") &
-                              If(_q1.Fila = 1, " carretel esperando", " carretéis esperando") &
-                              If(
-                                  _q1.OpsFila > _q1.Fila,
-                                  " · " & Text(_q1.OpsFila, "[$-en-US]0") & " OPs",
-                                  ""
-                              ),
-                              "Parada apontada no Hora-Hora"
+                          _trab: ((Text(_dh, "yyyy-mm-dd") & "|" & Text(_ta, "[$-en-US]0")) in colTurnosHHPnl.Value) ||
+                              (fx_MinNoTurno(varAgoraPnl, _ta) < LookUp(fx_GradeHoraHora As _gt, _gt.Turno = _ta && _gt.Ord = 2).Fim)
+                      },
+                      // 1 · PARADA apontada no Hora-Hora (com ou sem OP aberta). Pausa programada NAO entra.
+                      ClearCollect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(colPostosTrancPnl As _p1, _p1.Estado = "PARADA") As _q1,
+                              {
+                                  Sev: 1,
+                                  Titulo: _q1.Rotulo & " · " & _q1.Motivo,
+                                  Detalhe: "Parada nesta janela há " & fx_CronoLongo(_q1.InicioParada, varAgoraPnl) &
+                                  If(_q1.Produzindo, " · OP " & Text(_q1.OP, "[$-en-US]0") & " aberta", "") &
+                                  If(
+                                      _q1.Fila > 0,
+                                      " · " & Text(_q1.Fila, "[$-en-US]0") &
+                                      If(_q1.Fila = 1, " carretel esperando", " carretéis esperando"),
+                                      ""
+                                  ),
+                                  IdadeMin: Max(0, DateDiff(_q1.InicioParada, varAgoraPnl, TimeUnit.Minutes)),
+                                  Tipo: "TRANC",
+                                  Chave: _q1.Posto,
+                                  N: 0
+                              }
                           )
-                      }
-                  )
-              );
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(colBitolasPnl As _b1, _b1.Qtd < fx_KanbanMinimo) As _c1,
-                      {
-                          Sev: 1,
-                          Titulo: "Mandril bitola " & Text(_c1.Bitola, "[$-en-US]0") & " abaixo do mínimo",
-                          Detalhe: Text(_c1.Qtd, "[$-en-US]0") & " na fila do Tubo · mínimo " & Text(fx_KanbanMinimo, "[$-en-US]0")
-                      }
-                  )
-              );
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(colAcabPnl As _a6, !_a6.Produzindo && _a6.Fila > 0) As _c2,
-                      {
-                          Sev: 2,
-                          Titulo: _c2.Rotulo & " parada com fila",
-                          Detalhe: Text(_c2.Fila, "[$-en-US]0") & " OP(s) esperando esta etapa"
-                      }
-                  )
-              );
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          colPostosTrancPnl As _p2,
-                          _p2.Produzindo && _p2.Fila < fx_TrancKanbanMinimo &&
-                          !(!IsBlank(_p2.AutonomiaMin) && _p2.AutonomiaMin <= 0)
-                      ) As _q2,
-                      {
-                          Sev: 2,
-                          Titulo: _q2.Rotulo & " rodando sem carretel atrás",
-                          Detalhe: "Kanban da trançadeira abaixo do mínimo"
-                      }
-                  )
-              );
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          colPostosTrancPnl As _p3,
-                          _p3.Produzindo &&
-                          !IsBlank(_p3.Inicio) &&
-                          DateDiff(_p3.Inicio, ctxAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
-                      ) As _q3,
-                      {
-                          Sev: 3,
-                          Titulo: "OP " & Text(_q3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_q3.Inicio, ctxAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _q3.Rotulo,
-                          Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa"
-                      }
-                  )
-              );
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          colAcabPnl As _a7,
-                          _a7.Produzindo &&
-                          !IsBlank(_a7.InicioCrono) &&
-                          DateDiff(_a7.InicioCrono, ctxAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
-                      ) As _c3,
-                      {
-                          Sev: 3,
-                          Titulo: "OP " & Text(_c3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_c3.InicioCrono, ctxAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _c3.Rotulo,
-                          Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa"
-                      }
-                  )
-              );
-              // v0.8.0: cabine parada enquanto a fila da Extracao espera.
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(colPostosExtrPnl As _x1, !_x1.Produzindo && varFilaExtrPnl > 0) As _c4,
-                      {
-                          Sev: 2,
-                          Titulo: _c4.Rotulo & " parada com fila",
-                          Detalhe: Text(varFilaExtrPnl, "[$-en-US]0") & " OP(s) esperando a Extração"
-                      }
-                  )
-              );
-              // v0.10.2: tubo esgotado pela conta (carretel montado consumido, fila vazia, OP Em processo).
-              // O detalhe diz a causa mais provavel: janela do turno sem Hora-Hora.
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          colPostosTrancPnl As _p4,
-                          _p4.Produzindo && !IsBlank(_p4.AutonomiaMin) && _p4.AutonomiaMin <= 0
-                      ) As _q4,
-                      {
-                          Sev: 1,
-                          Titulo: _q4.Rotulo & " · tubo esgotado pela conta",
-                          Detalhe: If(
-                              _q4.SemApontar > 0,
-                              Text(_q4.SemApontar, "[$-en-US]0") &
-                              If(_q4.SemApontar = 1, " janela sem Hora-Hora", " janelas sem Hora-Hora") &
-                              " no turno · apontar e conferir o carretel",
-                              "Conferir o carretel na máquina e o Fim da OP"
-                          )
-                      }
-                  )
-              );
-              // v0.10.2: metragem implausivel no carretel que espera (ex.: 1 m na Spiral, 30/09). O metro da
-              // bolinha e o que a etapa ANTERIOR apontou; o detalhe diz onde corrigir.
-              Collect(
-                  colAndonPnl,
-                  ForAll(
-                      Filter(
-                          AddColumns(
+                      );
+                      // 2 · Trancadeira SEM OP e COM FILA (sem parada nem pausa apontada).
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
                               Filter(
-                                  colAguardPnl As _mq,
-                                  _mq.processo in ["Tubo", "Trançadeira", "Cobertura", "Bandagem", "Vulcanização", "Debandagem"]
-                              ),
-                              MetrosBol,
-                              Switch(
-                                  processo,
-                                  "Tubo",         quantidade_mandril,
-                                  "Trançadeira",  quantidade_tubo,
-                                  "Cobertura",    quantidade_trancagem,
-                                  "Bandagem",     quantidade_cobertura,
-                                  "Vulcanização", quantidade_bandagem,
-                                  "Debandagem",   quantidade_vulcanizacao
-                              ),
-                              EtapaAnt,
-                              Switch(
-                                  processo,
-                                  "Tubo",         "Mandril",
-                                  "Trançadeira",  "Tubo",
-                                  "Cobertura",    "Trançagem",
-                                  "Bandagem",     "Cobertura",
-                                  "Vulcanização", "Bandagem",
-                                  "Debandagem",   "Vulcanização"
+                                  colPostosTrancPnl As _p1b,
+                                  _trab && !_p1b.Produzindo && _p1b.Estado = "COM FILA"
+                              ) As _q1b,
+                              {
+                                  Sev: 1,
+                                  Titulo: _q1b.Rotulo & " sem OP · com fila",
+                                  Detalhe: Text(_q1b.Fila, "[$-en-US]0") &
+                                  If(_q1b.Fila = 1, " carretel esperando", " carretéis esperando") &
+                                  If(
+                                      _q1b.OpsFila > _q1b.Fila,
+                                      " · " & Text(_q1b.OpsFila, "[$-en-US]0") & " OPs",
+                                      ""
+                                  ),
+                                  IdadeMin: 0,
+                                  Tipo: "TRANC",
+                                  Chave: _q1b.Posto,
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 3 · Tubo esgotado pela conta (carretel montado consumido, fila vazia, OP Em processo).
+                      // O detalhe diz a causa mais provavel: janela do turno sem Hora-Hora.
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(
+                                  colPostosTrancPnl As _p4,
+                                  _p4.Produzindo && _p4.Estado <> "PARADA" && !IsBlank(_p4.AutonomiaMin) && _p4.AutonomiaMin <= 0
+                              ) As _q4,
+                              {
+                                  Sev: 1,
+                                  Titulo: _q4.Rotulo & " · tubo esgotado pela conta",
+                                  Detalhe: If(
+                                      _q4.SemApontar > 0,
+                                      Text(_q4.SemApontar, "[$-en-US]0") &
+                                      If(_q4.SemApontar = 1, " janela sem Hora-Hora", " janelas sem Hora-Hora") &
+                                      " no turno · apontar e conferir o carretel",
+                                      "Conferir o carretel na máquina e o Fim da OP"
+                                  ),
+                                  IdadeMin: 0,
+                                  Tipo: "TRANC",
+                                  Chave: _q4.Posto,
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 4 · Mandril abaixo do minimo: UM item so para todas as bitolas (antes eram ate 6, e podiam
+                      // ocupar os 3 lugares da tela e esconder uma trancadeira parada).
+                      If(
+                          CountRows(Filter(colBitolasPnl, Qtd < fx_KanbanMinimo)) > 0,
+                          Collect(
+                              colAndonPnl,
+                              {
+                                  Sev: 1,
+                                  Titulo: "Mandril abaixo do mínimo · bitola " &
+                                  Concat(Filter(colBitolasPnl, Qtd < fx_KanbanMinimo), Text(Bitola, "[$-en-US]0"), ", "),
+                                  Detalhe: "Fila do Tubo com menos de " & Text(fx_KanbanMinimo, "[$-en-US]0") & " carretéis por bitola",
+                                  IdadeMin: 0,
+                                  Tipo: "TUBO",
+                                  Chave: "Tubo",
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 5 · Etapas de acabamento SEM OP e COM FILA.
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(colAcabPnl As _a6, _trab && !_a6.Produzindo && _a6.Fila > 0) As _c2,
+                              {
+                                  Sev: 2,
+                                  Titulo: _c2.Rotulo & " sem OP · com fila",
+                                  Detalhe: Text(_c2.Fila, "[$-en-US]0") & " OP(s) esperando esta etapa",
+                                  IdadeMin: 0,
+                                  Tipo: "ACAB",
+                                  Chave: _c2.Processo,
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 6 · Cabine da Extracao sem OP enquanto a fila espera (v0.8.0).
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(colPostosExtrPnl As _x1, _trab && !_x1.Produzindo && varFilaExtrPnl > 0) As _c4,
+                              {
+                                  Sev: 2,
+                                  Titulo: _c4.Rotulo & " sem OP · com fila",
+                                  Detalhe: Text(varFilaExtrPnl, "[$-en-US]0") & " OP(s) esperando a Extração",
+                                  IdadeMin: 0,
+                                  Tipo: "EXTR",
+                                  Chave: "Extr./Teste",
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 7 · Tubo para MENOS DE UM TURNO UTIL (substitui a regra "rodando sem carretel atras" da
+                      // MEL-190, que disparava mesmo com horas de autonomia). Pausa e parada tem regra propria.
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(
+                                  colPostosTrancPnl As _p2,
+                                  _p2.Produzindo && _p2.Estado <> "PARADA" &&
+                                  (
+                                      (!IsBlank(_p2.AutonomiaMin) && _p2.AutonomiaMin > 0 && _p2.AutonomiaMin < fx_TurnoUtilMin) ||
+                                      (IsBlank(_p2.AutonomiaMin) && _p2.Fila = 0)
+                                  )
+                              ) As _q2,
+                              {
+                                  Sev: 2,
+                                  Titulo: _q2.Rotulo & If(IsBlank(_q2.AutonomiaMin), " · sem carretel atrás", " · tubo para menos de 1 turno"),
+                                  Detalhe: If(
+                                      IsBlank(_q2.AutonomiaMin),
+                                      "Sem velocidade cadastrada · sem carretel atrás",
+                                      "Autonomia " & fx_AutonomiaTexto(_q2.AutonomiaMin) & " · turno útil = " &
+                                      fx_AutonomiaTexto(fx_TurnoUtilMin)
+                                  ),
+                                  IdadeMin: 0,
+                                  Tipo: "TRANC",
+                                  Chave: _q2.Posto,
+                                  N: 0
+                              }
+                          )
+                      );
+                      // 8 · Metragem do carretel que espera: VAZIA (nao apontada) e IMPLAUSIVEL (apontada, abaixo do
+                      // minimo) sao problemas diferentes e viram itens diferentes. O metro da bolinha e o que a etapa
+                      // ANTERIOR apontou; o detalhe diz onde corrigir.
+                      With(
+                          {
+                              _mq: AddColumns(
+                                  Filter(
+                                      colAguardPnl As _mq0,
+                                      _mq0.processo in ["Tubo", "Trançadeira", "Cobertura", "Bandagem", "Vulcanização", "Debandagem"]
+                                  ),
+                                  MetrosBol,
+                                  Switch(
+                                      processo,
+                                      "Tubo",         quantidade_mandril,
+                                      "Trançadeira",  quantidade_tubo,
+                                      "Cobertura",    quantidade_trancagem,
+                                      "Bandagem",     quantidade_cobertura,
+                                      "Vulcanização", quantidade_bandagem,
+                                      "Debandagem",   quantidade_vulcanizacao
+                                  ),
+                                  EtapaAnt,
+                                  Switch(
+                                      processo,
+                                      "Tubo",         "Mandril",
+                                      "Trançadeira",  "Tubo",
+                                      "Cobertura",    "Trançagem",
+                                      "Bandagem",     "Cobertura",
+                                      "Vulcanização", "Bandagem",
+                                      "Debandagem",   "Vulcanização"
+                                  )
                               )
-                          ) As _mq2,
-                          Coalesce(_mq2.MetrosBol, 0) < fx_MetrosMinCarretel
-                      ) As _c5,
-                      {
-                          Sev: 2,
-                          Titulo: If(_c5.processo = "Trançadeira", Coalesce(Text(_c5.Trançadeira), "Trançagem"), _c5.processo) &
-                              " · carretel com " & Text(Coalesce(_c5.MetrosBol, 0), "[$-en-US]0") & " m",
-                          Detalhe: "OP " & Text(_c5.OP, "[$-en-US]0") & " · metragem do " & _c5.EtapaAnt & " a corrigir na ficha"
-                      }
+                          },
+                          Collect(
+                              colAndonPnl,
+                              ForAll(
+                                  Filter(_mq As _m1, IsBlank(_m1.MetrosBol)) As _c6,
+                                  {
+                                      Sev: 2,
+                                      Titulo: If(_c6.processo = "Trançadeira", Coalesce(Text(_c6.Trançadeira), "Trançagem"), _c6.processo) &
+                                      " · carretel sem metragem",
+                                      Detalhe: "OP " & Text(_c6.OP, "[$-en-US]0") & " · metragem do " & _c6.EtapaAnt & " não apontada",
+                                      IdadeMin: 0,
+                                      Tipo: Switch(_c6.processo, "Tubo", "TUBO", "Trançadeira", If(IsBlank(Text(_c6.Trançadeira)), "", "TRANC"), "ACAB"),
+                                      Chave: Switch(_c6.processo, "Tubo", "Tubo", "Trançadeira", Text(_c6.Trançadeira), _c6.processo),
+                                      N: 0
+                                  }
+                              )
+                          );
+                          Collect(
+                              colAndonPnl,
+                              ForAll(
+                                  Filter(_mq As _m2, !IsBlank(_m2.MetrosBol) && _m2.MetrosBol < fx_MetrosMinCarretel) As _c5,
+                                  {
+                                      Sev: 2,
+                                      Titulo: If(_c5.processo = "Trançadeira", Coalesce(Text(_c5.Trançadeira), "Trançagem"), _c5.processo) &
+                                      " · carretel com " & Text(_c5.MetrosBol, "[$-en-US]0") & " m",
+                                      Detalhe: "OP " & Text(_c5.OP, "[$-en-US]0") & " · metragem do " & _c5.EtapaAnt & " a corrigir na ficha",
+                                      IdadeMin: 0,
+                                      Tipo: Switch(_c5.processo, "Tubo", "TUBO", "Trançadeira", If(IsBlank(Text(_c5.Trançadeira)), "", "TRANC"), "ACAB"),
+                                      Chave: Switch(_c5.processo, "Tubo", "Tubo", "Trançadeira", Text(_c5.Trançadeira), _c5.processo),
+                                      N: 0
+                                  }
+                              )
+                          )
+                      );
+                      // 9 · OP zumbi: acima do teto de horas na mesma etapa.
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(
+                                  colPostosTrancPnl As _p3,
+                                  _p3.Produzindo &&
+                                  !IsBlank(_p3.Inicio) &&
+                                  DateDiff(_p3.Inicio, varAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
+                              ) As _q3,
+                              {
+                                  Sev: 3,
+                                  Titulo: "OP " & Text(_q3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_q3.Inicio, varAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _q3.Rotulo,
+                                  Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa",
+                                  IdadeMin: DateDiff(_q3.Inicio, varAgoraPnl, TimeUnit.Minutes),
+                                  Tipo: "TRANC",
+                                  Chave: _q3.Posto,
+                                  N: 0
+                              }
+                          )
+                      );
+                      Collect(
+                          colAndonPnl,
+                          ForAll(
+                              Filter(
+                                  colAcabPnl As _a7,
+                                  _a7.Produzindo &&
+                                  !IsBlank(_a7.InicioCrono) &&
+                                  DateDiff(_a7.InicioCrono, varAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
+                              ) As _c3,
+                              {
+                                  Sev: 3,
+                                  Titulo: "OP " & Text(_c3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_c3.InicioCrono, varAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _c3.Rotulo,
+                                  Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa",
+                                  IdadeMin: DateDiff(_c3.InicioCrono, varAgoraPnl, TimeUnit.Minutes),
+                                  Tipo: "ACAB",
+                                  Chave: _c3.Processo,
+                                  N: 0
+                              }
+                          )
+                      )
                   )
               );
               Set(varAndonQtdPnl, CountRows(colAndonPnl));
-              Set(varSincPnl, Now());
-              If(!varFalhaPnl, Set(varUltOkPnl, varSincPnl))
+              // v0.11.0 (item 2 · A3 · M12): varSincPnl e a ANCORA do calculo (autonomia, retrato da ficha) e
+              // avanca sempre; a IDADE DO DADO e varUltOkPnl, que so avanca em carga 100% ok (sem falha e sem
+              // truncamento). "Celula em dia" e o rodape leem varCargaOkPnl / varUltOkPnl.
+              Set(varSincPnl, varAgoraPnl);
+              Set(varCargaOkPnl, !varFalhaPnl && !varTruncaPnl);
+              If(varCargaOkPnl, Set(varUltOkPnl, varAgoraPnl));
+              // Medidor do ciclo: duracao da carga em segundos (unica leitura de relogio fora do instante do ciclo).
+              Set(varCargaSegPnl, DateDiff(varAgoraPnl, Now(), TimeUnit.Seconds))
             PressedFill: =Color.Transparent
             Text: =""
             Width: =1
@@ -1184,6 +1377,7 @@ Screens:
             OnTimerEnd: =Select(btn_RecarregarPnl)
             Repeat: =true
             Text: =""
+            Visible: =false
             Width: =1
             X: =1360
             Y: =2
@@ -1197,6 +1391,19 @@ Screens:
             Height: =1
             OnTimerEnd: |-
               =UpdateContext({ctxAgoraPnl: Now()});
+              // v0.11.0 (item 3 · A2): o "Onde olhar" gira de 3 em 3 itens a cada 30 s (este timer), em vez de
+              // cortar em 3 sem avisar. Sem item a mais, fica na pagina 0.
+              With(
+                  { _pgs: RoundUp(If(IsBlank(varAndonQtdPnl), 0, varAndonQtdPnl) / 3, 0) },
+                  Set(
+                      varAndonPagPnl,
+                      If(
+                          _pgs <= 1 || IsBlank(varAndonPagPnl) || varAndonPagPnl + 1 >= _pgs,
+                          0,
+                          varAndonPagPnl + 1
+                      )
+                  )
+              );
               // v0.9.0: a ficha de consulta fecha sozinha. A TV nao pode ficar presa num modal.
               If(
                   varDetAbertoPnl && DateDiff(varDetToquePnl, Now(), TimeUnit.Seconds) >= fx_DetFechaSeg,
@@ -1204,6 +1411,7 @@ Screens:
               )
             Repeat: =true
             Text: =""
+            Visible: =false
             Width: =1
             X: =1362
             Y: =2
@@ -1284,13 +1492,17 @@ Screens:
                                       varDetPnl,
                                       {
                                           Titulo: _p.Rotulo & " · Trançadeira",
+                                          // v0.11.0 (item 4): PARADA e PAUSA vem antes de "Trancando", porque a trancadeira pode
+                                          // estar parada COM OP aberta.
                                           Sub: If(
-                                              _p.Produzindo,
-                                              "Trançando há " & fx_Crono(_p.Inicio, ctxAgoraPnl),
                                               _p.Estado = "PARADA",
-                                              "Parada · " & _p.Motivo,
+                                              "Parada · " & _p.Motivo & " · nesta janela há " & fx_CronoLongo(_p.InicioParada, ctxAgoraPnl),
+                                              _p.Estado = "PAUSA",
+                                              "Pausa programada · " & _p.Motivo & " · há " & fx_CronoLongo(_p.InicioParada, ctxAgoraPnl),
+                                              _p.Produzindo,
+                                              "Trançando há " & fx_CronoLongo(_p.Inicio, ctxAgoraPnl),
                                               _p.Fila > 0,
-                                              "Parada, com fila",
+                                              "Sem OP, com fila",
                                               "Livre"
                                           ) & "  ·  " & Text(_p.Fila, "[$-en-US]0") &
                                           If(_p.Fila = 1, " carretel atrás", " carretéis atrás"),
@@ -1300,6 +1512,7 @@ Screens:
                                           Maquina: _p.Posto,
                                           Motivo: _p.Motivo,
                                           ParadoMin: _p.ParadoMin,
+                                          PausaMin: _p.PausaMin,
                                           HHReal: Sum(_hh, Real),
                                           HHMeta: Sum(_hh, Meta)
                                       }
@@ -1329,6 +1542,7 @@ Screens:
                                           Maquina: "",
                                           Motivo: "",
                                           ParadoMin: 0,
+                                          PausaMin: 0,
                                           HHReal: 0,
                                           HHMeta: 0
                                       }
@@ -1373,7 +1587,7 @@ Screens:
                                       _a.Processo = "Vulcanização",
                                       Text(varVulcQtdPnl, "[$-en-US]0") & " na autoclave",
                                       _a.Produzindo,
-                                      "Em processo há " & fx_Crono(_a.InicioCrono, ctxAgoraPnl),
+                                      "Em processo há " & fx_CronoLongo(_a.InicioCrono, ctxAgoraPnl),
                                       "Sem OP em processo"
                                   ) & "  ·  " & Text(_a.Fila, "[$-en-US]0") & " na fila",
                                   Estado: _a.Estado,
@@ -1382,6 +1596,7 @@ Screens:
                                   Maquina: "",
                                   Motivo: "",
                                   ParadoMin: 0,
+                                  PausaMin: 0,
                                   HHReal: 0,
                                   HHMeta: 0
                               }
@@ -1414,7 +1629,7 @@ Screens:
                               Titulo: "Extrusão de Tubo",
                               Sub: If(
                                   varTuboAtivoPnl,
-                                  "Extrudando há " & fx_Crono(varTuboInicioPnl, ctxAgoraPnl),
+                                  "Extrudando há " & fx_CronoLongo(varTuboInicioPnl, ctxAgoraPnl),
                                   "Sem OP em processo"
                               ) & "  ·  " & Text(varFilaTuboPnl, "[$-en-US]0") & " na fila",
                               Estado: fx_EstadoPosto(varTuboAtivoPnl, varFilaTuboPnl),
@@ -1423,6 +1638,7 @@ Screens:
                               Maquina: "",
                               Motivo: "",
                               ParadoMin: 0,
+                              PausaMin: 0,
                               HHReal: 0,
                               HHMeta: 0
                           }
@@ -1459,6 +1675,7 @@ Screens:
                               Maquina: "",
                               Motivo: "",
                               ParadoMin: 0,
+                              PausaMin: 0,
                               HHReal: 0,
                               HHMeta: 0
                           }
@@ -1783,7 +2000,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorInfo, fx_CorRotulo)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
             Height: =12
@@ -1797,13 +2014,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorInfo, fx_CorPainelTexto)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =Substitute(Text(varSaidaT1Pnl, "[$-en-US]#,##0"), ",", ".")
+            Text: =If(1 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT1Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =109
             X: =898
             Y: =28
@@ -1811,7 +2028,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorInfo, fx_CorRotulo)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
             Height: =12
@@ -1825,13 +2042,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorInfo, fx_CorPainelTexto)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =22
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =Substitute(Text(varSaidaT2Pnl, "[$-en-US]#,##0"), ",", ".")
+            Text: =If(2 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT2Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =105
             X: =1002
             Y: =28
@@ -1839,7 +2056,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorInfo, fx_CorRotulo)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
             Height: =12
@@ -1853,13 +2070,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorInfo, fx_CorPainelTexto)
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =Substitute(Text(varSaidaT3Pnl, "[$-en-US]#,##0"), ",", ".")
+            Text: =If(3 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT3Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =93
             X: =1128
             Y: =28
@@ -1881,7 +2098,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =21
             PaddingLeft: =0
-            Size: =10
+            Size: =fx_FonteApoio
             Text: ="TOTAL DO DIA"
             Width: =102
             X: =1242
@@ -1957,7 +2174,7 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorEstadoPosto(fx_EstadoPosto(varMandAtivoPnl, 0))
+            Color: =fx_CorEstadoTextoPainel(fx_EstadoPosto(varMandAtivoPnl, 0))
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =18
@@ -2002,7 +2219,7 @@ Screens:
                   { _p: Index(colPostosMandPnl, 1) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
-                      _p.Estado = "COM FILA", fx_CorAlerta,
+                      _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
                       fx_CorRotulo
                   )
               )
@@ -2036,7 +2253,7 @@ Screens:
             Height: =26
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(Index(colPostosMandPnl, 1).Produzindo, fx_Crono(Index(colPostosMandPnl, 1).Inicio, ctxAgoraPnl), "")
+            Text: =If(Index(colPostosMandPnl, 1).Produzindo, fx_CronoLongo(Index(colPostosMandPnl, 1).Inicio, ctxAgoraPnl), "")
             Width: =70
             X: =296
             Y: =104
@@ -2071,7 +2288,7 @@ Screens:
                   { _p: Index(colPostosMandPnl, 2) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
-                      _p.Estado = "COM FILA", fx_CorAlerta,
+                      _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
                       fx_CorRotulo
                   )
               )
@@ -2105,7 +2322,7 @@ Screens:
             Height: =26
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(Index(colPostosMandPnl, 2).Produzindo, fx_Crono(Index(colPostosMandPnl, 2).Inicio, ctxAgoraPnl), "")
+            Text: =If(Index(colPostosMandPnl, 2).Produzindo, fx_CronoLongo(Index(colPostosMandPnl, 2).Inicio, ctxAgoraPnl), "")
             Width: =70
             X: =296
             Y: =128
@@ -2137,7 +2354,12 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_SemaforoKanban(varKanbanTuboPnl)
+            Color: |-
+              =If(
+                  varKanbanTuboPnl >= fx_KanbanAlvo,   fx_CorPainelTextoOK,
+                  varKanbanTuboPnl >= fx_KanbanMinimo, fx_CorPainelTextoAlerta,
+                  fx_CorPainelTextoErro
+              )
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =18
@@ -2231,7 +2453,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =22
             PaddingLeft: =0
-            Size: =10
+            Size: =fx_FonteApoio
             Text: ="MANDRIL PRONTO ESPERANDO O TUBO"
             Width: =321
             X: =28
@@ -2285,7 +2507,7 @@ Screens:
                   RadiusBottomRight: =100
                   RadiusTopLeft: =100
                   RadiusTopRight: =100
-                  Size: =12
+                  Size: =fx_FonteCorpo
                   Text: ="−" & Text(ThisItem.Bitola, "[$-en-US]0")
                   Width: =38
                   Y: =7
@@ -2403,7 +2625,12 @@ Screens:
                 Properties:
                   Align: =Align.Right
                   BorderColor: =fx_CorPainelBorda
-                  Color: =ThisItem.Cor
+                  Color: |-
+                    =If(
+                        ThisItem.Qtd >= fx_KanbanAlvo,   fx_CorPainelTextoOK,
+                        ThisItem.Qtd >= fx_KanbanMinimo, fx_CorPainelTextoAlerta,
+                        fx_CorPainelTextoErro
+                    )
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =26
@@ -2460,7 +2687,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varBobSemFontePnl, fx_CorRotulo, fx_CorPainelTexto)
+            Color: =If(varBobSemFontePnl, fx_CorPainelTextoRotulo, fx_CorPainelTexto)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
@@ -2476,8 +2703,8 @@ Screens:
             Color: |-
               =If(
                   varBobSemFontePnl,
-                  fx_CorTextoSuave,
-                  fx_CorEstadoPosto(varBobStatusPnl)
+                  fx_CorPainelTextoErro,
+                  fx_CorEstadoTextoPainel(varBobStatusPnl)
               )
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
@@ -2487,7 +2714,7 @@ Screens:
             Text: |-
               =If(
                   varBobSemFontePnl,
-                  "SEM FONTE DE DADOS",
+                  "SEM DADO DA FIFO",
                   varBobBadgePnl
               )
             Width: =160
@@ -2619,7 +2846,7 @@ Screens:
             Text: =Last(FirstN(colBobEPPnl, 5)).Trancadeira
             Visible: =varBobCarrinhoPnl >= 5
             Width: =48
-            X: =166
+            X: =134
             Y: =590
       - btn_B6BobPnl:
           Control: Classic/Button@2.2.0
@@ -2642,7 +2869,7 @@ Screens:
             Text: =Last(FirstN(colBobEPPnl, 6)).Trancadeira
             Visible: =varBobCarrinhoPnl = 6
             Width: =38
-            X: =114
+            X: =134
             Y: =616
       - lbl_MaisBobPnl:
           Control: Label@2.5.1
@@ -2658,7 +2885,7 @@ Screens:
             Text: ="+" & Text(varBobCarrinhoPnl - 5, "[$-en-US]0")
             Visible: =varBobCarrinhoPnl > 6
             Width: =38
-            X: =114
+            X: =134
             Y: =616
       - rct_DivBobPnl:
           Control: Rectangle@2.3.0
@@ -2681,7 +2908,7 @@ Screens:
             Text: |-
               =If(
                   varBobSemFontePnl,
-                  "aguardando a FifoBobinadeira",
+                  "Fifo sem resposta · última leitura",
                   varBobFioPnl
               )
             X: =30
@@ -2690,13 +2917,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varBobSemFontePnl, fx_CorTextoSuave, fx_CorPainelTexto)
+            Color: =If(varBobSemFontePnl, fx_CorPainelTextoRotulo, fx_CorPainelTexto)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =36
             PaddingLeft: =0
             Size: =fx_FonteNumero
-            Text: =If(IsBlank(varBobInicioPnl), "--:--", fx_Crono(varBobInicioPnl, ctxAgoraPnl))
+            Text: =If(IsBlank(varBobInicioPnl), "--:--", fx_CronoLongo(varBobInicioPnl, ctxAgoraPnl))
             X: =30
             Y: =684
       - btn_CardTuboPnl:
@@ -2751,6 +2978,7 @@ Screens:
             Height: =24
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
+            Size: =fx_FonteDestaque
             Text: ="Extrusão de Tubo"
             Width: =160
             X: =219
@@ -2759,7 +2987,7 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorEstadoPosto(fx_EstadoPosto(varTuboAtivoPnl, varFilaTuboPnl))
+            Color: =fx_CorEstadoTextoPainel(fx_EstadoPosto(varTuboAtivoPnl, varFilaTuboPnl))
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
@@ -2790,7 +3018,7 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varFilaTuboPnl > 0, fx_CorAlerta, fx_CorRotulo)
+            Color: =If(varFilaTuboPnl > 0, fx_CorPainelTextoAlerta, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =14
@@ -3029,7 +3257,7 @@ Screens:
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
             Size: =fx_FonteNumero
-            Text: =If(varTuboAtivoPnl, fx_Crono(varTuboInicioPnl, ctxAgoraPnl), "--:--")
+            Text: =If(varTuboAtivoPnl, fx_CronoLongo(varTuboInicioPnl, ctxAgoraPnl), "--:--")
             Width: =160
             X: =219
             Y: =684
@@ -3077,7 +3305,7 @@ Screens:
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
-              =Text(CountRows(Filter(colPostosTrancPnl, Produzindo)), "[$-en-US]0")
+              =Text(CountRows(Filter(colPostosTrancPnl, Estado = "PRODUZINDO")), "[$-en-US]0")
               & " de "
               & Text(CountRows(colPostosTrancPnl), "[$-en-US]0")
               & " trançando"
@@ -3108,7 +3336,7 @@ Screens:
                 Properties:
                   BorderColor: =If(ThisItem.Fila = 0, fx_CorAlerta, fx_CorPainelBorda)
                   BorderThickness: =If(ThisItem.Fila >= 1, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 1, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3134,7 +3362,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =If(ThisItem.Fila >= 2, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 2, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3160,7 +3388,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =If(ThisItem.Fila >= 3, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 3, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3186,7 +3414,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =If(ThisItem.Fila >= 4, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 4, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3212,7 +3440,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =If(ThisItem.Fila >= 5, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 5, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3238,7 +3466,7 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =If(ThisItem.Fila >= 6, 0, 1)
-                  Color: =fx_CorTexto
+                  Color: =If(ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA", fx_CorPainelTexto, fx_CorTexto)
                   Fill: =If(ThisItem.Fila >= 6, ThisItem.Cor, Color.Transparent)
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
@@ -3344,9 +3572,18 @@ Screens:
                   Color: |-
                     =If(
                         ThisItem.Estado = "PARADA",
-                        fx_CorErro,
+                        fx_CorPainelTextoErro,
+                        ThisItem.Estado = "PAUSA",
+                        fx_CorPainelTextoRotulo,
                         ThisItem.Produzindo && !IsBlank(ThisItem.AutonomiaMin),
-                        fx_SemaforoAutonomia(fx_AutonomiaAgora(ThisItem.AutonomiaMin, varSincPnl, ctxAgoraPnl)),
+                        With(
+                            { _m: fx_AutonomiaAgora(ThisItem.AutonomiaMin, varSincPnl, ctxAgoraPnl) },
+                            If(
+                                _m >= 2 * fx_TurnoUtilMin, fx_CorPainelTextoOK,
+                                _m >= fx_TurnoUtilMin,     fx_CorPainelTextoAlerta,
+                                fx_CorPainelTextoErro
+                            )
+                        ),
                         fx_CorPainelTexto
                     )
                   Font: =fx_FonteFamilia
@@ -3357,12 +3594,12 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =If(
+                        (ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA") && !IsBlank(ThisItem.InicioParada),
+                        fx_CronoLongo(ThisItem.InicioParada, ctxAgoraPnl),
                         ThisItem.Produzindo && !IsBlank(ThisItem.AutonomiaMin),
                         fx_AutonomiaTexto(fx_AutonomiaAgora(ThisItem.AutonomiaMin, varSincPnl, ctxAgoraPnl)),
                         ThisItem.Produzindo,
                         "—",
-                        ThisItem.Estado = "PARADA" && !IsBlank(ThisItem.InicioParada),
-                        fx_Crono(ThisItem.InicioParada, ctxAgoraPnl),
                         ""
                     )
                   Width: =84
@@ -3374,25 +3611,24 @@ Screens:
                   BorderColor: =fx_CorPainelBorda
                   Color: |-
                     =If(
-                        ThisItem.Estado = "PARADA",   fx_CorErro,
-                        ThisItem.Estado = "COM FILA", fx_CorAlerta,
-                        ThisItem.Estado = "LIVRE",    fx_CorTextoSuave,
-                        fx_CorRotulo
+                        ThisItem.Estado = "PARADA",   fx_CorPainelTextoErro,
+                        ThisItem.Estado = "COM FILA", fx_CorPainelTextoAlerta,
+                        fx_CorPainelTextoRotulo
                     )
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =26
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
-                  Size: =10
+                  Size: =fx_FonteApoio
                   Text: |-
                     =If(
+                        ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA",
+                        ThisItem.Motivo & If(ThisItem.Produzindo, "  ·  OP " & Text(ThisItem.OP, "[$-en-US]0"), ""),
                         ThisItem.Produzindo,
                         fx_Ou(ThisItem.Mangueira) & "  ·  OP " & Text(ThisItem.OP, "[$-en-US]0"),
-                        ThisItem.Estado = "PARADA",
-                        ThisItem.Motivo,
                         ThisItem.Estado = "COM FILA",
-                        "Parada, com fila",
+                        "Sem OP, com fila",
                         "Sem produção no turno"
                     )
                   Width: =162
@@ -3480,7 +3716,7 @@ Screens:
                 Properties:
                   Align: =Align.Right
                   BorderColor: =fx_CorPainelBorda
-                  Color: =fx_CorEstadoPosto(ThisItem.Estado)
+                  Color: =fx_CorEstadoTextoPainel(ThisItem.Estado)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =36
@@ -3831,7 +4067,7 @@ Screens:
                   Height: =34
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
-                  Size: =12
+                  Size: =fx_FonteCorpo
                   Text: |-
                     =If(
                         ThisItem.Produzindo,
@@ -3846,7 +4082,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Fila > 0, fx_CorAlerta, fx_CorRotulo)
+                  Color: =If(ThisItem.Fila > 0, fx_CorPainelTextoAlerta, fx_CorRotulo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
@@ -3870,7 +4106,7 @@ Screens:
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteNumero
-                  Text: =If(ThisItem.Produzindo, fx_Crono(ThisItem.InicioCrono, ctxAgoraPnl), "--:--")
+                  Text: =If(ThisItem.Produzindo, fx_CronoLongo(ThisItem.InicioCrono, ctxAgoraPnl), "--:--")
                   Visible: =ThisItem.Processo <> "Vulcanização"
                   Width: =120
                   X: =198
@@ -3897,7 +4133,7 @@ Screens:
                   Text: |-
                     =ThisItem.Estado & If(
                         ThisItem.Produzindo,
-                        "  " & fx_Crono(ThisItem.InicioCrono, ctxAgoraPnl),
+                        "  " & fx_CronoLongo(ThisItem.InicioCrono, ctxAgoraPnl),
                         ""
                     )
                   Visible: =ThisItem.Processo = "Vulcanização"
@@ -4237,7 +4473,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Processo = varMaiorFilaPnl && ThisItem.Fila > 0, fx_CorPrimaria, If(ThisItem.Fila > 0, fx_CorAlerta, fx_CorRotulo))
+                  Color: =If(ThisItem.Processo = varMaiorFilaPnl && ThisItem.Fila > 0, fx_CorPainelTextoErro, If(ThisItem.Fila > 0, fx_CorPainelTextoAlerta, fx_CorRotulo))
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =14
@@ -4476,7 +4712,7 @@ Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =fx_CorPainelBorda
-            Color: =If(LookUp(colBatVulcPnl, Ord = 1).Estado = "ATUAL", fx_CorGelo, fx_CorRotulo)
+            Color: =If(LookUp(colBatVulcPnl, Ord = 1).Estado = "ATUAL", fx_CorPainelTextoGelo, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(LookUp(colBatVulcPnl, Ord = 1).Estado = "ATUAL", FontWeight.Bold, FontWeight.Semibold)
             Height: =30
@@ -4484,7 +4720,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: =LookUp(colBatVulcPnl, Ord = 1).Hora
             Width: =46
-            X: =1066
+            X: =1060
             Y: =522
       - btn_BatG21Pnl:
           Control: Classic/Button@2.2.0
@@ -4656,7 +4892,7 @@ Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =fx_CorPainelBorda
-            Color: =If(LookUp(colBatVulcPnl, Ord = 2).Estado = "ATUAL", fx_CorGelo, fx_CorRotulo)
+            Color: =If(LookUp(colBatVulcPnl, Ord = 2).Estado = "ATUAL", fx_CorPainelTextoGelo, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(LookUp(colBatVulcPnl, Ord = 2).Estado = "ATUAL", FontWeight.Bold, FontWeight.Semibold)
             Height: =30
@@ -4664,7 +4900,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: =LookUp(colBatVulcPnl, Ord = 2).Hora
             Width: =46
-            X: =1116
+            X: =1096
             Y: =522
       - btn_BatG31Pnl:
           Control: Classic/Button@2.2.0
@@ -4836,7 +5072,7 @@ Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =fx_CorPainelBorda
-            Color: =If(LookUp(colBatVulcPnl, Ord = 3).Estado = "ATUAL", fx_CorGelo, fx_CorRotulo)
+            Color: =If(LookUp(colBatVulcPnl, Ord = 3).Estado = "ATUAL", fx_CorPainelTextoGelo, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(LookUp(colBatVulcPnl, Ord = 3).Estado = "ATUAL", FontWeight.Bold, FontWeight.Semibold)
             Height: =30
@@ -4844,7 +5080,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: =LookUp(colBatVulcPnl, Ord = 3).Hora
             Width: =46
-            X: =1166
+            X: =1132
             Y: =522
       - btn_BatG41Pnl:
           Control: Classic/Button@2.2.0
@@ -5016,7 +5252,7 @@ Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =fx_CorPainelBorda
-            Color: =If(LookUp(colBatVulcPnl, Ord = 4).Estado = "ATUAL", fx_CorGelo, fx_CorRotulo)
+            Color: =If(LookUp(colBatVulcPnl, Ord = 4).Estado = "ATUAL", fx_CorPainelTextoGelo, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(LookUp(colBatVulcPnl, Ord = 4).Estado = "ATUAL", FontWeight.Bold, FontWeight.Semibold)
             Height: =30
@@ -5024,7 +5260,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: =LookUp(colBatVulcPnl, Ord = 4).Hora
             Width: =46
-            X: =1216
+            X: =1168
             Y: =522
       - btn_BatG51Pnl:
           Control: Classic/Button@2.2.0
@@ -5196,7 +5432,7 @@ Screens:
           Properties:
             Align: =Align.Center
             BorderColor: =fx_CorPainelBorda
-            Color: =If(LookUp(colBatVulcPnl, Ord = 5).Estado = "ATUAL", fx_CorGelo, fx_CorRotulo)
+            Color: =If(LookUp(colBatVulcPnl, Ord = 5).Estado = "ATUAL", fx_CorPainelTextoGelo, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =If(LookUp(colBatVulcPnl, Ord = 5).Estado = "ATUAL", FontWeight.Bold, FontWeight.Semibold)
             Height: =30
@@ -5204,7 +5440,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: =LookUp(colBatVulcPnl, Ord = 5).Hora
             Width: =46
-            X: =1266
+            X: =1204
             Y: =522
       - lbl_BatQtdPnl:
           Control: Label@2.5.1
@@ -5226,7 +5462,7 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorGelo
+            Color: =fx_CorPainelTextoGelo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =35
@@ -5298,7 +5534,7 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varFilaExtrPnl > 0, fx_CorAlerta, fx_CorRotulo)
+            Color: =If(varFilaExtrPnl > 0, fx_CorPainelTextoAlerta, fx_CorRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =20
@@ -5341,7 +5577,7 @@ Screens:
                   { _p: Index(colPostosExtrPnl, 1) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
-                      _p.Estado = "COM FILA", fx_CorAlerta,
+                      _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
                       fx_CorRotulo
                   )
               )
@@ -5350,7 +5586,7 @@ Screens:
             Height: =26
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
-            Size: =10
+            Size: =fx_FonteApoio
             Text: |-
               =With(
                   { _p: Index(colPostosExtrPnl, 1) },
@@ -5377,7 +5613,7 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(Index(colPostosExtrPnl, 1).Produzindo, fx_Crono(Index(colPostosExtrPnl, 1).Inicio, ctxAgoraPnl), "")
+            Text: =If(Index(colPostosExtrPnl, 1).Produzindo, fx_CronoLongo(Index(colPostosExtrPnl, 1).Inicio, ctxAgoraPnl), "")
             Width: =58
             X: =1276
             Y: =603
@@ -5413,7 +5649,7 @@ Screens:
                   { _p: Index(colPostosExtrPnl, 2) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
-                      _p.Estado = "COM FILA", fx_CorAlerta,
+                      _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
                       fx_CorRotulo
                   )
               )
@@ -5422,7 +5658,7 @@ Screens:
             Height: =28
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
-            Size: =10
+            Size: =fx_FonteApoio
             Text: |-
               =With(
                   { _p: Index(colPostosExtrPnl, 2) },
@@ -5449,7 +5685,7 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(Index(colPostosExtrPnl, 2).Produzindo, fx_Crono(Index(colPostosExtrPnl, 2).Inicio, ctxAgoraPnl), "")
+            Text: =If(Index(colPostosExtrPnl, 2).Produzindo, fx_CronoLongo(Index(colPostosExtrPnl, 2).Inicio, ctxAgoraPnl), "")
             Width: =58
             X: =1276
             Y: =633
@@ -5474,7 +5710,7 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="SAÍDA DA CÉLULA NO DIA"
+            Text: ="SAÍDA DO " & Text(fx_TurnoEm(ctxAgoraPnl), "[$-en-US]0") & "º TURNO"
             Width: =190
             X: =1066
             Y: =669
@@ -5490,7 +5726,14 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteNumero
-            Text: =Substitute(Text(varSaidaDiaPnl, "[$-en-US]#,##0"), ",", ".") & " m"
+            Text: |-
+              =Substitute(
+                  Text(
+                      Switch(fx_TurnoEm(ctxAgoraPnl), 1, varSaidaT1Pnl, 2, varSaidaT2Pnl, varSaidaT3Pnl),
+                      "[$-en-US]#,##0"
+                  ),
+                  ",", "."
+              ) & " m"
             Width: =268
             X: =1066
             Y: =687
@@ -5532,7 +5775,12 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varAndonQtdPnl > 0, fx_CorAlerta, fx_CorOK)
+            Color: |-
+              =If(
+                  !varCargaOkPnl, fx_CorPainelTextoErro,
+                  varAndonQtdPnl > 0, fx_CorPainelTextoAlerta,
+                  fx_CorPainelTextoOK
+              )
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
@@ -5540,9 +5788,19 @@ Screens:
             Size: =fx_FonteApoio
             Text: |-
               =If(
+                  !varCargaOkPnl,
+                  If(IsBlank(varUltOkPnl) && !varFalhaPnl && !varTruncaPnl, "carregando…", "SEM DADO"),
                   varAndonQtdPnl = 0,
                   "célula em dia",
-                  Text(varAndonQtdPnl, "[$-en-US]0") & " abertas"
+                  With(
+                      { _pgs: RoundUp(varAndonQtdPnl / 3, 0) },
+                      Text(varAndonQtdPnl, "[$-en-US]0") & " abertas" &
+                      If(
+                          _pgs > 1,
+                          " " & Text(Min(If(IsBlank(varAndonPagPnl), 0, varAndonPagPnl), _pgs - 1) + 1, "[$-en-US]0") & "/" & Text(_pgs, "[$-en-US]0"),
+                          ""
+                      )
+                  )
               )
             Width: =100
             X: =1234
@@ -5552,10 +5810,39 @@ Screens:
           Variant: Vertical
           Properties:
             BorderColor: =fx_CorPainelBorda
-            DisplayMode: =DisplayMode.View
             Fill: =Color.Transparent
             Height: =282
-            Items: =FirstN(Sort(colAndonPnl, Sev, SortOrder.Ascending), 3)
+            Items: |-
+              =With(
+                  {
+                      _ord: SortByColumns(
+                          colAndonPnl,
+                          "Sev", SortOrder.Ascending,
+                          "IdadeMin", SortOrder.Descending,
+                          "Titulo", SortOrder.Ascending
+                      )
+                  },
+                  With(
+                      { _n: CountRows(_ord) },
+                      With(
+                          { _pg: Min(If(IsBlank(varAndonPagPnl), 0, varAndonPagPnl), Max(0, RoundUp(_n / 3, 0) - 1)) },
+                          LastN(FirstN(_ord, Min(_n, (_pg + 1) * 3)), Max(0, Min(3, _n - _pg * 3)))
+                      )
+                  )
+              )
+            OnSelect: |-
+              =If(
+                  !IsBlank(gal_AndonPnl.Selected.Tipo),
+                  Set(
+                      varDetReqPnl,
+                      {
+                          Tipo: gal_AndonPnl.Selected.Tipo,
+                          Chave: gal_AndonPnl.Selected.Chave,
+                          N: gal_AndonPnl.Selected.N
+                      }
+                  );
+                  Select(btn_DetAbrirPnl)
+              )
             ShowScrollbar: =false
             TemplateFill: =Color.Transparent
             TemplatePadding: =0
@@ -5569,11 +5856,12 @@ Screens:
                 Properties:
                   BorderColor: =fx_CorPainelBorda
                   BorderThickness: =1
-                  DisplayMode: =DisplayMode.View
                   Fill: =fx_CorPainelFundo
+                  FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
                   Height: =86
                   HoverFill: =fx_CorPainelFundo
+                  OnSelect: =Select(Parent)
                   PressedFill: =fx_CorPainelFundo
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =fx_RaioS
@@ -5587,7 +5875,6 @@ Screens:
                 Properties:
                   BorderColor: =Color.Transparent
                   BorderThickness: =0
-                  DisplayMode: =DisplayMode.View
                   Fill: |-
                     =Switch(
                         ThisItem.Sev,
@@ -5595,9 +5882,11 @@ Screens:
                         2, fx_CorAlerta,
                         fx_CorInfo
                     )
+                  FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
                   Height: =86
                   HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
                   PressedFill: =Self.Fill
                   RadiusBottomLeft: =fx_RaioS
                   RadiusBottomRight: =0
@@ -5613,6 +5902,7 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
+                  OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteCorpo
                   Text: =ThisItem.Titulo
@@ -5627,6 +5917,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =32
+                  OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: =ThisItem.Detalhe
@@ -5704,9 +5995,42 @@ Screens:
             Height: =20
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="PARADA COM FILA"
+            Text: ="COM FILA"
             Width: =140
             X: =190
+            Y: =736
+      - btn_LegParadaPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            DisplayMode: =DisplayMode.View
+            Fill: =fx_CorErro
+            Font: =fx_FonteFamilia
+            Height: =12
+            HoverFill: =fx_CorErro
+            PressedFill: =fx_CorErro
+            RadiusBottomLeft: =fx_RaioG
+            RadiusBottomRight: =fx_RaioG
+            RadiusTopLeft: =fx_RaioG
+            RadiusTopRight: =fx_RaioG
+            Text: =""
+            Width: =12
+            X: =262
+            Y: =740
+      - lbl_LegParadaPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: ="PARADA"
+            Width: =62
+            X: =280
             Y: =736
       - btn_LegGeloPnl:
           Control: Classic/Button@2.2.0
@@ -5779,13 +6103,29 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =If(varFalhaPnl, fx_CorAlerta, fx_CorRotulo)
+            Color: |-
+              =If(
+                  varFalhaPnl || varTruncaPnl ||
+                  (!IsBlank(varUltOkPnl) && DateDiff(varUltOkPnl, ctxAgoraPnl, TimeUnit.Minutes) > fx_PainelIdadeAlertaMin),
+                  fx_CorPainelTextoErro,
+                  fx_CorPainelTextoRotulo
+              )
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =If(varFalhaPnl, "⚠ Sem conexão com o servidor — dados das " & Text(varUltOkPnl, "hh:mm") & "  ·  tentando de novo a cada 2 min", "Sincronizado às " & Text(varSincPnl, "hh:mm") & "  ·  atualiza a cada 2 min  ·  toque para detalhar")
+            Text: |-
+              =If(
+                  varFalhaPnl || varTruncaPnl,
+                  "⚠ " & If(varTruncaPnl && !varFalhaPnl, "Lista cortada no limite do conector", "Sem conexão com o servidor") &
+                  If(IsBlank(varUltOkPnl), "", " — dados de " & Text(varUltOkPnl, "hh:mm")) &
+                  "  ·  tentando de novo a cada 2 min",
+                  IsBlank(varUltOkPnl),
+                  "Carregando os dados…",
+                  "Dados de " & Text(varUltOkPnl, "hh:mm") & " (há " & Text(DateDiff(varUltOkPnl, ctxAgoraPnl, TimeUnit.Minutes), "[$-en-US]0") &
+                  " min)  ·  carga de " & Text(varCargaSegPnl, "[$-en-US]0") & " s  ·  toque para detalhar"
+              )
             Width: =600
             X: =640
             Y: =736
@@ -5794,13 +6134,13 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorTextoSuave
+            Color: =fx_CorPainelTextoRotulo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.10.3"
+            Text: ="Versão 0.11.0"
             Width: =98
             X: =1244
             Y: =743
@@ -5872,6 +6212,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =34
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteTitulo
             Text: =varDetPnl.Titulo
@@ -5887,6 +6228,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =22
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteCorpo
             Text: =varDetPnl.Sub
@@ -5959,6 +6301,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="OP EM FOCO"
@@ -5974,6 +6317,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =30
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteAcao
             Text: |-
@@ -5982,7 +6326,7 @@ Screens:
                   If(
                       IsBlank(_r.ID),
                       "Nenhuma OP nesta posição",
-                      If(Coalesce(_r.OP, 0) = 0, "OP não informada", "OP " & Text(_r.OP, "[$-en-US]0")) &
+                      If((IsBlank(_r.OP) || _r.OP = 0), "OP não informada", "OP " & Text(_r.OP, "[$-en-US]0")) &
                       "  ·  " & fx_Ou(_r.Mangueira)
                   )
               )
@@ -6016,7 +6360,7 @@ Screens:
                           _cobVenc: !IsBlank(_r.ValCob) && !IsBlank(_r.IniCob) && DateDiff(_r.ValCob, _r.IniCob, TimeUnit.Days) > 0
                       },
                       Table(
-                          { Rot: "BITOLA", Val: If(Coalesce(_r.Bitola, 0) = 0, "—", "−" & Text(_r.Bitola, "[$-en-US]0")), Alerta: false },
+                          { Rot: "BITOLA", Val: If((IsBlank(_r.Bitola) || _r.Bitola = 0), "—", "−" & Text(_r.Bitola, "[$-en-US]0")), Alerta: false },
                           { Rot: "CARRETEL", Val: fx_Ou(_r.Carretel), Alerta: false },
                           {
                               Rot: "ONDE ESTÁ",
@@ -6029,10 +6373,10 @@ Screens:
                           },
                           {
                               Rot: "NESTE ESTADO HÁ",
-                              Val: If(IsBlank(_mov.Mov), "—", fx_Crono(_mov.Mov, ctxAgoraPnl)),
+                              Val: If(IsBlank(_mov.Mov), "—", fx_CronoLongo(_mov.Mov, ctxAgoraPnl)),
                               Alerta: !IsBlank(_mov.Mov) && DateDiff(_mov.Mov, ctxAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
                           },
-                          { Rot: "IDADE DA OP", Val: If(IsBlank(_r.IniMand), "—", fx_Crono(_r.IniMand, ctxAgoraPnl)), Alerta: false },
+                          { Rot: "IDADE DA OP", Val: If(IsBlank(_r.IniMand), "—", fx_CronoLongo(_r.IniMand, ctxAgoraPnl)), Alerta: false },
                           { Rot: "REFUGO NA ROTA", Val: If(_ref > 0, Text(_ref, "[$-en-US]0") & " m", "0"), Alerta: _ref > 0 },
                           {
                               Rot: If(_tuboVenc, "TUBO VENCIDO NO USO", "COMPOSTO DO TUBO"),
@@ -6051,6 +6395,7 @@ Screens:
                       )
                   )
               )
+            OnSelect: =Set(varDetToquePnl, Now())
             ShowScrollbar: =false
             TemplateFill: =Color.Transparent
             TemplatePadding: =0
@@ -6065,12 +6410,12 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Alerta, fx_CorErro, fx_CorRotulo)
+                  Color: =If(ThisItem.Alerta, fx_CorPainelTextoErro, fx_CorRotulo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =18
                   PaddingLeft: =0
-                  Size: =10
+                  Size: =fx_FonteApoio
                   Text: =ThisItem.Rot
                   Width: =192
                   Wrap: =false
@@ -6078,12 +6423,12 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Alerta, fx_CorErro, fx_CorPainelTexto)
+                  Color: =If(ThisItem.Alerta, fx_CorPainelTextoErro, fx_CorPainelTexto)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =26
                   PaddingLeft: =0
-                  Size: =11
+                  Size: =fx_FonteApoio
                   Text: =ThisItem.Val
                   Width: =192
                   Wrap: =false
@@ -6096,6 +6441,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="ROTA DA OP"
@@ -6112,6 +6458,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="METROS"
@@ -6128,6 +6475,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="REFUGO"
@@ -6144,6 +6492,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="ESPERA"
@@ -6160,6 +6509,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="PROCESSO"
@@ -6175,6 +6525,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="OPERADOR"
@@ -6210,16 +6561,17 @@ Screens:
                               { _ant: LookUp(colDetRotaPnl As _t8, _t8.ID = varDetIDPnl && _t8.Ord = _o.Ord - 1) },
                               If(
                                   IsBlank(_ant.Fim), "",
-                                  !IsBlank(_o.Ini), fx_Crono(_ant.Fim, _o.Ini),
-                                  _o.Proc = _r.Processo, fx_Crono(_ant.Fim, ctxAgoraPnl),
+                                  !IsBlank(_o.Ini), fx_CronoLongo(_ant.Fim, _o.Ini),
+                                  _o.Proc = _r.Processo, fx_CronoLongo(_ant.Fim, ctxAgoraPnl),
                                   ""
                               )
                           )
                       ),
                       Dur,
-                      If(IsBlank(Ini), "", fx_Crono(Ini, Coalesce(Fim, ctxAgoraPnl)))
+                      If(IsBlank(Ini), "", fx_CronoLongo(Ini, Coalesce(Fim, ctxAgoraPnl)))
                   )
               )
+            OnSelect: =Set(varDetToquePnl, Now())
             ShowScrollbar: =false
             TemplateFill: =Color.Transparent
             TemplatePadding: =0
@@ -6272,7 +6624,7 @@ Screens:
                   Height: =36
                   PaddingLeft: =0
                   Size: =fx_FonteCorpo
-                  Text: =If(Coalesce(ThisItem.Qtd, 0) > 0, Text(ThisItem.Qtd, "[$-en-US]0"), "—")
+                  Text: =If((!IsBlank(ThisItem.Qtd) && ThisItem.Qtd > 0), Text(ThisItem.Qtd, "[$-en-US]0"), "—")
                   Width: =70
                   X: =196
             - lbl_DetRotaRefPnl:
@@ -6280,13 +6632,13 @@ Screens:
                 Properties:
                   Align: =Align.Right
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(Coalesce(ThisItem.Ref, 0) > 0, fx_CorErro, fx_CorRotulo)
+                  Color: =If((!IsBlank(ThisItem.Ref) && ThisItem.Ref > 0), fx_CorPainelTextoErro, fx_CorRotulo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Height: =36
                   PaddingLeft: =0
                   Size: =fx_FonteCorpo
-                  Text: =If(Coalesce(ThisItem.Ref, 0) > 0, Text(ThisItem.Ref, "[$-en-US]0"), "—")
+                  Text: =If((!IsBlank(ThisItem.Ref) && ThisItem.Ref > 0), Text(ThisItem.Ref, "[$-en-US]0"), "—")
                   Width: =64
                   X: =266
             - lbl_DetRotaEspPnl:
@@ -6294,7 +6646,7 @@ Screens:
                 Properties:
                   Align: =Align.Right
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Sit = "NA FILA", fx_CorAlerta, fx_CorPainelTexto)
+                  Color: =If(ThisItem.Sit = "NA FILA", fx_CorPainelTextoAlerta, fx_CorPainelTexto)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =36
@@ -6308,7 +6660,7 @@ Screens:
                 Properties:
                   Align: =Align.Right
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Sit = "EM CURSO", fx_CorOK, fx_CorPainelTexto)
+                  Color: =If(ThisItem.Sit = "EM CURSO", fx_CorPainelTextoOK, fx_CorPainelTexto)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =36
@@ -6347,6 +6699,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
@@ -6359,7 +6712,7 @@ Screens:
                               {
                                   Q: First(
                                       Sort(
-                                          Filter(colDetRotaPnl As _t7, _t7.ID = _l.ID && Coalesce(_t7.Qtd, 0) > 0),
+                                          Filter(colDetRotaPnl As _t7, _t7.ID = _l.ID && (!IsBlank(_t7.Qtd) && _t7.Qtd > 0)),
                                           Ord,
                                           SortOrder.Descending
                                       )
@@ -6431,7 +6784,7 @@ Screens:
                   Text: |-
                     =With(
                         { _r: LookUp(colDetOPsPnl As _d5, _d5.ID = ThisItem.ID) },
-                        If(Coalesce(_r.OP, 0) = 0, "OP não informada", "OP " & Text(_r.OP, "[$-en-US]0")) &
+                        If((IsBlank(_r.OP) || _r.OP = 0), "OP não informada", "OP " & Text(_r.OP, "[$-en-US]0")) &
                         "  ·  " & fx_Ou(_r.Mangueira)
                     )
                   Width: =290
@@ -6442,7 +6795,7 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(ThisItem.Ord = 0, fx_CorOK, fx_CorRotulo)
+                  Color: =If(ThisItem.Ord = 0, fx_CorPainelTextoOK, fx_CorRotulo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Height: =18
@@ -6450,7 +6803,7 @@ Screens:
                   PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: |-
-                    =ThisItem.Tag & "  ·  há " & fx_Crono(
+                    =ThisItem.Tag & "  ·  há " & fx_CronoLongo(
                         First(
                             Sort(
                                 Filter(colDetRotaPnl As _t5, _t5.ID = ThisItem.ID && !IsBlank(_t5.Mov)),
@@ -6481,7 +6834,7 @@ Screens:
                         {
                             _t: First(
                                 Sort(
-                                    Filter(colDetRotaPnl As _t6, _t6.ID = ThisItem.ID && Coalesce(_t6.Qtd, 0) > 0),
+                                    Filter(colDetRotaPnl As _t6, _t6.ID = ThisItem.ID && (!IsBlank(_t6.Qtd) && _t6.Qtd > 0)),
                                     Ord,
                                     SortOrder.Descending
                                 )
@@ -6500,6 +6853,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="HORA-HORA DO TURNO · " & varDetPnl.Maquina
@@ -6515,6 +6869,7 @@ Screens:
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =70
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteCorpo
             Text: |-
@@ -6524,6 +6879,7 @@ Screens:
                   " m nas janelas fechadas  ·  " & Text(fx_RendimentoHH(varDetPnl.HHMeta, varDetPnl.HHReal), "[$-en-US]0") & "%",
                   "Nenhuma janela fechada com meta neste turno"
               ) & Char(10) & "Parado no turno: " & Text(varDetPnl.ParadoMin, "[$-en-US]0") & " min" &
+              If(varDetPnl.PausaMin > 0, "  ·  pausa programada: " & Text(varDetPnl.PausaMin, "[$-en-US]0") & " min", "") &
               If(IsBlank(Trim(varDetPnl.Motivo)), "", "  ·  agora: " & varDetPnl.Motivo)
             Visible: =varDetAbertoPnl && varDetPnl.Maquina <> ""
             Width: =472
@@ -6534,10 +6890,11 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorTextoSuave
+            Color: =fx_CorPainelTextoRotulo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =18
+            OnSelect: =Set(varDetToquePnl, Now())
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="Toque na OP para ver a rota  ·  retrato das " & Text(varDetSincPnl, "hh:mm") & "  ·  fecha em " & Text(fx_DetFechaSeg, "[$-en-US]0") & " s"
