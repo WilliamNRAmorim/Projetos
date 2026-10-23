@@ -119,14 +119,14 @@
         {
           "name": "HH Meta (m)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Meta Hora])",
+          "expression": "SUM(fHoraHora[Meta Hora BI])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Meta Útil (m)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Meta Hora]) * 1295 / 1440",
+          "expression": "SUM(fHoraHora[Meta Hora BI])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
@@ -140,21 +140,21 @@
         {
           "name": "HH Aderência",
           "dataType": "Double",
-          "expression": "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora]) * 1295 / 1440)",
+          "expression": "DIVIDE(SUM(fHoraHora[Real. Hora]), SUM(fHoraHora[Meta Hora BI]))",
           "formatString": "0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Parado (min)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Tempo Parado (min)])",
+          "expression": "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), fHoraHora[Motivo Padrão] <> \"Almoço\")",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Principal Parada",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão])), \"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), \"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))",
           "displayFolder": "Painel (relatório)"
         }
       ]

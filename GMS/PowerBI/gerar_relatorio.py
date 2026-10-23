@@ -130,15 +130,16 @@ EXT = [
      'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
      'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
-    ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora])", "#,0", []),
-    # Meta dos cartoes: a grade soma 24 h (1.440 min), mas o dia util e 21h35 (1.295 min, ja sem as pausas de almoco).
-    # Meta continua 100%: produzir acima dela e ganho (Aderencia passa de 100%). O grafico por hora segue com HH Meta (m).
-    ("HH Meta Útil (m)", "Double", "SUM(fHoraHora[Meta Hora]) * 1295 / 1440", "#,0", []),
+    # 23/10/2026: a meta vem de fHoraHora[Meta Hora BI] (meta proporcional aos minutos fora da refeicao e com os 10 min
+    # de 13:47-13:57 no 2o turno). Por isso o fator 1295/1440 saiu: a refeicao ja e descontada linha a linha.
+    ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
+    ("HH Meta Útil (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
     ("HH Real (m)", "Double", "SUM(fHoraHora[Real. Hora])", "#,0", []),
     ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
-    ("HH Parado (min)", "Double", "SUM(fHoraHora[Tempo Parado (min)])", "#,0", []),
+    # Refeicao (Motivo Padrao = Almoco) fica fora de Parado e de Principal Parada, mas a hora do jantar conta em Meta e Real.
+    ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), fHoraHora[Motivo Padrão] <> \"Almoço\")", "#,0", []),
     ("HH Principal Parada", "Text",
-     "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão])), "
+     "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), "
      "\"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) "
      "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
      "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))", None, []),
@@ -536,7 +537,7 @@ def pg_paradas():
 def pg_horahora():
     """Hora-Hora de UMA trancadeira por vez: producao por hora (esq.), motivos (dir.), 5 cartoes."""
     p = Pagina("pg_horahora", "Hora-Hora Trançagem",
-               [filtro_excluir("fHoraHora", "Motivo Padrão", ["Almoço"], "h", "f_refeicao_hh")] + [filtro_incluir("fHoraHora", "Célula", TRANCADEIRAS, "c", "f_trancadeiras")])
+               [filtro_incluir("fHoraHora", "Célula", TRANCADEIRAS, "c", "f_trancadeiras")])  # 23/10/2026: sem filtro de refeicao (a hora do jantar conta)
     cabecalho(p, "Hora-Hora · Trançagem",
               [SEG_MES, (col("fHoraHora", "Turno"), "Turno", "gms_turno_hh", False),
                (col("fHoraHora", "Célula"), "Máquina", "gms_maquina_hh", True, 150)])
@@ -550,8 +551,8 @@ def pg_horahora():
     wl, wr = 760, 476
     alt = 720 - MARGEM - Y_R1
     p.add("g_prod_hora", MARGEM, Y_R1, wl, alt, grafico(
-        "lineClusteredColumnComboChart", col("fHoraHora", "Hora"), [med("HH Real (m)")],
-        "Produção por hora (m): Real × Meta", ordenar=col("fHoraHora", "Hora"),
+        "lineClusteredColumnComboChart", col("fHoraHora", "Hora BI"), [med("HH Real (m)")],
+        "Produção por hora (m): Real × Meta", ordenar=col("fHoraHora", "Hora BI"),
         segunda=[med("HH Meta (m)")], legenda=True, categorico=True))
     p.add("g_motivo", MARGEM + wl + VAO, Y_R1, wr, 290, grafico(
         "clusteredBarChart", col("fHoraHora", "Motivo Padrão"), [med("HH Parado (min)")],
