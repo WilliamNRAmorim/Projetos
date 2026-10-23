@@ -1628,7 +1628,7 @@ Revisor: sim (parada/setup).
 - (no OnSelect) `colHHJanPnl` ganhou `Prog` = o motivo da janela tem `Tipo = "Programada"` na `fx_MotivosParada` (Amostra, Manut. Prod. Total (MPT), Manutenção Preventiva, Set-up, Refeição, Reunião, Execução Check List Lean, TESTE ENGENHARIA). Comparação pelo texto do motivo, com `Trim`.
 - Estado da trançadeira: motivo apontado na janela de agora + `Prog` → **PAUSA** (cinza); motivo apontado sem `Prog` → **PARADA**, **com ou sem OP aberta** (antes só sem OP); sem motivo → `fx_EstadoPosto` como sempre. `Produzindo` continua = OP aberta.
 - "Parado no turno" (`ParadoMin`) soma só parada real; a pausa tem soma própria (`PausaMin`) e aparece à parte na ficha ("pausa programada: N min"). Parada real nunca soma com pausa. Tempo excedido é conceito da Montagem e não existe nesta tela.
-- Andon: PAUSA não gera item. PARADA gera item Sev 1 (item 3, regra 1) com o motivo e há quanto tempo; "tubo esgotado" e "tubo para menos de 1 turno" só valem para estado PRODUZINDO.
+- Andon: PAUSA não gera item. PARADA gera item Sev 1 (item 3, regra 1) com o motivo e há quanto tempo; "tubo esgotado" e "tubo para menos de 1 turno" valem para trançadeira com OP aberta fora de PARADA (inclui PAUSA com OP aberta: nada some do andon).
 - Card da trançadeira: cronômetro mostra o tempo parado (vermelho em PARADA, cinza em PAUSA) antes da autonomia; a linha de baixo mostra o motivo (e a OP quando há OP aberta); bolinhas de fila com texto claro sobre fundo vermelho/cinza; "N de 11 trançando" conta só PRODUZINDO.
 - Ficha: o subtítulo checa PARADA/PAUSA antes de "Trançando".
 
