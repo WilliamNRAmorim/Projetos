@@ -1,5 +1,5 @@
 # GMS — Índice do Projeto
-### Qual arquivo é a versão vigente de cada coisa · atualizado em 02/10/2026
+### Qual arquivo é a versão vigente de cada coisa · atualizado em 22/10/2026
 
 > **Regra de leitura para o Claude:**
 > 1. Leia este índice para saber **onde** está cada coisa.
@@ -30,6 +30,8 @@
 
 ## App.Formulas
 
+> **Vigente (22/10/2026): `Telas/Formulas.txt` v3.0.13** — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
+
 | Camada | Arquivo |
 |---|---|
 | Base completa | `claude/App_Formulas_v2.8.powerfx` (21/09, montada a partir do arquivo real, que estava em v2.7.3) |
@@ -50,7 +52,7 @@
 | Menu (Seleção de setor) | `scr_selecaosetor_1` | v0.7.1 | — | — |
 | Seleção de Gestão | `scr_SelecaoGestao_1` | **v0.2.0** (02/10, `Telas/`) — card Conferência SAP | — | — |
 | Conferência GMS × SAP × Packing | `scr_ConferenciaSAP` | **v0.1.1** (05/10, `Telas/`) | — | — |
-| Painel da Célula (TV) | `scr_PainelCelula_1` | v0.8.1 | COLAR v0.9.0 (ficha de consulta) | **v0.9.1 / v0.9.2** (25/09) |
+| Painel da Célula (TV) | `scr_PainelCelula_1` | **v0.11.0** (22/10, `Telas/`) — janela pela grade oficial, PARADA/PAUSA, andon em páginas, falha e idade do dado; **colar por blocos** na ordem de `Telas/_patch_PainelCelula_v0.11.0.md` (layout ajustado à mão: nunca reimport) | `_patch_PainelCelula_v0.11.0.md` | Colar Formulas v3.0.13 antes; v1.0 (`scr_PainelCelula_2`) só desenhada: `Mockups/painel_celula_v1_layout.html` + `Auditoria/27_PainelCelula_v1_desenho.md` |
 | Extrusora de Mandril | `scr_ExtrusoraMandril_2` | — | — | **v0.2.0** + COLAR EstoqueSolda (25/09) |
 | Solda de Mandril | `scr_mandril_1` | v0.5.4 | COLAR v0.5.4 KanbanPelaFila | — |
 | Tubo | `scr_tubo_1` | v0.4.0 | COLAR v0.4.1 + PATCH v0.4.1a | — |
@@ -70,6 +72,8 @@
 | Volume Diário | `scr_VolumeDiario_2` | v1.0.0 | PATCH v1.0.1 SaidaDaCelula | — |
 | Ficha Técnica | `scr_FichaTecnica_1` | v1.2.1 | COLAR Menu_FichaTecnica | — |
 | Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.0 | COLAR v0.5.0 ColunasCarimbadas | — |
+| Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.1.0** (22/10, `Telas/`) — AO VIVO + histórico, galeria 4×3; mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
+| Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
 
 Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?** A resposta fecha a coluna "Nome da tela".
 
