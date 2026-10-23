@@ -36,3 +36,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-10-22 | Painéis da Célula e da Montagem (Auditoria 26): aceitou as recomendadas 1 a 3 (PARADA com OP aberta e PAUSA para motivo programado; parada real da Montagem sem TE e RF, como o BI; meta pela MetaHora da OT). Pediu produção do turno visível na Célula e histórico (dia anterior, turno, dia inteiro ou hora) nos dois painéis. TV de parede é menor que 55" (polegada desconhecida). Execução em sessão nova em Sonnet a partir do plano escrito, de novo.
 2026-10-23 | BI Hora-Hora: aceitou a recomendada de meta proporcional para a hora do jantar (refeição fora de Parado e Principal parada) e aprovou o plano e o DAX antes de gravar
 2026-10-23 | Agendamento do modelo (GMS): ficou como está (8 horários); não aceitou mudar para a troca recomendada e encerrou a demanda
+2026-10-23 | Meta das duas passadas (TH01 e TO04): adiou a decisão para outro dia; segue como está
