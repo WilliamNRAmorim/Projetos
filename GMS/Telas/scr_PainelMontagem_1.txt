@@ -361,7 +361,7 @@ Screens:
                                       ClearCollect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && _e.Ontem),
+                                              Filter(colEstMon As _x, _vh && _x.Abertas > 0 && _x.Ontem) As _e,
                                               {
                                                   Ord: 100 + _e.Ord, Sev: 1, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: "aberta desde " & Text(_e.Inicio, "dd/mm") & " · OT " & Text(_e.OT, "[$-en-US]0")
@@ -371,7 +371,7 @@ Screens:
                                       Collect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && !_e.Ontem && _e.Excede),
+                                              Filter(colEstMon As _x, _vh && _x.Abertas > 0 && !_x.Ontem && _x.Excede) As _e,
                                               {
                                                   Ord: 200 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: "+" & Text(_e.RealMin - _e.MetaMin, "[$-en-US]0") & " min da meta"
@@ -382,10 +382,10 @@ Screens:
                                           colAndonMon,
                                           ForAll(
                                               Filter(
-                                                  colEstMon As _e,
-                                                  _vh && _e.Abertas = 0 && _e.Ativa && !IsBlank(_e.UltFim) &&
-                                                  DateDiff(_e.UltFim, _ref, TimeUnit.Minutes) >= fx_MontSemOTAlertaMin
-                                              ),
+                                                  colEstMon As _x,
+                                                  _vh && _x.Abertas = 0 && _x.Ativa && !IsBlank(_x.UltFim) &&
+                                                  DateDiff(_x.UltFim, _ref, TimeUnit.Minutes) >= fx_MontSemOTAlertaMin
+                                              ) As _e,
                                               {
                                                   Ord: 300 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: "sem OT há " & Text(DateDiff(_e.UltFim, _ref, TimeUnit.Minutes), "[$-en-US]0") & " min"
@@ -395,7 +395,7 @@ Screens:
                                       Collect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, _vh && _e.Abertas > 0 && !_e.Ontem && _e.MetaMin <= 0),
+                                              Filter(colEstMon As _x, _vh && _x.Abertas > 0 && !_x.Ontem && _x.MetaMin <= 0) As _e,
                                               {
                                                   Ord: 400 + _e.Ord, Sev: 3, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: "PN sem meta · " & _e.PN
@@ -406,7 +406,7 @@ Screens:
                                       Collect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, !_vh && _e.ParadaReal >= fx_MontSemOTAlertaMin),
+                                              Filter(colEstMon As _x, !_vh && _x.ParadaReal >= fx_MontSemOTAlertaMin) As _e,
                                               {
                                                   Ord: 100 + _e.Ord, Sev: 1, Celula: fx_RotuloCelulaTV(_e.Celula) & " · parada",
                                                   Detalhe: Text(_e.ParadaReal, "[$-en-US]0") & " min de parada real"
@@ -416,7 +416,7 @@ Screens:
                                       Collect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, !_vh && _e.Acima > 0),
+                                              Filter(colEstMon As _x, !_vh && _x.Acima > 0) As _e,
                                               {
                                                   Ord: 200 + _e.Ord, Sev: 2, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: Text(_e.Acima, "[$-en-US]0") & " OT acima · +" & Text(_e.AcimaMin, "[$-en-US]0") & " min"
@@ -426,7 +426,7 @@ Screens:
                                       Collect(
                                           colAndonMon,
                                           ForAll(
-                                              Filter(colEstMon As _e, !_vh && _e.SemMetaF > 0),
+                                              Filter(colEstMon As _x, !_vh && _x.SemMetaF > 0) As _e,
                                               {
                                                   Ord: 400 + _e.Ord, Sev: 3, Celula: fx_RotuloCelulaTV(_e.Celula),
                                                   Detalhe: Text(_e.SemMetaF, "[$-en-US]0") & " OT sem meta"
