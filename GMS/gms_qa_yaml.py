@@ -1,16 +1,109 @@
-import yaml, re, sys, collections
+import yaml, re, sys, collections, os, builtins
 # Power Apps usa "= " sozinho (propriedade vazia); PyYAML trata como tag :value
 yaml.SafeLoader.add_constructor('tag:yaml.org,2002:value', lambda l,n: "=")
 
+# [v5 · 22/10] Saida com codigo 1 quando algum teste imprimir FALHOU (alerta nao conta).
+_FALHOU = []
+_print0 = builtins.print
+def print(*a, **k):
+    t = " ".join(str(x) for x in a)
+    for ln in t.split("\n"):
+        if "FALHOU" in ln and not ln.lstrip().startswith("==="): _FALHOU.append(ln[:120])
+    _print0(*a, **k)
+def _sai(code=None):
+    if code is None: code = 1 if _FALHOU else 0
+    _print0("\n>>> RESULTADO:", ("FALHOU em %d teste(s) -> exit 1" % len(_FALHOU)) if code else "sem FALHOU -> exit 0")
+    sys.exit(code)
+
+def mascara(f):
+    """Texto de strings e comentarios trocado por 'x'/espaco, mesmo tamanho (indices preservados)."""
+    o=[]; i=0; n=len(f)
+    while i<n:
+        c=f[i]
+        if c=='"':
+            o.append('"'); i+=1
+            while i<n and f[i]!='"': o.append('x' if f[i]!="\n" else "\n"); i+=1
+            o.append('"'); i+=1
+        elif f.startswith("//",i):
+            while i<n and f[i]!="\n": o.append(" "); i+=1
+        elif f.startswith("/*",i):
+            j=f.find("*/",i+2); j=n if j<0 else j+2
+            o.append("".join(" " if ch!="\n" else "\n" for ch in f[i:j])); i=j
+        else: o.append(c); i+=1
+    return "".join(o)
+
+def args_de(m, ini):
+    """m = texto mascarado; ini = indice logo apos '('. Devolve ([(a,b) de cada argumento], indice apos ')')."""
+    prof=1; i=ini; a=ini; out=[]
+    while i<len(m) and prof:
+        c=m[i]
+        if c in "({[": prof+=1
+        elif c in ")}]":
+            prof-=1
+            if prof==0: out.append((a,i))
+        elif c=="," and prof==1: out.append((a,i)); a=i+1
+        i+=1
+    return out, i
+
+def ultimo_stmt(t):
+    prof=0; ult=0
+    for i,c in enumerate(t):
+        if c in "({[": prof+=1
+        elif c in ")}]": prof-=1
+        elif c==";" and prof==0: ult=i+1
+    return t[ult:].strip()
+
+def formulas_fx(caminho):
+    """Definicoes do Formulas.txt: {nome: [linhas]} ou None se nao existir."""
+    d=collections.defaultdict(list)
+    try:
+        for i,l in enumerate(open(caminho,encoding="utf-8").read().split("\n"),1):
+            m=re.match(r"(fx_\w+)", l)
+            if m: d[m.group(1)].append(i)
+    except OSError: return None
+    return d
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+FORMULAS_TXT = os.path.join(AQUI, "Telas", "Formulas.txt")
+
+if len(sys.argv)<2:
+    print("uso: python gms_qa_yaml.py Telas/scr_X.txt"); sys.exit(2)
 path = sys.argv[1]
-raw = open(path, encoding="utf-8").read()
+try:
+    with open(path, encoding="utf-8-sig") as fh: raw = fh.read()
+except (OSError, ValueError) as e:
+    print("FALHOU: nao consegui ler", path, e); sys.exit(1)
+
+if os.path.basename(path).lower()=="formulas.txt":
+    print("=== F. Formulas.txt (App.Formulas) ===")
+    defs=formulas_fx(path)
+    dups={k:v for k,v in defs.items() if len(v)>1}
+    print("fx_ duplicada:", "OK" if not dups else "FALHOU: "+str(dups))
+    m=mascara(raw)
+    pilha=[]; mal=None
+    for i,ch in enumerate(m):
+        if ch in "({[": pilha.append((ch,i))
+        elif ch in ")}]":
+            if not pilha or {")":"(","}":"{","]":"["}[ch]!=pilha[-1][0]: mal=i; break
+            pilha.pop()
+    if pilha and mal is None: mal=pilha[-1][1]
+    print("Parenteses/chaves:", "OK" if mal is None else "FALHOU: linha %d" % (raw[:mal].count("\n")+1))
+    ruins=[]
+    for dm in re.finditer(r"^(fx_\w+)(\s*\()?", m, re.M):
+        if dm.group(2): continue
+        fim=m.find(";", dm.end())
+        corpo=m[dm.end(): fim if fim>=0 else len(m)]
+        if re.search(r"\b(Now|Today|Rand)\(\)", corpo): ruins.append(dm.group(1))
+    print("Now()/Today()/Rand() em Named Formula:", "OK" if not ruins else "FALHOU: "+str(ruins))
+    print("Definicoes fx_:", len(defs))
+    _sai()
 
 print("=== 1. PARSE PyYAML ===")
 try:
     doc = yaml.safe_load(raw)
     print("OK")
 except Exception as e:
-    print("FALHOU:", e); sys.exit(1)
+    print("FALHOU:", e); _sai(1)
 
 VERSOES_OK = {
  "Classic/Button":"2.2.0","Classic/TextInput":"2.3.2","Classic/DropDown":"2.3.1",
@@ -35,8 +128,11 @@ def walk(node):
     elif isinstance(node, list):
         for i in node: walk(i)
 
-screens = doc["Screens"]
+screens = (doc or {}).get("Screens") if isinstance(doc, dict) else None
+if not isinstance(screens, dict):
+    print("FALHOU: YAML sem 'Screens'"); sys.exit(1)
 for sname, sbody in screens.items():
+    sbody = sbody or {}
     nomes.append(sname)
     walk(sbody.get("Children"))
 
@@ -116,10 +212,27 @@ for n,c in ctrls:
 print("Patch dentro de Timer (3.4):", "OK" if not tmr_bad else tmr_bad)
 
 print("\n=== 7. Referencia orfa a controle ===")
+# [v5 · 22/10] Reconhece: colecoes criadas no arquivo (Collect/ClearCollect em qualquer propriedade),
+# variaveis Set(), aliases "As x", colunas de record ({a: ..., b: ...}) e nomes fx_ do Formulas.txt.
 conhecidos=set(nomes)|{"Parent","Self","ThisItem","App","ThisRecord"}
+for n,f in formulas:
+    m_=mascara(f)
+    conhecidos |= set(re.findall(r"\b(?:Clear)?Collect\(\s*([A-Za-zÀ-ÿ_]\w*)", m_))
+    conhecidos |= set(re.findall(r"\bSet\(\s*([A-Za-zÀ-ÿ_]\w*)", m_))
+    conhecidos |= set(re.findall(r"\bAs\s+([A-Za-zÀ-ÿ_]\w*)", m_))
+    conhecidos |= set(re.findall(r"[{,(]\s*([A-Za-zÀ-ÿ_]\w*)\s*:(?!=)", m_))
+_dfx=formulas_fx(FORMULAS_TXT)
+if _dfx: conhecidos |= set(_dfx)
 refs=set()
 for n,f in formulas:
-    for m in re.finditer(r"\b([A-Za-zÀ-ÿ_][A-Za-zÀ-ÿ0-9_]*)\.(Text|Selected|SelectedDate|Value|X|Y|Width|Height|Fill|Visible|DisplayMode|Barcodes|AllItems)\b", f):
+    mf=mascara(f)
+    # colunas de fonte em escopo implicito: argumentos 2+ de Filter/LookUp/AddColumns/Sort/Search/ForAll/Sum...
+    esc=[]
+    for tm in re.finditer(r"\b(Filter|LookUp|AddColumns|Sort|SortByColumns|Search|ForAll|Sum|Average|Max|Min|CountIf|With|Concat|RenameColumns|GroupBy|Distinct|First|Last|FirstN|LastN)\(", mf):
+        ags,_=args_de(mf, tm.end())
+        esc += [(a,b) for a,b in ags[1:]]
+    for m in re.finditer(r"(?<![\w.])([A-Za-zÀ-ÿ_][A-Za-zÀ-ÿ0-9_]*)\.(Text|Selected|SelectedDate|Value|X|Y|Width|Height|Fill|Visible|DisplayMode|Barcodes|AllItems)\b", mf):
+        if any(a<=m.start()<b for a,b in esc): continue
         refs.add(m.group(1))
 orfas=sorted(r for r in refs if r not in conhecidos)
 print("Refs nao resolvidas (checar se sao fontes/vars/alias As):", orfas)
@@ -153,7 +266,9 @@ PERMITIDAS = {
  # Classic/Button NAO tem AccessibleLabel (o Text ja e o rotulo acessivel).
  "Classic/Button": COMUM|RAIO|{"BorderColor","BorderThickness","DisabledFill","DisabledBorderColor",
    "DisplayMode","HoverFill","HoverColor","HoverBorderColor","OnSelect","PressedFill","PressedColor",
-   "PressedBorderColor"},
+   "PressedBorderColor",
+   # [v5 · 22/10] Focused*: existem no Classic/Button (falso positivo do teste 11 no Painel)
+   "FocusedBorderColor","FocusedBorderThickness"},
  # Rectangle NAO tem Radius*. Superficie com canto arredondado = Classic/Button DisplayMode.View.
  "Rectangle": {"Fill","Height","Width","X","Y","Visible","BorderColor","BorderThickness","OnSelect"},
  # [v4 · 02/10] VerticalAlign acrescentado: existe no Label classico e ja esta publicado
@@ -242,18 +357,60 @@ print("\n=== 16. Formula sem '=' no inicio (PA1001 YamlInvalidSyntax) ===")
 sem_igual=[n for n,f in formulas if not f.lstrip().startswith("=")]
 print("OK" if not sem_igual else "FALHOU: "+str(sem_igual))
 
-print("\n=== 17. IfError(Collect/ClearCollect, Notify): fallback Boolean x Table ===")
-rx_ife = re.compile(r"IfError\(\s*(Clear)?Collect\(")
-ife=[]
+print("\n=== 17. IfError: tipo do valor x tipo do fallback (licao 2.23) ===")
+# [v5 · 22/10] Olha TODOS os argumentos (valor e fallbacks), nao so o 1o. Tipo de cada ramo = ultimo
+# comando apos o ultimo ';' de nivel 1: Collect/ClearCollect=Table, Patch=Record, Notify/true/false=Boolean.
+# Dois ramos de tipo conhecido e diferente = FALHOU ("Expecting a Boolean/Table"). Ramo Collect/Patch
+# contra ramo de tipo nao reconhecido = ALERTA. Solucao: fechar todos os ramos com "; true".
+def tipo_ramo(t):
+    u=ultimo_stmt(t)
+    if re.match(r"(Clear)?Collect\(", u): return "Table"
+    if re.match(r"Patch\(", u): return "Record"
+    if re.match(r"Notify\(", u) or u in ("true","false"): return "Boolean"
+    return None
+ife_f=[]; ife_a=[]
 for n,f in formulas:
-    for m in rx_ife.finditer(f):
-        i=m.end(); prof=1
-        while i < len(f) and prof:
-            if f[i]=="(": prof+=1
-            elif f[i]==")": prof-=1
-            i+=1
-        if re.match(r"\s*,\s*Notify\(", f[i:]): ife.append(n)
-print("OK" if not ife else "ALERTA (usar If(IsError(ClearCollect(...)), Notify(...))): "+str(sorted(set(ife))))
+    m=mascara(f)
+    for mm in re.finditer(r"\bIfError\(", m):
+        ags,_=args_de(m, mm.end())
+        tps=[tipo_ramo(m[a:b]) for a,b in ags]
+        conhec=set(t for t in tps if t)
+        if len(conhec)>1: ife_f.append(f"{n}: ramos {sorted(conhec)}")
+        elif conhec & {"Table","Record"} and any(t is None for t in tps): ife_a.append(n)
+print("OK" if not ife_f else "FALHOU (fechar os ramos com '; true' ou usar If(IsError(...), Notify(...))): "+str(sorted(set(ife_f))))
+if ife_a: print("ALERTA (ramo Collect/Patch contra ramo de tipo nao reconhecido, conferir):", sorted(set(ife_a)))
+
+print("\n=== 18. fx_ usada na tela x definida no Formulas.txt ===")
+if _dfx is None:
+    print("ALERTA: Formulas.txt nao encontrado em", FORMULAS_TXT)
+else:
+    usadas=collections.defaultdict(set)
+    for n,f in formulas:
+        for x in re.findall(r"\b(fx_\w+)", mascara(f)): usadas[x].add(n)
+    nao_def={k:sorted(v)[:3] for k,v in usadas.items() if k not in _dfx}
+    print(("OK (%d fx_ usadas, todas definidas)" % len(usadas)) if not nao_def else "FALHOU: fx_ nao definida no Formulas.txt (ordem de colagem): "+str(nao_def))
+
+print("\n=== 19. Size escrito a mao (alerta) ===")
+tipo_de={n:c.split("@")[0] for n,c in ctrls}
+TXT_T={"Label","ModernText","ModernButton","Classic/Button","Classic/TextInput","Classic/DropDown","Classic/ComboBox","HtmlViewer"}
+size_hand=[n for n,f in formulas
+           if n.split(".")[-1]=="Size" and tipo_de.get(n.rsplit(".",1)[0]) in TXT_T
+           and re.match(r"=\s*\d+(\.\d+)?\s*$", f.strip()) and float(f.strip()[1:])!=0]
+print("OK" if not size_hand else "ALERTA (usar fx_Fonte*): %d -> %s" % (len(size_hand), size_hand[:12]))
+
+print("\n=== 20. Coalesce(x, 0) em Text / .Attachments fora de Form (alerta) ===")
+coal=[]
+for n,f in formulas:
+    if n.split(".")[-1]!="Text": continue
+    m=mascara(f)
+    for mm in re.finditer(r"\bCoalesce\(", m):
+        ags,_=args_de(m, mm.end())
+        if ags and m[ags[-1][0]:ags[-1][1]].strip()=="0": coal.append(n); break
+print("Coalesce(x, 0) em Text:", "OK" if not coal else "ALERTA (usar Blank()): "+str(coal))
+forms={n for n,c in ctrls if c.startswith(("Form@","FormViewer@"))}
+att=sorted({n for n,f in formulas for x in re.findall(r"([A-Za-zÀ-ÿ_]\w*)\.Attachments\b", mascara(f)) if x not in forms})
+print(".Attachments fora de Form:", "OK" if not att else "ALERTA: "+str(att))
 
 print("\n=== 10. Inventario ===")
 print("Controles:", len(ctrls), "| Formulas:", len(formulas), "| Linhas:", raw.count("\n")+1)
+_sai()
