@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.12 · 2026-10-20
+//  GMS · App.Formulas · v3.0.13 · 2026-10-22
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex.
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex. v3.0.13 só ACRESCENTA a §18 (Painéis de TV · Célula v0.11.0 e Montagem v0.1.0): fx_FontePainelApoio/Rotulo/Texto/Numero/KPI, fx_CorPainelTexto(OK/Alerta/Erro/Info/Gelo/Rotulo), fx_CorEstadoTextoPainel, fx_CronoLongo, fx_PainelIdadeAlertaMin, fx_PainelLinhasAlerta, fx_HistVoltaMin, fx_HistDiasMax, fx_PeriodoIniEm, fx_PeriodoFimEm, fx_MetaMontagemMin, fx_MontSemOTAlertaMin, fx_RotuloCelulaTV, fx_ParadaRealMontagem. Nenhuma assinatura existente muda.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1617,3 +1617,157 @@ fx_AMDM02_Txt(valor: Number, casas: Number): Text =
 // Cor do tema em "#rrggbb" para desenho SVG (cartas X̄-R). JSON(Color) devolve "\"#rrggbbaa\"": pula a aspa e corta o alfa.
 fx_CorHex(cor: Color): Text =
     Mid(JSON(cor), 2, 7);
+
+//  §18 · PAINÉIS DE TV: TIPOGRAFIA, COR DE TEXTO, HISTÓRICO E MONTAGEM  ═══
+//  [v3.0.13 · 22/10/2026 · Painel da Célula v0.11.0 e Painel da Montagem v0.1.0] Seção NOVA e só
+//  aditiva. Nenhuma assinatura das §1 a §17 muda.
+//  POR QUE TOKENS NOVOS: a §2 foi feita para tela de operador, lida a 50 cm (11 a 16 pt). A TV de
+//  parede é lida a 4 m. Calibragem para TV de 43" (a polegada real é menor que 55" e ainda não foi
+//  medida): altura da maiúscula ≈ Size × 0,65 mm, então 24 pt = 16 mm (lido a 4 m) e 20 pt = 13 mm
+//  (3,2 m). Medida a diagonal da TV real, o ajuste é SÓ nesta seção.
+//  ⛔ Vale só para telas de parede, como a §14.
+
+fx_FontePainelApoio  = 20;
+fx_FontePainelRotulo = 24;
+fx_FontePainelTexto  = 28;
+fx_FontePainelNumero = 40;
+fx_FontePainelKPI    = 48;
+
+// Cores de TEXTO de parede. As da §1 (fx_CorErro, fx_CorTextoSuave, fx_CorOK...) são cores de
+// preenchimento e dão 2,7 a 3,5:1 como texto sobre o card escuro. Estas passam de 4,5:1 sobre
+// #1E293B (fx_CorPainelSuperficie); sobre #0F172A o contraste é maior. Contraste WCAG:
+// OK 8,4 · Alerta 6,5 · Erro 5,3 · Info 5,8 · Gelo 6,8 · Rótulo 5,7.
+fx_CorPainelTextoOK     = ColorValue("#4ADE80");
+fx_CorPainelTextoAlerta = ColorValue("#FB923C");
+fx_CorPainelTextoErro   = ColorValue("#F87171");
+fx_CorPainelTextoInfo   = ColorValue("#60A5FA");
+fx_CorPainelTextoGelo   = ColorValue("#38BDF8");
+fx_CorPainelTextoRotulo = ColorValue("#94A3B8");   // PAUSA, LIVRE, sem registro: o "cinza" legível
+
+// Mesma tabela de estados da fx_CorEstadoPosto (§14), em cor de TEXTO, mais os estados do Painel
+// da Montagem e a PAUSA programada da Célula (decisão 1 de 22/10). Estado fora da lista = rótulo.
+fx_CorEstadoTextoPainel(estado: Text): Color =
+    Switch(
+        estado,
+        "PRODUZINDO",    fx_CorPainelTextoOK,
+        "BOBINANDO",     fx_CorPainelTextoOK,
+        "VULCANIZANDO",  fx_CorPainelTextoOK,
+        "COM FILA",      fx_CorPainelTextoAlerta,
+        "AGUARDANDO",    fx_CorPainelTextoAlerta,
+        "ACIMA DA META", fx_CorPainelTextoAlerta,
+        "SEM OT",        fx_CorPainelTextoAlerta,
+        "RESFRIANDO",    fx_CorPainelTextoGelo,
+        "SEM META",      fx_CorPainelTextoInfo,
+        "PARADA",        fx_CorPainelTextoErro,
+        "OT DE ONTEM",   fx_CorPainelTextoErro,
+        "SEM DADO",      fx_CorPainelTextoErro,
+        fx_CorPainelTextoRotulo   // PAUSA, LIVRE, SEM REGISTRO, CARREGANDO e estado não mapeado
+    );
+
+// Cronômetro longo da ficha e dos cards: "05:40" até 24 h (igual ao fx_Crono) e "3 d 04 h" depois.
+// O fx_Crono trava em "+24 h", que numa OT esquecida aberta esconde se são 25 h ou 5 dias.
+fx_CronoLongo(inicio: DateTime, agora: DateTime): Text =
+    If(
+        IsBlank(inicio),
+        "--:--",
+        With(
+            { _m: Max(0, DateDiff(inicio, agora, TimeUnit.Minutes)) },
+            If(
+                _m >= 1440,
+                Text(Int(_m / 1440), "[$-en-US]0") & " d " & Text(Int(Mod(_m, 1440) / 60), "[$-en-US]00") & " h",
+                Text(Int(_m / 60), "[$-en-US]00") & ":" & Text(Mod(_m, 60), "[$-en-US]00")
+            )
+        )
+    );
+
+// Idade do dado: acima disto o rodapé/cabeçalho do painel fica vermelho. A carga roda a cada 2 min.
+fx_PainelIdadeAlertaMin = 5;
+
+// Linhas lidas de uma lista acima disto = suspeita de truncamento (limite de 2.000 do conector;
+// o aviso sobe antes de chegar lá).
+fx_PainelLinhasAlerta = 1800;
+
+// ---- Voltar no tempo (Painel da Montagem v0.1.0 e Painel da Célula v1.0) -----------------------
+// Fora do AO VIVO a tela volta sozinha ao vivo depois destes minutos sem toque.
+fx_HistVoltaMin = 5;
+
+// Quantos dias para trás o seletor de dia deixa ir (conta o dia produtivo, não o corrido).
+fx_HistDiasMax = 31;
+
+// Início e fim de um PERÍODO de um dia produtivo. dataRef é o dia produtivo (fx_DataRefEm).
+//   periodo: "1", "2", "3" = turno · "DIA" = o dia produtivo inteiro (05:20 às 05:20) ·
+//            "HORA" = uma janela da fx_GradeHoraHora, escolhida por `hora` (1 = 1ª janela do 1º
+//            turno, 05:20 às 06:00 · CountRows(fx_GradeHoraHora) = a última do 3º turno). O passo
+//            de 1 h do seletor é o passo da grade: as janelas de fronteira (13:57, 22:41) saem
+//            do jeito que o Hora-Hora grava, sem hora escrita aqui.
+// O início é fechado e o fim é aberto: use `>= ini && < fim`. O fim do turno vem da própria
+// grade (último Fim do turno), então 1º = 517 min, 2º = 524 e 3º = 399 acompanham a grade.
+// O 3º turno termina no dia seguinte (dataRef + 1361 + 399 = dataRef + 1760 min).
+// `hora` fora de 1 a CountRows vira a primeira/última janela. `hora` em branco com periodo "HORA" cai na última: a tela sempre passa número. Só lê tabelas e o relógio que
+// vem de fora (regra 2); não chama Now().
+fx_PeriodoIniEm(dataRef: Date, periodo: Text, hora: Number): DateTime =
+    With(
+        {
+            _t: fx_TurnoNum(periodo),
+            _g: Index(fx_GradeHoraHora, Max(1, Min(CountRows(fx_GradeHoraHora), hora)))
+        },
+        If(
+            periodo = "HORA",
+            fx_JanelaHHIni(dataRef, _g.Turno, _g.Fim, _g.Minutos),
+            _t > 0,
+            DateAdd(dataRef, fx_InicioTurnoMin(_t), TimeUnit.Minutes),
+            fx_JanelaInicioEm(DateAdd(dataRef, fx_InicioTurnoMin(1), TimeUnit.Minutes))
+        )
+    );
+
+fx_PeriodoFimEm(dataRef: Date, periodo: Text, hora: Number): DateTime =
+    With(
+        {
+            _t: fx_TurnoNum(periodo),
+            _g: Index(fx_GradeHoraHora, Max(1, Min(CountRows(fx_GradeHoraHora), hora)))
+        },
+        If(
+            periodo = "HORA",
+            fx_JanelaHHFim(dataRef, _g.Turno, _g.Fim),
+            _t > 0,
+            DateAdd(
+                DateAdd(dataRef, fx_InicioTurnoMin(_t), TimeUnit.Minutes),
+                Max(Filter(fx_GradeHoraHora, Turno = _t), Fim),
+                TimeUnit.Minutes
+            ),
+            fx_JanelaFimEm(DateAdd(dataRef, fx_InicioTurnoMin(1), TimeUnit.Minutes))
+        )
+    );
+
+// ---- Montagem --------------------------------------------------------------------------------
+// Meta da OT em minutos pela MetaHora GRAVADA NA PRÓPRIA OT (peças por hora = 60 / TempoMinPc,
+// gravada no INICIAR e hoje não lida pelas telas). Sem LookUp(Tempos) em propriedade de pintura
+// (lição 4.4). Mesma conta do menu (RoundDown(QtdOT × TempoMinPc, 0)); o Round de 2 casas tira o ruído
+// da MetaHora, gravada com 4 casas (Round(60 / TempoMinPc, 4): 10 × 60 / 85,7143 = 6,9999977 → 7, como o menu).
+// Sem meta devolve 0 (o menu usa -1): toda tela trata <= 0 como sem meta. Sem quantidade ou sem MetaHora = 0 ("PN sem meta"),
+// e a fx_ExcedeuMeta já trata meta <= 0 como "nunca acusa".
+fx_MetaMontagemMin(qtdOT: Number, metaHora: Number): Number =
+    If(
+        IsBlank(qtdOT) || IsBlank(metaHora) || qtdOT <= 0 || metaHora <= 0,
+        0,
+        RoundDown(Round(qtdOT * 60 / metaHora, 2), 0)
+    );
+
+// Célula sem OT aberta há mais que isto (desde a última OT fechada) entra no "Onde olhar".
+fx_MontSemOTAlertaMin = 30;
+
+// Nome curto para card de TV (24 pt não comporta 15 caracteres). Só CORTE-HIGH/FIRE muda; o
+// resto volta como está. A chave da célula (§15) continua sendo a longa.
+fx_RotuloCelulaTV(celula: Text): Text =
+    Substitute(celula, "CORTE-HIGH/FIRE", "CORTE-H/F");
+
+// PARADA REAL da Montagem (decisão 2 de 22/10, até o MEL-107 levar o Tipo do motivo ao app):
+// o mesmo critério do BI = qualquer motivo de Paradas_Montagem menos TE (tempo excedido, a célula
+// produziu) e RF (refeição). "TU - Troca de Turno" e "LI - 5S" CONTAM como parada. Motivo vazio
+// ou " " (a primeira linha do dropdown) não é parada. A comparação é pelo prefixo do código
+// ("RF - Refeição"), porque o texto vem do dropdown com acento.
+// Parada real nunca se soma a tempo excedido (GMS/CLAUDE.md, regras de negócio).
+fx_ParadaRealMontagem(motivo: Text): Boolean =
+    !IsBlank(Trim(motivo)) &&
+    motivo <> fx_MotivoTempoExcedido &&
+    Upper(Left(Trim(motivo), 2)) <> "RF";
