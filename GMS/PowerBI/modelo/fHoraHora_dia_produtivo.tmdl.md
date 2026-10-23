@@ -44,8 +44,8 @@ createOrReplace
 Os visuais da página Hora-Hora usam `Hora BI` no eixo.
 
 ## Pendente depois de aplicar
-- **Atualizar o modelo (refresh)**: as colunas novas só têm dados depois dele e, até lá, a página filtrada por calendário fica vazia.
-- Medida do modelo `'Hora-Hora'[Meta HH]` → `SUM(fHoraHora[Meta Hora BI])` (só depois do refresh).
+- (feito 23/10) Refresh do modelo e medida `'Hora-Hora'[Meta HH]` = `SUM(fHoraHora[Meta Hora BI])`.
+  Conferência TH07, dia produtivo 22/10: minutos BI 507 (1º) + 534 (2º) + 399 (3º) = 1.440; meta BI 1.698,93 / 1.854,14 / 1.516; real 834 / 1.044 / 726.
 - Publicar o relatório (medidas `HH Meta`, `HH Meta Útil`, `HH Aderência`, `HH Parado`, `HH Principal Parada` já editadas
   em `GMS_Painel.Report`; o filtro de página `f_refeicao_hh` saiu).
 - Conferir um dia × um turno × uma célula contra o rodapé do Hora-Hora do app.
