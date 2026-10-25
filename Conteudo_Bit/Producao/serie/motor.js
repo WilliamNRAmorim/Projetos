@@ -260,7 +260,7 @@ window.Motor = (() => {
       rect(g, 120, 200, 70, 40, '#2A211B'); circ(g, 155, 252, 16, cor, lv ? lv : 0.8); glow(g, 155, 252, lv ? 560 : 380, cor, lv ? 0.5 * lv : 0.16);
       const pts = [[W, H], [W, Y0]]; for (let k = 0; k < N; k++) { const x1 = W - (k + 1) * SW, y = Y0 - k * SH; pts.push([x1 + SW, y], [x1, y], [x1, y - SH]); } pts.push([0, YL], [0, H]);
       poly(g, pts, '#1E1718'); vgrad(g, YL, H, 'rgba(0,0,0,0)', 'rgba(0,0,0,0.5)');
-      const nAcesos = c.degrausVermelhos ? Math.floor(t * (c.ritmo || 1.6)) + 1 : 0;
+      const nAcesos = c.degrausVermelhos ? Math.floor(t * (c.ritmo || 1.6)) + (c.acesosIni ?? 1) : 0;
       for (let k = 0; k < N; k++) { const x1 = W - (k + 1) * SW, y = Y0 - k * SH; rect(g, x1 - 6, y - 4, SW + 6, 14, '#3A2D27'); rect(g, x1 - 6, y + 10, 6, SH - 10, '#140F10');
         if (k < nAcesos) { rect(g, x1 + 8, y + 18, SW - 16, 8, P.accent); glow(g, x1 + SW / 2, y + 20, 170, P.accent, 0.35); } }
       rect(g, 0, YL - 4, XL, 14, '#3A2D27');
@@ -496,6 +496,24 @@ window.Motor = (() => {
   // transformação comum (entrada, saída, balanço, tremor) e depois o corpo vetorial ou o PNG.
   // Com transparência (entrada/saída, 'some', 'alfa') ou 'luz', o corpo é desenhado numa camada à parte e composto com globalAlpha (rect/circ zeram o alpha).
   let camada = null;
+  // Subida de escada (opcional, ligada por "sobe" no personagem; os episodios sem "sobe" nao mudam): a personagem sobe degrau a degrau
+  // sobe = { de, ate, passo, lift? }: do degrau "de" ao degrau "ate" (8 = patamar), um passo a cada "passo" s (o pe aterrissa no fim do passo, no pulso).
+  // O corpo desliza entre os degraus, um pe fica plantado no degrau e o outro e levado dois degraus acima; os pes sao calculados sobre o degrau (CENARIOS.escada: SW 100, SH 66, topo em 1560).
+  let SUBE = null; POSES.subindo = () => SUBE;
+  function subida(p, tt) {
+    const q = p.sobe, SW = 100, SH = 66, esc = p.escala || 1, dir = p.flip ? -1 : 1, nP = q.ate - q.de, passo = q.passo || 0.857, lift = q.lift ?? 60, th = 0.14;
+    const X = m => W - SW / 2 - SW * m, Y = m => 1560 - 4 - SH * m, ss = x => x * x * (3 - 2 * x);
+    let n = Math.floor(Math.max(0, tt) / passo), f = Math.max(0, tt) / passo - n; if (n >= nP) { n = nP - 1; f = 1; }
+    const a = q.de + n, e = ss(f), mo = a - 0.5 + e;
+    const Ox = X(mo), Oy = Y(mo) - 6 * Math.sin(Math.PI * f), fp = Math.max(0, Math.min(1, (f - 0.04) / 0.9)), ex = ss(fp);
+    const swing = [X(a - 1 + 2 * ex), Y(a - 1 + 2 * ex) - lift * Math.sin(Math.PI * Math.pow(fp, 0.85))], plant = [X(a), Y(a)];
+    const leg = (w, lado) => { // alvo do pe em coordenadas locais do desenho (inversa da inclinacao), com o alcance da perna limitado
+      let vx = dir * (w[0] - Ox) / esc - 14, vy = (w[1] - Oy) / esc - 19, c = Math.cos(th), s = Math.sin(th), x = vx * c + vy * s, y = -vx * s + vy * c;
+      const hx = x - lado * 28, hy2 = y + 235, d = Math.hypot(hx, hy2); if (d > 226) { x = lado * 28 + hx * 226 / d; y = -235 + hy2 * 226 / d; } return [x - lado * 28, y + 235]; };
+    const sw = Math.cos(Math.PI * (n + e)), L = n % 2 === 0 ? swing : plant, R = n % 2 === 0 ? plant : swing;
+    SUBE = { al: [-25 + 55 * sw, 165 - 14 * Math.abs(sw)], ar: [25 - 55 * sw, 165 - 14 * Math.abs(sw)], fl: leg(L, -1), fr: leg(R, 1), olho: 'firme', boca: 'aberta', sobr: 0, inclina: th, olhar: 6 };
+    return Object.assign({}, p, { pose: 'subindo', x: Ox / W, y: Oy - GY, _tp: 0, semSombra: true, semEntrada: true });
+  }
   function personagem(g, o, t, dur, elenco, img) { // o: { id, pose, x(0..1), flip, escala, y, arquivo, costas, some, alfa, semEntrada, fica }
     const v = visual(o, elenco), ent = o.semEntrada ? 1 : back(clamp(t / 0.4)), sai = o.fica ? 1 : clamp((dur - t) / 0.25), fade = o.some != null ? clamp((t - o.some) / 1.2) : 0;
     const alfa = Math.min(o.semEntrada ? 1 : clamp(t / 0.25), sai) * (1 - fade) * (o.alfa ?? 1);
@@ -781,7 +799,7 @@ window.Motor = (() => {
             if (c.desfoque) g.filter = `blur(${c.desfoque}px)`; // fundo desfocado nos closes
       if (c.cenario === 'olho_magico' || c.cenario === 'espelho' || c.cenario === 'punho') c._elenco = elenco; if (c._img) g.drawImage(c._img, 0, 0, W, H); else CENARIOS[c.cenario](g, u, c);
       g.filter = 'none'; if (c.desfoque) rect(g, 0, 0, W, H, P.deep, 0.25);
-      (c.personagens || []).forEach(p => { if (p.ate == null || u < p.ate) personagem(g, p, u - (p.entra || 0), c.dur, elenco, p._img); }); // p.entra = segundos de atraso da entrada
+      (c.personagens || []).forEach(p => { if (p.ate == null || u < p.ate) personagem(g, p.sobe ? subida(p, u - (p.entra || 0)) : p, u - (p.entra || 0), c.dur, elenco, p._img); }); // p.entra = segundos de atraso da entrada
       const s0 = c._segs[0], cx = { u, inicio: palavra => s0 ? inicioGrupo(s0.obj, palavra, s0.ini, s0.dur) : 0 }; // gatilhos de objetos seguem a primeira fala
       (c.objetos || []).forEach(ob => { const uu = u - (ob.entra ?? 0.3); if (uu >= 0) OBJETOS[ob.tipo](g, ob, uu, cx); });
       g.restore();
