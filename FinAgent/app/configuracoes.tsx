@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { Fragment, useEffect, useState } from 'react';
 import { Alert, Pressable, Share, StyleSheet, Text, TextInput } from 'react-native';
 import { gerarExport } from '@/src/exportarCarregar';
+import { Sonda, rodarDiagnostico } from '@/src/mp/diagnostico';
 import { Tela } from '@/src/Tela';
 import { CHAVES, NomeChave, getSecret, setSecret } from '@/src/secrets';
 import { theme } from '@/src/theme';
@@ -17,6 +18,19 @@ export default function Configuracoes() {
       setSalvas(r);
     })();
   }, []);
+
+  const [diag, setDiag] = useState<Sonda[] | null>(null);
+  const [rodando, setRodando] = useState(false);
+
+  async function diagnosticar() {
+    setRodando(true);
+    try {
+      setDiag(await rodarDiagnostico());
+    } catch {
+      setDiag([{ nome: 'Diagnóstico', resultado: 'sem conexão', linhas: [] }]);
+    }
+    setRodando(false);
+  }
 
   async function salvar(nome: NomeChave) {
     await setSecret(nome, valores[nome]);
@@ -51,6 +65,14 @@ export default function Configuracoes() {
       <Pressable style={s.botao} onPress={exportar}>
         <Text style={s.botaoTxt}>Exportar tudo para o Claude (economista)</Text>
       </Pressable>
+      <Pressable style={s.botao} onPress={diagnosticar} disabled={rodando}>
+        <Text style={s.botaoTxt}>{rodando ? 'Rodando...' : 'Diagnóstico da API do Mercado Pago'}</Text>
+      </Pressable>
+      {diag?.map((d) => (
+        <Text key={d.nome} style={s.diag} selectable>
+          {`${d.nome}: ${d.resultado}${d.linhas.length ? '\n' + d.linhas.join('\n') : ''}`}
+        </Text>
+      ))}
       {CHAVES.map((c) => (
         <Fragment key={c.nome}>
           <Text style={s.rotulo}>
@@ -80,5 +102,6 @@ const s = StyleSheet.create({
   rotulo: { color: theme.text, fontSize: 15, marginTop: 8 },
   input: { backgroundColor: theme.card, color: theme.text, borderColor: theme.border, borderWidth: 1, borderRadius: 8, padding: 12 },
   botao: { backgroundColor: theme.tint, borderRadius: 8, padding: 12, alignItems: 'center' },
+  diag: { color: theme.muted, fontSize: 12 },
   botaoTxt: { color: '#0e1116', fontWeight: '700' },
 });
