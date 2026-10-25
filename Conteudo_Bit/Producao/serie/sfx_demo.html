@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sfx demo - Plantão Noturno</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#0d0f12;color:#e6e6e6;margin:0;padding:16px;max-width:760px}
+  h1{font-size:20px;margin:0 0 4px} p{color:#9aa;margin:4px 0 14px;font-size:14px}
+  .row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #222}
+  .row b{flex:1;font-weight:500;font-size:14px}
+  .row small{color:#889;font-size:12px;min-width:150px;text-align:right}
+  button{background:#2a3340;color:#fff;border:0;border-radius:6px;padding:7px 12px;cursor:pointer;font-size:13px}
+  button:hover{background:#3a475a} button.big{background:#7a2230;padding:10px 16px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<h1>Sfx demo - Plantão Noturno</h1>
+<p>Sons sintetizados por Web Audio, sem arquivos. Use fones e volume baixo: os stingers chegam a -6 dBFS.</p>
+<button class="big" id="todos">Baixar WAV de todos (1 arquivo, 1 s entre sons)</button>
+<div id="lista"></div>
+<script src="sfx.js"></script>
+<script>
+(function(){
+  var lista=document.getElementById('lista'), ac=null, atual=null;
+  function baixar(ab,nome){var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ab],{type:'audio/wav'}));a.download=nome;a.click();setTimeout(function(){URL.revokeObjectURL(a.href)},2000);}
+  function fmt(r){return 'pico '+r.picoDb.toFixed(1)+' dB | rms '+r.rmsDb.toFixed(1)+' dB';}
+  Sfx.DEMOS.forEach(function(d){
+    var row=document.createElement('div');row.className='row';
+    row.innerHTML='<b>'+d.nome+'</b><small></small><button>Tocar</button><button>WAV</button>';
+    var info=row.querySelector('small'), bt=row.querySelectorAll('button');
+    bt[0].onclick=function(){
+      if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+      if(atual){try{atual.close()}catch(e){} ac=new (window.AudioContext||window.webkitAudioContext)();}
+      atual=ac; ac.resume();
+      var s=Sfx.create(ac,ac.destination), t0=ac.currentTime+0.1;
+      d.cues.slice().sort(function(a,b){return a.t-b.t}).forEach(function(c){s.tocar(c.tipo,t0+c.t,c.params)});
+    };
+    bt[1].onclick=function(){
+      Sfx.renderOffline(d.cues,d.dur).then(function(b){info.textContent=fmt(Sfx.analisar(b));baixar(Sfx.toWav(b),d.nome+'.wav');});
+    };
+    lista.appendChild(row);
+    Sfx.renderOffline(d.cues,d.dur).then(function(b){info.textContent=fmt(Sfx.analisar(b));});
+  });
+  document.getElementById('todos').onclick=function(){
+    Promise.all(Sfx.DEMOS.map(function(d){return Sfx.renderOffline(d.cues,d.dur)})).then(function(bs){baixar(Sfx.toWav(bs,1),'plantao_sfx_todos.wav');});
+  };
+})();
+</script>
+</body>
+</html>
