@@ -10,3 +10,8 @@ Pedidos do William em 25/10/2026 e problemas que apareceram. Ler antes de planej
 6. **Ritmo.** Cenas com mais de ~1,5 s de silêncio depois da fala parecem lentas (Ep. 5). Deixar ar só onde for silêncio dramático deliberado.
 7. **Duração.** Manter 62 a 78 s por episódio (monetização exige 60 s ou mais).
 8. **Quem posta.** O William sobe e agenda no TikTok. Nenhum agente publica; só preenche legenda e miniatura no Meta Business Suite quando ele pede.
+
+## Arquivo de semanas antigas
+- As semanas 05, 12 e 19 de outubro de 2026 do canal Bit foram arquivadas em 25/10/2026 no Release `arquivo-bit-2026-10` do repositório (github.com/WilliamNRAmorim/Projetos/releases/tag/arquivo-bit-2026-10), como zips conferidos por hash, e apagadas do PC.
+- Para recuperar: `gh release download arquivo-bit-2026-10 --dir <pasta>` e extrair em `Conteudo_Bit\Semanal`.
+- Regra do William: o que já foi publicado e não será usado vai para um Release do GitHub e sai do PC; só volta para o PC o que for usar. A pasta `Semanal\serie` (Eps. 1 a 7) pode ser arquivada assim depois de 31/10.
