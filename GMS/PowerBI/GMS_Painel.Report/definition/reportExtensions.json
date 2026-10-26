@@ -110,6 +110,34 @@
           "displayFolder": "Painel (relatório)"
         },
         {
+          "name": "OTs Montagem",
+          "dataType": "Double",
+          "expression": "DISTINCTCOUNT(Producao_Montagem[OT])",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Horas de OT Montagem",
+          "dataType": "Double",
+          "expression": "SUM(Producao_Montagem[DuracaoMin]) / 60",
+          "formatString": "#,0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Peças por Hora Montagem",
+          "dataType": "Double",
+          "expression": "DIVIDE(SUM(Producao_Montagem[QtdProduzida]), SUM(Producao_Montagem[DuracaoMin]) / 60)",
+          "formatString": "#,0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Parada Real Montagem (min)",
+          "dataType": "Double",
+          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
           "name": "Minutos Brutos Montagem",
           "dataType": "Double",
           "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))",

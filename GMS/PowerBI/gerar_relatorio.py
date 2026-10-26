@@ -127,6 +127,16 @@ EXT = [
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
     # Total bruto da lista (todos os motivos, inclusive RF e TE): serve para bater com o SharePoint no mesmo dia.
     # Respeita Data, Turno e Celula; ignora o filtro de Motivo da pagina e do slicer.
+    # ---- pagina Producao Montagem: so contas diretas sobre Producao_Montagem (sem meta: depende de dMetaMontagem relacionada)
+    ("OTs Montagem", "Double", "DISTINCTCOUNT(Producao_Montagem[OT])", "#,0", []),
+    ("Horas de OT Montagem", "Double", "SUM(Producao_Montagem[DuracaoMin]) / 60", "#,0.0", []),
+    ("Peças por Hora Montagem", "Double",
+     "DIVIDE(SUM(Producao_Montagem[QtdProduzida]), SUM(Producao_Montagem[DuracaoMin]) / 60)", "#,0.0", []),
+    # Parada real = sem RF (Refeicao) e sem TE (Tempo Excedido), mesmo criterio do FILTRO_PM, mas como medida
+    # para a pagina de producao, que nao carrega o filtro de pagina da parada.
+    ("Parada Real Montagem (min)", "Double",
+     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))', "#,0", []),
     ("Minutos Brutos Montagem", "Double",
      "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
@@ -573,11 +583,43 @@ def pg_horahora():
     return p
 
 
+def pg_producao_montagem():
+    """Producao da Montagem. Producao_Montagem[Data] -> dCalendario[Date] ja e relacionamento ativo no modelo, entao
+    o periodo, o turno e a celula filtram igual ao da mangueira. Sem meta/aderencia ate dMetaMontagem ter relacionamento
+    com Celula e Turno (ver modelo/montagem_modelo.md)."""
+    p = Pagina("pg_producao_montagem", "Produção Mont.")
+    cabecalho(p, "Produção da Montagem",
+              [SEG_MES,
+               (col("Producao_Montagem", "Turno"), "Turno", None, False),
+               (col("Producao_Montagem", "Celula"), "Célula", None, False)])
+    kpis(p, [
+        ("Peças Produzidas", med("Quantidade Produzida Montagem"), None),
+        ("OTs", med("OTs Montagem"), None),
+        ("Horas de OT", med("Horas de OT Montagem"), None),
+        ("Peças por Hora", med("Peças por Hora Montagem"), None),
+        ("Parada Real (min)", med("Parada Real Montagem (min)"), None),
+    ])
+    p.add("g_dia", MARGEM, Y_R1, WL, 244, grafico(
+        "lineChart", col("dCalendario", "Date"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por dia", categorico=True))
+    p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
+        "clusteredColumnChart", col("Producao_Montagem", "Celula"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por célula", ordenar=med("Quantidade Produzida Montagem"), desc=True))
+    p.add("g_turno", MARGEM, Y_R2, 400, 240, grafico(
+        "clusteredColumnChart", col("Producao_Montagem", "Turno"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por turno", cores_turno=True))
+    p.add("g_parada_dia", MARGEM + 412, Y_R2, 824, 240, grafico(
+        "lineChart", col("dCalendario", "Date"), [med("Parada Real Montagem (min)")],
+        "Parada real por dia (min)", categorico=True))
+    return p
+
+
 def pg_paradas_montagem():
     p = Pagina("pg_paradas_montagem", "Paradas Mont.", FILTRO_PM())
-    # Periodo direto em Paradas_Montagem[Data] (sem depender de relacionamento com dCalendario); grupo de sync proprio.
+    # Periodo pelo dCalendario (Paradas_Montagem[Data] -> dCalendario[Date] ja e relacionamento ativo no modelo),
+    # igual as paginas da mangueira e no mesmo grupo de sync "gms_data".
     cabecalho(p, "Paradas da Montagem",
-              [(col("Paradas_Montagem", "Data"), "Período", "gms_data_pm", False, 250, "Between"),
+              [SEG_MES,
                (col("Paradas_Montagem", "Turno"), "Turno", None, False),
                (col("Paradas_Montagem", "Celula"), "Célula", None, False),
                (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
@@ -699,7 +741,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_paradas(), pg_horahora(), pg_paradas_montagem(), pg_extrusora()]
+    paginas = [pg_visao_geral(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})
