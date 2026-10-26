@@ -43,11 +43,11 @@
                       "Entity": "Medidas"
                     }
                   },
-                  "Property": "Minutos Parados Montagem"
+                  "Property": "Parada Real Montagem (min)"
                 }
               },
-              "queryRef": "Medidas.Minutos Parados Montagem",
-              "nativeQueryRef": "Minutos Parados Montagem"
+              "queryRef": "Medidas.Parada Real Montagem (min)",
+              "nativeQueryRef": "Parada Real Montagem (min)"
             }
           ]
         }
@@ -63,12 +63,13 @@
                     "Entity": "Medidas"
                   }
                 },
-                "Property": "Minutos Parados Montagem"
+                "Property": "Parada Real Montagem (min)"
               }
             },
             "direction": "Descending"
           }
-        ]
+        ],
+        "isDefaultSort": false
       }
     },
     "objects": {
@@ -197,7 +198,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Minutos parados por motivo'"
+                  "Value": "'Parada real por motivo (min) — sem TE e RF'"
                 }
               }
             },
@@ -354,5 +355,61 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f_sem_vazio",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Paradas_Montagem"
+              }
+            },
+            "Property": "Motivo"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "Paradas_Montagem",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Motivo"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

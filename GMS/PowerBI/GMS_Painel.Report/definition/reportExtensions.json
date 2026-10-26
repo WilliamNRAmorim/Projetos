@@ -138,6 +138,48 @@
           "displayFolder": "Painel (relatório)"
         },
         {
+          "name": "Refeição Montagem (min)",
+          "dataType": "Double",
+          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), Paradas_Montagem[Motivo] = \"RF - Refeição\")",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "Horas Paradas Real Montagem",
+          "dataType": "Double",
+          "expression": "[Parada Real Montagem (min)] / 60",
+          "formatString": "#,0.00",
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "Parada Real Montagem (min)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Célula Gargalo Parada Real",
+          "dataType": "Text",
+          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), \"@m\", [Parada Real Montagem (min)]) VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]))",
+          "displayFolder": "Painel (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "Parada Real Montagem (min)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Motivo Mais Frequente Parada Real",
+          "dataType": "Text",
+          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), \"@n\", CALCULATE(COUNTROWS(Paradas_Montagem), NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))) VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
           "name": "Minutos Brutos Montagem",
           "dataType": "Double",
           "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))",

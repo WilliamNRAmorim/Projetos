@@ -137,6 +137,21 @@ EXT = [
     ("Parada Real Montagem (min)", "Double",
      'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
      'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))', "#,0", []),
+    # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
+    # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
+    ("Refeição Montagem (min)", "Double",
+     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
+     'Paradas_Montagem[Motivo] = "RF - Refeição")', "#,0", []),
+    ("Horas Paradas Real Montagem", "Double", "[Parada Real Montagem (min)] / 60", "#,0.00",
+     [(M, "Parada Real Montagem (min)")]),
+    ("Célula Gargalo Parada Real", "Text",
+     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), "@m", [Parada Real Montagem (min)]) '
+     'VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]))', None,
+     [(M, "Parada Real Montagem (min)")]),
+    ("Motivo Mais Frequente Parada Real", "Text",
+     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), "@n", CALCULATE(COUNTROWS(Paradas_Montagem), '
+     'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))) '
+     'VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]))', None, []),
     ("Minutos Brutos Montagem", "Double",
      "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
@@ -615,7 +630,7 @@ def pg_producao_montagem():
 
 
 def pg_paradas_montagem():
-    p = Pagina("pg_paradas_montagem", "Paradas Mont.", FILTRO_PM())
+    p = Pagina("pg_paradas_montagem", "Paradas Mont.")
     # Periodo pelo dCalendario (Paradas_Montagem[Data] -> dCalendario[Date] ja e relacionamento ativo no modelo),
     # igual as paginas da mangueira e no mesmo grupo de sync "gms_data".
     cabecalho(p, "Paradas da Montagem",
@@ -624,19 +639,22 @@ def pg_paradas_montagem():
                (col("Paradas_Montagem", "Celula"), "Célula", None, False),
                (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
     kpis(p, [
-        ("Minutos Parados (parada real)", med("Minutos Parados Montagem"), None),
-        ("Horas Paradas", med("Horas Decimais Montagem"), None),
-        ("Célula Gargalo", med("Célula Gargalo Montagem"), None),
-        ("Motivo Mais Frequente", med("Motivo Mais Frequente Montagem"), None),
+        ("Minutos Parados (parada real)", med("Parada Real Montagem (min)"), None),
+        ("Horas Paradas", med("Horas Paradas Real Montagem"), None),
+        ("Célula Gargalo", med("Célula Gargalo Parada Real"), None),
+        ("Motivo Mais Frequente", med("Motivo Mais Frequente Parada Real"), None),
         ("Total bruto da lista (min)", med("Minutos Brutos Montagem"), None),
         ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
-        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Minutos Parados Montagem")],
-        "Minutos parados por motivo", ordenar=med("Minutos Parados Montagem"), desc=True))
+        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Parada Real Montagem (min)")],
+        "Parada real por motivo (min) — sem TE e RF", ordenar=med("Parada Real Montagem (min)"), desc=True,
+        sem_vazio=True))
+    # Todas as celulas no eixo: 3 series separadas (parada real, excedido, refeicao), nunca empilhadas nem somadas.
     p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 494, grafico(
-        "clusteredColumnChart", col("Paradas_Montagem", "Celula"), [med("Minutos Parados Montagem")],
-        "Minutos parados por célula", ordenar=med("Minutos Parados Montagem"), desc=True))
+        "clusteredColumnChart", col("Paradas_Montagem", "Celula"),
+        [med("Parada Real Montagem (min)"), med("Minutos Excedidos Montagem"), med("Refeição Montagem (min)")],
+        "Por célula (min): parada real × tempo excedido × refeição", legenda=True))
     return p
 
 
