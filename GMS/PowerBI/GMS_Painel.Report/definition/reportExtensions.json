@@ -133,34 +133,34 @@
         {
           "name": "Parada Real Montagem (min)",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"})))",
+          "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))), 0)",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "Refeição Montagem (min)",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"RF - Refeição\"))",
+          "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"RF - Refeição\")), 0)",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "Horas Paradas Real Montagem",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))) / 60",
+          "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))), 0) / 60",
           "formatString": "#,0.00",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "Célula Gargalo Parada Real",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), \"@m\", CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"})))) VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]))",
+          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), \"@m\", COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))), 0)) VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]), \"Sem parada real\")",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "Motivo Mais Frequente Parada Real",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), \"@n\", CALCULATE(COUNTROWS(Paradas_Montagem), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"})))) VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]))",
+          "expression": "VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), \"@n\", CALCULATE(COUNTROWS(Paradas_Montagem), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"})))) VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]), \"Sem parada real\")",
           "displayFolder": "Painel (relatório)"
         },
         {
@@ -173,7 +173,7 @@
         {
           "name": "Minutos Excedidos Montagem",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\"))",
+          "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\")), 0)",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },

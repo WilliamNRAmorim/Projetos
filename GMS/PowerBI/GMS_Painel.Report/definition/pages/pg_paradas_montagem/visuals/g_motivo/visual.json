@@ -10,7 +10,7 @@
     "tabOrder": 13000
   },
   "visual": {
-    "visualType": "barChart",
+    "visualType": "clusteredBarChart",
     "query": {
       "queryState": {
         "Category": {
@@ -43,41 +43,11 @@
                       "Entity": "Medidas"
                     }
                   },
-                  "Property": "Parada Real Montagem (min)"
+                  "Property": "Minutos Parados Montagem"
                 }
               },
-              "queryRef": "Medidas.Parada Real Montagem (min)",
-              "nativeQueryRef": "Parada Real Montagem (min)"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Schema": "extension",
-                      "Entity": "Medidas"
-                    }
-                  },
-                  "Property": "Minutos Excedidos Montagem"
-                }
-              },
-              "queryRef": "Medidas.Minutos Excedidos Montagem",
-              "nativeQueryRef": "Minutos Excedidos Montagem"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Schema": "extension",
-                      "Entity": "Medidas"
-                    }
-                  },
-                  "Property": "Refeição Montagem (min)"
-                }
-              },
-              "queryRef": "Medidas.Refeição Montagem (min)",
-              "nativeQueryRef": "Refeição Montagem (min)"
+              "queryRef": "Medidas.Minutos Parados Montagem",
+              "nativeQueryRef": "Minutos Parados Montagem"
             }
           ]
         }
@@ -108,7 +78,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
@@ -208,7 +178,98 @@
                   }
                 }
               }
+            },
+            "labelPosition": {
+              "expr": {
+                "Literal": {
+                  "Value": "'OutsideEnd'"
+                }
+              }
             }
+          }
+        }
+      ],
+      "dataPoint": [
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#334155'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Paradas_Montagem"
+                          }
+                        },
+                        "Property": "Motivo"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'TE - Tempo Excedido'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#64748B'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "Paradas_Montagem"
+                          }
+                        },
+                        "Property": "Motivo"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'RF - Refeição'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
           }
         }
       ]
@@ -227,7 +288,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Minutos por motivo: parada real × tempo excedido × refeição'"
+                  "Value": "'Minutos por motivo — vermelho: parada real · azul: tempo excedido · cinza: refeição'"
                 }
               }
             },

@@ -109,8 +109,9 @@ def delta_mtd(medida, coluna_data, relativo=True):
     )
 
 
-PARADA_REAL_DAX = ('CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
-                   'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"})))')
+# Sem parada real no recorte = 0 min (nao "em branco"): zero e o valor verdadeiro.
+PARADA_REAL_DAX = ('COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+                   'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))), 0)')
 DATA_FICHA = "'ficha_producao'[DataProducao]"
 DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
@@ -141,24 +142,24 @@ EXT = [
     # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
     # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
     ("Refeição Montagem (min)", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
-     'KEEPFILTERS(Paradas_Montagem[Motivo] = "RF - Refeição"))', "#,0", []),
+     'COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "RF - Refeição")), 0)', "#,0", []),
     # Medidas do relatorio nao referenciam outras medidas do relatorio (o servico nao resolve): a conta vai por extenso.
     ("Horas Paradas Real Montagem", "Double", PARADA_REAL_DAX + " / 60", "#,0.00", []),
     ("Célula Gargalo Parada Real", "Text",
      'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), "@m", ' + PARADA_REAL_DAX + ') '
-     'VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]))', None,
+     'VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]), "Sem parada real")', None,
      []),
     ("Motivo Mais Frequente Parada Real", "Text",
      'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), "@n", CALCULATE(COUNTROWS(Paradas_Montagem), '
      'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"})))) '
-     'VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]))', None, []),
+     'VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]), "Sem parada real")', None, []),
     ("Minutos Brutos Montagem", "Double",
      "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
     ("Minutos Excedidos Montagem", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
-     'KEEPFILTERS(Paradas_Montagem[Motivo] = "TE - Tempo Excedido"))', "#,0", []),
+     'COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "TE - Tempo Excedido")), 0)', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
     # 23/10/2026: a meta vem de fHoraHora[Meta Hora BI] (meta proporcional aos minutos fora da refeicao e com os 10 min
     # de 13:47-13:57 no 2o turno). Por isso o fator 1295/1440 saiu: a refeicao ja e descontada linha a linha.
@@ -317,7 +318,7 @@ def filtro_nao_vazio(campo, nome):
 
 
 def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=None, legenda=False,
-            cores_turno=None, sem_vazio=False, categorico=False):
+            cores_turno=None, sem_vazio=False, categorico=False, rotulo_fora=False, cores_pontos=None):
     qs = {"Category": {"projections": [proj(categoria, True)]},
           "Y": {"projections": [proj(m) for m in valores]}}
     if segunda:
@@ -330,6 +331,16 @@ def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=
     }
     if categorico:  # eixo por categoria: um ponto por dia/valor, sem escala de tempo (sem horas)
         obj["categoryAxis"][0]["properties"]["axisType"] = txt("Categorical")
+    if rotulo_fora:  # numero fora da barra/coluna, legivel mesmo em barra escura ou pequena
+        obj["labels"][0]["properties"]["labelPosition"] = txt("OutsideEnd")
+    if cores_pontos:  # {valor da categoria: cor}; o resto usa a cor padrao da serie
+        ent, prop = categoria["Column"]["Expression"]["SourceRef"]["Entity"], categoria["Column"]["Property"]
+        obj["dataPoint"] = [{
+            "properties": {"fill": cor(c)},
+            "selector": {"data": [{"scopeId": {"Comparison": {"ComparisonKind": 0,
+                                  "Left": col(ent, prop),
+                                  "Right": {"Literal": {"Value": "'" + v + "'"}}}}}]},
+        } for v, c in cores_pontos.items()]
     if cores_turno:
         ent = categoria["Column"]["Expression"]["SourceRef"]["Entity"]
         obj["dataPoint"] = [{
@@ -647,18 +658,17 @@ def pg_paradas_montagem():
         ("Total bruto da lista (min)", med("Minutos Brutos Montagem"), None),
         ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
-    # Todos os motivos no eixo, 3 series que nunca se somam: cada motivo so tem valor na propria serie
-    # (TE so em excedido, RF so em refeicao, o resto em parada real).
+    # Uma serie so (minutos do motivo), sem soma entre tipos: vermelho = parada real, azul = tempo excedido, cinza = refeicao.
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
-        "barChart", col("Paradas_Montagem", "Motivo"),
-        [med("Parada Real Montagem (min)"), med("Minutos Excedidos Montagem"), med("Refeição Montagem (min)")],
-        "Minutos por motivo: parada real × tempo excedido × refeição",
-        ordenar=col("Paradas_Montagem", "Motivo"), legenda=True))
+        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Minutos Parados Montagem")],
+        "Minutos por motivo — vermelho: parada real · azul: tempo excedido · cinza: refeição",
+        ordenar=col("Paradas_Montagem", "Motivo"), rotulo_fora=True,
+        cores_pontos={"TE - Tempo Excedido": CORES[1], "RF - Refeição": CORES[2]}))
     # Todas as celulas no eixo: 3 series separadas (parada real, excedido, refeicao), nunca empilhadas nem somadas.
     p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 494, grafico(
         "clusteredColumnChart", col("Paradas_Montagem", "Celula"),
         [med("Parada Real Montagem (min)"), med("Minutos Excedidos Montagem"), med("Refeição Montagem (min)")],
-        "Por célula (min): parada real × tempo excedido × refeição", legenda=True))
+        "Por célula (min): parada real × tempo excedido × refeição", legenda=True, rotulo_fora=True))
     return p
 
 
