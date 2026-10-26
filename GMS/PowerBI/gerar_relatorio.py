@@ -141,8 +141,8 @@ EXT = [
     # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
     # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
     ("Refeição Montagem (min)", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
-     'Paradas_Montagem[Motivo] = "RF - Refeição")', "#,0", []),
+     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "RF - Refeição"))', "#,0", []),
     # Medidas do relatorio nao referenciam outras medidas do relatorio (o servico nao resolve): a conta vai por extenso.
     ("Horas Paradas Real Montagem", "Double", PARADA_REAL_DAX + " / 60", "#,0.00", []),
     ("Célula Gargalo Parada Real", "Text",
@@ -157,8 +157,8 @@ EXT = [
      "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
     ("Minutos Excedidos Montagem", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
-     'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
+     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "TE - Tempo Excedido"))', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
     # 23/10/2026: a meta vem de fHoraHora[Meta Hora BI] (meta proporcional aos minutos fora da refeicao e com os 10 min
     # de 13:47-13:57 no 2o turno). Por isso o fator 1295/1440 saiu: a refeicao ja e descontada linha a linha.
@@ -647,10 +647,13 @@ def pg_paradas_montagem():
         ("Total bruto da lista (min)", med("Minutos Brutos Montagem"), None),
         ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
+    # Todos os motivos no eixo, 3 series que nunca se somam: cada motivo so tem valor na propria serie
+    # (TE so em excedido, RF so em refeicao, o resto em parada real).
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
-        "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Parada Real Montagem (min)")],
-        "Parada real por motivo (min) — sem TE e RF", ordenar=med("Parada Real Montagem (min)"), desc=True,
-        sem_vazio=True))
+        "barChart", col("Paradas_Montagem", "Motivo"),
+        [med("Parada Real Montagem (min)"), med("Minutos Excedidos Montagem"), med("Refeição Montagem (min)")],
+        "Minutos por motivo: parada real × tempo excedido × refeição",
+        ordenar=col("Paradas_Montagem", "Motivo"), legenda=True))
     # Todas as celulas no eixo: 3 series separadas (parada real, excedido, refeicao), nunca empilhadas nem somadas.
     p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 494, grafico(
         "clusteredColumnChart", col("Paradas_Montagem", "Celula"),

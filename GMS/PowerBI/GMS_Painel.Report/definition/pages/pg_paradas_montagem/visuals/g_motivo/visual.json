@@ -10,7 +10,7 @@
     "tabOrder": 13000
   },
   "visual": {
-    "visualType": "clusteredBarChart",
+    "visualType": "barChart",
     "query": {
       "queryState": {
         "Category": {
@@ -48,6 +48,36 @@
               },
               "queryRef": "Medidas.Parada Real Montagem (min)",
               "nativeQueryRef": "Parada Real Montagem (min)"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Schema": "extension",
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Minutos Excedidos Montagem"
+                }
+              },
+              "queryRef": "Medidas.Minutos Excedidos Montagem",
+              "nativeQueryRef": "Minutos Excedidos Montagem"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Schema": "extension",
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "Refeição Montagem (min)"
+                }
+              },
+              "queryRef": "Medidas.Refeição Montagem (min)",
+              "nativeQueryRef": "Refeição Montagem (min)"
             }
           ]
         }
@@ -56,17 +86,16 @@
         "sort": [
           {
             "field": {
-              "Measure": {
+              "Column": {
                 "Expression": {
                   "SourceRef": {
-                    "Schema": "extension",
-                    "Entity": "Medidas"
+                    "Entity": "Paradas_Montagem"
                   }
                 },
-                "Property": "Parada Real Montagem (min)"
+                "Property": "Motivo"
               }
             },
-            "direction": "Descending"
+            "direction": "Ascending"
           }
         ],
         "isDefaultSort": false
@@ -79,7 +108,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
@@ -198,7 +227,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Parada real por motivo (min) — sem TE e RF'"
+                  "Value": "'Minutos por motivo: parada real × tempo excedido × refeição'"
                 }
               }
             },
@@ -355,61 +384,5 @@
       ]
     },
     "drillFilterOtherVisuals": true
-  },
-  "filterConfig": {
-    "filters": [
-      {
-        "name": "f_sem_vazio",
-        "field": {
-          "Column": {
-            "Expression": {
-              "SourceRef": {
-                "Entity": "Paradas_Montagem"
-              }
-            },
-            "Property": "Motivo"
-          }
-        },
-        "type": "Advanced",
-        "filter": {
-          "Version": 2,
-          "From": [
-            {
-              "Name": "c",
-              "Entity": "Paradas_Montagem",
-              "Type": 0
-            }
-          ],
-          "Where": [
-            {
-              "Condition": {
-                "Not": {
-                  "Expression": {
-                    "Comparison": {
-                      "ComparisonKind": 0,
-                      "Left": {
-                        "Column": {
-                          "Expression": {
-                            "SourceRef": {
-                              "Source": "c"
-                            }
-                          },
-                          "Property": "Motivo"
-                        }
-                      },
-                      "Right": {
-                        "Literal": {
-                          "Value": "null"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
-      }
-    ]
   }
 }
