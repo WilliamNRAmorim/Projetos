@@ -110,7 +110,7 @@ def delta_mtd(medida, coluna_data, relativo=True):
 
 
 PARADA_REAL_DAX = ('CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
-                   'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))')
+                   'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"})))')
 DATA_FICHA = "'ficha_producao'[DataProducao]"
 DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
@@ -151,7 +151,7 @@ EXT = [
      []),
     ("Motivo Mais Frequente Parada Real", "Text",
      'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), "@n", CALCULATE(COUNTROWS(Paradas_Montagem), '
-     'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))) '
+     'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"})))) '
      'VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]))', None, []),
     ("Minutos Brutos Montagem", "Double",
      "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
