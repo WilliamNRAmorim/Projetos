@@ -138,6 +138,13 @@
           "displayFolder": "Painel (relatório)"
         },
         {
+          "name": "Parada Real por Dia Montagem (min)",
+          "dataType": "Double",
+          "expression": "IF(COUNTROWS(Paradas_Montagem) + COUNTROWS(Producao_Montagem) > 0, COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {\"RF - Refeição\", \"TE - Tempo Excedido\"}))), 0))",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
           "name": "Refeição Montagem (min)",
           "dataType": "Double",
           "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"RF - Refeição\")), 0)",

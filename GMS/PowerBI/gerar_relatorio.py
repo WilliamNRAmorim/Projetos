@@ -141,6 +141,10 @@ EXT = [
      PARADA_REAL_DAX, "#,0", []),
     # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
     # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
+    # Grafico por dia: o COALESCE da parada real tornaria todo dia do calendario "com valor" (eixo de 01/01 em diante e
+    # "Em branco"). Aqui so aparece o dia que tem alguma linha de parada ou de producao; dia com linha e sem parada real = 0.
+    ("Parada Real por Dia Montagem (min)", "Double",
+     "IF(COUNTROWS(Paradas_Montagem) + COUNTROWS(Producao_Montagem) > 0, " + PARADA_REAL_DAX + ")", "#,0", []),
     ("Refeição Montagem (min)", "Double",
      'COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
      'KEEPFILTERS(Paradas_Montagem[Motivo] = "RF - Refeição")), 0)', "#,0", []),
@@ -638,7 +642,7 @@ def pg_producao_montagem():
         "clusteredColumnChart", col("Producao_Montagem", "Turno"), [med("Quantidade Produzida Montagem")],
         "Peças produzidas por turno", cores_turno=True))
     p.add("g_parada_dia", MARGEM + 412, Y_R2, 824, 240, grafico(
-        "lineChart", col("dCalendario", "Date"), [med("Parada Real Montagem (min)")],
+        "lineChart", col("dCalendario", "Date"), [med("Parada Real por Dia Montagem (min)")],
         "Parada real por dia (min)", categorico=True))
     return p
 
