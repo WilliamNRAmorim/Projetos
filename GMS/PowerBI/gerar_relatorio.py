@@ -134,10 +134,10 @@ EXT = [
     # de 13:47-13:57 no 2o turno). Por isso o fator 1295/1440 saiu: a refeicao ja e descontada linha a linha.
     ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
     ("HH Meta Útil (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
-    ("HH Real (m)", "Double", "SUM(fHoraHora[Real. Hora])", "#,0", []),
-    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
+    ("HH Real (m)", "Double", "SUM(fHoraHora[Real BI])", "#,0", []),
+    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real BI]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
     # Refeicao (Motivo Padrao = Almoco) fica fora de Parado e de Principal Parada, mas a hora do jantar conta em Meta e Real.
-    ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))", "#,0", []),
+    ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Parado BI]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))", "#,0", []),
     # Texto do dia produtivo (rodape do grafico por hora): o dia vai das 05:20 do proprio dia as 05:20 do dia seguinte (24/10/2026).
     ("HH Dia Produtivo", "Text",
      "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) "
@@ -145,7 +145,7 @@ EXT = [
      "\"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 05:20 às 05:20 do dia seguinte\")", None, []),
     ("HH Principal Parada", "Text",
      "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), "
-     "\"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) "
+     "\"MinParado\", CALCULATE(SUM(fHoraHora[Parado BI]))) "
      "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
      "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))", None, []),
 ]

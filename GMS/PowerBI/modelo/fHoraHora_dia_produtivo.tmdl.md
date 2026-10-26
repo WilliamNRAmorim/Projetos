@@ -54,3 +54,9 @@ Os visuais da página Hora-Hora usam `Hora BI` no eixo.
 O dia produtivo do BI vai das **05:20 do dia D às 05:20 do dia D+1**; o 3º turno que começa 22:41 do dia D fica no dia D, como a base já grava a `Data`.
 Aplicado no modelo: `'Data BI' = fHoraHora[Data]` e `'HoraOrdem BI' = fHoraHora[HoraOrdem]` (as demais colunas BI e os relacionamentos ficam como estavam).
 Texto do relatório: "Dia produtivo D: de D 05:20 até D+1 05:20". Depende de refresh para as colunas recalcularem.
+
+## ATUALIZAÇÃO 26/10/2026 — Real BI e Parado BI (os 10 min de 13:47–13:57 também no real e no parado)
+Colunas novas na `fHoraHora`: `'Real BI'` e `'Parado BI'`. Janela `13:00 - 13:57`: valor × 47/57. Janela `13:47 - 15:00`: valor + 10/57 do valor da janela `13:00 - 13:57` da mesma `Célula` e `Data` (parado limitado a `Minutos BI`).
+Os totais do dia não mudam; só a divisão entre 1º e 2º turno. Aproximação proporcional no real; exata com máquina parada. O motivo do parado transferido é o da janela das 13:47.
+Medidas do relatório: `HH Real (m)`, `HH Aderência`, `HH Parado (min)` e `HH Principal Parada` leem `Real BI` e `Parado BI`.
+Pendente: refresh, publicar o relatório e atualizar a medida do modelo `'Hora-Hora'[Real HH]` para `SUM(fHoraHora[Real BI])` (só depois do refresh).
