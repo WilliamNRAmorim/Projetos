@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex. v3.0.13 só ACRESCENTA a §18 (Painéis de TV · Célula v0.11.0 e Montagem v0.1.0): fx_FontePainelApoio/Rotulo/Texto/Numero/KPI, fx_CorPainelTexto(OK/Alerta/Erro/Info/Gelo/Rotulo), fx_CorEstadoTextoPainel, fx_CronoLongo, fx_PainelIdadeAlertaMin, fx_PainelLinhasAlerta, fx_HistVoltaMin, fx_HistDiasMax, fx_PeriodoIniEm, fx_PeriodoFimEm, fx_MetaMontagemMin, fx_MontSemOTAlertaMin, fx_RotuloCelulaTV, fx_ParadaRealMontagem. Nenhuma assinatura existente muda. v3.0.14 só ACRESCENTA na §11 (Hora-Hora Trançagem v0.7.0 · MEL-248): fx_TravaHHMin, fx_DataRefHH, fx_JanelaTravada, fx_AcertoHH, fx_ParadaPropHH. Nenhuma assinatura existente muda.
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex. v3.0.13 só ACRESCENTA a §18 (Painéis de TV · Célula v0.11.0 e Montagem v0.1.0): fx_FontePainelApoio/Rotulo/Texto/Numero/KPI, fx_CorPainelTexto(OK/Alerta/Erro/Info/Gelo/Rotulo), fx_CorEstadoTextoPainel, fx_CronoLongo, fx_PainelIdadeAlertaMin, fx_PainelLinhasAlerta, fx_HistVoltaMin, fx_HistDiasMax, fx_PeriodoIniEm, fx_PeriodoFimEm, fx_MetaMontagemMin, fx_MontSemOTAlertaMin, fx_RotuloCelulaTV, fx_ParadaRealMontagem. Nenhuma assinatura existente muda. v3.0.14 só ACRESCENTA na §11 (Hora-Hora Trançagem v0.7.0 · MEL-248): fx_TravaHHMin, fx_DataRefHH, fx_JanelaTravada, fx_AcertoHH, fx_ParadaPropHH, fx_MotivoAmostra. Nenhuma assinatura existente muda.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -1012,6 +1012,10 @@ fx_AcertoHH(elegivel: Boolean, meta: Number, real: Number, motivo: Text, tempoPa
         tempoParado <= 0,                       "NT",
         ""
     );
+
+// Motivo de parada "Amostra" (texto da fx_MotivosParada). Escolhido na linha, o app lança a mangueira
+// "Amostra" (se a janela não tem mangueira) e o tempo parado = minutos da janela inteira, sem meta.
+fx_MotivoAmostra = "Amostra";
 
 // Tempo parado proporcional ao que faltou para a meta, capado nos minutos da janela.
 fx_ParadaPropHH(minutos: Number, meta: Number, real: Number): Number =

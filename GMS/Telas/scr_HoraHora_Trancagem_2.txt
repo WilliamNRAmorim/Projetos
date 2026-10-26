@@ -951,8 +951,13 @@ Screens:
                             Patch(
                                 colLinhasHHT,
                                 LookUp(colLinhasHHT As _lp4, _lp4.Ord = ThisItem.Ord),
-                                { Motivo: _v }
+                                {
+                                    Motivo: _v,
+                                    TempoParado: If(_v = fx_MotivoAmostra, ThisItem.Minutos, ThisItem.TempoParado),
+                                    Mangueira: If(_v = fx_MotivoAmostra && IsBlank(ThisItem.Mangueira), fx_MotivoAmostra, ThisItem.Mangueira)
+                                }
                             );
+                            If(_v = fx_MotivoAmostra, UpdateIf(colLinhasHHT, Ord > 0, { Ativa: true }));
                             UpdateContext({ctxAlteradoHHT: true})
                         )
                     )
@@ -2398,6 +2403,15 @@ Screens:
                                   Mangueira
                               )
                           )
+                      );
+                      Collect(
+                          colMangMaqHHT,
+                          {
+                              Mangueira: fx_MotivoAmostra,
+                              Chave: fx_MangCanon(fx_MotivoAmostra),
+                              MFG: 0,
+                              DP: false
+                          }
                       );
                       With(
                           {
