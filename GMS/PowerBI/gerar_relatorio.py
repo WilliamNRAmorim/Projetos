@@ -125,6 +125,10 @@ EXT = [
      [(M, "Refugo PPM")]),
     ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
+    # Total bruto da lista (todos os motivos, inclusive RF e TE): serve para bater com o SharePoint no mesmo dia.
+    # Respeita Data, Turno e Celula; ignora o filtro de Motivo da pagina e do slicer.
+    ("Minutos Brutos Montagem", "Double",
+     "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
     ("Minutos Excedidos Montagem", "Double",
      'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
@@ -571,8 +575,10 @@ def pg_horahora():
 
 def pg_paradas_montagem():
     p = Pagina("pg_paradas_montagem", "Paradas Mont.", FILTRO_PM())
+    # Periodo direto em Paradas_Montagem[Data] (sem depender de relacionamento com dCalendario); grupo de sync proprio.
     cabecalho(p, "Paradas da Montagem",
-              [(col("Paradas_Montagem", "Turno"), "Turno", None, False),
+              [(col("Paradas_Montagem", "Data"), "Período", "gms_data_pm", False, 250, "Between"),
+               (col("Paradas_Montagem", "Turno"), "Turno", None, False),
                (col("Paradas_Montagem", "Celula"), "Célula", None, False),
                (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
     kpis(p, [
@@ -580,6 +586,7 @@ def pg_paradas_montagem():
         ("Horas Paradas", med("Horas Decimais Montagem"), None),
         ("Célula Gargalo", med("Célula Gargalo Montagem"), None),
         ("Motivo Mais Frequente", med("Motivo Mais Frequente Montagem"), None),
+        ("Total bruto da lista (min)", med("Minutos Brutos Montagem"), None),
         ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
