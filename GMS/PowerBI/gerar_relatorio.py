@@ -109,6 +109,8 @@ def delta_mtd(medida, coluna_data, relativo=True):
     )
 
 
+PARADA_REAL_DAX = ('CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+                   'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))')
 DATA_FICHA = "'ficha_producao'[DataProducao]"
 DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
@@ -135,19 +137,18 @@ EXT = [
     # Parada real = sem RF (Refeicao) e sem TE (Tempo Excedido), mesmo criterio do FILTRO_PM, mas como medida
     # para a pagina de producao, que nao carrega o filtro de pagina da parada.
     ("Parada Real Montagem (min)", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
-     'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))', "#,0", []),
+     PARADA_REAL_DAX, "#,0", []),
     # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
     # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
     ("Refeição Montagem (min)", "Double",
      'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
      'Paradas_Montagem[Motivo] = "RF - Refeição")', "#,0", []),
-    ("Horas Paradas Real Montagem", "Double", "[Parada Real Montagem (min)] / 60", "#,0.00",
-     [(M, "Parada Real Montagem (min)")]),
+    # Medidas do relatorio nao referenciam outras medidas do relatorio (o servico nao resolve): a conta vai por extenso.
+    ("Horas Paradas Real Montagem", "Double", PARADA_REAL_DAX + " / 60", "#,0.00", []),
     ("Célula Gargalo Parada Real", "Text",
-     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), "@m", [Parada Real Montagem (min)]) '
+     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), "@m", ' + PARADA_REAL_DAX + ') '
      'VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]))', None,
-     [(M, "Parada Real Montagem (min)")]),
+     []),
     ("Motivo Mais Frequente Parada Real", "Text",
      'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), "@n", CALCULATE(COUNTROWS(Paradas_Montagem), '
      'NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))) '
