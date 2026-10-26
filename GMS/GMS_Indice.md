@@ -30,7 +30,7 @@
 
 ## App.Formulas
 
-> **Vigente (26/10/2026): `Telas/Formulas.txt` v3.0.14** (§11: trava de 2 h do Hora-Hora, MEL-248, só aditiva). Antes, v3.0.13 (22/10) — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
+> **Vigente (22/10/2026): `Telas/Formulas.txt` v3.0.13** — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
 
 | Camada | Arquivo |
 |---|---|
@@ -57,7 +57,7 @@
 | Solda de Mandril | `scr_mandril_1` | v0.5.4 | COLAR v0.5.4 KanbanPelaFila | — |
 | Tubo | `scr_tubo_1` | v0.4.0 | COLAR v0.4.1 + PATCH v0.4.1a | — |
 | Trançagem | `scr_Trancagem_3` | v0.5.0 | COLAR v0.5.1 ComboOperador, v0.5.2 FiltroMaquina | — |
-| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | **v0.7.0** (26/10, `Telas/`) — trava de 2 h após o fim da janela, Real só com mangueira, Motivo Não Declarado também no Salvar (MEL-248); fase 2 = fluxo MEL-249 | — | Colar Formulas v3.0.14 e a tela no Studio; revisor pendente |
+| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | v0.5.8 | COLAR v0.5.9 VelocidadeViva | — |
 | AM-DM-02 Controle de Trançagem | `scr_AMDM02_Trancagem_1` | **v0.5.1** (21/10, `Telas/`) — foto do pickômetro em tela cheia com zoom, pan e caneta só na tela; folha por trança (seletor 1ª/2ª no cabeçalho, chave Data|Máquina|Trança), coleta na hora real com prazo +2 h, dia produtivo 05:20–05:20, carta X̄-R pela hora; listas em `Engenharia/Trancagem/AMDM02_schema.md` (MEL-114) | — | Criar a coluna Tranca (número, indexada) na AMDM02_Folha; HoraColeta já feita; colar Formulas v3.0.12 (§17 nova) e a tela no Studio |
 | Hora-Hora Cobertura | `scr_HoraHora_Cobertura_1` (manual) e `scr_HoraHora_CoberturaGMS_1` (derivada) | v0.1.0 | — | — |
 | Cobertura | `scr_Cobertura_2` | v0.3.0 | COLAR v0.4.0 Delineamento | — |

@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.14 · 2026-10-26
+//  GMS · App.Formulas · v3.0.13 · 2026-10-22
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -9,7 +9,7 @@
 // -----------------------------------------------------------------------------
 //  O QUE ESTÁ NESTA VERSÃO, em relação ao export do Studio:
 //   · Nenhuma assinatura existente muda, exceto o que está marcado v3.0.5 (fronteira do
-//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex. v3.0.13 só ACRESCENTA a §18 (Painéis de TV · Célula v0.11.0 e Montagem v0.1.0): fx_FontePainelApoio/Rotulo/Texto/Numero/KPI, fx_CorPainelTexto(OK/Alerta/Erro/Info/Gelo/Rotulo), fx_CorEstadoTextoPainel, fx_CronoLongo, fx_PainelIdadeAlertaMin, fx_PainelLinhasAlerta, fx_HistVoltaMin, fx_HistDiasMax, fx_PeriodoIniEm, fx_PeriodoFimEm, fx_MetaMontagemMin, fx_MontSemOTAlertaMin, fx_RotuloCelulaTV, fx_ParadaRealMontagem. v3.0.14 só ACRESCENTA, na §11, a trava de 2 h do Hora-Hora (MEL-248): fx_PrazoEdicaoHHMin, fx_JanelaTravadaHH, fx_DataRefHH, fx_NDDevido, fx_ParadoProporcional. Nenhuma assinatura existente muda.
+//     3º turno às 22:41, §4 e §11). v3.0.6 só ACRESCENTA fx_PNMandril (§14); v3.0.7 só ACRESCENTA fx_MetrosUn (§16), fx_AutoclaveMax e fx_MangueiraOutra (§10) e fx_MetragemOk (§5); v3.0.8 só ACRESCENTA fx_MargemMetragemPct, fx_MetragemSubiu, fx_DiametroPol, fx_FitaDispensada, fx_FitaOk e fx_CompostoValido (§5); v3.0.9 só ACRESCENTA fx_CorBatelada (§1); v3.0.10 só ACRESCENTA fx_DuasPassagens (§11); v3.0.11 corrige fx_DuasPassagens (agora por máquina + construção, via _15OBSERVACAO). v3.0.12 só ACRESCENTA a §17 (AM-DM-02 · MEL-114): fx_AMDM02_PrazoColeta, fx_AMDM02_XHora, fx_AMDM02_EixoHoras, fx_AMDM02_ChaveFolha (Data + Máquina + Trança) e fx_AMDM02_PorTranca, fx_AMDM02_Pol, fx_AMDM02_Soma, fx_AMDM02_Media, fx_AMDM02_Amp, fx_AMDM02_YMedia, fx_AMDM02_YAmp, fx_AMDM02_Txt, fx_CorHex. v3.0.13 só ACRESCENTA a §18 (Painéis de TV · Célula v0.11.0 e Montagem v0.1.0): fx_FontePainelApoio/Rotulo/Texto/Numero/KPI, fx_CorPainelTexto(OK/Alerta/Erro/Info/Gelo/Rotulo), fx_CorEstadoTextoPainel, fx_CronoLongo, fx_PainelIdadeAlertaMin, fx_PainelLinhasAlerta, fx_HistVoltaMin, fx_HistDiasMax, fx_PeriodoIniEm, fx_PeriodoFimEm, fx_MetaMontagemMin, fx_MontSemOTAlertaMin, fx_RotuloCelulaTV, fx_ParadaRealMontagem. Nenhuma assinatura existente muda.
 // =============================================================================
 //  1. Named Formula (sem parênteses) = constante ou derivação pura.
 //     ⛔ Now(), Today() e Rand() dentro dela congelam no 1º uso da sessão.
@@ -967,39 +967,6 @@ fx_PendenciaMaqHH(ativa: Boolean, vencida: Boolean, mangueira: Text, meta: Numbe
         "",
         fx_PendenciaHH(vencida, mangueira, meta, real, motivo)
     );
-
-// [v3.0.14 · MEL-248] TRAVA DE 2 HORAS DO HORA-HORA. A janela fecha para edição 2 h DEPOIS DO FIM
-// dela (não do início): hora-hora é para preencher na hora, não no fim do turno com achismo.
-// Usa o relógio do aparelho (aceito pelo William em 26/10/2026; trava de servidor só com o fluxo
-// da fase 2). Sem destrave pelo app: correção de janela travada só na lista SharePoint.
-// A hora de fim sai de fx_JanelaHHFim, que já resolve a virada de meia-noite do 3º turno.
-fx_PrazoEdicaoHHMin = 120;
-
-fx_JanelaTravadaHH(dataRef: Date, turno: Number, fim: Number, agora: DateTime): Boolean =
-    agora >= DateAdd(fx_JanelaHHFim(dataRef, turno, fim), fx_PrazoEdicaoHHMin, TimeUnit.Minutes);
-
-// Data de referência do Hora-Hora aberto. Igual à fx_DataRefEm, com UMA exceção: entre 05:20 e
-// 07:20 o 3º turno ainda é o da noite que acabou (as últimas janelas dele estão dentro do prazo
-// de 2 h). Sem isto, às 05:30 a tela abriria o 3º turno da noite SEGUINTE e a janela
-// 05:00 - 05:20 nunca poderia ser preenchida.
-fx_DataRefHH(agora: DateTime, turno: Number): Date =
-    If(
-        turno = 3 &&
-        fx_MinutosDoDia(agora) >= 320 &&
-        fx_MinutosDoDia(agora) < 320 + fx_PrazoEdicaoHHMin,
-        DateAdd(fx_DataRefEm(agora), -1, TimeUnit.Days),
-        fx_DataRefEm(agora)
-    );
-
-// Motivo Não Declarado (MEL-242): janela de máquina ativa, já vencida (ou travada, conforme quem
-// chama), com meta e abaixo dela. Fechar turno passa `vencida`; Salvar passa `travada`, para não
-// queimar o prazo de 2 h do operador que ainda vai informar o motivo.
-fx_NDDevido(ativa: Boolean, vencida: Boolean, meta: Number, real: Number): Boolean =
-    ativa && vencida && meta > 0 && real < meta;
-
-// Tempo parado proporcional ao que faltou, capado na janela.
-fx_ParadoProporcional(minutos: Number, meta: Number, real: Number): Number =
-    If(meta > 0, Min(minutos, Round(minutos * (meta - real) / meta, 0)), 0);
 
 fx_RendimentoHH(meta: Number, real: Number): Number =
     If(meta > 0, Round(real / meta * 100, 1), 0);
