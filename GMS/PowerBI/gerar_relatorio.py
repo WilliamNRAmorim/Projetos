@@ -302,6 +302,8 @@ def slicer(campo, titulo, sync=None, unico=False, modo="Dropdown"):
     }
     if sync:
         v["syncGroup"] = {"groupName": sync, "fieldChanges": True, "filterChanges": True}
+    # sem a opcao "(Em branco)" no filtro (William, 26/10/2026): vale para todo slicer de todas as paginas
+    v["filterConfig"] = {"filters": [filtro_nao_vazio(campo, "f_sem_vazio_seg")]}
     return v
 
 

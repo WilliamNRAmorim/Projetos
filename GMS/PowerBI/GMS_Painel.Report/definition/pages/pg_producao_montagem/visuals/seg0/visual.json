@@ -3,9 +3,9 @@
   "name": "seg0",
   "position": {
     "x": 1095.960591133005,
-    "y": 52.315270935960591,
+    "y": 52.31527093596059,
     "z": 6,
-    "height": 62.068965517241381,
+    "height": 62.06896551724138,
     "width": 168.4729064039409,
     "tabOrder": 6
   },
@@ -251,5 +251,61 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f_sem_vazio_seg",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "Producao_Montagem"
+              }
+            },
+            "Property": "Celula"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "Producao_Montagem",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Celula"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }
