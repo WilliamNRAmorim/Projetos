@@ -138,11 +138,11 @@ EXT = [
     ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
     # Refeicao (Motivo Padrao = Almoco) fica fora de Parado e de Principal Parada, mas a hora do jantar conta em Meta e Real.
     ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))", "#,0", []),
-    # Texto do dia produtivo (rodape do grafico por hora): o dia vai das 22:20 da vespera as 22:20 do proprio dia.
+    # Texto do dia produtivo (rodape do grafico por hora): o dia vai das 05:20 do proprio dia as 05:20 do dia seguinte (24/10/2026).
     ("HH Dia Produtivo", "Text",
      "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) "
-     "RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1 - 1, \"dd/mm\") & \" 22:20 até \" & FORMAT(d1, \"dd/mm\") & \" 22:20\", "
-     "\"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 22:20 da véspera às 22:20\")", None, []),
+     "RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1, \"dd/mm\") & \" 05:20 até \" & FORMAT(d1 + 1, \"dd/mm\") & \" 05:20\", "
+     "\"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 05:20 às 05:20 do dia seguinte\")", None, []),
     ("HH Principal Parada", "Text",
      "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), "
      "\"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) "
