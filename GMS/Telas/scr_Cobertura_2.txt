@@ -920,7 +920,7 @@ Screens:
                       _s: LookUp(colSpecCob, Upper(Trim(PARTNUMBER)) = Upper(Trim(Coalesce(gal_FilaCob.Selected.Mangueira, "")))),
                       _d: fx_DiametroPol(inp_DiametroCob.Text),
                       _q: fx_Num(inp_QtdCob.Text),
-                      _rec: Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 1)
+                      _rec: If(Coalesce(gal_FilaCob.Selected.quantidade_trancagem, 0) > 0, gal_FilaCob.Selected.quantidade_trancagem, 1)
                   },
                   "⚠ " & Concat(
                       Filter(

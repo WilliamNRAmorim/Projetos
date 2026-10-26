@@ -840,9 +840,13 @@ Screens:
             Height: =40
             Size: =fx_FonteApoio
             Text: |-
-              ="⚠ A metragem bandada passa " &
-              Text(Round((fx_Num(inp_QtdBand.Text) / gal_FilaBand.Selected.quantidade_cobertura - 1) * 100, 0), "[$-en-US]0") &
-              "% da recebida da Cobertura (margem aceita: " & fx_MargemMetragemPct & "%). Confira o valor digitado."
+              =If(
+                  Coalesce(gal_FilaBand.Selected.quantidade_cobertura, 0) <= 0,
+                  "",
+                  "⚠ A metragem bandada passa " &
+                  Text(Round(Coalesce(fx_Num(inp_QtdBand.Text), 0) / gal_FilaBand.Selected.quantidade_cobertura * 100 - 100, 0), "[$-en-US]0") &
+                  "% da recebida da Cobertura (margem aceita: " & fx_MargemMetragemPct & "%). Confira o valor digitado."
+              )
             Visible: |-
               =fx_EstadoBand(gal_FilaBand.Selected.status_processo) = "PRODUZINDO" &&
               fx_MetragemSubiu(fx_Num(inp_QtdBand.Text), gal_FilaBand.Selected.quantidade_cobertura)
