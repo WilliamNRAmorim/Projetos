@@ -331,7 +331,19 @@ Screens:
                                   _a.Ativa,
                                   fx_FaixaVencida(_a.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                                   _a.Mangueira, _a.Meta, _a.Real, _a.Motivo
-                              ) = "SEM_APONTAMENTO"
+                              ) = "SEM_APONTAMENTO" &&
+                              !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _a.Fim, ctxAgoraHHT)
+                          )
+                      ),
+                      _l: CountRows(
+                          Filter(
+                              colLinhasHHT As _a0,
+                              fx_PendenciaMaqHH(
+                                  _a0.Ativa,
+                                  fx_FaixaVencida(_a0.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
+                                  _a0.Mangueira, _a0.Meta, _a0.Real, _a0.Motivo
+                              ) = "SEM_APONTAMENTO" &&
+                              fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _a0.Fim, ctxAgoraHHT)
                           )
                       ),
                       _m: CountRows(
@@ -345,8 +357,9 @@ Screens:
                           )
                       )
                   },
-                  If(_f > 0, "⚠ " & Text(_f) & " janela(s) já fechada(s) sem apontamento.   ", "") &
-                  If(_m > 0, "⛔ " & Text(_m) & " janela(s) abaixo da meta sem motivo de parada — se fechar assim, vão como Motivo Não Declarado, com o tempo parado proporcional.", "")
+                  If(_f > 0, "⚠ " & Text(_f) & " janela(s) já fechada(s) sem apontamento (até 2 h após o fim da janela).   ", "") &
+                  If(_l > 0, "🔒 " & Text(_l) & " janela(s) passaram de 2 h sem apontamento e não abrem mais.   ", "") &
+                  If(_m > 0, "⛔ " & Text(_m) & " janela(s) abaixo da meta sem motivo de parada (prazo: 2 h após o fim da janela) — se fechar assim, vão como Motivo Não Declarado, com o tempo parado proporcional.", "")
               )
             Visible: =rct_FaixaAlertaHHT.Visible
             Width: =1330
@@ -533,7 +546,9 @@ Screens:
               =AddColumns(
                   DropColumns(colLinhasHHT, Vencida),
                   Vencida,
-                  fx_FaixaVencida(Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT)
+                  fx_FaixaVencida(Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
+                  Travada,
+                  fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, Fim, ctxAgoraHHT)
               )
             TemplateFill: =Color.Transparent
             TemplateSize: =44
@@ -572,7 +587,7 @@ Screens:
                         fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo),
                         "SEM_MOTIVO",      fx_CorErroSuave,
                         "SEM_APONTAMENTO", fx_CorAlertaSuave,
-                        If(ThisItem.Vencida, fx_CorSuperficie, fx_CorFundo)
+                        If(ThisItem.Travada, fx_CorChip, ThisItem.Vencida, fx_CorSuperficie, fx_CorFundo)
                     )
                   Font: =fx_FonteFamilia
                   HoverFill: =Self.Fill
@@ -593,7 +608,8 @@ Screens:
                   FontWeight: =FontWeight.Semibold
                   PaddingLeft: =10
                   Size: =fx_FonteCorpo
-                  Text: =ThisItem.Rotulo
+                  Text: =If(ThisItem.Travada, "🔒 ", "") & ThisItem.Rotulo
+                  Tooltip: =If(ThisItem.Travada, "Janela fechada para edição (passaram 2 h do fim dela).", "")
                   X: =8
                   Y: =2
             - btn_ReplicarLinhaHHT:
@@ -689,10 +705,11 @@ Screens:
                     )
                   Default: =If(ThisItem.Real = 0 && IsBlank(ThisItem.Mangueira), "", Text(If(ThisItem.DP, ThisItem.Real * 2, ThisItem.Real)))
                   DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada || IsBlank(ThisItem.Mangueira), DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
                   Format: =TextFormat.Number
+                  HintText: =If(IsBlank(ThisItem.Mangueira) && !ThisItem.Travada, "mangueira primeiro", "")
                   Height: =38
                   HoverFill: =fx_CorInfoSuave
                   OnChange: |-
@@ -756,7 +773,7 @@ Screens:
                   BorderColor: =If(ThisItem.TempoParado > ThisItem.Minutos, fx_CorErro, fx_CorBorda)
                   Default: =If(ThisItem.TempoParado = 0, "", Text(ThisItem.TempoParado))
                   DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada, DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
                   Format: =TextFormat.Number
                   Height: =38
@@ -802,7 +819,7 @@ Screens:
                   ChevronHoverFill: =fx_CorRotulo
                   DefaultSelectedItems: =LookUp(colMangMaqHHT As _cm, _cm.Chave = fx_MangCanon(ThisItem.Mangueira))
                   DisplayFields: =["Mangueira"]
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada, DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
                   Height: =38
                   HoverFill: =fx_CorInfoSuave
@@ -829,10 +846,18 @@ Screens:
                                         Meta: 0,
                                         DP: false,
                                         Fora: false,
-                                        Real: _tot
+                                        Real: 0
                                     }
                                 );
-                                UpdateContext({ctxAlteradoHHT: true})
+                                UpdateContext({ctxAlteradoHHT: true});
+                                If(
+                                    _tot > 0,
+                                    Notify(
+                                        "Mangueira removida: os " & Text(_tot) & " m desta janela foram zerados. Escolha a mangueira para lançar metros.",
+                                        NotificationType.Warning,
+                                        6000
+                                    )
+                                )
                             ),
 
                             _m <> ThisItem.Mangueira,
@@ -878,7 +903,7 @@ Screens:
                   ChevronHoverBackground: =fx_CorFundo
                   ChevronHoverFill: =fx_CorRotulo
                   Default: =ThisItem.Motivo
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   Height: =38
@@ -917,7 +942,7 @@ Screens:
                   ChevronHoverBackground: =fx_CorFundo
                   ChevronHoverFill: =fx_CorRotulo
                   Default: =ThisItem.Motivo2
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada, DisplayMode.Disabled, DisplayMode.Edit)
                   Fill: =fx_CorSuperficie
                   Font: =fx_FonteFamilia
                   Height: =38
@@ -952,7 +977,7 @@ Screens:
                   BorderColor: =fx_CorBorda
                   Default: =ThisItem.Comentario
                   DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
+                  DisplayMode: =If(varProcessando || ThisItem.Travada, DisplayMode.Disabled, DisplayMode.Edit)
                   Font: =fx_FonteFamilia
                   Height: =38
                   HintText: ="o que foi feito"
@@ -1096,7 +1121,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =42
             Size: =fx_FonteApoio
-            Text: ="Só Salvar e Fechar turno gravam no sistema. Digitar na tela não grava nada sozinho."
+            Text: ="Só Salvar e Fechar turno gravam no sistema. Digitar na tela não grava nada sozinho. 🔒 A janela fecha para edição 2 h depois do fim dela."
             Visible: |-
               =!IsBlank(ctxCelulaCarregadaHHT) &&
               CountRows(Filter(colLinhasHHT As _v4, _v4.Ativa)) > 0
@@ -1111,7 +1136,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.6.5"
+            Text: ="Versão 0.7.0"
             Width: =140
             X: =1226
             Y: =728
@@ -1134,7 +1159,8 @@ Screens:
                               _f1.Ativa,
                               fx_FaixaVencida(_f1.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                               _f1.Mangueira, _f1.Meta, _f1.Real, _f1.Motivo
-                          ) = "SEM_APONTAMENTO"
+                          ) = "SEM_APONTAMENTO" &&
+                          !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _f1.Fim, ctxAgoraHHT)
                       )
                   ) > 0,
                   DisplayMode.Disabled,
@@ -1155,14 +1181,28 @@ Screens:
                                   _f2.Ativa,
                                   fx_FaixaVencida(_f2.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                                   _f2.Mangueira, _f2.Meta, _f2.Real, _f2.Motivo
-                              ) = "SEM_APONTAMENTO"
+                              ) = "SEM_APONTAMENTO" &&
+                              !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _f2.Fim, ctxAgoraHHT)
                           )
+                      ),
+                      _semM: Filter(
+                          colLinhasHHT As _sm0,
+                          _sm0.Real > 0 && IsBlank(Trim(_sm0.Mangueira)) &&
+                          !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _sm0.Fim, ctxAgoraHHT)
                       )
                   },
                   If(
                       _pend > 0,
                       Notify(
                           "Faltam " & Text(_pend) & " janela(s) fechada(s) sem apontamento: informe a mangueira e os metros, ou o motivo de a máquina não ter produzido.",
+                          NotificationType.Error,
+                          10000
+                      ),
+
+                      !IsEmpty(_semM),
+                      Notify(
+                          "Janela(s) com metros e sem mangueira: " & Concat(_semM, Rotulo, ", ") &
+                          ". Escolha a mangueira em cada uma, ou zere os metros.",
                           NotificationType.Error,
                           10000
                       ),
@@ -1181,9 +1221,12 @@ Screens:
                               ) As _q,
                               With(
                               {
-                                  _dev: _q.Ativa &&
-                                      fx_FaixaVencida(_q.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT) &&
-                                      _q.Meta > 0 && _q.Real < _q.Meta
+                                  _dev: fx_NDDevido(
+                                      _q.Ativa,
+                                      fx_FaixaVencida(_q.Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
+                                      _q.Meta,
+                                      _q.Real
+                                  )
                               },
                               With(
                               {
@@ -1202,7 +1245,7 @@ Screens:
                                   cRealAc:     Sum(Filter(colLinhasHHT As _c4, _c4.Ord <= _q.Ord), Real),
                                   cParado:     If(
                                       (_nd || _nt) && _q.TempoParado <= 0,
-                                      Min(_q.Minutos, Round(_q.Minutos * (_q.Meta - _q.Real) / _q.Meta, 0)),
+                                      fx_ParadoProporcional(_q.Minutos, _q.Meta, _q.Real),
                                       Min(_q.TempoParado, _q.Minutos)
                                   ),
                                   cMotivo:     If(_nd, "Motivo Não Declarado", _q.Motivo),
@@ -1302,7 +1345,7 @@ Screens:
                                       "  " & Text(_t) & " janela(s) com motivo e sem tempo parado receberam o tempo proporcional ao que faltou.",
                                       ""
                                   ) &
-                                  If(_n + _t > 0, "  Dá para trocar o motivo e o tempo depois, tocando em Abrir.", ""),
+                                  If(_n + _t > 0, "  Dá para trocar o motivo e o tempo depois, tocando em Abrir, até 2 h após o fim de cada janela.", ""),
                                   NotificationType.Success,
                                   If(_n + _t > 0, 14000, 6000)
                               )
@@ -1350,113 +1393,168 @@ Screens:
             Height: =fx_AlturaAcao
             HoverFill: =fx_CorFundo
             OnSelect: |-
-              =Set(varProcessando, true);
-              Clear(colFalhasHHT);
+              =With(
+                  {
+                      _semM: Filter(
+                          colLinhasHHT As _sm1,
+                          _sm1.Real > 0 && IsBlank(Trim(_sm1.Mangueira)) &&
+                          !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _sm1.Fim, Now()))
+                  },
+                  If(
+                      !IsEmpty(_semM),
+                      Notify(
+                          "Não gravou: " & Concat(_semM, Rotulo, ", ") &
+                          " tem metros sem mangueira. Escolha a mangueira da janela ou zere os metros.",
+                          NotificationType.Error,
+                          10000
+                      ),
 
-              // ── A · O que vai gravar. Congelado antes de tocar na rede.
-              //        cParado é CAPADO na janela: dado impossível não chega ao BI.
-              ClearCollect(
-                  colGravarHHT,
-                  ForAll(
-                      Filter(
-                          colLinhasHHT As _p,
-                          _p.IDsp > 0 || !IsBlank(_p.Mangueira) || _p.Real > 0 || _p.TempoParado > 0
-                      ) As _q,
-                      {
-                          cIDsp:       _q.IDsp,
-                          cHora:       _q.Hora,
-                          cRotulo:     _q.Rotulo,
-                          cMinutos:    _q.Minutos,
-                          cMangueira:  _q.Mangueira,
-                          cMeta:       _q.Meta,
-                          cReal:       _q.Real,
-                          cMetaAc:     Sum(Filter(colLinhasHHT As _c1, _c1.Ord <= _q.Ord), Meta),
-                          cRealAc:     Sum(Filter(colLinhasHHT As _c2, _c2.Ord <= _q.Ord), Real),
-                          cParado:     Min(_q.TempoParado, _q.Minutos),
-                          cMotivo:     _q.Motivo,
-                          cMotivo2:    _q.Motivo2,
-                          cComentario: _q.Comentario,
-                          cCelula:     _q.RCelula,
-                          cTurno:      _q.RTurno,
-                          cData:       _q.RData
-                      }
-                  )
-              );
+                      Set(varProcessando, true);
+                      Clear(colFalhasHHT);
 
-              // ── B · Uma linha por vez. Base lida por ID AGORA, nunca de coleção velha.
-              //        Se o item foi excluído da lista, a janela é RECRIADA em vez de dar erro.
-              ForAll(
-                  colGravarHHT As _u,
-                  With(
-                      {
-                          _base: With(
-                              { _b0: If(_u.cIDsp > 0, LookUp('Hora-Hora', ID = _u.cIDsp)) },
-                              If(
-                                  !IsBlank(_b0) && _b0.Célula = _u.cCelula && _b0.Turno = _u.cTurno && _b0.Hora = _u.cHora,
-                                  _b0,
-                                  Defaults('Hora-Hora')
-                              )
-                          )
-                      },
-                      IfError(
-                          With(
+                      // ── A · O que vai gravar. Congelado antes de tocar na rede.
+                      //        cParado é CAPADO na janela: dado impossível não chega ao BI.
+                      //        Janela que já passou das 2 h (travada) e ficou abaixo da meta é
+                      //        completada aqui, igual ao Fechar turno (MEL-248). Dentro das 2 h
+                      //        o operador ainda pode informar o motivo: nada é preenchido por ele.
+                      ClearCollect(
+                          colGravarHHT,
+                          ForAll(
+                              Filter(
+                                  colLinhasHHT As _p,
+                                  _p.IDsp > 0 || !IsBlank(_p.Mangueira) || _p.Real > 0 || _p.TempoParado > 0
+                              ) As _q,
+                              With(
                               {
-                                  _res: Patch(
-                                      'Hora-Hora',
-                                      If(IsBlank(_base), Defaults('Hora-Hora'), _base),
-                                      {
-                                          Title: Text(_u.cData, "[$-pt-BR]dd/mm/yyyy") & " - " & _u.cTurno & " - " & _u.cCelula,
-                                          Data: _u.cData,
-                                          Turno: _u.cTurno,
-                                          Célula: _u.cCelula,
-                                          Hora: _u.cHora,
-                                          Minutos: _u.cMinutos,
-                                          Mangueira: _u.cMangueira,
-                                          'Meta Hora': _u.cMeta,
-                                          'Real. Hora': _u.cReal,
-                                          'Meta Acum': _u.cMetaAc,
-                                          'Real. Acum': _u.cRealAc,
-                                          Diferença: _u.cMeta - _u.cReal,
-                                          'Tempo Parado (min)': _u.cParado,
-                                          Motivo: _u.cMotivo,
-                                          'Motivo 2': _u.cMotivo2,
-                                          'Comentário / Ação': _u.cComentario,
-                                          Rendimento: fx_RendimentoHH(_u.cMeta, _u.cReal),
-                                          Status: If(Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
-                                      }
+                                  _dev: fx_NDDevido(
+                                      _q.Ativa,
+                                      fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _q.Fim, Now()),
+                                      _q.Meta,
+                                      _q.Real
                                   )
                               },
-                              UpdateIf(colLinhasHHT, Hora = _u.cHora, { IDsp: _res.ID })
-                          ),
-                          Collect(
-                              colFalhasHHT,
+                              With(
                               {
-                                  fRotulo: _u.cRotulo,
-                                  fMsg: FirstError.Message
+                                  _nd: _dev && IsBlank(Trim(_q.Motivo)),
+                                  _nt: _dev && !IsBlank(Trim(_q.Motivo)) && _q.TempoParado <= 0
+                              },
+                              {
+                                  cIDsp:       _q.IDsp,
+                                  cHora:       _q.Hora,
+                                  cRotulo:     _q.Rotulo,
+                                  cMinutos:    _q.Minutos,
+                                  cMangueira:  _q.Mangueira,
+                                  cMeta:       _q.Meta,
+                                  cReal:       _q.Real,
+                                  cMetaAc:     Sum(Filter(colLinhasHHT As _c1, _c1.Ord <= _q.Ord), Meta),
+                                  cRealAc:     Sum(Filter(colLinhasHHT As _c2, _c2.Ord <= _q.Ord), Real),
+                                  cParado:     If(
+                                      (_nd || _nt) && _q.TempoParado <= 0,
+                                      fx_ParadoProporcional(_q.Minutos, _q.Meta, _q.Real),
+                                      Min(_q.TempoParado, _q.Minutos)
+                                  ),
+                                  cMotivo:     If(_nd, "Motivo Não Declarado", _q.Motivo),
+                                  cMotivo2:    _q.Motivo2,
+                                  cComentario: _q.Comentario,
+                                  cCelula:     _q.RCelula,
+                                  cTurno:      _q.RTurno,
+                                  cData:       _q.RData,
+                                  cND:         _nd,
+                                  cNT:         _nt
                               }
+                              )
+                              )
+                          )
+                      );
+
+                      // ── B · Uma linha por vez. Base lida por ID AGORA, nunca de coleção velha.
+                      //        Se o item foi excluído da lista, a janela é RECRIADA em vez de dar erro.
+                      ForAll(
+                          colGravarHHT As _u,
+                          With(
+                              {
+                                  _base: With(
+                                      { _b0: If(_u.cIDsp > 0, LookUp('Hora-Hora', ID = _u.cIDsp)) },
+                                      If(
+                                          !IsBlank(_b0) && _b0.Célula = _u.cCelula && _b0.Turno = _u.cTurno && _b0.Hora = _u.cHora,
+                                          _b0,
+                                          Defaults('Hora-Hora')
+                                      )
+                                  )
+                              },
+                              IfError(
+                                  With(
+                                      {
+                                          _res: Patch(
+                                              'Hora-Hora',
+                                              If(IsBlank(_base), Defaults('Hora-Hora'), _base),
+                                              {
+                                                  Title: Text(_u.cData, "[$-pt-BR]dd/mm/yyyy") & " - " & _u.cTurno & " - " & _u.cCelula,
+                                                  Data: _u.cData,
+                                                  Turno: _u.cTurno,
+                                                  Célula: _u.cCelula,
+                                                  Hora: _u.cHora,
+                                                  Minutos: _u.cMinutos,
+                                                  Mangueira: _u.cMangueira,
+                                                  'Meta Hora': _u.cMeta,
+                                                  'Real. Hora': _u.cReal,
+                                                  'Meta Acum': _u.cMetaAc,
+                                                  'Real. Acum': _u.cRealAc,
+                                                  Diferença: _u.cMeta - _u.cReal,
+                                                  'Tempo Parado (min)': _u.cParado,
+                                                  Motivo: _u.cMotivo,
+                                                  'Motivo 2': _u.cMotivo2,
+                                                  'Comentário / Ação': _u.cComentario,
+                                                  Rendimento: fx_RendimentoHH(_u.cMeta, _u.cReal),
+                                                  Status: If(Text(_base.Status) = "Finalizado", "Finalizado", "Rascunho")
+                                              }
+                                          )
+                                      },
+                                      UpdateIf(colLinhasHHT, Hora = _u.cHora, { IDsp: _res.ID })
+                                  ),
+                                  Collect(
+                                      colFalhasHHT,
+                                      {
+                                          fRotulo: _u.cRotulo,
+                                          fMsg: FirstError.Message
+                                      }
+                                  )
+                              )
+                          )
+                      );
+
+                      Set(varProcessando, false);
+
+                      // ── C · Resultado. Só o que falhou continua pendente.
+                      If(
+                          IsEmpty(colFalhasHHT),
+                          UpdateContext({ctxAlteradoHHT: false});
+                          ForAll(
+                              Filter(colGravarHHT, cND || cNT) As _gn,
+                              UpdateIf(colLinhasHHT, Hora = _gn.cHora, { Motivo: _gn.cMotivo, TempoParado: _gn.cParado })
+                          );
+                          With(
+                              { _c: CountRows(Filter(colGravarHHT, cND || cNT)) },
+                              Notify(
+                                  "Apontamento salvo. As linhas continuam na tela para conferência." &
+                                  If(
+                                      _c > 0,
+                                      "  " & Text(_c) & " janela(s) com mais de 2 h abaixo da meta foram completadas: Motivo Não Declarado e/ou tempo parado proporcional ao que faltou.",
+                                      ""
+                                  ),
+                                  NotificationType.Success,
+                                  If(_c > 0, 12000, 4000)
+                              )
+                          ),
+                          Notify(
+                              "⚠ " & Text(CountRows(colFalhasHHT)) & " janela(s) não gravaram: " &
+                              Concat(colFalhasHHT, fRotulo, ", ") &
+                              ".  O resto entrou. Toque em Salvar de novo — o que já gravou NÃO duplica.  (" &
+                              First(colFalhasHHT).fMsg & ")",
+                              NotificationType.Error,
+                              20000
                           )
                       )
-                  )
-              );
-
-              Set(varProcessando, false);
-
-              // ── C · Resultado. Só o que falhou continua pendente.
-              If(
-                  IsEmpty(colFalhasHHT),
-                  UpdateContext({ctxAlteradoHHT: false});
-                  Notify(
-                      "Apontamento salvo. As linhas continuam na tela para conferência.",
-                      NotificationType.Success,
-                      4000
-                  ),
-                  Notify(
-                      "⚠ " & Text(CountRows(colFalhasHHT)) & " janela(s) não gravaram: " &
-                      Concat(colFalhasHHT, fRotulo, ", ") &
-                      ".  O resto entrou. Toque em Salvar de novo — o que já gravou NÃO duplica.  (" &
-                      First(colFalhasHHT).fMsg & ")",
-                      NotificationType.Error,
-                      20000
                   )
               )
             PressedFill: =fx_CorFundo
@@ -1656,6 +1754,7 @@ Screens:
                                         colLinhasHHT As _c5,
                                         _c5.Ord > ctxOrdOrigemHHT &&
                                         _c5.Ord <= _ate &&
+                                        !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _c5.Fim, ctxAgoraHHT) &&
                                         (ctxSobrescreverHHT || IsBlank(_c5.Mangueira))
                                     )
                                 )
@@ -1738,6 +1837,7 @@ Screens:
                                 colLinhasHHT,
                                 Ord > ctxOrdOrigemHHT &&
                                 Ord <= _ate &&
+                                !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, Fim, ctxAgoraHHT) &&
                                 (ctxSobrescreverHHT || IsBlank(Mangueira)),
                                 {
                                     Mangueira: _o.Mangueira,
@@ -2050,7 +2150,7 @@ Screens:
                   With(
                       {
                           _t: fx_TurnoNum(_tl),
-                          _d: fx_DataRefEm(_agora)
+                          _d: fx_DataRefHH(_agora, fx_TurnoNum(_tl))
                       },
                       UpdateContext(
                           {
@@ -2402,7 +2502,7 @@ Screens:
               =If(
                   varProcessando ||
                   IsBlank(cmb_MotivoSemProdHHT.Selected.Motivo) ||
-                  IsEmpty(Filter(colLinhasHHT As _j1, _j1.Vencida && IsBlank(Trim(_j1.Motivo)))),
+                  IsEmpty(Filter(colLinhasHHT As _j1, _j1.Vencida && IsBlank(Trim(_j1.Motivo)) && !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _j1.Fim, ctxAgoraHHT))),
                   DisplayMode.Disabled,
                   DisplayMode.Edit
               )
@@ -2418,7 +2518,7 @@ Screens:
               ClearCollect(
                   colGravarSemProdHHT,
                   ForAll(
-                      Filter(colLinhasHHT As _s1, _s1.Vencida) As _s2,
+                      Filter(colLinhasHHT As _s1, _s1.Vencida && !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _s1.Fim, Now())) As _s2,
                       {
                           cIDsp:    _s2.IDsp,
                           cHora:    _s2.Hora,
@@ -2510,7 +2610,7 @@ Screens:
             Size: =fx_FonteCorpo
             Text: |-
               =If(
-                  IsEmpty(Filter(colLinhasHHT As _j2, _j2.Vencida && IsBlank(Trim(_j2.Motivo)))),
+                  IsEmpty(Filter(colLinhasHHT As _j2, _j2.Vencida && IsBlank(Trim(_j2.Motivo)) && !fx_JanelaTravadaHH(ctxDataCarregadaHHT, ctxTurnoCarregadoHHT, _j2.Fim, ctxAgoraHHT))),
                   "Sem produção já registrado",
                   "Registrar turno sem produção"
               )
