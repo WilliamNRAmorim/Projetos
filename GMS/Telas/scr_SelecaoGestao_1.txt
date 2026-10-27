@@ -6,7 +6,11 @@ Screens:
       OnVisible: |-
         =Set(
             varConfAbertasGest,
-            IfError(CountRows(Filter(Conferencia_SAP, Status = "Aberto")), Blank())
+            If(
+                fx_PodeConferencia,
+                IfError(CountRows(Filter(Conferencia_SAP, Status = "Aberto")), Blank()),
+                Blank()
+            )
         )
     Children:
       - rct_HeaderGest:
@@ -60,7 +64,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.3.0"
+            Text: ="Versão 0.4.0"
             Width: =180
             X: =1166
             Y: =21
@@ -344,6 +348,7 @@ Screens:
             RadiusTopLeft: =fx_Raio
             RadiusTopRight: =fx_Raio
             Text: =""
+            Visible: =fx_PodeConferencia
             Width: =560
             X: =103
             Y: =530
@@ -363,6 +368,7 @@ Screens:
             RadiusTopLeft: =fx_Raio
             RadiusTopRight: =fx_Raio
             Text: =""
+            Visible: =fx_PodeConferencia
             Width: =560
             X: =103
             Y: =530
@@ -382,6 +388,7 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Text: =""
+            Visible: =fx_PodeConferencia
             Width: =72
             X: =135
             Y: =566
@@ -391,6 +398,7 @@ Screens:
             Color: =fx_CorAlerta
             Height: =40
             Icon: =Icon.CheckBadge
+            Visible: =fx_PodeConferencia
             Width: =40
             X: =151
             Y: =582
@@ -404,6 +412,7 @@ Screens:
             PaddingLeft: =0
             Size: =fx_FonteDestaque
             Text: ="Conferência GMS × SAP × Packing"
+            Visible: =fx_PodeConferencia
             Width: =400
             X: =231
             Y: =556
@@ -418,6 +427,7 @@ Screens:
             Text: |-
               ="Divergências do dia entre o que a cabine apontou, o que o SAP recebeu (MB51) e o que foi para o Packing List, lance a lance. Registre a tratativa; o que for corrigido a conferência da manhã fecha sozinha."
             VerticalAlign: =VerticalAlign.Top
+            Visible: =fx_PodeConferencia
             Width: =400
             X: =231
             Y: =594
@@ -431,6 +441,7 @@ Screens:
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: ="Abrir conferência  →"
+            Visible: =fx_PodeConferencia
             Width: =400
             X: =231
             Y: =662
@@ -445,9 +456,9 @@ Screens:
             Height: =32
             Size: =fx_FonteCorpo
             Text: =If(IsBlank(varConfAbertasGest), "—", If(varConfAbertasGest = 0, "Em dia", Text(varConfAbertasGest) & If(varConfAbertasGest = 1, " aberta", " abertas")))
-            Visible: =!IsBlank(varConfAbertasGest)
+            Visible: =fx_PodeConferencia && !IsBlank(varConfAbertasGest)
             Width: =140
-            X: =1103
+            X: =503
             Y: =556
       - btn_NavConfGest:
           Control: Classic/Button@2.2.0
@@ -466,6 +477,7 @@ Screens:
             RadiusTopLeft: =fx_Raio
             RadiusTopRight: =fx_Raio
             Text: =""
+            Visible: =fx_PodeConferencia
             Width: =560
             X: =103
             Y: =530

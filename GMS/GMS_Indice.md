@@ -50,7 +50,7 @@
 | Tela / módulo | Nome da tela | YAML no projeto | Patches por cima | Fora do projeto (subir) |
 |---|---|---|---|---|
 | Menu (Seleção de setor) | `scr_selecaosetor_1` | v0.7.1 | — | — |
-| Seleção de Gestão | `scr_SelecaoGestao_1` | **v0.3.0** (27/10, `Telas/`) — cards Painel da Célula, Consulta de OP, Conferência SAP (narrowed) e Painel da Montagem; patch `_patch_SelecaoGestao_v0.3.0_PainelMontagem.md` | — | — |
+| Seleção de Gestão | `scr_SelecaoGestao_1` | **v0.4.0** (27/10, `Telas/`) — cards Painel da Célula, Consulta de OP, Conferência SAP (narrowed) e Painel da Montagem; patch `_patch_SelecaoGestao_v0.3.0_PainelMontagem.md` | — | — |
 | Conferência GMS × SAP × Packing | `scr_ConferenciaSAP` | **v0.1.1** (05/10, `Telas/`) | — | — |
 | Painel da Célula (TV) | `scr_PainelCelula_1` | **v0.11.0** (22/10, `Telas/`) — janela pela grade oficial, PARADA/PAUSA, andon em páginas, falha e idade do dado; **colar por blocos** na ordem de `Telas/_patch_PainelCelula_v0.11.0.md` (layout ajustado à mão: nunca reimport) | `_patch_PainelCelula_v0.11.0.md` | Colar Formulas v3.0.13 antes; v1.0 (`scr_PainelCelula_2`) só desenhada: `Mockups/painel_celula_v1_layout.html` + `Auditoria/27_PainelCelula_v1_desenho.md` |
 | Extrusora de Mandril | `scr_ExtrusoraMandril_2` | — | — | **v0.2.0** + COLAR EstoqueSolda (25/09) |
