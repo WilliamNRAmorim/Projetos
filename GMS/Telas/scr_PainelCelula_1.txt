@@ -1,5 +1,5 @@
-# scr_PainelCelula_1 · Painel da Célula v0.13.0 (FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
-# Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md
+# scr_PainelCelula_1 · Painel da Célula v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
+# Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md · v0.14.0: ver _patch_PainelCelula_v0.14.0_ficha.md
 Screens:
   scr_PainelCelula_1:
     Properties:
@@ -1525,6 +1525,19 @@ Screens:
               // a logica mora num lugar so.
               Set(varDetSincPnl, varSincPnl);
               Set(varDetIDPnl, Blank());
+              // v0.14.0: etapa tocada = chave de colProdEtapaTurnoPnl (bloco PRODUCAO DO PROCESSO da ficha).
+              // TRANC/TUBO/EXTR/BOB tem nome proprio; ACAB, VULC, MAND e TRANCP trazem a etapa na Chave.
+              Set(
+                  varDetEtapaPnl,
+                  Switch(
+                      varDetReqPnl.Tipo,
+                      "TRANC", "Trançagem",
+                      "TUBO",  "Tubo",
+                      "EXTR",  "Extração",
+                      "BOB",   "Bobinadeira",
+                      varDetReqPnl.Chave
+                  )
+              );
               Clear(colDetListaPnl);
               With(
                   { _q: varDetReqPnl },
@@ -1764,6 +1777,103 @@ Screens:
                               Estado: fx_EstadoPosto(varExtrAtivoPnl, varFilaExtrPnl),
                               Cor: fx_CorEstadoPosto(fx_EstadoPosto(varExtrAtivoPnl, varFilaExtrPnl)),
                               Lado: "NAS CABINES E NA FILA",
+                              Maquina: "",
+                              Motivo: "",
+                              ParadoMin: 0,
+                              PausaMin: 0,
+                              HHReal: 0,
+                              HHMeta: 0
+                          }
+                      ),
+                      // v0.14.0 · MODO PROCESSO (sem OP tocada): Solda de Mandril, cabecalho da Trancagem e Bobinagem.
+                      // A ficha abre com o bloco de producao por turno e, quando ha, as OPs em curso do processo.
+                      _q.Tipo = "MAND",
+                      Collect(
+                          colDetListaPnl,
+                          ForAll(
+                              Filter(colAtivasPnl As _m2, _m2.processo = "Mandril") As _m3,
+                              {
+                                  ID: _m3.ID,
+                                  Tag: Switch(
+                                      Text(_m3.maquina_mandril),
+                                      "TERMOFUSAO", "Quente",
+                                      "VIBRACIONAL", "Vibracional",
+                                      "Posto não informado"
+                                  ) & " · soldando",
+                                  Ord: 0
+                              }
+                          )
+                      );
+                      Set(
+                          varDetPnl,
+                          {
+                              Titulo: "Solda de Mandril",
+                              Sub: Text(CountRows(Filter(colPostosMandPnl As _m4, _m4.Produzindo)), "[$-en-US]0") & " de " &
+                              Text(CountRows(colPostosMandPnl), "[$-en-US]0") & " soldando",
+                              Estado: fx_EstadoPosto(varMandAtivoPnl, 0),
+                              Cor: fx_CorEstadoPosto(fx_EstadoPosto(varMandAtivoPnl, 0)),
+                              Lado: "SOLDANDO AGORA",
+                              Maquina: "",
+                              Motivo: "",
+                              ParadoMin: 0,
+                              PausaMin: 0,
+                              HHReal: 0,
+                              HHMeta: 0
+                          }
+                      ),
+                      _q.Tipo = "TRANCP",
+                      Collect(
+                          colDetListaPnl,
+                          ForAll(
+                              Filter(colPostosTrancPnl As _t5, _t5.Produzindo) As _t6,
+                              {
+                                  ID: _t6.IDAtiva,
+                                  Tag: _t6.Rotulo & If(
+                                      _t6.Estado = "PARADA", " · parada com OP",
+                                      _t6.Estado = "PAUSA",  " · em pausa",
+                                      " · trançando"
+                                  ),
+                                  Ord: 0
+                              }
+                          )
+                      );
+                      With(
+                          {
+                              _nP: CountRows(Filter(colPostosTrancPnl As _t7, _t7.Estado = "PRODUZINDO")),
+                              _nX: CountRows(Filter(colPostosTrancPnl As _t8, _t8.Estado = "PARADA"))
+                          },
+                          With(
+                              { _eT: If(_nP > 0, "PRODUZINDO", _nX > 0, "PARADA", "LIVRE") },
+                              Set(
+                                  varDetPnl,
+                                  {
+                                      Titulo: "Trançagem",
+                                      Sub: Text(_nP, "[$-en-US]0") & " de " & Text(CountRows(colPostosTrancPnl), "[$-en-US]0") & " trançando" &
+                                      If(_nX > 0, "  ·  " & Text(_nX, "[$-en-US]0") & " parada(s)", ""),
+                                      Estado: _eT,
+                                      Cor: fx_CorEstadoPosto(_eT),
+                                      Lado: "TRANÇANDO AGORA",
+                                      Maquina: "",
+                                      Motivo: "",
+                                      ParadoMin: 0,
+                                      PausaMin: 0,
+                                      HHReal: 0,
+                                      HHMeta: 0
+                                  }
+                              )
+                          )
+                      ),
+                      _q.Tipo = "BOB",
+                      // Bobinagem nao tem OP na ficha_producao nem evento de producao: so o estado da fifo.
+                      Set(
+                          varDetPnl,
+                          {
+                              Titulo: "Bobinagem",
+                              Sub: If(varBobSemFontePnl, "Fifo sem resposta · última leitura", varBobFioPnl) &
+                              If(IsBlank(varBobInicioPnl), "", "  ·  bobinando há " & fx_CronoLongo(varBobInicioPnl, ctxAgoraPnl)),
+                              Estado: If(varBobSemFontePnl, "SEM DADO DA FIFO", varBobBadgePnl),
+                              Cor: If(varBobSemFontePnl, fx_CorTextoSuave, fx_CorEstadoPosto(varBobStatusPnl)),
+                              Lado: "BOBINAGEM",
                               Maquina: "",
                               Motivo: "",
                               ParadoMin: 0,
@@ -6552,10 +6662,79 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.13.0"
+            Text: ="Versão 0.14.0"
             Width: =98
             X: =1244
             Y: =743
+      - btn_FichaMandPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =140
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Set(varDetReqPnl, {Tipo: "MAND", Chave: "Mandril", N: 0});
+              Select(btn_DetAbrirPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =370
+            X: =16
+            Y: =72
+      - btn_FichaTrancPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =36
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Set(varDetReqPnl, {Tipo: "TRANCP", Chave: "Trançagem", N: 0});
+              Select(btn_DetAbrirPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =306
+            X: =394
+            Y: =72
+      - btn_FichaBobPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =222
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =Set(varDetReqPnl, {Tipo: "BOB", Chave: "Bobinadeira", N: 0});
+              Select(btn_DetAbrirPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_Raio
+            RadiusBottomRight: =fx_Raio
+            RadiusTopLeft: =fx_Raio
+            RadiusTopRight: =fx_Raio
+            Text: =""
+            Width: =181
+            X: =16
+            Y: =502
       - btn_DetScrimPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -7314,3 +7493,129 @@ Screens:
             Width: =472
             X: =761
             Y: =676
+      - lbl_DetProdRotPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =16
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="PRODUÇÃO DO PROCESSO · " & Text(If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), "dd/mm") & " · m" &
+              If(ctxModoPnl <> "VIVO" && ctxHistFalhaPnl, " · sem histórico", "")
+            Visible: =varDetAbertoPnl
+            Width: =340
+            X: =597
+            Y: =78
+      - lbl_DetProdT1Pnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+            Height: =20
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = varDetEtapaPnl).T1 },
+                  "1º " & If(
+                      (ctxModoPnl = "VIVO" && 1 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                      "—",
+                      Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+                  )
+              )
+            Visible: =varDetAbertoPnl && varDetEtapaPnl <> "Bobinadeira"
+            Width: =78
+            X: =597
+            Y: =96
+      - lbl_DetProdT2Pnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+            Height: =20
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = varDetEtapaPnl).T2 },
+                  "2º " & If(
+                      (ctxModoPnl = "VIVO" && 2 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                      "—",
+                      Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+                  )
+              )
+            Visible: =varDetAbertoPnl && varDetEtapaPnl <> "Bobinadeira"
+            Width: =78
+            X: =675
+            Y: =96
+      - lbl_DetProdT3Pnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+            Height: =20
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = varDetEtapaPnl).T3 },
+                  "3º " & If(
+                      (ctxModoPnl = "VIVO" && 3 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                      "—",
+                      Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+                  )
+              )
+            Visible: =varDetAbertoPnl && varDetEtapaPnl <> "Bobinadeira"
+            Width: =78
+            X: =753
+            Y: =96
+      - lbl_DetProdDiaPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorPainelTexto
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =20
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: |-
+              =With(
+                  { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = varDetEtapaPnl).Dia },
+                  "DIA " & If(IsBlank(_v), "—", Substitute(Text(_v, "[$-en-US]#,##0"), ",", "."))
+              )
+            Visible: =varDetAbertoPnl && varDetEtapaPnl <> "Bobinadeira"
+            Width: =106
+            X: =831
+            Y: =96
+      - lbl_DetProdSemPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =fx_CorRotulo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Semibold
+            Height: =20
+            OnSelect: =Set(varDetToquePnl, Now())
+            PaddingLeft: =0
+            Size: =fx_FonteCorpo
+            Text: ="Sem registro de produção da Bobinagem"
+            Visible: =varDetAbertoPnl && varDetEtapaPnl = "Bobinadeira"
+            Width: =340
+            X: =597
+            Y: =96
