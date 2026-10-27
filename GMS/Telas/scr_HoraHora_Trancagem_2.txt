@@ -573,7 +573,9 @@ Screens:
                   Vencida,
                   fx_FaixaVencida(Fim, ctxTurnoCarregadoHHT, ctxAgoraHHT),
                   Travada,
-                  fx_JanelaTravada(RData, ctxTurnoCarregadoHHT, Fim, ctxAgoraHHT)
+                  fx_JanelaTravada(RData, ctxTurnoCarregadoHHT, Fim, ctxAgoraHHT),
+                  Iniciada,
+                  fx_FaixaVencida(Fim - Minutos, ctxTurnoCarregadoHHT, ctxAgoraHHT)
               )
             TemplateFill: =Color.Transparent
             TemplateSize: =44
@@ -810,10 +812,10 @@ Screens:
                 Properties:
                   AccessibleLabel: ="Minutos de máquina parada nesta janela"
                   BorderColor: =If(ThisItem.TempoParado > ThisItem.Minutos, fx_CorErro, fx_CorBorda)
-                  Default: =If(ThisItem.TempoParado = 0, "", Text(ThisItem.TempoParado))
+                  Default: =With({ _p: fx_ParadaEfetivaHH(ThisItem.Minutos, ThisItem.Meta, ThisItem.Real, ThisItem.TempoParado, ThisItem.Motivo, !IsBlank(Trim(ThisItem.Mangueira)) && ThisItem.Iniciada, ThisItem.Travada) }, If(_p = 0, "", Text(_p)))
                   DelayOutput: =true
-                  DisplayMode: =If(varProcessando, DisplayMode.Disabled, ThisItem.Travada, DisplayMode.View, DisplayMode.Edit)
-                  Fill: =If(ThisItem.Travada, fx_CorFundo, fx_CorSuperficie)
+                  DisplayMode: =DisplayMode.View
+                  Fill: =fx_CorFundo
                   Font: =fx_FonteFamilia
                   Format: =TextFormat.Number
                   Height: =38
@@ -927,7 +929,8 @@ Screens:
                   AllowEmptySelection: =true
                   BorderColor: |-
                     =If(
-                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_MOTIVO",
+                        fx_PendenciaMaqHH(ThisItem.Ativa, ThisItem.Vencida, ThisItem.Mangueira, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo) = "SEM_MOTIVO" ||
+                        fx_MotivoObrigatorioHH(!IsBlank(Trim(ThisItem.Mangueira)) && ThisItem.Iniciada, ThisItem.Meta, ThisItem.Real, ThisItem.Motivo),
                         fx_CorErro,
                         fx_CorBorda
                     )
@@ -1160,7 +1163,14 @@ Screens:
                   {
                       _meta: Sum(colLinhasHHT, Meta * If(DP, 2, 1)),
                       _real: Sum(colLinhasHHT, Real * If(DP, 2, 1)),
-                      _par: Sum(colLinhasHHT, TempoParado)
+                      _par: Sum(
+                          colLinhasHHT,
+                          fx_ParadaEfetivaHH(
+                              Minutos, Meta, Real, TempoParado, Motivo,
+                              !IsBlank(Trim(Mangueira)) && fx_FaixaVencida(Fim - Minutos, ctxTurnoCarregadoHHT, ctxAgoraHHT),
+                              fx_JanelaTravada(RData, ctxTurnoCarregadoHHT, Fim, ctxAgoraHHT)
+                          )
+                      )
                   },
                   "Meta " & Text(_meta, "[$-pt-BR]#.##0") & " m      Real " & Text(_real, "[$-pt-BR]#.##0") &
                   " m      Aderência " & Text(fx_RendimentoHH(_meta, _real), "[$-pt-BR]#0.0") & "%      Parado " &
@@ -1246,7 +1256,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.7.1"
+            Text: ="Versão 0.7.2"
             Width: =140
             X: =1226
             Y: =728
@@ -1366,10 +1376,10 @@ Screens:
                                           cReal:       _q.Real,
                                           cMetaAc:     Sum(Filter(colLinhasHHT As _c3, _c3.Ord <= _q.Ord), Meta),
                                           cRealAc:     Sum(Filter(colLinhasHHT As _c4, _c4.Ord <= _q.Ord), Real),
-                                          cParado:     If(
-                                              _ac <> "" && _q.TempoParado <= 0,
-                                              fx_ParadaPropHH(_q.Minutos, _q.Meta, _q.Real),
-                                              Min(_q.TempoParado, _q.Minutos)
+                                          cParado:     fx_ParadaEfetivaHH(
+                                              _q.Minutos, _q.Meta, _q.Real, _q.TempoParado, _q.Motivo,
+                                              !IsBlank(Trim(_q.Mangueira)) && fx_FaixaVencida(_q.Fim - _q.Minutos, ctxTurnoCarregadoHHT, _agora),
+                                              fx_JanelaTravada(_q.RData, ctxTurnoCarregadoHHT, _q.Fim, _agora)
                                           ),
                                           cMotivo:     If(_ac = "ND", "Motivo Não Declarado", _q.Motivo),
                                           cMotivo2:    _q.Motivo2,
@@ -1589,10 +1599,10 @@ Screens:
                                           cReal:       _q.Real,
                                           cMetaAc:     Sum(Filter(colLinhasHHT As _c1, _c1.Ord <= _q.Ord), Meta),
                                           cRealAc:     Sum(Filter(colLinhasHHT As _c2, _c2.Ord <= _q.Ord), Real),
-                                          cParado:     If(
-                                              _ac <> "" && _q.TempoParado <= 0,
-                                              fx_ParadaPropHH(_q.Minutos, _q.Meta, _q.Real),
-                                              Min(_q.TempoParado, _q.Minutos)
+                                          cParado:     fx_ParadaEfetivaHH(
+                                              _q.Minutos, _q.Meta, _q.Real, _q.TempoParado, _q.Motivo,
+                                              !IsBlank(Trim(_q.Mangueira)) && fx_FaixaVencida(_q.Fim - _q.Minutos, ctxTurnoCarregadoHHT, _agora),
+                                              fx_JanelaTravada(_q.RData, ctxTurnoCarregadoHHT, _q.Fim, _agora)
                                           ),
                                           cMotivo:     If(_ac = "ND", "Motivo Não Declarado", _q.Motivo),
                                           cMotivo2:    _q.Motivo2,
