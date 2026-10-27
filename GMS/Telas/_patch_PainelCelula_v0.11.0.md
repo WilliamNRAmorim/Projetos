@@ -2212,7 +2212,7 @@ Tudo está dentro do `btn_RecarregarPnl.OnSelect` do item 1; nenhuma outra propr
 - Card da Extração: "SAÍDA DA CÉLULA NO DIA" → "SAÍDA DO nº TURNO" (turno corrente, mesmo label de 28 pt) com os metros do turno corrente. O "TOTAL DO DIA" do cabeçalho continua o total.
 - Legenda: "PARADA COM FILA" → "COM FILA"; 2 controles novos (bolinha vermelha + "PARADA"), YAML abaixo. **PAUSA ficou sem item na legenda**: o espaço livre da legenda existente só comporta um par. A PAUSA se identifica pelo cinza + texto "Pausa programada" na ficha; se o William quiser PAUSA na legenda, precisa de mais 2 controles e de mover um existente (decisão dele).
 - Tamanhos escritos à mão trocados por token (sem mudar para fonte de parede, A4 fica fora): 10 → `fx_FonteApoio`, 12 → `fx_FonteCorpo`, 11 → `fx_FonteApoio`; `lbl_TuboNomePnl` ganhou `Size: fx_FonteDestaque` (irmãos estão em 16).
-- Timers com `Visible: false`.
+- Timers: NÃO ficam com `Visible: false` (revertido em 27/10: a TV parou de carregar; lição 6.2/MEL-139 não confirmou timer invisível). Voltam ao padrão da v0.10.3 (visível, 1×1 px, X 1360).
 - Cronômetros dos cards e da ficha: `fx_Crono` → `fx_CronoLongo` ("3 d 04 h" em vez de travar em "+24 h").
 - Ficha: toda label e as 2 galerias de fatos/rota passaram a reiniciar a contagem de fechamento ao toque (`Set(varDetToquePnl, Now())`), não só o fundo.
 - `Coalesce(x, 0)` na ficha (condições "vazio ou zero") trocado por `IsBlank(x) || x = 0`.
@@ -2259,16 +2259,16 @@ Inserir depois de `lbl_LegFilaPnl`, sem mover nenhum controle existente. Cabem n
 
 ### Propriedades
 
-**`tmr_DadosPnl` · Visible**
+**`tmr_DadosPnl` · Visible** (REVERTIDO: deixar `true`, como na v0.10.3)
 
 ```
-false
+true
 ```
 
-**`tmr_RelogioPnl` · Visible**
+**`tmr_RelogioPnl` · Visible** (REVERTIDO: deixar `true`, como na v0.10.3)
 
 ```
-false
+true
 ```
 
 **`lbl_T1RotPnl` · Color**
