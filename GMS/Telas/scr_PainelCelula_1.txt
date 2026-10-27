@@ -1417,7 +1417,7 @@ Screens:
               =With(
                   { _src: If(ctxModoPnl = "VIVO", colEvDiaPnl, colEvHistPnl) },
                   // UMA agregacao para os dois modos: colEvDiaPnl (AO VIVO) ou colEvHistPnl (dia escolhido), mesmo esquema de colunas.
-                  // Soma de `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+                  // Soma de `metros` dos eventos Fim e Parcial; na VULCANIZACAO, dos eventos Inicio (o que entrou na autoclave: o Fim so sai depois da cura). Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
                   ClearCollect(
                       colProdEtapaTurnoPnl,
                       ForAll(
@@ -1426,7 +1426,7 @@ Screens:
                               {
                                   _ev: Filter(
                                       _src As _pv,
-                                      _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                                      _pv.EtapaTxt = _pe.Etapa && If(_pe.Etapa = "Vulcanização", _pv.TipoTxt = "Início", _pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
                                   )
                               },
                               {
@@ -6670,7 +6670,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.14.1"
+            Text: ="Versão 0.14.2"
             Width: =98
             X: =1244
             Y: =743
