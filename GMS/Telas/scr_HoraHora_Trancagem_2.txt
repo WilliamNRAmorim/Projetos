@@ -812,7 +812,17 @@ Screens:
                 Properties:
                   AccessibleLabel: ="Minutos de máquina parada nesta janela"
                   BorderColor: =If(ThisItem.TempoParado > ThisItem.Minutos, fx_CorErro, fx_CorBorda)
-                  Default: =With({ _p: fx_ParadaEfetivaHH(ThisItem.Minutos, ThisItem.Meta, ThisItem.Real, ThisItem.TempoParado, ThisItem.Motivo, !IsBlank(Trim(ThisItem.Mangueira)) && ThisItem.Iniciada, ThisItem.Travada) }, If(_p = 0, "", Text(_p)))
+                  Default: |-
+                    =With(
+                        {
+                            _p: fx_ParadaEfetivaHH(
+                                ThisItem.Minutos, ThisItem.Meta, ThisItem.Real, ThisItem.TempoParado, ThisItem.Motivo,
+                                !IsBlank(Trim(ThisItem.Mangueira)) && ThisItem.Iniciada,
+                                ThisItem.Travada
+                            )
+                        },
+                        If(_p = 0, "", Text(_p))
+                    )
                   DelayOutput: =true
                   DisplayMode: =DisplayMode.View
                   Fill: =fx_CorFundo
