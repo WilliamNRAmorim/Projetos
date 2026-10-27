@@ -705,7 +705,7 @@ Screens:
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
                   Size: =fx_FonteCorpo
-                  Text: =If(ThisItem.Meta > 0, Text(ThisItem.Meta, "[$-pt-BR]#.##0"), "—")
+                  Text: =If(ThisItem.Meta > 0, Text(ThisItem.Meta * If(ThisItem.DP, 2, 1), "[$-pt-BR]#.##0"), "—")
                   Width: =64
                   X: =412
                   Y: =2
@@ -718,7 +718,7 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =Text(
-                        Sum(Filter(colLinhasHHT As _ma, _ma.Ord <= ThisItem.Ord), Meta),
+                        Sum(Filter(colLinhasHHT As _ma, _ma.Ord <= ThisItem.Ord), Meta * If(DP, 2, 1)),
                         "[$-pt-BR]#.##0"
                     )
                   Width: =76
@@ -782,7 +782,7 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =Text(
-                        Sum(Filter(colLinhasHHT As _ra, _ra.Ord <= ThisItem.Ord), Real),
+                        Sum(Filter(colLinhasHHT As _ra, _ra.Ord <= ThisItem.Ord), Real * If(DP, 2, 1)),
                         "[$-pt-BR]#.##0"
                     )
                   Width: =76
@@ -800,7 +800,7 @@ Screens:
                     =If(
                         ThisItem.Meta <= 0 && ThisItem.Real <= 0,
                         "—",
-                        Text(ThisItem.Meta - ThisItem.Real, "[$-pt-BR]#.##0")
+                        Text((ThisItem.Meta - ThisItem.Real) * If(ThisItem.DP, 2, 1), "[$-pt-BR]#.##0")
                     )
                   Width: =64
                   X: =720
@@ -1158,8 +1158,8 @@ Screens:
             Text: |-
               =With(
                   {
-                      _meta: Sum(colLinhasHHT, Meta),
-                      _real: Sum(colLinhasHHT, Real),
+                      _meta: Sum(colLinhasHHT, Meta * If(DP, 2, 1)),
+                      _real: Sum(colLinhasHHT, Real * If(DP, 2, 1)),
                       _par: Sum(colLinhasHHT, TempoParado)
                   },
                   "Meta " & Text(_meta, "[$-pt-BR]#.##0") & " m      Real " & Text(_real, "[$-pt-BR]#.##0") &
@@ -1246,7 +1246,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =24
             Size: =fx_FonteApoio
-            Text: ="Versão 0.7.0"
+            Text: ="Versão 0.7.1"
             Width: =140
             X: =1226
             Y: =728
