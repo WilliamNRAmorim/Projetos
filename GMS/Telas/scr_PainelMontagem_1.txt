@@ -1575,14 +1575,14 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(ctxFalhaMon, fx_CorPainelTextoErro, fx_CorPainelTextoAlerta)
+            Color: =If(ctxFalhaMon, fx_CorPainelTextoErro, ctxTruncMon, fx_CorPainelTextoAlerta, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
-              =If(ctxFalhaMon, "⚠ Sem conexão com o servidor — dados das " & Text(ctxUltOkMon, "hh:mm") & " · tentando de novo a cada 2 min", ctxTruncMon, "⚠ Lista no limite do conector: números podem estar cortados", "")
+              =If(ctxFalhaMon, "⚠ Sem conexão com o servidor — dados das " & Text(ctxUltOkMon, "hh:mm") & " · tentando de novo a cada 2 min", ctxTruncMon, "⚠ Lista no limite do conector: números podem estar cortados", "Carregado: " & Text(CountRows(colProdMon), "[$-en-US]0") & " OTs · " & Text(CountRows(colParMon), "[$-en-US]0") & " paradas · fechadas no período: " & Text(Sum(colEstMon, Fechadas), "[$-en-US]0") & " · modo " & ctxModoMon & " · dia " & Text(ctxDiaMon, "dd/mm"))
             Width: =960
             X: =16
             Y: =752
@@ -1597,7 +1597,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.1.0"
+            Text: ="Versão 0.1.1"
             Width: =106
             X: =1244
             Y: =752
