@@ -72,7 +72,7 @@
 | Volume Diário | `scr_VolumeDiario_2` | v1.0.0 | PATCH v1.0.1 SaidaDaCelula | — |
 | Ficha Técnica | `scr_FichaTecnica_1` | v1.2.1 | COLAR Menu_FichaTecnica | — |
 | Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.0 | COLAR v0.5.0 ColunasCarimbadas | — |
-| Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.1.0** (22/10, `Telas/`) — AO VIVO + histórico, galeria 4×3; mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
+| Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.2.0** (27/10, `Telas/`) — v0.1.0 (22/10) AO VIVO + histórico, galeria 4×3, + diagnóstico no rodapé (v0.1.1) + ficha de consulta ao tocar no card (`_patch_PainelMontagem_v0.2.0_ficha.md`); mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
 | Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
 
 Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?** A resposta fecha a coluna "Nome da tela".
