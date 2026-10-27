@@ -1,4 +1,4 @@
-# scr_PainelCelula_1 · Painel da Célula v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
+# scr_PainelCelula_1 · Painel da Célula v0.14.1 (AJUSTE DE TELA 27/10: Wrap false nos rótulos estreitos, título do Tubo e chips de bitola em fonte menor, horas das bateladas em 2 linhas) · v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
 # Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md · v0.14.0: ver _patch_PainelCelula_v0.14.0_ficha.md
 Screens:
   scr_PainelCelula_1:
@@ -2319,6 +2319,7 @@ Screens:
             Width: =102
             X: =1242
             Y: =7
+            Wrap: =false
       - lbl_TotalPnl:
           Control: Label@2.5.1
           Properties:
@@ -2912,7 +2913,7 @@ Screens:
                   RadiusBottomRight: =100
                   RadiusTopLeft: =100
                   RadiusTopRight: =100
-                  Size: =fx_FonteCorpo
+                  Size: =fx_FonteApoio
                   Text: ="−" & Text(ThisItem.Bitola, "[$-en-US]0")
                   Width: =38
                   Y: =7
@@ -3383,7 +3384,7 @@ Screens:
             Height: =24
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
-            Size: =fx_FonteDestaque
+            Size: =fx_FonteCorpo
             Text: ="Extrusão de Tubo"
             Width: =160
             X: =219
@@ -3423,6 +3424,7 @@ Screens:
             Width: =53
             X: =219
             Y: =556
+            Wrap: =false
       - lbl_ProdT2TuboPnl:
           Control: Label@2.5.1
           Properties:
@@ -3443,6 +3445,7 @@ Screens:
             Width: =53
             X: =272
             Y: =556
+            Wrap: =false
       - lbl_ProdT3TuboPnl:
           Control: Label@2.5.1
           Properties:
@@ -3463,6 +3466,7 @@ Screens:
             Width: =54
             X: =325
             Y: =556
+            Wrap: =false
       - lbl_TuboFilaRotPnl:
           Control: Label@2.5.1
           Properties:
@@ -4975,6 +4979,7 @@ Screens:
                   Width: =58
                   X: =272
                   Y: =56
+                  Wrap: =false
             - lbl_ProdT2AcPnl:
                 Control: Label@2.5.1
                 Properties:
@@ -4995,6 +5000,7 @@ Screens:
                   Width: =58
                   X: =272
                   Y: =72
+                  Wrap: =false
             - lbl_ProdT3AcPnl:
                 Control: Label@2.5.1
                 Properties:
@@ -5015,6 +5021,7 @@ Screens:
                   Width: =58
                   X: =272
                   Y: =88
+                  Wrap: =false
       - btn_CardBatPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -5243,7 +5250,7 @@ Screens:
             Height: =30
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =LookUp(colBatVulcPnl, Ord = 1).Hora
+            Text: =Left(LookUp(colBatVulcPnl, Ord = 1).Hora, 2) & "h" & Char(10) & Right(LookUp(colBatVulcPnl, Ord = 1).Hora, 2)
             Width: =46
             X: =1060
             Y: =522
@@ -5423,7 +5430,7 @@ Screens:
             Height: =30
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =LookUp(colBatVulcPnl, Ord = 2).Hora
+            Text: =Left(LookUp(colBatVulcPnl, Ord = 2).Hora, 2) & "h" & Char(10) & Right(LookUp(colBatVulcPnl, Ord = 2).Hora, 2)
             Width: =46
             X: =1096
             Y: =522
@@ -5603,7 +5610,7 @@ Screens:
             Height: =30
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =LookUp(colBatVulcPnl, Ord = 3).Hora
+            Text: =Left(LookUp(colBatVulcPnl, Ord = 3).Hora, 2) & "h" & Char(10) & Right(LookUp(colBatVulcPnl, Ord = 3).Hora, 2)
             Width: =46
             X: =1132
             Y: =522
@@ -5783,7 +5790,7 @@ Screens:
             Height: =30
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =LookUp(colBatVulcPnl, Ord = 4).Hora
+            Text: =Left(LookUp(colBatVulcPnl, Ord = 4).Hora, 2) & "h" & Char(10) & Right(LookUp(colBatVulcPnl, Ord = 4).Hora, 2)
             Width: =46
             X: =1168
             Y: =522
@@ -5963,7 +5970,7 @@ Screens:
             Height: =30
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: =LookUp(colBatVulcPnl, Ord = 5).Hora
+            Text: =Left(LookUp(colBatVulcPnl, Ord = 5).Hora, 2) & "h" & Char(10) & Right(LookUp(colBatVulcPnl, Ord = 5).Hora, 2)
             Width: =46
             X: =1204
             Y: =522
@@ -6554,6 +6561,7 @@ Screens:
             Width: =62
             X: =280
             Y: =736
+            Wrap: =false
       - btn_LegGeloPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -6662,10 +6670,11 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.14.0"
+            Text: ="Versão 0.14.1"
             Width: =98
             X: =1244
             Y: =743
+            Wrap: =false
       - btn_FichaMandPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -7535,6 +7544,7 @@ Screens:
             Width: =78
             X: =597
             Y: =96
+            Wrap: =false
       - lbl_DetProdT2Pnl:
           Control: Label@2.5.1
           Properties:
@@ -7559,6 +7569,7 @@ Screens:
             Width: =78
             X: =675
             Y: =96
+            Wrap: =false
       - lbl_DetProdT3Pnl:
           Control: Label@2.5.1
           Properties:
@@ -7583,6 +7594,7 @@ Screens:
             Width: =78
             X: =753
             Y: =96
+            Wrap: =false
       - lbl_DetProdDiaPnl:
           Control: Label@2.5.1
           Properties:
@@ -7603,6 +7615,7 @@ Screens:
             Width: =106
             X: =831
             Y: =96
+            Wrap: =false
       - lbl_DetProdSemPnl:
           Control: Label@2.5.1
           Properties:
