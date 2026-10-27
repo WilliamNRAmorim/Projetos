@@ -2272,10 +2272,10 @@ Screens:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =fx_CorPainelBorda
-            BorderThickness: =If(First(Skip(colPostosMandPnl, 1)).Estado = "LIVRE", 1, 0)
-            Color: =If(First(Skip(colPostosMandPnl, 1)).Estado = "LIVRE", fx_CorRotulo, fx_CorTexto)
+            BorderThickness: =If(LookUp(colPostosMandPnl, Ord = 2).Estado = "LIVRE", 1, 0)
+            Color: =If(LookUp(colPostosMandPnl, Ord = 2).Estado = "LIVRE", fx_CorRotulo, fx_CorTexto)
             DisplayMode: =DisplayMode.View
-            Fill: =If(First(Skip(colPostosMandPnl, 1)).Estado = "LIVRE", Color.Transparent, fx_CorEstadoPosto(First(Skip(colPostosMandPnl, 1)).Estado))
+            Fill: =If(LookUp(colPostosMandPnl, Ord = 2).Estado = "LIVRE", Color.Transparent, fx_CorEstadoPosto(LookUp(colPostosMandPnl, Ord = 2).Estado))
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =22
@@ -2286,7 +2286,7 @@ Screens:
             RadiusTopLeft: =100
             RadiusTopRight: =100
             Size: =fx_FonteApoio
-            Text: =First(Skip(colPostosMandPnl, 1)).Curto
+            Text: =LookUp(colPostosMandPnl, Ord = 2).Curto
             Width: =93
             X: =32
             Y: =130
@@ -2296,7 +2296,7 @@ Screens:
             BorderColor: =fx_CorPainelBorda
             Color: |-
               =With(
-                  { _p: First(Skip(colPostosMandPnl, 1)) },
+                  { _p: LookUp(colPostosMandPnl, Ord = 2) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
                       _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
@@ -2310,7 +2310,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: |-
               =With(
-                  { _p: First(Skip(colPostosMandPnl, 1)) },
+                  { _p: LookUp(colPostosMandPnl, Ord = 2) },
                   If(
                       _p.Produzindo,
                       "OP " & Text(_p.OP, "[$-en-US]0") & "  ·  Bitola " & Text(_p.Bitola, "[$-en-US]0"),
@@ -2333,7 +2333,7 @@ Screens:
             Height: =26
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(First(Skip(colPostosMandPnl, 1)).Produzindo, fx_CronoLongo(First(Skip(colPostosMandPnl, 1)).Inicio, ctxAgoraPnl), "")
+            Text: =If(LookUp(colPostosMandPnl, Ord = 2).Produzindo, fx_CronoLongo(LookUp(colPostosMandPnl, Ord = 2).Inicio, ctxAgoraPnl), "")
             Width: =70
             X: =296
             Y: =128
@@ -5632,9 +5632,9 @@ Screens:
           Control: Classic/Button@2.2.0
           Properties:
             BorderColor: =fx_CorPainelBorda
-            BorderThickness: =If(First(Skip(colPostosExtrPnl, 1)).Estado = "LIVRE", 1, 0)
-            Color: =If(First(Skip(colPostosExtrPnl, 1)).Estado = "LIVRE", fx_CorRotulo, fx_CorTexto)
-            Fill: =If(First(Skip(colPostosExtrPnl, 1)).Estado = "LIVRE", Color.Transparent, fx_CorEstadoPosto(First(Skip(colPostosExtrPnl, 1)).Estado))
+            BorderThickness: =If(Last(FirstN(colPostosExtrPnl, 2)).Estado = "LIVRE", 1, 0)
+            Color: =If(Last(FirstN(colPostosExtrPnl, 2)).Estado = "LIVRE", fx_CorRotulo, fx_CorTexto)
+            Fill: =If(Last(FirstN(colPostosExtrPnl, 2)).Estado = "LIVRE", Color.Transparent, fx_CorEstadoPosto(Last(FirstN(colPostosExtrPnl, 2)).Estado))
             FocusedBorderThickness: =0
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
@@ -5647,7 +5647,7 @@ Screens:
             RadiusTopLeft: =100
             RadiusTopRight: =100
             Size: =fx_FonteApoio
-            Text: =First(Skip(colPostosExtrPnl, 1)).Curto
+            Text: =Last(FirstN(colPostosExtrPnl, 2)).Curto
             Width: =38
             X: =1066
             Y: =635
@@ -5657,7 +5657,7 @@ Screens:
             BorderColor: =fx_CorPainelBorda
             Color: |-
               =With(
-                  { _p: First(Skip(colPostosExtrPnl, 1)) },
+                  { _p: Last(FirstN(colPostosExtrPnl, 2)) },
                   If(
                       _p.Produzindo,          fx_CorPainelTexto,
                       _p.Estado = "COM FILA", fx_CorPainelTextoAlerta,
@@ -5672,7 +5672,7 @@ Screens:
             Size: =fx_FonteApoio
             Text: |-
               =With(
-                  { _p: First(Skip(colPostosExtrPnl, 1)) },
+                  { _p: Last(FirstN(colPostosExtrPnl, 2)) },
                   If(
                       _p.Produzindo,
                       fx_Ou(_p.Mangueira) & "  ·  OP " & Text(_p.OP, "[$-en-US]0"),
@@ -5696,7 +5696,7 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteCorpo
-            Text: =If(First(Skip(colPostosExtrPnl, 1)).Produzindo, fx_CronoLongo(First(Skip(colPostosExtrPnl, 1)).Inicio, ctxAgoraPnl), "")
+            Text: =If(Last(FirstN(colPostosExtrPnl, 2)).Produzindo, fx_CronoLongo(Last(FirstN(colPostosExtrPnl, 2)).Inicio, ctxAgoraPnl), "")
             Width: =58
             X: =1276
             Y: =633
