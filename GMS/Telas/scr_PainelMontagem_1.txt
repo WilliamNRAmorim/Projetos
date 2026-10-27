@@ -1,14 +1,3 @@
-# scr_PainelMontagem_1 · Painel da Montagem v0.2.0 (Fase 3 da Auditoria 26) · 27/10/2026
-# v0.2.0: FICHA DE CONSULTA da celula. Tocar no card (gal_CardsMon) abre a ficha: OT aberta, OTs fechadas, paradas (PARADA REAL e TE separadas)
-# e producao por turno do dia. So le colProdMon/colParMon/colEstMon (sem rede nova), fecha sozinha apos fx_DetFechaSeg s sem toque (tmr_RelogioMon).
-# Controles novos: btn_FichaAbrirMon, btn_ToqueCardMon (dentro do card), btn_FichaScrimMon ... lbl_FichaDicaMon (fim da lista = por cima de tudo).
-# Variaveis: ctxFichaMon, ctxFichaAbertaMon, ctxFichaToqueMon, ctxFichaSubMon, ctxFichaDiaMon, ctxFichaSincMon, ctxFichaRefMon.
-# Colecoes: colFichaFechMon, colFichaParMon, colFichaTurMon (montadas por btn_FichaAbrirMon ao tocar no card).
-# PENDENCIA (confirmar nomes internos): os nomes de coluna de Producao_Montagem, Paradas_Montagem usados aqui sao os de
-# EXIBICAO que o menu e a scr_Montagem_HoraHora ja usam (Celula, PN, OT, QtdOT, InicioEm, QtdProduzida, MetaHora, Status,
-# FimEm, DuracaoMin, DescontoMin, DuracaoRealMin, Data, Turno, Motivo, TempoParadoMin, OPVinculada, RegistradoEm, ID).
-# Nenhum field_N confirmado. Conferir na lista (/_api/web/lists/getbytitle('X')/fields?$select=InternalName,Title) antes de publicar.
-# Colar no Studio: Formulas v3.0.13 (§18) ANTES desta tela. Depois, o menu da Montagem (botao Painel de TV).
 Screens:
   scr_PainelMontagem_1:
     Properties:
@@ -47,8 +36,10 @@ Screens:
                       IfError(
                           Concurrent(
                               ClearCollect(colAbertasMon, Filter(Producao_Montagem, Status = "EmAndamento")),
-                              ClearCollect(colDiaMon, Filter(Producao_Montagem, Data >= _dia)),
-                              ClearCollect(colParMon, Filter(Paradas_Montagem, Data >= DateAdd(_dia, -2, TimeUnit.Days)))
+                              // v0.2.1: as OTs/paradas MAIS NOVAS por ID (ordenacao por ID e delegavel) e o corte por Data e LOCAL.
+                              // O Filter por Data direto no SharePoint voltou 0 linhas na TV (27/10); isto funciona nos dois casos.
+                              ClearCollect(colDiaMon, Filter(FirstN(SortByColumns(Producao_Montagem, "ID", SortOrder.Descending), 2000) As _pd, _pd.Data >= _dia)),
+                              ClearCollect(colParMon, Filter(FirstN(SortByColumns(Paradas_Montagem, "ID", SortOrder.Descending), 2000) As _pp, _pp.Data >= DateAdd(_dia, -2, TimeUnit.Days)))
                           );
                           true,
                           UpdateContext({ ctxFalhaMon: true });
@@ -92,8 +83,9 @@ Screens:
                   UpdateContext({ ctxFalhaMon: false });
                   IfError(
                       Concurrent(
-                          ClearCollect(colProdMon, Filter(Producao_Montagem, Data >= DateAdd(_d, -2, TimeUnit.Days), Data <= _d)),
-                          ClearCollect(colParMon, Filter(Paradas_Montagem, Data >= DateAdd(_d, -2, TimeUnit.Days), Data <= _d))
+                          // v0.2.1: mais novas por ID (delegavel) e corte por Data LOCAL (ver btn_RecarregarMon).
+                          ClearCollect(colProdMon, Filter(FirstN(SortByColumns(Producao_Montagem, "ID", SortOrder.Descending), 2000) As _pd, _pd.Data >= DateAdd(_d, -2, TimeUnit.Days) && _pd.Data <= _d)),
+                          ClearCollect(colParMon, Filter(FirstN(SortByColumns(Paradas_Montagem, "ID", SortOrder.Descending), 2000) As _pp, _pp.Data >= DateAdd(_d, -2, TimeUnit.Days) && _pp.Data <= _d))
                       );
                       true,
                       UpdateContext({ ctxFalhaMon: true });
@@ -644,8 +636,6 @@ Screens:
             Fill: =fx_CorPainelSuperficie
             Height: =72
             Width: =1366
-            X: =0
-            Y: =0
       - rct_BordaTopoMon:
           Control: Rectangle@2.3.0
           Properties:
@@ -653,7 +643,6 @@ Screens:
             Fill: =If(ctxModoMon <> "VIVO", fx_CorPainelTextoAlerta, fx_CorPainelBorda)
             Height: =If(ctxModoMon <> "VIVO", 4, 1)
             Width: =1366
-            X: =0
             Y: =If(ctxModoMon <> "VIVO", 68, 71)
       - btn_VoltarMon:
           Control: Classic/Button@2.2.0
@@ -665,7 +654,7 @@ Screens:
             FocusedBorderThickness: =0
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
-            Height: =44
+            Height: =71
             HoverFill: =fx_CorHoverSutil
             OnSelect: =Navigate(scr_selecaosetor_Montagem, ScreenTransition.None)
             PressedFill: =fx_CorHoverSutil
@@ -673,11 +662,9 @@ Screens:
             RadiusBottomRight: =0
             RadiusTopLeft: =0
             RadiusTopRight: =0
-            Size: =fx_FontePainelRotulo
+            Size: =22
             Text: ="‹ MONTAGEM"
-            Width: =210
-            X: =8
-            Y: =14
+            Width: =218
       - btn_VivoMon:
           Control: Classic/Button@2.2.0
           Properties:
@@ -696,7 +683,7 @@ Screens:
             RadiusBottomRight: =fx_RaioG
             RadiusTopLeft: =fx_RaioG
             RadiusTopRight: =fx_RaioG
-            Size: =fx_FontePainelApoio
+            Size: =18
             Text: ="AO VIVO"
             Width: =120
             X: =222
@@ -915,7 +902,7 @@ Screens:
             RadiusBottomRight: =fx_RaioG
             RadiusTopLeft: =fx_RaioG
             RadiusTopRight: =fx_RaioG
-            Size: =fx_FontePainelApoio
+            Size: =18
             Text: =If(ctxModoMon = "HORA", "HORA " & Left(Index(fx_GradeHoraHora, Max(1, Min(CountRows(fx_GradeHoraHora), ctxHoraMon))).Rotulo, 2) & "h", "HORA")
             Width: =132
             X: =772
@@ -985,7 +972,6 @@ Screens:
             Size: =fx_FontePainelNumero
             Text: =Text(ctxAgoraMon, "hh:mm")
             Visible: =ctxModoMon = "VIVO"
-            Width: =150
             X: =1008
             Y: =8
       - lbl_HistMon:
@@ -1016,7 +1002,7 @@ Screens:
             FontWeight: =FontWeight.Bold
             Height: =36
             PaddingLeft: =0
-            Size: =fx_FontePainelApoio
+            Size: =18
             Text: =If(ctxModoMon <> "VIVO", "volta em " & Text(Max(0, fx_HistVoltaMin - DateDiff(ctxToqueMon, ctxAgoraMon, TimeUnit.Minutes)), "[$-en-US]0") & " min", !ctxCarregouMon, If(ctxFalhaMon, "sem dado", "carregando"), "dados " & Text(ctxUltOkMon, "hh:mm"))
             Width: =186
             X: =1166
@@ -1161,7 +1147,8 @@ Screens:
             Height: =56
             PaddingLeft: =0
             Size: =fx_FontePainelNumero
-            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, Pecas), "[$-en-US]0") & " pç")
+            Text: |-
+              =If(!ctxCarregouMon || ctxFalhaMon, "—", With({ _v: Sum(colEstMon, Pecas) }, If(IsBlank(_v), "0", Text(_v, "[$-en-US]0")) & " pç"))
             Width: =192
             X: =476
             Y: =112
@@ -1258,7 +1245,8 @@ Screens:
             Height: =56
             PaddingLeft: =0
             Size: =fx_FontePainelNumero
-            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, ParadaReal), "[$-en-US]0") & " min")
+            Text: |-
+              =If(!ctxCarregouMon || ctxFalhaMon, "—", With({ _v: Sum(colEstMon, ParadaReal) }, If(IsBlank(_v), "0", Text(_v, "[$-en-US]0")) & " min"))
             Width: =192
             X: =924
             Y: =112
@@ -1306,7 +1294,8 @@ Screens:
             Height: =56
             PaddingLeft: =0
             Size: =fx_FontePainelNumero
-            Text: =If(!ctxCarregouMon, "—", Text(Sum(colEstMon, Excedido), "[$-en-US]0") & " min")
+            Text: |-
+              =If(!ctxCarregouMon || ctxFalhaMon, "—", With({ _v: Sum(colEstMon, Excedido) }, If(IsBlank(_v), "0", Text(_v, "[$-en-US]0")) & " min"))
             Width: =190
             X: =1148
             Y: =112
@@ -1358,8 +1347,6 @@ Screens:
                   RadiusTopRight: =fx_Raio
                   Text: =""
                   Width: =238
-                  X: =0
-                  Y: =0
             - btn_FaixaCardMon:
                 Control: Classic/Button@2.2.0
                 Properties:
@@ -1399,8 +1386,6 @@ Screens:
                   RadiusTopRight: =0
                   Text: =""
                   Width: =238
-                  X: =0
-                  Y: =0
             - lbl_FaixaCardMon:
                 Control: Label@2.5.1
                 Properties:
@@ -1421,7 +1406,6 @@ Screens:
                     )
                   Width: =222
                   X: =12
-                  Y: =0
             - lbl_CelCardMon:
                 Control: Label@2.5.1
                 Properties:
@@ -1579,8 +1563,6 @@ Screens:
                   RadiusTopRight: =fx_Raio
                   Text: =""
                   Width: =238
-                  X: =0
-                  Y: =0
       - btn_CardAndonMon:
           Control: Classic/Button@2.2.0
           Properties:
@@ -1608,7 +1590,6 @@ Screens:
             Color: =fx_CorPainelTexto
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
-            Height: =40
             PaddingLeft: =0
             Size: =fx_FontePainelRotulo
             Text: =If(ctxModoMon = "VIVO" || ctxModoMon = "HORA", "ONDE OLHAR", "NO TURNO")
@@ -1625,7 +1606,6 @@ Screens:
             Fill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
-            Height: =40
             HoverFill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
             PressedFill: =If(CountRows(colAndonMon) > 0, fx_CorPainelTextoAlerta, fx_CorPainelTextoOK)
             RadiusBottomLeft: =fx_RaioG
@@ -1688,7 +1668,6 @@ Screens:
                   RadiusTopRight: =fx_RaioS
                   Text: =""
                   Width: =330
-                  X: =0
                   Y: =2
             - lbl_SimboloAnMon:
                 Control: Label@2.5.1
@@ -1697,7 +1676,6 @@ Screens:
                   Color: =Switch(ThisItem.Sev, 1, fx_CorPainelTextoErro, 2, fx_CorPainelTextoAlerta, fx_CorPainelTextoInfo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   PaddingLeft: =0
                   Size: =fx_FontePainelRotulo
                   Text: =Switch(ThisItem.Sev, 1, "▲", 2, "●", "■")
@@ -1711,7 +1689,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   PaddingLeft: =0
                   Size: =fx_FontePainelRotulo
                   Text: =ThisItem.Celula
@@ -1725,12 +1702,12 @@ Screens:
                   Color: =fx_CorPainelTextoRotulo
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =42
+                  Height: =48
                   PaddingLeft: =0
-                  Size: =fx_FontePainelApoio
+                  Size: =18
                   Text: =ThisItem.Detalhe
-                  Width: =286
-                  X: =40
+                  Width: =316
+                  X: =10
                   Y: =46
       - lbl_MaisAndonMon:
           Control: Label@2.5.1
@@ -1772,7 +1749,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.2.0"
+            Text: ="Versão 0.2.1"
             Width: =106
             X: =1244
             Y: =752
@@ -1796,8 +1773,6 @@ Screens:
             Text: =""
             Visible: =ctxFichaAbertaMon
             Width: =1366
-            X: =0
-            Y: =0
       - btn_FichaCardMon:
           Control: Classic/Button@2.2.0
           Properties:
@@ -1847,7 +1822,6 @@ Screens:
             Color: =fx_CorPainelTexto
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
-            Height: =40
             OnSelect: |-
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
@@ -1884,7 +1858,6 @@ Screens:
             Fill: =fx_CorEstadoTextoPainel(Coalesce(LookUp(colEstMon As _e, _e.Celula = ctxFichaMon).Estado, "CARREGANDO"))
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
-            Height: =40
             HoverFill: =Self.Fill
             PressedFill: =Self.Fill
             RadiusBottomLeft: =100
@@ -1989,7 +1962,7 @@ Screens:
             OnSelect: |-
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
-            Size: =fx_FontePainelApoio
+            Size: =18
             Text: |-
               =With(
                   { _s: LookUp(colEstMon As _e, _e.Celula = ctxFichaMon) },
@@ -2025,8 +1998,8 @@ Screens:
                   { _s: LookUp(colEstMon As _e, _e.Celula = ctxFichaMon) },
                   If(
                       (ctxModoMon = "VIVO" || ctxModoMon = "HORA") && _s.Abertas > 0,
-                      "Real " & Text(_s.RealMin, "[$-en-US]0") & " min  ·  meta " &
-                      If(_s.MetaMin > 0, Text(_s.MetaMin, "[$-en-US]0") & " min", "sem meta") &
+                      "Real " & Text(_s.RealMin, "[$-en-US]0") & " min  ·  " &
+                      If(_s.MetaMin > 0, "meta " & Text(_s.MetaMin, "[$-en-US]0") & " min", "sem meta") &
                       If(_s.Excede, "  ·  +" & Text(_s.RealMin - _s.MetaMin, "[$-en-US]0") & " min acima", ""),
                       ""
                   )
@@ -2064,7 +2037,8 @@ Screens:
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
             Size: =fx_FontePainelNumero
-            Text: =Text(Sum(Filter(colFichaParMon, Tag = "PARADA"), TempoParadoMin), "[$-en-US]0") & " min"
+            Text: |-
+              =With({ _v: Sum(Filter(colFichaParMon, Tag = "PARADA"), TempoParadoMin) }, If(IsBlank(_v), "0", Text(_v, "[$-en-US]0")) & " min")
             Visible: =ctxFichaAbertaMon
             Width: =262
             X: =681
@@ -2098,7 +2072,8 @@ Screens:
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
             Size: =fx_FontePainelNumero
-            Text: =Text(Sum(Filter(colFichaParMon, Tag = "TE"), TempoParadoMin), "[$-en-US]0") & " min"
+            Text: |-
+              =With({ _v: Sum(Filter(colFichaParMon, Tag = "TE"), TempoParadoMin) }, If(IsBlank(_v), "0", Text(_v, "[$-en-US]0")) & " min")
             Visible: =ctxFichaAbertaMon
             Width: =268
             X: =961
@@ -2140,7 +2115,7 @@ Screens:
             OnSelect: |-
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
-            Size: =fx_FontePainelApoio
+            Size: =18
             Text: ="OTs FECHADAS NO PERÍODO  ·  " & Text(CountRows(colFichaFechMon), "[$-en-US]0")
             Visible: =ctxFichaAbertaMon
             Width: =400
@@ -2178,7 +2153,7 @@ Screens:
             TemplateFill: =Color.Transparent
             TemplatePadding: =0
             TemplateSize: =44
-            Visible: =ctxFichaAbertaMon
+            Visible: =ctxFichaAbertaMon && !IsEmpty(colFichaFechMon)
             Width: =600
             X: =137
             Y: =328
@@ -2191,7 +2166,6 @@ Screens:
                   Fill: =fx_CorPainelFundo
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
-                  Height: =40
                   HoverFill: =fx_CorPainelFundo
                   OnSelect: =Select(Parent)
                   PressedFill: =fx_CorPainelFundo
@@ -2201,7 +2175,6 @@ Screens:
                   RadiusTopRight: =fx_RaioS
                   Text: =""
                   Width: =588
-                  X: =0
                   Y: =2
             - lbl_FichaFechOTMon:
                 Control: Label@2.5.1
@@ -2210,7 +2183,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2227,7 +2199,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2244,7 +2215,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2261,7 +2231,6 @@ Screens:
                   Color: =If(ThisItem.Excede, fx_CorPainelTextoAlerta, IsBlank(ThisItem.Pct), fx_CorPainelTextoRotulo, fx_CorPainelTextoOK)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2277,7 +2246,6 @@ Screens:
             Color: =fx_CorPainelTextoRotulo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
-            Height: =40
             OnSelect: |-
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
@@ -2301,7 +2269,7 @@ Screens:
             Size: =fx_FontePainelApoio
             Text: ="PARADAS NO PERÍODO  ·  " & Text(CountRows(colFichaParMon), "[$-en-US]0")
             Visible: =ctxFichaAbertaMon
-            Width: =300
+            Width: =375
             X: =761
             Y: =296
       - lbl_FichaParMaisMon:
@@ -2319,7 +2287,6 @@ Screens:
             Size: =fx_FontePainelApoio
             Text: =If(CountRows(colFichaParMon) > 6, "+" & Text(CountRows(colFichaParMon) - 6, "[$-en-US]0") & " mais", "")
             Visible: =ctxFichaAbertaMon
-            Width: =150
             X: =1079
             Y: =296
       - gal_FichaParMon:
@@ -2336,7 +2303,7 @@ Screens:
             TemplateFill: =Color.Transparent
             TemplatePadding: =0
             TemplateSize: =44
-            Visible: =ctxFichaAbertaMon
+            Visible: =ctxFichaAbertaMon && !IsEmpty(colFichaParMon)
             Width: =468
             X: =761
             Y: =328
@@ -2349,7 +2316,6 @@ Screens:
                   Fill: =fx_CorPainelFundo
                   FocusedBorderThickness: =0
                   Font: =fx_FonteFamilia
-                  Height: =40
                   HoverFill: =fx_CorPainelFundo
                   OnSelect: =Select(Parent)
                   PressedFill: =fx_CorPainelFundo
@@ -2359,7 +2325,6 @@ Screens:
                   RadiusTopRight: =fx_RaioS
                   Text: =""
                   Width: =456
-                  X: =0
                   Y: =2
             - lbl_FichaParMotMon:
                 Control: Label@2.5.1
@@ -2368,7 +2333,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2385,7 +2349,6 @@ Screens:
                   Color: =If(ThisItem.Tag = "PARADA", fx_CorPainelTextoErro, ThisItem.Tag = "TE", fx_CorPainelTextoAlerta, fx_CorPainelTextoRotulo)
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Bold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2402,7 +2365,6 @@ Screens:
                   Color: =fx_CorPainelTexto
                   Font: =fx_FonteFamilia
                   FontWeight: =FontWeight.Semibold
-                  Height: =40
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FontePainelApoio
@@ -2418,7 +2380,6 @@ Screens:
             Color: =fx_CorPainelTextoRotulo
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
-            Height: =40
             OnSelect: |-
               =UpdateContext({ ctxFichaToqueMon: Now() })
             PaddingLeft: =0
@@ -2483,7 +2444,6 @@ Screens:
                   RadiusTopRight: =fx_RaioS
                   Text: =""
                   Width: =352
-                  X: =0
                   Y: =2
             - lbl_FichaTurRotMon:
                 Control: Label@2.5.1
