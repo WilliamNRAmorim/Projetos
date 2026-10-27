@@ -1,4 +1,4 @@
-# scr_PainelCelula_1 · Painel da Célula v0.11.0 (Fase 2 da Auditoria 26) · 23/10/2026
+# scr_PainelCelula_1 · Painel da Célula v0.11.1 (Fase 2 da Auditoria 26; 27/10: Concurrent sem Set da mesma variável, timers visíveis)
 # Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md
 Screens:
   scr_PainelCelula_1:
@@ -33,14 +33,20 @@ Screens:
               Set(varAgoraPnl, Now());
               // v0.11.0 (item 5 · M11): os Refresh rodam em PARALELO, e nao mais 3 em serie. Cada um fecha
               // o IfError com "true" / "false" (licao 2.23: valor e fallback do mesmo tipo).
+              // v0.11.1: cada ramo do Concurrent grava a SUA flag (varR1..R3Pnl); varFalhaPnl so e escrita
+              // FORA do Concurrent (o Studio nao aceita a mesma variavel escrita em varios ramos paralelos).
+              Set(varR1Pnl, false);
+              Set(varR2Pnl, false);
+              Set(varR3Pnl, false);
               Concurrent(
-                  IfError(Refresh(ficha_producao); true, Set(varFalhaPnl, true); false),
-                  IfError(Refresh(Eventos_Producao); true, Set(varFalhaPnl, true); false),
-                  IfError(Refresh('Hora-Hora'); true, Set(varFalhaPnl, true); false),
-                  If(
-                      IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
-                      IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
-                  )
+                  IfError(Refresh(ficha_producao); true, Set(varR1Pnl, true); false),
+                  IfError(Refresh(Eventos_Producao); true, Set(varR2Pnl, true); false),
+                  IfError(Refresh('Hora-Hora'); true, Set(varR3Pnl, true); false)
+              );
+              If(varR1Pnl || varR2Pnl || varR3Pnl, Set(varFalhaPnl, true));
+              If(
+                  IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
+                  IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
               );
               // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
               // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
@@ -114,6 +120,12 @@ Screens:
                       Set(varFalhaPnl, true); false
                   )
               );
+              Set(varC1Pnl, false);
+              Set(varC2Pnl, false);
+              Set(varC3Pnl, false);
+              Set(varC4Pnl, false);
+              Set(varC5Pnl, false);
+              Set(varC6Pnl, false);
               With(
                   { _hoje: fx_DataRefEm(varAgoraPnl) },
                   // v0.11.0 (item 2 · A3): cada ClearCollect do Concurrent fecha o IfError com "true" / "false".
@@ -132,7 +144,7 @@ Screens:
                               )
                           );
                           true,
-                          Set(varFalhaPnl, true); false
+                          Set(varC1Pnl, true); false
                       ),
                       IfError(
                           ClearCollect(
@@ -143,7 +155,7 @@ Screens:
                               )
                           );
                           true,
-                          Set(varFalhaPnl, true); false
+                          Set(varC2Pnl, true); false
                       ),
                       IfError(
                           ClearCollect(
@@ -151,7 +163,7 @@ Screens:
                               Filter(ficha_producao, status_processo = "Em processo")
                           );
                           true,
-                          Set(varFalhaPnl, true); false
+                          Set(varC3Pnl, true); false
                       ),
                       IfError(
                           ClearCollect(
@@ -159,7 +171,7 @@ Screens:
                               Filter(ficha_producao, status_processo = "Aguardando")
                           );
                           true,
-                          Set(varFalhaPnl, true); false
+                          Set(varC4Pnl, true); false
                       ),
                       // v0.11.0 (item 5 · M11): Eventos numa consulta SO (antes 3, com a mesma data). Os tres
                       // recortes por etapa (Vulcanizacao, Mandril, Extracao) saem daqui, locais, logo abaixo.
@@ -180,7 +192,7 @@ Screens:
                               )
                           );
                           true,
-                          Set(varFalhaPnl, true); false
+                          Set(varC5Pnl, true); false
                       ),
                       // v0.11.0 (item 5 · M11): FifoBobinadeira numa consulta so (EP + AB), DENTRO do Concurrent.
                       // Falhou = "sem fonte" de verdade (antes varBobSemFontePnl era sempre false).
@@ -192,11 +204,12 @@ Screens:
                           Set(varBobSemFontePnl, false);
                           true,
                           Set(varBobSemFontePnl, true);
-                          Set(varFalhaPnl, true);
+                          Set(varC6Pnl, true);
                           false
                       )
                   )
               );
+              If(varC1Pnl || varC2Pnl || varC3Pnl || varC4Pnl || varC5Pnl || varC6Pnl, Set(varFalhaPnl, true));
               ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
               ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
               ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
@@ -6138,7 +6151,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.11.0"
+            Text: ="Versão 0.11.1"
             Width: =98
             X: =1244
             Y: =743
