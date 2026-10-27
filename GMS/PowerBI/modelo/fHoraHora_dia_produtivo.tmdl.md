@@ -51,7 +51,7 @@ Os visuais da página Hora-Hora usam `Hora BI` no eixo.
 - Conferir um dia × um turno × uma célula contra o rodapé do Hora-Hora do app.
 
 ## ATUALIZAÇÃO 26/10/2026 — regra nova do dia produtivo (substitui a regra 1 acima)
-O dia produtivo do BI vai das **05:20 do dia D às 05:20 do dia D+1**; o 3º turno que começa 22:41 do dia D fica no dia D, como a base já grava a `Data`.
+O dia produtivo do BI vai das **05:20 do dia D às 05:20 do dia D+1**; o 3º turno que começa 22:20 do dia D fica no dia D, como a base já grava a `Data`.
 Aplicado no modelo: `'Data BI' = fHoraHora[Data]` e `'HoraOrdem BI' = fHoraHora[HoraOrdem]` (as demais colunas BI e os relacionamentos ficam como estavam).
 Texto do relatório: "Dia produtivo D: de D 05:20 até D+1 05:20". Depende de refresh para as colunas recalcularem.
 
