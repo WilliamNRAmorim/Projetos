@@ -1,4 +1,4 @@
-# scr_PainelCelula_1 · Painel da Célula v0.11.1 (Fase 2 da Auditoria 26; 27/10: Concurrent sem Set da mesma variável, timers visíveis)
+# scr_PainelCelula_1 · Painel da Célula v0.12.0 (metragem produzida no dia por turno e por processo: colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
 # Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md
 Screens:
   scr_PainelCelula_1:
@@ -213,6 +213,30 @@ Screens:
               ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
               ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
               ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
+              // v0.12.0 · METRAGEM PRODUZIDA NO DIA, POR PROCESSO E TURNO. UM ClearCollect, agregacao local sobre
+              // colEvDiaPnl (nenhuma consulta nova). Mesma regra de varMandProduzidoPnl / varSaidaT1Pnl: soma de
+              // `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+              ClearCollect(
+                  colProdEtapaTurnoPnl,
+                  ForAll(
+                      fx_EtapasLinha As _pe,
+                      With(
+                          {
+                              _ev: Filter(
+                                  colEvDiaPnl As _pv,
+                                  _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                              )
+                          },
+                          {
+                              Etapa: _pe.Etapa,
+                              T1: If(CountRows(Filter(_ev As _q1, _q1.TurnoTxt = "1")) > 0, Sum(Filter(_ev As _r1, _r1.TurnoTxt = "1"), metros), Blank()),
+                              T2: If(CountRows(Filter(_ev As _q2, _q2.TurnoTxt = "2")) > 0, Sum(Filter(_ev As _r2, _r2.TurnoTxt = "2"), metros), Blank()),
+                              T3: If(CountRows(Filter(_ev As _q3, _q3.TurnoTxt = "3")) > 0, Sum(Filter(_ev As _r3, _r3.TurnoTxt = "3"), metros), Blank()),
+                              Dia: If(CountRows(_ev) > 0, Sum(_ev, metros), Blank())
+                          }
+                      )
+                  )
+              );
               // v0.11.0 (item 2 · M12): guarda de truncamento. Lista lida com fx_PainelLinhasAlerta linhas ou
               // mais = suspeita de corte no limite do conector: a carga deixa de contar como "ok".
               If(
@@ -3009,6 +3033,66 @@ Screens:
             Width: =160
             X: =219
             Y: =540
+      - lbl_ProdT1TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="1º " & If(
+                  1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =53
+            X: =219
+            Y: =556
+      - lbl_ProdT2TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="2º " & If(
+                  2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =53
+            X: =272
+            Y: =556
+      - lbl_ProdT3TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="3º " & If(
+                  3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =54
+            X: =325
+            Y: =556
       - lbl_TuboFilaRotPnl:
           Control: Label@2.5.1
           Properties:
@@ -4501,6 +4585,66 @@ Screens:
                   Width: =300
                   X: =18
                   Y: =110
+            - lbl_ProdT1AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="1º " & If(
+                        1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =56
+            - lbl_ProdT2AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="2º " & If(
+                        2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =72
+            - lbl_ProdT3AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="3º " & If(
+                        3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =88
       - btn_CardBatPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -6151,7 +6295,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.11.1"
+            Text: ="Versão 0.12.0"
             Width: =98
             X: =1244
             Y: =743
