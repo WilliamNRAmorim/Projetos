@@ -1,5 +1,5 @@
-# scr_PainelCelula_1 · Painel da Célula v0.12.0 (metragem produzida no dia por turno e por processo: colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
-# Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md
+# scr_PainelCelula_1 · Painel da Célula v0.13.0 (FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
+# Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md
 Screens:
   scr_PainelCelula_1:
     Properties:
@@ -7,6 +7,8 @@ Screens:
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
         =UpdateContext({ctxAgoraPnl: Now()});
+        // v0.13.0: seletor de dia/turno. A tela SEMPRE abre AO VIVO; o historico e escolha do operador e volta sozinho.
+        UpdateContext({ctxModoPnl: "VIVO", ctxDiaPnl: fx_DataRefEm(ctxAgoraPnl), ctxToquePnl: ctxAgoraPnl, ctxHistDiaPnl: Blank(), ctxHistFalhaPnl: false, ctxHistTruncPnl: false});
         Set(varDetAbertoPnl, false);
         // v0.10.0: abrir a tela recarrega o cadastro de velocidade (DM_*). TV aberta recarrega 1x por dia.
         Set(varVelDiaPnl, Blank());
@@ -213,30 +215,9 @@ Screens:
               ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
               ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
               ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
-              // v0.12.0 · METRAGEM PRODUZIDA NO DIA, POR PROCESSO E TURNO. UM ClearCollect, agregacao local sobre
-              // colEvDiaPnl (nenhuma consulta nova). Mesma regra de varMandProduzidoPnl / varSaidaT1Pnl: soma de
-              // `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
-              ClearCollect(
-                  colProdEtapaTurnoPnl,
-                  ForAll(
-                      fx_EtapasLinha As _pe,
-                      With(
-                          {
-                              _ev: Filter(
-                                  colEvDiaPnl As _pv,
-                                  _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
-                              )
-                          },
-                          {
-                              Etapa: _pe.Etapa,
-                              T1: If(CountRows(Filter(_ev As _q1, _q1.TurnoTxt = "1")) > 0, Sum(Filter(_ev As _r1, _r1.TurnoTxt = "1"), metros), Blank()),
-                              T2: If(CountRows(Filter(_ev As _q2, _q2.TurnoTxt = "2")) > 0, Sum(Filter(_ev As _r2, _r2.TurnoTxt = "2"), metros), Blank()),
-                              T3: If(CountRows(Filter(_ev As _q3, _q3.TurnoTxt = "3")) > 0, Sum(Filter(_ev As _r3, _r3.TurnoTxt = "3"), metros), Blank()),
-                              Dia: If(CountRows(_ev) > 0, Sum(_ev, metros), Blank())
-                          }
-                      )
-                  )
-              );
+              // v0.13.0: a agregacao da metragem por turno (colProdEtapaTurnoPnl) e a saida da Extracao (varSaida*) foram
+              // para o botao oculto btn_AgregaPnl (chamado no fim deste ciclo e a cada escolha do seletor), que le a
+              // fonte do modo: colEvDiaPnl (AO VIVO) ou colEvHistPnl (dia escolhido). Uma formula so.
               // v0.11.0 (item 2 · M12): guarda de truncamento. Lista lida com fx_PainelLinhasAlerta linhas ou
               // mais = suspeita de corte no limite do conector: a carga deixa de contar como "ok".
               If(
@@ -1075,37 +1056,6 @@ Screens:
                   )
               );
               Set(
-                  varSaidaT1Pnl,
-                  Sum(
-                      Filter(
-                          colEvSaidaPnl As _e1,
-                          _e1.TurnoTxt = "1" && (_e1.TipoTxt = "Fim" || _e1.TipoTxt = "Parcial")
-                      ),
-                      metros
-                  )
-              );
-              Set(
-                  varSaidaT2Pnl,
-                  Sum(
-                      Filter(
-                          colEvSaidaPnl As _e2,
-                          _e2.TurnoTxt = "2" && (_e2.TipoTxt = "Fim" || _e2.TipoTxt = "Parcial")
-                      ),
-                      metros
-                  )
-              );
-              Set(
-                  varSaidaT3Pnl,
-                  Sum(
-                      Filter(
-                          colEvSaidaPnl As _e3,
-                          _e3.TurnoTxt = "3" && (_e3.TipoTxt = "Fim" || _e3.TipoTxt = "Parcial")
-                      ),
-                      metros
-                  )
-              );
-              Set(varSaidaDiaPnl, varSaidaT1Pnl + varSaidaT2Pnl + varSaidaT3Pnl);
-              Set(
                   varMaiorFilaPnl,
                   Coalesce(
                       Text(First(Sort(colAcabPnl, Fila, SortOrder.Descending)).Processo),
@@ -1396,6 +1346,7 @@ Screens:
               Set(varSincPnl, varAgoraPnl);
               Set(varCargaOkPnl, !varFalhaPnl && !varTruncaPnl);
               If(varCargaOkPnl, Set(varUltOkPnl, varAgoraPnl));
+              Select(btn_AgregaPnl);
               // Medidor do ciclo: duracao da carga em segundos (unica leitura de relogio fora do instante do ciclo).
               Set(varCargaSegPnl, DateDiff(varAgoraPnl, Now(), TimeUnit.Seconds))
             PressedFill: =Color.Transparent
@@ -1427,6 +1378,8 @@ Screens:
             Height: =1
             OnTimerEnd: |-
               =UpdateContext({ctxAgoraPnl: Now()});
+              // v0.13.0: fora do AO VIVO, volta sozinho depois de fx_HistVoltaMin sem toque no seletor.
+              If(ctxModoPnl <> "VIVO" && DateDiff(ctxToquePnl, ctxAgoraPnl, TimeUnit.Minutes) >= fx_HistVoltaMin, Select(btn_VivoPnl));
               // v0.11.0 (item 3 · A2): o "Onde olhar" gira de 3 em 3 itens a cada 30 s (este timer), em vez de
               // cortar em 3 sem avisar. Sem item a mais, fica na pagina 0.
               With(
@@ -1449,6 +1402,110 @@ Screens:
             Text: =""
             Width: =1
             X: =1362
+            Y: =2
+      - btn_AgregaPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =With(
+                  { _src: If(ctxModoPnl = "VIVO", colEvDiaPnl, colEvHistPnl) },
+                  // UMA agregacao para os dois modos: colEvDiaPnl (AO VIVO) ou colEvHistPnl (dia escolhido), mesmo esquema de colunas.
+                  // Soma de `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+                  ClearCollect(
+                      colProdEtapaTurnoPnl,
+                      ForAll(
+                          fx_EtapasLinha As _pe,
+                          With(
+                              {
+                                  _ev: Filter(
+                                      _src As _pv,
+                                      _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                                  )
+                              },
+                              {
+                                  Etapa: _pe.Etapa,
+                                  T1: If(CountRows(Filter(_ev As _q1, _q1.TurnoTxt = "1")) > 0, Sum(Filter(_ev As _r1, _r1.TurnoTxt = "1"), metros), Blank()),
+                                  T2: If(CountRows(Filter(_ev As _q2, _q2.TurnoTxt = "2")) > 0, Sum(Filter(_ev As _r2, _r2.TurnoTxt = "2"), metros), Blank()),
+                                  T3: If(CountRows(Filter(_ev As _q3, _q3.TurnoTxt = "3")) > 0, Sum(Filter(_ev As _r3, _r3.TurnoTxt = "3"), metros), Blank()),
+                                  Dia: With({ _t: Filter(_ev As _qd, _qd.TurnoTxt in ["1", "2", "3"]) }, If(CountRows(_t) > 0, Sum(_t, metros), Blank()))
+                              }
+                          )
+                      )
+                  )
+              );
+              // Cabecalho T1/T2/T3/Total e "SAIDA DO nº TURNO" da Extracao leem a linha da Extracao da MESMA colecao.
+              With(
+                  { _x: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Extração") },
+                  Set(varSaidaT1Pnl, _x.T1);
+                  Set(varSaidaT2Pnl, _x.T2);
+                  Set(varSaidaT3Pnl, _x.T3);
+                  Set(varSaidaDiaPnl, _x.Dia)
+              )
+            PressedFill: =Color.Transparent
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =1
+            X: =1354
+            Y: =2
+      - btn_HistPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            Font: =fx_FonteFamilia
+            Height: =1
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =With(
+                  { _d: ctxDiaPnl },
+                  // Historico: UMA consulta delegavel por escolha de DIA (trocar de turno no mesmo dia nao consulta de novo).
+                  // Hoje (ou falha anterior) sempre le de novo. Sem timer de carga, sem Refresh.
+                  If(
+                      IsBlank(ctxHistDiaPnl) || ctxHistDiaPnl <> _d || _d >= fx_DataRefEm(ctxAgoraPnl) || ctxHistFalhaPnl,
+                      UpdateContext({ ctxHistFalhaPnl: false });
+                      IfError(
+                          ClearCollect(
+                              colEvHistPnl,
+                              AddColumns(
+                                  Filter(Eventos_Producao, data_ref = _d),
+                                  EtapaTxt,
+                                  Text(etapa.Value),
+                                  TipoTxt,
+                                  Text(tipo.Value),
+                                  TurnoTxt,
+                                  Text(turno)
+                              )
+                          );
+                          UpdateContext({ ctxHistDiaPnl: _d });
+                          true,
+                          UpdateContext({ ctxHistFalhaPnl: true, ctxHistDiaPnl: Blank() });
+                          Clear(colEvHistPnl);
+                          false
+                      );
+                      UpdateContext({ ctxHistTruncPnl: CountRows(colEvHistPnl) >= fx_PainelLinhasAlerta })
+                  );
+                  Select(btn_AgregaPnl)
+              )
+            PressedFill: =Color.Transparent
+            RadiusBottomLeft: =0
+            RadiusBottomRight: =0
+            RadiusTopLeft: =0
+            RadiusTopRight: =0
+            Text: =""
+            Width: =1
+            X: =1352
             Y: =2
       - btn_DetAbrirPnl:
           Control: Classic/Button@2.2.0
@@ -1940,13 +1997,22 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorRotulo
+            Color: =If(ctxModoPnl = "VIVO", fx_CorRotulo, fx_CorPainelTextoAlerta)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="MANGUEIRAS HIDRÁULICAS · GUARATINGUETÁ"
+            Text: |-
+              =If(
+                  ctxModoPnl = "VIVO",
+                  "MANGUEIRAS HIDRÁULICAS · GUARATINGUETÁ",
+                  ctxHistFalhaPnl,
+                  "HISTÓRICO · falha ao ler " & Text(ctxDiaPnl, "dd/mm") & " · postos ao vivo",
+                  ctxHistTruncPnl,
+                  "HISTÓRICO · lista cortada no limite · postos ao vivo",
+                  "HISTÓRICO · produção de " & Text(ctxDiaPnl, "dd/mm") & " · postos ao vivo"
+              )
             Width: =380
             X: =69
             Y: =38
@@ -1955,13 +2021,18 @@ Screens:
           Properties:
             Align: =Align.Right
             BorderColor: =fx_CorPainelBorda
-            Color: =fx_CorRotulo
+            Color: =If(ctxModoPnl = "VIVO", fx_CorRotulo, fx_CorPainelTextoAlerta)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
             Height: =28
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="DATA DE REFERÊNCIA"
+            Text: |-
+              =If(
+                  ctxModoPnl = "VIVO",
+                  "DATA DE REFERÊNCIA",
+                  "VOLTA EM " & Text(Max(1, fx_HistVoltaMin - DateDiff(ctxToquePnl, ctxAgoraPnl, TimeUnit.Minutes)), "[$-en-US]0") & " MIN"
+              )
             Width: =168
             X: =431
             Y: =7
@@ -1976,7 +2047,7 @@ Screens:
             Height: =22
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =Text(fx_DataRefEm(ctxAgoraPnl), "dd/mm/yyyy")
+            Text: =Text(If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), "dd/mm/yyyy")
             X: =443
             Y: =30
       - lbl_TurnoRotPnl:
@@ -1990,7 +2061,7 @@ Screens:
             Height: =12
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="TURNO"
+            Text: =If(ctxModoPnl = "VIVO", "TURNO", "TURNO AGORA")
             Width: =130
             X: =620
             Y: =14
@@ -2035,9 +2106,9 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =12
             PaddingLeft: =0
             Size: =fx_FonteApoio
@@ -2049,13 +2120,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =If(1 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT1Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
+            Text: =If((ctxModoPnl = "VIVO" && 1 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(varSaidaT1Pnl), "—", Substitute(Text(varSaidaT1Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =109
             X: =898
             Y: =28
@@ -2063,9 +2134,9 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =12
             PaddingLeft: =0
             Size: =fx_FonteApoio
@@ -2077,13 +2148,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =22
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =If(2 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT2Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
+            Text: =If((ctxModoPnl = "VIVO" && 2 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(varSaidaT2Pnl), "—", Substitute(Text(varSaidaT2Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =105
             X: =1002
             Y: =28
@@ -2091,9 +2162,9 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =12
             PaddingLeft: =0
             Size: =fx_FonteApoio
@@ -2105,13 +2176,13 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Bold
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =If(3 > fx_TurnoEm(ctxAgoraPnl), "—", Substitute(Text(varSaidaT3Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
+            Text: =If((ctxModoPnl = "VIVO" && 3 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(varSaidaT3Pnl), "—", Substitute(Text(varSaidaT3Pnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =93
             X: =1128
             Y: =28
@@ -2148,10 +2219,199 @@ Screens:
             Height: =24
             PaddingLeft: =0
             Size: =fx_FonteDestaque
-            Text: =Substitute(Text(varSaidaDiaPnl, "[$-en-US]#,##0"), ",", ".") & " m"
+            Text: =If(IsBlank(varSaidaDiaPnl), "—", Substitute(Text(varSaidaDiaPnl, "[$-en-US]#,##0"), ",", ".") & " m")
             Width: =121
             X: =1238
             Y: =28
+      - btn_DiaAntPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTextoRotulo
+            Fill: =fx_CorPainelFundo
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            HoverFill: =fx_CorPainelFundo
+            OnSelect: |-
+              =With(
+                  { _hoje: fx_DataRefEm(ctxAgoraPnl), _atual: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl) },
+                  If(
+                      DateDiff(_atual, _hoje, TimeUnit.Days) < fx_HistDiasMax,
+                      UpdateContext({ ctxDiaPnl: DateAdd(_atual, -1, TimeUnit.Days), ctxModoPnl: If(ctxModoPnl = "VIVO", "DIA", ctxModoPnl), ctxToquePnl: Now() });
+                      Select(btn_HistPnl)
+                  )
+              )
+            PressedFill: =fx_CorPainelBorda
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="‹"
+            Width: =30
+            X: =336
+            Y: =6
+      - btn_VivoPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoPnl = "VIVO", fx_CorPainelTextoOK, fx_CorPainelTextoAlerta)
+            BorderThickness: =1
+            Color: =fx_CorPainelFundo
+            Fill: =If(ctxModoPnl = "VIVO", fx_CorPainelTextoOK, fx_CorPainelTextoAlerta)
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            HoverFill: =If(ctxModoPnl = "VIVO", fx_CorPainelTextoOK, fx_CorPainelTextoAlerta)
+            OnSelect: |-
+              =UpdateContext({ ctxModoPnl: "VIVO", ctxDiaPnl: fx_DataRefEm(ctxAgoraPnl), ctxToquePnl: ctxAgoraPnl });
+              Select(btn_RecarregarPnl)
+            PressedFill: =If(ctxModoPnl = "VIVO", fx_CorPainelTextoOK, fx_CorPainelTextoAlerta)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: =If(ctxModoPnl = "VIVO", "VIVO", Text(ctxDiaPnl, "dd/mm"))
+            Width: =60
+            X: =368
+            Y: =6
+      - btn_DiaProxPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            BorderThickness: =1
+            Color: =fx_CorPainelTextoRotulo
+            Fill: =fx_CorPainelFundo
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =28
+            HoverFill: =fx_CorPainelFundo
+            OnSelect: |-
+              =With(
+                  { _hoje: fx_DataRefEm(ctxAgoraPnl), _atual: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl) },
+                  If(
+                      _atual < _hoje,
+                      UpdateContext({ ctxDiaPnl: DateAdd(_atual, 1, TimeUnit.Days), ctxToquePnl: Now() });
+                      Select(btn_HistPnl)
+                  )
+              )
+            PressedFill: =fx_CorPainelBorda
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteApoio
+            Text: ="›"
+            Width: =30
+            X: =430
+            Y: =6
+      - btn_SelT1Pnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoPnl = "1", fx_CorPainelTextoAlerta, Color.Transparent)
+            BorderThickness: =If(ctxModoPnl = "1", 2, 0)
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =40
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =UpdateContext({ ctxModoPnl: "1", ctxDiaPnl: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), ctxToquePnl: Now() });
+              Select(btn_HistPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =108
+            X: =893
+            Y: =10
+      - btn_SelT2Pnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoPnl = "2", fx_CorPainelTextoAlerta, Color.Transparent)
+            BorderThickness: =If(ctxModoPnl = "2", 2, 0)
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =40
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =UpdateContext({ ctxModoPnl: "2", ctxDiaPnl: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), ctxToquePnl: Now() });
+              Select(btn_HistPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =118
+            X: =1001
+            Y: =10
+      - btn_SelT3Pnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoPnl = "3", fx_CorPainelTextoAlerta, Color.Transparent)
+            BorderThickness: =If(ctxModoPnl = "3", 2, 0)
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =40
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =UpdateContext({ ctxModoPnl: "3", ctxDiaPnl: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), ctxToquePnl: Now() });
+              Select(btn_HistPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =114
+            X: =1119
+            Y: =10
+      - btn_SelDiaPnl:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =If(ctxModoPnl = "DIA", fx_CorPainelTextoAlerta, Color.Transparent)
+            BorderThickness: =If(ctxModoPnl = "DIA", 2, 0)
+            Color: =fx_CorPainelTexto
+            Fill: =Color.Transparent
+            FocusedBorderThickness: =0
+            Font: =fx_FonteFamilia
+            Height: =44
+            HoverFill: =Color.Transparent
+            OnSelect: |-
+              =UpdateContext({ ctxModoPnl: "DIA", ctxDiaPnl: If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), ctxToquePnl: Now() });
+              Select(btn_HistPnl)
+            PressedFill: =fx_CorHoverSutil
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Text: =""
+            Width: =125
+            X: =1234
+            Y: =10
+      - rct_BordaTopoPnl:
+          Control: Rectangle@2.3.0
+          Properties:
+            BorderColor: =Color.Transparent
+            Fill: =fx_CorPainelTextoAlerta
+            Height: =4
+            Visible: =ctxModoPnl <> "VIVO"
+            Width: =1366
+            X: =0
+            Y: =64
       - btn_CardSoldaPnl:
           Control: Classic/Button@2.2.0
           Properties:
@@ -3037,16 +3297,16 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =16
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
               ="1º " & If(
-                  1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1),
+                  (ctxModoPnl = "VIVO" && 1 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1),
                   "—",
                   Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1, "[$-en-US]#,##0"), ",", ".")
               )
@@ -3057,16 +3317,16 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =16
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
               ="2º " & If(
-                  2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2),
+                  (ctxModoPnl = "VIVO" && 2 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2),
                   "—",
                   Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2, "[$-en-US]#,##0"), ",", ".")
               )
@@ -3077,16 +3337,16 @@ Screens:
           Control: Label@2.5.1
           Properties:
             BorderColor: =fx_CorPainelBorda
-            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
             Font: =fx_FonteFamilia
-            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+            FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
             Height: =16
             OnSelect: =Select(btn_CardTuboPnl)
             PaddingLeft: =0
             Size: =fx_FonteApoio
             Text: |-
               ="3º " & If(
-                  3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3),
+                  (ctxModoPnl = "VIVO" && 3 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3),
                   "—",
                   Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3, "[$-en-US]#,##0"), ",", ".")
               )
@@ -4589,16 +4849,16 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
                   Font: =fx_FonteFamilia
-                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+                  FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
                   Height: =16
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: |-
                     ="1º " & If(
-                        1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1),
+                        (ctxModoPnl = "VIVO" && 1 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1),
                         "—",
                         Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1, "[$-en-US]#,##0"), ",", ".")
                     )
@@ -4609,16 +4869,16 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
                   Font: =fx_FonteFamilia
-                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+                  FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
                   Height: =16
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: |-
                     ="2º " & If(
-                        2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2),
+                        (ctxModoPnl = "VIVO" && 2 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2),
                         "—",
                         Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2, "[$-en-US]#,##0"), ",", ".")
                     )
@@ -4629,16 +4889,16 @@ Screens:
                 Control: Label@2.5.1
                 Properties:
                   BorderColor: =fx_CorPainelBorda
-                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
                   Font: =fx_FonteFamilia
-                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+                  FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
                   Height: =16
                   OnSelect: =Select(Parent)
                   PaddingLeft: =0
                   Size: =fx_FonteApoio
                   Text: |-
                     ="3º " & If(
-                        3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3),
+                        (ctxModoPnl = "VIVO" && 3 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3),
                         "—",
                         Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3, "[$-en-US]#,##0"), ",", ".")
                     )
@@ -5865,7 +6125,7 @@ Screens:
             OnSelect: =Select(btn_CardExtrPnl)
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="SAÍDA DO " & Text(fx_TurnoEm(ctxAgoraPnl), "[$-en-US]0") & "º TURNO"
+            Text: ="SAÍDA DO " & If(If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 0, "DIA", Text(If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)), "[$-en-US]0") & "º TURNO")
             Width: =190
             X: =1066
             Y: =669
@@ -5882,13 +6142,10 @@ Screens:
             PaddingLeft: =0
             Size: =fx_FonteNumero
             Text: |-
-              =Substitute(
-                  Text(
-                      Switch(fx_TurnoEm(ctxAgoraPnl), 1, varSaidaT1Pnl, 2, varSaidaT2Pnl, varSaidaT3Pnl),
-                      "[$-en-US]#,##0"
-                  ),
-                  ",", "."
-              ) & " m"
+              =With(
+                  { _v: Switch(If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)), 1, varSaidaT1Pnl, 2, varSaidaT2Pnl, 3, varSaidaT3Pnl, varSaidaDiaPnl) },
+                  If(IsBlank(_v), "—", Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".") & " m")
+              )
             Width: =268
             X: =1066
             Y: =687
@@ -6295,7 +6552,7 @@ Screens:
             Height: =16
             PaddingLeft: =0
             Size: =fx_FonteApoio
-            Text: ="Versão 0.12.0"
+            Text: ="Versão 0.13.0"
             Width: =98
             X: =1244
             Y: =743
