@@ -177,3 +177,10 @@ Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o
 - Faltam no GMS **3 lances de boa: 58,7, 54,8 e 60,0 (173,5 m)**, e não existem em outra OP (o 54,8 que aparece na 30307301 é de 26/09, coincidência). A ficha 3787 mostra extração de 270 m (finalizada 28/09), o que sustenta que houve produção.
 - Sobram 1,7 m: o refugo do SAP (17,3) é maior que o do GMS (15,6). Não resolvido.
 - Proposta: criar os 3 lances (TO04, GH781-16, turno 2, 28/09, horas aproximadas pela ordem dos docs: 58,7 às 16:40, 54,8 às 16:46, 60,0 às 17:05) e acertar a ficha 3787 (`quantidade_extracao` 49,3 → 222,8). Sem pallet (Packing_Pallets não tem essa ficha).
+
+**Refugos (decisão do William, 28/10): os refugos que estão só no GMS e faltam no SAP serão lançados no SAP amanhã (29/10).** Entram aqui: refugos da 30495038 (~40 lançamentos de 17/10), 1,7 m de diferença na 30324629 e os demais "SÓ NO GMS" de refugo. Não mexer no GMS por causa deles; refazer a conferência depois do lançamento.
+
+**30447183 (GH781-6, ficha 3967, TM01) — analisada em 28/10, sem correção no GMS:**
+- GMS: 8 lances de boa (716,4 m, 14/10 23:11 a 15/10 00:40). SAP: 7 lançamentos de boa (577,5 m, 14/10, U406627) + 7,5 m de refugo (15/10, U452021) = 585,0 m; COOIS 585,0 de 680 m, TECO em 15/10.
+- Falta no SAP **1 lance: 138,9 m** (inspeção linha 17550, TM01, 14/10 21:16, mangueira GH781-6-2, alias de GH781-6). Não está em outra OP no SAP. A ficha mostra extração de 720 m, então a produção existiu.
+- É falta de lançamento **no SAP** (a OP já está TECO, pode precisar reabrir). Pela regra do William não se corrige o SAP daqui: fica para ele/SAP. GMS fica como está.
