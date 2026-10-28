@@ -95,3 +95,6 @@ Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?
 - **Resto do pacote `.msapp` de 03/07**: manifest, identity, logo e o json do app (×2).
 - **Nenhum COLAR, diário, conceito ou auditoria foi apagado.** As lições desses arquivos continuam no projeto e em `GMS_Licoes.md`.
 - Espaço de arquivos do projeto: **1,957 MB → ~1,13 MB**.
+
+## Roteiro de manutenção (28/10/2026)
+`Analises/Higienizacao_HoraHora/COMO_ARRUMAR_HORAHORA.md` — passo a passo para corrigir/criar/apagar linhas da lista Hora-Hora e mexer no modelo (GMS) e no relatório. Ler antes de qualquer pedido sobre apontamento, tempo parado, motivo ou dia produtivo.

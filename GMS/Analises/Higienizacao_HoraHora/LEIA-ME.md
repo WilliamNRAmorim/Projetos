@@ -25,3 +25,5 @@ acumulados de 53 linhas e 69 duplicados enviados à lixeira do SharePoint (resta
 Conferência depois da gravação: 3.955 itens (4.024 − 69), 0 Title≠Célula, 0 Data≠Title, 0 acumulados divergentes em 436 grupos de turno.
 NÃO aplicados (decisão item a item): 33 duplicados com Real ou mangueira diferentes (linhas NAO_APLICADO_REVISAR) e 308 mangueiras
 divergentes da OP (relatório de mudanças).
+
+> **Roteiro completo e atualizado (28/10/2026): `COMO_ARRUMAR_HORAHORA.md`** — leia antes de mexer na lista ou no BI.
