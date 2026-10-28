@@ -9,7 +9,12 @@ Por quê: a fonte `Tempos` do app (Material, TempoMinPc; 3.995 linhas) estava **
 - Script `GMS_LerTemposMontagem.ts` (nesta pasta). Falta gravar no OneDrive: pasta sincronizada `Documents\Office Scripts`
   como `GMS_LerTemposMontagem_v100` (a REST dá 403, igual ao GMS_LerPlanoOPs).
 
-## Fluxo GMS_Tempos_Sync (montar no Power Automate)
+## Estado em 28/10/2026 (montado, DESLIGADO)
+- Script gravado no OneDrive do William como `GMS_LerTemposMontagem_v100` (pasta Documents/Office Scripts); o Power Automate o reconhece e lê o parâmetro `existentesJson`.
+- Fluxo `GMS_Tempos_Sync` (id 7450b3dc-b4be-4726-a6c8-38674acacaba) criado e salvo, **Status Off**. Gatilho SharePoint "arquivo criado ou modificado (somente propriedades)" na pasta `/Apps/Relatórios` da biblioteca Documents, com condição `FilenameWithExtension = 'PN prod time.xlsx'` e concorrência 1; Get items (Top 5000) → Select (id, m, t) → Run script (Excel Online, `PN prod time.xlsx`) → Apply to each `novos` (Create item) → Apply to each 1 `alterados` (Update item). As duas expressões leem `json(body('Run_script')?['result'])`.
+- Falta: teste da primeira execução (carga inicial de ~3.995 itens), conferir o nome real da saída do Run script (`result`), aviso de falha por e-mail (passo 8) e o "potential problem" do Flow checker. Não ligado: só com o "sim" do William.
+
+## Fluxo GMS_Tempos_Sync (roteiro original)
 1. **Gatilho**: SharePoint, *Quando um arquivo é criado ou modificado (somente propriedades)* ou *(propriedades e conteúdo)* —
    biblioteca Documents, pasta `/Apps/Relatórios`. Condição: `Nome do arquivo com extensão` = `PN prod time.xlsx`.
    Para não rodar em cascata, em *Configurações* do gatilho: concorrência 1 e, se a edição disparar várias vezes, adicione *Delay* de 2 min.
