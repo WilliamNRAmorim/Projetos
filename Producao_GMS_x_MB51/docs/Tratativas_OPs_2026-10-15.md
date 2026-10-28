@@ -151,3 +151,10 @@ Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o
 - 30545859 (HC139-7): SAP 803,4 m, GMS 221 m (+582 m). Causa não vista.
 - 30337761 (GH781-8, −522 m) e 30406478 (GH493-12, −316 m): sem lançamento na MB51. Para a 30337761 a boa pode estar na 30421672 (15/10).
 - COOIS não traz várias OPs do GMS (ex. 29733203, 29118867, 30206916): motivo desconhecido.
+
+**OP 30545859 (HC139-7, TM04) — analisada em 28/10, sem correção feita:**
+- GMS tem 6 lances de boa (212,6 m, TM04, 22/10 21:00 a 21:34) e 4 refugos (8,4 m); todos batem com o SAP (docs 3028775085 a 3028776769 e refugo 3028825534).
+- O SAP tem mais **12 lançamentos de boa em 27/10, 582,4 m, todos do usuário U395462** (docs 3029003870 a 3029010...). Nenhum lance do GMS tem esses valores em outra OP: as coincidências de valor (32,6; 53,2; 51,0) são acaso, em OPs de outras mangueiras.
+- As OPs vizinhas de HC139-7 conferem por completo: 30549004 (TM04, 26/10, 14 lances, 652,9 m) e 30575953 (HC139-7_S-GX, TM04, 26/10, 12 lances, 631,5 m).
+- COOIS: OP TECO, confirmado 803,4 m para ordem de 680 m (acima da ordem).
+- Hipótese (não provada): produção de 27/10 sem apontamento de inspeção no GMS (ou apontada fora do app). Corrigir seria criar lances no GMS, e não invento lance. **William: confirmar se houve produção e quem é U395462.** A 30575954 (TH05, +143,5 m) pode ter a mesma causa.
