@@ -77,3 +77,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-27 | 3º turno volta a 22:20 + diagnóstico de mangueiras da TH02 | chefe/Sonnet sozinho; revisão pelo próprio Sonnet a pedido (revisor Opus não carregou na sessão) | pedido do William; sem subagentes | custo não medido
 2026-10-28 | Hora-Hora: TH07 de 27/10 (2o e 3o turno) lancado como Manutencao Preventiva, 17 itens (IDs 31759 a 31775) gravados e conferidos por leitura | chefe (Sonnet), sem subagente | mesmo padrao de 26/10, gravacao pelo navegador com Libero do William | sem medicao
 2026-10-28 | Tempos: lista Tempos_Montagem criada, script Office e roteiro do fluxo GMS_Tempos_Sync | chefe (Sonnet), sem subagente | exploracao e escrita curtas, leitura do Excel na memoria do navegador | sem medicao
+2026-10-28 | Conferência GMS x SAP refeita com listas do SharePoint e MB51 de 28/10; COOIS comparado | chefe (Sonnet), sem subagente | leitura e script existente | sem medição
