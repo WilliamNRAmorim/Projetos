@@ -167,6 +167,6 @@ Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o
 - EC215-08L: 1 lance de 63,4 m (17/08, TH07) da 29862025 está no SAP na 29847701.
 
 **30545859 — decisão do William (28/10): os 582,4 m existem, só faltou lançar no GMS.** Preparado, **não gravado** (sistema bloqueou a criação de registros; aguarda confirmação dos dados assumidos):
-- 12 lances novos em RegistrosInspeção (OP 30545859, HC139-7 250 MTS, TM04, CABINE_L2), valores e ordem dos docs SAP 3029003870 a 3029009686. O SAP só informa a data (27/10), não a hora: proposta 27/10 a partir das 12:00, um por minuto, TurnoTeste 1; sem diâmetros nem concentricidade (não existem na fonte).
+- 12 lances novos em RegistrosInspeção (OP 30545859, HC139-7 250 MTS, TM04, CABINE_L2), valores e ordem dos docs SAP 3029003870 a 3029009686. O SAP só informa a data (27/10), não a hora: definido pelo William: TurnoTeste 3; proposta 27/10 a partir das 22:30 (turno 3 começa 22:20), um por minuto; sem diâmetros nem concentricidade (não existem na fonte).
 - Depois: ficha 3988 `quantidade_extracao` 212,6 → 795,0, e Packing_Pallets pallet 2 (ficha 3988, 12 lances, 582,4 m). Atenção: a ficha mostra 680 m de mandril e 230 m até a extração, e o SAP já soma 803,4 m para ordem de 680 m; o William é quem confirma que a produção existiu.
 - Packlist do pallet 2 gerado como prévia em `Packlists/Pallet2_30545859/PackList_3988_30545859_P2.pdf` (script `gerar.py` ao lado).
