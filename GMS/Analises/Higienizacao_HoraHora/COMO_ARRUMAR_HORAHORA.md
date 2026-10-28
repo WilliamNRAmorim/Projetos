@@ -159,3 +159,7 @@ Escolha uma máquina e um dia (usamos TH07). Compare `minutos BI` por turno (1º
 - Apagar dado em definitivo: nunca (só lixeira, a pedido). Entrar em conta, aceitar permissões do app/Microsoft: é do William.
 - Decisões em vigor: dia produtivo 05:20 a 05:20; hora do jantar conta com meta proporcional e refeição fora de Parado e Principal parada; 10 min de 13:47 a 13:57 vão para o 2º turno (minutos, meta, real e parado); janeiro a 03/09 não se mexe; meta das duas passadas adiada; atualização com 8 horários.
 - Pendências abertas na data: refresh e publicação do relatório com `Real BI`/`Parado BI`; atualizar a medida do modelo `'Hora-Hora'[Real HH]` para `SUM(fHoraHora[Real BI])` (só depois do refresh); decisão da meta das duas passadas (MEL-241).
+
+## Precedentes na pasta
+- `LOG_TH07_2026-10-26_manutencao_preventiva.txt` e o `.tsv` ao lado: outra sessão gravou o 2º e o 3º turno da TH07 de 26/10 (17 itens, IDs 31551 a 31567, motivo Manutenção Preventiva), no mesmo padrão da seção 5. Para desfazer, os IDs vão para a lixeira da lista.
+- TH06, noite 23/10, motivo "Amostra": IDs 31374 a 31381.
