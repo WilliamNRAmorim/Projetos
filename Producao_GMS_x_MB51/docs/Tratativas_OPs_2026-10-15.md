@@ -136,3 +136,18 @@ Para desfazer, voltar o OP_ID ao de origem. Pendentes: lance 17870 (86,8 m, OP 3
 - Troca completa 30424231 ↔ 30351277: 31 lances (676,0 m) e 14 lances (506,5 m). Fichas 3887 e 3806.
 - Lance 18709 (30529216): 16,9 → 16,1 m, igual ao SAP. Ficha 3996 (532,0 m).
 - Fora: 126/109 (SAP lançou refugo de 12,5 m como boa na 30223117), 140, 147 e os 21 sem packlist.
+
+## Rodada de 28/10/2026 (conferência refeita com SharePoint e MB51 de 28/10)
+
+Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o que tem prova e paralelo no histórico; o resto fica aqui para ele ajudar e para a próxima vez sair certo.
+
+**Prontas (troca de OP do lance, prova por valor, hora e doc SAP) — em `registros/correcoes_gms_2026-10-28.csv`; fichas em `correcoes_ficha_28out_previstas.csv` (ficha = soma dos lances antes, então acompanha). Gravação no SharePoint bloqueada pelo sistema; aguardando liberação:**
+- GH781-8: 30206916 → 30206915 (65,8 m); 30406737 → 30338597 (122,5 m).
+- GH781-4: 4 lances (188,8 m) 30495038 → 30495036.
+
+**Não sei resolver (William ajuda):**
+- 30495036: 30,4 m de boa (doc 3028369639) e 21,9 m de refugo (doc 3028431649, 19/10) só no SAP, sem par no GMS.
+- 30495038: SAP lançou 553,9 m e estornou no mesmo dia (docs 3028368920 e 3028649234, usuário S122684, outro dos demais). No GMS ficam 2 lances de boa (36,2 e 6,9 m) e ~40 refugos que o SAP não tem. OP ainda REL no COOIS. Perguntar a S122684 o motivo do estorno.
+- 30545859 (HC139-7): SAP 803,4 m, GMS 221 m (+582 m). Causa não vista.
+- 30337761 (GH781-8, −522 m) e 30406478 (GH493-12, −316 m): sem lançamento na MB51. Para a 30337761 a boa pode estar na 30421672 (15/10).
+- COOIS não traz várias OPs do GMS (ex. 29733203, 29118867, 30206916): motivo desconhecido.
