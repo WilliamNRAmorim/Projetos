@@ -79,3 +79,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-28 | Tempos: lista Tempos_Montagem criada, script Office e roteiro do fluxo GMS_Tempos_Sync | chefe (Sonnet), sem subagente | exploracao e escrita curtas, leitura do Excel na memoria do navegador | sem medicao
 2026-10-28 | Conferência GMS x SAP refeita com listas do SharePoint e MB51 de 28/10; COOIS comparado | chefe (Sonnet), sem subagente | leitura e script existente | sem medição
 2026-10-28 | Gravados no GMS 6 lances (troca de OP) e 6 fichas, pares GH781-8 e GH781-4, com Libero e releitura | chefe (Sonnet), sem subagente | padrão de 15/10 com travas | sem medição
+2026-10-28 | Gravado no GMS lote 2 (GH781-16 troca dupla, EC215-08L): 12 lances e 4 fichas, com Libero e releitura | chefe (Sonnet), sem subagente | mesmo padrão do lote 1 | sem medição
