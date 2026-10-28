@@ -1,7 +1,7 @@
 """Top N OPs mais divergentes (MB51 x GMS) no periodo e, para cada uma, as OPs da mesma mangueira que ficaram com os lances trocados.
 Prova por lance: lance 'so no GMS' (ou 'so na MB51') com a mesma metragem (+-0,05 m), na mesma mangueira, em outra OP, em +-7 dias.
 Rodar na pasta Producao_GMS_x_MB51: python -I compensacao_por_lance.py [N] [inicio] [fim] [saida.csv]   (padrao 10, 2026-05-20 a 2026-09-20). Pula ops_tratadas.csv.
-Le o mb51 (5).xlsx (cerca de 1 minuto)."""
+Le o mb51 (8).xlsx (cerca de 1 minuto)."""
 import os as _os, pathlib as _pl; _os.chdir(_pl.Path(__file__).resolve().parents[1])  # roda sempre a partir de Producao_GMS_x_MB51
 import sys, csv, collections, datetime as dt, openpyxl
 N=int(sys.argv[1]) if len(sys.argv)>1 else 10
@@ -12,7 +12,7 @@ wb=openpyxl.load_workbook('Conferencia_Lances_por_OP.xlsx',read_only=True)
 res=list(wb['Resumo por OP'].iter_rows(min_row=2,values_only=True))
 ll=list(wb['Linha a linha'].iter_rows(min_row=2,values_only=True))
 mb=collections.defaultdict(list)   # material -> (op, data, qtd, doc, tipo)
-for r in openpyxl.load_workbook('dados/mb51 (5).xlsx',read_only=True,data_only=True).worksheets[0].iter_rows(min_row=2,values_only=True):
+for r in openpyxl.load_workbook('dados/mb51 (8).xlsx',read_only=True,data_only=True).worksheets[0].iter_rows(min_row=2,values_only=True):
     if r[11]!='M' or str(r[5])!='101' or not r[1] or r[14] is None: continue
     mb[str(r[0])].append((str(r[1]).strip(),r[9],float(r[14]),f"{r[7]}/{r[8]}"))
 gm=collections.defaultdict(list)   # material -> lances GMS 'so no GMS'

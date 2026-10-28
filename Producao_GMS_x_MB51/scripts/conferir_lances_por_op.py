@@ -2,9 +2,9 @@
 
 Rodar na raiz do repositório:  python Producao_GMS_x_MB51/scripts/conferir_lances_por_op.py
 Entradas (pasta Producao_GMS_x_MB51):
-  dados/inspecao_14out.csv  -> lista RegistrosInspeção (query (49).iqy, exportada pelo Excel)
-  dados/refugo_14out.csv    -> lista TiposErros       (query (48).iqy)
-  dados/mb51 (5).xlsx       -> export da MB51 (com código do material e Order)
+  dados/inspecao_28out.csv  -> lista RegistrosInspeção (query (49).iqy, exportada pelo Excel)
+  dados/refugo_28out.csv    -> lista TiposErros       (query (48).iqy)
+  dados/mb51 (8).xlsx       -> export da MB51 (com código do material e Order)
   ../GMS/Sharepoint Data GMS/ficha_producao.csv -> mangueira da OP quando a inspeção vem sem nome
 Saídas: Conferencia_Lances_por_OP.xlsx e dados/aliases_mangueira.csv (nome GMS x material SAP, aprendido pela OP).
 """
@@ -79,7 +79,7 @@ excluidos = []
 gms = collections.defaultdict(list)
 nome_insp = collections.defaultdict(collections.Counter)
 zerados = 0
-for i, r in enumerate(ler_csv(AQUI / "dados" / "inspecao_14out.csv"), start=2):
+for i, r in enumerate(ler_csv(AQUI / "dados" / "inspecao_28out.csv"), start=2):
     op, q = r["OP_ID"].strip(), num(r["Quantidade"])
     if not q:
         zerados += 1; continue
@@ -90,7 +90,7 @@ for i, r in enumerate(ler_csv(AQUI / "dados" / "inspecao_14out.csv"), start=2):
     if r["Mangueira"].strip():
         nome_insp[op][nome_gms(r["Mangueira"])] += 1
     gms[op].append(Lance("GMS", op, "boa", q, d, f"Inspeção linha {i}", r.get("Trançadeira", "")))
-for i, r in enumerate(ler_csv(AQUI / "dados" / "refugo_14out.csv"), start=2):
+for i, r in enumerate(ler_csv(AQUI / "dados" / "refugo_28out.csv"), start=2):
     op, q = r["OP_ID"].strip(), num(r["Quantidade"])
     if not q:
         zerados += 1; continue
@@ -109,7 +109,7 @@ def mangueira_gms(op):
 
 # ---------------- MB51 ----------------
 mb = collections.defaultdict(list)
-ws = openpyxl.load_workbook(AQUI / "dados" / "mb51 (5).xlsx", read_only=True, data_only=True).worksheets[0]
+ws = openpyxl.load_workbook(AQUI / "dados" / "mb51 (8).xlsx", read_only=True, data_only=True).worksheets[0]
 for r in ws.iter_rows(min_row=2, values_only=True):
     mat, op, desc, mvt, d, un, q, usr = r[0], r[1], r[2], str(r[5]), r[9], r[11], r[14], r[15]
     if un != "M" or mvt not in ("101", "102") or not op or q is None:
@@ -356,7 +356,7 @@ for op, S in sorted(mb.items()):
     sg.append([op, S[0].mat, S[0].desc, min(ds), max(ds), len(S), round(sum(s.q for s in S), 2)])
 
 for l in [
-    "Fontes: listas RegistrosInspeção e TiposErros do SharePoint puxadas em 14/10/2026 pelas query (49).iqy e query (48).iqy; MB51 = mb51 (5).xlsx (lançamentos até 14/10/2026).",
+    "Fontes: listas RegistrosInspeção e TiposErros do SharePoint puxadas em 28/10/2026; MB51 = mb51 (8).xlsx (lançamentos até 28/10/2026).",
     "MB51: só unidade M, movimentos 101 e 102, com Order preenchida. Usuários U445131 e U452021 = lançamento de refugo; demais = produção boa; 102 = estorno (vem negativo).",
     "GMS: cada linha da inspeção é um lance de produção boa; cada linha do TiposErros é um lance de refugo. Linhas com quantidade 0 ou vazia foram ignoradas (" + str(zerados) + ").",
     "Ordem do casamento dentro da OP: (1) cada 102 anula um 101 de mesmo valor; (2) mesmo valor (±0,05 m) e mesmo tipo, pela data mais próxima; (3) mesmo valor com tipo trocado (boa x refugo);",
