@@ -141,7 +141,7 @@ Para desfazer, voltar o OP_ID ao de origem. Pendentes: lance 17870 (86,8 m, OP 3
 
 Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o que tem prova e paralelo no histórico; o resto fica aqui para ele ajudar e para a próxima vez sair certo.
 
-**Prontas (troca de OP do lance, prova por valor, hora e doc SAP) — em `registros/correcoes_gms_2026-10-28.csv`; fichas em `correcoes_ficha_28out_previstas.csv` (ficha = soma dos lances antes, então acompanha). Gravação no SharePoint bloqueada pelo sistema; aguardando liberação:**
+**Prontas (troca de OP do lance, prova por valor, hora e doc SAP) — em `registros/correcoes_gms_2026-10-28.csv`; fichas em `correcoes_ficha_28out_previstas.csv` (ficha = soma dos lances antes, então acompanha). Gravação no SharePoint bloqueada pelo sistema; GRAVADAS em 28/10 com o "Libero" do William, releitura conferida (6 lances e 6 fichas, tudo status 204):**
 - GH781-8: 30206916 → 30206915 (65,8 m); 30406737 → 30338597 (122,5 m).
 - GH781-4: 4 lances (188,8 m) 30495038 → 30495036.
 
