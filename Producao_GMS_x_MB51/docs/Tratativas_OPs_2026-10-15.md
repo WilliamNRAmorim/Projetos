@@ -170,3 +170,10 @@ Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o
 - 12 lances novos em RegistrosInspeção (OP 30545859, HC139-7 250 MTS, TM04, CABINE_L2), valores e ordem dos docs SAP 3029003870 a 3029009686. O SAP só informa a data (27/10), não a hora: definido pelo William: TurnoTeste 3; proposta 27/10 a partir das 22:30 (turno 3 começa 22:20), um por minuto; sem diâmetros nem concentricidade (não existem na fonte).
 - Depois: ficha 3988 `quantidade_extracao` 212,6 → 795,0, e Packing_Pallets pallet 2 (ficha 3988, 12 lances, 582,4 m). Atenção: a ficha mostra 680 m de mandril e 230 m até a extração, e o SAP já soma 803,4 m para ordem de 680 m; o William é quem confirma que a produção existiu.
 - Packlist do pallet 2 gerado como prévia em `Packlists/Pallet2_30545859/PackList_3988_30545859_P2.pdf` (script `gerar.py` ao lado).
+
+**30324629 (GH781-16, TO04, ficha 3787, ordem 250 m) — analisada em 28/10, proposta aguardando "Libero":**
+- SAP (28/09, U395556): 4 boa — 58,7 (doc 3026960349), 54,8 (3026962115), 51,0 (3026962267), 60,0 (3026962465) — e 17,3 de refugo (29/09, doc 3027020917). COOIS 241,8 m, TECO.
+- GMS: 1 lance boa de 49,3 (28/09 16:52) mais refugos 0,6 e 1,1 que fecham os 51,0; 3 refugos (14,8 + 0,4 + 0,4) que fecham 15,6 dos 17,3 do SAP.
+- Faltam no GMS **3 lances de boa: 58,7, 54,8 e 60,0 (173,5 m)**, e não existem em outra OP (o 54,8 que aparece na 30307301 é de 26/09, coincidência). A ficha 3787 mostra extração de 270 m (finalizada 28/09), o que sustenta que houve produção.
+- Sobram 1,7 m: o refugo do SAP (17,3) é maior que o do GMS (15,6). Não resolvido.
+- Proposta: criar os 3 lances (TO04, GH781-16, turno 2, 28/09, horas aproximadas pela ordem dos docs: 58,7 às 16:40, 54,8 às 16:46, 60,0 às 17:05) e acertar a ficha 3787 (`quantidade_extracao` 49,3 → 222,8). Sem pallet (Packing_Pallets não tem essa ficha).
