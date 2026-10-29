@@ -215,3 +215,4 @@ Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o
 - **Ficha 3890: OP 30406478 → 30406472** (SAP GH493-12, ordem 400, TECO 05/10): 4 lances (310,8 m) e 4 refugos (5,1 m) acompanharam.
 - **30636253 → 30604449:** lances 20089 (84,4) e 20091 (96,4); fichas 4166 (1.022,4 → 841,6) e 4136 (648,8 → 829,6). **Os pallets 240 e 241 (30636253) não foram alterados e ainda listam esses 2 lances (pallet P1 559,7 e P2 462,7)**; a OP 30604449 passa a 829,6 m para ordem de 680 m. O packlist físico os coloca na 30636253: se o erro for do SAP, o certo seria o SAP corrigir; fica registrado.
 - Refugos movidos de OP seguem sem lançamento no SAP (entram no lote de refugos). A cópia local `inspecao_29out.csv` não reflete estas trocas até a próxima atualização por delta.
+- **Decisão do William (29/10): pallets 240 e 241 da 30636253 ficam como estão** (o packlist físico é a referência).
