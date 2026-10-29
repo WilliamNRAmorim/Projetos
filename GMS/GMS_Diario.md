@@ -1251,3 +1251,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-29 | PUBLICADO | OnStart | — | MEL-254 | William colou o GH781-6-2 em colMangueiras e reabriu o app #F1
 2026-10-29 | VALIDADO | Painéis de TV | — | MEL-246 | William informa que a revisão de compilação interrompida foi retomada e feita #F1
 2026-10-29 | ENTREGUE | Tempos_Montagem | — | MEL-??? | Patch _patch_Tempos_Montagem_fonte.md em Telas/ para trocar a fonte Tempos (embutida no .msapp) pela lista Tempos_Montagem via linha Tempos = Tempos_Montagem; no App.Formulas, sem mexer nas 7 fórmulas; nenhuma tela editada, William publica no Studio depois da carga inicial conferida #F1
+2026-10-29 | FEITO | Tempos_Montagem | — | MEL-??? | Fluxo GMS_Tempos_Sync LIGADO (Status On) com o sim do William; a carga inicial só roda quando o PN prod time.xlsx for salvo (gatilho de arquivo modificado); lista ainda vazia, aviso de falha e flow checker pendentes #F1
