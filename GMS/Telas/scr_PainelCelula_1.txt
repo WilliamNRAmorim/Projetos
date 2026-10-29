@@ -48,7 +48,7 @@ Screens:
               If(varR1Pnl || varR2Pnl || varR3Pnl, Set(varFalhaPnl, true));
               If(
                   IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
-                  IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
+                  IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); Refresh(DM_ENGRENAGENS_DESVIO); true, Set(varFalhaPnl, true); false)
               );
               // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
               // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
@@ -80,8 +80,36 @@ Screens:
                                       Chave: fx_MangCanon(_d0.PARTNUMBER),
                                       ConsN: fx_NormCodigo(_d0._2BRD_CODE)
                                   }
+                              ),
+                              // [DESVIO] só as linhas do desvio que estão valendo hoje (Inicio..Fim).
+                              _dsv: ForAll(
+                                  Filter(
+                                      DM_ENGRENAGENS_DESVIO,
+                                      fx_DesvioAtivo(Desvio, Inicio, Fim, fx_DataRefEm(varAgoraPnl))
+                                  ) As _x,
+                                  {
+                                      MaqN: fx_NormCodigo(_x._4MAQUINA),
+                                      ConsN: fx_NormCodigo(_x._1CONSTRUCAO),
+                                      MFG: fx_NumVelocidade(Text(_x._13TEORICA_M_H))
+                                  }
                               )
                           },
+                          With(
+                              {
+                                  // Desvio ativo SUBSTITUI a linha normal da mesma máquina+construção.
+                                  _engOk: Ungroup(
+                                      Table(
+                                          {
+                                              L: Filter(
+                                                  _eng As _a,
+                                                  CountRows(Filter(_dsv As _b, _b.MaqN = _a.MaqN && _b.ConsN = _a.ConsN)) = 0
+                                              )
+                                          },
+                                          { L: _dsv }
+                                      ),
+                                      L
+                                  )
+                              },
                           With(
                               {
                                   _novo: Filter(
@@ -90,7 +118,7 @@ Screens:
                                               Filter(_trc As _t1, !IsBlank(_t1.Chave) && !IsBlank(_t1.ConsN)) As _d,
                                               {
                                                   Linhas: ForAll(
-                                                      Filter(_eng As _e2, _e2.ConsN = _d.ConsN) As _e3,
+                                                      Filter(_engOk As _e2, _e2.ConsN = _d.ConsN) As _e3,
                                                       {
                                                           MaqN: _e3.MaqN,
                                                           Chave: _d.Chave,
@@ -117,6 +145,7 @@ Screens:
                                   Set(varTruncaPnl, true)
                               );
                               true
+                          )
                           )
                       ),
                       Set(varFalhaPnl, true); false

@@ -87,3 +87,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-29 | OP 29733203: lance duplicado de 116,1 m para a lixeira e ficha 3161 ajustada (590,1 para 474,0) | chefe (Sonnet), sem subagente | Libero do William, releitura conferida | sem medição
 2026-10-29 | Reconferência GMS x SAP com MB51 (9)/COOIS (3): GMS atualizado por delta do SharePoint, sem divergência nova nas antigas; 7 OPs fecharam | chefe (Sonnet), sem subagente | rotina existente + delta por API | sem medição
 2026-10-29 | Corrigido no GMS: OP das fichas 3841 e 3890 (digitada errada, com lances e refugos), 2 lances da 30636253 para 30604449 e fichas | chefe (Sonnet), sem subagente | regra do William (corrigir GMS), prova por valor+COOIS, releitura conferida | sem medição
+2026-10-29 | Desvio de velocidade da trançadeira (fonte separada, janela de datas) | chefe Sonnet direto, sem subagente | mudança pequena em 2 arquivos, plano aprovado | custo não medido

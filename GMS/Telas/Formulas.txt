@@ -1082,14 +1082,35 @@ fx_MaquinaEngrenagens(célula: Text): Text =
 // digitado à mão) e DM_ENGRENAGENS vira Blank() em silêncio → MFG = 0 → mangueira some da lista.
 // _13TEORICA_M_H vem com vírgula decimal e tem linhas "-" (Spiral) — Text()+Substitute cobre
 // número ou texto na origem, e "-"/Blank() viram 0 (a chamadora decide o que fazer com MFG = 0).
+// [DESVIO] Desvio de velocidade (DM_ENGRENAGENS_DESVIO): enquanto hoje (data de referência do turno) estiver
+// entre Inicio e Fim (inclusive) e Desvio = 1, a velocidade do desvio É a oficial da máquina+construção.
+// Passou do Fim (ex.: 31/12/2026) ele deixa de valer sozinho e volta a velocidade de DM_ENGRENAGENS.
+fx_DesvioAtivo(desvio: Number, inicio: Date, fim: Date, hoje: Date): Boolean =
+    desvio = 1 && !IsBlank(inicio) && !IsBlank(fim) && hoje >= inicio && hoje <= fim;
+
 fx_VelocidadeTeorica(maquina: Text, construcao: Text): Number =
-    fx_NumVelocidade(
-        Text(
-            LookUp(
-                DM_ENGRENAGENS,
+    With(
+        {
+            _dsv: LookUp(
+                DM_ENGRENAGENS_DESVIO,
                 fx_NormCodigo(_4MAQUINA) = fx_NormCodigo(maquina) &&
-                    fx_NormCodigo(_1CONSTRUCAO) = fx_NormCodigo(construcao),
+                    fx_NormCodigo(_1CONSTRUCAO) = fx_NormCodigo(construcao) &&
+                    fx_DesvioAtivo(Desvio, Inicio, Fim, fx_DataRefEm(Now())),
                 _13TEORICA_M_H
+            )
+        },
+        fx_NumVelocidade(
+            Text(
+                If(
+                    !IsBlank(_dsv),
+                    _dsv,
+                    LookUp(
+                        DM_ENGRENAGENS,
+                        fx_NormCodigo(_4MAQUINA) = fx_NormCodigo(maquina) &&
+                            fx_NormCodigo(_1CONSTRUCAO) = fx_NormCodigo(construcao),
+                        _13TEORICA_M_H
+                    )
+                )
             )
         )
     );
