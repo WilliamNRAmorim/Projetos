@@ -84,3 +84,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-28 | OP 30324629: criados 3 lances (173,5 m) e ficha 3787 ajustada no GMS | chefe (Sonnet), sem subagente | mesmo padrão da 30545859, Libero do William, releitura conferida | sem medição
 2026-10-29 | TH07 28/10 2o e 3o turno: preventiva lancada na Hora-Hora (17 linhas) | chefe (Sonnet), sem subagente | tarefa repetida, so aplicar o padrao documentado | baixo
 2026-10-29 | OP 30589719 e 30636250: lance simbólico trocado por 6 lances reais cada, fichas e pallets 208/256 corrigidos, PDFs refeitos | chefe (Sonnet), sem subagente | Libero do William, releitura conferida | sem medição
+2026-10-29 | OP 29733203: lance duplicado de 116,1 m para a lixeira e ficha 3161 ajustada (590,1 para 474,0) | chefe (Sonnet), sem subagente | Libero do William, releitura conferida | sem medição
