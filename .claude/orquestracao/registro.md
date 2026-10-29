@@ -82,3 +82,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-28 | Gravado no GMS lote 2 (GH781-16 troca dupla, EC215-08L): 12 lances e 4 fichas, com Libero e releitura | chefe (Sonnet), sem subagente | mesmo padrão do lote 1 | sem medição
 2026-10-28 | OP 30545859: criados 12 lances no GMS (582,4 m, turno 3), ficha 3988 e pallet 2; packlist PDF gerado | chefe (Sonnet), sem subagente | decisão e permissão do William, releitura conferida | sem medição
 2026-10-28 | OP 30324629: criados 3 lances (173,5 m) e ficha 3787 ajustada no GMS | chefe (Sonnet), sem subagente | mesmo padrão da 30545859, Libero do William, releitura conferida | sem medição
+2026-10-29 | TH07 28/10 2o e 3o turno: preventiva lancada na Hora-Hora (17 linhas) | chefe (Sonnet), sem subagente | tarefa repetida, so aplicar o padrao documentado | baixo
