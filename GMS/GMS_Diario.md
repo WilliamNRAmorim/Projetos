@@ -1250,3 +1250,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-10-29 | PUBLICADO | Formulas+PainelCelula | — | MEL-256 | William adicionou a fonte DM_ENGRENAGENS_DESVIO no Studio e colou o patch do desvio de velocidade da trançadeira #F1
 2026-10-29 | PUBLICADO | OnStart | — | MEL-254 | William colou o GH781-6-2 em colMangueiras e reabriu o app #F1
 2026-10-29 | VALIDADO | Painéis de TV | — | MEL-246 | William informa que a revisão de compilação interrompida foi retomada e feita #F1
+2026-10-29 | ENTREGUE | Tempos_Montagem | — | MEL-??? | Patch _patch_Tempos_Montagem_fonte.md em Telas/ para trocar a fonte Tempos (embutida no .msapp) pela lista Tempos_Montagem via linha Tempos = Tempos_Montagem; no App.Formulas, sem mexer nas 7 fórmulas; nenhuma tela editada, William publica no Studio depois da carga inicial conferida #F1
