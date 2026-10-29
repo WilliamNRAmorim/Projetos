@@ -41,10 +41,10 @@ for x in L:
 # ---------- GMS ----------
 EXCL = {r["referencia"] for r in ler(AQUI / "dados" / "lances_excluidos.csv")} if (AQUI / "dados" / "lances_excluidos.csv").exists() else set()
 regs = []
-for i, r in enumerate(ler(AQUI / "dados" / "inspecao_28out.csv"), start=2):
+for i, r in enumerate(ler(AQUI / "dados" / "inspecao_29out.csv"), start=2):
     regs.append(("Produção", f"Inspeção linha {i}", r["OP_ID"].strip(), num(r["Quantidade"]), data(r["Created"]),
                  (r["Diametro_Interno"], r["Diametro_Externo"], r["Concentricidade"]), r["Mangueira"] or ""))
-for i, r in enumerate(ler(AQUI / "dados" / "refugo_28out.csv"), start=2):
+for i, r in enumerate(ler(AQUI / "dados" / "refugo_29out.csv"), start=2):
     regs.append(("Refugo", f"Refugo linha {i}", r["OP_ID"].strip(), num(r["Quantidade"]), data(r["Created"]),
                  r["CodigoErro"], ""))
 
