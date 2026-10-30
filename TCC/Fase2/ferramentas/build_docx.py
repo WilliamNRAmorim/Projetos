@@ -10,14 +10,16 @@ import sys
 import zipfile
 from pathlib import Path
 
-MOLDE = Path("C:/Users/willi/Downloads/Projetos/TCC_GMS.docx")
-FIGURAS = Path("C:/Users/willi/Downloads/Projetos/TCC/Fase2/figuras")
+RAIZ_TCC = Path(__file__).resolve().parents[2]   # .../Projetos/TCC
+MOLDE = RAIZ_TCC / "TCC_GMS.docx"
+FIGURAS = RAIZ_TCC / "Fase2" / "figuras"
 MAX_W = 5760000   # 16 cm em EMU
 MAX_H = 7200000   # 20 cm em EMU
 FIG_ESPECIAL = "fig04_evolucao_interface.png"
 CM = 360000  # EMU por cm
-LARG_CM = {"fig01": 16, "fig02": 11.5, "fig03": 12, "fig05": 12.5, "fig06": 12.5, "fig07": 14.5,
-           "fig08": 14.5, "fig09": 12.5, "fig10": 13.5, "fig11": 13, "fig12": 13, "fig13": 13}
+LARG_CM = {"fig01": 15, "fig02": 11, "fig03": 11, "fig05": 11, "fig06": 12.5, "fig07": 13.5,
+           "fig08": 14, "fig09": 11.5, "fig10": 13.5, "fig11": 13, "fig12": 13, "fig13": 13,
+           "print": 13.5}
 FIG04_CM = 7.8  # largura de cada tela (a) e (b) reaproveitada do TCC I
 
 FONT = ('<w:rFonts w:ascii="Times New Roman" w:cs="Times New Roman" '
