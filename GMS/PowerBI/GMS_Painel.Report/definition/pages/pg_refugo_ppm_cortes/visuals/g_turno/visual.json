@@ -346,7 +346,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "f_sem_vazio",
+        "name": "f_turno_valido",
         "field": {
           "Column": {
             "Expression": {
@@ -357,7 +357,7 @@
             "Property": "Turno_Trançagem"
           }
         },
-        "type": "Advanced",
+        "type": "Categorical",
         "filter": {
           "Version": 2,
           "From": [
@@ -370,32 +370,55 @@
           "Where": [
             {
               "Condition": {
-                "Not": {
-                  "Expression": {
-                    "Comparison": {
-                      "ComparisonKind": 0,
-                      "Left": {
-                        "Column": {
-                          "Expression": {
-                            "SourceRef": {
-                              "Source": "c"
-                            }
-                          },
-                          "Property": "Turno_Trançagem"
-                        }
-                      },
-                      "Right": {
-                        "Literal": {
-                          "Value": "null"
-                        }
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "c"
+                          }
+                        },
+                        "Property": "Turno_Trançagem"
                       }
                     }
-                  }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'1'"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'2'"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'3'"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'Turno 3'"
+                        }
+                      }
+                    ]
+                  ]
                 }
               }
             }
           ]
-        }
+        },
+        "howCreated": "User"
       }
     ]
   }

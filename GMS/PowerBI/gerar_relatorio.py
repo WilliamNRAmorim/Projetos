@@ -240,6 +240,7 @@ def filtro_incluir(ent, prop, valores, alias, nome):
     }
 
 
+TRANC_VALIDAS = ["TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07", "TM01", "TM04", "TO04", "Spiral"]
 TRANCADEIRAS = ["TH01", "TH02", "TH03", "TH05", "TH06", "TH07", "Spiral"]
 
 
@@ -569,15 +570,22 @@ def pg_refugo_ppm_cortes():
     p.add("g_dia", MARGEM, y1, w2, alt, grafico(
         "lineChart", col("dCalendario", "Date"), [ppm], "Como o PPM de refugo evolui por dia?",
         categorico=True, sem_vazio=True))
-    p.add("g_turno", MARGEM + w2 + VAO, y1, w2, alt, grafico(
-        "clusteredColumnChart", col("ficha_producao", "Turno_Trançagem"), [ppm],
-        "Qual turno tem o maior PPM de refugo?", rotulo_fora=True, sem_vazio=True))
+    # Filtros de valores validos (so os que existem de fato). Grafias sujas ("TH-02", "Turno 3", "0") sao
+    # corrigidas na origem pelo passo de Power Query em modelo/limpeza_ficha_producao.m.md.
+    def so(v, ent, prop, valores, nome):
+        v["filterConfig"] = {"filters": [filtro_incluir(ent, prop, valores, "c", nome)]}
+        return v
+    v_turno = so(grafico("clusteredColumnChart", col("ficha_producao", "Turno_Trançagem"), [ppm],
+                         "Qual turno tem o maior PPM de refugo?", rotulo_fora=True),
+                 "ficha_producao", "Turno_Trançagem", ["1", "2", "3", "Turno 3"], "f_turno_valido")
+    v_tran = so(grafico("clusteredBarChart", col("ficha_producao", "Trançadeira"), [ppm],
+                        "Qual trançadeira tem o maior PPM?", ordenar=ppm, desc=True, rotulo_fora=True),
+                "ficha_producao", "Trançadeira", TRANC_VALIDAS, "f_trancadeira_valida")
+    p.add("g_turno", MARGEM + w2 + VAO, y1, w2, alt, v_turno)
     p.add("g_mangueira", MARGEM, y2, w2, alt, grafico(
         "clusteredBarChart", col("ficha_producao", "Mangueira"), [ppm],
         "Quais tipos de mangueira têm o maior PPM?", ordenar=ppm, desc=True, sem_vazio=True))
-    p.add("g_trancadeira", MARGEM + w2 + VAO, y2, w2, alt, grafico(
-        "clusteredBarChart", col("ficha_producao", "Trançadeira"), [ppm],
-        "Qual trançadeira tem o maior PPM?", ordenar=ppm, desc=True, rotulo_fora=True, sem_vazio=True))
+    p.add("g_trancadeira", MARGEM + w2 + VAO, y2, w2, alt, v_tran)
     return p
 
 
