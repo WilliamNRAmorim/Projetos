@@ -556,10 +556,15 @@ def pg_refugo_ppm_cortes():
     precisa ser conferido no Desktop (DAX da medida nao esta no repositorio)."""
     p = Pagina("pg_refugo_ppm_cortes", "Refugo PPM · Cortes")
     cabecalho(p, "Refugo PPM por dia, turno, mangueira e trançadeira", [SEG_MES])
-    hm, hh = (WL + WR + VAO) // 2 - VAO // 2, 0
     w2 = (LARG_UTIL - VAO) // 2
-    alt = 285
-    y1, y2 = 106, 106 + alt + VAO
+    larg_s = (LARG_UTIL - 2 * VAO) // 3
+    for i, (campo, rot, sync) in enumerate([
+            (col("ficha_producao", "Mangueira"), "Mangueira", "gms_mangueira"),
+            (col("ficha_producao", "Trançadeira"), "Trançadeira", "gms_trancadeira"),
+            (col("ficha_producao", "Turno_Trançagem"), "Turno", "gms_turno_trancagem")]):
+        p.add(f"segc{i}", MARGEM + i * (larg_s + VAO), 102, larg_s, 46, slicer(campo, rot, sync, False))
+    alt = 255
+    y1, y2 = 156, 156 + alt + VAO
     ppm = med("Refugo PPM")
     p.add("g_dia", MARGEM, y1, w2, alt, grafico(
         "lineChart", col("dCalendario", "Date"), [ppm], "Como o PPM de refugo evolui por dia?",
