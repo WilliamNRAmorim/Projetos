@@ -551,6 +551,31 @@ def pg_refugo_ppm():
     return p
 
 
+def pg_refugo_ppm_cortes():
+    """Cortes do PPM. Campos de ficha_producao/dCalendario; o comportamento da medida Refugo PPM nesses cortes
+    precisa ser conferido no Desktop (DAX da medida nao esta no repositorio)."""
+    p = Pagina("pg_refugo_ppm_cortes", "Refugo PPM · Cortes")
+    cabecalho(p, "Refugo PPM por dia, turno, mangueira e trançadeira", [SEG_MES])
+    hm, hh = (WL + WR + VAO) // 2 - VAO // 2, 0
+    w2 = (LARG_UTIL - VAO) // 2
+    alt = 285
+    y1, y2 = 106, 106 + alt + VAO
+    ppm = med("Refugo PPM")
+    p.add("g_dia", MARGEM, y1, w2, alt, grafico(
+        "lineChart", col("dCalendario", "Date"), [ppm], "Como o PPM de refugo evolui por dia?",
+        categorico=True, sem_vazio=True))
+    p.add("g_turno", MARGEM + w2 + VAO, y1, w2, alt, grafico(
+        "clusteredColumnChart", col("ficha_producao", "Turno_Trançagem"), [ppm],
+        "Qual turno tem o maior PPM de refugo?", rotulo_fora=True, sem_vazio=True))
+    p.add("g_mangueira", MARGEM, y2, w2, alt, grafico(
+        "clusteredBarChart", col("ficha_producao", "Mangueira"), [ppm],
+        "Quais tipos de mangueira têm o maior PPM?", ordenar=ppm, desc=True, sem_vazio=True))
+    p.add("g_trancadeira", MARGEM + w2 + VAO, y2, w2, alt, grafico(
+        "clusteredBarChart", col("ficha_producao", "Trançadeira"), [ppm],
+        "Qual trançadeira tem o maior PPM?", ordenar=ppm, desc=True, rotulo_fora=True, sem_vazio=True))
+    return p
+
+
 def pg_gargalo():
     p = Pagina("pg_gargalo", "Gargalo e Fluxo", FILTRO_HH())
     cabecalho(p, "Gargalo e Fluxo", [SEG_MES, (col("Hora-Hora", "Célula"), "Célula", "gms_celula", False)])
@@ -800,7 +825,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_refugo_ppm(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
+    paginas = [pg_visao_geral(), pg_refugo_ppm(), pg_refugo_ppm_cortes(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})
