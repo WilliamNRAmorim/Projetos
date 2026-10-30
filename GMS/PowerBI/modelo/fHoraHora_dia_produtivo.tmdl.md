@@ -60,3 +60,6 @@ Colunas novas na `fHoraHora`: `'Real BI'` e `'Parado BI'`. Janela `13:00 - 13:57
 Os totais do dia não mudam; só a divisão entre 1º e 2º turno. Aproximação proporcional no real; exata com máquina parada. O motivo do parado transferido é o da janela das 13:47.
 Medidas do relatório: `HH Real (m)`, `HH Aderência`, `HH Parado (min)` e `HH Principal Parada` leem `Real BI` e `Parado BI`.
 Pendente: refresh, publicar o relatório e atualizar a medida do modelo `'Hora-Hora'[Real HH]` para `SUM(fHoraHora[Real BI])` (só depois do refresh).
+
+## ATUALIZAÇÃO 30/10/2026 — meta sem desconto de refeição (William)
+`Meta Hora BI` não desconta mais o tempo de Refeição/Almoço: `VAR ref = 0`, ou seja, Meta Hora × Minutos BI ÷ Minutos. Aplicado no modelo (GMS) pelo TMDL view; vale depois do próximo refresh. Substitui a "meta proporcional ao jantar" das atualizações anteriores. A norma do Parado (refeição fora de Parado e Principal parada) segue como estava.
