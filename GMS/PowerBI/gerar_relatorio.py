@@ -562,7 +562,7 @@ def pg_refugo_ppm_cortes():
     for i, (campo, rot, sync) in enumerate([
             (col("ficha_producao", "Mangueira"), "Mangueira", "gms_mangueira"),
             (col("ficha_producao", "Trançadeira"), "Trançadeira", "gms_trancadeira"),
-            (col("ficha_producao", "Turno_Trançagem"), "Turno", "gms_turno_trancagem")]):
+            (col("TiposErros", "Turno Erro"), "Turno", "gms_turno_trancagem")]):
         p.add(f"segc{i}", MARGEM + i * (larg_s + VAO), 102, larg_s, 46, slicer(campo, rot, sync, False))
     alt = 255
     y1, y2 = 156, 156 + alt + VAO
@@ -575,9 +575,9 @@ def pg_refugo_ppm_cortes():
     def so(v, ent, prop, valores, nome):
         v["filterConfig"] = {"filters": [filtro_incluir(ent, prop, valores, "c", nome)]}
         return v
-    v_turno = so(grafico("clusteredColumnChart", col("ficha_producao", "Turno_Trançagem"), [ppm],
+    v_turno = so(grafico("clusteredColumnChart", col("TiposErros", "Turno Erro"), [ppm],
                          "Qual turno tem o maior PPM de refugo?", rotulo_fora=True),
-                 "ficha_producao", "Turno_Trançagem", ["1", "2", "3", "Turno 3"], "f_turno_valido")
+                 "TiposErros", "Turno Erro", ["1", "2", "3"], "f_turno_valido")
     v_tran = so(grafico("clusteredBarChart", col("ficha_producao", "Trançadeira"), [ppm],
                         "Qual trançadeira tem o maior PPM?", ordenar=ppm, desc=True, rotulo_fora=True),
                 "ficha_producao", "Trançadeira", TRANC_VALIDAS, "f_trancadeira_valida")
