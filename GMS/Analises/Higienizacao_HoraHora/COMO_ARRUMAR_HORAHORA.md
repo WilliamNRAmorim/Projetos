@@ -163,3 +163,25 @@ Escolha uma máquina e um dia (usamos TH07). Compare `minutos BI` por turno (1º
 ## Precedentes na pasta
 - `LOG_TH07_2026-10-26_manutencao_preventiva.txt` e o `.tsv` ao lado: outra sessão gravou o 2º e o 3º turno da TH07 de 26/10 (17 itens, IDs 31551 a 31567, motivo Manutenção Preventiva), no mesmo padrão da seção 5. Para desfazer, os IDs vão para a lixeira da lista.
 - TH06, noite 23/10, motivo "Amostra": IDs 31374 a 31381.
+
+## 11. Atualização de 30/10/2026 (o que mudou e como se faz)
+
+### Decisões que substituem as da seção 10
+- **Meta do BI NÃO é proporcional à refeição.** `Meta Hora BI = Meta Hora × Minutos BI ÷ Minutos` (VAR ref = 0). A hora do jantar mostra a meta cheia. A decisão de 23/10 ("meta proporcional") foi revogada pelo William em 30/10.
+- **Regra dos 21h35 (1295/1440)**: vale só nas medidas do relatório `HH Meta Útil (m)` (cartão Meta) e `HH Aderência`, e só quando nenhuma hora está filtrada: `SUM(fHoraHora[Meta Hora BI]) * IF(ISFILTERED(fHoraHora[Hora BI]), 1, 1295/1440)`. As barras por hora usam a meta cheia. Medida de relatório não pode referenciar outra medida de relatório (erro semântico): copie a expressão.
+- Parado e Principal parada seguem sem refeição ("Almoço" do Motivo Padrão).
+
+### Como fazer, com o navegador do app (testado)
+- **Abas**: a aba `seed` fica no SharePoint (leitura e gravação REST pelo `javascript_tool`) e a `tab-1` no Power BI. Não é preciso o Chrome com a extensão.
+- **Editar uma coluna calculada**: TMDL view, clique direito na tabela no painel de dados, "Script TMDL to" > "Script tab". Isso gera o script com `dataType`, `formatString` e `lineTag`. Clique no começo da linha a mudar, `shift`+clique no fim, digite a linha nova, `Escape`, botão **Apply** e espere "Changes applied to the model". A coluna só recalcula depois do refresh.
+- **Refresh**: página do workspace `.../groups/<id>/list`, botão "Refresh now" da linha do semantic model "(GMS)". Se o clique der "ref stale", não repita: confira se já aparece "Cancel refresh" na linha (alguém já disparou). O William costuma disparar sozinho.
+- **Esconder o rótulo de uma série no gráfico**: no `visual.json`, em `objects.labels`, acrescentar `{"properties":{"show":{"expr":{"Literal":{"Value":"false"}}}},"selector":{"metadata":"Medidas.<nome da medida>"}}`. Gravar com `json.dumps(indent=2, ensure_ascii=False)` e CRLF; o diff fica só com as linhas novas.
+- **Criar linhas (seção 5)**: tipo do item `SP.Data.HoraHoraListItem`; `$select=ListItemEntityTypeFullName` só volta certo com `odata=nometadata` (devolve JSON direto, sem `.d`). Modelo: o mesmo turno do dia anterior da máquina. O 2º turno tem 9 janelas e o 3º tem 8 (17 linhas, minutos 524 e 399). Antes de gravar, releia e aborte se já houver linha. Conferência final: releia e conte (sem duplicata).
+- **Retorno vazio do `javascript_tool`** depois de um POST não quer dizer que falhou: releia a lista antes de tentar de novo, para não duplicar.
+
+### Como trabalhar com o William
+- Pedido curto e coloquial (ex.: "TH7 só o 1º turno com manutenção, coloca em todos") quer dizer: leia a lista, ache a lacuna e faça. Pergunte só o que muda o resultado (dia e motivo, quando o texto e os dados divergem) e **use o que está nos dados, não o que ele disse de memória**: ele falou "corretiva" e a lista tinha "preventiva".
+- Quando ele diz "libero", é o "sim" daquela ação. Se o sistema ainda bloquear a escrita (SharePoint, modelo), pare, diga o que ia gravar, deixe o backup pronto e peça que ele libere a permissão; **não tente contornar**. Uma nova tentativa depois do "Tento de novo" funcionou.
+- Pergunta "e a lógica de X?": busque no `git log -S` e no diário antes de responder (os 21h35 estavam no commit `9aab50b`, de 22/10, e a ordem das mudanças explicou tudo).
+- Explique um número do painel com a linha da lista que o gera (ex.: 116 × 13 ÷ 60 = 25). Mostra de onde vem e resolve a dúvida.
+- Ao fim de cada ajuste: linha no diário (MEL-257 neste assunto), `python gms.py --check`, commit só dos arquivos do assunto, `pull --rebase --autostash`, push na main. O relatório só vale depois que o William reabre o projeto no Desktop e publica; o modelo só depois do refresh.
