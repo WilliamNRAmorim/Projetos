@@ -18,8 +18,8 @@ MAX_H = 7200000   # 20 cm em EMU
 FIG_ESPECIAL = "fig04_evolucao_interface.png"
 CM = 360000  # EMU por cm
 LARG_CM = {"fig01": 15, "fig02": 11, "fig03": 11, "fig05": 11, "fig06": 12.5, "fig07": 13.5,
-           "fig08": 14, "fig09": 11.5, "fig10": 13.5, "fig11": 13, "fig12": 13, "fig13": 13,
-           "print": 13.5}
+           "fig08": 14, "fig09": 11.5, "fig10": 13.5, "fig11": 8.5, "fig12": 13, "fig13": 13,
+           "print": 12.5}
 FIG04_CM = 7.8  # largura de cada tela (a) e (b) reaproveitada do TCC I
 
 FONT = ('<w:rFonts w:ascii="Times New Roman" w:cs="Times New Roman" '
@@ -295,12 +295,12 @@ def main():
                 prox["doc"] += 1
             out.append(p_fonte(fonte))
             continue
-        if s.startswith("[[QUADRO"):
+        if s.startswith(("[[QUADRO", "[[TABELA")):
             flush()
             partes = [x.strip() for x in s[2:-2].split("|")]
-            num = partes[0].split()[1]
+            tipo, num = partes[0].split()[0].capitalize(), partes[0].split()[1]
             titulo, fonte = partes[1], partes[2]
-            out.append(p_legenda(f"Quadro {num} \u2013 {titulo}"))
+            out.append(p_legenda(f"{tipo} {num} \u2013 {titulo}"))
             while i < len(linhas) and not linhas[i].strip():
                 i += 1
             if i < len(linhas) and linhas[i].strip().startswith("```"):
