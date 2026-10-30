@@ -115,6 +115,8 @@ PARADA_REAL_DAX = ('COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
 DATA_FICHA = "'ficha_producao'[DataProducao]"
 DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
+    # 30/10/2026: referencia do grafico de PPM = base real de 2025 (~3.900 PPM, Refugo/PPM_Refugo). Ajustar se houver meta oficial.
+    ("Meta Refugo PPM", "Double", "3900", "#,0", []),
     # (nome, tipo, DAX, formato, [(entidade, medida) referenciadas])
     ("Disponibilidade", "Double", "[Disponibilidade %]", "0.0%", [(M, "Disponibilidade %")]),
     ("Tempo Parado %", "Double", "[% Tempo Parado]", "0.0%", [(M, "% Tempo Parado")]),
@@ -530,6 +532,25 @@ def pg_visao_geral():
     return p
 
 
+def pg_refugo_ppm():
+    p = Pagina("pg_refugo_ppm", "Refugo PPM")
+    cabecalho(p, "Refugo da Mangueira · PPM", [SEG_MES])
+    kpis(p, [
+        ("Refugo PPM", med("Refugo PPM"), med("Δ Refugo PPM vs mês ant.")),
+        ("Meta (base 2025)", med("Meta Refugo PPM"), None),
+        ("Refugo (m)", med("Refugo (m)"), None),
+        ("Metragem Produzida", fp("Metragem Produzida"), med("Δ Metragem vs mês ant.")),
+    ])
+    p.add("g_ppm_mes", MARGEM, Y_R1, WL + WR + VAO, 244, grafico(
+        "lineChart", col("dCalendario", "Mês Nº"), [med("Refugo PPM"), med("Meta Refugo PPM")],
+        "O PPM de refugo está acima da base de 2025?", sem_vazio=True, legenda=True))
+    p.add("g_causa", MARGEM, Y_R2, WL + WR + VAO, 240, grafico(
+        "lineClusteredColumnComboChart", col("TiposErros", "CodigoErro"), [med("Refugo (m)")],
+        "Quais causas concentram o refugo (m)?", ordenar=med("Refugo (m)"), desc=True,
+        segunda=[med("% Acumulado Refugo")]))
+    return p
+
+
 def pg_gargalo():
     p = Pagina("pg_gargalo", "Gargalo e Fluxo", FILTRO_HH())
     cabecalho(p, "Gargalo e Fluxo", [SEG_MES, (col("Hora-Hora", "Célula"), "Célula", "gms_celula", False)])
@@ -779,7 +800,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
+    paginas = [pg_visao_geral(), pg_refugo_ppm(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})
