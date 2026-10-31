@@ -74,3 +74,8 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 2. Objetos novos: `morte_mascara` e `mortalha_vazia`; cenário `salao_cores` recebe a cor do salão e a do próximo (perspectiva em enfilada). Sons: `badalada` e `arrastar`.
 3. **Falha do edge-tts (áudio de 2 KB):** aconteceu de novo (Dia 2 Loira, Dia 7 Vizinho) com combinações de `rate` e `pitch` negativos. Depois de gerar as vozes, rodar `find ../stems/serie/epcXX -name "*.mp3" -size -6k` e regerar o que aparecer com `rate`/`pitch` ligeiramente diferentes. Já virou parte do roteiro de produção.
 4. **Semana completa (Dias 1 a 7):** 28 Shorts, cada um com cor dominante e cenário próprio, 45 a 70 s, 1080x1920, sem clipping. Os 4 Shorts de cada dia ficam em `Semanal\contos-dia1` a `contos-dia7` (fora do git). Pendência do plano: o vídeo longo do Dia 8 depende da retenção medida depois de publicar.
+
+## Dia 8: vídeo longo (16:9)
+- `serie/longo.html` junta os 10 MP4 já prontos (decodifica áudio e quadros, sem reprocessar cena), 1920x1080, 553 s (9:13), intro de 10,7 s (voz Antonio + zumbido), fundo = quadro borrado, fade de 0,45 s e batida grave entre contos, corte do silêncio final deixando 0,9 s, barra de progresso e etiqueta "CONTO n DE 10". Ganho por conto para pico -4 dBFS (limite 2x).
+- Seleção feita por critério editorial (mistura literário/folclore/original, durações), NÃO por retenção: ainda não havia dados. Trocar a lista em `LISTA` e rodar de novo se o William quiser os 10 de maior retenção.
+- Render: `node driver.js render "http://127.0.0.1:5178/Producao/serie/longo.html?render=1" --w=1920 --h=1080 --lim=1500` (~12 min); saída `Semanal/contos-dia8/` (405 MB, fora do git).
