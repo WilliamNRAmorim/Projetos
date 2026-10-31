@@ -98,7 +98,7 @@
   OBJETOS.maos_olhos = (g, o, u) => { // mãos da avó cobrindo os olhos de quem está em (o.x, o.escala); braços vêm de trás (o.lado = 1 direita, -1 esquerda)
     const k = out(clamp(u / 0.35)), e = o.escala || 1, lado = o.lado || 1, cx = o.x * W + 16 * e, cy = GY + (o.y || 0) - 472 * e, sl = o.manga || '#7A5A8A', pele = o.pele || '#B98560';
     g.save(); g.globalAlpha = k; g.translate(lado * (1 - k) * 60, 0);
-    for (const dx of [-24, 24]) { const om = o.ombro ? [o.ombro[0] + dx * 1.6, o.ombro[1]] : [cx + lado * 210 * e + dx * e * 1.4, cy + 190 * e]; line(g, cx + dx * e, cy + 4 * e, om[0], om[1], sl, 46 * e); }
+    if (!o.semBraco) for (const dx of [-24, 24]) { const om = o.ombro ? [o.ombro[0] + dx * 1.6, o.ombro[1]] : [cx + lado * 210 * e + dx * e * 1.4, cy + 190 * e]; line(g, cx + dx * e, cy + 4 * e, om[0], om[1], sl, 46 * e); }
     rrect(g, cx - 66 * e, cy - 34 * e, 132 * e, 70 * e, 30 * e, pele); for (let i = 1; i < 4; i++) line(g, cx - 66 * e + i * 33 * e, cy - 24 * e, cx - 66 * e + i * 33 * e, cy + 8 * e, 'rgba(0,0,0,0.18)', 3);
     g.restore();
   };
@@ -180,5 +180,6 @@
     const a = c.novo === false ? 0 : 1; if (a) { botao(g, 540, 430, 46, '13', true, t); glow(g, 540, 430, 520, '#FFB02A', 0.35 * (0.7 + 0.3 * Math.sin(t * 4))); } vinheta(g, 0.5);
   };
   POSES.curioso = t => ({ al: [-8, 195], ar: [8, 195], fl: [-30, 235], fr: [30, 235], olho: 'grande', olhar: 10, boca: 'pequena', sobr: 0.9, cabeca: 0.06 });
+  POSES.maosOlhos = t => ({ al: [-131, 17], ar: [-200, 17], fl: [-30, 235], fr: [30, 235], olho: 'fixo', boca: 'reta', sobr: 0, cabeca: 0.03 }); // avó com os dois braços esticados até os olhos de quem está à esquerda (par com o objeto maos_olhos semBraco)
   POSES.cega = t => ({ al: [-8, 195], ar: [8, 195], fl: [-30, 235], fr: [30, 235], olho: 'cego', boca: 'reta', sobr: 0.2, cabeca: 0.04 });
 })();
