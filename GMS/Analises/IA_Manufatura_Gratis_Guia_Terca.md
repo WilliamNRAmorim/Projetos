@@ -14,6 +14,31 @@ Por que esse caminho:
 
 O limite honesto: num PC sem placa de vídeo, a resposta leva de 20 s a 2 min. Serve para teste e para perguntas de supervisão, não para o chão de fábrica em tempo real.
 
+## Versão 2 (pedido de 31/10): peças prontas, associação, engenharia reversa e memória em .md
+
+O William pediu que a IA use coisas prontas, faça engenharia reversa, associe os dados entre si, leia exports de Excel e anote em `.md` tudo o que aprender. Abaixo está como cada pedido fica, com o que já existe pronto e grátis.
+
+| Pedido | Como fica | Peça pronta usada |
+|---|---|---|
+| Banco por export de Excel | Solta os `.xlsx` numa pasta `dados/`; cada aba vira tabela no DuckDB (com cache em Parquet para abrir rápido) | pandas + openpyxl + DuckDB |
+| Engenharia reversa | (1) Um mapeador lê cada planilha, descobre tipos, unidades e quais colunas ligam uma planilha à outra (ex.: OP, carretel, mangueira), comparando nome e valores em comum, e grava `mapa_dados.md`. (2) Ele também lê o que o GMS já tem pronto: as relações e medidas do modelo do Power BI (`GMS_Mestre_BI.md` / TMDL) e as regras do `GMS_Mestre.md`, e usa isso como ponto de partida | pandas, DuckDB, leitura de texto |
+| Associar as coisas | Pergunta que cruza planilhas usa as ligações do `mapa_dados.md` para montar o JOIN. Para associar conceitos em documentos (manual, norma, lição), um grafo de conhecimento | DuckDB (dados); LightRAG (documentos, fase 2) |
+| Aprender e anotar em `.md` | Arquivo `memoria.md` com três partes: **Fatos** (o que ele descobriu sozinho), **Perguntas validadas** (pergunta → SQL que você aprovou) e **Erros a evitar** (o que você corrigiu). Ele lê a memória antes de cada pergunta | Padrão igual ao `CLAUDE.md`/`MEMORY.md` do Claude Code e ao Basic Memory, só que em arquivo simples |
+
+**Como ele "aprende por reforço" de verdade aqui.** Depois de cada resposta você digita `+` (certo) ou `-` com a correção. Certo: a pergunta e o SQL vão para "Perguntas validadas" e viram exemplo nas próximas. Errado: a correção vai para "Erros a evitar". Quando o SQL falha e ele mesmo conserta na segunda tentativa, ele anota a lição sozinho em "Fatos". Isso é reforço por retorno (recompensa = seu `+` ou `-`), guardado como memória em texto, e não treino dos pesos do modelo.
+
+Por que não treinar o modelo de verdade (ajuste fino ou reforço clássico): precisa de placa de vídeo, de milhares de exemplos e de horas de treino, e o resultado fica preso numa versão do modelo. A memória em `.md` funciona no PC comum, você lê e corrige à mão, e vale para qualquer modelo que trocar depois. Ajuste fino (LoRA) só faz sentido se, depois de meses, a memória passar de centenas de exemplos.
+
+**Cuidado com a memória:** só entra em "Perguntas validadas" o que você aprovou. Fato que ele descobre sozinho entra marcado como "a conferir" até você confirmar, para um erro não virar regra. Uma vez por semana, um passo de limpeza junta repetidos e corta o que ficou velho (como o `financeiro` faz com `licoes.md`).
+
+**O que foi descartado e por quê:**
+- **Vanna 2.0** (texto para SQL com memória): é o mais parecido, mas o repositório aparece arquivado em 2026 e a memória dele fica num banco vetorial, não em `.md`.
+- **WrenAI**: a camada de relações é boa, mas a versão de chat precisa de Docker, que o PC corporativo dificilmente libera.
+- **PandasAI**: executa código Python gerado pela IA (mais risco), e a ligação com o Ollama nas versões novas não está clara.
+- **Basic Memory**: guarda em `.md`, mas exige um cliente MCP e tem licença AGPL. Copiamos a ideia em arquivo simples.
+
+**LightRAG (fase 2):** monta um grafo de conhecimento a partir de documentos e responde cruzando entidades. Roda com Ollama e guarda tudo em arquivos JSON por padrão. Precisa de contexto de 32 mil tokens, o que pesa no PC sem placa de vídeo; por isso fica para depois que o SQL estiver acertando.
+
 ## Qual tipo de IA serve para qual pergunta
 
 Você falou em generativa, por reforço e outras. Este é o mapa, com o que vale testar agora e o que fica para depois.
@@ -208,3 +233,10 @@ while True:
 - [Modelos de base para séries temporais em manutenção preditiva](https://www.tigerdata.com/learn/foundation-models-predictive-maintenance)
 - [Embeddings de séries temporais para vida útil restante (2026)](https://arxiv.org/pdf/2606.11990)
 - [Da OEE à causa raiz com IA](https://tdengine.com/how-ai-helps-engineers-move-from-oee-monitoring-to-root-cause-analysis/)
+- [Vanna: DuckDB com Ollama](https://vanna.ai/docs/duckdb-ollama-other-vectordb)
+- [Vanna: versões e status](https://github.com/vanna-ai/vanna/releases)
+- [PandasAI: exemplos (Excel, várias tabelas)](https://docs.pandas-ai.com/v2/examples.md)
+- [LightRAG (grafo de conhecimento local)](https://learnopencv.com/lightrag)
+- [Basic Memory (memória em Markdown)](https://jimmysong.io/ai/basic-memory)
+- [Soluções de memória para agentes em 2026](https://agentsroom.dev/blog/ai-agent-memory-solutions)
+- [WrenAI (camada semântica e relações)](https://landscape.jimmysong.io/projects/wrenai/)
