@@ -128,5 +128,28 @@
       for (let s = t; s < T - 0.1; s += esp * (0.6 + 0.8 * rng())) { const f = rnd(2200, 4200), o = O('square', f, s, s + 0.08), bp = F('bandpass', f, 6), g = G(0); dec(g.gain, s, 0.001, rnd(0.2, 0.8), 0.04); C(o, bp, g, out); }
       bus(out, false); return { t: t, fim: T };
     };
+    // guizos de bobo da corte: tilintares agudos (p.dur, p.intervalo menor = mais agitados)
+    defs.guizos = function (t, p) {
+      const dur = p.dur || 6, T = t + dur, out = G(0.4 * (p.vol == null ? 1 : p.vol)), esp = p.intervalo || 0.35;
+      for (let s = t; s < T - 0.2; s += esp * (0.5 + rng())) { const f = rnd(2400, 4200); [1, 1.5, 2.3].forEach(function (m, i) { const o = O('sine', f * m, s, s + 0.5), g = G(0); dec(g.gain, s + i * 0.02, 0.002, rnd(0.2, 0.6) / (i + 1), 0.25); C(o, g, out); }); }
+      eco(out, out, 0.2, 0.35, 5000, 0.4); bus(out, true); return { t: t, fim: T };
+    };
+    // rugido grave de fera (sawtooth baixo + ruído, com vibrato)
+    defs.rugido = function (t, p) {
+      const dur = p.dur || 2.4, T = t + dur, out = G(0.5 * (p.vol == null ? 1 : p.vol)), o = O('sawtooth', 70, t, T), lp = F('lowpass', 700, 1.2), g = G(0), lf = O('sine', 18, t, T), lg = G(12); C(lf, lg); lg.connect(o.frequency);
+      o.frequency.setValueAtTime(110, t); o.frequency.linearRampToValueAtTime(55, T); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.2); g.gain.setValueAtTime(1, T - 0.8); g.gain.linearRampToValueAtTime(0, T); C(o, lp, g, out);
+      const n = N(t, T), bp = F('bandpass', 300, 0.6), gn = G(0.5); C(n, bp, gn, out); eco(out, out, 0.16, 0.3, 1200, 0.4); bus(out, false); return { t: t, fim: T + 0.4 };
+    };
+    // remo na água: pancadas de ruído filtrado e respingos em ritmo
+    defs.remo = function (t, p) {
+      const dur = p.dur || 6, T = t + dur, out = G(0.4 * (p.vol == null ? 1 : p.vol)), per = p.ritmo || 1.1;
+      for (let s = t; s < T - 0.3; s += per) { const n = N(s, s + 0.5), bp = F('bandpass', 900, 0.8), g = G(0); bp.frequency.setValueAtTime(700, s); bp.frequency.linearRampToValueAtTime(1800, s + 0.4); dec(g.gain, s, 0.03, 0.6, 0.25); C(n, bp, g, out); const o = O('sine', 90, s, s + 0.2), g2 = G(0); dec(g2.gain, s, 0.004, 0.4, 0.08); C(o, g2, out); }
+      bus(out, true); return { t: t, fim: T };
+    };
+    // chiado de babá eletrônica: ruído branco filtrado com estalos
+    defs.chiado = function (t, p) {
+      const dur = p.dur || 3, T = t + dur, out = G(0), n = N(t, T), hp = F('highpass', 2500), g = G(0.5); trap(out.gain, t, dur, 0.05, 0.1, 0.5 * (p.vol == null ? 1 : p.vol)); C(n, hp, g, out);
+      for (let s = t; s < T; s += rnd(0.1, 0.4)) g.gain.linearRampToValueAtTime(rnd(0.2, 1.2), s); bus(out, false); return { t: t, fim: T };
+    };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -62,3 +62,9 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 3. **Roteiro curto de "urgente" precisa de batidas visuais:** o Ônibus noturno saiu com 36 s mesmo com voz rápida; foi para 48 s com ritmo +14%, cenas mais longas e um respiro final de 2,5 s. Regra prática: 85 palavras = ~36 s a +24%.
 4. Sons novos: `uivoLobo` e `corrente` (corrente tensa mais rápida). Toque de celular a vol 0,7 passa a voz; usar ~0,3.
 5. Personagem "sentada" sem cadeira flutua; o cenário da torre do pintor desenha o banquinho na posição certa (x 0,25, escala 0,85).
+
+## Contos de terror, Dia 6 (31/10/2026)
+1. **O Barril de Amontillado conferido no original** (poemuseum.org): Fortunato fantasiado de bobo (vestido listrado e chapéu com guizos), Montresor de máscara preta e roquelaire; a isca é o Amontillado e a vaidade contra Luchesi; nitro e tosse nas catacumbas; Fortunato preso a um nicho de granito por corrente e cadeado, emparedado; ri, depois pede "pelo amor de Deus"; só os guizos respondem; "In pace requiescat!" e meio século depois ninguém mexeu nos ossos. A morte nunca aparece: só a parede subindo (objeto `tijolos_nicho` por cima do personagem) e o som dos guizos.
+2. O objeto `gorro_guizos` põe o gorro sobre a cabeça de qualquer personagem (calcula pela altura da cabeça); `tijolos_nicho` cresce a parede por cima do personagem (objetos são desenhados depois dos personagens).
+3. Sons novos: `guizos`, `rugido`, `remo`, `chiado`. Rugido e chiado precisam de volume ~0,12 a 0,2 para não passar a voz.
+4. Voz da mãe da Babá eletrônica escala o ritmo e o tom por cena (`rateNarrador` e `pitchNarrador` crescentes) para simular o pânico; a voz da babá é um sussurro ElevenLabs separado.
