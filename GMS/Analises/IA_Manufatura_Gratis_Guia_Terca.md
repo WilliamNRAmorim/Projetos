@@ -86,7 +86,7 @@ Crie uma pasta `dados` e coloque 2 ou 3 listas do GMS exportadas do SharePoint e
 Crie `dados/glossario.md` com o significado das colunas e das regras, em frases curtas. Exemplo de conteúdo (sem dado real):
 
 ```
-- Turno: 1º 05:20 às 13:57; 2º a partir de 13:57 (hora extra até 23:20); 3º 22:20 às 05:20. O dia produtivo começa às 05:20.
+- Turno (NORMA de 27/10/2026, MEL-250): 1º 05:20 às 13:56; 2º 13:57 às 22:19; 3º 22:20 às 05:19. O dia produtivo começa às 05:20.
 - Parada real (célula sem produzir) nunca soma com tempo excedido.
 - Coluna Etapa: Mandril, Tubo, Trancagem, Cobertura, Bandagem, Vulcanizacao, Debandagem, Extracao.
 - Status Cancelado não conta como produção.
