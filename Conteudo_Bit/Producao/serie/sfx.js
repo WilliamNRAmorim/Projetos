@@ -430,6 +430,7 @@
       return { t: t, fim: t + dur + 0.6 };
     };
 
+    if (root.SfxExtra) root.SfxExtra(defs, { G: G, F: F, O: O, N: N, C: C, dec: dec, trap: trap, glide: glide, eco: eco, rnd: rnd, rng: rng, bus: bus, ctx: ctx, sr: sr }); // sons extras opcionais (sfx_contos.js)
     // API pública: métodos posicionais + tocar(tipo, t, params)
     const api = { ctx: ctx, cama: cama, TIPOS: Object.keys(POS) };
     Object.keys(POS).forEach(function (tipo) {

@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><title>contato</title><style>body{margin:0;background:#111;color:#ddd;font:14px monospace}canvas{display:block}</style></head><body>
+<script>
+// Folha de contato e medição do MP4 FINAL. ?f=contos-dia1/01_a_causa_secreta.mp4 (em Semanal/) · &n=12 quadros
+(async () => {
+  const q = new URLSearchParams(location.search), f = q.get('f'), n = +(q.get('n') || 12), url = '/Semanal/' + f;
+  const v = document.createElement('video'); v.muted = true; v.src = url; v.preload = 'auto'; await new Promise((r, j) => { v.onloadedmetadata = r; v.onerror = () => j(new Error('video')); });
+  const d = v.duration, w = v.videoWidth, h = v.videoHeight, sw = 270, sh = 480, cols = 6, sheet = document.createElement('canvas'); sheet.width = sw * cols; sheet.height = sh * Math.ceil(n / cols); const g = sheet.getContext('2d');
+  for (let i = 0; i < n; i++) { const tt = Math.min(d - 0.2, (i + 0.5) * d / n); v.currentTime = tt; await new Promise(r => v.onseeked = r); g.drawImage(v, (i % cols) * sw, Math.floor(i / cols) * sh, sw, sh); g.fillStyle = '#fff'; g.font = '16px monospace'; g.fillText(tt.toFixed(1) + 's', (i % cols) * sw + 6, Math.floor(i / cols) * sh + 18); }
+  document.body.append(sheet);
+  const ac = new OfflineAudioContext(2, 48000, 48000), buf = await ac.decodeAudioData(await (await fetch(url)).arrayBuffer()); let pk = 0, clip = 0, e = 0, n2 = 0, sil = 0, run = 0, maxSil = 0, maxAt = 0; const c0 = buf.getChannelData(0), sr = buf.sampleRate;
+  for (let i = 0; i < c0.length; i++) { const a = Math.abs(c0[i]); if (a > pk) pk = a; if (a >= 0.999) clip++; e += a * a; n2++; if (a < 0.003) { run++; if (run > maxSil) { maxSil = run; maxAt = i - run; } } else run = 0; }
+  window.INFO = { arquivo: f, duracaoVideo: +d.toFixed(2), duracaoAudio: +buf.duration.toFixed(2), largura: w, altura: h, picoDb: +(20 * Math.log10(pk)).toFixed(1), clip, rmsDb: +(10 * Math.log10(e / n2)).toFixed(1), maiorSilencioSeg: +(maxSil / sr).toFixed(2), maiorSilencioEm: +(maxAt / sr).toFixed(1) };
+  document.title = 'ready ' + d.toFixed(2);
+})().catch(e => { document.title = 'erro: ' + e.message; document.body.append('ERRO ' + e.message); });
+</script></body></html>

@@ -50,3 +50,6 @@ Um episódio é um JSON em `ep/`. O motor (`motor.js`) desenha cenário, persona
 ## Pendências conhecidas
 - A qualidade da voz atual (ElevenLabs "Bit") não foi ouvida neste teste: nenhum áudio foi gerado.
 - Cenários de papel além do fundo liso (cidade, escritório) ainda não existem; PNG ou novo cenário em `CENARIOS`.
+
+## Contos de terror (31/10/2026)
+`contos.html` carrega o motor + `contos.js` (cenários novos por peça, poses `curioso` e `cega`, objeto `maos_olhos`) + `sfx_contos.js` (grilos, crepitar, rumor, elevadorZumbido, ding, portaElevador). JSON da peça: `ep/c0N_*.json` (`cartela`, `cor`, `saida`, `arquivo`, `vozes`, `eleven`). Detalhes e armadilhas em `Serie/aprendizados.md` (seção "Contos de terror").

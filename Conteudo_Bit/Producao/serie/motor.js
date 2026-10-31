@@ -581,6 +581,7 @@ window.Motor = (() => {
       else if (s.olho === 'meio') { circ(g, ex, ey, 12, '#FFF'); circ(g, ex + 2, ey + 3, 6, P.deep); g.fillStyle = v.pele; g.beginPath(); g.arc(ex, ey, 14, Math.PI, 0); g.fill(); line(g, ex - 13, ey, ex + 13, ey, P.deep, 4); } // pálpebra caída (cansada)
       else if (s.olho === 'baixo') { g.strokeStyle = P.deep; g.lineWidth = 6; g.beginPath(); g.arc(ex, ey - 4, 12, Math.PI * 0.15, Math.PI * 0.85); g.stroke(); } // olho fechado de pesar
       else if (s.olho === 'baixoAberto') { circ(g, ex, ey, 13, '#FFF'); circ(g, ex, ey + 6, 6, P.deep); g.fillStyle = v.pele; g.beginPath(); g.arc(ex, ey - 2, 15, Math.PI, 0); g.fill(); line(g, ex - 14, ey - 2, ex + 14, ey - 2, P.deep, 4); } // olhando o chão
+      else if (s.olho === 'cego') { circ(g, ex, ey, 17, '#E9E7E2'); circ(g, ex, ey, 17, 'rgba(150,170,190,0.35)'); g.strokeStyle = 'rgba(120,130,140,0.5)'; g.lineWidth = 3; g.beginPath(); g.arc(ex, ey, 16, 0, Math.PI * 2); g.stroke(); } // contos: olho leitoso, sem pupila
       else if (s.olho === 'grande') { circ(g, ex, ey, 19, '#FFF'); circ(g, ex + lk, ey + ly, 7, P.deep); }
       else if (s.olho === 'lado') { circ(g, ex, ey, 13, '#FFF'); circ(g, ex + lk * 0.9, ey + ly * 0.8, 6, P.deep); }
       else if (s.olho === 'firme') { circ(g, ex, ey, 10, '#FFF'); circ(g, ex + lk, ey, 6, P.deep); line(g, ex - 16, ey - 20, ex + 14, ey - 12, P.deep, 7); }
@@ -742,7 +743,14 @@ window.Motor = (() => {
     rect(g, bx, y0, bw, bh, P.deep, 0.85); rect(g, bx, y0, 14, bh, P.accent);
     ls.forEach((ln, i) => text(g, ln.join(' '), W / 2 + 7, y0 + 28 + size * 0.9 + i * lh, size, P.paper, { align: 'center', mono, w: mono ? 700 : 900 })); g.restore(); // mono = números (0 diferente de O)
   }
+  function cartelaTitulo(g, ep, tt) { // contos: ep.cartela = { titulo, sub } e ep.cor (acento da peça); só liga se o JSON pedir
+    const D = 2.8; if (tt > D) return; const a = tt < 0.3 ? out(tt / 0.3) : tt > D - 0.35 ? out((D - tt) / 0.35) : 1, cor = ep.cor || P.accent, T = ep.cartela.titulo.toUpperCase();
+    g.save(); g.translate((1 - a) * -W * 0.4, 0); g.globalAlpha = Math.min(1, a * 1.5); rect(g, 0, 270, W, 190, P.deep, 0.93); rect(g, 0, 270, 20, 190, cor);
+    text(g, ep.cartela.sub.toUpperCase(), 60, 328, 32, cor, { mono: 1, w: 700 }); let sz = 76; g.font = `900 ${sz}px Geist`; g.letterSpacing = `${-0.03 * sz}px`; const mw = g.measureText(T).width; if (mw > 940) sz = Math.floor(sz * 940 / mw);
+    text(g, T, 60, 420, sz, P.paper); g.restore();
+  }
   function faixaTitulo(g, ep, tt) { // "EPISÓDIO N · NOME" no começo
+    if (ep.cartela) return cartelaTitulo(g, ep, tt);
     const D = 2.6; if (tt > D) return; const a = tt < 0.3 ? out(tt / 0.3) : tt > D - 0.35 ? out((D - tt) / 0.35) : 1;
     g.save(); g.translate((1 - a) * -W * 0.4, 0); g.globalAlpha = Math.min(1, a * 1.5); rect(g, 0, 290, W, 150, P.deep, 0.92); rect(g, 0, 290, 20, 150, P.accent);
     text(g, `EPISÓDIO ${ep.numero} ·`, 60, 345, 34, P.accent, { mono: 1, w: 700 }); text(g, ep.nome.toUpperCase(), 60, 412, 64, P.paper); g.restore();
@@ -808,7 +816,7 @@ window.Motor = (() => {
       faixaTitulo(g, ep, tt); if (ep.proxima) faixaFinal(g, ep, tt, DUR);
       let sg = null; for (const x of c._segs) if (u >= x.ini - 0.05) sg = x; // fala ativa (a anterior continua na tela até a próxima começar)
       if (sg) { Object.assign(sg.obj, { legendaY: c.legendaY ?? ep.legendaY, legendaTam: c.legendaTam ?? ep.legendaTam }); if (modoFrase) legendaFrase(g, sg.texto, clamp((u - sg.ini) / sg.dur), dest); else legendaPalavras(g, sg.obj, u, sg.ini, sg.dur, dest); } // legenda por cima das faixas
-      const k = 1 - tr; if (k > 0) { rect(g, 0, 0, W, H, claro ? P.bege : P.deep, Math.pow(k, 1.5)); if (u < 0.1 && i > 0) { rect(g, 0, rnd(fr) * H, W, 6, P.accent, 0.8); rect(g, 0, rnd(fr + 3) * H, W, 3, P.paper, 0.5); } }
+      const k = 1 - tr; if (k > 0) { rect(g, 0, 0, W, H, claro ? P.bege : P.deep, Math.pow(k, 1.5)); if (u < 0.1 && i > 0) { rect(g, 0, rnd(fr) * H, W, 6, ep.cor || P.accent, 0.8); rect(g, 0, rnd(fr + 3) * H, W, 3, P.paper, 0.5); } }
       grain(g, W, H, claro ? 0.04 : 0.07);
       if (c.glitch && u < c.glitch) { const ga = 1 - u / c.glitch; for (let q2 = 0; q2 < 5; q2++) { const gy = rnd(fr * 7 + q2) * H, gh = 16 + rnd(fr + q2 * 3) * 80, gdx = (rnd(fr * 3 + q2) - 0.5) * 140 * ga; g.drawImage(cv, 0, gy, W, gh, gdx, gy, W, gh); } rect(g, 0, rnd(fr + 11) * H, W, 5, P.accent, 0.7 * ga); } // glitch de recap (c.glitch = segundos)
       if (tt > DUR - 0.3) rect(g, 0, 0, W, H, '#0C0C0D', clamp((tt - (DUR - 0.3)) / 0.3));
@@ -881,8 +889,8 @@ window.Motor = (() => {
     for (let fr = 0; fr < total; fr++) { frame(fr / FPS); const vf = new VideoFrame(cv, { timestamp: Math.round(fr * 1e6 / FPS) }); ve.encode(vf, { keyFrame: fr % 60 === 0 }); vf.close();
       if (err) throw err; for (let w = 0; ve.encodeQueueSize > 10; w++) { if (w > 2000) throw new Error('encoder parado (fila não esvazia)'); await new Promise(r => setTimeout(r, 5)); } if (fr % 15 === 0) document.title = `${fr}/${total}`; }
     await ve.flush(); await ae.flush(); if (err) throw err; mux.finalize();
-    await fetch(`/save?dir=serie&name=ep${opts.id}.mp4`, { method: 'POST', body: mux.target.buffer }); // grava em Semanal/serie/epXX.mp4
+    await fetch(`/save?dir=${ep.saida || 'serie'}&name=${ep.arquivo || 'ep' + opts.id + '.mp4'}`, { method: 'POST', body: mux.target.buffer }); // grava em Semanal/serie/epXX.mp4
     document.title = 'ready ' + DUR.toFixed(2);
   }
-  return { run, CENARIOS, POSES, OBJETOS, W, H, FPS };
+  return { run, CENARIOS, POSES, OBJETOS, W, H, FPS, GY, H_: { rect, poly, circ, line, rrect, text, glow, vgrad, rgba, vinheta, rnd, lerp, clamp, out, back, P, personagem, hash } };
 })();
