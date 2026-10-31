@@ -1194,14 +1194,18 @@ Screens:
             Height: =24
             Size: =fx_FonteCorpo
             Text: |-
-              ="⚠ Produzido + refugo passa " &
-              Text(
-                  Round(
-                      ((Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) + Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)) / gal_FilaTubo_1.Selected.quantidade_mandril - 1) * 100,
-                      0
-                  ),
-                  "[$-en-US]0"
-              ) & "% do que entrou (margem " & fx_MargemMetragemPct & "%). Confira a digitação."
+              =If(
+                  Coalesce(gal_FilaTubo_1.Selected.quantidade_mandril, 0) <= 0,
+                  "",
+                  "⚠ Produzido + refugo passa " &
+                  Text(
+                      Round(
+                          ((Coalesce(fx_Num(inp_QtdTubo_1.Text), 0) + Coalesce(fx_Num(inp_RefugoTubo_1.Text), 0)) / gal_FilaTubo_1.Selected.quantidade_mandril - 1) * 100,
+                          0
+                      ),
+                      "[$-en-US]0"
+                  ) & "% do que entrou (margem " & fx_MargemMetragemPct & "%). Confira a digitação."
+              )
             Visible: |-
               =fx_EstadoContinuo(gal_FilaTubo_1.Selected.status_processo) = "PRODUZINDO" &&
               fx_MetragemSubiu(

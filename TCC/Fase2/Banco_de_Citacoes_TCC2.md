@@ -182,9 +182,9 @@ Mesmo esquema da qualificação. Para cada referência: o que é a obra, o que e
   - **O que é:** revisão sistemática de qualidade de dados em sistemas ciber-físicos e IoT para a Indústria 4.0, na *ACM Computing Surveys*. Completude, consistência e acurácia aparecem como requisitos.
   - **Estrato Qualis:** estimado A1 (CiteScore 65,2, rank 1/241 em General Computer Science).
   - **DOI:** 10.1145/3593043
-  - **Sustenta:** seção 2.4 e seção 4.4, onde classifico as minhas medidas: cobertura de 96,4% e quantidade vazia de cerca de 0,1% medem completude, e a diferença zero contra o SAP mede consistência.
+  - **Sustenta:** seção 2.4 e seção 4.4, onde classifico as minhas medidas: cobertura de 96,4% e quantidade vazia (2 de 1.700 campos) medem completude, a diferença zero contra o SAP mede consistência e a comparação com o sensor da trançadeira é a primeira medida de acurácia.
   - **Ler antes da defesa:** resumo lido só em parte.
-  - **Se perguntarem:** "Eles listam completude, consistência e acurácia como os requisitos de qualidade do dado. Usei isso para dizer o que minhas medidas provam e o que não provam. Completude e consistência eu medi. Acurácia frente ao evento físico não tive como medir, e o texto diz."
+  - **Se perguntarem:** "Eles listam completude, consistência e acurácia como os requisitos de qualidade do dado. Usei isso para dizer o que minhas medidas provam e o que não provam. Completude e consistência eu medi. Acurácia eu medi numa só máquina, a trançadeira que tem sensor, por quinze dias: 48% das horas bateram até cinco minutos, as paradas longas bateram, a parada curta e o 3º turno não."
 
 ### 24. Speicher et al. (2026)
 
@@ -319,7 +319,7 @@ Mesmo esquema da qualificação. Para cada referência: o que é a obra, o que e
   - **O que é:** "Implementation of a scalable platform for real-time monitoring of machine tools", na *Computers in Industry*. Plataforma que coleta, processa, detecta *outliers* e exibe em painel, validada numa fresadora de cinco eixos.
   - **Estrato Qualis:** A1 provável (Scopus Q1; estimado, conferir).
   - **DOI:** 10.1016/j.compind.2023.104065
-  - **Sustenta:** seção 2.7 (Quadro 1), seção 4.8 e seção 5 (coleta automática de máquinas).
+  - **Sustenta:** seção 2.4 (acurácia exige fonte independente, papel do sinal da máquina), seção 2.7 (Quadro 1), seção 4.8 e seção 5 (coleta automática de máquinas).
   - **Se perguntarem:** "É a mesma cadeia que o GMS: coleta, processamento e painel. Eles pegam o sinal da máquina e eu pego o apontamento do operador. Ligar o sensor é um trabalho futuro, nos níveis 1 e 2 da ISA-95."
 
 ### 41. Imai (2012)
@@ -416,16 +416,16 @@ Cada resposta cabe em 20 a 40 segundos falados. Os números vêm do texto do TCC
 "Em quatro frentes. Filtros com funções delegáveis. Colunas de filtro indexadas. O cálculo pesado fora do tablet: o Power Automate calcula em horário agendado e grava o resultado pronto. E a auditoria. A pior classe de defeito que achei foi a delegação silenciosa, em que a consulta devolve só os primeiros registros e uma soma gravava valor parcial. Corrigi materializando o cálculo fora da consulta e auditando os avisos. É um limite que eu aceito, está na seção 4.10, e é o que empurra para o Dataverse."
 
 **6. O QA automatizado é integração contínua?**
-"Não, e o texto diz isso. É uma bateria de 16 verificações com um inventário da tela, que precisa passar antes de cada entrega. Falta o que a integração contínua tem de verdade, como o disparo automático a cada alteração. Por isso digo que ela se aproxima, em escala pequena, do que Hilton e colegas estudam. Além da bateria, fiz a triagem de 2.854 apontamentos do verificador de aplicativos, dos quais 20 viraram defeitos corrigidos. O valor para mim foi tratar o aplicativo *low-code* como software, e não como uma planilha com botões."
+"Não, e o texto diz isso. É uma bateria de 19 verificações com um inventário da tela, que precisa passar antes de cada entrega. Falta o que a integração contínua tem de verdade, como o disparo automático a cada alteração. Por isso digo que ela se aproxima, em escala pequena, do que Hilton e colegas estudam. Além da bateria, fiz a triagem de 2.854 apontamentos do verificador de aplicativos, dos quais 20 viraram defeitos corrigidos. O valor para mim foi tratar o aplicativo *low-code* como software, e não como uma planilha com botões."
 
 **7. E a conciliação com o SAP? Os números fecham?**
-"Fecham em parte, e o texto diz onde. Numa análise retrospectiva de agosto de 2026, 96,4% das OPs do GMS tinham contrapartida no SAP, e a aderência de metragem ficou em 83,4%. A diferença de 16,6% eu atribuo em boa parte a OPs sem inspeção, mas é hipótese, ainda não confirmada. Em setembro, cerca de 85% das OPs fecharam com diferença zero entre GMS, SAP e refugo. O fluxo diário foi ligado em 2 de outubro e, no fechamento do trabalho, ainda estava em estabilização. Uso o SAP como referência quando os registros divergem. Isso mede completude e consistência. A acurácia frente ao evento físico não teve medida própria."
+"Fecham em parte, e o texto diz onde. Numa análise retrospectiva de agosto de 2026, 2.222 das 2.304 OPs do GMS (96,4%) tinham contrapartida no SAP, e a aderência de metragem ficou em 83,4%. A diferença, de 184 mil metros, tem a mesma ordem de grandeza dos 193 mil metros de 391 OPs que nunca passaram pela inspeção, de onde o GMS tira a metragem. Isso confirma no agregado, não OP a OP. Em setembro, cerca de 85% das OPs fecharam com diferença zero. E a conciliação mostrou que o SAP também erra: refugo duplicado, material errado, lance na OP vizinha. Por isso digo que o SAP é a referência por convenção, não por ser infalível. O fluxo diário foi ligado em 2 de outubro e reescrito no dia 8 para ler o packing registrado no próprio GMS."
 
 **8. Isso não é só uma planilha bem feita?**
 "Planilha guarda dado. O GMS controla o fluxo. Cada ordem entra numa fila por etapa e só avança quando a etapa registra. A tela valida na origem, o que impede, por exemplo, metragem em branco ou zero. O estado da etapa é derivado dos campos gravados, e a ordem fica rastreada por OP e por carretel. Também há a conferência diária contra o SAP, os alertas no painel de TV e um conjunto de 28 listas sob norma escrita e testes. Reconheço uma coisa: o dado de origem é o mesmo da ficha de papel. Meu argumento é que o sistema reduziu o custo de acessá-lo, e isso uma planilha isolada não fazia no turno."
 
 **9. Se você sair da empresa, quem mantém o sistema?**
-"É uma limitação real e está na seção 4.10. O autor desenvolveu, implantou e avaliou o sistema, e esse papel duplo é um risco. Para mitigar existem a norma escrita, com princípios, padrões e 40 conceitos catalogados, o diário de decisões, o backlog com mais de 200 itens rastreáveis, o código das telas em pasta versionada e a bateria de testes. Mas o diário original foi perdido e reconstruído em outubro de 2026, com setembro aproximado, e a dívida técnica das telas extensas permanece. Então o risco está reduzido, não eliminado."
+"É uma limitação real e está na seção 4.10. O autor desenvolveu, implantou e avaliou o sistema, e esse papel duplo é um risco. Para mitigar existem a norma escrita, com princípios, padrões e 40 conceitos catalogados, o diário de decisões, o backlog com mais de 250 itens rastreáveis, o código das telas em pasta versionada e a bateria de testes. Mas o diário original foi perdido e reconstruído em outubro de 2026, com setembro aproximado, e a dívida técnica das telas extensas permanece. Então o risco está reduzido, não eliminado."
 
 **10. Um estudo de caso único generaliza?**
 "Não generaliza estatisticamente, e o trabalho não pretende. É um caso de uma célula, numa planta. O que ele oferece é uma descrição articulada de uma implantação real sob governança real, que outra empresa na mesma situação pode usar como referência. Os usos que Heuer e colegas catalogaram aparecem aqui numa só implantação. A replicação em Forest City será o primeiro teste fora dessa célula, mas ela fica fora deste trabalho."
@@ -437,7 +437,7 @@ Cada resposta cabe em 20 a 40 segundos falados. Os números vêm do texto do TCC
 "O indicador de volume contava 8,3 vezes a saída real, porque o mesmo metro era somado em cada etapa. Outros dois exemplos: a meta do Hora-Hora saía inflada em 4,9%, 5,0% e 14,3% nos três turnos, e 74% dos minutos de parada da Montagem eram tempo excedido. Depois de corrigir a meta, a aderência do 3º turno subiu de 75,1% para 85,9%. Só apareceu porque o dado passou a ser medido na origem. Segundo o dossiê, a célula só confiou no sistema quando os números bateram com o que se via no chão."
 
 **13. Você mediu a adesão dos operadores? O papel saiu mesmo?**
-"O papel foi retirado a partir de maio de 2026, depois de três meses de validação em paralelo, e o registro digital ficou como único da OP. Mas o critério que defini na qualificação, a continuidade dos registros em todos os turnos, não foi medido turno a turno neste trabalho, e eu digo isso na seção 4.1. A evidência é indireta: os campos de operador e turno com erro, que variavam de 6% a 93% no histórico, ficaram próximos de zero nos 60 dias mais recentes. Isso indica qualidade do registro, e não continuidade. Esse limite está listado na seção 4.10."
+"O papel foi retirado a partir de maio de 2026, depois de três meses de validação em paralelo. A adesão por turno eu medi no Hora-Hora, de 14 de setembro a 15 de outubro: nas máquinas e dias com algum registro, o 1º turno registrou em 89%, o 2º em 82% e o 3º em 26%, e o 3º não fechou nenhum turno. Parte disso é máquina que não trabalha à noite, mas o fechamento zero mostra que a adesão é menor no 3º turno. Na ficha de produção a evidência continua indireta, e isso está na seção 4.10. Também medi o papel duplo de outra forma: comparei o apontamento com o sensor da única trançadeira instrumentada."
 
 ---
 
@@ -447,6 +447,6 @@ Cada resposta cabe em 20 a 40 segundos falados. Os números vêm do texto do TCC
   - Ler o resumo no DOI das obras marcadas "Ler antes da defesa" (Kusiak, Xu e colegas 2018, Schiraldi e Varisco, Frank e colegas, Dalenogare e colegas, Lu e colegas, Venkatesh e colegas, Tabim e colegas, Goknil e colegas, Alameer e Halfond, Couto e colegas).
   - Conferir o número final do artigo de Couto e colegas (edição de nov. 2026).
   - Ter de cabeça o placar MESA-11: 6 implementadas, 1 em expansão, 2 parciais, 2 fora do escopo.
-  - Ter de cabeça os números da seção 4.4 (96,4%, 83,4%, cerca de 85%, 2.854 apontamentos, 20 defeitos).
+  - Ter de cabeça os números da seção 4.4 (96,4%, 83,4%, 391 OPs sem inspeção, cerca de 85%, 2.854 apontamentos, 20 defeitos, adesão 89/82/26%, sensor: 48% das horas batem).
   - Ensaiar a história de Atkin em 20 segundos e a resposta da pegadinha do *blockchain* de Lin.
   - Responder a pergunta 1 sem hesitar: os números do Kaizen vêm do dossiê, sem método e sem auditoria independente.

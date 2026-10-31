@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Célula: gente por etapa</title>
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --ink:#1b2430; --muted:#5b6675; --line:#dfe3e9;
+  --bar:#3a7bd5; --bar-soft:#d6e4f7; --person:#3a7bd5; --person-off:#d9dee5;
+  --hot:#d9480f; --hot-soft:#fde7dc; --ok:#2f9e44; --ok-soft:#e3f4e6;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161d; --card:#1a212b; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2b3440;
+    --bar:#5b9bf0; --bar-soft:#22344d; --person:#5b9bf0; --person-off:#333d4a;
+    --hot:#ff8a50; --hot-soft:#3a2418; --ok:#5fcf75; --ok-soft:#1c3323;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11161d; --card:#1a212b; --ink:#e7ebf0; --muted:#9aa5b3; --line:#2b3440;
+  --bar:#5b9bf0; --bar-soft:#22344d; --person:#5b9bf0; --person-off:#333d4a;
+  --hot:#ff8a50; --hot-soft:#3a2418; --ok:#5fcf75; --ok-soft:#1c3323;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--muted);margin:0 0 22px}
+.lead{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-bottom:26px}
+.lead div{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.lead b{display:block;font-size:24px;line-height:1.1;margin-bottom:4px}
+.lead .hot b{color:var(--hot)}
+.lead span{color:var(--muted);font-size:13.5px}
+
+.flow{display:flex;align-items:stretch;gap:0;overflow:visible;flex-wrap:wrap;row-gap:14px}
+.step{flex:1 1 150px;min-width:150px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 12px 12px;position:relative;display:flex;flex-direction:column;gap:10px}
+.step.hot{border-color:var(--hot);box-shadow:0 0 0 3px var(--hot-soft)}
+.arrow{flex:0 0 22px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.n{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.name{font-size:16.5px;font-weight:700;margin-top:-6px}
+.tag{position:absolute;top:-11px;right:10px;background:var(--hot);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.ppl{display:flex;flex-wrap:wrap;gap:2px;min-height:58px;align-content:flex-start}
+.ppl svg{width:22px;height:28px}
+.big{font-size:22px;font-weight:700;line-height:1}
+.big small{font-size:12.5px;font-weight:500;color:var(--muted)}
+.lbl{font-size:12px;color:var(--muted);margin-bottom:3px}
+.track{height:10px;border-radius:5px;background:var(--bar-soft);overflow:hidden}
+.fill{height:100%;background:var(--bar);border-radius:5px}
+.mval{font-size:13px;margin-top:3px}
+.ratio{margin-top:auto;border-radius:10px;padding:8px 10px;background:var(--ok-soft);color:var(--ink)}
+.step.hot .ratio{background:var(--hot-soft)}
+.ratio b{font-size:18px;color:var(--ok)}
+.step.hot .ratio b{color:var(--hot)}
+.ratio div{font-size:12px;color:var(--muted)}
+
+h2{font-size:18px;margin:34px 0 4px}
+.h2sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.chart{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 16px 10px}
+.row{display:grid;grid-template-columns:120px 1fr 64px;align-items:center;gap:10px;padding:6px 0}
+.row .k{font-weight:600;font-size:14px}
+.row .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.row .t{height:22px;background:var(--bar-soft);border-radius:6px;overflow:hidden}
+.row .f{height:100%;background:var(--ok);border-radius:6px}
+.row.hot .f{background:var(--hot)}
+.row.hot .v{color:var(--hot)}
+.read{background:var(--card);border-left:4px solid var(--hot);border-radius:10px;padding:14px 16px;margin-top:22px}
+.read p{margin:0 0 6px}.read p:last-child{margin:0}
+footer{margin-top:26px;color:var(--muted);font-size:12.5px;border-top:1px solid var(--line);padding-top:12px}
+@media (max-width:760px){
+  .arrow{display:none}
+  .step{flex:1 1 calc(50% - 8px)}
+  .flow{gap:12px}
+  .row{grid-template-columns:96px 1fr 52px}
+}
+@media (max-width:420px){ .step{flex:1 1 100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Célula de mangueiras: da trançagem à cabine</h1>
+  <p class="sub">Volume médio diário e pessoas por etapa · média dos dias úteis de 01/09 a 06/10/2026</p>
+
+  <div class="lead">
+    <div><b>≈ 6.500 m/dia</b><span>passam por todas as etapas. O volume é praticamente o mesmo do começo ao fim.</span></div>
+    <div class="hot"><b>Trançagem e Cabine</b><span>concentram mais gente por metro: juntas somam 11,4 das 20,7 pessoas da sequência.</span></div>
+    <div><b>3,7× mais gente</b><span>por metro na trançagem do que na vulcanização (1,00 x 0,27 pessoa a cada 1.000 m).</span></div>
+  </div>
+
+  <div class="flow" id="flow"></div>
+
+  <h2>Pessoas a cada 1.000 metros</h2>
+  <p class="h2sub">Quanto maior a barra, mais gente para o mesmo metro: sinal de movimentação manual ou gargalo.</p>
+  <div class="chart" id="chart"></div>
+
+  <div class="read">
+    <p><b>Leitura:</b> o metro que entra na trançagem é o mesmo que chega na cabine (perda de cerca de 4% ao longo da linha). O que muda entre as etapas não é o volume, é a gente.</p>
+    <p>Trançagem (6,7 pessoas, até 9 no dia) e cabine de teste (4,7 pessoas, até 6) rendem bem menos metros por pessoa que as etapas do meio, que trabalham com 2 a 3 pessoas. São os dois pontos para olhar primeiro: movimentação, abastecimento, espera e rotina de teste.</p>
+  </div>
+
+  <footer>Headcount estimado pelos apontamentos (operadores distintos que apontaram a etapa no dia), não é escala oficial. Dados até 06/10/2026. Metros por pessoa = média diária.</footer>
+</div>
+
+<script>
+var D=[
+ {n:"Trançagem",m:6680,p:6.7,mx:9,mp:997},
+ {n:"Cobertura",m:6535,p:2.2,mp:2990},
+ {n:"Bandagem",m:6465,p:2.8,mp:2297},
+ {n:"Vulcanização",m:6527,p:1.8,mp:3689},
+ {n:"Debandagem",m:6504,p:2.5,mp:2601},
+ {n:"Cabine (teste)",m:6413,p:4.7,mx:6,mp:1356}
+];
+function br(x,d){return x.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d})}
+function person(frac,i){
+  var id="g"+i+"_"+Math.random().toString(36).slice(2,7), pct=Math.round(frac*100);
+  return '<svg viewBox="0 0 22 28" aria-hidden="true"><defs><linearGradient id="'+id+'" x1="0" x2="1" y1="0" y2="0">'+
+   '<stop offset="'+pct+'%" stop-color="var(--person)"/><stop offset="'+pct+'%" stop-color="var(--person-off)"/></linearGradient></defs>'+
+   '<circle cx="11" cy="6" r="5" fill="url(#'+id+')"/><path d="M2 27v-7a9 9 0 0 1 18 0v7z" fill="url(#'+id+')"/></svg>';
+}
+function people(p,mx){
+  var s="",tot=mx||Math.ceil(p);
+  for(var i=0;i<tot;i++){var f=Math.max(0,Math.min(1,p-i));s+=person(f,i);}
+  return s;
+}
+var hot=function(d){return d.mp<1500};
+var flow=document.getElementById("flow"),h="";
+D.forEach(function(d,i){
+  var per=1000/d.mp;
+  h+='<div class="step'+(hot(d)?' hot':'')+'">'+(hot(d)?'<span class="tag">mais gente/metro</span>':'')+
+   '<div class="n">Etapa '+(i+1)+'</div><div class="name">'+d.n+'</div>'+
+   '<div class="ppl" title="'+br(d.p,1)+' pessoas em média'+(d.mx?' (máx '+d.mx+')':'')+'">'+people(d.p,d.mx)+'</div>'+
+   '<div class="big">'+br(d.p,1)+' <small>pessoas/dia'+(d.mx?' · máx '+d.mx:'')+'</small></div>'+
+   '<div><div class="lbl">Metros por dia</div><div class="track"><div class="fill" style="width:'+(d.m/7000*100).toFixed(1)+'%"></div></div>'+
+   '<div class="mval"><b>'+br(d.m,0)+'</b> m/dia</div></div>'+
+   '<div class="ratio"><b>'+br(d.mp,0)+'</b> m/pessoa<div>'+br(per,2)+' pessoa a cada 1.000 m</div></div>'+
+   '</div>';
+  if(i<D.length-1) h+='<div class="arrow"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 9h11M10 4l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+});
+flow.innerHTML=h;
+var c="",max=1.05;
+D.forEach(function(d){
+  var per=1000/d.mp;
+  c+='<div class="row'+(hot(d)?' hot':'')+'"><div class="k">'+d.n+'</div><div class="t"><div class="f" style="width:'+(per/max*100).toFixed(1)+'%"></div></div><div class="v">'+br(per,2)+'</div></div>';
+});
+document.getElementById("chart").innerHTML=c;
+</script>
+</body>
+</html>

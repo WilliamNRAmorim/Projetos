@@ -30,7 +30,7 @@
 
 ## App.Formulas
 
-> **Vigente (22/10/2026): `Telas/Formulas.txt` v3.0.13** — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
+> **Vigente (26/10/2026): `Telas/Formulas.txt` v3.0.14** — §11 ganha fx_TravaHHMin, fx_DataRefHH, fx_JanelaTravada, fx_AcertoHH e fx_ParadaPropHH (Hora-Hora Trançagem v0.7.0, MEL-248). Só aditiva. Antes dela (22/10): v3.0.13 — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
 
 | Camada | Arquivo |
 |---|---|
@@ -50,14 +50,14 @@
 | Tela / módulo | Nome da tela | YAML no projeto | Patches por cima | Fora do projeto (subir) |
 |---|---|---|---|---|
 | Menu (Seleção de setor) | `scr_selecaosetor_1` | v0.7.1 | — | — |
-| Seleção de Gestão | `scr_SelecaoGestao_1` | **v0.2.0** (02/10, `Telas/`) — card Conferência SAP | — | — |
+| Seleção de Gestão | `scr_SelecaoGestao_1` | **v0.4.0** (27/10, `Telas/`) — cards Painel da Célula, Consulta de OP, Conferência SAP (narrowed) e Painel da Montagem; patch `_patch_SelecaoGestao_v0.3.0_PainelMontagem.md` | — | — |
 | Conferência GMS × SAP × Packing | `scr_ConferenciaSAP` | **v0.1.1** (05/10, `Telas/`) | — | — |
-| Painel da Célula (TV) | `scr_PainelCelula_1` | **v0.11.0** (22/10, `Telas/`) — janela pela grade oficial, PARADA/PAUSA, andon em páginas, falha e idade do dado; **colar por blocos** na ordem de `Telas/_patch_PainelCelula_v0.11.0.md` (layout ajustado à mão: nunca reimport) | `_patch_PainelCelula_v0.11.0.md` | Colar Formulas v3.0.13 antes; v1.0 (`scr_PainelCelula_2`) só desenhada: `Mockups/painel_celula_v1_layout.html` + `Auditoria/27_PainelCelula_v1_desenho.md` |
+| Painel da Célula (TV) | `scr_PainelCelula_1` | **v0.14.0** (27/10, `Telas/`) — filtro de dia e turno (v0.13.0) e produção por turno na ficha com modo processo (v0.14.0: `_patch_PainelCelula_v0.13.0_filtro.md`, `_patch_PainelCelula_v0.14.0_ficha.md`); base v0.12.0 — v0.11.1 (Concurrent sem Set da mesma variável, posto 2 sem Skip) + metragem por turno em Tubo, Cobertura, Bandagem, Vulcanização e Debandagem (`_patch_PainelCelula_v0.12.0_producao.md`); base v0.11.0 (22/10) — janela pela grade oficial, PARADA/PAUSA, andon em páginas, falha e idade do dado; **colar por blocos** na ordem de `Telas/_patch_PainelCelula_v0.11.0.md` (layout ajustado à mão: nunca reimport) | `_patch_PainelCelula_v0.11.0.md` | Colar Formulas v3.0.13 antes; v1.0 (`scr_PainelCelula_2`) só desenhada: `Mockups/painel_celula_v1_layout.html` + `Auditoria/27_PainelCelula_v1_desenho.md` |
 | Extrusora de Mandril | `scr_ExtrusoraMandril_2` | — | — | **v0.2.0** + COLAR EstoqueSolda (25/09) |
 | Solda de Mandril | `scr_mandril_1` | v0.5.4 | COLAR v0.5.4 KanbanPelaFila | — |
 | Tubo | `scr_tubo_1` | v0.4.0 | COLAR v0.4.1 + PATCH v0.4.1a | — |
 | Trançagem | `scr_Trancagem_3` | v0.5.0 | COLAR v0.5.1 ComboOperador, v0.5.2 FiltroMaquina | — |
-| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | v0.5.8 | COLAR v0.5.9 VelocidadeViva | — |
+| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | **v0.7.0** (26/10, `Telas/`) — trava de 2 h após o fim da janela, Real só com mangueira, Motivo Não Declarado também no Salvar (MEL-248); **aguarda publish**, colar por blocos (layout ajustado à mão: nunca reimport); colar Formulas v3.0.14 antes | — | — |
 | AM-DM-02 Controle de Trançagem | `scr_AMDM02_Trancagem_1` | **v0.5.1** (21/10, `Telas/`) — foto do pickômetro em tela cheia com zoom, pan e caneta só na tela; folha por trança (seletor 1ª/2ª no cabeçalho, chave Data|Máquina|Trança), coleta na hora real com prazo +2 h, dia produtivo 05:20–05:20, carta X̄-R pela hora; listas em `Engenharia/Trancagem/AMDM02_schema.md` (MEL-114) | — | Criar a coluna Tranca (número, indexada) na AMDM02_Folha; HoraColeta já feita; colar Formulas v3.0.12 (§17 nova) e a tela no Studio |
 | Hora-Hora Cobertura | `scr_HoraHora_Cobertura_1` (manual) e `scr_HoraHora_CoberturaGMS_1` (derivada) | v0.1.0 | — | — |
 | Cobertura | `scr_Cobertura_2` | v0.3.0 | COLAR v0.4.0 Delineamento | — |
@@ -72,7 +72,7 @@
 | Volume Diário | `scr_VolumeDiario_2` | v1.0.0 | PATCH v1.0.1 SaidaDaCelula | — |
 | Ficha Técnica | `scr_FichaTecnica_1` | v1.2.1 | COLAR Menu_FichaTecnica | — |
 | Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.0 | COLAR v0.5.0 ColunasCarimbadas | — |
-| Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.1.0** (22/10, `Telas/`) — AO VIVO + histórico, galeria 4×3; mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
+| Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.2.0** (27/10, `Telas/`) — v0.1.0 (22/10) AO VIVO + histórico, galeria 4×3, + diagnóstico no rodapé (v0.1.1) + ficha de consulta ao tocar no card (`_patch_PainelMontagem_v0.2.0_ficha.md`); mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
 | Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
 
 Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?** A resposta fecha a coluna "Nome da tela".
@@ -95,3 +95,6 @@ Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?
 - **Resto do pacote `.msapp` de 03/07**: manifest, identity, logo e o json do app (×2).
 - **Nenhum COLAR, diário, conceito ou auditoria foi apagado.** As lições desses arquivos continuam no projeto e em `GMS_Licoes.md`.
 - Espaço de arquivos do projeto: **1,957 MB → ~1,13 MB**.
+
+## Roteiro de manutenção (28/10/2026)
+`Analises/Higienizacao_HoraHora/COMO_ARRUMAR_HORAHORA.md` — passo a passo para corrigir/criar/apagar linhas da lista Hora-Hora e mexer no modelo (GMS) e no relatório. Ler antes de qualquer pedido sobre apontamento, tempo parado, motivo ou dia produtivo.

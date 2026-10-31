@@ -39,3 +39,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-10-23 | Meta das duas passadas (TH01 e TO04): adiou a decisão para outro dia; segue como está
 2026-10-25 | Serie Plantao Noturno: aprovou publicar a 1a serie como esta (Eps 5 e 6 corrigidos antes); horario 18h, um ep por dia; quer capas (miniaturas) ja preparadas nas proximas series, porque TikTok nao deixa editar post agendado; exige roteiro, detalhes e climax bem melhores na proxima historia
 2026-10-25 | Proximas series: capas chamativas e virais, preparadas antes do upload (nao gerar as capas da serie Plantao Noturno)
+2026-10-30 | TCC II: aceitou a recomendada de tirar o Apêndice C (bateria de QA) para caber em 30 páginas

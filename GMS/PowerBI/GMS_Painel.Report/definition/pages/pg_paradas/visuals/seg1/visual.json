@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "seg1",
   "position": {
-    "x": 884.13373860182378,
+    "x": 884.1337386018238,
     "y": 51.550151975683896,
-    "z": 7,
-    "height": 63.221884498480243,
+    "z": 6000,
+    "height": 63.22188449848024,
     "width": 168.26747720364742,
-    "tabOrder": 7
+    "tabOrder": 6000
   },
   "visual": {
     "visualType": "slicer",
@@ -260,7 +260,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "a2acafc75dd69512fb44",
+        "name": "f_sem_vazio_seg",
         "field": {
           "Column": {
             "Expression": {
@@ -271,7 +271,45 @@
             "Property": "Turno"
           }
         },
-        "type": "Categorical"
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "Hora-Hora",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Turno"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       }
     ]
   }

@@ -49,14 +49,20 @@ Set(varTruncaPnl, false);
 Set(varAgoraPnl, Now());
 // v0.11.0 (item 5 · M11): os Refresh rodam em PARALELO, e nao mais 3 em serie. Cada um fecha
 // o IfError com "true" / "false" (licao 2.23: valor e fallback do mesmo tipo).
+// v0.11.1: cada ramo do Concurrent grava a SUA flag (varR1..R3Pnl); varFalhaPnl so e escrita
+// FORA do Concurrent (o Studio nao aceita a mesma variavel escrita em varios ramos paralelos).
+Set(varR1Pnl, false);
+Set(varR2Pnl, false);
+Set(varR3Pnl, false);
 Concurrent(
-    IfError(Refresh(ficha_producao); true, Set(varFalhaPnl, true); false),
-    IfError(Refresh(Eventos_Producao); true, Set(varFalhaPnl, true); false),
-    IfError(Refresh('Hora-Hora'); true, Set(varFalhaPnl, true); false),
-    If(
-        IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
-        IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
-    )
+    IfError(Refresh(ficha_producao); true, Set(varR1Pnl, true); false),
+    IfError(Refresh(Eventos_Producao); true, Set(varR2Pnl, true); false),
+    IfError(Refresh('Hora-Hora'); true, Set(varR3Pnl, true); false)
+);
+If(varR1Pnl || varR2Pnl || varR3Pnl, Set(varFalhaPnl, true));
+If(
+    IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
+    IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
 );
 // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
 // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
@@ -130,6 +136,12 @@ If(
         Set(varFalhaPnl, true); false
     )
 );
+Set(varC1Pnl, false);
+Set(varC2Pnl, false);
+Set(varC3Pnl, false);
+Set(varC4Pnl, false);
+Set(varC5Pnl, false);
+Set(varC6Pnl, false);
 With(
     { _hoje: fx_DataRefEm(varAgoraPnl) },
     // v0.11.0 (item 2 · A3): cada ClearCollect do Concurrent fecha o IfError com "true" / "false".
@@ -148,7 +160,7 @@ With(
                 )
             );
             true,
-            Set(varFalhaPnl, true); false
+            Set(varC1Pnl, true); false
         ),
         IfError(
             ClearCollect(
@@ -159,7 +171,7 @@ With(
                 )
             );
             true,
-            Set(varFalhaPnl, true); false
+            Set(varC2Pnl, true); false
         ),
         IfError(
             ClearCollect(
@@ -167,7 +179,7 @@ With(
                 Filter(ficha_producao, status_processo = "Em processo")
             );
             true,
-            Set(varFalhaPnl, true); false
+            Set(varC3Pnl, true); false
         ),
         IfError(
             ClearCollect(
@@ -175,7 +187,7 @@ With(
                 Filter(ficha_producao, status_processo = "Aguardando")
             );
             true,
-            Set(varFalhaPnl, true); false
+            Set(varC4Pnl, true); false
         ),
         // v0.11.0 (item 5 · M11): Eventos numa consulta SO (antes 3, com a mesma data). Os tres
         // recortes por etapa (Vulcanizacao, Mandril, Extracao) saem daqui, locais, logo abaixo.
@@ -196,7 +208,7 @@ With(
                 )
             );
             true,
-            Set(varFalhaPnl, true); false
+            Set(varC5Pnl, true); false
         ),
         // v0.11.0 (item 5 · M11): FifoBobinadeira numa consulta so (EP + AB), DENTRO do Concurrent.
         // Falhou = "sem fonte" de verdade (antes varBobSemFontePnl era sempre false).
@@ -208,11 +220,12 @@ With(
             Set(varBobSemFontePnl, false);
             true,
             Set(varBobSemFontePnl, true);
-            Set(varFalhaPnl, true);
+            Set(varC6Pnl, true);
             false
         )
     )
 );
+If(varC1Pnl || varC2Pnl || varC3Pnl || varC4Pnl || varC5Pnl || varC6Pnl, Set(varFalhaPnl, true));
 ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
 ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
 ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
@@ -2212,11 +2225,11 @@ Tudo está dentro do `btn_RecarregarPnl.OnSelect` do item 1; nenhuma outra propr
 - Card da Extração: "SAÍDA DA CÉLULA NO DIA" → "SAÍDA DO nº TURNO" (turno corrente, mesmo label de 28 pt) com os metros do turno corrente. O "TOTAL DO DIA" do cabeçalho continua o total.
 - Legenda: "PARADA COM FILA" → "COM FILA"; 2 controles novos (bolinha vermelha + "PARADA"), YAML abaixo. **PAUSA ficou sem item na legenda**: o espaço livre da legenda existente só comporta um par. A PAUSA se identifica pelo cinza + texto "Pausa programada" na ficha; se o William quiser PAUSA na legenda, precisa de mais 2 controles e de mover um existente (decisão dele).
 - Tamanhos escritos à mão trocados por token (sem mudar para fonte de parede, A4 fica fora): 10 → `fx_FonteApoio`, 12 → `fx_FonteCorpo`, 11 → `fx_FonteApoio`; `lbl_TuboNomePnl` ganhou `Size: fx_FonteDestaque` (irmãos estão em 16).
-- Timers com `Visible: false`.
+- Timers: NÃO ficam com `Visible: false` (revertido em 27/10: a TV parou de carregar; lição 6.2/MEL-139 não confirmou timer invisível). Voltam ao padrão da v0.10.3 (visível, 1×1 px, X 1360).
 - Cronômetros dos cards e da ficha: `fx_Crono` → `fx_CronoLongo` ("3 d 04 h" em vez de travar em "+24 h").
 - Ficha: toda label e as 2 galerias de fatos/rota passaram a reiniciar a contagem de fechamento ao toque (`Set(varDetToquePnl, Now())`), não só o fundo.
 - `Coalesce(x, 0)` na ficha (condições "vazio ou zero") trocado por `IsBlank(x) || x = 0`.
-- Versão: "Versão 0.11.0".
+- Versão: "Versão 0.11.1".
 
 ### YAML dos 2 controles novos da legenda
 Inserir depois de `lbl_LegFilaPnl`, sem mover nenhum controle existente. Cabem no vão entre o fim do texto "COM FILA" (≈ X 250) e a bolinha "RESFRIANDO" (X 342); a caixa de `lbl_LegFilaPnl` (largura 140) se sobrepõe a eles, mas o texto dela termina antes.
@@ -2259,16 +2272,16 @@ Inserir depois de `lbl_LegFilaPnl`, sem mover nenhum controle existente. Cabem n
 
 ### Propriedades
 
-**`tmr_DadosPnl` · Visible**
+**`tmr_DadosPnl` · Visible** (REVERTIDO: deixar `true`, como na v0.10.3)
 
 ```
-false
+true
 ```
 
-**`tmr_RelogioPnl` · Visible**
+**`tmr_RelogioPnl` · Visible** (REVERTIDO: deixar `true`, como na v0.10.3)
 
 ```
-false
+true
 ```
 
 **`lbl_T1RotPnl` · Color**
@@ -2596,7 +2609,7 @@ fx_CorPainelTextoRotulo
 **`lbl_VersaoTelaPnl` · Text**
 
 ```
-"Versão 0.11.0"
+"Versão 0.11.1"
 ```
 
 **`lbl_DetTituloPnl` · OnSelect**

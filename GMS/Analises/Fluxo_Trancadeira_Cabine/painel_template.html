@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fluxo Trançagem à Cabine</title>
+<style>
+:root{--bg:#f6f5f2;--card:#fff;--tx:#14130f;--tx2:#55534d;--tx3:#8a877f;--bd:#e1e0d9;--blue:#2a78d6;--org:#eb6834;--grn:#0ca30c;--red:#d03b3b;--amb:#fab219}
+@media (prefers-color-scheme:dark){:root{--bg:#161614;--card:#1f1f1d;--tx:#f0efec;--tx2:#c3c2b7;--tx3:#898781;--bd:#34332f;--blue:#3987e5;--org:#d95926}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,Segoe UI,Arial,sans-serif;padding:20px 16px 40px}
+.w{max-width:1040px;margin:0 auto}
+h1{font-size:22px;font-weight:500;margin:0 0 2px}h2{font-size:16px;font-weight:500;margin:0 0 8px}
+.sub{color:var(--tx2);font-size:13px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-top:14px}
+.filt{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.filt label{display:flex;flex-direction:column;font-size:12px;color:var(--tx2);gap:3px}
+select,button{font:inherit;padding:7px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+button{cursor:pointer}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.k{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px}
+.k b{display:block;font-size:24px;font-weight:500;font-variant-numeric:tabular-nums}
+.k span{font-size:12px;color:var(--tx2)}.k small{display:block;font-size:11px;color:var(--tx3);margin-top:2px}
+.st{display:grid;grid-template-columns:120px 1fr 150px 90px;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--bd);font-size:13px}
+.st:first-of-type{border-top:0}
+.bar{height:16px;background:var(--bd);border-radius:4px;position:relative}.bar i{position:absolute;inset:0 auto 0 0;border-radius:4px}
+.dots{display:flex;flex-wrap:wrap;gap:3px}.dots s{width:11px;height:11px;border-radius:50%;background:var(--org);display:block}.dots s.h{background:none;border:1.5px solid var(--org)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:99px;margin-left:6px;color:#fff}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--tx2);margin:2px 0 6px}.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+svg text{fill:var(--tx3);font-size:11px}
+#leit p{margin:5px 0;font-size:14px}
+.ref{font-size:12px;color:var(--tx2)}.ref li{margin:3px 0}
+@media(max-width:640px){.st{grid-template-columns:90px 1fr;}.st .d,.st .p{grid-column:2}}
+</style>
+</head>
+<body><div class="w">
+<h1>Fluxo da trançagem até a cabine</h1>
+<div class="sub">Volume, pessoas e KPIs de manufatura por etapa · fonte: ficha de produção · dados até <span id="ate"></span></div>
+
+<div class="card"><div class="filt">
+<label>Ano<select id="fa"></select></label>
+<label>Mês<select id="fm"></select></label>
+<label>Dia<select id="fd"></select></label>
+<button id="lim">Limpar filtros</button>
+<span class="sub" id="nd"></span>
+</div></div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="card"><h2>Volume e pessoas por etapa</h2>
+<div class="lg"><span><i style="background:var(--blue)"></i>metros por dia</span><span><i style="background:var(--org);border-radius:50%"></i>1 pessoa (média)</span></div>
+<div id="stages"></div></div>
+
+<div class="card"><h2>Conteúdo de mão de obra (pessoas por 1.000 m)</h2>
+<div class="sub">Quanto mais alto, mais gente a etapa consome para o mesmo metro. A linha tracejada é a média da linha.</div>
+<div id="yam"></div></div>
+
+<div class="card"><h2>Evolução diária: trançagem × cabine</h2>
+<div class="lg"><span><i style="background:var(--blue)"></i>trançagem (metros)</span><span><i style="background:var(--org)"></i>trançagem (pessoas)</span><span><i style="background:var(--grn)"></i>cabine (metros e pessoas)</span></div>
+<div id="trend"></div>
+<div id="trend2"></div></div>
+
+<div class="card" id="leit"><h2>Leitura automática</h2><div id="leitb"></div></div>
+
+<div class="card"><h2>Como cada KPI é calculado</h2>
+<ul class="ref">
+<li><b>Vazão (TH)</b>: metros que saem da etapa por dia. Média só dos dias produtivos (trançagem ≥ 3.000 m). Escolhendo um dia, ele entra sempre.</li>
+<li><b>Pessoas</b>: operadores distintos que apontaram a etapa no dia. É estimativa pelos apontamentos, não a escala oficial.</li>
+<li><b>Produtividade da mão de obra</b>: metros ÷ pessoas (m/pessoa·dia).</li>
+<li><b>Conteúdo de mão de obra</b>: pessoas ÷ (metros/1.000). Equivale ao quadro Yamazumi do Toyota Production System, com pessoa no lugar do tempo.</li>
+<li><b>Eficiência de balanceamento</b>: Σ conteúdo ÷ (n etapas × maior conteúdo). Perda de balanceamento = 1 − eficiência (Scholl, 1999). Abaixo de 100% há etapa com mais gente que o necessário em relação à mais exigente.</li>
+<li><b>Restrição</b> (Teoria das Restrições, Goldratt e Cox, 1984): a etapa de menor vazão limita a linha; a de maior conteúdo é a restrição de mão de obra.</li>
+<li><b>Lei de Little</b> (1961): estoque em processo = vazão × lead time. Lead time = mediana por ficha entre o fim da trançagem e o fim da cabine.</li>
+<li><b>Variabilidade</b>: coeficiente de variação (desvio ÷ média) da vazão diária. Quanto maior, mais estoque e espera a linha precisa para a mesma entrega (Hopp e Spearman, <i>Factory Physics</i>).</li>
+<li><b>Rendimento de fluxo</b>: metros da cabine ÷ metros da trançagem no período.</li>
+</ul></div>
+</div>
+<script>
+const D=__DATA__;
+const ET=[["tranc","Trançagem"],["cob","Cobertura"],["band","Bandagem"],["vulc","Vulcanização"],["deb","Debandagem"],["cab","Cabine (teste)"]];
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const dias=Object.keys(D).sort();
+const $=id=>document.getElementById(id);
+const fmt=(v,n=0)=>v==null||isNaN(v)?"–":v.toLocaleString("pt-BR",{minimumFractionDigits:n,maximumFractionDigits:n});
+$("ate").textContent=dias[dias.length-1].split("-").reverse().join("/");
+function opts(sel,list,all){sel.innerHTML="";[["",all]].concat(list).forEach(([v,t])=>{const o=document.createElement("option");o.value=v;o.textContent=t;sel.appendChild(o)})}
+const anos=[...new Set(dias.map(d=>d.slice(0,4)))];
+opts($("fa"),anos.map(a=>[a,a]),"Todos");
+function refMes(){const a=$("fa").value;const ms=[...new Set(dias.filter(d=>!a||d.startsWith(a)).map(d=>d.slice(0,7)))];opts($("fm"),ms.map(m=>[m,MES[+m.slice(5)-1]+(a?"":"/"+m.slice(2,4))]),"Todos")}
+function refDia(){const m=$("fm").value,a=$("fa").value;const ds=dias.filter(d=>(!a||d.startsWith(a))&&(!m||d.startsWith(m)));opts($("fd"),ds.map(d=>[d,d.slice(8)+"/"+d.slice(5,7)]),"Todos")}
+refMes();refDia();
+$("fa").onchange=()=>{refMes();refDia();draw()};$("fm").onchange=()=>{refDia();draw()};$("fd").onchange=draw;
+$("lim").onclick=()=>{$("fa").value="";refMes();refDia();draw()};
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const sd=a=>{if(a.length<2)return null;const m=avg(a);return Math.sqrt(a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1))};
+function sel(){const a=$("fa").value,m=$("fm").value,d=$("fd").value;
+ let l=dias.filter(x=>(!a||x.startsWith(a))&&(!m||x.startsWith(m))&&(!d||x===d));
+ if(!d)l=l.filter(x=>(D[x].tranc||[0])[0]>=3000);return l}
+function draw(){
+ const L=sel();$("nd").textContent=L.length+(L.length===1?" dia":" dias produtivos");
+ const S={};ET.forEach(([k])=>{S[k]={m:avg(L.map(d=>(D[d][k]||[0])[0])),hc:avg(L.map(d=>(D[d][k]||[0,0,0])[2])),mm:L.map(d=>(D[d][k]||[0])[0])}});
+ ET.forEach(([k])=>{const s=S[k];s.prod=s.hc?s.m/s.hc:null;s.wc=s.m?s.hc/(s.m/1000):null});
+ const wcs=ET.map(([k])=>S[k].wc).filter(x=>x!=null);
+ const lbe=wcs.length?wcs.reduce((a,b)=>a+b,0)/(wcs.length*Math.max(...wcs)):null;
+ const wcAvg=avg(wcs);
+ const ths=ET.map(([k])=>[k,S[k].m]).filter(x=>x[1]);
+ const gar=ths.length?ths.reduce((a,b)=>b[1]<a[1]?b:a)[0]:null;
+ const garMO=ET.map(([k])=>[k,S[k].wc]).filter(x=>x[1]!=null).reduce((a,b)=>b[1]>a[1]?b:a,["",0])[0];
+ const lts=L.map(d=>D[d].lt).filter(x=>x!=null);const lt=lts.length?lts.reduce((a,b)=>a+b,0)/lts.length:null;
+ const th=S.cab.m,wip=(th!=null&&lt!=null)?th*lt/24:null;
+ const cv=(()=>{const a=S.tranc.mm;return a.length>1&&avg(a)?sd(a)/avg(a):null})();
+ const rf=S.tranc.m?S.cab.m/S.tranc.m:null;
+ const hcTot=ET.reduce((s,[k])=>s+(S[k].hc||0),0);
+ $("kpis").innerHTML=[
+  [fmt(S.cab.m),"m/dia na cabine","vazão da linha (TH)"],
+  [fmt(hcTot,1),"pessoas somando as 6 etapas","por dia, média"],
+  [fmt(S.tranc.hc,1)+" / "+fmt(S.cab.hc,1),"pessoas: trançagem / cabine","média diária"],
+  [fmt(S.cab.prod),"m por pessoa na cabine","produtividade da mão de obra"],
+  [lbe==null?"–":fmt(lbe*100)+"%","eficiência de balanceamento","perda: "+(lbe==null?"–":fmt((1-lbe)*100)+"%")],
+  [fmt(lt,0)+" h","lead time trançagem→cabine","mediana por ficha"],
+  [fmt(wip),"m em processo (Little)","TH × lead time"],
+  [cv==null?"–":fmt(cv*100)+"%","variabilidade (CV) da vazão","trançagem, entre dias"],
+  [rf==null?"–":fmt(rf*100)+"%","rendimento de fluxo","cabine ÷ trançagem"]
+ ].map(([v,t,s])=>`<div class="k"><b>${v}</b><span>${t}</span><small>${s}</small></div>`).join("");
+ const mx=Math.max(1,...ET.map(([k])=>S[k].m||0));
+ $("stages").innerHTML=ET.map(([k,n])=>{const s=S[k];const hc=s.hc||0,fl=Math.floor(hc),fr=hc-fl;let p="";for(let i=0;i<fl;i++)p+="<s></s>";if(fr>.2)p+='<s class="h"></s>';
+  const t=(k===gar?'<span class="tag" style="background:var(--blue)">menor vazão</span>':"")+(k===garMO?'<span class="tag" style="background:var(--org)">mais mão de obra</span>':"");
+  return `<div class="st"><div><b>${n}</b>${t}</div><div class="d"><div class="bar"><i style="width:${(s.m||0)/mx*100}%;background:var(--blue)"></i></div><span class="sub">${fmt(s.m)} m/dia</span></div><div class="p"><div class="dots">${p}</div><span class="sub">${fmt(hc,1)} pessoas</span></div><div class="sub">${fmt(s.prod)} m/pessoa</div></div>`}).join("");
+ const mw=Math.max(1,...ET.map(([k])=>S[k].wc||0));
+ $("yam").innerHTML=`<svg viewBox="0 0 640 190" width="100%" role="img" aria-label="Pessoas por mil metros em cada etapa">`+ET.map(([k,n],i)=>{const v=S[k].wc||0,h=v/mw*120,x=20+i*102;
+  return `<rect x="${x}" y="${150-h}" width="70" height="${h}" rx="4" fill="${k===garMO?'var(--org)':'var(--blue)'}"/><text x="${x+35}" y="${144-h}" text-anchor="middle" style="fill:var(--tx)">${fmt(v,2)}</text><text x="${x+35}" y="170" text-anchor="middle">${n.split(" ")[0]}</text>`}).join("")+
+  (wcAvg?`<line x1="10" x2="630" y1="${150-wcAvg/mw*120}" y2="${150-wcAvg/mw*120}" stroke="var(--tx3)" stroke-dasharray="5 4"/><text x="632" y="${146-wcAvg/mw*120}" text-anchor="end">média ${fmt(wcAvg,2)}</text>`:"")+`</svg>`;
+ line("trend",L,d=>(D[d].tranc||[0])[0],d=>(D[d].cab||[0])[0],"m");
+ line("trend2",L,d=>(D[d].tranc||[0,0,0])[2],d=>(D[d].cab||[0,0,0])[2],"pessoas");
+ const out=[];
+ if(gar)out.push(`<p>A etapa que mais limita a vazão é <b>${name(gar)}</b> (${fmt(S[gar].m)} m/dia). Pela Teoria das Restrições, só o que melhora ali aumenta a entrega da linha.</p>`);
+ if(garMO)out.push(`<p>A etapa que mais consome gente por metro é <b>${name(garMO)}</b> (${fmt(S[garMO].wc,2)} pessoas por 1.000 m, ${fmt(S[garMO].wc/wcAvg,1)}× a média). É onde está a maior movimentação de pessoas.</p>`);
+ if(lbe!=null)out.push(`<p>Eficiência de balanceamento de ${fmt(lbe*100)}% (100% seria o mesmo número de pessoas por metro em todas as etapas). Quanto menor, mais desigual a distribuição de gente entre as etapas, o que indica espaço para realocação.</p>`);
+ if(wip!=null)out.push(`<p>Pela Lei de Little, cerca de ${fmt(wip)} m ficam em processo entre a trançagem e a cabine (${fmt(lt,0)} h de lead time). Reduzir lead time ou variabilidade reduz esse estoque sem mexer na vazão.</p>`);
+ if(L.length===1)out.push(`<p class="sub">Dia único: a média é o próprio dia, então a leitura de variabilidade não se aplica.</p>`);
+ $("leitb").innerHTML=out.join("")||"<p>Sem dados no filtro.</p>"}
+const name=k=>ET.find(e=>e[0]===k)[1];
+function line(id,L,fa,fb,un){const W=640,H=150,P=34;if(L.length<2){$(id).innerHTML=`<div class="sub">${L.length?"Escolha um período com mais de um dia para ver a evolução.":""}</div>`;return}
+ const A=L.map(fa),B=L.map(fb),mx=Math.max(1,...A,...B)*1.08;const X=i=>P+i*(W-P-8)/(L.length-1),Y=v=>H-18-(v/mx)*(H-30);
+ const pa=A.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join(""),pb=B.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join("");
+ const ca=un==="m"?"var(--blue)":"var(--org)",cb="var(--grn)";
+ const tk=[0,.5,1].map(f=>`<line x1="${P}" x2="${W}" y1="${Y(mx*f/1.08)}" y2="${Y(mx*f/1.08)}" stroke="var(--bd)"/><text x="${P-4}" y="${Y(mx*f/1.08)+3}" text-anchor="end">${fmt(mx*f/1.08)}</text>`).join("");
+ const lab=[0,Math.floor((L.length-1)/2),L.length-1].map(i=>`<text x="${X(i)}" y="${H-3}" text-anchor="middle">${L[i].slice(8)}/${L[i].slice(5,7)}</text>`).join("");
+ $(id).innerHTML=`<div class="sub" style="margin-top:6px">${un==="m"?"Metros por dia":"Pessoas por dia (laranja trançagem, verde cabine)"}</div><svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Evolução diária de ${un}">${tk}<path d="${pa}" fill="none" stroke="${ca}" stroke-width="2"/><path d="${pb}" fill="none" stroke="${cb}" stroke-width="2"/>${lab}</svg>`}
+draw();
+</script>
+</body></html>

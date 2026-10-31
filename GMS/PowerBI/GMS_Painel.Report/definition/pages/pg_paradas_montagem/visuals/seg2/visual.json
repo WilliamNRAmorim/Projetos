@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "seg2",
   "position": {
-    "x": 736.29179331306989,
+    "x": 736.2917933130699,
     "y": 51.550151975683896,
-    "z": 8,
-    "height": 63.221884498480243,
+    "z": 7000,
+    "height": 63.22188449848024,
     "width": 167.29483282674772,
-    "tabOrder": 8
+    "tabOrder": 7000
   },
   "visual": {
     "visualType": "slicer",
@@ -255,7 +255,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "70a63e6998febde4fec3",
+        "name": "f_sem_vazio_seg",
         "field": {
           "Column": {
             "Expression": {
@@ -266,7 +266,45 @@
             "Property": "Turno"
           }
         },
-        "type": "Categorical"
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "Paradas_Montagem",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Turno"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       }
     ]
   }

@@ -1,0 +1,1552 @@
+# Patch Painel da Célula v0.12.0 · metragem produzida no dia por turno e por processo
+
+Base: Telas/scr_PainelCelula_1.txt v0.11.1 (a tela publicada tem layout ajustado à mão: patch por bloco, nunca reimport).
+Staging: scratchpad/stage2/scr_PainelCelula_1.txt (QA sem FALHOU). Nenhuma fx_ nova; nenhuma consulta de rede nova.
+
+## Ordem de colar
+1. `btn_RecarregarPnl` → OnSelect (propriedade inteira abaixo; o que muda é só o bloco da coleção `colProdEtapaTurnoPnl`, logo depois do `ClearCollect(colEvSaidaPnl, ...)`).
+2. Rodar a tela em Preview uma vez (ou clicar o botão) para a coleção existir antes dos labels (os labels leem por LookUp; coleção vazia = "—").
+3. Criar os 3 labels do card Tubo (YAML 1, colar no canvas na tela scr_PainelCelula_1).
+4. Entrar no template de `gal_AcabPnl` (Editar → Items/template) e criar os 3 labels da galeria (YAML 2).
+5. `lbl_VersaoTelaPnl` → Text.
+
+## 1. btn_RecarregarPnl.OnSelect (inteira, sem o "=" inicial)
+Trecho novo (para localizar), logo após `ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));`:
+
+```
+              // v0.12.0 · METRAGEM PRODUZIDA NO DIA, POR PROCESSO E TURNO. UM ClearCollect, agregacao local sobre
+              // colEvDiaPnl (nenhuma consulta nova). Mesma regra de varMandProduzidoPnl / varSaidaT1Pnl: soma de
+              // `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+              ClearCollect(
+                  colProdEtapaTurnoPnl,
+                  ForAll(
+                      fx_EtapasLinha As _pe,
+                      With(
+                          {
+                              _ev: Filter(
+                                  colEvDiaPnl As _pv,
+                                  _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                              )
+                          },
+                          {
+                              Etapa: _pe.Etapa,
+                              T1: If(CountRows(Filter(_ev As _q1, _q1.TurnoTxt = "1")) > 0, Sum(Filter(_ev As _r1, _r1.TurnoTxt = "1"), metros), Blank()),
+                              T2: If(CountRows(Filter(_ev As _q2, _q2.TurnoTxt = "2")) > 0, Sum(Filter(_ev As _r2, _r2.TurnoTxt = "2"), metros), Blank()),
+                              T3: If(CountRows(Filter(_ev As _q3, _q3.TurnoTxt = "3")) > 0, Sum(Filter(_ev As _r3, _r3.TurnoTxt = "3"), metros), Blank()),
+                              Dia: If(CountRows(_ev) > 0, Sum(_ev, metros), Blank())
+                          }
+                      )
+                  )
+              );
+```
+
+Propriedade inteira:
+
+```
+Set(varFalhaPnl, false);
+Set(varTruncaPnl, false);
+// v0.11.0 · UM instante por ciclo: toda a carga (turno, janela, data de referencia, consumo,
+// andon) usa varAgoraPnl. Antes eram ~25 leituras de Now() misturadas com ctxAgoraPnl.
+Set(varAgoraPnl, Now());
+// v0.11.0 (item 5 · M11): os Refresh rodam em PARALELO, e nao mais 3 em serie. Cada um fecha
+// o IfError com "true" / "false" (licao 2.23: valor e fallback do mesmo tipo).
+// v0.11.1: cada ramo do Concurrent grava a SUA flag (varR1..R3Pnl); varFalhaPnl so e escrita
+// FORA do Concurrent (o Studio nao aceita a mesma variavel escrita em varios ramos paralelos).
+Set(varR1Pnl, false);
+Set(varR2Pnl, false);
+Set(varR3Pnl, false);
+Concurrent(
+    IfError(Refresh(ficha_producao); true, Set(varR1Pnl, true); false),
+    IfError(Refresh(Eventos_Producao); true, Set(varR2Pnl, true); false),
+    IfError(Refresh('Hora-Hora'); true, Set(varR3Pnl, true); false)
+);
+If(varR1Pnl || varR2Pnl || varR3Pnl, Set(varFalhaPnl, true));
+If(
+    IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
+    IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); true, Set(varFalhaPnl, true); false)
+);
+// v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
+// mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
+// Cadastro carregado 1x por dia (ou ao abrir a tela) numa colecao local: o calculo por maquina
+// abaixo nao faz NENHUMA chamada de rede. Nunca chamar fx_VelocidadeTeorica aqui: e LookUp no
+// SharePoint por linha (11 maquinas x a cada 2 min).
+// Ordem externa = DM_TRANCAGEM, igual ao colMangMaqHHT: mangueira com duas construcoes na mesma
+// maquina pega a MESMA velocidade que o Hora-Hora pega.
+// v0.11.0: (item 5) a chave da DM_TRANCAGEM e normalizada UMA vez por linha, antes do laco, e nao
+// a cada linha da DM_ENGRENAGENS; (item 2) o cadastro so e TROCADO se a leitura nova vier cheia
+// (antes um ClearCollect com leitura vazia apagava as velocidades) e a leitura grande demais
+// acende o aviso de truncamento.
+If(
+    IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
+    IfError(
+        With(
+            {
+                _eng: ForAll(
+                    DM_ENGRENAGENS As _e,
+                    {
+                        MaqN: fx_NormCodigo(_e._4MAQUINA),
+                        ConsN: fx_NormCodigo(_e._1CONSTRUCAO),
+                        MFG: fx_NumVelocidade(Text(_e._13TEORICA_M_H))
+                    }
+                ),
+                _trc: ForAll(
+                    DM_TRANÇAGEM As _d0,
+                    {
+                        Chave: fx_MangCanon(_d0.PARTNUMBER),
+                        ConsN: fx_NormCodigo(_d0._2BRD_CODE)
+                    }
+                )
+            },
+            With(
+                {
+                    _novo: Filter(
+                        Ungroup(
+                            ForAll(
+                                Filter(_trc As _t1, !IsBlank(_t1.Chave) && !IsBlank(_t1.ConsN)) As _d,
+                                {
+                                    Linhas: ForAll(
+                                        Filter(_eng As _e2, _e2.ConsN = _d.ConsN) As _e3,
+                                        {
+                                            MaqN: _e3.MaqN,
+                                            Chave: _d.Chave,
+                                            MFG: _e3.MFG
+                                        }
+                                    )
+                                }
+                            ),
+                            Linhas
+                        ),
+                        MFG > 0
+                    )
+                },
+                // Leitura vazia (rede caiu): mantem o cadastro anterior, NAO marca o dia e o proximo
+                // ciclo de 2 min tenta de novo.
+                If(
+                    IsEmpty(_novo),
+                    Set(varFalhaPnl, true),
+                    ClearCollect(colVelTrPnl, _novo);
+                    Set(varVelDiaPnl, fx_DataRefEm(varAgoraPnl))
+                );
+                If(
+                    CountRows(_eng) >= fx_PainelLinhasAlerta || CountRows(_trc) >= fx_PainelLinhasAlerta,
+                    Set(varTruncaPnl, true)
+                );
+                true
+            )
+        ),
+        Set(varFalhaPnl, true); false
+    )
+);
+Set(varC1Pnl, false);
+Set(varC2Pnl, false);
+Set(varC3Pnl, false);
+Set(varC4Pnl, false);
+Set(varC5Pnl, false);
+Set(varC6Pnl, false);
+With(
+    { _hoje: fx_DataRefEm(varAgoraPnl) },
+    // v0.11.0 (item 2 · A3): cada ClearCollect do Concurrent fecha o IfError com "true" / "false".
+    // Antes so os Refresh estavam protegidos: carga que falhava deixava varSincPnl avancar e o
+    // andon dizia "celula em dia" sem dado.
+    Concurrent(
+        // v0.10.1: Hora-Hora de ONTEM e de HOJE, uma consulta por dia, em paralelo. Um dia cheio
+        // chega a ~300 linhas; dois dias numa consulta so passariam do limite de linhas e a
+        // lista viria CORTADA sem aviso. O turno atual (colHHPnl) sai daqui, local, logo abaixo.
+        IfError(
+            ClearCollect(
+                colHHOntemPnl,
+                Filter(
+                    'Hora-Hora',
+                    Data = DateAdd(_hoje, -1, TimeUnit.Days)
+                )
+            );
+            true,
+            Set(varC1Pnl, true); false
+        ),
+        IfError(
+            ClearCollect(
+                colHHHojePnl,
+                Filter(
+                    'Hora-Hora',
+                    Data = _hoje
+                )
+            );
+            true,
+            Set(varC2Pnl, true); false
+        ),
+        IfError(
+            ClearCollect(
+                colAtivasPnl,
+                Filter(ficha_producao, status_processo = "Em processo")
+            );
+            true,
+            Set(varC3Pnl, true); false
+        ),
+        IfError(
+            ClearCollect(
+                colAguardPnl,
+                Filter(ficha_producao, status_processo = "Aguardando")
+            );
+            true,
+            Set(varC4Pnl, true); false
+        ),
+        // v0.11.0 (item 5 · M11): Eventos numa consulta SO (antes 3, com a mesma data). Os tres
+        // recortes por etapa (Vulcanizacao, Mandril, Extracao) saem daqui, locais, logo abaixo.
+        IfError(
+            ClearCollect(
+                colEvDiaPnl,
+                AddColumns(
+                    Filter(
+                        Eventos_Producao,
+                        data_ref = _hoje
+                    ),
+                    EtapaTxt,
+                    Text(etapa.Value),
+                    TipoTxt,
+                    Text(tipo.Value),
+                    TurnoTxt,
+                    Text(turno)
+                )
+            );
+            true,
+            Set(varC5Pnl, true); false
+        ),
+        // v0.11.0 (item 5 · M11): FifoBobinadeira numa consulta so (EP + AB), DENTRO do Concurrent.
+        // Falhou = "sem fonte" de verdade (antes varBobSemFontePnl era sempre false).
+        IfError(
+            ClearCollect(
+                colBobFifoPnl,
+                Filter(FifoBobinadeira, Status = "EP" || Status = "AB")
+            );
+            Set(varBobSemFontePnl, false);
+            true,
+            Set(varBobSemFontePnl, true);
+            Set(varC6Pnl, true);
+            false
+        )
+    )
+);
+If(varC1Pnl || varC2Pnl || varC3Pnl || varC4Pnl || varC5Pnl || varC6Pnl, Set(varFalhaPnl, true));
+ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
+ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
+ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
+// v0.12.0 · METRAGEM PRODUZIDA NO DIA, POR PROCESSO E TURNO. UM ClearCollect, agregacao local sobre
+// colEvDiaPnl (nenhuma consulta nova). Mesma regra de varMandProduzidoPnl / varSaidaT1Pnl: soma de
+// `metros` dos eventos Fim e Parcial. Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+ClearCollect(
+    colProdEtapaTurnoPnl,
+    ForAll(
+        fx_EtapasLinha As _pe,
+        With(
+            {
+                _ev: Filter(
+                    colEvDiaPnl As _pv,
+                    _pv.EtapaTxt = _pe.Etapa && (_pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                )
+            },
+            {
+                Etapa: _pe.Etapa,
+                T1: If(CountRows(Filter(_ev As _q1, _q1.TurnoTxt = "1")) > 0, Sum(Filter(_ev As _r1, _r1.TurnoTxt = "1"), metros), Blank()),
+                T2: If(CountRows(Filter(_ev As _q2, _q2.TurnoTxt = "2")) > 0, Sum(Filter(_ev As _r2, _r2.TurnoTxt = "2"), metros), Blank()),
+                T3: If(CountRows(Filter(_ev As _q3, _q3.TurnoTxt = "3")) > 0, Sum(Filter(_ev As _r3, _r3.TurnoTxt = "3"), metros), Blank()),
+                Dia: If(CountRows(_ev) > 0, Sum(_ev, metros), Blank())
+            }
+        )
+    )
+);
+// v0.11.0 (item 2 · M12): guarda de truncamento. Lista lida com fx_PainelLinhasAlerta linhas ou
+// mais = suspeita de corte no limite do conector: a carga deixa de contar como "ok".
+If(
+    CountRows(colHHOntemPnl) >= fx_PainelLinhasAlerta ||
+    CountRows(colHHHojePnl) >= fx_PainelLinhasAlerta ||
+    CountRows(colAtivasPnl) >= fx_PainelLinhasAlerta ||
+    CountRows(colAguardPnl) >= fx_PainelLinhasAlerta ||
+    CountRows(colEvDiaPnl) >= fx_PainelLinhasAlerta,
+    Set(varTruncaPnl, true)
+);
+ClearCollect(colHH2dPnl, colHHOntemPnl, colHHHojePnl);
+ClearCollect(
+    colHHPnl,
+    Filter(
+        colHH2dPnl As _z,
+        _z.Data = fx_DataRefEm(varAgoraPnl) && _z.Turno = fx_TurnoLabelEm(varAgoraPnl)
+    )
+);
+// v0.10.1 · CONSUMO DO CARRETEL PELO HORA-HORA (C13 · C10).
+// Uma linha por janela de trancadeira: a ULTIMA salva (maior ID) quando a lista tem registro
+// duplicado. So fica a janela APONTADA: metro, parada ou motivo. Linha salva vazia (o botao
+// repetir pre-preenche a mangueira) nao e apontamento.
+ClearCollect(
+    colHHConsPnl,
+    Filter(
+        ForAll(
+            GroupBy(
+                AddColumns(
+                    Filter(colHH2dPnl As _x, Text(_x.Célula) in fx_CelulasTrancagem.Celula),
+                    ChaveJan,
+                    Text(Célula) & "|" & Text(Data, "yyyy-mm-dd") & "|" & Text(Turno) & "|" & Hora
+                ),
+                ChaveJan,
+                LinhasJan
+            ) As _gj,
+            With(
+                { _r: First(Sort(_gj.LinhasJan, ID, SortOrder.Descending)) },
+                {
+                    Celula: Text(_r.Célula),
+                    DataRef: _r.Data,
+                    Turno: fx_TurnoNum(Text(_r.Turno)),
+                    Hora: _r.Hora,
+                    Real: Coalesce(_r.'Real. Hora', 0),
+                    Apontada: Coalesce(_r.'Real. Hora', 0) > 0 ||
+                        Coalesce(_r.'Tempo Parado (min)', 0) > 0 ||
+                        !IsBlank(Text(_r.Motivo))
+                }
+            )
+        ),
+        Apontada
+    )
+);
+// Turnos que tiveram QUALQUER linha no Hora-Hora (criterio ANTIGO da v0.10.3, inclui linha pre-preenchida):
+// so o CONSUMO de tubo usa esta colecao (colJanTrPnl.Trabalhado), para a autonomia ficar igual a v0.10.3.
+ClearCollect(
+    colTurnosHHConsPnl,
+    Distinct(
+        ForAll(
+            colHH2dPnl As _y0,
+            { K: Text(_y0.Data, "yyyy-mm-dd") & "|" & Text(fx_TurnoNum(Text(_y0.Turno)), "[$-en-US]0") }
+        ),
+        K
+    )
+);
+// Turnos TRABALHADOS para o ANDON: tiveram janela APONTADA (metro, parada ou motivo) numa trancadeira.
+// Turno sem apontamento nenhum = a fabrica nao rodou (3o turno de 29/09): calam as regras de FILA.
+// v0.11.0 (item 3 · M5). NAO e usada no consumo de tubo (ali vale colTurnosHHConsPnl, acima).
+ClearCollect(
+    colTurnosHHPnl,
+    Distinct(
+        ForAll(
+            colHHConsPnl As _y,
+            { K: Text(_y.DataRef, "yyyy-mm-dd") & "|" & Text(_y.Turno, "[$-en-US]0") }
+        ),
+        K
+    )
+);
+// Grade de janelas de ONTEM e HOJE, com instante de abertura e fechamento. O turno de agora
+// conta sempre como trabalhado (as 05:25 ainda ninguem apontou, mas a fabrica esta rodando).
+With(
+    {
+        _dh: fx_DataRefEm(varAgoraPnl),
+        _ta: fx_TurnoEm(varAgoraPnl)
+    },
+    ClearCollect(
+        colJanTrPnl,
+        ForAll(
+            fx_GradeHoraHora As _g1,
+            With(
+                { _dr1: DateAdd(_dh, -1, TimeUnit.Days) },
+                {
+                    DataRef: _dr1,
+                    Turno: _g1.Turno,
+                    Hora: _g1.Hora,
+                    Minutos: _g1.Minutos,
+                    Ini: fx_JanelaHHIni(_dr1, _g1.Turno, _g1.Fim, _g1.Minutos),
+                    Fim: fx_JanelaHHFim(_dr1, _g1.Turno, _g1.Fim),
+                    Trabalhado: (Text(_dr1, "yyyy-mm-dd") & "|" & Text(_g1.Turno, "[$-en-US]0")) in colTurnosHHConsPnl.Value
+                }
+            )
+        )
+    );
+    Collect(
+        colJanTrPnl,
+        ForAll(
+            fx_GradeHoraHora As _g2,
+            {
+                DataRef: _dh,
+                Turno: _g2.Turno,
+                Hora: _g2.Hora,
+                Minutos: _g2.Minutos,
+                Ini: fx_JanelaHHIni(_dh, _g2.Turno, _g2.Fim, _g2.Minutos),
+                Fim: fx_JanelaHHFim(_dh, _g2.Turno, _g2.Fim),
+                Trabalhado: _g2.Turno = _ta ||
+                    (Text(_dh, "yyyy-mm-dd") & "|" & Text(_g2.Turno, "[$-en-US]0")) in colTurnosHHConsPnl.Value
+            }
+        )
+    )
+);
+// v0.11.0 · JANELA ATUAL PELA GRADE OFICIAL (A1, M3, M4). Antes a janela "atual" era achada lendo o
+// TEXTO da chave ("22:00 - 22:20"), que desde a v3.0.5 dura ate 22:41: das 22:20 as 22:40 nenhuma
+// janela era "atual" e a trancadeira parada sumia. Agora Ini/Fim vem de fx_GradeHoraHora +
+// fx_JanelaHHIni/Fim (mesma regua do Hora-Hora), o instante e o do ciclo (varAgoraPnl) e a janela
+// duplicada na lista fica so com a de MAIOR ID (igual ao colHHConsPnl).
+With(
+    { _dh: fx_DataRefEm(varAgoraPnl) },
+    ClearCollect(
+        colHHJanPnl,
+        ForAll(
+            GroupBy(
+                AddColumns(colHHPnl, ChaveJan, Text(Célula) & "|" & Hora),
+                ChaveJan,
+                LinhasJan
+            ) As _gj,
+            With(
+                {
+                    _h: First(Sort(_gj.LinhasJan, ID, SortOrder.Descending))
+                },
+                With(
+                    {
+                        _gr: LookUp(
+                            fx_GradeHoraHora As _gr0,
+                            _gr0.Hora = _h.Hora && _gr0.Turno = fx_TurnoNum(Text(_h.Turno))
+                        )
+                    },
+                    With(
+                        {
+                            _ini: fx_JanelaHHIni(_dh, _gr.Turno, _gr.Fim, _gr.Minutos),
+                            _fim: fx_JanelaHHFim(_dh, _gr.Turno, _gr.Fim)
+                        },
+                        {
+                            Celula: Text(_h.Célula),
+                            Ini: _ini,
+                            Fim: _fim,
+                            Atual: !IsBlank(_gr.Fim) && varAgoraPnl >= _ini && varAgoraPnl < _fim,
+                            Motivo: Coalesce(Text(_h.Motivo), ""),
+                            // v0.11.0 (item 4 · M2): motivo com Tipo "Programada" na fx_MotivosParada
+                            // (Refeicao, Reuniao, Set-up, Preventiva, Check List, Amostra, MPT, Teste
+                            // Engenharia) e PAUSA, nao parada real.
+                            Prog: !IsBlank(Trim(Text(_h.Motivo))) &&
+                                LookUp(fx_MotivosParada As _mp, Trim(_mp.Motivo) = Trim(Text(_h.Motivo))).Tipo = "Programada",
+                            Parado: Coalesce(_h.'Tempo Parado (min)', 0),
+                            // v0.9.0: meta e real da janela para a ficha de consulta.
+                            // Janela fechada = o instante do ciclo passou do fim da janela da grade.
+                            Meta: Coalesce(_h.'Meta Hora', 0),
+                            Real: Coalesce(_h.'Real. Hora', 0),
+                            Fechada: !IsBlank(_gr.Fim) && varAgoraPnl >= _fim
+                        }
+                    )
+                )
+            )
+        )
+    )
+);
+ClearCollect(
+    colPostosTrancPnl,
+    ForAll(
+        Filter(fx_LayoutBalizas, tranc) As _b,
+        With(
+            {
+                _f: LookUp(
+                    colAtivasPnl As _a,
+                    _a.processo = "Trançadeira" && _a.Trançadeira = _b.Trançadeira
+                ),
+                // v0.8.1: fila POR CARRETEL, nao por OP. Um carretel de tubo pode
+                // levar 2 OPs; contar OP mostrava "tubo atras" quando a 2a OP estava
+                // no MESMO carretel que ja roda na maquina. Agrupa pelo 'Carretel
+                // Entrada', tira o carretel montado (o da OP Em processo) e cada
+                // grupo vira uma bolinha com a soma dos metros. OP sem carretel
+                // apontado vira carretel proprio (ID-n): nunca some da fila.
+                _fila: With(
+                    {
+                        _carMaq: Coalesce(
+                            Upper(
+                                Trim(
+                                    LookUp(
+                                        colAtivasPnl As _a0,
+                                        _a0.processo = "Trançadeira" && _a0.Trançadeira = _b.Trançadeira
+                                    ).'Carretel Entrada'
+                                )
+                            ),
+                            ""
+                        )
+                    },
+                    Sort(
+                        AddColumns(
+                            GroupBy(
+                                Filter(
+                                    AddColumns(
+                                        Filter(
+                                            colAguardPnl As _g,
+                                            _g.processo = "Trançadeira" && _g.Trançadeira = _b.Trançadeira
+                                        ),
+                                        CarKey,
+                                        Coalesce(
+                                            Upper(Trim('Carretel Entrada')),
+                                            "ID-" & Text(ID, "[$-en-US]0")
+                                        )
+                                    ) As _o,
+                                    _o.CarKey <> _carMaq
+                                ),
+                                CarKey,
+                                OpsCar
+                            ),
+                            QtdAnterior,
+                            Sum(OpsCar, quantidade_tubo),
+                            PrimID,
+                            Min(OpsCar, ID),
+                            NOps,
+                            CountRows(OpsCar)
+                        ),
+                        PrimID,
+                        SortOrder.Ascending
+                    )
+                )
+            },
+            With(
+                {
+                    _n: CountRows(_fila),
+                    _ult: LookUp(
+                        colHHJanPnl As _j,
+                        _j.Celula = _b.Trançadeira && _j.Atual
+                    ),
+                    // v0.11.0 (item 4): "parado no turno" soma so parada REAL; a pausa programada
+                    // (Refeicao, Reuniao...) tem soma propria e nunca entra na parada.
+                    _parMin: Sum(
+                        Filter(colHHJanPnl As _j2, _j2.Celula = _b.Trançadeira && !_j2.Prog),
+                        Parado
+                    ),
+                    _pauMin: Sum(
+                        Filter(colHHJanPnl As _j3, _j3.Celula = _b.Trançadeira && _j3.Prog),
+                        Parado
+                    ),
+                    _maqN: fx_NormCodigo(fx_MaquinaEngrenagens(_b.Trançadeira))
+                },
+                With(
+                {
+                    // v0.11.0 (item 4 · M1 · M2 · decisao 1 de 22/10): parada apontada no Hora-Hora
+                    // na janela de agora vira PARADA mesmo com OP aberta; motivo Programado vira PAUSA.
+                    _est: If(
+                        !IsBlank(_ult.Motivo) && _ult.Prog,
+                        "PAUSA",
+                        !IsBlank(_ult.Motivo),
+                        "PARADA",
+                        fx_EstadoPosto(!IsBlank(_f.ID), _n)
+                    ),
+                    // v0.10.0: velocidade da mangueira que esta NA MAQUINA (m/h).
+                    // Mesmo envelope do Hora-Hora: sem delineamento, cai no fallback da Spiral.
+                    _vAtiva: If(
+                        IsBlank(_f.ID),
+                        0,
+                        Coalesce(
+                            LookUp(
+                                colVelTrPnl As _v1,
+                                _v1.MaqN = _maqN &&
+                                _v1.Chave = fx_MangCanon(Text(_f.Mangueira))
+                            ).MFG,
+                            fx_VelocidadeFallbackSpiral(Text(_f.Mangueira))
+                        )
+                    ),
+                    // v0.10.1: janelas APONTADAS desta maquina (ontem e hoje).
+                    _hhMaq: Filter(colHHConsPnl As _hc, _hc.Celula = _b.Trançadeira)
+                },
+                With(
+                {
+                    // v0.10.1 · METROS JA CONSUMIDOS do carretel montado, do Inicio da OP ate agora,
+                    // janela por janela da grade:
+                    //   janela aberta agora ............ velocidade x minutos decorridos
+                    //   janela fechada APONTADA ........ o Real apontado (rateado se a OP comecou no meio)
+                    //   fechada SEM apontamento, turno
+                    //   trabalhado ..................... velocidade x minutos (nao apontou = conta como rodou)
+                    //   turno sem linha nenhuma ........ 0 (a fabrica nao rodou)
+                    // Antes de ontem 05:20 o Hora-Hora nao foi carregado: ali vale velocidade x relogio.
+                    _consM: If(
+                        IsBlank(_f.ID) || _vAtiva <= 0 || IsBlank(_f.data_hora_inicio_trancadeira),
+                        0,
+                        With(
+                            {
+                                _I: _f.data_hora_inicio_trancadeira,
+                                _N: varAgoraPnl,
+                                _C: DateAdd(fx_JanelaInicioEm(varAgoraPnl), -1, TimeUnit.Days)
+                            },
+                            If(_I < _C, _vAtiva * DateDiff(_I, _C, TimeUnit.Minutes) / 60, 0) +
+                            Sum(
+                                ForAll(
+                                    Filter(colJanTrPnl As _w, _w.Fim > _I && _w.Ini < _N) As _w2,
+                                    With(
+                                        {
+                                            _ov: fx_OverlapMin(_w2.Ini, _w2.Fim, _I, _N),
+                                            _r: LookUp(
+                                                _hhMaq As _hm,
+                                                _hm.DataRef = _w2.DataRef && _hm.Turno = _w2.Turno && _hm.Hora = _w2.Hora
+                                            )
+                                        },
+                                        {
+                                            M: If(
+                                                _w2.Fim > _N,      _vAtiva * _ov / 60,
+                                                !IsBlank(_r.Hora), fx_RateioCob(_r.Real, _ov, _w2.Minutos),
+                                                _w2.Trabalhado,    _vAtiva * _ov / 60,
+                                                0
+                                            )
+                                        }
+                                    )
+                                ),
+                                M
+                            )
+                        )
+                    ),
+                    // Minutos de TODA OP Aguardando desta maquina: a fila por carretel E as OPs que
+                    // dividem o carretel montado (saem da fila desde a v0.8.1, mas sao tubo na
+                    // maquina). Cada OP na velocidade da propria mangueira; sem velocidade cadastrada,
+                    // usa a da mangueira montada.
+                    _minFila: Sum(
+                        ForAll(
+                            Filter(
+                                colAguardPnl As _g7,
+                                _g7.processo = "Trançadeira" && _g7.Trançadeira = _b.Trançadeira
+                            ) As _o7,
+                            With(
+                                {
+                                    _v7: Coalesce(
+                                        LookUp(
+                                            colVelTrPnl As _v2,
+                                            _v2.MaqN = _maqN && _v2.Chave = fx_MangCanon(Text(_o7.Mangueira))
+                                        ).MFG,
+                                        fx_VelocidadeFallbackSpiral(Text(_o7.Mangueira))
+                                    )
+                                },
+                                With(
+                                    { _v8: If(_v7 > 0, _v7, _vAtiva) },
+                                    { M: If(_v8 > 0, Coalesce(_o7.quantidade_tubo, 0) * 60 / _v8, 0) }
+                                )
+                            )
+                        ),
+                        M
+                    )
+                },
+                With(
+                {
+                    _restM: If(
+                        IsBlank(_f.ID),
+                        0,
+                        Max(0, Coalesce(_f.quantidade_tubo, 0) - _consM)
+                    )
+                },
+                {
+                    Posto: _b.Trançadeira,
+                    Rotulo: _b.nome,
+                    OP: Coalesce(_f.OP, 0),
+                    Mangueira: Coalesce(Text(_f.Mangueira), ""),
+                    Inicio: _f.data_hora_inicio_trancadeira,
+                    Produzindo: !IsBlank(_f.ID),
+                    Estado: _est,
+                    Cor: If(_est = "PARADA", fx_CorErro, fx_CorEstadoPosto(_est)),
+                    Motivo: If(_est = "PARADA" || _est = "PAUSA", _ult.Motivo, ""),
+                    ParadoMin: _parMin,
+                    PausaMin: _pauMin,
+                    // Inicio da janela parada pela grade oficial (v0.11.0): 13:57 e 22:41 nas fronteiras de turno.
+                    InicioParada: If(_est = "PARADA" || _est = "PAUSA", _ult.Ini, Blank()),
+                    // Fila = CARRETEIS atras. OpsFila so alimenta o detalhe do andon.
+                    Fila: _n,
+                    OpsFila: Sum(_fila, NOps),
+                    Q1: If(_n >= 1, Last(FirstN(_fila, 1)).QtdAnterior, Blank()),
+                    Q2: If(_n >= 2, Last(FirstN(_fila, 2)).QtdAnterior, Blank()),
+                    Q3: If(_n >= 3, Last(FirstN(_fila, 3)).QtdAnterior, Blank()),
+                    Q4: If(_n >= 4, Last(FirstN(_fila, 4)).QtdAnterior, Blank()),
+                    Q5: If(_n >= 5, Last(FirstN(_fila, 5)).QtdAnterior, Blank()),
+                    Q6: If(_n >= 6, Last(FirstN(_fila, 6)).QtdAnterior, Blank()),
+                    Mais: If(_n > fx_PainelSlotsTranc, _n - fx_PainelSlotsTranc, 0),
+                    // v0.9.0: chaves da ficha de consulta. FilaTab guarda os carreteis
+                    // (com as OPs dentro) na mesma ordem das bolinhas.
+                    IDAtiva: _f.ID,
+                    FilaTab: _fila,
+                    // v0.10.1: autonomia de tubo no instante da carga (varSincPnl). O label desconta
+                    // o relogio da tela (fx_AutonomiaAgora). Blank = sem velocidade cadastrada.
+                    VelAtiva: _vAtiva,
+                    ConsumidoM: Round(_consM, 0),
+                    RestanteM: Round(_restM, 0),
+                    // v0.10.2: janelas JA FECHADAS do turno atual sem apontamento desta maquina.
+                    SemApontar: CountRows(
+                        Filter(
+                            colJanTrPnl As _w5,
+                            _w5.DataRef = fx_DataRefEm(varAgoraPnl) &&
+                            _w5.Turno = fx_TurnoEm(varAgoraPnl) &&
+                            _w5.Fim <= varAgoraPnl &&
+                            IsBlank(
+                                LookUp(
+                                    _hhMaq As _hm5,
+                                    _hm5.DataRef = _w5.DataRef && _hm5.Turno = _w5.Turno && _hm5.Hora = _w5.Hora
+                                ).Hora
+                            )
+                        )
+                    ),
+                    AutonomiaMin: If(
+                        _vAtiva > 0,
+                        Round(_restM * 60 / _vAtiva + _minFila, 0),
+                        Blank()
+                    )
+                }
+                )
+                )
+                )
+            )
+        )
+    )
+);
+ClearCollect(
+    colBitolasPnl,
+    ForAll(
+        fx_BitolasMandril As _bt,
+        With(
+            {
+                _q: CountRows(
+                    Filter(
+                        colAguardPnl As _g2,
+                        _g2.processo = "Tubo" &&
+                        _g2.Bitola = _bt.Bitola &&
+                        !IsBlank(_g2.'Carretel Entrada')
+                    )
+                )
+            },
+            {
+                Bitola: _bt.Bitola,
+                Qtd: _q,
+                Cor: fx_SemaforoKanban(_q)
+            }
+        )
+    )
+);
+ClearCollect(
+    colAcabPnl,
+    ForAll(
+        fx_EtapasAcabPainel As _e,
+        With(
+            {
+                _f: LookUp(colAtivasPnl As _a2, _a2.processo = _e.Processo),
+                _fila: AddColumns(
+                    Sort(
+                        Filter(colAguardPnl As _g3, _g3.processo = _e.Processo),
+                        ID,
+                        SortOrder.Ascending
+                    ),
+                    QtdAnterior,
+                    Switch(
+                        _e.Processo,
+                        "Cobertura",    quantidade_trancagem,
+                        "Bandagem",     quantidade_cobertura,
+                        "Vulcanização", quantidade_bandagem,
+                        "Debandagem",   quantidade_vulcanizacao
+                    )
+                )
+            },
+            With(
+                {
+                    _n: CountRows(_fila),
+                    _ini: Switch(
+                        _e.Processo,
+                        "Cobertura",    _f.data_hora_inicio_cobertura,
+                        "Bandagem",     _f.data_hora_inicio_bandagem,
+                        "Vulcanização", _f.data_hora_inicio_vulcanizacao,
+                        "Debandagem",   _f.data_hora_inicio_debandagem
+                    )
+                },
+                With(
+                    {
+                        _est: If(
+                            _e.Processo = "Vulcanização" && !IsBlank(_f.ID),
+                            fx_EstadoVulca(
+                                Text(_f.status_processo),
+                                _f.InicioResfriamento_Vulcanizacao,
+                                varAgoraPnl
+                            ),
+                            fx_EstadoPosto(!IsBlank(_f.ID), _n)
+                        )
+                    },
+                    {
+                        Ord: _e.Ord,
+                        Processo: _e.Processo,
+                        Rotulo: _e.Rotulo,
+                        OP: Coalesce(_f.OP, 0),
+                        Mangueira: Coalesce(Text(_f.Mangueira), ""),
+                        Produzindo: !IsBlank(_f.ID),
+                        Estado: _est,
+                        InicioCrono: If(
+                            _est = "RESFRIANDO",
+                            _f.InicioResfriamento_Vulcanizacao,
+                            _ini
+                        ),
+                        Fila: _n,
+                        Q1: If(_n >= 1, Last(FirstN(_fila, 1)).QtdAnterior, Blank()),
+                        Q2: If(_n >= 2, Last(FirstN(_fila, 2)).QtdAnterior, Blank()),
+                        Q3: If(_n >= 3, Last(FirstN(_fila, 3)).QtdAnterior, Blank()),
+                        Q4: If(_n >= 4, Last(FirstN(_fila, 4)).QtdAnterior, Blank()),
+                        Q5: If(_n >= 5, Last(FirstN(_fila, 5)).QtdAnterior, Blank()),
+                        Q6: If(_n >= 6, Last(FirstN(_fila, 6)).QtdAnterior, Blank()),
+                        Q7: If(_n >= 7, Last(FirstN(_fila, 7)).QtdAnterior, Blank()),
+                        Q8: If(_n >= 8, Last(FirstN(_fila, 8)).QtdAnterior, Blank()),
+                        Q9: If(_n >= 9, Last(FirstN(_fila, 9)).QtdAnterior, Blank()),
+                        Q10: If(_n >= 10, Last(FirstN(_fila, 10)).QtdAnterior, Blank()),
+                        Q11: If(_n >= 11, Last(FirstN(_fila, 11)).QtdAnterior, Blank()),
+                        Q12: If(_n >= 12, Last(FirstN(_fila, 12)).QtdAnterior, Blank()),
+                        Mais: If(_n > fx_PainelSlotsAcab, _n - fx_PainelSlotsAcab, 0),
+                        // v0.9.0: chaves da ficha de consulta, na ordem das bolinhas.
+                        IDAtiva: _f.ID,
+                        FilaTab: ForAll(_fila As _w, { ID: _w.ID })
+                    }
+                )
+            )
+        )
+    )
+);
+With(
+    {
+        _fm: LookUp(colAtivasPnl As _a3, _a3.processo = "Mandril"),
+        _ft: LookUp(colAtivasPnl As _a4, _a4.processo = "Tubo"),
+        _fe: LookUp(colAtivasPnl As _a5, _a5.processo = "Extr./Teste")
+    },
+    Set(varMandAtivoPnl, !IsBlank(_fm.ID));
+    Set(varTuboOPPnl, Coalesce(_ft.OP, 0));
+    Set(varTuboMangPnl, Coalesce(Text(_ft.Mangueira), ""));
+    Set(varTuboInicioPnl, _ft.data_hora_inicio_tubo);
+    Set(varTuboAtivoPnl, !IsBlank(_ft.ID));
+    Set(varTuboIDPnl, _ft.ID);
+    Set(varExtrAtivoPnl, !IsBlank(_fe.ID))
+);
+ClearCollect(
+    colFilaExtrPnl,
+    Sort(
+        Filter(colAguardPnl As _g4, _g4.processo = "Extr./Teste"),
+        ID,
+        SortOrder.Ascending
+    )
+);
+Set(varFilaExtrPnl, CountRows(colFilaExtrPnl));
+// Solda de Mandril e Extracao POR POSTO (v0.8.0, C37). A etapa tem duas
+// maquinas fisicas; LookUp de uma OP so mostrava a primeira que achasse.
+// Mandril nao tem fila propria (e a 1a etapa): estado = PRODUZINDO ou LIVRE.
+ClearCollect(
+    colPostosMandPnl,
+    ForAll(
+        Table(
+            { Ord: 1, Posto: "TERMOFUSAO",  Curto: "Quente" },
+            { Ord: 2, Posto: "VIBRACIONAL", Curto: "Vibracional" }
+        ) As _m,
+        With(
+            {
+                _f: LookUp(
+                    colAtivasPnl As _a9,
+                    _a9.processo = "Mandril" && _a9.maquina_mandril = _m.Posto
+                )
+            },
+            {
+                Ord: _m.Ord,
+                Posto: _m.Posto,
+                Curto: _m.Curto,
+                OP: Coalesce(_f.OP, 0),
+                Bitola: Coalesce(_f.Bitola, 0),
+                Inicio: _f.data_hora_inicio_mandril,
+                Produzindo: !IsBlank(_f.ID),
+                Estado: fx_EstadoPosto(!IsBlank(_f.ID), 0)
+            }
+        )
+    )
+);
+// Extracao: a fila e UMA so para as duas cabines; o estado e por cabine
+// (parada com fila acende so na que esta parada).
+ClearCollect(
+    colPostosExtrPnl,
+    ForAll(
+        fx_CabinesTeste As _c,
+        With(
+            {
+                _f: LookUp(
+                    colAtivasPnl As _a8,
+                    _a8.processo = "Extr./Teste" && _a8.cabine_teste = _c.Posto
+                )
+            },
+            {
+                Posto: _c.Posto,
+                Rotulo: _c.Rotulo,
+                Curto: Substitute(_c.Rotulo, "Cabine ", ""),
+                OP: Coalesce(_f.OP, 0),
+                Mangueira: Coalesce(Text(_f.Mangueira), ""),
+                Inicio: _f.data_hora_inicio_extracao,
+                Produzindo: !IsBlank(_f.ID),
+                Estado: fx_EstadoPosto(!IsBlank(_f.ID), varFilaExtrPnl),
+                IDAtiva: _f.ID
+            }
+        )
+    )
+);
+Set(
+    varMandProduzidoPnl,
+    Sum(
+        Filter(
+            colEvMandPnl As _m1,
+            _m1.TurnoTxt = Text(fx_TurnoEm(varAgoraPnl), "[$-en-US]0") &&
+            (_m1.TipoTxt = "Fim" || _m1.TipoTxt = "Parcial")
+        ),
+        metros
+    )
+);
+Set(
+    varKanbanTuboPnl,
+    CountRows(
+        Filter(
+            colAguardPnl As _g5,
+            _g5.processo = "Tubo" && !IsBlank(_g5.'Carretel Entrada')
+        )
+    )
+);
+ClearCollect(
+    colFilaTuboPnl,
+    AddColumns(
+        Sort(
+            Filter(colAguardPnl As _g6, _g6.processo = "Tubo"),
+            ID,
+            SortOrder.Ascending
+        ),
+        QtdAnterior,
+        quantidade_mandril
+    )
+);
+Set(varFilaTuboPnl, CountRows(colFilaTuboPnl));
+Set(varQT1Pnl, If(varFilaTuboPnl >= 1, Last(FirstN(colFilaTuboPnl, 1)).QtdAnterior, Blank()));
+Set(varQT2Pnl, If(varFilaTuboPnl >= 2, Last(FirstN(colFilaTuboPnl, 2)).QtdAnterior, Blank()));
+Set(varQT3Pnl, If(varFilaTuboPnl >= 3, Last(FirstN(colFilaTuboPnl, 3)).QtdAnterior, Blank()));
+Set(varQT4Pnl, If(varFilaTuboPnl >= 4, Last(FirstN(colFilaTuboPnl, 4)).QtdAnterior, Blank()));
+Set(varQT5Pnl, If(varFilaTuboPnl >= 5, Last(FirstN(colFilaTuboPnl, 5)).QtdAnterior, Blank()));
+Set(varQT6Pnl, If(varFilaTuboPnl >= 6, Last(FirstN(colFilaTuboPnl, 6)).QtdAnterior, Blank()));
+// Bobinagem (v0.7.0) — FifoBobinadeira. AB = pedido aberto, EP = bobinando,
+// BC = bobinado, CO = consumido. BC ainda NAO entra: o consumo nao e gravado
+// (OP_Consumo vazio), entao BC acumula desde junho. Carrinho fisico entra depois.
+// v0.11.0 (item 5): EP e AB vem da UMA consulta da FifoBobinadeira feita no Concurrent (colBobFifoPnl);
+// aqui so o recorte local. Falha da consulta = varBobSemFontePnl true (setado la).
+ClearCollect(
+    colBobEPPnl,
+    Sort(Filter(colBobFifoPnl, Status = "EP"), DataHoraInicio, SortOrder.Ascending)
+);
+Set(varBobAbertosPnl, CountRows(Filter(colBobFifoPnl, Status = "AB")));
+Set(varBobCarrinhoPnl, CountRows(colBobEPPnl));
+Set(varBobInicioPnl, First(colBobEPPnl).DataHoraInicio);
+// Estado no vocabulario do fx_CorEstadoPosto: cor igual as outras etapas.
+Set(
+    varBobStatusPnl,
+    If(varBobCarrinhoPnl > 0, "PRODUZINDO", varBobAbertosPnl > 0, "COM FILA", "LIVRE")
+);
+Set(
+    varBobBadgePnl,
+    If(varBobCarrinhoPnl > 0, "BOBINANDO", varBobAbertosPnl > 0, "COM PEDIDO", "LIVRE")
+);
+Set(
+    varBobFioPnl,
+    With(
+        { _o: First(colBobEPPnl) },
+        If(
+            varBobCarrinhoPnl > 0,
+            _o.Mangueira & " · " & Text(_o.NFios, "[$-en-US]0") & " fios" &
+            If(varBobAbertosPnl > 0, "  ·  " & Text(varBobAbertosPnl, "[$-en-US]0") & " aberto(s)", ""),
+            varBobAbertosPnl > 0,
+            Text(varBobAbertosPnl, "[$-en-US]0") & " pedido(s) aberto(s)",
+            "sem pedido na fila"
+        )
+    )
+);
+ClearCollect(
+    colVulcAtivasPnl,
+    AddColumns(
+        Sort(
+            Filter(colAtivasPnl As _v1, _v1.processo = "Vulcanização"),
+            ID,
+            SortOrder.Ascending
+        ),
+        QtdAnterior,
+        quantidade_bandagem
+    )
+);
+Set(varVulcQtdPnl, CountRows(colVulcAtivasPnl));
+Set(varVQ1Pnl, If(varVulcQtdPnl >= 1, Last(FirstN(colVulcAtivasPnl, 1)).QtdAnterior, Blank()));
+Set(varVQ2Pnl, If(varVulcQtdPnl >= 2, Last(FirstN(colVulcAtivasPnl, 2)).QtdAnterior, Blank()));
+Set(varVQ3Pnl, If(varVulcQtdPnl >= 3, Last(FirstN(colVulcAtivasPnl, 3)).QtdAnterior, Blank()));
+Set(varVQ4Pnl, If(varVulcQtdPnl >= 4, Last(FirstN(colVulcAtivasPnl, 4)).QtdAnterior, Blank()));
+Set(varVQ5Pnl, If(varVulcQtdPnl >= 5, Last(FirstN(colVulcAtivasPnl, 5)).QtdAnterior, Blank()));
+Set(varVQ6Pnl, If(varVulcQtdPnl >= 6, Last(FirstN(colVulcAtivasPnl, 6)).QtdAnterior, Blank()));
+Set(varVQ7Pnl, If(varVulcQtdPnl >= 7, Last(FirstN(colVulcAtivasPnl, 7)).QtdAnterior, Blank()));
+Set(varVQ8Pnl, If(varVulcQtdPnl >= 8, Last(FirstN(colVulcAtivasPnl, 8)).QtdAnterior, Blank()));
+Set(varVQ9Pnl, If(varVulcQtdPnl >= 9, Last(FirstN(colVulcAtivasPnl, 9)).QtdAnterior, Blank()));
+Set(varVQ10Pnl, If(varVulcQtdPnl >= 10, Last(FirstN(colVulcAtivasPnl, 10)).QtdAnterior, Blank()));
+Set(varVQ11Pnl, If(varVulcQtdPnl >= 11, Last(FirstN(colVulcAtivasPnl, 11)).QtdAnterior, Blank()));
+Set(varVQ12Pnl, If(varVulcQtdPnl >= 12, Last(FirstN(colVulcAtivasPnl, 12)).QtdAnterior, Blank()));
+// Bateladas REAIS da Vulcanizacao (v0.6.0).
+// Batelada = grupo de "Início" colados no tempo: um Início abre batelada nova
+// quando nao houve outro Início nos 30 min anteriores (as 5 OPs de 08:23/08:24
+// entram juntas). Maximo de 5 bateladas no dia e 5 carreteis por batelada.
+// colGradeVulcPnl so rotula as colunas que ainda nao aconteceram.
+ClearCollect(
+    colGradeVulcPnl,
+    { Ord: 1, Hora: "05:50" },
+    { Ord: 2, Hora: "09:20" },
+    { Ord: 3, Hora: "12:50" },
+    { Ord: 4, Hora: "16:20" },
+    { Ord: 5, Hora: "19:50" }
+);
+With(
+    { _dr: fx_DataRefEm(varAgoraPnl) },
+    // v0.9.2: cada bolinha e UM carretel, e cada carretel vem de UMA fonte so.
+    // Na autoclave agora (ficha Em processo) -> entra pelo inicio gravado na ficha e
+    // fica AZUL. Ja saiu -> entra pelo evento de Inicio do dia. Antes a grade lia so
+    // evento e o numero lia so ficha: 6 bolinhas contra 5 na autoclave em 25/09.
+    ClearCollect(
+        colIniVulcPnl,
+        ForAll(
+            Filter(
+                colEvVulcPnl As _ev0,
+                _ev0.TipoTxt = "Início" && !(_ev0.origem_ID in colVulcAtivasPnl.ID)
+            ) As _ev1,
+            { MinIni: DateDiff(_dr, _ev1.data_hora, TimeUnit.Minutes), NaAuto: false }
+        )
+    );
+    Collect(
+        colIniVulcPnl,
+        ForAll(
+            colVulcAtivasPnl As _va,
+            {
+                MinIni: DateDiff(_dr, Coalesce(_va.data_hora_inicio_vulcanizacao, varAgoraPnl), TimeUnit.Minutes),
+                NaAuto: true
+            }
+        )
+    );
+    ClearCollect(
+        colCabVulcPnl,
+        FirstN(
+            Sort(
+                Distinct(
+                    Filter(
+                        colIniVulcPnl As _i,
+                        IsEmpty(
+                            Filter(
+                                colIniVulcPnl As _k,
+                                _k.MinIni < _i.MinIni && _k.MinIni >= _i.MinIni - 30
+                            )
+                        )
+                    ),
+                    MinIni
+                ),
+                Value,
+                SortOrder.Ascending
+            ),
+            5
+        )
+    );
+    With(
+        { _nCab: CountRows(colCabVulcPnl) },
+        ClearCollect(
+            colBatVulcPnl,
+            ForAll(
+                Sequence(5) As _s,
+                With(
+                    {
+                        _existe: _s.Value <= _nCab,
+                        _de: If(_s.Value <= _nCab, Last(FirstN(colCabVulcPnl, _s.Value)).Value, 0),
+                        _ate: If(_s.Value < _nCab, Last(FirstN(colCabVulcPnl, _s.Value + 1)).Value, 99999)
+                    },
+                    {
+                        Ord: _s.Value,
+                        Hora: If(
+                            _existe,
+                            Text(DateAdd(_dr, _de, TimeUnit.Minutes), "hh:mm"),
+                            LookUp(colGradeVulcPnl As _gb, _gb.Ord = _s.Value).Hora
+                        ),
+                        // Autoclave comporta no maximo 5 carreteis por batelada.
+                        Qtd: If(
+                            _existe,
+                            Min(
+                                CountRows(
+                                    Filter(
+                                        colIniVulcPnl As _i2,
+                                        _i2.MinIni >= _de && _i2.MinIni < _ate
+                                    )
+                                ),
+                                5
+                            ),
+                            0
+                        ),
+                        // v0.9.2: quantos carreteis DESTA batelada ainda estao na autoclave.
+                        QtdAuto: If(
+                            _existe,
+                            Min(
+                                CountRows(
+                                    Filter(
+                                        colIniVulcPnl As _i3,
+                                        _i3.NaAuto && _i3.MinIni >= _de && _i3.MinIni < _ate
+                                    )
+                                ),
+                                5
+                            ),
+                            0
+                        ),
+                        // v0.9.2: ATUAL = batelada com carretel ainda na autoclave, venha
+                        // de onde vier. Batelada antiga com carretel dentro acende azul
+                        // tambem: e OP que nao teve o Fim apontado.
+                        Estado: If(
+                            !_existe, "FUTURA",
+                            CountRows(
+                                Filter(
+                                    colIniVulcPnl As _i4,
+                                    _i4.NaAuto && _i4.MinIni >= _de && _i4.MinIni < _ate
+                                )
+                            ) > 0, "ATUAL",
+                            "CONCLUIDA"
+                        )
+                    }
+                )
+            )
+        )
+    )
+);
+Set(
+    varSaidaT1Pnl,
+    Sum(
+        Filter(
+            colEvSaidaPnl As _e1,
+            _e1.TurnoTxt = "1" && (_e1.TipoTxt = "Fim" || _e1.TipoTxt = "Parcial")
+        ),
+        metros
+    )
+);
+Set(
+    varSaidaT2Pnl,
+    Sum(
+        Filter(
+            colEvSaidaPnl As _e2,
+            _e2.TurnoTxt = "2" && (_e2.TipoTxt = "Fim" || _e2.TipoTxt = "Parcial")
+        ),
+        metros
+    )
+);
+Set(
+    varSaidaT3Pnl,
+    Sum(
+        Filter(
+            colEvSaidaPnl As _e3,
+            _e3.TurnoTxt = "3" && (_e3.TipoTxt = "Fim" || _e3.TipoTxt = "Parcial")
+        ),
+        metros
+    )
+);
+Set(varSaidaDiaPnl, varSaidaT1Pnl + varSaidaT2Pnl + varSaidaT3Pnl);
+Set(
+    varMaiorFilaPnl,
+    Coalesce(
+        Text(First(Sort(colAcabPnl, Fila, SortOrder.Descending)).Processo),
+        ""
+    )
+);
+// ONDE OLHAR AGORA (v0.11.0 · itens 3 e 4). Todo item leva as mesmas 7 colunas:
+//   Sev, Titulo, Detalhe, IdadeMin (ha quantos min o problema existe; 0 = nao medido) e
+//   Tipo/Chave/N, que dizem a ficha de consulta o que abrir quando o item e tocado (Tipo vazio = sem ficha).
+// Regras de FILA (sem OP + carretel esperando) ficam caladas em turno NAO trabalhado: sem janela
+// apontada no turno de agora (criterio "Apontada", mesmo do consumo de tubo). Na 1a janela do turno
+// vale a tolerancia (ainda ninguem apontou). Parada apontada, tubo, metragem e OP zumbi nao calam.
+With(
+    {
+        _ta: fx_TurnoEm(varAgoraPnl),
+        _dh: fx_DataRefEm(varAgoraPnl)
+    },
+    With(
+        {
+            _trab: ((Text(_dh, "yyyy-mm-dd") & "|" & Text(_ta, "[$-en-US]0")) in colTurnosHHPnl.Value) ||
+                (fx_MinNoTurno(varAgoraPnl, _ta) < LookUp(fx_GradeHoraHora As _gt, _gt.Turno = _ta && _gt.Ord = 2).Fim)
+        },
+        // 1 · PARADA apontada no Hora-Hora (com ou sem OP aberta). Pausa programada NAO entra.
+        ClearCollect(
+            colAndonPnl,
+            ForAll(
+                Filter(colPostosTrancPnl As _p1, _p1.Estado = "PARADA") As _q1,
+                {
+                    Sev: 1,
+                    Titulo: _q1.Rotulo & " · " & _q1.Motivo,
+                    Detalhe: "Parada nesta janela há " & fx_CronoLongo(_q1.InicioParada, varAgoraPnl) &
+                    If(_q1.Produzindo, " · OP " & Text(_q1.OP, "[$-en-US]0") & " aberta", "") &
+                    If(
+                        _q1.Fila > 0,
+                        " · " & Text(_q1.Fila, "[$-en-US]0") &
+                        If(_q1.Fila = 1, " carretel esperando", " carretéis esperando"),
+                        ""
+                    ),
+                    IdadeMin: Max(0, DateDiff(_q1.InicioParada, varAgoraPnl, TimeUnit.Minutes)),
+                    Tipo: "TRANC",
+                    Chave: _q1.Posto,
+                    N: 0
+                }
+            )
+        );
+        // 2 · Trancadeira SEM OP e COM FILA (sem parada nem pausa apontada).
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(
+                    colPostosTrancPnl As _p1b,
+                    _trab && !_p1b.Produzindo && _p1b.Estado = "COM FILA"
+                ) As _q1b,
+                {
+                    Sev: 1,
+                    Titulo: _q1b.Rotulo & " sem OP · com fila",
+                    Detalhe: Text(_q1b.Fila, "[$-en-US]0") &
+                    If(_q1b.Fila = 1, " carretel esperando", " carretéis esperando") &
+                    If(
+                        _q1b.OpsFila > _q1b.Fila,
+                        " · " & Text(_q1b.OpsFila, "[$-en-US]0") & " OPs",
+                        ""
+                    ),
+                    IdadeMin: 0,
+                    Tipo: "TRANC",
+                    Chave: _q1b.Posto,
+                    N: 0
+                }
+            )
+        );
+        // 3 · Tubo esgotado pela conta (carretel montado consumido, fila vazia, OP Em processo).
+        // O detalhe diz a causa mais provavel: janela do turno sem Hora-Hora.
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(
+                    colPostosTrancPnl As _p4,
+                    _p4.Produzindo && _p4.Estado <> "PARADA" && !IsBlank(_p4.AutonomiaMin) && _p4.AutonomiaMin <= 0
+                ) As _q4,
+                {
+                    Sev: 1,
+                    Titulo: _q4.Rotulo & " · tubo esgotado pela conta",
+                    Detalhe: If(
+                        _q4.SemApontar > 0,
+                        Text(_q4.SemApontar, "[$-en-US]0") &
+                        If(_q4.SemApontar = 1, " janela sem Hora-Hora", " janelas sem Hora-Hora") &
+                        " no turno · apontar e conferir o carretel",
+                        "Conferir o carretel na máquina e o Fim da OP"
+                    ),
+                    IdadeMin: 0,
+                    Tipo: "TRANC",
+                    Chave: _q4.Posto,
+                    N: 0
+                }
+            )
+        );
+        // 4 · Mandril abaixo do minimo: UM item so para todas as bitolas (antes eram ate 6, e podiam
+        // ocupar os 3 lugares da tela e esconder uma trancadeira parada).
+        If(
+            CountRows(Filter(colBitolasPnl, Qtd < fx_KanbanMinimo)) > 0,
+            Collect(
+                colAndonPnl,
+                {
+                    Sev: 1,
+                    Titulo: "Mandril abaixo do mínimo · bitola " &
+                    Concat(Filter(colBitolasPnl, Qtd < fx_KanbanMinimo), Text(Bitola, "[$-en-US]0"), ", "),
+                    Detalhe: "Fila do Tubo com menos de " & Text(fx_KanbanMinimo, "[$-en-US]0") & " carretéis por bitola",
+                    IdadeMin: 0,
+                    Tipo: "TUBO",
+                    Chave: "Tubo",
+                    N: 0
+                }
+            )
+        );
+        // 5 · Etapas de acabamento SEM OP e COM FILA.
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(colAcabPnl As _a6, _trab && !_a6.Produzindo && _a6.Fila > 0) As _c2,
+                {
+                    Sev: 2,
+                    Titulo: _c2.Rotulo & " sem OP · com fila",
+                    Detalhe: Text(_c2.Fila, "[$-en-US]0") & " OP(s) esperando esta etapa",
+                    IdadeMin: 0,
+                    Tipo: "ACAB",
+                    Chave: _c2.Processo,
+                    N: 0
+                }
+            )
+        );
+        // 6 · Cabine da Extracao sem OP enquanto a fila espera (v0.8.0).
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(colPostosExtrPnl As _x1, _trab && !_x1.Produzindo && varFilaExtrPnl > 0) As _c4,
+                {
+                    Sev: 2,
+                    Titulo: _c4.Rotulo & " sem OP · com fila",
+                    Detalhe: Text(varFilaExtrPnl, "[$-en-US]0") & " OP(s) esperando a Extração",
+                    IdadeMin: 0,
+                    Tipo: "EXTR",
+                    Chave: "Extr./Teste",
+                    N: 0
+                }
+            )
+        );
+        // 7 · Tubo para MENOS DE UM TURNO UTIL (substitui a regra "rodando sem carretel atras" da
+        // MEL-190, que disparava mesmo com horas de autonomia). Pausa e parada tem regra propria.
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(
+                    colPostosTrancPnl As _p2,
+                    _p2.Produzindo && _p2.Estado <> "PARADA" &&
+                    (
+                        (!IsBlank(_p2.AutonomiaMin) && _p2.AutonomiaMin > 0 && _p2.AutonomiaMin < fx_TurnoUtilMin) ||
+                        (IsBlank(_p2.AutonomiaMin) && _p2.Fila = 0)
+                    )
+                ) As _q2,
+                {
+                    Sev: 2,
+                    Titulo: _q2.Rotulo & If(IsBlank(_q2.AutonomiaMin), " · sem carretel atrás", " · tubo para menos de 1 turno"),
+                    Detalhe: If(
+                        IsBlank(_q2.AutonomiaMin),
+                        "Sem velocidade cadastrada · sem carretel atrás",
+                        "Autonomia " & fx_AutonomiaTexto(_q2.AutonomiaMin) & " · turno útil = " &
+                        fx_AutonomiaTexto(fx_TurnoUtilMin)
+                    ),
+                    IdadeMin: 0,
+                    Tipo: "TRANC",
+                    Chave: _q2.Posto,
+                    N: 0
+                }
+            )
+        );
+        // 8 · Metragem do carretel que espera: VAZIA (nao apontada) e IMPLAUSIVEL (apontada, abaixo do
+        // minimo) sao problemas diferentes e viram itens diferentes. O metro da bolinha e o que a etapa
+        // ANTERIOR apontou; o detalhe diz onde corrigir.
+        With(
+            {
+                _mq: AddColumns(
+                    Filter(
+                        colAguardPnl As _mq0,
+                        _mq0.processo in ["Tubo", "Trançadeira", "Cobertura", "Bandagem", "Vulcanização", "Debandagem"]
+                    ),
+                    MetrosBol,
+                    Switch(
+                        processo,
+                        "Tubo",         quantidade_mandril,
+                        "Trançadeira",  quantidade_tubo,
+                        "Cobertura",    quantidade_trancagem,
+                        "Bandagem",     quantidade_cobertura,
+                        "Vulcanização", quantidade_bandagem,
+                        "Debandagem",   quantidade_vulcanizacao
+                    ),
+                    EtapaAnt,
+                    Switch(
+                        processo,
+                        "Tubo",         "Mandril",
+                        "Trançadeira",  "Tubo",
+                        "Cobertura",    "Trançagem",
+                        "Bandagem",     "Cobertura",
+                        "Vulcanização", "Bandagem",
+                        "Debandagem",   "Vulcanização"
+                    )
+                )
+            },
+            Collect(
+                colAndonPnl,
+                ForAll(
+                    Filter(_mq As _m1, IsBlank(_m1.MetrosBol)) As _c6,
+                    {
+                        Sev: 2,
+                        Titulo: If(_c6.processo = "Trançadeira", Coalesce(Text(_c6.Trançadeira), "Trançagem"), _c6.processo) &
+                        " · carretel sem metragem",
+                        Detalhe: "OP " & Text(_c6.OP, "[$-en-US]0") & " · metragem do " & _c6.EtapaAnt & " não apontada",
+                        IdadeMin: 0,
+                        Tipo: Switch(_c6.processo, "Tubo", "TUBO", "Trançadeira", If(IsBlank(Text(_c6.Trançadeira)), "", "TRANC"), "ACAB"),
+                        Chave: Switch(_c6.processo, "Tubo", "Tubo", "Trançadeira", Text(_c6.Trançadeira), _c6.processo),
+                        N: 0
+                    }
+                )
+            );
+            Collect(
+                colAndonPnl,
+                ForAll(
+                    Filter(_mq As _m2, !IsBlank(_m2.MetrosBol) && _m2.MetrosBol < fx_MetrosMinCarretel) As _c5,
+                    {
+                        Sev: 2,
+                        Titulo: If(_c5.processo = "Trançadeira", Coalesce(Text(_c5.Trançadeira), "Trançagem"), _c5.processo) &
+                        " · carretel com " & Text(_c5.MetrosBol, "[$-en-US]0") & " m",
+                        Detalhe: "OP " & Text(_c5.OP, "[$-en-US]0") & " · metragem do " & _c5.EtapaAnt & " a corrigir na ficha",
+                        IdadeMin: 0,
+                        Tipo: Switch(_c5.processo, "Tubo", "TUBO", "Trançadeira", If(IsBlank(Text(_c5.Trançadeira)), "", "TRANC"), "ACAB"),
+                        Chave: Switch(_c5.processo, "Tubo", "Tubo", "Trançadeira", Text(_c5.Trançadeira), _c5.processo),
+                        N: 0
+                    }
+                )
+            )
+        );
+        // 9 · OP zumbi: acima do teto de horas na mesma etapa.
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(
+                    colPostosTrancPnl As _p3,
+                    _p3.Produzindo &&
+                    !IsBlank(_p3.Inicio) &&
+                    DateDiff(_p3.Inicio, varAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
+                ) As _q3,
+                {
+                    Sev: 3,
+                    Titulo: "OP " & Text(_q3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_q3.Inicio, varAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _q3.Rotulo,
+                    Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa",
+                    IdadeMin: DateDiff(_q3.Inicio, varAgoraPnl, TimeUnit.Minutes),
+                    Tipo: "TRANC",
+                    Chave: _q3.Posto,
+                    N: 0
+                }
+            )
+        );
+        Collect(
+            colAndonPnl,
+            ForAll(
+                Filter(
+                    colAcabPnl As _a7,
+                    _a7.Produzindo &&
+                    !IsBlank(_a7.InicioCrono) &&
+                    DateDiff(_a7.InicioCrono, varAgoraPnl, TimeUnit.Hours) > fx_TetoOPHoras
+                ) As _c3,
+                {
+                    Sev: 3,
+                    Titulo: "OP " & Text(_c3.OP, "[$-en-US]0") & " há " & Text(DateDiff(_c3.InicioCrono, varAgoraPnl, TimeUnit.Hours), "[$-en-US]0") & " h na " & _c3.Rotulo,
+                    Detalhe: "Acima do teto de " & Text(fx_TetoOPHoras, "[$-en-US]0") & " h na mesma etapa",
+                    IdadeMin: DateDiff(_c3.InicioCrono, varAgoraPnl, TimeUnit.Minutes),
+                    Tipo: "ACAB",
+                    Chave: _c3.Processo,
+                    N: 0
+                }
+            )
+        )
+    )
+);
+Set(varAndonQtdPnl, CountRows(colAndonPnl));
+// v0.11.0 (item 2 · A3 · M12): varSincPnl e a ANCORA do calculo (autonomia, retrato da ficha) e
+// avanca sempre; a IDADE DO DADO e varUltOkPnl, que so avanca em carga 100% ok (sem falha e sem
+// truncamento). "Celula em dia" e o rodape leem varCargaOkPnl / varUltOkPnl.
+Set(varSincPnl, varAgoraPnl);
+Set(varCargaOkPnl, !varFalhaPnl && !varTruncaPnl);
+If(varCargaOkPnl, Set(varUltOkPnl, varAgoraPnl));
+// Medidor do ciclo: duracao da carga em segundos (unica leitura de relogio fora do instante do ciclo).
+Set(varCargaSegPnl, DateDiff(varAgoraPnl, Now(), TimeUnit.Seconds))
+```
+
+## 2. lbl_VersaoTelaPnl.Text
+```
+"Versão 0.12.0"
+```
+
+## 3. YAML dos controles NOVOS · card Tubo (nível da tela; X/Y/Width/Height definidos)
+```yaml
+      - lbl_ProdT1TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="1º " & If(
+                  1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T1, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =53
+            X: =219
+            Y: =556
+      - lbl_ProdT2TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="2º " & If(
+                  2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T2, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =53
+            X: =272
+            Y: =556
+      - lbl_ProdT3TuboPnl:
+          Control: Label@2.5.1
+          Properties:
+            BorderColor: =fx_CorPainelBorda
+            Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+            Font: =fx_FonteFamilia
+            FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+            Height: =16
+            OnSelect: =Select(btn_CardTuboPnl)
+            PaddingLeft: =0
+            Size: =fx_FonteApoio
+            Text: |-
+              ="3º " & If(
+                  3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3),
+                  "—",
+                  Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = "Tubo").T3, "[$-en-US]#,##0"), ",", ".")
+              )
+            Width: =54
+            X: =325
+            Y: =556
+```
+
+## 4. YAML dos controles NOVOS · dentro do template de gal_AcabPnl (card de cada etapa; coordenadas relativas ao template)
+Aparece nas 4 linhas (Cobertura, Bandagem, Vulcanização, Debandagem). Região livre: X 272..330, Y 56..104 (à direita das bolinhas de carretel, abaixo do estado/badge).
+```yaml
+            - lbl_ProdT1AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 1, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 1, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="1º " & If(
+                        1 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T1, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =56
+            - lbl_ProdT2AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 2, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 2, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="2º " & If(
+                        2 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T2, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =72
+            - lbl_ProdT3AcPnl:
+                Control: Label@2.5.1
+                Properties:
+                  BorderColor: =fx_CorPainelBorda
+                  Color: =If(fx_TurnoEm(ctxAgoraPnl) = 3, fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =If(fx_TurnoEm(ctxAgoraPnl) = 3, FontWeight.Bold, FontWeight.Semibold)
+                  Height: =16
+                  OnSelect: =Select(Parent)
+                  PaddingLeft: =0
+                  Size: =fx_FonteApoio
+                  Text: |-
+                    ="3º " & If(
+                        3 > fx_TurnoEm(ctxAgoraPnl) || IsBlank(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3),
+                        "—",
+                        Substitute(Text(LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = ThisItem.Processo).T3, "[$-en-US]#,##0"), ",", ".")
+                    )
+                  Width: =58
+                  X: =272
+                  Y: =88
+```

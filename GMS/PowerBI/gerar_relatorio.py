@@ -109,9 +109,14 @@ def delta_mtd(medida, coluna_data, relativo=True):
     )
 
 
+# Sem parada real no recorte = 0 min (nao "em branco"): zero e o valor verdadeiro.
+PARADA_REAL_DAX = ('COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+                   'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"}))), 0)')
 DATA_FICHA = "'ficha_producao'[DataProducao]"
 DATA_HH = "'Hora-Hora'[Data]"
 EXT = [
+    # 30/10/2026: referencia do grafico de PPM = base real de 2025 (~3.900 PPM, Refugo/PPM_Refugo). Ajustar se houver meta oficial.
+    ("Meta Refugo PPM", "Double", "3900", "#,0", []),
     # (nome, tipo, DAX, formato, [(entidade, medida) referenciadas])
     ("Disponibilidade", "Double", "[Disponibilidade %]", "0.0%", [(M, "Disponibilidade %")]),
     ("Tempo Parado %", "Double", "[% Tempo Parado]", "0.0%", [(M, "% Tempo Parado")]),
@@ -125,27 +130,59 @@ EXT = [
      [(M, "Refugo PPM")]),
     ("Minutos Parados Montagem", "Double", "SUM(Paradas_Montagem[TempoParadoMin])", "#,0", []),
     ("Quantidade Produzida Montagem", "Double", "SUM(Producao_Montagem[QtdProduzida])", "#,0", []),
+    # Total bruto da lista (todos os motivos, inclusive RF e TE): serve para bater com o SharePoint no mesmo dia.
+    # Respeita Data, Turno e Celula; ignora o filtro de Motivo da pagina e do slicer.
+    # ---- pagina Producao Montagem: so contas diretas sobre Producao_Montagem (sem meta: depende de dMetaMontagem relacionada)
+    ("OTs Montagem", "Double", "DISTINCTCOUNT(Producao_Montagem[OT])", "#,0", []),
+    ("Horas de OT Montagem", "Double", "SUM(Producao_Montagem[DuracaoMin]) / 60", "#,0.0", []),
+    ("Peças por Hora Montagem", "Double",
+     "DIVIDE(SUM(Producao_Montagem[QtdProduzida]), SUM(Producao_Montagem[DuracaoMin]) / 60)", "#,0.0", []),
+    # Parada real = sem RF (Refeicao) e sem TE (Tempo Excedido), mesmo criterio do FILTRO_PM, mas como medida
+    # para a pagina de producao, que nao carrega o filtro de pagina da parada.
+    ("Parada Real Montagem (min)", "Double",
+     PARADA_REAL_DAX, "#,0", []),
+    # Pagina Paradas Mont. sem filtro de pagina: parada real, excedido e refeicao sao medidas separadas e nunca somadas.
+    # Assim toda celula entra no eixo, mesmo sem parada real no periodo.
+    # Grafico por dia: o COALESCE da parada real tornaria todo dia do calendario "com valor" (eixo de 01/01 em diante e
+    # "Em branco"). Aqui so aparece o dia que tem alguma linha de parada ou de producao; dia com linha e sem parada real = 0.
+    ("Parada Real por Dia Montagem (min)", "Double",
+     "IF(COUNTROWS(Paradas_Montagem) + COUNTROWS(Producao_Montagem) > 0, " + PARADA_REAL_DAX + ")", "#,0", []),
+    ("Refeição Montagem (min)", "Double",
+     'COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "RF - Refeição")), 0)', "#,0", []),
+    # Medidas do relatorio nao referenciam outras medidas do relatorio (o servico nao resolve): a conta vai por extenso.
+    ("Horas Paradas Real Montagem", "Double", PARADA_REAL_DAX + " / 60", "#,0.00", []),
+    ("Célula Gargalo Parada Real", "Text",
+     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Celula]), "@m", ' + PARADA_REAL_DAX + ') '
+     'VAR mx = MAXX(t, [@m]) RETURN IF(mx > 0, MAXX(FILTER(t, [@m] = mx), Paradas_Montagem[Celula]), "Sem parada real")', None,
+     []),
+    ("Motivo Mais Frequente Parada Real", "Text",
+     'VAR t = ADDCOLUMNS(VALUES(Paradas_Montagem[Motivo]), "@n", CALCULATE(COUNTROWS(Paradas_Montagem), '
+     'KEEPFILTERS(NOT(Paradas_Montagem[Motivo] IN {"RF - Refeição", "TE - Tempo Excedido"})))) '
+     'VAR mx = MAXX(t, [@n]) RETURN IF(mx > 0, MAXX(FILTER(t, [@n] = mx), Paradas_Montagem[Motivo]), "Sem parada real")', None, []),
+    ("Minutos Brutos Montagem", "Double",
+     "CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]))", "#,0", []),
     # Tempo excedido (TE) fica FORA da parada real; este e o unico lugar onde ele aparece, separado.
     ("Minutos Excedidos Montagem", "Double",
-     'CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), REMOVEFILTERS(Paradas_Montagem[Motivo]), '
-     'Paradas_Montagem[Motivo] = "TE - Tempo Excedido")', "#,0", []),
+     'COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), '
+     'KEEPFILTERS(Paradas_Montagem[Motivo] = "TE - Tempo Excedido")), 0)', "#,0", []),
     # ---- pagina Hora-Hora Trancagem: mesmas contas do rodape da tela do app (Meta, Real, Aderencia, Parado)
     # 23/10/2026: a meta vem de fHoraHora[Meta Hora BI] (meta proporcional aos minutos fora da refeicao e com os 10 min
     # de 13:47-13:57 no 2o turno). Por isso o fator 1295/1440 saiu: a refeicao ja e descontada linha a linha.
     ("HH Meta (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
     ("HH Meta Útil (m)", "Double", "SUM(fHoraHora[Meta Hora BI])", "#,0", []),
-    ("HH Real (m)", "Double", "SUM(fHoraHora[Real. Hora])", "#,0", []),
-    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real. Hora]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
+    ("HH Real (m)", "Double", "SUM(fHoraHora[Real BI])", "#,0", []),
+    ("HH Aderência", "Double", "DIVIDE(SUM(fHoraHora[Real BI]), [HH Meta Útil (m)])", "0%", [(M, "HH Meta Útil (m)")]),
     # Refeicao (Motivo Padrao = Almoco) fica fora de Parado e de Principal Parada, mas a hora do jantar conta em Meta e Real.
-    ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Tempo Parado (min)]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))", "#,0", []),
-    # Texto do dia produtivo (rodape do grafico por hora): o dia vai das 22:20 da vespera as 22:20 do proprio dia.
+    ("HH Parado (min)", "Double", "CALCULATE(SUM(fHoraHora[Parado BI]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))", "#,0", []),
+    # Texto do dia produtivo (rodape do grafico por hora): o dia vai das 05:20 do proprio dia as 05:20 do dia seguinte (24/10/2026).
     ("HH Dia Produtivo", "Text",
      "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) "
-     "RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1 - 1, \"dd/mm\") & \" 22:20 até \" & FORMAT(d1, \"dd/mm\") & \" 22:20\", "
-     "\"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 22:20 da véspera às 22:20\")", None, []),
+     "RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1, \"dd/mm\") & \" 05:20 até \" & FORMAT(d1 + 1, \"dd/mm\") & \" 05:20\", "
+     "\"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 05:20 às 05:20 do dia seguinte\")", None, []),
     ("HH Principal Parada", "Text",
      "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), "
-     "\"MinParado\", CALCULATE(SUM(fHoraHora[Tempo Parado (min)]))) "
+     "\"MinParado\", CALCULATE(SUM(fHoraHora[Parado BI]))) "
      "VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) "
      "RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))", None, []),
 ]
@@ -203,6 +240,7 @@ def filtro_incluir(ent, prop, valores, alias, nome):
     }
 
 
+TRANC_VALIDAS = ["TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07", "TM01", "TM04", "TO04", "Spiral"]
 TRANCADEIRAS = ["TH01", "TH02", "TH03", "TH05", "TH06", "TH07", "Spiral"]
 
 
@@ -271,6 +309,8 @@ def slicer(campo, titulo, sync=None, unico=False, modo="Dropdown"):
     }
     if sync:
         v["syncGroup"] = {"groupName": sync, "fieldChanges": True, "filterChanges": True}
+    # sem a opcao "(Em branco)" no filtro (William, 26/10/2026): vale para todo slicer de todas as paginas
+    v["filterConfig"] = {"filters": [filtro_nao_vazio(campo, "f_sem_vazio_seg")]}
     return v
 
 
@@ -287,7 +327,7 @@ def filtro_nao_vazio(campo, nome):
 
 
 def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=None, legenda=False,
-            cores_turno=None, sem_vazio=False, categorico=False):
+            cores_turno=None, sem_vazio=False, categorico=False, rotulo_fora=False, cores_pontos=None):
     qs = {"Category": {"projections": [proj(categoria, True)]},
           "Y": {"projections": [proj(m) for m in valores]}}
     if segunda:
@@ -300,6 +340,16 @@ def grafico(tipo, categoria, valores, titulo, ordenar=None, desc=False, segunda=
     }
     if categorico:  # eixo por categoria: um ponto por dia/valor, sem escala de tempo (sem horas)
         obj["categoryAxis"][0]["properties"]["axisType"] = txt("Categorical")
+    if rotulo_fora:  # numero fora da barra/coluna, legivel mesmo em barra escura ou pequena
+        obj["labels"][0]["properties"]["labelPosition"] = txt("OutsideEnd")
+    if cores_pontos:  # {valor da categoria: cor}; o resto usa a cor padrao da serie
+        ent, prop = categoria["Column"]["Expression"]["SourceRef"]["Entity"], categoria["Column"]["Property"]
+        obj["dataPoint"] = [{
+            "properties": {"fill": cor(c)},
+            "selector": {"data": [{"scopeId": {"Comparison": {"ComparisonKind": 0,
+                                  "Left": col(ent, prop),
+                                  "Right": {"Literal": {"Value": "'" + v + "'"}}}}}]},
+        } for v, c in cores_pontos.items()]
     if cores_turno:
         ent = categoria["Column"]["Expression"]["SourceRef"]["Entity"]
         obj["dataPoint"] = [{
@@ -483,6 +533,62 @@ def pg_visao_geral():
     return p
 
 
+def pg_refugo_ppm():
+    p = Pagina("pg_refugo_ppm", "Refugo PPM")
+    cabecalho(p, "Refugo da Mangueira · PPM", [SEG_MES])
+    kpis(p, [
+        ("Refugo PPM", med("Refugo PPM"), med("Δ Refugo PPM vs mês ant.")),
+        ("Meta (base 2025)", med("Meta Refugo PPM"), None),
+        ("Refugo (m)", med("Refugo (m)"), None),
+        ("Metragem Produzida", fp("Metragem Produzida"), med("Δ Metragem vs mês ant.")),
+    ])
+    p.add("g_ppm_mes", MARGEM, Y_R1, WL + WR + VAO, 244, grafico(
+        "lineChart", col("dCalendario", "Mês Nº"), [med("Refugo PPM"), med("Meta Refugo PPM")],
+        "O PPM de refugo está acima da base de 2025?", sem_vazio=True, legenda=True))
+    p.add("g_causa", MARGEM, Y_R2, WL + WR + VAO, 240, grafico(
+        "lineClusteredColumnComboChart", col("TiposErros", "CodigoErro"), [med("Refugo (m)")],
+        "Quais causas concentram o refugo (m)?", ordenar=med("Refugo (m)"), desc=True,
+        segunda=[med("% Acumulado Refugo")]))
+    return p
+
+
+def pg_refugo_ppm_cortes():
+    """Cortes do PPM. Campos de ficha_producao/dCalendario; o comportamento da medida Refugo PPM nesses cortes
+    precisa ser conferido no Desktop (DAX da medida nao esta no repositorio)."""
+    p = Pagina("pg_refugo_ppm_cortes", "Refugo PPM · Cortes")
+    cabecalho(p, "Refugo PPM por dia, turno, mangueira e trançadeira", [SEG_MES])
+    w2 = (LARG_UTIL - VAO) // 2
+    larg_s = (LARG_UTIL - 2 * VAO) // 3
+    for i, (campo, rot, sync) in enumerate([
+            (col("ficha_producao", "Mangueira"), "Mangueira", "gms_mangueira"),
+            (col("ficha_producao", "Trançadeira"), "Trançadeira", "gms_trancadeira"),
+            (col("TiposErros", "Turno Erro"), "Turno", "gms_turno_trancagem")]):
+        p.add(f"segc{i}", MARGEM + i * (larg_s + VAO), 102, larg_s, 46, slicer(campo, rot, sync, False))
+    alt = 255
+    y1, y2 = 156, 156 + alt + VAO
+    ppm = med("Refugo PPM")
+    p.add("g_dia", MARGEM, y1, w2, alt, grafico(
+        "lineChart", col("dCalendario", "Date"), [ppm], "Como o PPM de refugo evolui por dia?",
+        categorico=True, sem_vazio=True))
+    # Filtros de valores validos (so os que existem de fato). Grafias sujas ("TH-02", "Turno 3", "0") sao
+    # corrigidas na origem pelo passo de Power Query em modelo/limpeza_ficha_producao.m.md.
+    def so(v, ent, prop, valores, nome):
+        v["filterConfig"] = {"filters": [filtro_incluir(ent, prop, valores, "c", nome)]}
+        return v
+    v_turno = so(grafico("clusteredColumnChart", col("TiposErros", "Turno Erro"), [ppm],
+                         "Qual turno tem o maior PPM de refugo?", rotulo_fora=True),
+                 "TiposErros", "Turno Erro", ["1", "2", "3"], "f_turno_valido")
+    v_tran = so(grafico("clusteredBarChart", col("ficha_producao", "Trançadeira"), [ppm],
+                        "Qual trançadeira tem o maior PPM?", ordenar=ppm, desc=True, rotulo_fora=True),
+                "ficha_producao", "Trançadeira", TRANC_VALIDAS, "f_trancadeira_valida")
+    p.add("g_turno", MARGEM + w2 + VAO, y1, w2, alt, v_turno)
+    p.add("g_mangueira", MARGEM, y2, w2, alt, grafico(
+        "clusteredBarChart", col("ficha_producao", "Mangueira"), [ppm],
+        "Quais tipos de mangueira têm o maior PPM?", ordenar=ppm, desc=True, sem_vazio=True))
+    p.add("g_trancadeira", MARGEM + w2 + VAO, y2, w2, alt, v_tran)
+    return p
+
+
 def pg_gargalo():
     p = Pagina("pg_gargalo", "Gargalo e Fluxo", FILTRO_HH())
     cabecalho(p, "Gargalo e Fluxo", [SEG_MES, (col("Hora-Hora", "Célula"), "Célula", "gms_celula", False)])
@@ -569,25 +675,65 @@ def pg_horahora():
     return p
 
 
+def pg_producao_montagem():
+    """Producao da Montagem. Producao_Montagem[Data] -> dCalendario[Date] ja e relacionamento ativo no modelo, entao
+    o periodo, o turno e a celula filtram igual ao da mangueira. Sem meta/aderencia ate dMetaMontagem ter relacionamento
+    com Celula e Turno (ver modelo/montagem_modelo.md)."""
+    p = Pagina("pg_producao_montagem", "Produção Mont.")
+    cabecalho(p, "Produção da Montagem",
+              [SEG_MES,
+               (col("Producao_Montagem", "Turno"), "Turno", None, False),
+               (col("Producao_Montagem", "Celula"), "Célula", None, False)])
+    kpis(p, [
+        ("Peças Produzidas", med("Quantidade Produzida Montagem"), None),
+        ("OTs", med("OTs Montagem"), None),
+        ("Horas de OT", med("Horas de OT Montagem"), None),
+        ("Peças por Hora", med("Peças por Hora Montagem"), None),
+        ("Parada Real (min)", med("Parada Real Montagem (min)"), None),
+    ])
+    p.add("g_dia", MARGEM, Y_R1, WL, 244, grafico(
+        "lineChart", col("dCalendario", "Date"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por dia", categorico=True))
+    p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 244, grafico(
+        "clusteredColumnChart", col("Producao_Montagem", "Celula"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por célula", ordenar=med("Quantidade Produzida Montagem"), desc=True))
+    p.add("g_turno", MARGEM, Y_R2, 400, 240, grafico(
+        "clusteredColumnChart", col("Producao_Montagem", "Turno"), [med("Quantidade Produzida Montagem")],
+        "Peças produzidas por turno", cores_turno=True))
+    p.add("g_parada_dia", MARGEM + 412, Y_R2, 824, 240, grafico(
+        "lineChart", col("dCalendario", "Date"), [med("Parada Real por Dia Montagem (min)")],
+        "Parada real por dia (min)", categorico=True))
+    return p
+
+
 def pg_paradas_montagem():
-    p = Pagina("pg_paradas_montagem", "Paradas Mont.", FILTRO_PM())
+    p = Pagina("pg_paradas_montagem", "Paradas Mont.")
+    # Periodo pelo dCalendario (Paradas_Montagem[Data] -> dCalendario[Date] ja e relacionamento ativo no modelo),
+    # igual as paginas da mangueira e no mesmo grupo de sync "gms_data".
     cabecalho(p, "Paradas da Montagem",
-              [(col("Paradas_Montagem", "Turno"), "Turno", None, False),
+              [SEG_MES,
+               (col("Paradas_Montagem", "Turno"), "Turno", None, False),
                (col("Paradas_Montagem", "Celula"), "Célula", None, False),
                (col("Paradas_Montagem", "Motivo"), "Motivo", None, False)])
     kpis(p, [
-        ("Minutos Parados (parada real)", med("Minutos Parados Montagem"), None),
-        ("Horas Paradas", med("Horas Decimais Montagem"), None),
-        ("Célula Gargalo", med("Célula Gargalo Montagem"), None),
-        ("Motivo Mais Frequente", med("Motivo Mais Frequente Montagem"), None),
+        ("Minutos Parados (parada real)", med("Parada Real Montagem (min)"), None),
+        ("Horas Paradas", med("Horas Paradas Real Montagem"), None),
+        ("Célula Gargalo", med("Célula Gargalo Parada Real"), None),
+        ("Motivo Mais Frequente", med("Motivo Mais Frequente Parada Real"), None),
+        ("Total bruto da lista (min)", med("Minutos Brutos Montagem"), None),
         ("Tempo Excedido (min) — fora da parada", med("Minutos Excedidos Montagem"), None),
     ])
+    # Uma serie so (minutos do motivo), sem soma entre tipos: vermelho = parada real, azul = tempo excedido, cinza = refeicao.
     p.add("g_motivo", MARGEM, Y_R1, WL, 494, grafico(
         "clusteredBarChart", col("Paradas_Montagem", "Motivo"), [med("Minutos Parados Montagem")],
-        "Minutos parados por motivo", ordenar=med("Minutos Parados Montagem"), desc=True))
+        "Minutos por motivo — vermelho: parada real · azul: tempo excedido · cinza: refeição",
+        ordenar=col("Paradas_Montagem", "Motivo"), rotulo_fora=True,
+        cores_pontos={"TE - Tempo Excedido": CORES[1], "RF - Refeição": CORES[2]}))
+    # Todas as celulas no eixo: 3 series separadas (parada real, excedido, refeicao), nunca empilhadas nem somadas.
     p.add("g_celula", MARGEM + WL + VAO, Y_R1, WR, 494, grafico(
-        "clusteredColumnChart", col("Paradas_Montagem", "Celula"), [med("Minutos Parados Montagem")],
-        "Minutos parados por célula", ordenar=med("Minutos Parados Montagem"), desc=True))
+        "clusteredColumnChart", col("Paradas_Montagem", "Celula"),
+        [med("Parada Real Montagem (min)"), med("Minutos Excedidos Montagem"), med("Refeição Montagem (min)")],
+        "Por célula (min): parada real × tempo excedido × refeição", legenda=True, rotulo_fora=True))
     return p
 
 
@@ -692,7 +838,7 @@ def main():
                  **({"references": {"measures": [{"entity": en, "name": nm} for en, nm in refs]}} if refs else {}))
             for n, t, e, f, refs in EXT]}],
     })
-    paginas = [pg_visao_geral(), pg_paradas(), pg_horahora(), pg_paradas_montagem(), pg_extrusora()]
+    paginas = [pg_visao_geral(), pg_refugo_ppm(), pg_refugo_ppm_cortes(), pg_paradas(), pg_horahora(), pg_producao_montagem(), pg_paradas_montagem(), pg_extrusora()]
     grava(DEF / "pages" / "pages.json", {
         "$schema": f"{SCH}/pagesMetadata/1.1.0/schema.json",
         "pageOrder": [p.nome for p in paginas], "activePageName": paginas[0].nome})

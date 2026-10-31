@@ -4,10 +4,10 @@
   "position": {
     "x": 1096.1702127659576,
     "y": 51.550151975683896,
-    "z": 6,
-    "height": 63.221884498480243,
+    "z": 5000,
+    "height": 63.22188449848024,
     "width": 168.26747720364742,
-    "tabOrder": 6
+    "tabOrder": 5000
   },
   "visual": {
     "visualType": "slicer",
@@ -255,7 +255,7 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "ffb62f915666b1752fbf",
+        "name": "f_sem_vazio_seg",
         "field": {
           "Column": {
             "Expression": {
@@ -266,7 +266,45 @@
             "Property": "Motivo"
           }
         },
-        "type": "Categorical"
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c",
+              "Entity": "Paradas_Montagem",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Motivo"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
       }
     ]
   }

@@ -1,0 +1,131 @@
+- lbl_DetProdRotPnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =fx_CorRotulo
+      Font: =fx_FonteFamilia
+      FontWeight: =FontWeight.Bold
+      Height: =16
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteApoio
+      Text: |-
+        ="PRODUÇÃO DO PROCESSO · " & Text(If(ctxModoPnl = "VIVO", fx_DataRefEm(ctxAgoraPnl), ctxDiaPnl), "dd/mm") & " · m" &
+        If(ctxModoPnl <> "VIVO" && ctxHistFalhaPnl, " · sem histórico", "")
+      Visible: =varDetAbertoPnl
+      Width: =340
+      X: =597
+      Y: =78
+- lbl_DetProdT1Pnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+      Font: =fx_FonteFamilia
+      FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 1 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+      Height: =20
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteCorpo
+      Text: |-
+        =With(
+            { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave)).T1 },
+            "1º " & If(
+                (ctxModoPnl = "VIVO" && 1 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                "—",
+                Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+            )
+        )
+      Visible: =varDetAbertoPnl && Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave) <> "Bobinadeira"
+      Width: =78
+      X: =597
+      Y: =96
+      Wrap: =false
+- lbl_DetProdT2Pnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+      Font: =fx_FonteFamilia
+      FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 2 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+      Height: =20
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteCorpo
+      Text: |-
+        =With(
+            { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave)).T2 },
+            "2º " & If(
+                (ctxModoPnl = "VIVO" && 2 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                "—",
+                Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+            )
+        )
+      Visible: =varDetAbertoPnl && Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave) <> "Bobinadeira"
+      Width: =78
+      X: =675
+      Y: =96
+      Wrap: =false
+- lbl_DetProdT3Pnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), fx_CorPainelTexto, fx_CorPainelTextoRotulo)
+      Font: =fx_FonteFamilia
+      FontWeight: =If((If(ctxModoPnl = "VIVO", fx_TurnoEm(ctxAgoraPnl), fx_TurnoNum(ctxModoPnl)) = 3 || ctxModoPnl = "DIA"), FontWeight.Bold, FontWeight.Semibold)
+      Height: =20
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteCorpo
+      Text: |-
+        =With(
+            { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave)).T3 },
+            "3º " & If(
+                (ctxModoPnl = "VIVO" && 3 > fx_TurnoEm(ctxAgoraPnl)) || IsBlank(_v),
+                "—",
+                Substitute(Text(_v, "[$-en-US]#,##0"), ",", ".")
+            )
+        )
+      Visible: =varDetAbertoPnl && Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave) <> "Bobinadeira"
+      Width: =78
+      X: =753
+      Y: =96
+      Wrap: =false
+- lbl_DetProdDiaPnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =fx_CorPainelTexto
+      Font: =fx_FonteFamilia
+      FontWeight: =FontWeight.Bold
+      Height: =20
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteCorpo
+      Text: |-
+        =With(
+            { _v: LookUp(colProdEtapaTurnoPnl As _pt, _pt.Etapa = Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave)).Dia },
+            "DIA " & If(IsBlank(_v), "—", Substitute(Text(_v, "[$-en-US]#,##0"), ",", "."))
+        )
+      Visible: =varDetAbertoPnl && Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave) <> "Bobinadeira"
+      Width: =106
+      X: =831
+      Y: =96
+      Wrap: =false
+- lbl_DetProdSemPnl:
+    Control: Label@2.5.1
+    Properties:
+      BorderColor: =fx_CorPainelBorda
+      Color: =fx_CorRotulo
+      Font: =fx_FonteFamilia
+      FontWeight: =FontWeight.Semibold
+      Height: =20
+      OnSelect: =Set(varDetToquePnl, Now())
+      PaddingLeft: =0
+      Size: =fx_FonteCorpo
+      Text: ="Sem registro de produção da Bobinagem"
+      Visible: =varDetAbertoPnl && Switch(varDetReqPnl.Tipo, "TRANC", "Trançagem", "TUBO", "Tubo", "EXTR", "Extração", varDetReqPnl.Chave) = "Bobinadeira"
+      Width: =340
+      X: =597
+      Y: =96
+

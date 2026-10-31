@@ -136,3 +136,83 @@ Para desfazer, voltar o OP_ID ao de origem. Pendentes: lance 17870 (86,8 m, OP 3
 - Troca completa 30424231 ↔ 30351277: 31 lances (676,0 m) e 14 lances (506,5 m). Fichas 3887 e 3806.
 - Lance 18709 (30529216): 16,9 → 16,1 m, igual ao SAP. Ficha 3996 (532,0 m).
 - Fora: 126/109 (SAP lançou refugo de 12,5 m como boa na 30223117), 140, 147 e os 21 sem packlist.
+
+## Rodada de 28/10/2026 (conferência refeita com SharePoint e MB51 de 28/10)
+
+Regra do William (28/10): **sempre corrigir o GMS, nunca o SAP.** Só corrigir o que tem prova e paralelo no histórico; o resto fica aqui para ele ajudar e para a próxima vez sair certo.
+
+**Prontas (troca de OP do lance, prova por valor, hora e doc SAP) — em `registros/correcoes_gms_2026-10-28.csv`; fichas em `correcoes_ficha_28out_previstas.csv` (ficha = soma dos lances antes, então acompanha). Gravação no SharePoint bloqueada pelo sistema; GRAVADAS em 28/10 com o "Libero" do William, releitura conferida (6 lances e 6 fichas, tudo status 204):**
+- GH781-8: 30206916 → 30206915 (65,8 m); 30406737 → 30338597 (122,5 m).
+- GH781-4: 4 lances (188,8 m) 30495038 → 30495036.
+
+**Não sei resolver (William ajuda):**
+- 30495036: 30,4 m de boa (doc 3028369639) e 21,9 m de refugo (doc 3028431649, 19/10) só no SAP, sem par no GMS.
+- 30495038: SAP lançou 553,9 m e estornou no mesmo dia (docs 3028368920 e 3028649234, usuário S122684, outro dos demais). No GMS ficam 2 lances de boa (36,2 e 6,9 m) e ~40 refugos que o SAP não tem. OP ainda REL no COOIS. Perguntar a S122684 o motivo do estorno.
+- 30545859 (HC139-7): SAP 803,4 m, GMS 221 m (+582 m). Causa não vista.
+- 30337761 (GH781-8, −522 m) e 30406478 (GH493-12, −316 m): sem lançamento na MB51. Para a 30337761 a boa pode estar na 30421672 (15/10).
+- COOIS não traz várias OPs do GMS (ex. 29733203, 29118867, 30206916): motivo desconhecido.
+
+**OP 30545859 (HC139-7, TM04) — analisada em 28/10, sem correção feita:**
+- GMS tem 6 lances de boa (212,6 m, TM04, 22/10 21:00 a 21:34) e 4 refugos (8,4 m); todos batem com o SAP (docs 3028775085 a 3028776769 e refugo 3028825534).
+- O SAP tem mais **12 lançamentos de boa em 27/10, 582,4 m, todos do usuário U395462** (docs 3029003870 a 3029010...). Nenhum lance do GMS tem esses valores em outra OP: as coincidências de valor (32,6; 53,2; 51,0) são acaso, em OPs de outras mangueiras.
+- As OPs vizinhas de HC139-7 conferem por completo: 30549004 (TM04, 26/10, 14 lances, 652,9 m) e 30575953 (HC139-7_S-GX, TM04, 26/10, 12 lances, 631,5 m).
+- COOIS: OP TECO, confirmado 803,4 m para ordem de 680 m (acima da ordem).
+- Hipótese (não provada): produção de 27/10 sem apontamento de inspeção no GMS (ou apontada fora do app). Corrigir seria criar lances no GMS, e não invento lance. **William: confirmar se houve produção e quem é U395462.** A 30575954 (TH05, +143,5 m) pode ter a mesma causa.
+- **Ficha_producao (28/10, resposta à hipótese acima):** a ficha 3988 (OP 30545859, mangueira "HC139-7 250 MTS", TM04, Finalizado 22/10) diz que só **230 m** chegaram à bandagem, vulcanização, debandagem e extração (a inspeção do GMS tem 221 m, coerente); mandril e trançagem fizeram 680 m, cobertura 400 m. Logo **o GMS está certo e os 582,4 m de 27/10 no SAP não são produção desta OP**. As fichas 4091 (30549004: 680/652,9) e 4106 (30575953: 680/631,5) também conferem com o SAP.
+- Candidata a dona dos 582,4 m: **30592754** (ficha 4107, HC139-7, TM04, 610 m, em Extr./Teste em 28/10, ainda **sem nenhuma inspeção no GMS**). Não provado. Conferir quando ela tiver lances: se os 12 valores (51,0; 48,9; 32,8; 28,3; 42,3; 53,2; 32,6; 24,6; 68,9; 70,7; 66,5; 62,6) aparecerem nela, o erro é do SAP (lançado na OP errada) e **não se mexe no GMS**. Mesma ideia vale para a 30575954 (ficha 4094: só 330 m, GMS 329,5, SAP 473).
+- **Busca dos 12 valores (28/10, feita no GMS inteiro e na MB51 desde 01/09):** nenhuma OP do GMS tem esses lançamentos (no máximo 2 valores em comum por acaso; sem OP com soma 582,4 m nem 12 lances parecidos, e a 30592754 segue sem inspeção). Na MB51 só a 30545859 tem os 12. Fica aguardando a 30592754 receber lances.
+
+**Lote 2 de 28/10 — GRAVADO com o "Libero" do William, 12 lances e 4 fichas, releitura conferida:** `registros/correcoes_gms_2026-10-28_lote2.csv` e `correcoes_ficha_28out_lote2.csv`.
+- GH781-16, troca nos dois sentidos entre 30206907 e 30206908 (22/09, TO04): 6 lances (189,9 m) da 30206907 estão no SAP na 30206908 e 5 lances (201,9 m) da 30206908 estão no SAP na 30206907, todos com valor e doc iguais. Diferença líquida de 12,1 m vira 0,1 m (dois lances de 48,6 e 48,7 com valor trocado, ignorado).
+- EC215-08L: 1 lance de 63,4 m (17/08, TH07) da 29862025 está no SAP na 29847701.
+
+**30545859 — decisão do William (28/10): os 582,4 m existem, só faltou lançar no GMS.** **GRAVADO em 28/10 com o "Libero" do William (permissão de criação liberada por ele):** lances IDs 20151 a 20162 (27/10 22:30 a 22:41, TurnoTeste 3), ficha 3988 `quantidade_extracao` 795,0 e Packing_Pallets ID 252 (pallet 2, 12 lances, 582,4 m, turno 3); releitura conferida. Plano que foi seguido:
+- 12 lances novos em RegistrosInspeção (OP 30545859, HC139-7 250 MTS, TM04, CABINE_L2), valores e ordem dos docs SAP 3029003870 a 3029009686. O SAP só informa a data (27/10), não a hora: definido pelo William: TurnoTeste 3; proposta 27/10 a partir das 22:30 (turno 3 começa 22:20), um por minuto; sem diâmetros nem concentricidade (não existem na fonte).
+- Depois: ficha 3988 `quantidade_extracao` 212,6 → 795,0, e Packing_Pallets pallet 2 (ficha 3988, 12 lances, 582,4 m). Atenção: a ficha mostra 680 m de mandril e 230 m até a extração, e o SAP já soma 803,4 m para ordem de 680 m; o William é quem confirma que a produção existiu.
+- Packlist do pallet 2 gerado como prévia em `Packlists/Pallet2_30545859/PackList_3988_30545859_P2.pdf` (script `gerar.py` ao lado).
+
+**30324629 (GH781-16, TO04, ficha 3787, ordem 250 m) — GRAVADO em 28/10 com o "Libero" do William: lances IDs 20163 a 20165 (turno 2, CABINE_L2) e ficha 3787 em 222,8; releitura conferida. Análise:**
+- SAP (28/09, U395556): 4 boa — 58,7 (doc 3026960349), 54,8 (3026962115), 51,0 (3026962267), 60,0 (3026962465) — e 17,3 de refugo (29/09, doc 3027020917). COOIS 241,8 m, TECO.
+- GMS: 1 lance boa de 49,3 (28/09 16:52) mais refugos 0,6 e 1,1 que fecham os 51,0; 3 refugos (14,8 + 0,4 + 0,4) que fecham 15,6 dos 17,3 do SAP.
+- Faltam no GMS **3 lances de boa: 58,7, 54,8 e 60,0 (173,5 m)**, e não existem em outra OP (o 54,8 que aparece na 30307301 é de 26/09, coincidência). A ficha 3787 mostra extração de 270 m (finalizada 28/09), o que sustenta que houve produção.
+- Sobram 1,7 m: o refugo do SAP (17,3) é maior que o do GMS (15,6). Não resolvido.
+- Proposta: criar os 3 lances (TO04, GH781-16, turno 2, 28/09, horas aproximadas pela ordem dos docs: 58,7 às 16:40, 54,8 às 16:46, 60,0 às 17:05) e acertar a ficha 3787 (`quantidade_extracao` 49,3 → 222,8). Sem pallet (Packing_Pallets não tem essa ficha).
+
+**Refugos (decisão do William, 28/10): os refugos que estão só no GMS e faltam no SAP serão lançados no SAP amanhã (29/10).** Entram aqui: refugos da 30495038 (~40 lançamentos de 17/10), 1,7 m de diferença na 30324629 e os demais "SÓ NO GMS" de refugo. Não mexer no GMS por causa deles; refazer a conferência depois do lançamento.
+
+**30447183 (GH781-6, ficha 3967, TM01) — analisada em 28/10, sem correção no GMS:**
+- GMS: 8 lances de boa (716,4 m, 14/10 23:11 a 15/10 00:40). SAP: 7 lançamentos de boa (577,5 m, 14/10, U406627) + 7,5 m de refugo (15/10, U452021) = 585,0 m; COOIS 585,0 de 680 m, TECO em 15/10.
+- Falta no SAP **1 lance: 138,9 m** (inspeção linha 17550, TM01, 14/10 21:16, mangueira GH781-6-2, alias de GH781-6). Não está em outra OP no SAP. A ficha mostra extração de 720 m, então a produção existiu.
+- É falta de lançamento **no SAP** (a OP já está TECO, pode precisar reabrir). Pela regra do William não se corrige o SAP daqui: fica para ele/SAP. GMS fica como está.
+
+**30589719 e 30636250 (consulta do William em 29/10, MB51 (9) e COOIS (3) de 29/10) — lance simbólico no GMS, produção real só no SAP. GRAVADO em 29/10 com o "Libero" do William (lances novos IDs 20263 a 20274, turno 2, horas aproximadas 14:00 em diante; lances simbólicos 19900 e 20197 na lixeira, restauráveis; fichas 4112=397,4 e 4164=233,5; pallets 208 e 256 atualizados in loco). PDFs refeitos em Packlists/Pallet2_30545859/. Releitura conferida.**
+- **30589719** (GH781-12, TH07, ficha 4112, ordem 400): GMS tem 1 lance de **0,1 m** (ID 19900, 26/10 18:53, T2) e 1 m de refugo; ficha finalizada no mesmo minuto (26/10) com extração 420 e **pallet 208 de 0,1 m**. SAP: 6 boa, **397,4 m** (U395462): 21/10 11,0 (3028686668), 17,8 (3028686788), 105,1 (3028686849), 57,8 (3028687066); 22/10 103,1 (3028687428), 102,6 (3028687720). COOIS 397,4, TECO 22/10. Nenhum lance com esses valores em outra OP do GMS.
+- **30636250** (GH493-16, Spiral, ficha 4164, ordem 250): GMS tem 1 lance de **1 m** (ID 20197, 28/10 23:16, T2), ficha finalizada no mesmo minuto com extração 235 e **pallet 256 de 1 m**. SAP: 6 boa, **233,5 m** (U398090, 27/10): 27,0 (3029052448), 51,2 (3029057127), 50,2 (3029059599), 17,5 (3029060386), 49,8 (3029062776), 37,8 (3029063598); mais 47,2 (3029070152) estornado (3029081365). COOIS 233,5, TECO 27/10.
+- Causa provável: a ficha foi finalizada sem apontar os lances reais; o lance de 0,1 e de 1 m fecha o fluxo. Os packlists gerados (pallets 208 e 256) saíram com o total errado e precisam ser refeitos.
+- Proposta (igual à 30545859): trocar o lance simbólico pelos 6 lances do SAP em cada OP (simbólicos para a lixeira, restaurável), acertar `quantidade_extracao` das fichas 4112 (397,4) e 4164 (233,5) e refazer os pallets 208 e 256. Refugo de 1 m da 30589719 entra no lote de refugos de 29/10.
+- **Busca em todo o GMS (29/10, 19.353 lances de inspeção, qualquer data/OP):** nenhum lance da 30589719 nem da 30636250 está em outra OP. Só coincidências de valor em OPs de meses antes e de outras mangueiras (ex.: 28913924 com 17,5/51,2/50,2 em 05/2026 na EC115-16L). Na GH781-12 (20 a 23/10) e na GH493-16 (26 a 29/10) as demais OPs têm total normal; só essas duas ficaram sem lances reais.
+
+**GH681-8 (29/10, MB51 (9) e COOIS (3)):**
+- **29733203 (ficha 3161, TH02, ordem 520 m):** o lance de **116,1 m está duplicado no GMS** (IDs 13029 às 09:04 e 13030 às 09:08, de 07/08); o SAP tem um só (doc U398090, 07/08, 116,1). Sem o duplicado o GMS fecha em 474,0 m de boa, igual ao SAP (474,6 com 0,6 m de refugo). A extração da ficha é 470 m, também de acordo. Não está em outra OP (o 116,1 do SAP em 02/2026 é da 27612795). **GRAVADO em 29/10 com o "Libero" do William:** lance 13030 (116,1 m, 07/08 09:08, TH02, turno 1) na lixeira (restaurável) e ficha 3161 590,1 → 474,0; releitura conferida.
+- **30447770 (ficha 3902, TH02, ordem 520 m, COOIS 609,48 TECO):** o GMS tem 9 lances (691,8 m); o SAP não tem o lance de **86,8 m** (ID 17870, 08/10 09:21, TH02), e o valor não existe em nenhuma OP do SAP. Sem ele o GMS tem 605,0 m, igual à boa do SAP (605,0). A extração da ficha é 570 m. Não é duplicado nem troca de OP: **William/chão decide se o 86,8 m é produção que falta lançar no SAP (lado SAP) ou apontamento a mais no GMS.** Nada feito.
+- **30447770: William deixou em aberto (29/10).** Aguarda saber se o lance de 86,8 m (ID 17870) foi produzido; nada feito no GMS nem no SAP.
+
+**Reconferência de 29/10 (MB51 (9), COOIS (3), SharePoint de 29/10):** 72 OPs divergentes >5 m desde 20/05; 48 antigas (último lance antes de 26/10: SAP a mais 854,0 m; GMS a mais 1.456,4 m) e 24 recentes (em andamento ou de hoje). Nenhuma divergência nova entre as antigas; fecharam desde ontem 30545859, 30324629, 29733203, 29847701/29862025 e 30206907/08. Os "novos" de hoje são OPs em andamento (30678930/31/32 GH493-16 de hoje sem SAP ainda; REL com diferença pequena). Maiores recentes a acompanhar: 30636253 (GH781-6, TECO, GMS 191,4 m a mais), 30576661 (GH781-4, REL, −85,5), 30575840 (+33,8). GMS de hoje reconstruído por diferença (IDs conferidos com a contagem do SharePoint: 19.363 inspeções e 6.612 refugos).
+
+**Packlists x MB51 (29/10, pedido do William: falha do SAP ou lançado em outra OP?)** Fonte: Packing_Pallets (só existe desde ~10/10) e comparação por valor com a MB51 (9). Sem nenhuma alteração.
+- **30636253** (GH781-6, TH01, ficha 4166, packlists P1 559,7 + P2 462,7 = 1.022,4 m, conferem com o GMS): dos 191,4 m a mais, **180,8 m são 2 lances de boa (84,4 e 96,4 m, IDs 20089 e 20091) que o SAP lançou na OP 30604449** em 28/10 (docs 3029141832 e 3029142496, usuário U395462); os 10,6 m restantes são refugos que faltam no SAP. A 30604449 (ficha 4136, TH01, finalizada 24/10, 648,8 m no GMS) ficou com 829,6 m no SAP, acima da ordem. = **lançado em outra OP (erro de OP no SAP)**; o packlist prova que são da 30636253.
+- **30337761** (GH781-8): os 7 lances de boa (509,9 m, 04/10, linhas 16662 a 16668) estão no SAP na OP **30421672** (GH781-8, 04/10, U395462), com os mesmos 7 valores. A 30421672 **não existe no GMS** (sem ficha nem lance). Packlist: anterior ao Packing_Pallets, não conferido. = **lançado em outra OP**. Já estava na decisão pendente do William de 15/10.
+- **30406478** (GH493-12, Spiral): os 4 lances de boa (310,8 m, 05/10) estão no SAP na OP **30406472** (U398320, 05/10, mesmos 4 valores). A 30406472 **não existe no GMS**. Packlist antigo, não conferido. = **lançado em outra OP**.
+- **30447183** (GH781-6): packlist 49 (P1, 716,4 m, 8 lances) inclui o lance de 138,9 m; ele não existe em nenhuma OP da MB51. = **falta de lançamento no SAP (falha do lançamento)**.
+- **30447770** (GH681-8): packlist 19 (P1, 572,4 m, 8 lances: IDs 17863 a 17870) inclui o lance de 86,8 m (17870), que não está em nenhuma OP da MB51. O lance 17869 do packlist (62,7 m, por diferença de total) **não existe mais no GMS** (apagado) e também não está no SAP. = **falta de lançamento no SAP**; o 17869 sumido precisa de explicação. Segue em aberto.
+- **30347763** (GH781-12): 2 lances de 33,1 m (17059 às 13:17 e 17060 às 13:28 de 29/09); o SAP tem um. Provável **duplicado no GMS**; sem packlist para confirmar. Aguardando "Libero" para mandar o 17060 para a lixeira (ficha 3789: 419,7 → 386,6).
+- **Só refugo (entram no lote de refugos de hoje):** 30495038, 30576661 (69 + 15 + 1,5 m), 30036777, 30365177, 30351277, 29949591, 30479026 (sobra também 16,56 m de refugo no SAP sem par), 30592754.
+- **ATENÇÃO, correção anterior:** o pallet 93 da 30495038 (653,1 m, 21 lances) **contém os 4 lances (188,8 m) que movi no lote 1 de 28/10 para a 30495036** (IDs 19167, 19169, 19171, 19172). O packlist impresso os coloca na 30495038, enquanto o SAP os lançou na 30495036. Ou seja, o packlist contradiz a troca feita (que seguiu o SAP). Decisão do William: manter ou reverter (CSV `registros/correcoes_gms_2026-10-28.csv` tem o caminho de volta). O pallet 93 e o 30495036 (460,3 m) não foram atualizados.
+- Pallet 46 da 30479026 (776,8 m, 25 lances): 10 dos lances (221,8 m) estão hoje na OP 30424233 no GMS (movidos em tratativa anterior); packlist desatualizado, só registro.
+
+**GRAVADO em 29/10 a pedido do William ("arrume isso"; regra: sempre corrigir o GMS), releitura conferida. Caminho de volta em `registros/correcoes_gms_2026-10-29.csv`:**
+- **Ficha 3841: OP 30337761 → 30421672** (OP digitada errada; SAP GH781-8, ordem 520, TECO 04/10): 7 lances (509,9 m) e 4 refugos (12,12 m) acompanharam.
+- **Ficha 3890: OP 30406478 → 30406472** (SAP GH493-12, ordem 400, TECO 05/10): 4 lances (310,8 m) e 4 refugos (5,1 m) acompanharam.
+- **30636253 → 30604449:** lances 20089 (84,4) e 20091 (96,4); fichas 4166 (1.022,4 → 841,6) e 4136 (648,8 → 829,6). **Os pallets 240 e 241 (30636253) não foram alterados e ainda listam esses 2 lances (pallet P1 559,7 e P2 462,7)**; a OP 30604449 passa a 829,6 m para ordem de 680 m. O packlist físico os coloca na 30636253: se o erro for do SAP, o certo seria o SAP corrigir; fica registrado.
+- Refugos movidos de OP seguem sem lançamento no SAP (entram no lote de refugos). A cópia local `inspecao_29out.csv` não reflete estas trocas até a próxima atualização por delta.
+- **Decisão do William (29/10): pallets 240 e 241 da 30636253 ficam como estão** (o packlist físico é a referência).
