@@ -14,3 +14,5 @@
 - [2026-10-08] Vídeo pixel art do Bit (PT): entregue roteiro com 2 mensagens finais; dúvidas abertas: quem é o 'Você', voz vs legenda, cap. V.
 - [2026-10-08] Reel 30s com Bit: usei MESA-11 (posts_prontos.md, LinkedIn) como tema ainda sem reel; todos os fatos vinham de um arquivo so, facil de citar.
 - [2026-10-10] Curtas 2 e 3 (PT, só texto): conferir tempo por cena com folga; recomendei mensagem literal nos dois (paralelismo).
+- [2026-10-24] Série "Sala 4": formato de escolha ao espectador (2ª pessoa, cenário fechado, 2D flat). Pedido do coordenador incluía "Segue pra ver o Dia 2"; omiti por regra de marca (sem CTA), fica a decidir com o William.
+- [2026-10-24] Nova direção: série de terror 'Plantão Noturno' (7 eps, TikTok, Halloween). CTA 'Parte N+1' autorizado só nesta série. Bit/Sala 4 descartados.

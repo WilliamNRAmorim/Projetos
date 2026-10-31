@@ -7,3 +7,5 @@
 - [2026-10-08] Números de formato de LinkedIn vêm quase todos de ferramentas de social media; marcar a origem como fornecedor e não tratar como dado independente.
 - [2026-10-08] REPROVADO [retrabalho, errou]
 - [2026-10-08] APROVADO [atendeu]
+- [2026-10-09] Pesquisas de opinião com amostra EUA (Elon, Resume Now) e Datafolha (BR, via Portal Tela) funcionaram como achados com fonte; checar a data de campo, que varia entre matérias.
+- [2026-10-09] Tema de sentido/propósito é saturado no discurso genérico ("IA não te substitui"); exigir o episódio real do William antes de propor ângulo.
