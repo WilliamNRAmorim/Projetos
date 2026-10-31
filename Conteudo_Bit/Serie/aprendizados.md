@@ -118,3 +118,23 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 - Trocar a lista do longo pelos 10 de maior retenção quando houver dados.
 - Apagar o rascunho "05 o coracao delator" no YouTube.
 - Conferir o longo programado (8/11, 18h) em Conteúdo > Vídeos.
+
+## Perfil do canal YouTube e fechamento da sessão (31/10/2026)
+
+### Feito
+- Canal `@Uiloumusk`, nome "William Amorim" (nome da futura placa). Handle mantido por decisão do William.
+- Descrição do canal, link do TikTok (`https://www.tiktok.com/@uiloumusk`), e-mail de contato williamamorim089@gmail.com (público), foto de perfil, banner e marca d'água (círculo 150x150, exibida só no final do vídeo).
+- Arquivos em `Conteudo_Bit/Serie/canal/`: `banner.jpeg`, `perfil.jpeg`, `marca_dagua.png`.
+- Imagens geradas no Gemini (login do William no Chrome). Personagem ORIGINAL (aventureiro encapuzado com vela de chama azul) com fundo de itens genéricos de fantasia (dado d20, mapa, espada de energia, cajado, anel, poções, blocos de pixel, teia). Gostos dele: RPG de mesa, fantasia, Hora de Aventura, Apenas um Show, jogos e super-heróis. Nenhuma marca ou personagem de terceiros.
+
+### Lições do perfil
+1. Pedido ao Gemini com lista de marcas gera imagem em branco (filtro). Prompt curto e sem nomes de franquias funciona. Imagem leva ~20 s; esperar antes de concluir que falhou.
+2. Download do Gemini cai em Downloads, que a sessão não lê. Copiar para a pasta do projeto antes do `file_upload`.
+3. `file_upload` exige o `ref` do input (achar com `find`), não clicar no botão "Enviar".
+4. YouTube mostra "alterações não salvas" enquanto o upload termina; esperar "Mudanças publicadas".
+5. Foto de perfil: quadrado, rosto central, legível pequeno. Banner: texto e personagem no miolo; bordas são cortadas.
+6. Faltam: trocar foto do TikTok pela mesma; Instagram; trocar marca d'água por versão mais discreta se ficar chamativa; abrir `youtube.com/@Uiloumusk` no celular para checar o recorte.
+
+### Estado ao fechar a sessão
+- 28 Shorts + longo programados no YouTube; 28 Shorts agendados no TikTok.
+- Pendente: apagar rascunho duplicado "05 o coracao delator" (YouTube); conferir o longo em Conteúdo > Vídeos (8/11, 18h); decidir mudança do CLAUDE.md para aprovação por lote (proposta na seção anterior).
