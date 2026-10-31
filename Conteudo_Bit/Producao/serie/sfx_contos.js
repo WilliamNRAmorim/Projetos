@@ -151,5 +151,18 @@
       const dur = p.dur || 3, T = t + dur, out = G(0), n = N(t, T), hp = F('highpass', 2500), g = G(0.5); trap(out.gain, t, dur, 0.05, 0.1, 0.5 * (p.vol == null ? 1 : p.vol)); C(n, hp, g, out);
       for (let s = t; s < T; s += rnd(0.1, 0.4)) g.gain.linearRampToValueAtTime(rnd(0.2, 1.2), s); bus(out, false); return { t: t, fim: T };
     };
+    // badalada: um golpe de sino grave de relógio (parciais harmônicos, decaimento longo)
+    defs.badalada = function (t, p) {
+      const out = G(0.5 * (p.vol == null ? 1 : p.vol)); let fim = t;
+      [[196, 1, 4.5], [392, 0.6, 3.5], [588, 0.4, 2.6], [784, 0.2, 1.8], [231, 0.5, 3.8]].forEach(function (h) { const o = O('sine', h[0], t, t + h[2] + 0.5), g = G(0); fim = Math.max(fim, dec(g.gain, t, 0.003, h[1], h[2])); C(o, g, out); });
+      const n = N(t, t + 0.12), bp = F('bandpass', 1400, 1), gn = G(0); dec(gn.gain, t, 0.001, 0.4, 0.06); C(n, bp, gn, out);
+      bus(out, false); return { t: t, fim: fim + 0.2 };
+    };
+    // arrastar: saco/pés arrastando no asfalto (ruído grave filtrado em varreduras) com baque surdo
+    defs.arrastar = function (t, p) {
+      const dur = p.dur || 6, T = t + dur, out = G(0.45 * (p.vol == null ? 1 : p.vol)), per = p.ritmo || 1.0;
+      for (let s = t; s < T - 0.5; s += per) { const n = N(s, s + 0.7), lp = F('lowpass', 900), g = G(0); lp.frequency.setValueAtTime(600, s); lp.frequency.linearRampToValueAtTime(1100, s + 0.5); g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.7, s + 0.25); g.gain.linearRampToValueAtTime(0, s + 0.65); C(n, lp, g, out); const o = O('sine', 80, s + 0.7, s + 0.9), g2 = G(0); dec(g2.gain, s + 0.7, 0.004, 0.6, 0.12); C(o, g2, out); }
+      bus(out, false); return { t: t, fim: T };
+    };
   };
 })(typeof window !== 'undefined' ? window : globalThis);
