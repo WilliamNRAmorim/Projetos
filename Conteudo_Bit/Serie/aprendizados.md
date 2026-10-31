@@ -79,3 +79,42 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 - `serie/longo.html` junta os 10 MP4 já prontos (decodifica áudio e quadros, sem reprocessar cena), 1920x1080, 553 s (9:13), intro de 10,7 s (voz Antonio + zumbido), fundo = quadro borrado, fade de 0,45 s e batida grave entre contos, corte do silêncio final deixando 0,9 s, barra de progresso e etiqueta "CONTO n DE 10". Ganho por conto para pico -4 dBFS (limite 2x).
 - Seleção feita por critério editorial (mistura literário/folclore/original, durações), NÃO por retenção: ainda não havia dados. Trocar a lista em `LISTA` e rodar de novo se o William quiser os 10 de maior retenção.
 - Render: `node driver.js render "http://127.0.0.1:5178/Producao/serie/longo.html?render=1" --w=1920 --h=1080 --lim=1500` (~12 min); saída `Semanal/contos-dia8/` (405 MB, fora do git).
+
+## Agendamento em lote (Dias 1 a 8) e plano "shadow" (31/10/2026)
+
+### O que deu certo
+- Um único conjunto de 8 abas (4 YouTube Studio + 4 TikTok Studio), cada uma com 1 vídeo do dia, preenchidas em lote (`browser_batch`). O texto vem de `contos-de-terror-semana/publicacao-28-pecas.md`.
+- Conferência final pela lista (YouTube: Conteúdo > Shorts; TikTok: Publicações), não pela tela de cada aba.
+- Resultado: 28 Shorts + 1 longo programados no YouTube, 28 no TikTok.
+
+### O que errei (e o custo de cada erro)
+1. **Cliques por coordenada sem olhar a tela.** O layout muda entre abas (barra de progresso, aba rolada, altura). Vários cliques caíram no calendário em vez de "Agendar", ou no campo errado. Custo: refazer e conferir.
+2. **Data/hora do TikTok e do YouTube.** Digitar a hora só pega depois de clicar no campo e esperar 1 s; o seletor do TikTok vem em 19:xx e é preciso escolher minuto 00 e depois a hora. Calendário do YouTube pode pular para 2027 se clicar rápido. Sempre conferir com zoom na região da data/hora antes de agendar.
+3. **Abas congelam** quando 4 vídeos processam ao mesmo tempo (screenshot com timeout). Não clicar de novo: esperar, ou reabrir.
+4. **Alterações não salvas** no YouTube bloqueiam a navegação ("Leave site?"). Nunca forçar; verificar se o vídeo ficou programado antes de reusar a aba.
+5. **Ordem dos arquivos nas abas** nem sempre bate com a ordem combinada (Dia 7 veio Máscara, Homem do Saco, Vizinho, Iara). Identificar pelo nome do arquivo na aba, nunca pela posição.
+6. **Capa do TikTok** só deixa escolher quadro do vídeo, e a legenda queimada fica cortada ("CHEGOU, POR"). O YouTube só oferece 3 quadros. Escolhi capa de cabeça em vários; não houve critério.
+7. **Hashtag**: o YouTube trocou `#Shorts` por `#shortsyoutube`/`#shortsbeta` em alguns. Sem impacto.
+8. **Rascunho duplicado** ("05 o coracao delator") ficou no YouTube por envio repetido. Apagar.
+9. Informei "feito" duas vezes sem ter lido a confirmação de todas as abas (Dia 6 no YouTube). Só dizer "programado" depois de ver a confirmação ou a lista.
+
+### Como reduzir custo e aprovação (modo shadow: 1 "sim" por lote, não por vídeo)
+**Regra de aprovação proposta (precisa do "sim" do William uma única vez, vale para a série inteira):**
+- William aprova **o lote do dia ou da semana inteiro** em um resumo único (título, descrição, data, hora, capa por peça). Depois disso, o chefe agenda sem perguntar de novo, desde que o texto seja idêntico ao aprovado.
+- Continua exigindo "sim" novo: mudar texto, data ou hora; publicar na hora (não agendar); apagar; qualquer conta/plataforma nova.
+- Quem agenda é só o chefe, nunca subagente (regra do CLAUDE.md não muda).
+
+**Para gastar menos:**
+1. **Gerar um `lote.json`** por semana (peça, título, legenda YouTube, legenda TikTok, data, hora, arquivo) a partir de `publicacao-28-pecas.md`. Uma única aprovação cobre tudo.
+2. **Uma tabela fixa de coordenadas por tela** (YouTube Studio e TikTok Studio) para digitar sem screenshot a cada passo; screenshot só na conferência final por zoom. Metade dos tokens foi screenshot.
+3. **Nome do arquivo = ordem**: subir os vídeos na ordem do `lote.json` e conferir pelo nome do arquivo antes de preencher.
+4. **Escolher capa por regra**, não por olho: pegar o quadro de 3 s (gancho) ou o 2º quadro sugerido, igual para todos. Salvar a regra e parar de decidir um a um.
+5. **Conferir pela lista**, uma vez no fim (YouTube Shorts + TikTok Publicações), em vez de abrir peça por peça.
+6. **Produção**: o motor já é barato (voz edge-tts, render local). Gasto alto foi revisão visual de cada quadro. Rever só a folha de contato e só as cenas que mudaram; reaproveitar cenários e poses.
+7. **Longo "10 melhores"**: montar uma vez por semana com `serie/longo.html` (só reusa os MP4 prontos, sem reprocessar).
+8. **Medir retenção antes de repetir** (regra do plano): olhar visualizações por tipo (literário × folclore × original) no Dia 3 e no Dia 7 e cortar o que não rende.
+
+### Pendências da semana
+- Trocar a lista do longo pelos 10 de maior retenção quando houver dados.
+- Apagar o rascunho "05 o coracao delator" no YouTube.
+- Conferir o longo programado (8/11, 18h) em Conteúdo > Vídeos.
