@@ -11,7 +11,7 @@ async def main():
     out = os.path.normpath(os.path.join(base, "..", "stems", "serie", f"ep{ep}")); os.makedirs(out, exist_ok=True)
     for i, c in enumerate(d["cenas"], 1):
         segs = []
-        if c.get("narracao"): segs.append(("narrador", c["narracao"], c.get("rateNarrador"), None, None))
+        if c.get("narracao"): segs.append(("narrador", c["narracao"], c.get("rateNarrador"), c.get("pitchNarrador"), None))
         for f in c.get("falas", []): segs.append((f.get("quem", "narrador"), f["texto"], f.get("rate"), f.get("pitch"), f.get("arquivo")))
         for k, (quem, txt, rate, pitch, arq) in enumerate(segs, 1):
             if arq: continue

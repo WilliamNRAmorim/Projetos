@@ -1,7 +1,7 @@
 // Sons extras dos contos (sintetizados; só ACRESCENTA tipos ao sfx.js pelo gancho root.SfxExtra). Sem arquivos, sem licença.
 (function (root) {
   root.SfxExtra = function (defs, h) {
-    const { G, F, O, N, C, dec, trap, glide, eco, rnd, bus } = h;
+    const { G, F, O, N, C, dec, trap, glide, eco, rnd, rng, bus } = h;
     // grilos: vários grilos, cada um um oscilador contínuo (~4,5 kHz) com envelope de "cri-cri-cri" repetido
     defs.grilos = function (t, p) {
       const dur = p.dur || 8, T = t + dur, out = G(0), n = p.n || 4;
@@ -50,6 +50,19 @@
       const n = N(t, T), bp = F('bandpass', 700, 1.2); bp.frequency.setValueAtTime(500, t); bp.frequency.linearRampToValueAtTime(1500, T); C(n, bp, out);
       const o = O('sine', 90, T - 0.05, T + 0.3), g = G(0); dec(g.gain, T - 0.05, 0.004, 0.8 * v, 0.2); C(o, g, out);
       bus(out, false); return { t: t, fim: T + 0.3 };
+    };
+    // pinga: gotas caindo em intervalo (com eco de banheiro)
+    defs.pinga = function (t, p) {
+      const dur = p.dur || 8, T = t + dur, out = G(0.4 * (p.vol == null ? 1 : p.vol)), esp = p.intervalo || 1.7;
+      for (let s = t + 0.3; s < T - 0.3; s += esp * (0.8 + 0.4 * rng())) { const o = O('sine', 1400, s, s + 0.25), g = G(0); glide(o.frequency, 1700, 900, s, s + 0.08); dec(g.gain, s, 0.002, 0.7, 0.07); C(o, g, out); }
+      eco(out, out, 0.19, 0.4, 2600, 0.5); bus(out, true); return { t: t, fim: T };
+    };
+    // rangido de porta abrindo devagar
+    defs.rangido = function (t, p) {
+      const dur = p.dur || 2.2, T = t + dur, out = G(0), v = (p.vol == null ? 1 : p.vol);
+      out.gain.setValueAtTime(0, t); out.gain.linearRampToValueAtTime(0.35 * v, t + 0.3); out.gain.linearRampToValueAtTime(0.25 * v, T - 0.4); out.gain.linearRampToValueAtTime(0, T);
+      const o = O('sawtooth', 220, t, T), lp = F('bandpass', 900, 6); glide(o.frequency, 180, 420, t, T); lp.frequency.setValueAtTime(700, t); lp.frequency.linearRampToValueAtTime(1300, T); C(o, lp, out);
+      bus(out, false); return { t: t, fim: T };
     };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

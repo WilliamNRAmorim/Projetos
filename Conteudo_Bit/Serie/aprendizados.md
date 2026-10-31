@@ -35,3 +35,10 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 7. **Personagem some no fim da cena** (fade de saída) se não tiver `"fica": true`; no close da fala final do porteiro isso apareceu como "fantasma". Usar `fica` em fala que termina a cena.
 8. **Câmera dentro de cenário:** a cobra de fogo (`boitata`) mapeia a profundidade em `yA..yB`; na janela do quarto use uma faixa pequena (a janela não vai até o chão do pasto).
 9. **Sem ferramenta de áudio:** não há ffmpeg nesta máquina; a conferência do áudio do MP4 final decodifica o arquivo pelo próprio Edge (pico, clipping, RMS e maior silêncio). O agente não ouve: pronúncia, sotaque e "peso" do sussurro só o ouvido do William valida.
+
+## Contos de terror, Dia 2 (31/10/2026)
+1. Cenários novos em `contos2.js` (carregado por `contos.html`): quarto/olho/assoalho/sala (ocre), banheiro escolar e espelho com cabines refletidas (rosa), rua, carro de lado e janela de carro com o objeto `porta_carro` por cima do motorista (roxo), corredor/banheiro/espelho/porta (branco-ciano). Reflexo no espelho é desenhado à mão no cenário (`refCostas`, `portaRefAberta`).
+2. Para esconder as pernas de quem está "dentro" de um carro, um OBJETO desenhado depois dos personagens (a porta) cobre o corpo; personagens sempre são desenhados antes dos objetos.
+3. `gen_voz_contos.py` aceita `pitchNarrador` por cena (voz que muda de tom ao longo da peça: Loira vai de brincalhona a grave). O batimento acelerando (`batimento` bpm 70, 100, 130, 150) é o que sustenta a tensão do Coração Delator; volume do último acima de ~0,7 passa a voz.
+4. `sfx_contos.js` ganhou `pinga` e `rangido`; o gancho `SfxExtra` entrega `rng`, que precisa ser extraído em cada def (faltou uma vez e o mix falhou com "rng is not defined", sem aviso na tela: conferir `MIX_INFO` e a última linha do log do `driver.js`).
+5. Coração Delator: enredo conferido no original (poemuseum.org): 7 noites, oitava noite o velho acorda, 3 policiais, cadeira sobre as tábuas, "relógio embrulhado em algodão". O roteiro de memória foi ajustado (sem esquartejar, sem mostrar corpo; final "Tirem as tábuas! Aqui, aqui! É o coração dele!").
