@@ -115,5 +115,18 @@
       for (let s = t; s < T - per; s += per) { g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.8, s + per * 0.35); g.gain.linearRampToValueAtTime(0, s + per * 0.55); g.gain.linearRampToValueAtTime(0.55, s + per * 0.7); g.gain.linearRampToValueAtTime(0, s + per * 0.95); }
       bus(out, true); return { t: t, fim: T };
     };
+    // uivo de lobo: glide longo com vibrato e eco
+    defs.uivoLobo = function (t, p) {
+      const dur = p.dur || 4, T = t + dur, out = G(0.4 * (p.vol == null ? 1 : p.vol)), o = O('sawtooth', 300, t, T), lp = F('lowpass', 1400, 1), g = G(0), lf = O('sine', 5.5, t, T), lg = G(14); C(lf, lg); lg.connect(o.frequency);
+      o.frequency.setValueAtTime(260, t); o.frequency.linearRampToValueAtTime(640, t + dur * 0.4); o.frequency.setValueAtTime(640, t + dur * 0.6); o.frequency.linearRampToValueAtTime(380, T);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.8, t + 0.6); g.gain.setValueAtTime(0.8, T - 1.0); g.gain.linearRampToValueAtTime(0, T); C(o, lp, g, out); eco(out, out, 0.3, 0.5, 2000, 0.6);
+      bus(out, false); return { t: t, fim: T + 1 };
+    };
+    // corrente de metal: batidinhas metálicas irregulares (p.tenso = mais rápidas e esticadas)
+    defs.corrente = function (t, p) {
+      const dur = p.dur || 4, T = t + dur, out = G(0.4 * (p.vol == null ? 1 : p.vol)), esp = p.tenso ? 0.07 : 0.28;
+      for (let s = t; s < T - 0.1; s += esp * (0.6 + 0.8 * rng())) { const f = rnd(2200, 4200), o = O('square', f, s, s + 0.08), bp = F('bandpass', f, 6), g = G(0); dec(g.gain, s, 0.001, rnd(0.2, 0.8), 0.04); C(o, bp, g, out); }
+      bus(out, false); return { t: t, fim: T };
+    };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

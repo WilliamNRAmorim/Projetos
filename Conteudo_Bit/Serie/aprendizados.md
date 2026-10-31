@@ -55,3 +55,10 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 2. Cenários em `contos4.js` e sons `gongo`, `uivoGato`, `galope`, `relincho`, `raspar`, `respirar` em `sfx_contos.js`. Sons de impacto (uivo, gongo, relincho) precisam de volume ~0,2 a 0,4 para não passar a voz (margem P5 >= 6 dB); a medição de cada cena em `&mix=1` mostra na hora.
 3. Duração: com voz ElevenLabs Daniel + 8 cenas a peça do Gato Preto chegou a 68 s (limite 70): olhar a soma das falas antes de adicionar pausas.
 4. Sombra de objeto/animal como "personagem" (mula, gato) fica mais legível com escala grande; a mula de fogo precisou de escala 1,8 a 2 para ser lida de relance.
+
+## Contos de terror, Dia 5 (31/10/2026)
+1. **O Retrato Oval conferido no original** (poemuseum.org): narrador ferido e delirante, o criado Pedro arromba o castelo nos Apeninos, quarto de torre com quadros, livrinho no travesseiro, retrato oval da jovem, pintor obcecado que "não queria ver", a esposa posa semanas na torre escura, fim "Ela estava morta!". O roteiro de memória estava certo no essencial.
+2. Cenários novos em `contos5.js`; objeto `camera_rec` (modo de composição `saturation` + multiply) transforma qualquer cena em imagem de câmera de segurança em preto e branco com data/hora e REC, desenhado por cima dos personagens.
+3. **Roteiro curto de "urgente" precisa de batidas visuais:** o Ônibus noturno saiu com 36 s mesmo com voz rápida; foi para 48 s com ritmo +14%, cenas mais longas e um respiro final de 2,5 s. Regra prática: 85 palavras = ~36 s a +24%.
+4. Sons novos: `uivoLobo` e `corrente` (corrente tensa mais rápida). Toque de celular a vol 0,7 passa a voz; usar ~0,3.
+5. Personagem "sentada" sem cadeira flutua; o cenário da torre do pintor desenha o banquinho na posição certa (x 0,25, escala 0,85).
