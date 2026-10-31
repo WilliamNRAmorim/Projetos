@@ -42,3 +42,10 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 3. `gen_voz_contos.py` aceita `pitchNarrador` por cena (voz que muda de tom ao longo da peça: Loira vai de brincalhona a grave). O batimento acelerando (`batimento` bpm 70, 100, 130, 150) é o que sustenta a tensão do Coração Delator; volume do último acima de ~0,7 passa a voz.
 4. `sfx_contos.js` ganhou `pinga` e `rangido`; o gancho `SfxExtra` entrega `rng`, que precisa ser extraído em cada def (faltou uma vez e o mix falhou com "rng is not defined", sem aviso na tela: conferir `MIX_INFO` e a última linha do log do `driver.js`).
 5. Coração Delator: enredo conferido no original (poemuseum.org): 7 noites, oitava noite o velho acorda, 3 policiais, cadeira sobre as tábuas, "relógio embrulhado em algodão". O roteiro de memória foi ajustado (sem esquartejar, sem mostrar corpo; final "Tirem as tábuas! Aqui, aqui! É o coração dele!").
+
+## Contos de terror, Dia 3 (31/10/2026)
+1. **O Enfermeiro: o roteiro de memória estava errado** (conferido na Wikisource): não há espelho nem fantasma do velho. Procópio (enfermeiro em 1859, coronel Felisberto, 24/8/1860) leva uma moringa no rosto, estrangula o coronel, esconde as marcas, herda tudo, doa uma parte, ergue túmulo, sente remorso e se consola; fecha com a "emenda" ao Sermão da Montanha ("Bem-aventurados os que possuem..."). Roteiro refeito (7 cenas); a luta é só sombra na parede.
+2. **Duração com voz ElevenLabs lenta (Bill):** a primeira versão passou de 77 s; precisou cortar frases (a duração vem do áudio, não da cena). Medir `&mix=1` antes de renderizar e podar o roteiro, nunca acelerar a voz.
+3. Cenários novos em `contos3.js` (sépia, floresta, estrada na chuva, quarto de lua). Pegadas precisam de contraste (cor clara no chão de mata, chão claro no close).
+4. `assobio` e `limpador` em `sfx_contos.js`. Assobio e grilos sobem a cama facilmente: manter assobio <= 0,45 e grilos <= 2,2 para a voz ficar >= 6 dB.
+5. **Arquivo travado:** se o MP4 já foi enviado/aberto pelo app, o servidor não consegue sobrescrever e o render "termina" sem gravar. Sempre conferir a data do arquivo e, na dúvida, mudar o nome (`v2`).

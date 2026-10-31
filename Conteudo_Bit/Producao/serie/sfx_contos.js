@@ -64,5 +64,17 @@
       const o = O('sawtooth', 220, t, T), lp = F('bandpass', 900, 6); glide(o.frequency, 180, 420, t, T); lp.frequency.setValueAtTime(700, t); lp.frequency.linearRampToValueAtTime(1300, T); C(o, lp, out);
       bus(out, false); return { t: t, fim: T };
     };
+    // assobio: duas notas deslizando (uma pessoa assobiando ao longe)
+    defs.assobio = function (t, p) {
+      const out = G(0.35 * (p.vol == null ? 1 : p.vol)); const o = O('sine', 1700, t, t + 1.3), g = G(0), lf = O('sine', 6, t, t + 1.3), lg = G(25); C(lf, lg); lg.connect(o.frequency);
+      glide(o.frequency, 1700, 2400, t, t + 0.5); o.frequency.setValueAtTime(2400, t + 0.5); o.frequency.exponentialRampToValueAtTime(1500, t + 1.2); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.7, t + 0.08); g.gain.setValueAtTime(0.7, t + 1.0); g.gain.linearRampToValueAtTime(0, t + 1.3); C(o, g, out);
+      eco(out, out, 0.25, 0.4, 3000, 0.5); bus(out, false); return { t: t, fim: t + 1.8 };
+    };
+    // limpador de para-brisa: varredura de ruído com batida de borracha a cada ciclo
+    defs.limpador = function (t, p) {
+      const dur = p.dur || 8, T = t + dur, out = G(0.5 * (p.vol == null ? 1 : p.vol));
+      for (let s = t + 0.4; s < T - 0.6; s += 1.25) { const n = N(s, s + 0.6), bp = F('bandpass', 1800, 0.8), g = G(0); bp.frequency.setValueAtTime(1400, s); bp.frequency.linearRampToValueAtTime(2200, s + 0.5); g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.45, s + 0.25); g.gain.linearRampToValueAtTime(0, s + 0.55); C(n, bp, g, out); const o = O('sine', 120, s + 0.5, s + 0.7), g2 = G(0); dec(g2.gain, s + 0.5, 0.003, 0.5, 0.08); C(o, g2, out); }
+      bus(out, true); return { t: t, fim: T };
+    };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

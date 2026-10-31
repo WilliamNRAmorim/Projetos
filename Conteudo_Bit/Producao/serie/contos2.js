@@ -69,6 +69,7 @@
     rect(g, -340, -112, 680, 10, 'rgba(255,255,255,0.15)'); rrect(g, 300, -138, 36, 24, 8, '#FFF0B0'); glow(g, 330, -126, 120, '#FFF0B0', 0.3); rrect(g, -340, -138, 20, 24, 8, '#E83A3A');
     for (const wx of [-210, 200]) { circ(g, wx, -40, 54, '#0A0810'); circ(g, wx, -40, 28, '#8A8A98'); } g.restore();
   };
+  Motor.H_.carro = carro;
   CENARIOS.rua_roxa = (g, t, c = {}) => { // rua à noite, roxo; c.carros = [{x, y?, esc, cor:'preto'|'prata'}]
     fundoGrad(g, '#0E0A1E', '#3A2A6A'); for (let i = 0; i < 4; i++) { const x = i * 300 - 40, h = 380 + rnd(i + 4) * 360; rect(g, x, 1000 - h, 280, h + 240, i % 2 ? '#1A1236' : '#140E2A'); for (let k = 0; k < 6; k++) { rect(g, x + 30 + (k % 2) * 110, 1000 - h + 50 + Math.floor(k / 2) * 120, 60, 70, rnd(i * 6 + k) > 0.6 ? '#C9A8FF' : '#0A0716', rnd(i * 6 + k) > 0.6 ? 0.6 : 1); } }
     rect(g, 760, 520, 260, 80, '#2A1A4A'); text(g, 'BAR 24H', 890, 580, 50, '#FF5AC8', { align: 'center', w: 800 }); glow(g, 890, 560, 300, '#FF5AC8', 0.3 * (0.8 + 0.2 * Math.sin(t * 6)));
