@@ -49,3 +49,9 @@ Processo e arquivos em `Producao\serie`: `contos.html` (abre o motor com `contos
 3. Cenários novos em `contos3.js` (sépia, floresta, estrada na chuva, quarto de lua). Pegadas precisam de contraste (cor clara no chão de mata, chão claro no close).
 4. `assobio` e `limpador` em `sfx_contos.js`. Assobio e grilos sobem a cama facilmente: manter assobio <= 0,45 e grilos <= 2,2 para a voz ficar >= 6 dB.
 5. **Arquivo travado:** se o MP4 já foi enviado/aberto pelo app, o servidor não consegue sobrescrever e o render "termina" sem gravar. Sempre conferir a data do arquivo e, na dúvida, mudar o nome (`v2`).
+
+## Contos de terror, Dia 4 (31/10/2026)
+1. **O Gato Preto conferido no original** (poemuseum.org): Plutão (olho arrancado e enforcado, só sugerido), incêndio, gato de mancha em forca, machado no porão (a esposa segura o braço), emparedada, polícia no 4º dia, bengala na parede, uivo; o cadáver aparece com o gato sobre a cabeça. Na versão em vídeo nada disso é mostrado: só sombra do braço, silhueta, parede e olhos do gato. A frase da animação "fez mal a Plutão" é eufemismo deliberado (regra: sem animal ferido).
+2. Cenários em `contos4.js` e sons `gongo`, `uivoGato`, `galope`, `relincho`, `raspar`, `respirar` em `sfx_contos.js`. Sons de impacto (uivo, gongo, relincho) precisam de volume ~0,2 a 0,4 para não passar a voz (margem P5 >= 6 dB); a medição de cada cena em `&mix=1` mostra na hora.
+3. Duração: com voz ElevenLabs Daniel + 8 cenas a peça do Gato Preto chegou a 68 s (limite 70): olhar a soma das falas antes de adicionar pausas.
+4. Sombra de objeto/animal como "personagem" (mula, gato) fica mais legível com escala grande; a mula de fogo precisou de escala 1,8 a 2 para ser lida de relance.
