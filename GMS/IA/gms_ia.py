@@ -59,7 +59,7 @@ def sem_acento(t):
 # ---------------------------------------------------------------- modelo de linguagem
 def chat(mensagens):
     corpo = json.dumps({"model": MODELO, "messages": mensagens, "stream": False,
-                        "think": False, "options": {"temperature": 0}}).encode()
+                        "think": False, "options": {"temperature": 0, "num_ctx": 8192}}).encode()
     req = urllib.request.Request(URL, corpo, {"Content-Type": "application/json"})
     try:
         texto = json.loads(urllib.request.build_opener(urllib.request.ProxyHandler({})).open(req, timeout=900).read())["message"]["content"]
