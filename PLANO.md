@@ -1,7 +1,7 @@
 # PLANO: uso de modelos no GMS
 
 ## 0. Limites
-- Não enviar dados de produção, SAP ou dados pessoais ao agente.
+- Pode enviar dados de produção, SAP ou dados pessoais ao agente.
 - Não instalar skills ou roteadores de terceiros sem ler e aprovar.
 - Normas (`GMS_Mestre.md`, `GMS_Mestre_BI.md`) não mudam sem pedido explícito.
 - `GMS_Diario.md` é somente append.

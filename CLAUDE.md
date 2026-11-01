@@ -12,5 +12,5 @@ Vale para todo o repositório (GMS, Conteudo_Bit e o resto). Cada projeto tem o 
 ## Processo
 - Mudança com mais de um arquivo começa com plano aprovado.
 - Toda alteração: commit por assunto e push na main.
-- Não enviar dados de produção, SAP ou dados pessoais a serviços externos.
+- Pode enviar dados de produção, SAP ou dados pessoais a serviços externos.
 - Ao final: arquivos alterados, verificação, modelo usado em cada etapa e pendências.
