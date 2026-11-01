@@ -1,0 +1,898 @@
+<!doctype html><html lang="pt-BR"><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style>
+<title>Estado da Célula</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+</head><body>
+
+<style>
+  /* ---------- TOKENS: derivados do design system do próprio GMS (Mestre B§5.2) ---------- */
+  :root {
+    --ground:      #F5F7FA;   /* fx_CorFundo */
+    --surface:     #FFFFFF;   /* fx_CorSuperficie */
+    --surface-2:   #EEF2F7;
+    --ink:         #0F172A;   /* fx_CorTexto */
+    --ink-soft:    #64748B;   /* fx_CorTextoSuave */
+    --ink-label:   #94A3B8;   /* fx_CorRotulo */
+    --line:        #E2E8F0;   /* fx_CorBorda */
+    --header:      #1E293B;   /* fx_CorHeader */
+    --header-ink:  #F8FAFC;
+    --header-soft: #94A3B8;
+
+    --brand:       #E2231A;   /* fx_CorPrimaria — Danfoss. Marca e alerta máximo, nunca botão */
+    --ok:          #16A34A;   /* fx_CorOK */
+    --warn:        #E67E22;   /* fx_CorAlerta */
+    --err:         #C0392B;   /* fx_CorErro */
+    --info:        #2C6FBF;   /* fx_CorInfo */
+
+    --ok-soft:     #D1FAE5;
+    --warn-soft:   #FEF3C7;
+    --err-soft:    #FEE2E2;
+    --info-soft:   #EFF6FF;
+
+    --shadow: 0 1px 2px rgba(15,23,42,.06), 0 8px 24px -12px rgba(15,23,42,.18);
+    --radius: 12px;
+    --radius-s: 8px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0B1220;
+      --surface:     #131C2B;
+      --surface-2:   #1B2739;
+      --ink:         #E8EEF7;
+      --ink-soft:    #97A6BC;
+      --ink-label:   #6E7F98;
+      --line:        #263449;
+      --header:      #0A101B;
+      --header-ink:  #F1F5FB;
+      --header-soft: #8FA0B8;
+
+      --brand:       #FF5F55;
+      --ok:          #3DD07E;
+      --warn:        #F5A742;
+      --err:         #F2705F;
+      --info:        #6BA6F5;
+
+      --ok-soft:     #123326;
+      --warn-soft:   #3A2A11;
+      --err-soft:    #3A1B1A;
+      --info-soft:   #142338;
+
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0B1220;
+    --surface:     #131C2B;
+    --surface-2:   #1B2739;
+    --ink:         #E8EEF7;
+    --ink-soft:    #97A6BC;
+    --ink-label:   #6E7F98;
+    --line:        #263449;
+    --header:      #0A101B;
+    --header-ink:  #F1F5FB;
+    --header-soft: #8FA0B8;
+
+    --brand:       #FF5F55;
+    --ok:          #3DD07E;
+    --warn:        #F5A742;
+    --err:         #F2705F;
+    --info:        #6BA6F5;
+
+    --ok-soft:     #123326;
+    --warn-soft:   #3A2A11;
+    --err-soft:    #3A1B1A;
+    --info-soft:   #142338;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 28px -14px rgba(0,0,0,.7);
+  }
+
+  /* ---------- BASE ---------- */
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Barlow", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
+
+  h1, h2, h3, .cond {
+    font-family: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+    text-wrap: balance;
+  }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- CABEÇALHO ---------- */
+  .top {
+    background: var(--header);
+    color: var(--header-ink);
+    border-bottom: 3px solid var(--brand);
+    margin-bottom: 34px;
+  }
+  .top-inner { max-width: 1180px; margin: 0 auto; padding: 30px 20px 26px; }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--header-soft);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: clamp(38px, 6.2vw, 64px);
+    font-weight: 700;
+    letter-spacing: .012em;
+    text-transform: uppercase;
+    line-height: .96;
+    margin: 0 0 14px;
+  }
+  .thesis {
+    max-width: 62ch;
+    font-size: clamp(15px, 1.7vw, 18px);
+    color: var(--header-soft);
+    font-style: italic;
+    margin: 0;
+    border-left: 2px solid var(--brand);
+    padding-left: 14px;
+  }
+  .thesis cite { font-style: normal; display: block; font-size: 12.5px; letter-spacing: .05em; margin-top: 6px; opacity: .8; }
+
+  /* ---------- PLACAR ---------- */
+  .placar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 14px;
+    margin-bottom: 44px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 20px 16px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--line);
+  }
+  .kpi.is-ok   { border-top-color: var(--ok); }
+  .kpi.is-warn { border-top-color: var(--warn); }
+  .kpi.is-err  { border-top-color: var(--err); }
+
+  .kpi-num {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    display: block;
+  }
+  .kpi.is-ok .kpi-num   { color: var(--ok); }
+  .kpi.is-warn .kpi-num { color: var(--warn); }
+  .kpi.is-err .kpi-num  { color: var(--err); }
+
+  .kpi-label {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 6px 0 4px;
+  }
+  .kpi-sub { font-size: 13.5px; color: var(--ink-soft); line-height: 1.4; }
+
+  /* ---------- SEÇÕES ---------- */
+  section { margin-bottom: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  h2 {
+    font-size: clamp(24px, 3.2vw, 32px);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    margin: 0;
+  }
+  .sec-tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-label);
+    border: 1px solid var(--line);
+    border-radius: 100px;
+    padding: 3px 10px;
+  }
+  .sec-note { color: var(--ink-soft); max-width: 72ch; margin: 0 0 22px; font-size: 15.5px; }
+
+  /* ---------- LINHA DE PRODUÇÃO ---------- */
+  .linha { display: flex; flex-direction: column; gap: 8px; }
+
+  .etapa {
+    display: grid;
+    grid-template-columns: 52px minmax(150px, 210px) 1fr auto;
+    gap: 16px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 5px solid var(--line);
+    border-radius: var(--radius-s);
+    padding: 13px 18px 13px 14px;
+  }
+  .etapa.s-sistema { border-left-color: var(--ok); }
+  .etapa.s-duplo   { border-left-color: var(--warn); }
+  .etapa.s-legado  { border-left-color: var(--info); }
+
+  .ord {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-label);
+    font-variant-numeric: tabular-nums;
+  }
+  .etapa-nome {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .025em;
+    line-height: 1.05;
+  }
+  .etapa-tela {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    color: var(--ink-label);
+    display: block;
+    margin-top: 2px;
+    word-break: break-word;
+  }
+  .etapa-obs { font-size: 14px; color: var(--ink-soft); line-height: 1.45; }
+  .etapa-obs b { color: var(--ink); font-weight: 600; }
+
+  .chip {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: 5px 12px;
+    border-radius: 100px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .chip.sistema { background: var(--ok-soft);   color: var(--ok);   border-color: var(--ok); }
+  .chip.duplo   { background: var(--warn-soft); color: var(--warn); border-color: var(--warn); }
+  .chip.legado  { background: var(--info-soft); color: var(--info); border-color: var(--info); }
+  .chip.conf    { background: transparent;      color: var(--ink-soft); border-color: var(--line); border-style: dashed; }
+
+  .satelites {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .sat-label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+    color: var(--ink-label);
+    margin: 0 0 10px;
+  }
+
+  /* ---------- CAMADAS ---------- */
+  .camadas { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 16px; }
+  .camada {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px 22px 22px;
+    box-shadow: var(--shadow);
+  }
+  .camada-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .camada h3 {
+    font-size: 21px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin: 0;
+  }
+  .camada-verdict {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    margin: 8px 0 12px;
+  }
+  .v-ok   { color: var(--ok); }
+  .v-warn { color: var(--warn); }
+  .v-err  { color: var(--err); }
+
+  .camada ul { margin: 0; padding-left: 18px; }
+  .camada li { font-size: 14.5px; color: var(--ink-soft); margin-bottom: 8px; line-height: 1.45; }
+  .camada li b { color: var(--ink); font-weight: 600; }
+  .camada li:last-child { margin-bottom: 0; }
+
+  /* ---------- CORRENTE DO FUTURO ---------- */
+  .horiz { display: flex; flex-direction: column; gap: 14px; }
+  .h-bloco {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px 22px 20px;
+    display: grid;
+    grid-template-columns: 96px 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .h-badge {
+    font-family: "Barlow Condensed", sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: center;
+    border-radius: var(--radius-s);
+    padding: 10px 6px 8px;
+    line-height: 1.05;
+  }
+  .h-badge span { display: block; font-size: 27px; }
+  .h-badge small { display: block; font-size: 10.5px; letter-spacing: .1em; opacity: .85; margin-top: 2px; }
+  .h1b { background: var(--ok-soft);   color: var(--ok); }
+  .h2b { background: var(--warn-soft); color: var(--warn); }
+  .h3b { background: var(--info-soft); color: var(--info); }
+
+  .h-titulo { font-family: "Barlow Condensed", sans-serif; font-size: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; }
+  .h-bloco p { margin: 0 0 10px; font-size: 14.5px; color: var(--ink-soft); line-height: 1.5; }
+  .h-bloco p:last-child { margin-bottom: 0; }
+  .h-bloco b { color: var(--ink); font-weight: 600; }
+
+  .corrente {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border-radius: var(--radius-s);
+    padding: 10px 14px;
+    margin-top: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .corrente .seta { color: var(--brand); font-weight: 600; padding: 0 4px; }
+
+  /* ---------- DECISÕES ---------- */
+  .tabela-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; }
+  th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-label);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td { font-size: 14.5px; color: var(--ink-soft); }
+  td b { color: var(--ink); font-weight: 600; }
+  .dias { font-family: "IBM Plex Mono", monospace; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--ink); font-weight: 500; }
+  .dias.alerta-dias { color: var(--err); font-weight: 700; }
+
+  /* ---------- ALERTA ---------- */
+  .alerta {
+    background: var(--err-soft);
+    border: 1px solid var(--err);
+    border-left: 5px solid var(--err);
+    border-radius: var(--radius-s);
+    padding: 18px 22px;
+  }
+  .alerta h3 {
+    font-size: 19px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    margin: 0 0 8px; color: var(--err);
+  }
+  .alerta p { margin: 0 0 8px; font-size: 14.5px; color: var(--ink); line-height: 1.5; }
+  .alerta p:last-child { margin-bottom: 0; }
+  .alerta code {
+    font-family: "IBM Plex Mono", monospace; font-size: 13px;
+    background: var(--surface); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line);
+  }
+
+  /* ---------- LEGENDA / RODAPÉ ---------- */
+  .legenda { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
+  .leg-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft); }
+  .leg-dot { width: 12px; height: 12px; border-radius: 3px; flex: none; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    font-size: 13px;
+    color: var(--ink-label);
+    line-height: 1.6;
+  }
+  footer b { color: var(--ink-soft); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .etapa { grid-template-columns: 34px 1fr; row-gap: 8px; }
+    .etapa-obs { grid-column: 1 / -1; }
+    .etapa > .chip { grid-column: 2; justify-self: start; }
+    .h-bloco { grid-template-columns: 1fr; gap: 12px; }
+    .h-badge { width: 96px; }
+  }
+</style>
+
+<header class="top">
+  <div class="top-inner">
+    <p class="eyebrow">GMS · Guaratinguetá Manufacturing System · 01 nov 2026</p>
+    <h1>Estado da Célula</h1>
+    <p class="thesis">
+      “Se uma funcionalidade não muda comportamento, ela é enfeite.”
+      <cite>GMS_Mestre, Parte A.0</cite>
+    </p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- PLACAR -->
+  <div class="placar">
+    <div class="kpi is-ok">
+      <span class="kpi-num">8/8</span>
+      <p class="kpi-label">Etapas com apontamento digital</p>
+      <p class="kpi-sub">Mandril a Finalização. Nenhuma etapa da mangueira depende de papel para registrar produção. A Debandagem saiu da fila de reforma e já tem a tela nova.</p>
+    </div>
+    <div class="kpi is-warn">
+      <span class="kpi-num">3</span>
+      <p class="kpi-label">Pontos de digitação dupla</p>
+      <p class="kpi-sub">Hora-Hora do Mandril, da Trançagem e da Montagem. Na Trançagem o Tempo Parado já é calculado sozinho (no ar desde 29/10); o resto da grade ainda é digitado. Quanto disso é cópia da ficha: a confirmar.</p>
+    </div>
+    <div class="kpi is-err">
+      <span class="kpi-num">1</span>
+      <p class="kpi-label">Controle ainda fora do GMS</p>
+      <p class="kpi-sub">O diário de bordo da autoclave (planilha mensal) — se ainda roda em paralelo, a confirmar. A Raspadinha AM-DM-02 já está numa tela de tablet.</p>
+    </div>
+  </div>
+
+  <!-- LINHA DE PRODUÇÃO -->
+  <section>
+    <div class="sec-head">
+      <h2>A linha, etapa por etapa</h2>
+      <span class="sec-tag">camada 1 · apontamento</span>
+    </div>
+    <p class="sec-note">
+      A ordem é a do processo físico, não uma priorização. Cada etapa mostra a tela e a versão
+      registradas no diário e o que ainda pesa nela. Onde o diário não confirma a versão que está no ar, aparece “a confirmar”.
+    </p>
+
+    <div class="legenda">
+      <span class="leg-item"><span class="leg-dot" style="background:var(--ok)"></span> Só sistema, tela reconstruída</span>
+      <span class="leg-item"><span class="leg-dot" style="background:var(--warn)"></span> Sistema + registro paralelo</span>
+      <span class="leg-item"><span class="leg-dot" style="background:var(--info)"></span> No sistema, tela legada</span>
+      <span class="leg-item"><span class="leg-dot" style="border:1px dashed var(--ink-soft)"></span> A confirmar no chão</span>
+    </div>
+
+    <div class="linha">
+
+      <div class="etapa s-duplo">
+        <span class="ord">01</span>
+        <div>
+          <div class="etapa-nome">Mandril</div>
+          <span class="etapa-tela">scr_mandril_1 · v0.5.5 · 05/10</span>
+        </div>
+        <p class="etapa-obs">
+          Carga do posto mais rápida (<b>Concurrent</b>), relógio do kanban só com operador ocioso, e
+          <b>Salvar Parcial e Enviar exigem metragem válida</b>. A Hora-Hora do Mandril continua no modelo antigo (~410 linhas):
+          o molde novo <b>scr_HoraHora_Mandril_2</b> está pronto, falta aplicar (MEL-224).
+        </p>
+        <span class="chip duplo">Hora-Hora manual</span>
+      </div>
+
+      <div class="etapa s-sistema">
+        <span class="ord">02</span>
+        <div>
+          <div class="etapa-nome">Tubo</div>
+          <span class="etapa-tela">scr_tubo_1 · 14/10 · versão a confirmar</span>
+        </div>
+        <p class="etapa-obs">
+          Ganhou <b>cancelar OP com motivo</b> (o material volta para a fila) e <b>exceção de OP</b> para pedir uma OP fora do plano (MEL-222).
+          O poka-yoke do diâmetro continua parado na pergunta da unidade (polegada ou milímetro).
+        </p>
+        <span class="chip sistema">Só sistema</span>
+      </div>
+
+      <div class="etapa s-duplo">
+        <span class="ord">03</span>
+        <div>
+          <div class="etapa-nome">Trançagem</div>
+          <span class="etapa-tela">scr_Trancagem_3 · v0.3.2 · 20/10 · versão a confirmar</span>
+        </div>
+        <p class="etapa-obs">
+          A <b>Hora-Hora v0.7.2</b> está no ar desde 29/10: <b>Tempo Parado automático e não editável</b> (MEL-255).
+          A <b>Raspadinha AM-DM-02</b> agora é tela de tablet (v0.5.1, com foto do pickômetro, testada pelo William em 22/10);
+          falta saber se a qualidade aceita o registro digital no lugar do papel. O consumo de bobina com sobra (MEL-095) segue aberto.
+        </p>
+        <span class="chip duplo">Hora-Hora + Raspadinha em teste</span>
+      </div>
+
+      <div class="etapa s-sistema">
+        <span class="ord">04</span>
+        <div>
+          <div class="etapa-nome">Cobertura</div>
+          <span class="etapa-tela">scr_Cobertura_2 · v0.3.3 · 06/10</span>
+        </div>
+        <p class="etapa-obs">
+          Ganhou o botão do <b>Hora-Hora</b> no menu lateral (a tela estava órfã) e o operador pode ser buscado digitando.
+          A Hora-Hora da Cobertura existe em duas telas (manual v0.2.0 e derivada v0.1.0).
+        </p>
+        <span class="chip sistema">Só sistema</span>
+      </div>
+
+      <div class="etapa s-sistema">
+        <span class="ord">05</span>
+        <div>
+          <div class="etapa-nome">Bandagem</div>
+          <span class="etapa-tela">scr_Bandagem_1 · v0.3.2 · 05/10</span>
+        </div>
+        <p class="etapa-obs">
+          A dúvida da fita foi decidida: <b>continua bloqueando</b> quando a mangueira leva fita e o código difere do Delineamento,
+          mas se o Delineamento diz “-” o operador não precisa digitar nada (MEL-206).
+        </p>
+        <span class="chip sistema">Só sistema</span>
+      </div>
+
+      <div class="etapa s-duplo">
+        <span class="ord">06</span>
+        <div>
+          <div class="etapa-nome">Vulcanização</div>
+          <span class="etapa-tela">scr_Vulcanizacao_1 · v0.3.5 · 05/10</span>
+        </div>
+        <p class="etapa-obs">
+          Não vulcaniza OP sem metragem recebida e tem trava para a tela não ficar presa em “Salvando”.
+          O fluxo <b>GMS_AutoResfriamentoVulca</b> marca sozinho o início do resfriamento (início + 110 min, fixo para todas as mangueiras; no ar desde 08/10).
+          O <b>Rel_&lt;Mês&gt;.xlsx</b> da autoclave: se ainda roda em paralelo, a confirmar.
+        </p>
+        <span class="chip duplo">Planilha a confirmar</span>
+      </div>
+
+      <div class="etapa s-sistema">
+        <span class="ord">07</span>
+        <div>
+          <div class="etapa-nome">Debandagem</div>
+          <span class="etapa-tela">scr_Debandagem_2 · v0.3.1 · 05/10</span>
+        </div>
+        <p class="etapa-obs">
+          Saiu do padrão antigo: fila que atualiza sozinha a cada 120 s, <b>não inicia sem metragem recebida</b> e alerta quando passa
+          mais de 10% da Vulcanização. Se a metragem que ela registra é sempre cópia da anterior (MEL-077), segue como pergunta aberta.
+        </p>
+        <span class="chip sistema">Só sistema</span>
+      </div>
+
+      <div class="etapa s-sistema">
+        <span class="ord">08</span>
+        <div>
+          <div class="etapa-nome">Finalização<br>Extração / Teste</div>
+          <span class="etapa-tela">scr_ExtracaoTeste_2 · v0.4.0 · 28/08 · scr_Finalização_1 · 15/10</span>
+        </div>
+        <p class="etapa-obs">
+          Na Finalização, o <b>Confirmar e Finalizar passa a somar todos os pallets</b> da ficha (antes olhava só o 1º e travava OP com mais de 26 lances).
+          Se o registro do pallet falhar, a impressão segue e o erro aparece com a mensagem real. Cabines L1/L2 na Extração/Teste.
+        </p>
+        <span class="chip sistema">Só sistema</span>
+      </div>
+
+    </div>
+
+    <div class="satelites">
+      <p class="sat-label">Fora da linha da mangueira</p>
+      <div class="linha">
+        <div class="etapa s-duplo">
+          <span class="ord">—</span>
+          <div>
+            <div class="etapa-nome">Montagem</div>
+            <span class="etapa-tela">scr_Montagem_HoraHora · v0.5.0 · 06/10</span>
+          </div>
+          <p class="etapa-obs">
+            13 células numa tela só. O cálculo de Tempo Excedido e de real líquido agora é o mesmo no menu e na Hora-Hora (MEL-195),
+            e uma OT aberta em outra célula <b>não bloqueia</b> o início (decisão do William, MEL-233). A regra de turno desta tela:
+            <b>não troca de turno sozinha</b>.
+          </p>
+          <span class="chip duplo">Hora-Hora manual</span>
+        </div>
+        <div class="etapa s-sistema">
+          <span class="ord">—</span>
+          <div>
+            <div class="etapa-nome">Bobinadeira</div>
+            <span class="etapa-tela">scr_Bobinadeira_1 · v0.5.0 · 06/10</span>
+          </div>
+          <p class="etapa-obs">
+            Concluir bloqueia metragem em branco ou zero, e Salvar/Concluir gravam vazio em vez de 0. Refugo da Bobinadeira
+            tem tela própria (v0.4.0) e entra no modelo do BI.
+          </p>
+          <span class="chip sistema">Só sistema</span>
+        </div>
+        <div class="etapa s-sistema">
+          <span class="ord">—</span>
+          <div>
+            <div class="etapa-nome">Painéis de TV</div>
+            <span class="etapa-tela">scr_PainelCelula_1 · v0.14.3 · scr_PainelMontagem_1 · v0.2.1 · 27/10</span>
+          </div>
+          <p class="etapa-obs">
+            Painel da <b>Célula</b> com filtro de dia e turno e produção por turno na ficha; painel da <b>Montagem</b> com galeria 4×3
+            e ficha de consulta ao tocar no card. Os dois têm card na Seleção de Gestão (v0.4.0, junto com Consulta de OP e Conferência SAP).
+            O desvio de velocidade da trançadeira (MEL-256, fonte DM_ENGRENAGENS_DESVIO) está no ar desde 29/10.
+          </p>
+          <span class="chip sistema">Só sistema</span>
+        </div>
+        <div class="etapa">
+          <span class="ord">—</span>
+          <div>
+            <div class="etapa-nome">Extrusora · Catenária</div>
+            <span class="etapa-tela">scr_Catenaria_1 · 06/10 · scr_ExtrusoraMandril_1</span>
+          </div>
+          <p class="etapa-obs">
+            A Catenária ganhou tela com números padronizados, lixeira com confirmação e zebra por ID. O uso real no chão
+            segue sem registro em lugar nenhum: <b>pergunta pra reunião</b>, não afirmação.
+          </p>
+          <span class="chip conf">A confirmar</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AS TRÊS CAMADAS -->
+  <section>
+    <div class="sec-head">
+      <h2>Onde o papel ainda vive</h2>
+      <span class="sec-tag">o veredito honesto</span>
+    </div>
+    <p class="sec-note">
+      A pergunta “papel ou sistema?” não se responde por etapa — se responde por camada. O apontamento
+      já virou. A qualidade acabou de entrar no tablet, e o que resta é o registro de máquina e a aceitação da qualidade.
+    </p>
+
+    <div class="camadas">
+      <div class="camada">
+        <div class="camada-top"><h3>Apontamento</h3></div>
+        <p class="camada-verdict v-ok">Digital nas 8 etapas</p>
+        <ul>
+          <li>Toda ficha de etapa grava direto na <b>ficha_producao</b>.</li>
+          <li>As telas de etapa passaram por uma rodada de correção em outubro: metragem válida antes de enviar, atualização automática só com operador ocioso e trava contra tela presa em “Salvando”.</li>
+          <li>Tubo e Trançagem agora cancelam OP com motivo e devolvem o material à fila.</li>
+        </ul>
+      </div>
+
+      <div class="camada">
+        <div class="camada-top"><h3>Hora-Hora</h3></div>
+        <p class="camada-verdict v-warn">Digital, em parte já automática</p>
+        <ul>
+          <li>Existe em <b>Mandril</b>, <b>Trançagem</b>, <b>Cobertura</b> e <b>Montagem</b>.</li>
+          <li>Na Trançagem o <b>Tempo Parado é automático</b> e o motivo é cobrado quando há parada (no ar desde 29/10).</li>
+          <li>No Mandril e no Tubo a tela segue no modelo antigo; o molde novo está pronto e falta aplicar.</li>
+          <li>Quanto da grade ainda é digitado de novo a partir da ficha: <b>a confirmar</b>.</li>
+        </ul>
+      </div>
+
+      <div class="camada">
+        <div class="camada-top"><h3>Qualidade e registro</h3></div>
+        <p class="camada-verdict v-warn">Quase tudo dentro do sistema</p>
+        <ul>
+          <li><b>Raspadinha AM-DM-02</b> — já em tela de tablet, com folha por trança, coleta na hora real e carta X̄-R. Falta a qualidade aceitar o registro digital no lugar do papel.</li>
+          <li><b>Rel_&lt;Mês&gt;.xlsx</b> — diário de bordo da autoclave; o início do resfriamento já sai sozinho, mas se a planilha ainda roda em paralelo é <b>a confirmar</b>.</li>
+          <li>Os dados mestres <b>DM_*</b> seguem em Excel: aceitos como tabela de domínio, proibidos para transação.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUTURO -->
+  <section>
+    <div class="sec-head">
+      <h2>Para onde vai</h2>
+      <span class="sec-tag">horizonte h1 · h2 · h3</span>
+    </div>
+    <p class="sec-note">
+      Cada horizonte só existe se o anterior existir. Mostrar a corrente é o que separa plano de promessa —
+      nada aqui acontece fora de ordem.
+    </p>
+
+    <div class="horiz">
+
+      <div class="h-bloco">
+        <div class="h-badge h1b"><span>H1</span><small>dá pra fazer agora</small></div>
+        <div>
+          <p class="h-titulo">Matar a digitação dupla e o papel que sobrou</p>
+          <p>
+            <b>Já entrou:</b> Tempo Parado automático na Hora-Hora da Trançagem (MEL-255), Raspadinha AM-DM-02 no tablet,
+            início do resfriamento da autoclave sozinho (MEL-240), painéis de TV da Célula e da Montagem e a
+            conferência diária GMS × SAP × Packing (validada em 08/10).
+          </p>
+          <p>
+            <b>Falta:</b> aplicar o molde novo da Hora-Hora no Mandril e no Tubo (MEL-224), e a aceitação da qualidade
+            para aposentar o papel da Raspadinha.
+          </p>
+          <div class="corrente">
+            ficha confiável <span class="seta">→</span> Hora-Hora derivado <span class="seta">→</span> tempo de ciclo real <span class="seta">→</span> gargalo e OEE de verdade
+          </div>
+        </div>
+      </div>
+
+      <div class="h-bloco">
+        <div class="h-badge h2b"><span>H2</span><small>depende de dado consolidado</small></div>
+        <div>
+          <p class="h-titulo">Prever, não só registrar</p>
+          <p>
+            <b>IA local GMS/IA (MEL-258):</b> responde sobre a produção a partir de exports de Excel, rodando no próprio PC
+            (Ollama + DuckDB), só leitura. Já tem 6 exports, 31 fatos marcados “a conferir” e 46 perguntas-semente; falta o William confirmar os fatos
+            e fazer o primeiro treino real.
+          </p>
+          <p>
+            <b>Simulador headcount × demanda (MEL-259):</b> calibrado e testado, mas a <b>meta de erro diário não foi atingida</b>
+            (fora da amostra: MAPE 24,2%, WAPE 22,5%; perde da mediana ingênua em 5 de 6 etapas). Falta a escala real de pessoas.
+          </p>
+          <p>
+            Dataverse, previsão por OP e MTBF/MTTR seguem na fila: o ambiente de Dev ainda espera a permissão System Customizer.
+          </p>
+          <div class="corrente">
+            Frente 2 <span class="seta">→</span> Dataverse <span class="seta">→</span> delegação, offline nativo e IA sobre os dados
+          </div>
+        </div>
+      </div>
+
+      <div class="h-bloco">
+        <div class="h-badge h3b"><span>H3</span><small>visão, não prazo</small></div>
+        <div>
+          <p class="h-titulo">A supervisão deixa de caçar problema</p>
+          <p>
+            Um agente vigia o processo e chega no supervisor com a exceção já ranqueada e a ação preparada —
+            o humano aprova, não descobre. E o simulador de fila mostra o impacto de priorizar uma OP
+            <b>antes</b> de confirmar.
+          </p>
+          <p>
+            <b>Isto não tem data e não deve ser apresentado como se tivesse.</b> Depende inteiramente de H1 e H2
+            estarem maduros.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- DECISÕES -->
+  <section>
+    <div class="sec-head">
+      <h2>Travado esperando gente</h2>
+      <span class="sec-tag">o que levar pra reunião</span>
+    </div>
+    <p class="sec-note">
+      Nada aqui depende de código. Todos são decisão ou resposta de alguém — por isso estão parados.
+      Dias contados até 01/11, a partir da data em que a pendência entrou no diário. Os mais velhos
+      têm de <b>66 a 76 dias</b>. O <b>dMotivoParada</b>, que estava na lista em setembro, foi resolvido em 13/10 e saiu.
+    </p>
+
+    <div class="tabela-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>O quê</th>
+            <th>Quem responde</th>
+            <th>Parado há</th>
+            <th>O que destrava</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Arquivo do fluxo Monitor do Power Automate</b></td>
+            <td>Quem administra o fluxo</td>
+            <td class="dias alerta-dias">76 dias</td>
+            <td>A cadeia sincronizada entre etapas: Tubo enxergar as trançadeiras, Mandril enxergar os dois (C23/C24)</td>
+          </tr>
+          <tr>
+            <td><b>Unidade do diâmetro na ficha: polegada ou milímetro</b></td>
+            <td>Qualidade / operadores</td>
+            <td class="dias alerta-dias">75 dias (Tubo) · 69 dias (Trançagem)</td>
+            <td>Dois poka-yoke de diâmetro de uma vez, mais a ficha técnica (MEL-091, 097, 164). A spec já se sabe: é polegada</td>
+          </tr>
+          <tr>
+            <td><b>Como a bobina com sobra volta pra fila, na prática</b></td>
+            <td>Operadores da Trançagem</td>
+            <td class="dias alerta-dias">66 dias</td>
+            <td>O modelo de consumo da Trançagem (MEL-095): dividir a bobina ou simplificar o registro</td>
+          </tr>
+          <tr>
+            <td><b>Permissão System Customizer no ambiente de Dev</b></td>
+            <td>Admin do Power Platform</td>
+            <td class="dias alerta-dias">66 dias</td>
+            <td>A prova de conceito do Dataverse — e com ela todo o H2 (MEL-049)</td>
+          </tr>
+          <tr>
+            <td><b>A qualidade aceita a folha digital como registro válido da AM-DM-02, ou o papel continua em paralelo</b></td>
+            <td>Qualidade</td>
+            <td class="dias alerta-dias">66 dias</td>
+            <td>Aposentar o papel da Raspadinha (C5); a tela já está no tablet</td>
+          </tr>
+          <tr>
+            <td><b>Data row limit do app: 500 padrão ou 2.000</b></td>
+            <td>A confirmar</td>
+            <td class="dias alerta-dias">32 dias</td>
+            <td>Define se o Hora-Hora de 2 dias pode voltar a uma consulta só (MEL-013)</td>
+          </tr>
+          <tr>
+            <td><b>Régua do turno útil: 440 min (número da reunião) ou 517 min (janela do Hora-Hora do 1º turno)</b></td>
+            <td>Supervisão</td>
+            <td class="dias alerta-dias">32 dias</td>
+            <td>Autonomia e semáforo de OP calculados sobre a régua certa (MEL-189)</td>
+          </tr>
+          <tr>
+            <td><b>Regravar ou não os registros de 05 a 27/10 entre 22:20 e 22:40 que ficaram com Turno 2</b></td>
+            <td>William</td>
+            <td class="dias">5 dias</td>
+            <td>Contagem feita só por leitura: 146 linhas de Hora-Hora e 46 fins de etapa na ficha (MEL-250)</td>
+          </tr>
+          <tr>
+            <td><b>Engenharia confirmar a velocidade das linhas TH02-TEXTILE</b></td>
+            <td>Engenharia</td>
+            <td class="dias">3 dias</td>
+            <td>Tirar a marca “validar” das 12 linhas já cadastradas na DM_ENGRENAGENS (MEL-251)</td>
+          </tr>
+          <tr>
+            <td><b>Higienização dos dados: CSV novo da ficha e da Hora-Hora e 5 decisões</b></td>
+            <td>William</td>
+            <td class="dias">1 dia</td>
+            <td>Aceite da Fase 1 (hoje a ficha dá 7 contra 46 esperados porque o export vai só até 06/10) (MEL-258)</td>
+          </tr>
+          <tr>
+            <td><b>IA local: rodar --limpar nos fatos e --treinar com as perguntas-semente</b></td>
+            <td>William</td>
+            <td class="dias">hoje</td>
+            <td>Primeiro treino real e a bateria de 20 perguntas antes de mostrar à supervisão (MEL-258)</td>
+          </tr>
+          <tr>
+            <td><b>Simulador: escala real de pessoas e confirmar a hora extra do 2º turno (22:20–23:20) caindo no 3º</b></td>
+            <td>William</td>
+            <td class="dias">hoje</td>
+            <td>Reduzir o erro diário, que hoje não atingiu a meta (MEL-259)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ALERTA DE GOVERNANÇA -->
+  <section>
+    <div class="alerta">
+      <h3>Aviso de governança — numeração destravada, com uma ressalva</h3>
+      <p>
+        O <code>GMS_Diario.md</code> foi <b>reconstruído em 01/10</b> e está em dia: último ID real <code>MEL-259</code>,
+        próximo livre <code>MEL-260</code>, e a checagem da gramática passa sem erro. O aviso de “numeração travada” de setembro
+        não vale mais.
+      </p>
+      <p>
+        Ressalva: o trecho de <b>04 a 30/09 é aproximado</b> (reconstruído, linhas com a tag <code>#recon</code>), e há cerca de
+        <b>16 linhas</b> entre 14/10 e 30/10 ainda com <code>MEL-???</code> no lugar do número. Na dúvida sobre um item de setembro,
+        o diário é pista; a pasta de telas é a verdade.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      <b>Como este mapa é montado:</b> tudo aqui vem do <b>GMS_Mestre.md</b> (norma e conceitos), do
+      <b>GMS_Diario.md</b> (posição de 01/11/2026) e do <b>GMS_Indice.md</b>. Nada foi inferido sem marca —
+      o que não está registrado aparece como <b>a confirmar</b>, e isso é pergunta pra reunião, não lacuna.
+    </p>
+    <p>
+      <b>Prioridade de raciocínio (Mestre, P7):</b> confiabilidade do dado → esforço do operador →
+      poder de decisão da supervisão → estética. Nesta ordem, sempre.
+    </p>
+  </footer>
+
+</div>
+
+</body></html>
