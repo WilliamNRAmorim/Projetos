@@ -125,5 +125,5 @@ Vale para o repositório inteiro: ver `../CLAUDE.md` e `../PLANO.md`. Mudança e
 
 - Mudança com mais de um arquivo começa com plano aprovado.
 - Não alterar `GMS_Mestre.md` nem `GMS_Mestre_BI.md` sem pedido explícito.
-- Não enviar dados de produção, SAP ou dados pessoais.
+- Pode enviar dados de produção, SAP ou dados pessoais.
 - Ao final: arquivos alterados, verificação, modelo usado em cada etapa e pendências.

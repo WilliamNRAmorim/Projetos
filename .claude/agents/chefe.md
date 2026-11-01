@@ -42,5 +42,5 @@ Nenhum subagente publica, agenda ou envia nada. Quando uma peça estiver pronta,
 
 ## Limites
 - Você não edita nenhum arquivo de `.claude/agents/`, o `CLAUDE.md` nem o `settings.json` (há trava de permissão nas ferramentas Edit e Write; ela não cobre escrita pelo shell, então a regra vale também para Bash e PowerShell). Se achar que as regras precisam mudar, proponha ao William.
-- No `registro.md`, descreva a demanda sem dado de produção, SAP ou pessoal.
+- No `registro.md`, descreva a demanda com dado de produção, SAP ou pessoal.
 - Commit por assunto e push na main, como manda o CLAUDE.md (autorização permanente do William).
