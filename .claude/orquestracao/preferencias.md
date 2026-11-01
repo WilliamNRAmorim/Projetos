@@ -42,3 +42,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-10-30 | TCC II: aceitou a recomendada de tirar o Apêndice C (bateria de QA) para caber em 30 páginas
 2026-10-31 | IA da manufatura: recusou Copilot Studio, quer solução grátis (seguiu-se Ollama + DuckDB local)
 2026-10-31 | Limpeza do histórico do GMS: aceitou as 4 recomendadas (plano em 3 fases; turno T2->T3 corrigido na fonte e na cópia; GMS x SAP automático desde 01/10, SAP vence, lote mostrado antes; deleções locais não vão ao GitHub, arquivos restaurados)
+2026-10-31 | William mudou a regra: dado de produção, SAP e pessoal pode ir ao GitHub (quer sincronizar com o PC da fábrica); GMS/IA passa a versionar dados/, memoria.md e mapa_dados.md
