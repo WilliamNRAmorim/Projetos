@@ -33,7 +33,7 @@ Parada real e setup: definicao do GMS/CLAUDE.md; o Tempo Parado do Hora-Hora e o
 - 3o turno: 22:20 a 05:19 do dia seguinte (1340 a 319), 420 min.
 - Dia produtivo (data_ref): comeca as 05:20. Apontamento antes das 05:20 pertence ao dia anterior.
 - Mesma fronteira em fx_Turno, fx_InicioTurnoMin, fx_GradeHoraHora e dTurno do BI.
-- Historico: de 05/10 a ~29/10/2026 o app usou 3o turno a partir de 22:41. Registros desse periodo
+- Historico: ate 27/10/2026 o app usou 3o turno a partir de 22:41 (o problema vem de antes de 05/10). Registros desse periodo
   feitos entre 22:20 e 22:40 estao gravados como Turno 2 (janela "22:00 - 22:20" com 41 min).
   Antes de 05/10 a virada do 1o para o 2o turno ja foi 13:47/13:48 em parte do app.
   Para comparar turnos nesses periodos, avise que a fronteira mudou.
