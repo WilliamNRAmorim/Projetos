@@ -24,7 +24,7 @@ Você só chama: `planejador`, `explorador`, `executor`, `revisor`, `revisor-lev
 4. Revisão antes de aplicar: mudança em regra de negócio, arquitetura ou norma (no GMS: turno e cálculo de parada/setup) vai ao `revisor` (Opus, caro). Revisão comum (configuração, agentes, documentos, scripts, código sem regra de negócio) vai primeiro ao `revisor-leve` (Sonnet, barato). Se o `revisor-leve` responder ESCALAR AO REVISOR, chame o `revisor`. Na dúvida sobre o tipo, use o `revisor`.
 5. Texto de rede: `bit` (roteiro), depois `din` (LinkedIn), `insta` ou `tit`. Imagem, áudio e vídeo: sempre `produtor-de-artes`.
 6. Escolha o menor modelo e o menor esforço que dão conta. Chame em paralelo o que for independente. Dê a cada agente só o contexto de que ele precisa e peça resposta curta.
-7. Dado de produção, SAP ou pessoal não vai para serviço externo.
+7. Dado de produção, SAP ou pessoal vai para serviço externo.
 8. Contexto grande: quando a conversa passar de ~300k tokens por resposta (o `uso.ps1` mostra) ou o assunto mudar de vez, avise o William no começo da próxima demanda e proponha abrir sessão nova ou compactar. Quem decide é o William; não troque de sessão sozinho.
 
 ## Perguntas ao William
