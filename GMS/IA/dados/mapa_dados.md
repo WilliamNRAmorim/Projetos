@@ -708,3 +708,25 @@ Escrito pelo Claude em 01/11/2026, a conferir. Cada nota traz a fonte entre colc
 - Meses somados diferem do periodo inteiro: troca de OP que atravessa meses aparece maior nos meses. [CU 4]
 - Numero de referencia (16/05 a 16/09/2026): producao boa SAP 596.547 m; faltou 211,6 m + sobrou 369,3 m = 580,9 m; 974 ppm (SAP). [CU 6]
 - Em SQL, prefira LEFT JOIN ... IS NULL ou NOT EXISTS para achar OP sem par; "NOT IN (subconsulta)" devolveu 0 com a MB51 deste cache. [obs]
+
+### Triagem das ligacoes candidatas (Claude, 01/11/2026, a conferir)
+Feita olhando o nome e os exemplos de cada coluna. O cabecalho das abas detail1 e detalhes1 da Mascara esta na 1a linha: col_3 = Material, col_4 = Order, col_5 = Material Description, col_10 = Material Document, col_11 = Material Doc.Item, col_13 = Qty in unit of entry, col_17 = Quantity, col_18 = User Name.
+
+**Valem (chave real):**
+- OP: ficha_producao.op = mb51__sheet1.order = mascara_de_producao__mb51.order = mascara_de_producao__coois.order = registrosinspecao.op_id = tiposerros.op_id = detail1.col_4 = detalhes1.col_4.
+- Material SAP: mb51__sheet1.material = mascara_de_producao__mb51.material = coois.material = detail1.col_3 = detalhes1.col_3. Descricao: material_description nas mesmas tabelas = detail1.col_5 = detalhes1.col_5.
+- Documento de material: mb51__sheet1.material_document = mascara_de_producao__mb51.material_document = detail1.col_10 = detalhes1.col_10. O item so vale junto do documento (material_document + material_doc_item); sozinho e numero pequeno.
+- Usuario SAP: mb51__sheet1.user_name = mascara_de_producao__mb51.user_name = detail1.col_18 = detalhes1.col_18.
+- Trancadeira: ficha_producao.trancadeira = registrosinspecao.trancadeira = tiposerros.trancadeira = mascara_de_producao__plano.braider (codigos TH/TM).
+
+**Mesmo atributo, mas nao e chave (serve para filtrar ou agrupar, nao para juntar linha com linha):**
+- Bitola: ficha_producao.bitola = cadastro_mangueiras.bitola = plano.dash (dash e a bitola).
+- Nome da mangueira: ficha_producao.mangueira, registrosinspecao.mangueira, bd_packing_list.pn, plano.pn, cadastro_mangueiras.mangueira_hose e o material SAP batem de 88% a 98%. Mesmo assim, ligue pela OP (veja Ligacoes que valem). mascara_de_producao__mb51.col_27 esta 100% vazia (9 nomes soltos); nao use.
+- Codigos de 3 letras repetidos entre abas: production_supervisor (HAS, FIT, HOS), mrp_controller, storage_location, unit_of_entry, movement_type_text.
+- Copias: mascara_de_producao__mb51 x mb51__sheet1 e detail1 x detalhes1 tem o mesmo leiaute. Use mb51__sheet1, que e mais recente.
+
+**Falso positivo (ignore):**
+- Toda ligacao com bd_packing_list__data_base.id ou .slice; elas so batem com contagem e metragem.
+- Toda ligacao entre colunas de quantidade ou de numero pequeno: bitola x quantidade, concentricidade, carretel_entrada/saida, qtd_turno*, quantidade_*, defeito_*, coois.order_quantity_gmein, material_doc_item, detail1/detalhes1 col_11, col_13 e col_17, registrosinspecao.quantidade/concentricidade.
+- ficha_producao.datafinalizacao x tiposerros.datahorarefugo: sao datas do mesmo periodo, nao uma chave. Junte pela OP.
+- calculo_de_horas_hose.production_supervisor x material: e uma tabela dinamica (Row Labels, Sum of horas). A coluna tem codigo de material com nome errado; nao use para juntar.
