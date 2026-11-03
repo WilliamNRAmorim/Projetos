@@ -94,8 +94,8 @@ Visuais de análise: 2 (limite da §B.6.3: 8).
 |---|---|---|---|---|---|
 | Tabela de conteúdo de mão de obra | `dEtapa[Etapa no Fluxo]`, `SVG Conteúdo` (imagem 400 × 29) | 16 | 92 | 616 | 340 |
 | Tabela da leitura automática | `Leitura Automática` (uma coluna, fonte 11, coluna 556) | 648 | 92 | 616 | 340 |
-| Colunas agrupadas: metros por dia, por mês | eixo `dCalendario[AnoMês]` (categórico, crescente); `Vazão Trançagem (m/dia)`, `Vazão Cabine (m/dia)` | 16 | 444 | 616 | 216 |
-| Colunas agrupadas: pessoas por dia, por mês | eixo `dCalendario[AnoMês]` (categórico, crescente); `Pessoas Trançagem (por dia)`, `Pessoas Cabine (por dia)` | 648 | 444 | 616 | 216 |
+| Colunas agrupadas: metros por dia, por mês | eixo `dCalendario[Mês/Ano]` ("dez/25", categórico, ordem pela `AnoMês`); `Vazão Trançagem (m/dia)`, `Vazão Cabine (m/dia)` | 16 | 444 | 616 | 216 |
+| Colunas agrupadas: pessoas por dia, por mês | eixo `dCalendario[Mês/Ano]` ("dez/25", categórico, ordem pela `AnoMês`); `Pessoas Trançagem (por dia)`, `Pessoas Cabine (por dia)` | 648 | 444 | 616 | 216 |
 
 Visuais de análise: 4.
 
@@ -163,8 +163,8 @@ Texto alternativo: "Seis cartões, da trançagem à cabine: pessoas por dia, met
   desligada; totais desligados. A medida separa os parágrafos com quebra de linha (`UNICHAR(10)`), que a tabela mostra
   com a quebra automática ligada. Sem dado: "Sem dados no filtro."
 - **Gráficos mensais (03/11/2026; substituem as linhas diárias, que tinham muito pico e as 2 linhas sobrepostas):**
-  colunas agrupadas, eixo `dCalendario[AnoMês]` categórico e crescente (rótulo `202512`; o `Mês` "jan".."dez" sairia
-  em ordem alfabética, ver seção 7). Cada coluna é a média dos dias produtivos do mês (mesma regra dos KPIs).
+  colunas agrupadas, eixo `dCalendario[Mês/Ano]` categórico ("dez/25"; coluna do Bloco 2b, classificada por `AnoMês`
+  no modelo, então a ordem é cronológica). Cada coluna é a média dos dias produtivos do mês (mesma regra dos KPIs).
   Trançagem azul `#2A78D6`, cabine laranja `#EB6834` nos 2 gráficos. Rótulo de dado ligado em todas as colunas
   (metros `#,0` a 8 pt, pessoas `#,0.0` a 9 pt), eixo Y oculto e sem grade, espaço entre categorias 8%, legenda no
   topo em 10. Títulos: "Metros por dia · média dos dias produtivos, por mês" e "Pessoas por dia · média dos dias
@@ -279,9 +279,10 @@ Cartões de etapa esperados (Data de Referência, mesmo período):
 - **Data do dia diferente das páginas atuais.** `ficha_producao[DataProducao]` e `Etapas[Data]` usam a data civil,
   sem a virada das 05:20. O piloto usa a `Data de Referência` (§A.3), então um mesmo dia pode mostrar números
   diferentes do piloto e da Visão Geral. É esperado, e a diferença é a mesma explicada na 6.4.
-- **Rótulo do mês nos gráficos mensais:** sai `202512` porque `dCalendario[AnoMês]` é número. Para "dez/25" é preciso
-  uma coluna de texto nova no `dCalendario` (ex.: `"Mês Ano", FORMAT([Date], "mmm/yy", "pt-BR")`, classificada por
-  `AnoMês`) e trocar `EIXO_MES` no gerador. Mudança no modelo: decisão do William, não aplicada.
+- **Rótulo do mês nos gráficos mensais: resolvido (03/11/2026).** Coluna `dCalendario[Mês/Ano]` ("dez/25", classificada
+  por `AnoMês`, Bloco 2b de `Medidas_FluxoTrancagemCabine.md`), aprovada pelo William e aplicada **só na cópia de
+  teste**. **Risco:** precisa ser colada no modelo real antes de levar as páginas ao `GMS_Painel`; sem ela os 2
+  gráficos mensais quebram (campo inexistente).
 - **Ordem do Mês:** `dCalendario[Mês]` ("jan", "fev"…) não tem "Classificar por coluna" no modelo e a segmentação sai
   em ordem alfabética. Ajuste de 1 clique: modelo → `dCalendario[Mês]` → Classificar por coluna → `Mês Nº`. Muda a
   ordem do Mês em qualquer visual que o use (para melhor), por isso é decisão do William.
@@ -300,5 +301,5 @@ Pendente: números por turno, segmentações e visuais ainda não foram montados
 
 ## Como regenerar as 2 páginas (código)
 1. Feche o `GMS_Teste.pbip` no Desktop e rode, nesta pasta: `python gerar_paginas_fluxo.py` (padrão: `..\..\..\PowerBI\Modelo_PBIP_teste\GMS_Modelo.Report`; outro `.Report` vai como 1º argumento, e fora de pasta `*_teste` só com `--forcar`).
-2. O script apaga e recria só `pg_fluxo_1` e `pg_fluxo_2`, põe as 2 no fim do `pages.json` sem trocar a página ativa, **não mexe no `report.json` nem no tema** e valida no fim (JSON, campos no TMDL, nomes, margem de 16 e simetria em 1280 × 720, sobreposição, tema escuro não registrado); `--validar` só confere.
+2. O script apaga e recria só `pg_fluxo_1` e `pg_fluxo_2`, põe as 2 no fim do `pages.json` sem trocar a página ativa, **não mexe no `report.json` nem no tema** e valida no fim (JSON, campos no TMDL, nomes, margem de 16 e simetria em 1280 × 720, sobreposição, tema escuro não registrado, `dCalendario[Mês/Ano]` classificada por `AnoMês`); `--validar` só confere.
 3. Ajuste feito à mão no Desktop nessas 2 páginas some na próxima geração: leve o ajuste para o script antes de regerar.

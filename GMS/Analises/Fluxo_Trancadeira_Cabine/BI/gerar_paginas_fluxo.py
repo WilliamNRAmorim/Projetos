@@ -370,10 +370,11 @@ def v_tabela_leitura():
     }
 
 
-# Eixo dos graficos mensais: dCalendario[AnoMes] (numero AAAAMM, ex.: 202512). E a unica coluna de mes do modelo que
-# ordena certo sozinha; "Mes" ("jan".."dez") nao tem Classificar por coluna e sairia em ordem alfabetica. Rotulo curto
-# "dez/25" exige coluna de texto nova no dCalendario (decisao do William; ver LEIAME secao 7).
-EIXO_MES = col("dCalendario", "AnoMês")
+# Eixo dos graficos mensais: dCalendario[Mes/Ano] ("dez/25"), coluna calculada aprovada pelo William em 03/11/2026
+# (Bloco 2b de Medidas_FluxoTrancagemCabine.md), com sortByColumn = AnoMes no modelo: a ordem cronologica vem do
+# modelo e o visual so pede ordem crescente do proprio eixo. Precisa existir no modelo real antes do GMS_Painel.
+EIXO_MES = col("dCalendario", "Mês/Ano")
+ORDEM_EIXO_MES = "AnoMês"  # a validacao confere que o TMDL classifica o eixo por esta coluna
 COR_TRANC, COR_CABINE = HEX_AZUL, HEX_LARANJA  # iguais nos 2 graficos (cabine = laranja das etapas destaque)
 
 
@@ -551,6 +552,25 @@ def le_modelo(rel):
     return tabelas
 
 
+def ordem_coluna(rel, tabela, coluna):
+    """sortByColumn de uma coluna no TMDL do modelo (None se nao tiver)."""
+    caminho = le(rel / "definition.pbir").get("datasetReference", {}).get("byPath", {}).get("path")
+    for f in ((rel / caminho).resolve() / "definition" / "tables").glob("*.tmdl"):
+        atual_tab, atual_col = None, None
+        for linha in f.read_text(encoding="utf-8-sig").splitlines():
+            m = RX_OBJ.match(linha)
+            if m:
+                tipo, nome = m.group(1), nome_tmdl(m.group(2))
+                if tipo == "table":
+                    atual_tab, atual_col = nome, None
+                else:
+                    atual_col = nome if tipo == "column" else None
+                continue
+            if atual_tab == tabela and atual_col == coluna and linha.strip().startswith("sortByColumn:"):
+                return nome_tmdl(linha.split(":", 1)[1].strip())
+    return None
+
+
 def campos(o):
     """Todas as referencias Column/Measure com Entity (SourceRef.Source de filtro e ignorado)."""
     if isinstance(o, dict):
@@ -668,6 +688,11 @@ def valida(rel):
         if not ok:
             erros.append(f"pg_fluxo_2/{g}: precisa ser colunas agrupadas por {qref(EIXO_MES)} (categorico, crescente), "
                          "2 series e rotulos ligados")
+    if modelo is not None:
+        ordem = ordem_coluna(rel, "dCalendario", EIXO_MES["Column"]["Property"])
+        if ordem != ORDEM_EIXO_MES:
+            erros.append(f"dCalendario[{EIXO_MES['Column']['Property']}]: sortByColumn deveria ser {ORDEM_EIXO_MES} "
+                         f"no TMDL (achei {ordem!r}); sem isso o mes sai em ordem alfabetica")
     if erros:
         print("VALIDACAO FALHOU:")
         for e in erros:

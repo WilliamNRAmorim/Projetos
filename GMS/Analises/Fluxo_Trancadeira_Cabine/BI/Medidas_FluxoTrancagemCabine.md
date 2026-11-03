@@ -436,6 +436,32 @@ createOrReplace
 Os ativos são `Data de Referência` e `Turno` (regra de ligação da §A.3). O inativo só serve às medidas de
 `Conferência`, para bater 1:1 com o HTML, que conta o dia pela data civil do fim.
 
+## Bloco 2b — coluna de calendário (`dCalendario[Mês/Ano]`, aprovada pelo William em 03/11/2026)
+
+Rótulo legível do mês ("dez/25") no eixo dos 2 gráficos mensais da página 2. Coluna calculada nova no `dCalendario`
+(tabela calculada), classificada por `AnoMês` para sair em ordem cronológica. Nenhuma outra coluna muda. Já aplicada
+na cópia de teste (`Modelo_PBIP_teste`); no modelo real, colar antes de levar a página ao `GMS_Painel`.
+
+O "/" dentro de um padrão do `FORMAT` é o separador de data do idioma, não um caractere fixo. Por isso o texto é
+montado com `LOWER ( FORMAT ( ..., "mmm" ) )`, a mesma regra da coluna `Mês` já existente, mais "/" e os 2 dígitos do
+ano: dá sempre "dez/25", sem depender do separador.
+
+```
+createOrReplace
+
+	ref table dCalendario
+
+		column 'Mês/Ano' = LOWER ( FORMAT ( dCalendario[Date], "mmm", "pt-BR" ) ) & "/" & RIGHT ( YEAR ( dCalendario[Date] ), 2 )
+			dataType: string
+			summarizeBy: none
+			sortByColumn: AnoMês
+
+			annotation SummarizationSetBy = Automatic
+```
+
+Conferir depois de aplicar: `dCalendario[Mês/Ano]` de 01/12/2025 = "dez/25"; numa tabela com `Mês/Ano`, a ordem é
+jan/25, fev/25… (pela `AnoMês`), nunca alfabética.
+
 ## Bloco 3 — Medidas (tabela `Medidas`)
 
 Regras aplicadas: `DIVIDE` sempre; nenhuma `COALESCE(x, 0)` em exibição (sem dado = BLANK). O `+ 0` dentro de
@@ -1036,4 +1062,5 @@ são cerca de 5.000 m (ver LEIAME 5.4).
 2026-11-03 | DECISÃO | PowerBI/Fluxo Tranç→Cabine | v0.2 | C4 | Lead time oficial do trecho trançagem→cabine = mediana única do período (K07/C4); a média das medianas diárias do painel HTML fica só como conferência. WIP de Little = vazão por dia de calendário × lead time médio
 2026-11-03 | PENDÊNCIA | PowerBI/turno | — | MEL-250 B.2.3 | Fronteira de turno divergente no modelo: Etapas[Turno] e ficha_producao[Turno_Producao] usam 320/820/1340 (2º turno às 13:40), a medida Turno Atual usa 320/828/1361; a norma e o piloto Fluxo Tranç→Cabine (fn_Turno) usam 320/837/1340. Revisor/William decidem a correção; o piloto não altera o modelo existente
 2026-11-03 | PENDÊNCIA | PowerBI/fPessoasEtapaOP | — | B.3.3 | Fuso da ficha_producao assumido como hora local (FichaJaEmHoraLocal = true), pelo uso do modelo atual; William confere numa ficha conhecida antes de aplicar
+2026-11-03 | DECISÃO | PowerBI/dCalendario | v0.2 | MEL-??? | Coluna calculada nova dCalendario[Mês/Ano] ("dez/25", LOWER(FORMAT(Date,"mmm","pt-BR")) & "/" & 2 dígitos do ano), classificada por AnoMês. Motivo: rótulo legível e em ordem cronológica do mês no eixo dos gráficos mensais do piloto Fluxo Tranç→Cabine (AnoMês é número 202512 e Mês sai em ordem alfabética). Aprovada pelo William; aplicada na cópia de teste, falta o modelo real
 ```
