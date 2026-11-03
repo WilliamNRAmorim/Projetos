@@ -1,0 +1,39 @@
+// Conferência do piloto Fluxo Tranç→Cabine contra o painel HTML (todos os dias, sem filtro).
+// Onde rodar: Power BI Desktop, modelo de GMS/PowerBI/Modelo_PBIP_teste/GMS_Teste.pbip, depois de Atualizar,
+// em Exibição de consulta DAX: colar, Executar.
+// As colunas "HTML · ..." usam a regra do painel HTML (dia = data civil do fim, relacionamento inativo
+// fPessoasEtapaOP[Data do Fim]) e devem bater 1:1 com ele:
+//   vazão cabine 5.499 m/dia · pessoas trançagem/cabine 6,9 / 5,0 · eficiência de balanceamento 57%
+//   lead time 31 h (média das medianas diárias) · WIP de Little 7.196 m · CV 23% · rendimento 85%
+// "HTML · Lead Time Mediana Única" e "HTML · Lead Time Médio" não têm número no HTML: são o K07 e o W de Little
+// calculados pela data civil. As colunas "Oficial · ..." usam a Data de Referência (virada das 05:20) e a
+// fórmula nova do Little; não precisam bater com o HTML.
+EVALUATE
+ROW (
+    "HTML · Vazão Cabine (m/dia)", [Conf HTML · Vazão Cabine (m/dia)],
+    "HTML · Pessoas Trançagem (por dia)",
+        CALCULATE ( [Pessoas Trançagem (por dia)], USERELATIONSHIP ( fPessoasEtapaOP[Data do Fim], dCalendario[Date] ) ),
+    "HTML · Pessoas Cabine (por dia)",
+        CALCULATE ( [Pessoas Cabine (por dia)], USERELATIONSHIP ( fPessoasEtapaOP[Data do Fim], dCalendario[Date] ) ),
+    "HTML · Pessoas Trançagem / Cabine", [Conf HTML · Pessoas Trançagem / Cabine],
+    "HTML · Eficiência de Balanceamento", [Conf HTML · Eficiência de Balanceamento],
+    "HTML · Lead Time Média das Medianas (h)", [Conf HTML · Lead Time (h)],
+    "HTML · Lead Time Mediana Única (h)",
+        CALCULATE ( [Lead Time Tranç→Cabine (h)], USERELATIONSHIP ( fPessoasEtapaOP[Data do Fim], dCalendario[Date] ) ),
+    "HTML · Lead Time Médio (h)",
+        CALCULATE ( [_Lead Time Médio (h)], USERELATIONSHIP ( fPessoasEtapaOP[Data do Fim], dCalendario[Date] ) ),
+    "HTML · WIP Little (m)", [Conf HTML · WIP Little (m)],
+    "HTML · CV Vazão Trançagem", [Conf HTML · CV Vazão Trançagem],
+    "HTML · Rendimento de Fluxo", [Conf HTML · Rendimento de Fluxo],
+    "HTML · Dias Produtivos",
+        CALCULATE ( [Dias Produtivos (Fluxo)], USERELATIONSHIP ( fPessoasEtapaOP[Data do Fim], dCalendario[Date] ) ),
+    "Oficial · Vazão Cabine (m/dia)", [Vazão Cabine (m/dia)],
+    "Oficial · Pessoas Trançagem / Cabine", [Pessoas Trançagem / Cabine],
+    "Oficial · Eficiência de Balanceamento", [Eficiência de Balanceamento],
+    "Oficial · Lead Time Mediana (h)", [Lead Time Tranç→Cabine (h)],
+    "Oficial · Lead Time Médio (h)", [_Lead Time Médio (h)],
+    "Oficial · WIP Little (m)", [WIP Little (m)],
+    "Oficial · CV Vazão Trançagem", [CV Vazão Trançagem],
+    "Oficial · Rendimento de Fluxo", [Rendimento de Fluxo],
+    "Oficial · Dias Produtivos", [Dias Produtivos (Fluxo)]
+)

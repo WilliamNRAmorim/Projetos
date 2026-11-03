@@ -300,6 +300,9 @@ createOrReplace
 				let
 				    // Fuso: true = data_hora_final_* já está na hora da fábrica (como o modelo atual usa). Se a ficha conferida estiver 3 h adiantada (UTC), troque para false.
 				    FichaJaEmHoraLocal = true,
+				    // Quantidade acima disto por ficha e etapa é erro de digitação (máximo limpo observado: 995 m; achados de 03/11: fichas 3306, 3686, 3647, 4010 com milhões de m).
+				    // Vira vazio e sai das somas; a pessoa continua contada. Corrigir na origem e conferir com a consulta de maiores quantidades do LEIAME.
+				    QtdMaxFicha = 2000,
 				    // Grão de entrada: ficha_producao, 1 linha por ficha. Saída: 1 linha por ficha × etapa concluída.
 				    // Não há junção; conferência de contagem: linhas da saída = soma, por etapa, das fichas com data_hora_final preenchida.
 				    Origem = ficha_producao,
@@ -370,7 +373,7 @@ createOrReplace
 				    Empilhada = Table.Combine(PorEtapa),
 				    Tipada = Table.TransformColumns(Empilhada, {
 				        {"_Fim", ParaDataHora, type nullable datetime},
-				        {"_Qtd", ParaNumero, type nullable number},
+				        {"_Qtd", (q) => let n = ParaNumero(q) in if n <> null and n > QtdMaxFicha then null else n, type nullable number},
 				        {"_Op", ParaTexto, type nullable text}}),
 				    Concluidas = Table.SelectRows(Tipada, each [_Fim] <> null),
 				    // Turno e Data de Referência carimbados uma vez, pelas funções do modelo (§B.3.3).
