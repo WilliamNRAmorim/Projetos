@@ -23,8 +23,8 @@ Regra geral do William: nada de fato pontual da fábrica no relatório (datas de
 12. Seção 4.5: tirar o valor de R$ 75,4 mil (entrega e produtividade). Decidir se os outros dois valores (R$ 15,7 mil e R$ 38,6 mil) ficam.
 
 ## Correções de fato
-13. "licenças e tablets já existiam" está errado: os tablets não existiam, foram comprados 2 para teste. Corrigir na seção 4.5 e conferir "capex zero" no resumo, na 4.5, na 4.8 e nas Considerações Finais (com tablets comprados, deixa de ser capex zero ou é investimento mínimo; confirmar com o William como chamar).
-14. Papel: "336 kg por ano ... dos quais 80 kg já foram eliminados". O William disse "pode colocar 256 kg". Confirmar antes: 256 kg é o que já foi eliminado (336 − 80) ou substitui o total?
+13. "licenças e tablets já existiam" está errado: os tablets não existiam, foram comprados 2 para teste. Corrigir na seção 4.5 e trocar "capex zero" no resumo, na 4.5, na 4.8 e nas Considerações Finais. **Decidido (03/11):** escrever "investimento mínimo, com dois tablets comprados para teste".
+14. Papel: "336 kg por ano ... dos quais 80 kg já foram eliminados". **Decidido (03/11):** 256 kg é o novo total por ano, com as mudanças mais recentes do GMS. Leitura adotada: o papel eliminado passa de 80 kg para 256 kg por ano, dos 336 kg de consumo das fichas. Se a frase final ficar ambígua, confirmar com o William.
 
 ## Faltou do TCC I para o TCC II
 15. Quadro 4 e seção 4.1: incluir o delineamento (cadastros da Engenharia, DM_*, lidos pelas telas) e a conferência de especificação na hora da produção (a tela compara o que o operador mede com o delineamento e avisa quando sai da faixa).
