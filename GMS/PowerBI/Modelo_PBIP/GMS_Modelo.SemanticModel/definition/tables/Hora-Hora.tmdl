@@ -1,0 +1,153 @@
+table Hora-Hora
+	lineageTag: 38f5963a-0e7f-41bd-9897-370d398a1e4a
+
+	/// Meta acumulada do Hora-Hora (soma de Meta Hora) no contexto filtrado (célula/turno/dia).
+	measure 'Meta HH' = SUM('Hora-Hora'[Meta Hora])
+		formatString: #,0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 27342815-d0a0-4113-9a6b-050850b7696f
+
+	/// Produção real do Hora-Hora (soma de Real. Hora) no contexto filtrado.
+	measure 'Real HH' = SUM('Hora-Hora'[Real.Hora])
+		displayFolder: 08 Eficiência Célula
+		lineageTag: e41960f6-c869-4d0d-b6cc-4ef4ebac4982
+
+	/// Eficiência = Real / Meta do Hora-Hora. Em branco quando não há meta no contexto (evita divisão por zero).
+	measure '% Eficiência HH' = DIVIDE([Real HH], [Meta HH])
+		formatString: 0%
+		displayFolder: 08 Eficiência Célula
+		lineageTag: a7a5854c-0ddc-4b01-a2d4-eb395fe1404f
+
+	/// Minutos de parada registrados no Hora-Hora no contexto filtrado.
+	measure 'Tempo Parado HH (min)' = SUM('Hora-Hora'[Tempo Parado (min)])
+		formatString: #,0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 7931bea6-c4e5-4072-945e-140f6d812fc0
+
+	/// Seta de tendência da eficiência: para cima quando Real >= Meta, para baixo quando abaixo. Mesmo padrão da Seta Etapa do CP Mangueira.
+	measure 'Seta Eficiência HH' = VAR p = [% Eficiência HH] RETURN IF(NOT ISBLANK(p), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 4f10f9b5-2751-4066-a183-079aa4248abe
+
+	/// % de eficiência com a seta na frente, para usar na matriz célula x dia (mesmo visual do Excel de eficiência).
+	measure '% Eficiência HH c/ Seta' = VAR p = [% Eficiência HH] RETURN IF(NOT ISBLANK(p), [Seta Eficiência HH] & " " & FORMAT(p, "0%"))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 4b18e4d9-88d1-4ff8-b8f2-9d8608b29d1a
+
+	/// Quantidade de células (trançadeiras) com eficiência abaixo de 100% no contexto filtrado. Para cartão de alerta da página Eficiência.
+	measure 'Células Abaixo da Meta' = COUNTROWS(FILTER(VALUES('Hora-Hora'[Célula]), NOT ISBLANK([% Eficiência HH]) && [% Eficiência HH] < 1))
+		formatString: 0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 70903748-964c-4130-ae79-28fd9ff55cb9
+
+	/// Mangueira(s) da célula/turno/dia. Limitado a 3 itens distintos; acima disso mostra contagem, pois mais que isso indica falta de filtro de dia (uso indevido fora do kanban diário).
+	measure 'Mangueira do Turno' = VAR lista = FILTER(VALUES('Hora-Hora'[Mangueira]), NOT ISBLANK('Hora-Hora'[Mangueira]) && 'Hora-Hora'[Mangueira] <> BLANK()) VAR qtd = COUNTROWS(lista) RETURN IF(qtd <= 3, CONCATENATEX(lista, 'Hora-Hora'[Mangueira], " / "), qtd & " mangueiras (selecione 1 dia)")
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 3a037fa4-58b1-4176-9719-22010ac3fbc7
+
+	/// Motivos distintos da célula/turno/dia, prefixo numérico removido. Limitado a 3 itens; acima mostra contagem, sinal de que falta filtro de dia.
+	measure 'Motivos do Turno' = VAR lista = FILTER(VALUES('Hora-Hora'[Motivo]), NOT ISBLANK('Hora-Hora'[Motivo]) && 'Hora-Hora'[Motivo] <> BLANK()) VAR qtd = COUNTROWS(lista) VAR textoLimpo = CONCATENATEX(lista, SUBSTITUTE('Hora-Hora'[Motivo], LEFT('Hora-Hora'[Motivo], SEARCH(" - ", 'Hora-Hora'[Motivo] & " - ", 1) + 2), ""), " / ") RETURN IF(qtd = 0, BLANK(), IF(qtd <= 3, textoLimpo, qtd & " motivos (selecione 1 dia)"))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: feabcedc-20aa-4556-ba61-c39d56b1672c
+
+	column Turno
+		dataType: string
+		lineageTag: 2238e69e-0bbb-4580-a31c-f8ffa7ba8b25
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ce0fe538-d940-40e8-a40e-c35d5a6fbf74
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Célula
+		dataType: string
+		lineageTag: 36489d9d-8b66-40c6-947c-79c2268bd37d
+		summarizeBy: none
+		sourceColumn: Célula
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tempo Parado (min)'
+		dataType: double
+		lineageTag: de817f86-0ed6-4a58-8289-2e3b89b71798
+		summarizeBy: sum
+		sourceColumn: Tempo Parado (min)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Motivo
+		dataType: string
+		lineageTag: 5dafdd41-e007-4971-b04a-05d0342156ca
+		summarizeBy: none
+		sourceColumn: Motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Motivo 2'
+		dataType: string
+		lineageTag: c271051f-bd2f-4c54-9f9d-7d6f3462d110
+		summarizeBy: none
+		sourceColumn: Motivo 2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Comentário / Ação'
+		dataType: string
+		lineageTag: 9bfab07b-fb78-448b-b734-8d7b9685b7f8
+		summarizeBy: none
+		sourceColumn: Comentário / Ação
+
+		annotation SummarizationSetBy = Automatic
+
+	column Minutos
+		dataType: double
+		lineageTag: 75e20aff-9da0-4b5e-9f55-6d141da49992
+		summarizeBy: sum
+		sourceColumn: Minutos
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Motivo Padrão' = VAR t = TRIM('Hora-Hora'[Motivo]) VAR p = IFERROR(SEARCH("-", t), 0) VAR pre = IF(p > 1, TRIM(LEFT(t, p - 1)), "") VAR limpo = IF(IFERROR(VALUE(pre), -1) >= 0, TRIM(MID(t, p + 1, 300)), t) RETURN IF(ISBLANK('Hora-Hora'[Motivo]), BLANK(), SWITCH(TRUE(), limpo = "Refeição", "Almoço", limpo = "Problema no tubo", "Análise/Problema no tubo", limpo))
+		dataType: string
+		lineageTag: eb411755-1a47-48e1-b85e-2bc77613426a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Motivo 2 Padrão' = VAR t = TRIM('Hora-Hora'[Motivo 2]) VAR p = IFERROR(SEARCH("-", t), 0) VAR pre = IF(p > 1, TRIM(LEFT(t, p - 1)), "") VAR limpo = IF(IFERROR(VALUE(pre), -1) >= 0, TRIM(MID(t, p + 1, 300)), t) RETURN IF(ISBLANK('Hora-Hora'[Motivo 2]), BLANK(), SWITCH(TRUE(), limpo = "Refeição", "Almoço", limpo = "Problema no tubo", "Análise/Problema no tubo", limpo))
+		dataType: string
+		lineageTag: c50e6357-8be3-4109-8e0e-bc8b9fab2a2b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Hora-Hora = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    #"463b6df3-c864-4b6c-8995-5926a238ee7a" = Fonte{[Id="463b6df3-c864-4b6c-8995-5926a238ee7a"]}[Items],
+				    #"Tipo Alterado" = Table.TransformColumnTypes(#"463b6df3-c864-4b6c-8995-5926a238ee7a",{{"Data", type date}}),
+				    #"Colunas Removidas" = Table.RemoveColumns(#"Tipo Alterado",{"Title", "Hora", "Meta Hora", "Meta Acum", "Mangueira", "Real. Hora", "Real. Acum", "Diferença", "Rendimento", "Status", "Color Tag", "Compliance Asset Id", "Modified", "ID", "Content Type", "Created", "Created By", "Modified By", "Version", "Attachments", "Edit", "Type", "Item Child Count", "Folder Child Count", "Label setting", "Retention label", "Retention label Applied", "Label applied by", "Item is a Record", "App Created By", "App Modified By"}),
+				    #"Linhas Filtradas1" = Table.SelectRows(#"Colunas Removidas", each ([Célula] <> "") and ([Motivo] <> "" and [Motivo] <> "21 - Refeição"))
+				in
+				    #"Linhas Filtradas1"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,1786 @@
+table ficha_producao
+	lineageTag: b2670663-f96b-4c3f-9c8c-86a404eddb7d
+
+	/// Metragem total produzida (extraída) em metros. Métrica principal de produção.
+	measure 'Metragem Produzida' = SUM('ficha_producao'[Metragem_Extracao])
+		formatString: #,0 "m"
+		displayFolder: 01 Produção
+		lineageTag: 3377c40f-b985-4b8d-81e7-98c25f451fd8
+
+	/// Quantidade de mangueiras (fichas) que passaram pela extração, ou seja, com metragem > 0.
+	measure 'Qtd Mangueiras Produzidas' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Metragem_Extracao] > 0)
+		formatString: #,0
+		displayFolder: 01 Produção
+		lineageTag: 59d26a51-2f51-46b0-85cc-222443644a07
+
+	/// Metragem média por mangueira produzida.
+	measure 'Metragem Media por Mangueira' = DIVIDE([Metragem Produzida], [Qtd Mangueiras Produzidas])
+		formatString: #,0.0 "m"
+		displayFolder: 01 Produção
+		lineageTag: 34556789-1140-4ad2-a01a-db9dd7666587
+
+	/// Total de fichas/ordens registradas no período (qualquer status).
+	measure 'Total Fichas' = COUNTROWS('ficha_producao')
+		formatString: #,0
+		displayFolder: 01 Produção
+		lineageTag: 28511f96-712d-421f-a310-e7d19c9ee662
+
+	/// Fichas finalizadas (status = Finalizado).
+	measure 'Fichas Finalizadas' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[status_processo] = "Finalizado")
+		formatString: #,0
+		displayFolder: 01 Produção
+		lineageTag: eb35639f-fe10-4c85-bdfc-1de42a55603b
+
+	/// Fichas em processo (status = Em processo).
+	measure 'Fichas Em Processo' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[status_processo] = "Em processo")
+		formatString: #,0
+		displayFolder: 01 Produção
+		lineageTag: 1cd7cd68-3b40-479f-8633-caefda6182c8
+
+	/// Fichas aguardando próxima etapa (status = Aguardando).
+	measure 'Fichas Aguardando' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[status_processo] = "Aguardando")
+		formatString: #,0
+		displayFolder: 01 Produção
+		lineageTag: 09717dd0-1773-4317-8ec7-01cb31360ed4
+
+	/// Soma de defeitos registrados na trançagem.
+	measure 'Defeitos Trancagem' = SUM('ficha_producao'[defeito_trancagem_trat])
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 58178825-f534-4d18-a31f-557533c2a251
+
+	/// Soma de defeitos registrados na cobertura.
+	measure 'Defeitos Cobertura' = SUM('ficha_producao'[defeito_cobertura_trat])
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: a818da81-f736-41e6-9483-6d89b5a82719
+
+	/// Soma de defeitos registrados no tubo.
+	measure 'Defeitos Tubo' = SUM('ficha_producao'[defeito_tubo_trat])
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 2c8a1e2e-4dca-4eee-8be4-8cd8bcd26e79
+
+	/// Total de defeitos somando todas as etapas.
+	measure 'Total Defeitos' = [Defeitos Trancagem] + [Defeitos Cobertura] + [Defeitos Tubo]
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: dcc9e562-5c1f-4a0a-bfc8-cc9acd663c4a
+
+	/// Total de registros de inspeção de qualidade.
+	measure 'Total Inspecoes' = COUNTROWS('RegistrosInspeção')
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 432f50e3-ce22-47ee-ac9f-5f4bed977837
+
+	/// Fichas com bitola que precisou ser corrigida (divergente, vazia ou irrecuperável).
+	measure 'Fichas Bitola Corrigida' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Flag_Qualidade_Bitola] <> "OK")
+		formatString: #,0
+		displayFolder: 02 Qualidade\Tratamento
+		lineageTag: 2668fe13-9060-4d7f-a805-b9ad942af961
+
+	/// Fichas com inconsistência temporal (data final antes da inicial em alguma etapa).
+	measure 'Fichas Data Invertida' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Flag_Data_Invertida] = TRUE())
+		formatString: #,0
+		displayFolder: 02 Qualidade\Tratamento
+		lineageTag: d989b8af-035f-4715-9b3d-69084bb8951a
+
+	/// % de fichas com qualidade de dados OK na bitola.
+	measure '% Qualidade Dados Bitola' = DIVIDE(CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Flag_Qualidade_Bitola] = "OK"), COUNTROWS('ficha_producao'))
+		formatString: 0.0%
+		displayFolder: 02 Qualidade\Tratamento
+		lineageTag: 26b7f246-30d1-411b-bacb-6e28842ed182
+
+	/// Metragem produzida no Turno 1 (extração).
+	measure 'Metragem Turno 1' = CALCULATE([Metragem Produzida], 'ficha_producao'[Turno_Producao] = "Turno 1")
+		formatString: #,0 "m"
+		displayFolder: 03 Por Turno
+		lineageTag: 7aeff7bb-63b9-4ac5-ae8b-f70b50b7acfa
+
+	/// Metragem produzida no Turno 2 (extração).
+	measure 'Metragem Turno 2' = CALCULATE([Metragem Produzida], 'ficha_producao'[Turno_Producao] = "Turno 2")
+		formatString: #,0 "m"
+		displayFolder: 03 Por Turno
+		lineageTag: b8db5dec-8c3a-4466-9604-0ebb7303e552
+
+	/// Metragem produzida no Turno 3 (extração).
+	measure 'Metragem Turno 3' = CALCULATE([Metragem Produzida], 'ficha_producao'[Turno_Producao] = "Turno 3")
+		formatString: #,0 "m"
+		displayFolder: 03 Por Turno
+		lineageTag: cd3dcd7b-edbc-4b8d-9b57-076d4152ed5b
+
+	/// Tempo médio de ciclo em horas (início mandril -> fim extração), ignorando fichas incompletas.
+	measure 'Tempo Ciclo Medio (h)' = AVERAGEX(FILTER('ficha_producao', NOT(ISBLANK('ficha_producao'[TempoCiclo_Horas]))), 'ficha_producao'[TempoCiclo_Horas])
+		formatString: #,0.0 "h"
+		displayFolder: 04 Tempo de Ciclo
+		lineageTag: c9e41eb7-e658-4b08-890a-c69f039b0f77
+
+	/// Tempo de ciclo em dias (média).
+	measure 'Tempo Ciclo Medio (dias)' = DIVIDE([Tempo Ciclo Medio (h)], 24)
+		formatString: #,0.0 "dias"
+		displayFolder: 04 Tempo de Ciclo
+		lineageTag: 1e165bfd-f130-42c0-bdb1-74ec812e0237
+
+	/// Maior tempo de ciclo registrado (horas).
+	measure 'Tempo Ciclo Maximo (h)' = MAXX('ficha_producao', 'ficha_producao'[TempoCiclo_Horas])
+		formatString: #,0.0 "h"
+		displayFolder: 04 Tempo de Ciclo
+		lineageTag: bc8d593f-0ba1-46c5-b2ac-c67916a58e13
+
+	/// Taxa de defeitos por mangueira produzida (defeitos totais tratados / qtd produzida).
+	measure 'Defeitos por Mangueira' = DIVIDE([Total Defeitos], [Qtd Mangueiras Produzidas])
+		formatString: 0.00
+		displayFolder: 02 Qualidade
+		lineageTag: bc76afca-25f7-42d2-a2d7-9a84944f4eb7
+
+	/// Meta (Plan) de metragem por C.Standard, do Hose Plan. Sensivel ao mes (AnoMes_Producao). Carregados: Maio/2026 (202605) e Junho/2026 (202606). Default = Junho. Para novos meses, adicionar as linhas no SWITCH.
+	measure 'Meta Plan' = VAR mes = SELECTEDVALUE('ficha_producao'[AnoMes_Producao], 202606) RETURN SUMX(VALUES('Part Number x Construction'[C_Standard_Plan]), VAR cs = 'Part Number x Construction'[C_Standard_Plan] RETURN SWITCH(TRUE(), mes = 202605 && cs = "DD24-08/10/12", 67205, mes = 202605 && cs = "DD20-04/06", 28909, mes = 202605 && cs = "SD20-04/06", 24280, mes = 202605 && cs = "TEXTILE-07/08/10/12/16", 18460, mes = 202605 && cs = "SPIRAL", 13249, mes = 202605 && cs = "SD24-08/10/12", 11680, mes = 202605 && cs = "SD/DD36-16", 10000, mes = 202605 && cs = "TEXTILE-03/04/05/06", 3400, mes = 202606 && cs = "DD24-08/10/12", 54540, mes = 202606 && cs = "DD20-04/06", 24560, mes = 202606 && cs = "SD20-04/06", 24560, mes = 202606 && cs = "SD24-08/10/12", 15100, mes = 202606 && cs = "SPIRAL", 13420, mes = 202606 && cs = "SD/DD36-16", 10250, mes = 202606 && cs = "TEXTILE-03/04/05/06", 9560, mes = 202606 && cs = "TEXTILE-07/08/10/12/16", 8400, BLANK()))
+		formatString: #,##0
+		displayFolder: 05 Hose Plan
+		lineageTag: a3c95d48-5990-420c-bc4a-352ab5315396
+
+	/// Metragem realizada (MTD) considerando o mes de producao selecionado. Use com slicer de MesProducao/AnoMes_Producao.
+	measure 'Realizado MTD' = [Metragem Produzida]
+		formatString: #,##0
+		displayFolder: 05 Hose Plan
+		lineageTag: d3e45bb8-207f-4393-a845-b4b665357da1
+
+	/// % de atingimento da meta: Realizado MTD / Meta Plan.
+	measure '% Atingimento Meta' = DIVIDE([Realizado MTD], [Meta Plan])
+		formatString: 0.0%
+		displayFolder: 05 Hose Plan
+		lineageTag: ad31bd16-c786-4f1b-a8a5-9abe88e9cb5d
+
+	/// GAP de metragem: Realizado MTD - Meta Plan. Negativo = abaixo da meta.
+	measure 'GAP Meta' = [Realizado MTD] - [Meta Plan]
+		formatString: #,##0
+		displayFolder: 05 Hose Plan
+		lineageTag: 01f40490-343b-4d61-a57d-03c1d5f1cb2f
+
+	/// Metragem que falta para bater a meta (0 se ja atingiu).
+	measure 'Falta para Meta' = VAR g = [Meta Plan] - [Realizado MTD] RETURN IF(g > 0, g, 0)
+		formatString: #,##0
+		displayFolder: 05 Hose Plan
+		lineageTag: e56553db-d834-4e41-bc82-aa5c9a8f473f
+
+	/// Dias uteis totais do mes de referencia (K34 do Hose Plan). Maio=23, Junho=21. Editar por mes.
+	measure 'Dias Uteis Mes' = VAR mes = SELECTEDVALUE('ficha_producao'[AnoMes_Producao], 202606) RETURN SWITCH(mes, 202605, 23, 202606, 21, BLANK())
+		formatString: 0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 0aa1b8a4-964e-44e3-8a12-8c44c2566d77
+
+	/// Dias uteis (seg-sex) decorridos no mes de producao ate hoje. Mes ja fechado retorna o total (100% do ritmo). Mes futuro retorna 0. Automatico - nao precisa editar por mes.
+	measure 'Dias Uteis Decorridos' = VAR mes = SELECTEDVALUE('ficha_producao'[AnoMes_Producao], 202605) VAR ano = INT(mes / 100) VAR m = MOD(mes, 100) VAR inicioMes = DATE(ano, m, 1) VAR fimMes = EOMONTH(inicioMes, 0) VAR hoje = TODAY() RETURN SWITCH(TRUE(), hoje > fimMes, [Dias Uteis Mes], hoje < inicioMes, 0, VAR ateData = hoje VAR dias = GENERATESERIES(inicioMes, ateData, 1) RETURN COUNTROWS(FILTER(dias, WEEKDAY([Value], 2) <= 5)))
+		formatString: 0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 2bfb92e0-cf43-4215-8cd7-1508ad8c751a
+
+	/// % do ritmo esperado = dias decorridos / dias totais (campo K36 do Hose Plan). Fracao do plano que deveria estar feita ate agora.
+	measure '% Ritmo Esperado' = DIVIDE([Dias Uteis Decorridos], [Dias Uteis Mes])
+		formatString: 0.0%
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 054907e1-1968-4409-8cac-46517f4c8c5c
+
+	/// Atraso em metros vs o ritmo esperado: (% ritmo esperado - % atingimento) x Meta. Positivo = atrasado em relacao ao planejado ate a data. Replica a coluna Atraso do Hose Plan (G = (K36-F)*D).
+	measure Atraso = VAR plan = [Meta Plan] RETURN IF(plan > 0, ([% Ritmo Esperado] - [% Atingimento Meta]) * plan, 0)
+		formatString: #,##0
+		displayFolder: 05 Hose Plan
+		lineageTag: c83330dc-36b8-4841-ab19-8fd33cac294e
+
+	/// Meta diaria planejada (m/dia util) = Meta Plan / dias uteis do mes. No Excel estava cravada em 7700 (~177183/23).
+	measure 'Meta Diaria Planejada' = DIVIDE([Meta Plan], [Dias Uteis Mes])
+		formatString: #,##0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: e2a4b88f-ca06-4d7f-a920-b82a69ffe331
+
+	/// Dias uteis restantes no mes (dias totais - decorridos).
+	measure 'Dias Restantes' = [Dias Uteis Mes] - [Dias Uteis Decorridos]
+		formatString: 0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 2813dbee-b82c-4825-b714-9be3955ffc0e
+
+	/// Total de atraso em metros (mesmo que Atraso no nivel total). Replica K40/G39 do Excel, mas com o realizado completo do GMS.
+	measure 'Total Atraso' = [Atraso]
+		formatString: #,##0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: ba5d24e0-56b4-477f-b52b-a9e624b26f67
+
+	/// Meta diaria ajustada para recuperar o atraso nos dias restantes = Meta diaria planejada + Atraso/dias restantes. Em branco quando o mes acabou (sem dias restantes) - trata o #DIV/0! do Excel.
+	measure 'Meta Diaria Ajustada' = VAR dr = [Dias Restantes] RETURN IF(dr <= 0, BLANK(), [Meta Diaria Planejada] + DIVIDE([Total Atraso], dr))
+		formatString: #,##0
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 9134e885-95e5-4087-a1b1-66c0636af1e2
+
+	/// Indicador binario do ritmo, igual ao Excel IF(Total Atraso<=0; feliz; triste). Feliz se atraso <= 0 (no ritmo ou adiantado), triste se > 0 (atrasado). Em branco se nao ha meta.
+	measure 'Status Ritmo' = VAR m = [Meta Plan] VAR a = [Atraso] RETURN IF(ISBLANK(m) || m = 0, BLANK(), IF(a <= 0, "😀", "😟"))
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: f90f562f-f921-4233-bff3-2694fc6025b9
+
+	/// OPs ativas no pipeline agora (nao finalizadas/descartadas, com atividade recente).
+	measure 'OPs Ativas' = CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Esta_Ativa] = TRUE())
+		formatString: #,0
+		displayFolder: 06 Supervisao
+		lineageTag: 012813f2-fde3-48c2-a334-6f13e2b56400
+
+	/// Metragem em processo (das OPs ativas).
+	measure 'Metragem Em Processo' = CALCULATE(SUM('ficha_producao'[Metragem_Extracao]), 'ficha_producao'[Esta_Ativa] = TRUE())
+		formatString: #,0 "m"
+		displayFolder: 06 Supervisao
+		lineageTag: af1aaeaa-2112-40ce-9654-5d5ad7730f8d
+
+	/// OPs ativas paradas ha 3+ dias (sem modificacao), que requerem atencao.
+	measure 'OPs Paradas +3 Dias' = VAR maxMod = MAXX(ALL('ficha_producao'), 'ficha_producao'[Modified]) RETURN CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[Esta_Ativa] = TRUE(), FILTER('ficha_producao', 'ficha_producao'[Modified] < maxMod - 3))
+		formatString: #,0
+		displayFolder: 06 Supervisao
+		lineageTag: 571b4b77-bfae-4b29-b54a-d6bb40cba959
+
+	/// OPs finalizadas hoje (data de finalizacao = data mais recente do sistema).
+	measure 'OPs Finalizadas Hoje' = VAR hoje = MAXX(ALL('ficha_producao'), 'ficha_producao'[DataProducao]) RETURN CALCULATE(COUNTROWS('ficha_producao'), 'ficha_producao'[status_processo] = "Finalizado", FILTER('ficha_producao', 'ficha_producao'[DataProducao] = hoje))
+		formatString: #,0
+		displayFolder: 06 Supervisao
+		lineageTag: 8e86d9a3-683c-404d-80de-d2c1857a3067
+
+	/// Metragem produzida hoje (ultimo dia com producao no sistema).
+	measure 'Metragem Hoje' = VAR hoje = MAXX(ALL('ficha_producao'), 'ficha_producao'[DataProducao]) RETURN CALCULATE(SUM('ficha_producao'[Metragem_Extracao]), FILTER('ficha_producao', 'ficha_producao'[DataProducao] = hoje))
+		formatString: #,0 "m"
+		displayFolder: 06 Supervisao
+		lineageTag: 54895edf-4dd7-4c51-a874-e8ebc157e4d1
+
+	/// Total de registros de refugo (cada linha da TiposErros = um refugo com codigo de erro).
+	measure 'Total Refugos' = COUNTROWS('TiposErros')
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 394a4b18-23a9-4385-8f10-20898e3bd691
+
+	/// Refugos registrados no dia mais recente do sistema.
+	measure 'Refugos Hoje' = VAR h = MAXX(ALL('TiposErros'), 'TiposErros'[DataHoraRefugo]) RETURN CALCULATE(COUNTROWS('TiposErros'), FILTER('TiposErros', YEAR('TiposErros'[DataHoraRefugo]) = YEAR(h) && MONTH('TiposErros'[DataHoraRefugo]) = MONTH(h) && DAY('TiposErros'[DataHoraRefugo]) = DAY(h)))
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 58df0309-f247-4752-89f9-437f214e3bc7
+
+	/// Taxa de refugo: refugos por mangueira produzida (proxy de qualidade).
+	measure 'Refugos por Mangueira' = DIVIDE([Total Refugos], [Qtd Mangueiras Produzidas])
+		formatString: 0.00
+		displayFolder: 02 Qualidade
+		lineageTag: 8d18e6b5-6946-4fd7-90b5-a0b3ad33d0e9
+
+	/// Total de inspecoes de qualidade registradas.
+	measure 'Total Inspecoes Qualidade' = COUNTROWS('RegistrosInspeção')
+		formatString: #,0
+		displayFolder: 02 Qualidade
+		lineageTag: 437e7fdd-2562-44e3-86a6-f979cf24bbac
+
+	/// Atingimento relativo ao ritmo esperado = % Atingimento / % Ritmo Esperado. 100% = exatamente no ritmo; >100% adiantado; <100% atrasado. Use ESTA medida na formatacao condicional do semaforo da matriz (em vez do % cru), para a cor fazer sentido em qualquer dia do mes.
+	measure '% vs Ritmo' = DIVIDE([% Atingimento Meta], [% Ritmo Esperado])
+		formatString: 0.0%
+		displayFolder: 05 Hose Plan
+		lineageTag: 7f13c8e1-f38e-43a9-b720-e369b0e7fbea
+
+	/// Status do ritmo em texto claro para o cartão (substitui o emoji). 'No ritmo' quando Total Atraso <= 0, senão 'Atrasado X m'. Reduz esforço cognitivo: leitura direta sem interpretar carinha.
+	measure 'Status Ritmo Texto' = VAR a = [Total Atraso] RETURN IF(NOT ISBLANK(a), IF(a <= 0, "▲ No ritmo", "▼ Atrasado " & FORMAT(a, "#,0") & " m"))
+		displayFolder: 05 Hose Plan\Ritmo
+		lineageTag: 28c7bc78-f45f-4d84-bd78-679e0ca940cd
+
+	/// Quantidade produzida no Mandril, agrupada por Bitola e Turno. Base do Kanban Extrusora 1 - Mandril Soldado. Filtrar Bitola em branco no visual (não na medida: booleano em CALCULATE sobre a mesma coluna do agrupamento sobrescreve o contexto, vide P-series).
+	measure 'Qtd Mandril por Bitola' = SUM(ficha_producao[quantidade_mandril])
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extrusora Mandril
+		lineageTag: 73f10921-b11c-4b2a-a2bc-4e5f3205036c
+
+	/// Rótulo pronto 'Bitola X' para linha do Kanban Extrusora, evitando expor o número cru sem contexto.
+	measure 'Rotulo Bitola' = "Bitola " & SELECTEDVALUE(ficha_producao[Bitola])
+		displayFolder: 13 Kanban Processos\Extrusora Mandril
+		lineageTag: 32adca1b-b203-434d-91f0-53ffd6f9d1c0
+
+	/// Quantidade produzida na etapa Tubo, por Mangueira/PN e Turno. Representa a fila (WIP) parada no Tubo aguardando avançar para Cobertura/Extração. Base do Kanban Extração - bloco Tubo.
+	measure 'Qtd Fila Tubo' = CALCULATE(SUM(ficha_producao[quantidade_tubo]), NOT ISBLANK(ficha_producao[quantidade_tubo]))
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: f223ed9a-2b1d-4325-94a6-877b0f1bf17c
+
+	/// Quantidade produzida na etapa Cobertura, por Mangueira/PN e Turno. Representa a fila (WIP) parada na Cobertura aguardando avançar para Extração. Base do Kanban Extração - bloco Cobertura.
+	measure 'Qtd Fila Cobertura' = CALCULATE(SUM(ficha_producao[quantidade_cobertura]), NOT ISBLANK(ficha_producao[quantidade_cobertura]))
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: 1b2d6736-4118-4b9a-838e-3d80980303eb
+
+	/// Duração total do turno na etapa Tubo (soma do intervalo inicio->fim de cada apontamento), para a linha de rodapé do Kanban Extração (formato hh:mm:ss). Em minutos brutos; formatar como horário no visual se precisar de hh:mm:ss.
+	measure 'Duracao Turno Tubo (min)' = SUMX(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[data_hora_inicio_tubo]) && NOT ISBLANK(ficha_producao[data_hora_final_tubo])), DATEDIFF(ficha_producao[data_hora_inicio_tubo], ficha_producao[data_hora_final_tubo], MINUTE))
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: 53d2af80-908c-430c-b635-7fb094b5c832
+
+	/// Tubo produzido na própria trançadeira (MQ). Turno_Tubo tem tipo misto (1/2/3 e 'Turno 1'/'Turno 3'), normalizado via FORMAT+SWITCH dentro do filtro, sem depender de coluna calculada (limitação conhecida do table_operations).
+	measure 'MQ Producao Propria' = CALCULATE(SUM(ficha_producao[quantidade_tubo]), TREATAS(VALUES('Hora-Hora'[Célula]), ficha_producao[Trançadeira]), FILTER(ALL(ficha_producao[Turno_Tubo]), VAR t = TRIM(FORMAT(ficha_producao[Turno_Tubo], "")) VAR padrao = SWITCH(TRUE(), t IN {"1", "Turno 1"}, "1º Turno", t IN {"2", "Turno 2"}, "2º Turno", t IN {"3", "Turno 3"}, "3º Turno", BLANK()) RETURN padrao IN VALUES('Hora-Hora'[Turno])))
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Tubo das Trançadeiras
+		lineageTag: 4ae3a6bb-1648-4a74-b57d-78fc7c456631
+
+	/// Metragem vinda da Bobinadeira (KB) para a mesma trançadeira/turno/dia. Turno normalizado via SWITCH; data via join virtual INT(DataHoraInicio), pois a tabela não tem relacionamento físico com dCalendario (datetime com hora).
+	measure 'KB Bobinadeira' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN CALCULATE(SUM(FifoBobinadeira[Metragem]), TREATAS(VALUES('Hora-Hora'[Célula]), FifoBobinadeira[Trancadeira]), FILTER(ALL(FifoBobinadeira[Turno]), SWITCH(FifoBobinadeira[Turno], 1, "1º Turno", 2, "2º Turno", 3, "3º Turno", BLANK()) IN VALUES('Hora-Hora'[Turno])), FILTER(ALL(FifoBobinadeira[DataHoraInicio]), NOT temCal || INT(FifoBobinadeira[DataHoraInicio]) IN datas))
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Tubo das Trançadeiras
+		lineageTag: 73bcb238-4d28-4f10-a29e-9ec103a580de
+
+	/// Total do Tubo por Trançadeira/Turno = MQ (própria máquina) + KB (Bobinadeira). Coluna TT do painel Tubo das Trançadeiras.
+	measure 'TT Total Tubo' = [MQ Producao Propria] + [KB Bobinadeira]
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Tubo das Trançadeiras
+		lineageTag: 52a4c04c-9e97-4772-bf26-192991ca4f61
+
+	/// Turno em curso agora, calculado por horário (mesmos limites da Power App: 1º 05:20-13:48, 2º 13:48-22:41, 3º 22:41-05:20). Reavalia a cada carregamento do relatório.
+	measure 'Turno Atual' = VAR minAtual = HOUR(NOW()) * 60 + MINUTE(NOW()) RETURN SWITCH(TRUE(), minAtual >= 320 && minAtual < 828, "1º Turno", minAtual >= 828 && minAtual < 1361, "2º Turno", "3º Turno")
+		displayFolder: 13 Kanban Processos\Extrusora Mandril
+		lineageTag: 3c8ae39b-ac79-416c-93e8-7ed5bbc30ed5
+
+	/// Quantidade de Mandril produzida no turno EM CURSO (não histórico), por Bitola. Ignora qualquer slicer de data da página de propósito (ALL em dCalendario): o Kanban Extrusora sempre mostra o turno de agora, não o filtro selecionado. Após 00:00 e antes de 05:20, a data de referência recua 1 dia (3º turno cruza a meia-noite).
+	measure 'Qtd Mandril Turno Atual' = VAR minAtual = HOUR(NOW()) * 60 + MINUTE(NOW()) VAR turnoAtual = [Turno Atual] VAR dataRef = IF(minAtual < 320, TODAY() - 1, TODAY()) RETURN CALCULATE(SUM(ficha_producao[quantidade_mandril]), ALL(dCalendario), dCalendario[Date] = dataRef, FILTER(ALL(ficha_producao[Turno_mandril]), VAR t = TRIM(FORMAT(ficha_producao[Turno_mandril], "")) VAR padrao = SWITCH(TRUE(), t IN {"1", "Turno 1"}, "1º Turno", t IN {"2", "Turno 2"}, "2º Turno", t IN {"3", "Turno 3"}, "3º Turno", BLANK()) RETURN padrao = turnoAtual))
+		displayFolder: 13 Kanban Processos\Extrusora Mandril
+		lineageTag: b6c1ac2a-0bb9-45f6-aa0b-a60148b8389b
+
+	/// Quantidade AGORA aguardando ou em processo na etapa Tubo (WIP ao vivo, sem filtro de turno/data). Exclui processo=Finalizado (571 registros têm status_processo desatualizado após finalizar, achado documentado para MEL de limpeza de dado).
+	measure 'Qtd Ativa Tubo (WIP)' = CALCULATE(COUNTROWS(ficha_producao), ALL(dCalendario), ficha_producao[processo] = "Tubo", ficha_producao[status_processo] IN {"Aguardando", "Em processo"})
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: 07ebdf00-5265-4717-be29-a7afa4cd4ebb
+
+	/// Quantidade AGORA aguardando ou em processo na etapa Trançadeira (WIP ao vivo). Mesma exclusão de Finalizado.
+	measure 'Qtd Ativa Trancadeira (WIP)' = CALCULATE(COUNTROWS(ficha_producao), ALL(dCalendario), ficha_producao[processo] = "Trançadeira", ficha_producao[status_processo] IN {"Aguardando", "Em processo"})
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: 15bb2f54-4ed5-4ab8-8f71-74e207052dcb
+
+	/// PNs (Mangueira) ativos agora na etapa Tubo, para listar quais itens estão na fila. Usar como Linha de uma tabela filtrada por processo=Tubo, status Aguardando/Em processo.
+	measure 'Qtd por PN Tubo Ativo' = CALCULATE(COUNTROWS(ficha_producao), ALL(dCalendario), ficha_producao[processo] = "Tubo", ficha_producao[status_processo] IN {"Aguardando", "Em processo"})
+		formatString: #,##0
+		displayFolder: 13 Kanban Processos\Extração (filas)
+		lineageTag: cd8e58c9-fcd2-4c90-8c61-4e24bffb9028
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 87300c41-074a-4d13-a837-481b702294a9
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column processo
+		dataType: string
+		lineageTag: 6d1fd194-b17c-4221-a181-963f48207a72
+		summarizeBy: none
+		sourceColumn: processo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Carretel Entrada'
+		dataType: string
+		lineageTag: d66ed702-b03a-4f78-9791-84c83c3a57f4
+		summarizeBy: none
+		sourceColumn: Carretel Entrada
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Carretel Saida'
+		dataType: string
+		lineageTag: 6bcc3f3b-5ba8-4e8b-932a-f10335ff1f63
+		summarizeBy: none
+		sourceColumn: Carretel Saida
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bitola
+		dataType: double
+		lineageTag: 35532cbf-dd8e-4c04-aec2-36cfd2711dc9
+		summarizeBy: sum
+		sourceColumn: Bitola
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Mangueira
+		dataType: string
+		lineageTag: f721ec27-1207-4d6f-b6e5-2eecf5055227
+		summarizeBy: none
+		sourceColumn: Mangueira
+
+		annotation SummarizationSetBy = Automatic
+
+	column OP
+		dataType: double
+		lineageTag: eae07b28-fa50-477d-8844-df839d08ec54
+		summarizeBy: sum
+		sourceColumn: OP
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column status_processo
+		dataType: string
+		lineageTag: 8aed875a-8431-4653-afc9-ad54a629bd85
+		summarizeBy: none
+		sourceColumn: status_processo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trançadeira
+		dataType: string
+		lineageTag: 658e5e59-0ae0-4b10-a134-a1c62e6f1c65
+		summarizeBy: none
+		sourceColumn: Trançadeira
+
+		annotation SummarizationSetBy = Automatic
+
+	column cod_mandril
+		dataType: string
+		lineageTag: c9e3a0b4-6a33-40e7-83ee-ffe8bfb4d430
+		summarizeBy: none
+		sourceColumn: cod_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_mandril
+		dataType: string
+		lineageTag: 0bc0ecf1-3f31-4166-bbed-00b0c2652ab6
+		summarizeBy: none
+		sourceColumn: Turno_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_mandril
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3997dad5-3861-42c6-a091-03002ff4a2c0
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_mandril
+
+		variation Variation
+			isDefault
+			relationship: 209f5360-6af2-4a12-bd1e-4c34a17b1f1a
+			defaultHierarchy: LocalDateTable_8b8be83e-ddb2-465f-9489-78e803d385a0.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_mandril
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 691df69a-af3e-434e-93e8-556bba2f7e5b
+		summarizeBy: none
+		sourceColumn: data_hora_final_mandril
+
+		variation Variation
+			isDefault
+			relationship: 664a3044-c506-4f54-89a4-220bfe23fa94
+			defaultHierarchy: LocalDateTable_c3668ffb-bde2-4889-b09d-bee5648f32c1.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote_mandril
+		dataType: string
+		lineageTag: 73bc4fb2-2954-42d5-b3b7-49b4d54f4f3f
+		summarizeBy: none
+		sourceColumn: lote_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column desmoldante_mandril
+		dataType: string
+		lineageTag: eebebe90-713c-49a8-8883-707231cddedc
+		summarizeBy: none
+		sourceColumn: desmoldante_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column diametro_mandril
+		dataType: double
+		lineageTag: 8cad3f77-a61e-4a5e-a701-94f026ad2348
+		summarizeBy: sum
+		sourceColumn: diametro_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_mandril
+		dataType: string
+		lineageTag: eea15d8f-442d-42b3-bc3a-e445e7ec83d4
+		summarizeBy: none
+		sourceColumn: operador_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade_mandril
+		dataType: double
+		lineageTag: 154b1b51-bed1-43ee-bc18-dd60f9216d30
+		summarizeBy: sum
+		sourceColumn: quantidade_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Turno_Tubo
+		dataType: string
+		lineageTag: d5ce3965-f8f9-48b6-9c2a-59f7688adc89
+		summarizeBy: none
+		sourceColumn: Turno_Tubo
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_tubo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3c4c946c-25bf-40e7-99da-99a4c406569f
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_tubo
+
+		variation Variation
+			isDefault
+			relationship: d24669b3-2f4a-4489-8116-09d226bc5584
+			defaultHierarchy: LocalDateTable_97907e3f-fd6e-4d20-8521-8d066278f75b.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_tubo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ac4d89b0-7f2f-45e1-8c62-3d2f9c805fc9
+		summarizeBy: none
+		sourceColumn: data_hora_final_tubo
+
+		variation Variation
+			isDefault
+			relationship: 3f18aa63-146d-496e-af0a-b31c440865da
+			defaultHierarchy: LocalDateTable_cc54cbab-63f5-4fec-999d-8e54be7ca7ff.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column diametro_tubo
+		dataType: double
+		lineageTag: 1d6d5cab-b9e1-40e0-9b20-e54478b9d4cc
+		summarizeBy: sum
+		sourceColumn: diametro_tubo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column defeito_tubo
+		dataType: double
+		lineageTag: 71b9cd07-2402-4e83-96fe-5b266ab102d6
+		summarizeBy: sum
+		sourceColumn: defeito_tubo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column quantidade_tubo
+		dataType: double
+		lineageTag: 2103815a-a6ef-49f5-ab4d-3e8c3b867579
+		summarizeBy: sum
+		sourceColumn: quantidade_tubo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_tubo
+		dataType: string
+		lineageTag: 7cefaa26-f132-4921-92da-6164d608c42b
+		summarizeBy: none
+		sourceColumn: operador_tubo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Trançagem
+		dataType: string
+		lineageTag: bc6db000-29d0-4154-a5d1-3c73f8225e98
+		summarizeBy: none
+		sourceColumn: Turno_Trançagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_trancadeira
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 430c799d-e3bb-4e16-a7a7-c48e1c608efe
+		summarizeBy: none
+		sourceColumn: data_hora_final_trancadeira
+
+		variation Variation
+			isDefault
+			relationship: 8fb27559-e468-4cdc-94cf-4d63268f58b9
+			defaultHierarchy: LocalDateTable_38c8983f-83be-4821-a360-4d8f6736958c.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_trancadeira
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1d00c92f-065a-48de-bb3f-af1782d69d6f
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_trancadeira
+
+		variation Variation
+			isDefault
+			relationship: eab4d352-ce9b-42c9-a968-f010b5e4a88b
+			defaultHierarchy: LocalDateTable_c8b76112-0e56-4dee-befe-e9b02c5d27cc.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Diametro_Trançagem
+		dataType: double
+		lineageTag: 3540c8c5-411e-4415-ad61-33055f86c416
+		summarizeBy: sum
+		sourceColumn: Diametro_Trançagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column quantidade_trancagem
+		dataType: double
+		lineageTag: cb0a534a-f111-4d32-b2d8-a49e4e2b4b09
+		summarizeBy: sum
+		sourceColumn: quantidade_trancagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column defeito_trancagem
+		dataType: double
+		lineageTag: ba10e3ca-6b4e-4c6e-8588-ef2c046099b9
+		summarizeBy: sum
+		sourceColumn: defeito_trancagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_trancagem
+		dataType: string
+		lineageTag: 910b2c66-afac-44a6-b495-f69743aad411
+		summarizeBy: none
+		sourceColumn: operador_trancagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Cobertura
+		dataType: string
+		lineageTag: f8c6dc7d-000b-4bff-9d04-ff567ea2e6be
+		summarizeBy: none
+		sourceColumn: Turno_Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_cobertura
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ffb79d5e-55c1-4d00-ab9d-d462fbae4aed
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_cobertura
+
+		variation Variation
+			isDefault
+			relationship: 016f3805-8b92-494c-bf75-b3343cc9bb28
+			defaultHierarchy: LocalDateTable_2b7600c5-79d9-4700-8b0f-71eaf3158e3a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_cobertura
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4751da63-7143-4b9d-8341-27d50781ecb2
+		summarizeBy: none
+		sourceColumn: data_hora_final_cobertura
+
+		variation Variation
+			isDefault
+			relationship: 3179c5b6-1b80-440f-8c9f-5c3eb869be3f
+			defaultHierarchy: LocalDateTable_393bbf10-8871-4738-9c79-5ee2b8b1084a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column diametro_cobertura
+		dataType: double
+		lineageTag: e9cda6e1-cb42-4595-b0fd-881802cf9f44
+		summarizeBy: sum
+		sourceColumn: diametro_cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column defeito_cobertura
+		dataType: double
+		lineageTag: 9088e87a-58ae-4b32-b1f6-5ef955aeb70e
+		summarizeBy: sum
+		sourceColumn: defeito_cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column quantidade_cobertura
+		dataType: double
+		lineageTag: 0aac8f5a-5d6f-4073-bcb0-704187112b11
+		summarizeBy: sum
+		sourceColumn: quantidade_cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_cobertura
+		dataType: string
+		lineageTag: bc14b8e4-5ccd-4a86-a6c9-48d03d6a5599
+		summarizeBy: none
+		sourceColumn: operador_cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Bandagem
+		dataType: string
+		lineageTag: 76e907de-97bf-42ba-b769-3beb70058656
+		summarizeBy: none
+		sourceColumn: Turno_Bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_bandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e2641ac8-4621-4905-8e62-2516bf836f8b
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_bandagem
+
+		variation Variation
+			isDefault
+			relationship: 019511e8-e743-4b49-bc87-d25072ccd763
+			defaultHierarchy: LocalDateTable_5c3c9a82-13e3-4229-86d5-9987e4fee162.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_bandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b29ec3cc-2651-4084-80a8-da9dbc127f6d
+		summarizeBy: none
+		sourceColumn: data_hora_final_bandagem
+
+		variation Variation
+			isDefault
+			relationship: bda69f79-8613-4dd7-9f94-9d7fc19c7efe
+			defaultHierarchy: LocalDateTable_47acb01e-b0a9-4ae2-98d5-59b8d229696a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column operador_bandagem
+		dataType: string
+		lineageTag: 48765fd7-1744-47d3-9442-9b0bc724a39e
+		summarizeBy: none
+		sourceColumn: operador_bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cód_Fita_Bandagem
+		dataType: string
+		lineageTag: 25a266cd-42fd-4429-9879-3f9b41dcb37e
+		summarizeBy: none
+		sourceColumn: Cód_Fita_Bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Código_Filme_UHMWPE
+		dataType: string
+		lineageTag: 336a11d5-b491-4ed6-9986-17fcb7903645
+		summarizeBy: none
+		sourceColumn: Código_Filme_UHMWPE
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade_bandagem
+		dataType: double
+		lineageTag: 540de350-c57f-443e-aa33-b96e43c631ad
+		summarizeBy: sum
+		sourceColumn: quantidade_bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column data_hora_final_vulcanizacao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 15296c48-5e93-4dfd-888d-ff8ee06967c2
+		summarizeBy: none
+		sourceColumn: data_hora_final_vulcanizacao
+
+		variation Variation
+			isDefault
+			relationship: 0a541b3e-5640-4a70-931c-8750644f204b
+			defaultHierarchy: LocalDateTable_ca40d252-64ad-4078-95b1-cd6b4df41f4b.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_vulcanizacao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 466bc465-7f41-49e6-b7d5-aec61b634c70
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_vulcanizacao
+
+		variation Variation
+			isDefault
+			relationship: f8973eaa-5828-4f28-a788-5e742c3ea8f1
+			defaultHierarchy: LocalDateTable_21aa6f60-c92f-4a4b-8331-c2a78085a299.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Vulcanização
+		dataType: string
+		lineageTag: b9046b9e-c04d-46a7-ba94-2f07989a7bcc
+		summarizeBy: none
+		sourceColumn: Turno_Vulcanização
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioResfriamento_Vulcanizacao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3064e9fa-82c1-4ed9-8a74-dc8632199333
+		summarizeBy: none
+		sourceColumn: InicioResfriamento_Vulcanizacao
+
+		variation Variation
+			isDefault
+			relationship: a0f46af0-83c1-470d-9c0d-90ce6ad8dc1b
+			defaultHierarchy: LocalDateTable_0c116b8e-73ba-43c7-aff2-d81e2c9eb515.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade_vulcanizacao
+		dataType: double
+		lineageTag: 4014abcc-e61d-4f81-8c60-581be93e42be
+		summarizeBy: sum
+		sourceColumn: quantidade_vulcanizacao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_vulcanizacao
+		dataType: string
+		lineageTag: 4355cffe-cf73-443e-9907-36a56bca5266
+		summarizeBy: none
+		sourceColumn: operador_vulcanizacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Debandagem
+		dataType: string
+		lineageTag: 622722eb-dd35-4a71-84d3-e5fa895c58b5
+		summarizeBy: none
+		sourceColumn: Turno_Debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio_debandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 610ef337-fed4-4242-87cd-0329d424e352
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_debandagem
+
+		variation Variation
+			isDefault
+			relationship: 325da75d-2934-484e-8a01-c441853a7267
+			defaultHierarchy: LocalDateTable_9545e532-0cfa-4e1e-8b1f-f19f480c8c9d.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_debandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 38bba6f9-0dcd-4112-915a-67d0016f1bfa
+		summarizeBy: none
+		sourceColumn: data_hora_final_debandagem
+
+		variation Variation
+			isDefault
+			relationship: 41add852-894a-462b-ab9e-5bed2a47ad63
+			defaultHierarchy: LocalDateTable_c1bd3451-eb1f-410c-a8f4-d6a3d119d9d2.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade_debandagem
+		dataType: double
+		lineageTag: 3974cdb7-357a-4af1-adbe-416e1e8f92ca
+		summarizeBy: sum
+		sourceColumn: quantidade_debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_debandagem
+		dataType: string
+		lineageTag: 098ca95c-c4c3-4dfb-932a-2033207ed4b3
+		summarizeBy: none
+		sourceColumn: operador_debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno_Extr/Teste
+		dataType: double
+		lineageTag: 4787e658-c61d-4c41-80bc-29dbf9398597
+		summarizeBy: sum
+		sourceColumn: Turno_Extr/Teste
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column data_hora_inicio_extracao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 659f48b5-47a2-4996-9f12-5d008e885514
+		summarizeBy: none
+		sourceColumn: data_hora_inicio_extracao
+
+		variation Variation
+			isDefault
+			relationship: 7b2aae82-290b-4a26-96fa-84b40ab654da
+			defaultHierarchy: LocalDateTable_bda0a056-9e8b-4773-b075-8c67d0bd38f7.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final_extracao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e547dcbf-9857-45f3-8580-b457ba6c4238
+		summarizeBy: none
+		sourceColumn: data_hora_final_extracao
+
+		variation Variation
+			isDefault
+			relationship: 4728b69d-c1f7-4c6e-8079-8b8126f7d78e
+			defaultHierarchy: LocalDateTable_31c42ab0-9826-484e-b346-dace67bd20ff.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade_extracao
+		dataType: double
+		lineageTag: 7e3a217e-bb33-4580-9776-529bc8b6bfa9
+		summarizeBy: sum
+		sourceColumn: quantidade_extracao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador_extracao
+		dataType: string
+		lineageTag: 9439ace0-ea03-4d98-a4d5-e83125488314
+		summarizeBy: none
+		sourceColumn: operador_extracao
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cod.Cobertura'
+		dataType: string
+		lineageTag: 6dbf497d-380a-4ee6-8506-c9e79cd9ef9b
+		summarizeBy: none
+		sourceColumn: Cod.Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Cod.CompostoTubo'
+		dataType: string
+		lineageTag: 644d3c1b-5645-4d47-b2f3-18f831fb3476
+		summarizeBy: none
+		sourceColumn: Cod.CompostoTubo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 89c49d5a-8cf3-4dd9-b27b-3a8f4d887124
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: 7ff3e7ab-3444-4f11-babf-7489376575b8
+			defaultHierarchy: LocalDateTable_b8884ade-3095-40d6-8eec-0198b2ada567.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data de Validade  do composto cobertura'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 0b05a587-343d-4dce-a3ee-b387a51fb114
+		summarizeBy: none
+		sourceColumn: Data de Validade  do composto cobertura
+
+		variation Variation
+			isDefault
+			relationship: 1c9e875b-69d2-4831-b885-d27e65aca3f2
+			defaultHierarchy: LocalDateTable_e0bd9aac-1ef3-44c8-8c8c-8e92aa4137d5.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Data de Validade do Composto Tubo'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b903bd10-938e-49cf-ba54-0f9858f8a15b
+		summarizeBy: none
+		sourceColumn: Data de Validade do Composto Tubo
+
+		variation Variation
+			isDefault
+			relationship: b2e2b0f4-de5a-4a31-9102-910c6cb5d7dd
+			defaultHierarchy: LocalDateTable_0c7569f8-33ad-4686-a494-dec3e739da64.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lote Composto Tubo'
+		dataType: string
+		lineageTag: abbde051-2d66-4673-972c-e6139fbc3991
+		summarizeBy: none
+		sourceColumn: Lote Composto Tubo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lote_cobertura
+		dataType: string
+		lineageTag: 884c18b7-ab82-486b-ab5a-9e4b815060b1
+		summarizeBy: none
+		sourceColumn: Lote_cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lote_Trançagem
+		dataType: string
+		lineageTag: b0cb0b2b-74fb-4b20-a22e-3e62b08a0983
+		summarizeBy: none
+		sourceColumn: Lote_Trançagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column N°Picks
+		dataType: string
+		lineageTag: aa3f64ea-d33e-4d9f-b839-4e8360d0c0fe
+		summarizeBy: none
+		sourceColumn: N°Picks
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cod_Trançagem
+		dataType: string
+		lineageTag: 1659d1e3-cf09-409c-bcad-988dfa1eb43d
+		summarizeBy: none
+		sourceColumn: Cod_Trançagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardando_Trançadeira
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 420e880c-cc03-4f40-88a0-29908f25998e
+		summarizeBy: none
+		sourceColumn: InicioAguardando_Trançadeira
+
+		variation Variation
+			isDefault
+			relationship: 5932db7a-f5a3-4292-981f-7430a0724b1a
+			defaultHierarchy: LocalDateTable_3e873968-2de3-4086-9073-d9ef7d5fc1f2.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardando_Tubo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2a78419d-8357-4487-acc8-8b3b3a309aea
+		summarizeBy: none
+		sourceColumn: InicioAguardando_Tubo
+
+		variation Variation
+			isDefault
+			relationship: b8bae894-6c1d-40b0-94d4-b731c92748c2
+			defaultHierarchy: LocalDateTable_42d4ee41-516f-4729-8013-ede8549c9229.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardando_bandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 3ff79164-5673-4f62-80f9-2f58e495d4da
+		summarizeBy: none
+		sourceColumn: InicioAguardando_bandagem
+
+		variation Variation
+			isDefault
+			relationship: a2a2d730-c8b7-4343-ac55-8da4fcbceba6
+			defaultHierarchy: LocalDateTable_52311c2a-85c2-4acb-9896-fd3c1fa167b5.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardando_Vulcanização
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 4cb6f7c4-753c-43fd-8d19-bdbc039ebabb
+		summarizeBy: none
+		sourceColumn: InicioAguardando_Vulcanização
+
+		variation Variation
+			isDefault
+			relationship: 2e665f6b-99bf-47d1-a41e-b27e2e3c4060
+			defaultHierarchy: LocalDateTable_03df41ea-202d-4b13-bfac-2d1000a4467f.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardando_Debandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 411c561c-1a09-4552-b85c-38cd739b4795
+		summarizeBy: none
+		sourceColumn: InicioAguardando_Debandagem
+
+		variation Variation
+			isDefault
+			relationship: a3f0d112-94c7-4e0e-ab57-847fb8645e6e
+			defaultHierarchy: LocalDateTable_81bab066-615c-49b9-b5d9-a2058d513f86.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'InicioAguardando_Extr./Teste'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ab6058b3-4f4f-4d92-96c3-655c1a8baf45
+		summarizeBy: none
+		sourceColumn: InicioAguardando_Extr./Teste
+
+		variation Variation
+			isDefault
+			relationship: b9db50c5-2562-45a4-84b1-97beb6ce78bd
+			defaultHierarchy: LocalDateTable_11635348-72e6-4c84-8a58-b4ff760f8c75.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Mandril
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 439da0a2-4f1a-4202-9171-3f239aeb1794
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Mandril
+
+		variation Variation
+			isDefault
+			relationship: a948994f-f020-449d-92cd-bdc10a2a39d9
+			defaultHierarchy: LocalDateTable_17ae34fb-3ebb-4a1c-8a29-e67cade73394.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Tubo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2311de7e-b138-4055-84fd-a554bedff2b0
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Tubo
+
+		variation Variation
+			isDefault
+			relationship: d924f95c-8c01-4093-bf4b-82b6142ff2a8
+			defaultHierarchy: LocalDateTable_538bd658-180d-4a8c-bb12-b299fac136b4.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Trançagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: c4355aee-94b4-4984-9a9d-cd06a988cf7e
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Trançagem
+
+		variation Variation
+			isDefault
+			relationship: 4efbe26e-28c5-440e-991a-eae83775cf85
+			defaultHierarchy: LocalDateTable_eef6b0f2-1387-413b-9705-3d77a962b165.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Cobertura
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 72132c73-778d-4cfa-b023-09687441a58b
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Cobertura
+
+		variation Variation
+			isDefault
+			relationship: 2a68a8aa-dc4c-4a85-8063-acb3d62d781b
+			defaultHierarchy: LocalDateTable_4a390039-c045-4665-896a-a1ac7dce0593.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Bandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 79d2ef50-2054-4a1a-b1f8-44b1a4c1b756
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Bandagem
+
+		variation Variation
+			isDefault
+			relationship: 093104c5-b95b-4cd1-ae26-cb64e9766f5d
+			defaultHierarchy: LocalDateTable_6ff39473-b432-437f-a352-d6aa47a8f2c0.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Vulcanização
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2ecf5571-7413-40b1-9cca-5062feefa267
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Vulcanização
+
+		variation Variation
+			isDefault
+			relationship: d4eb6e04-7be5-45a2-b4f9-7be8dd022bfd
+			defaultHierarchy: LocalDateTable_7eb6e5f4-aa1b-455f-bbfd-0f1ce7edc0e5.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioEmProcesso_Debandagem
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: b9e70bbd-02a5-4dfb-9f8c-09dccbc13043
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Debandagem
+
+		variation Variation
+			isDefault
+			relationship: 1d4d12ae-ed14-4792-90e7-70fcf33bcc67
+			defaultHierarchy: LocalDateTable_92a0cb3f-2339-46a2-a87a-ef20b92992c5.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'InicioEmProcesso_Extr./Teste'
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: df6e9286-4e54-4d75-b051-8ecec0aa0eb2
+		summarizeBy: none
+		sourceColumn: InicioEmProcesso_Extr./Teste
+
+		variation Variation
+			isDefault
+			relationship: fdcff78b-191e-427b-bdb6-243a75224eb7
+			defaultHierarchy: LocalDateTable_3fea536d-59b7-4cbf-94b3-65631750b339.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column InicioAguardandoCobertura
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: dc1d318f-3618-401d-8063-873bfb01ef54
+		summarizeBy: none
+		sourceColumn: InicioAguardandoCobertura
+
+		variation Variation
+			isDefault
+			relationship: f22630a5-5d60-495e-ae22-2ebb989b96c0
+			defaultHierarchy: LocalDateTable_3b70512d-40d9-4c5b-a483-01862f8e3a3f.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Qtd_Turno1
+		dataType: double
+		lineageTag: 7268e3fd-34c3-42e5-8dc3-8c8d7bad78b8
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno1
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno2
+		dataType: double
+		lineageTag: 149aa446-5aa3-498a-a316-d61612022c1e
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno2
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno3
+		dataType: double
+		lineageTag: c5d7834f-61ac-414d-83d6-b474344ee4dd
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno3
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 7dd5de87-2ab2-4e8a-a799-35309b79cb57
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: 9633795b-861a-4b49-9108-04a7c6006135
+			defaultHierarchy: LocalDateTable_487911a5-249f-437e-853c-b45a8d640003.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Qtd_Turno1_Cobertura
+		dataType: double
+		lineageTag: 06650aec-0d65-4259-9c90-3f7868524566
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno1_Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno2_Cobertura
+		dataType: double
+		lineageTag: 07030aeb-beb7-4288-9916-5b159d697199
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno2_Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno3_Cobertura
+		dataType: double
+		lineageTag: 274da44e-f1d5-40db-918d-e6b514149a76
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno3_Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno1_Bandagem
+		dataType: double
+		lineageTag: d08fe5df-dbb2-43b5-b09c-79b4071082e4
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno1_Bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ' Qtd_Turno2_Bandagem'
+		dataType: double
+		lineageTag: 902d6764-3f4f-4232-a0cf-9f58d06ae33a
+		summarizeBy: sum
+		sourceColumn: " Qtd_Turno2_Bandagem"
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ' Qtd_Turno3_Bandagem'
+		dataType: double
+		lineageTag: 5c535077-5242-4e34-931c-2ed88a7f1675
+		summarizeBy: sum
+		sourceColumn: " Qtd_Turno3_Bandagem"
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno1_Vulcanizacao
+		dataType: double
+		lineageTag: 4d950aa3-3c7d-4a22-8ab2-fb2d1cf66c1d
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno1_Vulcanizacao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno2_Vulcanizacao
+		dataType: double
+		lineageTag: d37b5b09-7735-4d17-8391-3c892da08929
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno2_Vulcanizacao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno3_Vulcanizacao
+		dataType: double
+		lineageTag: a42d556f-46c7-4b6c-a885-d57b68abd162
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno3_Vulcanizacao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno1_Debandagem
+		dataType: double
+		lineageTag: 3df77b08-4fe5-4fce-9bf2-f9f586b26f1a
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno1_Debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno2_Debandagem
+		dataType: double
+		lineageTag: b667ffbd-b1f8-479d-9ffc-4a9fc293e6dd
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno2_Debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Qtd_Turno3_Debandagem
+		dataType: double
+		lineageTag: 6f2b0d9c-1187-4e41-a430-e3c25e2719d3
+		summarizeBy: sum
+		sourceColumn: Qtd_Turno3_Debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataFinalizacao
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: bfea49f6-107b-40c1-b622-a7ed95cffd50
+		summarizeBy: none
+		sourceColumn: DataFinalizacao
+
+		variation Variation
+			isDefault
+			relationship: b063199c-096d-4308-888c-6e954ec0b845
+			defaultHierarchy: LocalDateTable_5fcc18a2-4525-4a85-aca8-323353f4d538.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_mandril
+		dataType: string
+		lineageTag: 535574cc-9d5d-45ce-b494-de7f567d1081
+		summarizeBy: none
+		sourceColumn: Observação_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_tubo
+		dataType: string
+		lineageTag: 980caafd-a15d-45d5-aec1-a2e813b20b9a
+		summarizeBy: none
+		sourceColumn: Observação_tubo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_Trançagem
+		dataType: string
+		lineageTag: b52ade68-4118-414e-afb8-dc431ee28974
+		summarizeBy: none
+		sourceColumn: Observação_Trançagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_Cobertura
+		dataType: string
+		lineageTag: 3443faaf-a2b4-40e4-be22-df6aef864b25
+		summarizeBy: none
+		sourceColumn: Observação_Cobertura
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PackList Cabine'
+		dataType: string
+		lineageTag: b42b4789-8220-4307-856f-b28c7de6ce05
+		summarizeBy: none
+		sourceColumn: PackList Cabine
+
+		annotation SummarizationSetBy = Automatic
+
+	column ordem_producao
+		dataType: double
+		lineageTag: e96201ba-f0dc-4aee-b21c-f26d108acecb
+		summarizeBy: sum
+		sourceColumn: ordem_producao
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column cod_mangueira
+		dataType: string
+		lineageTag: f4f652f7-1b98-4564-a4ec-2189f67141e8
+		summarizeBy: none
+		sourceColumn: cod_mangueira
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote
+		dataType: string
+		lineageTag: 515e3b55-e5b6-4eaa-a6aa-7b9a2f2d4737
+		summarizeBy: none
+		sourceColumn: lote
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Processo.1'
+		dataType: string
+		lineageTag: bae4c3da-6f71-4906-9e03-53cc28bc3405
+		summarizeBy: none
+		sourceColumn: Processo.1
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PostCure Qtd'
+		dataType: string
+		lineageTag: 85a0bc37-3b08-49e0-87a5-fd85ad235360
+		summarizeBy: none
+		sourceColumn: PostCure Qtd
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'PostCure Data'
+		dataType: string
+		lineageTag: 72b0c4d4-75da-450f-88ec-6ff55d21677f
+		summarizeBy: none
+		sourceColumn: PostCure Data
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Postcure Horario de termino'
+		dataType: string
+		lineageTag: b7ff85fb-8d49-4489-a068-70973ee8a885
+		summarizeBy: none
+		sourceColumn: Postcure Horario de termino
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Registro Defeito'
+		dataType: string
+		lineageTag: c0bc7320-bd51-4ce0-8095-2c484c2310a2
+		summarizeBy: none
+		sourceColumn: Registro Defeito
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Qtd. Planejada'
+		dataType: double
+		lineageTag: bf76ffc1-1c52-4b53-ad94-16a2c29cb19b
+		summarizeBy: sum
+		sourceColumn: Qtd. Planejada
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Turno
+		dataType: string
+		lineageTag: 7dc7966f-9ae5-44b1-8a71-ccbb4c656bd9
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'board choice1'
+		dataType: string
+		lineageTag: e975f9c6-98fb-4380-a7e3-a76f644c7ba1
+		summarizeBy: none
+		sourceColumn: board choice1
+
+		annotation SummarizationSetBy = Automatic
+
+	column QTranças?
+		dataType: string
+		lineageTag: 0fe44ade-3092-49fd-923f-cd2ca5e38655
+		summarizeBy: none
+		sourceColumn: QTranças?
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: a85edf52-08ce-47e5-83d1-e8d28259fe07
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: b864278d-ac51-4869-8a54-7e9fd9bcd505
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: 307bf5f9-cde8-415b-b879-0f9e6e96a28a
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: da8165e4-bfaa-4f34-940f-e352687c822d
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: ffb8ad49-3e3a-4cfe-a3b4-66197d6f84e6
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: 99520a17-f6af-4995-b09a-01f29442f7bb
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 76d7acfd-87de-4da2-be0f-26026955820c
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: ffa83255-f90e-49e3-bef4-c00535200769
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: e3be8953-fe04-400b-a3ed-bd64cad78d8b
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mangueira_Limpa = VAR m = UPPER(TRIM('ficha_producao'[Mangueira])) VAR semZeroEsq = IF(LEFT(m,1) = "0" && NOT(MID(m,2,1) >= "0" && MID(m,2,1) <= "9"), MID(m, 2, LEN(m)), m) RETURN semZeroEsq
+		lineageTag: 35be8a18-e81d-4701-b732-7879394502a3
+
+	column Bitola_Corrigida = VAR mang = TRIM('ficha_producao'[Mangueira]) VAR temHifen = IFERROR(SEARCH("-", mang, 1, 0) > 0, FALSE) VAR sufixo = IF(temHifen, PATHITEM(SUBSTITUTE(mang, "-", "|"), 2), BLANK()) VAR digitos = IF(ISBLANK(sufixo), "", CONCATENATEX(GENERATESERIES(1, LEN(sufixo)), VAR c = MID(sufixo, [Value], 1) RETURN IF(c >= "0" && c <= "9", c, ""), "")) RETURN IF(digitos = "", BLANK(), VALUE(digitos))
+		lineageTag: 7778dd64-ee15-4934-910d-0d9cd1c89346
+
+	column Flag_Data_Invertida = VAR e1 = NOT(ISBLANK('ficha_producao'[data_hora_final_mandril])) && 'ficha_producao'[data_hora_final_mandril] < 'ficha_producao'[data_hora_inicio_mandril] VAR e2 = NOT(ISBLANK('ficha_producao'[data_hora_final_extracao])) && 'ficha_producao'[data_hora_final_extracao] < 'ficha_producao'[data_hora_inicio_extracao] VAR e3 = NOT(ISBLANK('ficha_producao'[data_hora_final_vulcanizacao])) && 'ficha_producao'[data_hora_final_vulcanizacao] < 'ficha_producao'[data_hora_inicio_vulcanizacao] RETURN e1 || e2 || e3
+		lineageTag: 3634f730-fb47-445d-b009-261592508657
+
+	column OP_Texto = VAR o = 'ficha_producao'[OP] RETURN IF(ISBLANK(o), BLANK(), SUBSTITUTE(FORMAT(o, "0"), ",", ""))
+		lineageTag: b3121acb-29ea-4628-acbb-6e6ef3e3dc04
+
+	column Metragem_Extracao = VAR t = TRIM('ficha_producao'[quantidade_extracao]) VAR norm = SUBSTITUTE(t, ",", ".") VAR posP = IFERROR(SEARCH(".", norm, 1, 0), 0) VAR semSep = SUBSTITUTE(norm, ".", "") VAR nCasas = IF(posP = 0, 0, LEN(norm) - posP) VAR valInt = IF(semSep = "", BLANK(), IFERROR(VALUE(semSep), BLANK())) RETURN IF(ISBLANK(t) || t = "" || ISBLANK(valInt), BLANK(), DIVIDE(valInt, POWER(10, nCasas)))
+		lineageTag: 98589406-8c72-444a-9018-86a86e56db48
+
+	column Turno_Extracao_Limpo = VAR t = TRIM('ficha_producao'[Turno_Extr/Teste]) RETURN SWITCH(TRUE(), t = "" || ISBLANK(t), "Não informado", t = "1" || t = "Turno 1", "Turno 1", t = "2" || t = "Turno 2", "Turno 2", t = "3" || t = "Turno 3", "Turno 3", t)
+		lineageTag: e4ed5b70-870f-489b-b618-0b98be47f552
+
+	column TempoCiclo_Horas = VAR ini = 'ficha_producao'[data_hora_inicio_mandril] VAR fim = 'ficha_producao'[data_hora_final_extracao] VAR horas = IF(ISBLANK(ini) || ISBLANK(fim), BLANK(), (fim - ini) * 24) RETURN IF(ISBLANK(horas) || horas < 0, BLANK(), horas)
+		lineageTag: b58ca661-9728-41f3-bb01-9eca68d887c6
+
+	column defeito_trancagem_trat = VAR d = 'ficha_producao'[defeito_trancagem] RETURN IF(ISBLANK(d) || d > 100 || d < 0, 0, d)
+		lineageTag: f3683315-5d01-48a5-8c7a-a081591ba6fa
+
+	column defeito_cobertura_trat = VAR d = 'ficha_producao'[defeito_cobertura] RETURN IF(ISBLANK(d) || d > 100 || d < 0, 0, d)
+		lineageTag: f5319611-4270-4849-a36c-41ddfc7581fb
+
+	column defeito_tubo_trat = VAR d = 'ficha_producao'[defeito_tubo] RETURN IF(ISBLANK(d) || d > 100 || d < 0, 0, d)
+		lineageTag: 3170216e-dac1-448e-8d5b-a48dd1c6a6ce
+
+	column Esta_Ativa = VAR maxMod = MAXX(ALL('ficha_producao'), 'ficha_producao'[Modified]) RETURN NOT('ficha_producao'[status_processo] IN {"Finalizado", "Descartado"}) && NOT(ISBLANK('ficha_producao'[Modified])) && 'ficha_producao'[Modified] >= maxMod - 4
+		lineageTag: 0caa719a-51b9-4dc2-a1ea-978737e2fa3a
+
+	column Flag_Qualidade_Bitola = VAR orig = 'ficha_producao'[Bitola] VAR corr = 'ficha_producao'[Bitola_Corrigida] VAR temMang = NOT(ISBLANK('ficha_producao'[Mangueira])) && TRIM('ficha_producao'[Mangueira]) <> "" RETURN SWITCH(TRUE(), NOT(temMang), "Sem mangueira", ISBLANK(corr), "Bitola irrecuperavel", ISBLANK(orig), "Bitola vazia - corrigida", orig <> corr, "Bitola divergente - corrigida", "OK")
+		lineageTag: 1fc83b6d-3bcc-4ea9-9a85-8f0615a2090a
+
+	column AnoMes_Producao = VAR d = 'ficha_producao'[data_hora_final_extracao] RETURN IF(ISBLANK(d) || 'ficha_producao'[Metragem_Extracao] <= 0, BLANK(), YEAR(d) * 100 + MONTH(d))
+		lineageTag: 5f8bb951-0121-4595-a3c4-78cf2675c118
+
+	column MesProducao = VAR d = 'ficha_producao'[data_hora_final_extracao] RETURN IF(ISBLANK(d) || 'ficha_producao'[Metragem_Extracao] <= 0, BLANK(), FORMAT(d, "mmm/yyyy", "pt-BR"))
+		lineageTag: 54dfb607-d04f-415d-9610-a690fe184a19
+
+	column Turno_Producao = VAR e = 'ficha_producao'[data_hora_final_extracao] VAR tm = HOUR(e) * 60 + MINUTE(e) VAR derived = SWITCH(TRUE(), tm >= 320 && tm < 820, "Turno 1", tm >= 820 && tm < 1340, "Turno 2", "Turno 3") VAR rec = 'ficha_producao'[Turno_Extracao_Limpo] VAR madrugada = tm < 320 RETURN SWITCH(TRUE(), ISBLANK(e), "Nao informado", madrugada && (rec = "Turno 1" || rec = "Turno 2"), rec, derived)
+		lineageTag: 4886661d-b096-42e4-b0df-28cc3036c222
+
+	column DataProducao = VAR d = 'ficha_producao'[data_hora_final_extracao] RETURN IF(ISBLANK(d) || 'ficha_producao'[Metragem_Extracao] <= 0, BLANK(), DATE(YEAR(d), MONTH(d), DAY(d)))
+		lineageTag: eb8ede3c-f3a3-43a2-83fa-3a658f290a0a
+
+	column maquina_mandril
+		dataType: string
+		lineageTag: dddaaff0-85b7-44bf-8687-08075ff16a99
+		summarizeBy: none
+		sourceColumn: maquina_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_Bandagem
+		dataType: string
+		lineageTag: 9df1e2a3-2a90-497b-8786-d5911f7b827e
+		summarizeBy: none
+		sourceColumn: Observação_Bandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação_Debandagem
+		dataType: string
+		lineageTag: e0dee57e-ac8e-4164-adef-9c33d5909373
+		summarizeBy: none
+		sourceColumn: Observação_Debandagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column cabine_teste
+		dataType: string
+		lineageTag: 07c4b122-d63b-41dc-869a-3be9cdcaae6f
+		summarizeBy: none
+		sourceColumn: cabine_teste
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ficha_producao = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    Origem = Fonte{[Id="e963db72-b7d4-4cbb-8613-cf6f7bc6b8f3"]}[Items],
+				    Renomeado = Table.RenameColumns(Origem,{{"Processo", "Processo.1"}}),
+				    Limpo = Table.RemoveColumns(Renomeado, {"Color Tag","Compliance Asset Id","Content Type","Item Child Count","Folder Child Count","Label setting","Retention label","App Created By","App Modified By","Title"}, MissingField.Ignore)
+				in
+				    Limpo
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

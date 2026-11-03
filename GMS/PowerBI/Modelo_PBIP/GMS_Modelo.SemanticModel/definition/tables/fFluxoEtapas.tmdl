@@ -1,0 +1,212 @@
+/// Fato de fila/processamento por etapa. Base da analise de lead time e Teoria das Restricoes.
+table fFluxoEtapas
+	lineageTag: 67bbe416-173a-4a8c-b0c5-ae1811d77f1b
+
+	/// Tempo mediano de FILA (espera) na etapa, em horas. Mediana e nao media: a distribuicao tem cauda longa e a media e distorcida por OPs travadas.
+	measure 'Fila Mediana (h)' = MEDIANX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Fila_h])
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: d764f525-32cc-4a37-88c5-5470323f239b
+
+	/// Tempo mediano de PROCESSAMENTO (trabalho efetivo) na etapa, em horas.
+	measure 'Proc Mediana (h)' = MEDIANX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Proc_h])
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 19e31ac3-b99f-4cf6-ab14-1235b8757cb1
+
+	/// Lead time mediano da etapa (fila + processamento), em horas.
+	measure 'Lead Mediana (h)' = MEDIANX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Lead_h])
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 7bfa693d-38b4-418a-afae-e8e18fd4777e
+
+	/// Fila no percentil 90 (h). Mostra o pior caso realista, nao o outlier absoluto. Use junto da mediana para dimensionar a cauda.
+	measure 'Fila P90 (h)' = PERCENTILEX.INC(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Fila_h], 0.9)
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: db28df84-8537-4433-9b7d-54a4c0fea63b
+
+	/// Eficiencia de fluxo (Lean) = tempo de processamento / lead time total. Percentual do tempo em que a peca esta efetivamente sendo trabalhada. Referencia de industria discreta costuma ficar abaixo de 10%.
+	measure 'Eficiencia de Fluxo' = DIVIDE(SUMX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Proc_h]), SUMX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Lead_h]))
+		formatString: 0.0%
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 9fc3f991-6479-43a8-8ac0-75c220385c6f
+
+	/// Quantas vezes a espera supera o trabalho efetivo na etapa (fila mediana / processamento mediano). Acima de 1 significa que a peca espera mais do que e trabalhada.
+	measure 'Razao Fila-Processo' = DIVIDE([Fila Mediana (h)], [Proc Mediana (h)])
+		formatString: 0.0"x"
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 4dd86522-b6f6-4f2f-b1b3-fcf6dd380eed
+
+	/// Lead time medio total de uma ficha somando todas as etapas medidas, em horas. Base da analise de Teoria das Restricoes.
+	measure 'Lead Total por Ficha (h)' = AVERAGEX(VALUES(fFluxoEtapas[ID_Ficha]), CALCULATE(SUMX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Lead_h])))
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 39ce478c-8f72-451e-befd-62e6cf694458
+
+	/// Nome da etapa com a maior fila mediana no contexto filtrado. E o gargalo do fluxo segundo a Teoria das Restricoes. Use em cartao.
+	measure 'Etapa Gargalo' = VAR _T = ADDCOLUMNS(VALUES(fFluxoEtapas[Etapa]), "@Fila", [Fila Mediana (h)]) VAR _Max = MAXX(_T, [@Fila]) RETURN IF(ISBLANK(_Max), BLANK(), CONCATENATEX(FILTER(_T, [@Fila] = _Max), fFluxoEtapas[Etapa], ", "))
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: 77f51df1-e37d-46b1-8786-1867ef83b171
+
+	/// Registros de etapa validos no contexto (carimbos coerentes).
+	measure 'Etapas Medidas' = COUNTROWS(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]))
+		formatString: #,0
+		displayFolder: 14 Fluxo e Lead Time
+		lineageTag: a983c27c-0015-4c7f-8e40-7e0c1746c4d1
+
+	/// % de registros com carimbos invertidos (fim antes do inicio). Indicador de qualidade de dado do apontamento, nao de produtividade.
+	measure '% Carimbos Invalidos' = DIVIDE(COUNTROWS(FILTER(fFluxoEtapas, NOT fFluxoEtapas[Valida])), COUNTROWS(fFluxoEtapas))
+		formatString: 0.0%
+		displayFolder: 14 Fluxo e Lead Time\Qualidade de Dado
+		lineageTag: f3a45e24-b059-4e36-b0f2-dd5e88154ebe
+
+	/// Tempo MEDIO de fila na etapa (h). Criada especificamente para o grafico de barras empilhadas: medias sao aditivas (Fila Media + Proc Media = Lead Media), medianas nao. Para leitura de tipico use a mediana; para composicao empilhada use esta.
+	measure 'Fila Media (h)' = AVERAGEX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Fila_h])
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time\Aditivas (para empilhado)
+		lineageTag: afc33ac3-ae21-45e1-bd4a-44f286cf848e
+
+	/// Tempo MEDIO de processamento na etapa (h). Par aditivo de Fila Media (h) para o grafico empilhado.
+	measure 'Proc Media (h)' = AVERAGEX(FILTER(fFluxoEtapas, fFluxoEtapas[Valida]), fFluxoEtapas[Proc_h])
+		formatString: 0.0
+		displayFolder: 14 Fluxo e Lead Time\Aditivas (para empilhado)
+		lineageTag: 3bc32134-d83e-46a5-94c7-d1aeda86a11e
+
+	column ID_Ficha
+		lineageTag: 1803e2e3-2bcc-4e2f-8d23-a3170abad112
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [ID_Ficha]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordem_Etapa
+		lineageTag: 0b7683eb-7b8a-4813-831f-e401335ce68a
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Ordem_Etapa]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Etapa
+		lineageTag: 519cc2ce-bb2d-40da-9ec8-3e4ab74ac324
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Etapa]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ini_Fila
+		lineageTag: 7ff58aaa-3a15-4da5-ab1a-e04a14cfcf40
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ini_Fila]
+
+		variation Variation
+			isDefault
+			relationship: 3b3b3ddf-ef50-4d8d-8c75-95cbdff14b62
+			defaultHierarchy: LocalDateTable_ac94742d-2082-40a7-b4d3-70beccec7473.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ini_Proc
+		lineageTag: 2a921a6a-30a9-423d-823e-2294041ad959
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ini_Proc]
+
+		variation Variation
+			isDefault
+			relationship: 16ac567b-3a90-4b6d-a7a3-44de6e9903f6
+			defaultHierarchy: LocalDateTable_2a39ccbe-770d-4eac-bc2f-2d3ebee79656.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fim
+		lineageTag: c99394fb-b101-45cc-93d4-20e19fc4c0e9
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Fim]
+
+		variation Variation
+			isDefault
+			relationship: 7f504c14-e884-4f6b-8e9c-466db0b4da54
+			defaultHierarchy: LocalDateTable_5e71ebd6-1830-4134-b6ae-4b299c148fad.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fila_Medida
+		lineageTag: a5b5bffb-e6f9-4975-bdcb-01ca5b585861
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Fila_Medida]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Data_Fim
+		lineageTag: 0de320a1-8ac4-4b67-8a78-606f1825acd2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Data_Fim]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Fila_h
+		lineageTag: bb801ff8-fd41-4a87-b167-e511f6b7ca57
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Fila_h]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Proc_h
+		lineageTag: fff79915-4de8-43ee-a450-c60baf0cbe5f
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Proc_h]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lead_h
+		lineageTag: 115ccb50-c3c5-4dbe-b4bd-cbe621f7be06
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Lead_h]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Valida
+		lineageTag: a2e17aa2-061b-4b1c-be9b-3067a3ac89c6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Valida]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mangueira = LOOKUPVALUE(ficha_producao[Mangueira_Limpa], ficha_producao[ID], fFluxoEtapas[ID_Ficha])
+		lineageTag: 05deaf96-eec8-47c7-9b2b-9657978ebb2d
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bitola = LOOKUPVALUE(ficha_producao[Bitola_Corrigida], ficha_producao[ID], fFluxoEtapas[ID_Ficha])
+		lineageTag: f0997741-3891-4039-a7ce-042cef6999a9
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fFluxoEtapas = calculated
+		mode: import
+		source =
+				VAR _E1 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[data_hora_inicio_mandril]) && NOT ISBLANK(ficha_producao[data_hora_final_mandril])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 1, "Etapa", "1 Mandril", "Ini_Fila", ficha_producao[data_hora_inicio_mandril], "Ini_Proc", ficha_producao[data_hora_inicio_mandril], "Fim", ficha_producao[data_hora_final_mandril], "Fila_Medida", FALSE())
+				VAR _E2 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Tubo]) && NOT ISBLANK(ficha_producao[data_hora_final_tubo])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 2, "Etapa", "2 Tubo", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_Tubo], ficha_producao[InicioEmProcesso_Tubo]), "Ini_Proc", ficha_producao[InicioEmProcesso_Tubo], "Fim", ficha_producao[data_hora_final_tubo], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_Tubo]))
+				VAR _E3 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Trançagem]) && NOT ISBLANK(ficha_producao[data_hora_final_trancadeira])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 3, "Etapa", "3 Trançagem", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_Trançadeira], ficha_producao[InicioEmProcesso_Trançagem]), "Ini_Proc", ficha_producao[InicioEmProcesso_Trançagem], "Fim", ficha_producao[data_hora_final_trancadeira], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_Trançadeira]))
+				VAR _E4 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Cobertura]) && NOT ISBLANK(ficha_producao[data_hora_final_cobertura])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 4, "Etapa", "4 Cobertura", "Ini_Fila", COALESCE(ficha_producao[InicioAguardandoCobertura], ficha_producao[InicioEmProcesso_Cobertura]), "Ini_Proc", ficha_producao[InicioEmProcesso_Cobertura], "Fim", ficha_producao[data_hora_final_cobertura], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardandoCobertura]))
+				VAR _E5 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Bandagem]) && NOT ISBLANK(ficha_producao[data_hora_final_bandagem])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 5, "Etapa", "5 Bandagem", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_bandagem], ficha_producao[InicioEmProcesso_Bandagem]), "Ini_Proc", ficha_producao[InicioEmProcesso_Bandagem], "Fim", ficha_producao[data_hora_final_bandagem], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_bandagem]))
+				VAR _E6 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Vulcanização]) && NOT ISBLANK(ficha_producao[data_hora_final_vulcanizacao])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 6, "Etapa", "6 Vulcanização", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_Vulcanização], ficha_producao[InicioEmProcesso_Vulcanização]), "Ini_Proc", ficha_producao[InicioEmProcesso_Vulcanização], "Fim", ficha_producao[data_hora_final_vulcanizacao], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_Vulcanização]))
+				VAR _E7 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Debandagem]) && NOT ISBLANK(ficha_producao[data_hora_final_debandagem])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 7, "Etapa", "7 Debandagem", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_Debandagem], ficha_producao[InicioEmProcesso_Debandagem]), "Ini_Proc", ficha_producao[InicioEmProcesso_Debandagem], "Fim", ficha_producao[data_hora_final_debandagem], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_Debandagem]))
+				VAR _E8 = SELECTCOLUMNS(FILTER(ficha_producao, NOT ISBLANK(ficha_producao[InicioEmProcesso_Extr./Teste]) && NOT ISBLANK(ficha_producao[data_hora_final_extracao])), "ID_Ficha", ficha_producao[ID], "Ordem_Etapa", 8, "Etapa", "8 Extr./Teste", "Ini_Fila", COALESCE(ficha_producao[InicioAguardando_Extr./Teste], ficha_producao[InicioEmProcesso_Extr./Teste]), "Ini_Proc", ficha_producao[InicioEmProcesso_Extr./Teste], "Fim", ficha_producao[data_hora_final_extracao], "Fila_Medida", NOT ISBLANK(ficha_producao[InicioAguardando_Extr./Teste]))
+				VAR _U = UNION(_E1, _E2, _E3, _E4, _E5, _E6, _E7, _E8)
+				RETURN ADDCOLUMNS(_U, "Data_Fim", DATE(YEAR([Fim]), MONTH([Fim]), DAY([Fim])), "Fila_h", ([Ini_Proc] - [Ini_Fila]) * 24.0, "Proc_h", ([Fim] - [Ini_Proc]) * 24.0, "Lead_h", ([Fim] - [Ini_Fila]) * 24.0, "Valida", ([Ini_Proc] - [Ini_Fila]) >= 0 && ([Fim] - [Ini_Proc]) >= 0)
+

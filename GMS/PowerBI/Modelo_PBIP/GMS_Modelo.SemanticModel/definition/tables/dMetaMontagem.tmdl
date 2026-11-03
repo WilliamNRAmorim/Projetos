@@ -1,0 +1,35 @@
+/// Metas diarias de montagem por celula e turno (aba META Mangueira Montagem do CP).
+table dMetaMontagem
+	lineageTag: d7218143-06b6-4a7f-a5e3-ea9ebb7cb35d
+
+	column Celula
+		lineageTag: f36594ab-63c1-49e5-9607-6e9e6a2b7e06
+		isNameInferred
+		sourceColumn: [Celula]
+
+	column Turno
+		lineageTag: 76794bc8-38ef-4150-b3c2-6375c7be7071
+		isNameInferred
+		sourceColumn: [Turno]
+
+	column MetaDia
+		lineageTag: 4e4559a4-c079-4c0e-a274-61187e766ea1
+		isNameInferred
+		sourceColumn: [MetaDia]
+
+	partition dMetaMontagem = calculated
+		mode: import
+		source =
+				DATATABLE(
+				    "Celula", STRING, "Turno", STRING, "MetaDia", INTEGER,
+				    {
+				        {"HIGH", "1º Turno", 143}, {"HIGH", "2º Turno", 143},
+				        {"FF1", "1º Turno", 400}, {"FF1", "2º Turno", 400},
+				        {"FF2", "1º Turno", 500}, {"FF2", "2º Turno", 500},
+				        {"FF3", "1º Turno", 250}, {"FF3", "2º Turno", 250},
+				        {"Bundle", "1º Turno", 14},
+				        {"Acessorios", "1º Turno", 500},
+				        {"Conexão", "1º Turno", 1500}
+				    }
+				)
+

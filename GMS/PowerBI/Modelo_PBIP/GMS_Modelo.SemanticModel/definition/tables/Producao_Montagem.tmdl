@@ -1,0 +1,214 @@
+table Producao_Montagem
+	lineageTag: 0b4c1af1-1947-4d8e-877c-3a5a685e3ef1
+
+	/// Meta DIARIA de montagem no contexto de celula/turno da dMetaMontagem. Para periodos maiores que 1 dia, multiplicar por dias uteis. Fonte: aba META Mangueira Montagem do CP.
+	measure 'Meta Montagem Dia' = SUM(dMetaMontagem[MetaDia])
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 72d7610b-69a8-42c6-95e0-4c9a719a531f
+
+	/// Producao de montagem (somente OPs Finalizado). Cruza com dMetaMontagem via TREATAS quando a matriz usa celula/turno da tabela de metas, dispensando relacionamento fisico.
+	measure 'Real Montagem' = CALCULATE(SUM(Producao_Montagem[QtdProduzida]), Producao_Montagem[status] = "Finalizado", TREATAS(VALUES(dMetaMontagem[Celula]), Producao_Montagem[Celula]), TREATAS(VALUES(dMetaMontagem[Turno]), Producao_Montagem[Turno]))
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 017d23fd-716d-4944-bfd8-ccccd53a6623
+
+	/// % de atingimento da montagem = Real / Meta diaria. Em branco quando nao ha meta no contexto.
+	measure '% Montagem' = DIVIDE([Real Montagem], [Meta Montagem Dia])
+		formatString: 0%
+		displayFolder: 10 CP Montagem
+		lineageTag: dc068543-e55c-4241-a8ab-91aec4aca851
+
+	/// % de montagem com seta de tendencia, mesmo padrao do CP Mangueira: para cima quando bateu a meta, para baixo abaixo.
+	measure '% Montagem c/ Seta' = VAR p = [% Montagem] RETURN IF(NOT ISBLANK(p), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)) & " " & FORMAT(p, "0%"))
+		displayFolder: 10 CP Montagem
+		lineageTag: 8e1eac0d-d64d-4f4b-bb06-d523ff8d2045
+
+	/// Minutos de parada da montagem. Cruza celula/turno com dMetaMontagem via TREATAS para uso na mesma matriz de metas.
+	measure 'Tempo Parado Montagem (min)' = CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), TREATAS(VALUES(dMetaMontagem[Celula]), Paradas_Montagem[Celula]), TREATAS(VALUES(dMetaMontagem[Turno]), Paradas_Montagem[Turno]))
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: eb242a75-f2df-4726-a77e-67a48c6b55d2
+
+	/// Quantidade de OPs de montagem finalizadas no contexto.
+	measure 'OPs Finalizadas Montagem' = CALCULATE(COUNTROWS(Producao_Montagem), Producao_Montagem[status] = "Finalizado")
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 302ed6b2-819a-4f61-8573-6125376f6588
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 0655d1aa-84aa-46d9-b641-6bd09be45ab4
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Turno
+		dataType: string
+		lineageTag: 869323a3-228b-4ed6-a4ff-df1dd62f8159
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Celula
+		dataType: string
+		lineageTag: 2ea793bd-5662-40f4-b253-0087e8e2a511
+		summarizeBy: none
+		sourceColumn: Celula
+
+		annotation SummarizationSetBy = Automatic
+
+	column PN
+		dataType: string
+		lineageTag: 174facbc-4ae0-46ad-85b3-1df1c6c5a693
+		summarizeBy: none
+		sourceColumn: PN
+
+		annotation SummarizationSetBy = Automatic
+
+	column OT
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a8151e4-488c-409d-bf85-9ca9032dd543
+		summarizeBy: sum
+		sourceColumn: OT
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdOT
+		dataType: double
+		lineageTag: ff1d6b29-2dcc-4e15-8e33-e40e5b12d17e
+		summarizeBy: sum
+		sourceColumn: QtdOT
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InicioEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: adba5efc-9ce3-4498-9008-4c393d7574b4
+		summarizeBy: none
+		sourceColumn: InicioEm
+
+		variation Variation
+			isDefault
+			relationship: 7564363c-12f3-4d88-be04-088775a09ccc
+			defaultHierarchy: LocalDateTable_46a4a0be-2e8f-47a2-a719-43dc07bbaed1.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FimEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5d6b742c-cc69-45e5-84ad-97346cf0328f
+		summarizeBy: none
+		sourceColumn: FimEm
+
+		variation Variation
+			isDefault
+			relationship: 2c74738e-288d-4f6f-9b0f-d25a653e4268
+			defaultHierarchy: LocalDateTable_5b2ae7f8-4e58-46e5-8e7e-2ca9431e5940.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdProduzida
+		dataType: double
+		lineageTag: 83c8fbd8-bed6-4861-b324-c02c5baae142
+		summarizeBy: sum
+		sourceColumn: QtdProduzida
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MetaHora
+		dataType: double
+		lineageTag: 19717b03-cbe4-4a7a-bac1-02825fc8b1fd
+		summarizeBy: sum
+		sourceColumn: MetaHora
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DuracaoMin
+		dataType: double
+		lineageTag: f2bfd67d-10c8-4139-86f4-312b36e9bb29
+		summarizeBy: sum
+		sourceColumn: DuracaoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DuracaoSeg
+		dataType: double
+		lineageTag: 78f320f8-a60a-4e7b-be96-a292f3ee3885
+		summarizeBy: sum
+		sourceColumn: DuracaoSeg
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Status
+		dataType: string
+		lineageTag: b882d321-cd01-4fed-981d-4f77684c9bf4
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cracha
+		dataType: string
+		lineageTag: 7a28d10a-44b8-4ed1-afd8-c48e0b2796e6
+		summarizeBy: none
+		sourceColumn: Cracha
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuracaoRealMin
+		dataType: double
+		lineageTag: b92bf5c6-ff2f-4bab-b210-fd6a416e2ba8
+		summarizeBy: sum
+		sourceColumn: DuracaoRealMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DescontoMin
+		dataType: double
+		lineageTag: 79afba11-a0e9-422a-8d82-70561bf40a52
+		summarizeBy: sum
+		sourceColumn: DescontoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Producao_Montagem = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    #"d13a93aa-5b29-403f-b7d2-a6d2d1db781c" = Fonte{[Id="d13a93aa-5b29-403f-b7d2-a6d2d1db781c"]}[Items],
+				    #"Colunas Removidas" = Table.RemoveColumns(#"d13a93aa-5b29-403f-b7d2-a6d2d1db781c",{"Color Tag", "Compliance Asset Id", "ID", "Content Type", "Modified", "Created", "Created By", "Modified By", "Version", "Attachments", "Edit", "Type", "Item Child Count", "Folder Child Count", "Label setting", "Retention label", "Retention label Applied", "Label applied by", "Item is a Record", "App Created By", "App Modified By", "Data", "Turno", "Celula"}),
+				    #"Dividir Coluna por Delimitador" = Table.SplitColumn(#"Colunas Removidas", "Title", Splitter.SplitTextByDelimiter("-", QuoteStyle.Csv), {"Title.1", "Title.2", "Title.3"}),
+				    #"Tipo Alterado" = Table.TransformColumnTypes(#"Dividir Coluna por Delimitador",{{"Title.1", type date}, {"Title.2", type text}, {"Title.3", type text}}),
+				    #"Colunas Renomeadas" = Table.RenameColumns(#"Tipo Alterado",{{"Title.1", "Data"}, {"Title.2", "Turno"}, {"Title.3", "Celula"}}),
+				    #"Tipo Alterado1" = Table.TransformColumnTypes(#"Colunas Renomeadas",{{"OT", Int64.Type}})
+				in
+				    #"Tipo Alterado1"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

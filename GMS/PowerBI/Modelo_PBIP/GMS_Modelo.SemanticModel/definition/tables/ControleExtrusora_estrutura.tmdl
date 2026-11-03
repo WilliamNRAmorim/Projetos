@@ -1,0 +1,337 @@
+table ControleExtrusora_estrutura
+	lineageTag: 491e514d-f15c-46c0-ae5c-0ed65d717da0
+
+	/// Quantidade extrudada de mandril (ControleExtrusora_estrutura). Data vem de data_hora_inicio via join virtual com dCalendario (INT do datetime), pois a tabela não tem coluna de data pura.
+	measure 'Qtd Extrusora Mandril' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(ControleExtrusora_estrutura, INT(ControleExtrusora_estrutura[data_hora_inicio]) IN datas), ControleExtrusora_estrutura[Quantidade]), SUM(ControleExtrusora_estrutura[Quantidade]))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 47ab092b-07fa-4051-8f97-71b0ec3020f2
+
+	/// Quantidade refugada na extrusora de mandril. Join virtual de data via INT(DataHoraRefugo).
+	measure 'Refugo Extrusora Mandril' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(RefugoExtrusora_estrutura, INT(RefugoExtrusora_estrutura[DataHoraRefugo]) IN datas), RefugoExtrusora_estrutura[Quantidade]), SUM(RefugoExtrusora_estrutura[Quantidade]))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 2439d72b-8e56-4360-bf6b-b02caa2c0ec7
+
+	/// % de refugo da extrusora de mandril = refugo / (produzido + refugo).
+	measure '% Refugo Extrusora' = DIVIDE([Refugo Extrusora Mandril], [Qtd Extrusora Mandril] + [Refugo Extrusora Mandril])
+		formatString: 0.0%
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 9b80124e-0313-4d5b-881c-dc7fcbbd32be
+
+	column OP_ID
+		dataType: string
+		lineageTag: cfabaef8-1b51-4667-93f6-fae5ec42d9ac
+		summarizeBy: none
+		sourceColumn: OP_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column OP
+		dataType: double
+		lineageTag: b48bf12e-ea07-4d77-a181-e5260150e540
+		summarizeBy: sum
+		sourceColumn: OP
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Bitola
+		dataType: double
+		lineageTag: 93626e58-3485-4f67-be5f-edb63a6f5f3e
+		summarizeBy: sum
+		sourceColumn: Bitola
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column cod_mandril
+		dataType: string
+		lineageTag: 97977ccf-5bd1-43ea-8890-8f9eecc393cf
+		summarizeBy: none
+		sourceColumn: cod_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column desmoldante
+		dataType: string
+		lineageTag: 350cbe9d-a272-4eae-a94e-226f5ed4a5e9
+		summarizeBy: none
+		sourceColumn: desmoldante
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade
+		dataType: double
+		lineageTag: 91f7c306-1ea6-4635-9279-1725d1add840
+		summarizeBy: sum
+		sourceColumn: quantidade
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador
+		dataType: string
+		lineageTag: 197d3c45-2e39-48ff-81e5-32d9c5108cc3
+		summarizeBy: none
+		sourceColumn: operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote_mandril
+		dataType: string
+		lineageTag: 04786dad-f6de-4854-a1f1-83dbc7cc088b
+		summarizeBy: none
+		sourceColumn: lote_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9061a5fd-76bd-4d39-8872-e21ae3181b08
+		summarizeBy: none
+		sourceColumn: data_hora_inicio
+
+		variation Variation
+			isDefault
+			relationship: 180e3ac1-23ad-498e-8d48-8d7c3c11100a
+			defaultHierarchy: LocalDateTable_d3d8f8fc-662e-4456-9507-d98a3b425705.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f80333ad-675c-45de-bb47-c738e0068c47
+		summarizeBy: none
+		sourceColumn: data_hora_final
+
+		variation Variation
+			isDefault
+			relationship: 68d90e74-7d8a-4290-ab6a-24d0b17eca25
+			defaultHierarchy: LocalDateTable_f4de1dc1-ea26-4c5b-ae47-9d89b92257d7.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno
+		dataType: string
+		lineageTag: adf33a9a-9bcd-43db-9378-12b9caeb1f8f
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observacao
+		dataType: string
+		lineageTag: 2c01779a-a884-40fe-b750-a248e39d7b4e
+		summarizeBy: none
+		sourceColumn: Observacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Criado
+		dataType: string
+		lineageTag: aa1e70e0-9455-4990-9b1b-e43d3ffcc11a
+		summarizeBy: none
+		sourceColumn: Criado
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Color Tag'
+		dataType: string
+		lineageTag: 3537b93e-3107-49e2-b4e1-510c65139d48
+		summarizeBy: none
+		sourceColumn: Color Tag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Compliance Asset Id'
+		dataType: string
+		lineageTag: c1454390-a301-4102-8dd7-0859c0dd335f
+		summarizeBy: none
+		sourceColumn: Compliance Asset Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 093ac7c7-21b9-4621-8b39-2689908a1728
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Content Type'
+		dataType: string
+		lineageTag: 41616919-8094-40bc-9631-ad0874cbd84a
+		summarizeBy: none
+		sourceColumn: Content Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 789b5fba-b358-4ce9-a1d7-8051e7ceec0f
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: 804bf907-9732-43bf-91f2-b692a8adc0ab
+			defaultHierarchy: LocalDateTable_97450d99-d9b3-4267-ad89-a53bff143083.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 53159439-cdfc-42e9-a8da-af20fe04ca0a
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: c41697a4-2389-4867-9a38-5bb436ca7629
+			defaultHierarchy: LocalDateTable_d99a7a0e-4b9e-46ef-9b33-20b8fa496c59.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: 8d8b897c-8477-48f4-b4ef-21bdcde2d7ad
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: 8ca92cb9-a9a5-4172-bf1b-dfa37f7e3802
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: 99747838-f0a3-4c13-aaa2-2fb95b96b5e8
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: 9f259d06-01a5-4e41-81cb-9ccc1c820b32
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: 3d12c7d3-01b5-49b0-b2a1-978522810ff6
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: baf8c2f5-2c01-4753-8d6c-513af0295d7a
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item Child Count'
+		dataType: string
+		lineageTag: 7b42224b-6a64-4dcc-b79c-946bcb3d59aa
+		summarizeBy: none
+		sourceColumn: Item Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Folder Child Count'
+		dataType: string
+		lineageTag: 8764a371-26c2-4b75-b919-d32a045789b9
+		summarizeBy: none
+		sourceColumn: Folder Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label setting'
+		dataType: string
+		lineageTag: a8a3fcce-94ea-4437-92ab-fe3c0056d413
+		summarizeBy: none
+		sourceColumn: Label setting
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label'
+		dataType: string
+		lineageTag: c255c118-51af-45b9-a4e4-78afca009b03
+		summarizeBy: none
+		sourceColumn: Retention label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 59a664df-62ac-46ff-a975-61e79243a3e7
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: 1267da68-9544-4a59-b418-4327e8dd05ce
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: 2c8c6cae-b0b9-4137-9a74-4401b2c2dddb
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Created By'
+		dataType: string
+		lineageTag: ac667a71-b5d6-435a-b692-068638696c1a
+		summarizeBy: none
+		sourceColumn: App Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Modified By'
+		dataType: string
+		lineageTag: cd031417-3660-479e-acb8-5588f4ab41fa
+		summarizeBy: none
+		sourceColumn: App Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ControleExtrusora_estrutura = m
+		mode: import
+		source =
+				let
+				  Origem = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation = "2.0", ViewMode = "All"]),
+				  #"Navegação 1" = Origem{[Id = "58d84b1f-8b34-485d-81b8-82604f9a7218"]}[Items]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

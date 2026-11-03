@@ -1,0 +1,461 @@
+table FifoBobinadeira
+	lineageTag: 136872e7-a77d-4863-a429-b4bddf1a38bd
+
+	/// Metragem bobinada (FifoBobinadeira). Join virtual de data via INT(DataHoraInicio).
+	measure 'Metragem Bobinada' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(FifoBobinadeira, INT(FifoBobinadeira[DataHoraInicio]) IN datas), FifoBobinadeira[Metragem]), SUM(FifoBobinadeira[Metragem]))
+		formatString: #,##0
+		displayFolder: 12 Bobinadeira
+		lineageTag: 3c88f1d0-dce8-4344-9f25-f3cf2e83cea9
+
+	/// Quantidade refugada na bobinadeira. QuantidadeRefugo e coluna TEXTO no SharePoint: conversao via VALUE com IFERROR (linhas nao numericas contam 0). Corrigir o tipo da coluna na lista e o fix definitivo (auditar Patches antes). Join virtual de data via INT(DataHoraRefugo).
+	measure 'Refugo Bobinadeira' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN SUMX(FILTER(Refugo_Bobinadeira, NOT temCal || INT(Refugo_Bobinadeira[DataHoraRefugo]) IN datas), IFERROR(VALUE(Refugo_Bobinadeira[QuantidadeRefugo]), 0))
+		formatString: #,##0
+		displayFolder: 12 Bobinadeira
+		lineageTag: 60f5e919-37f3-4703-930e-9b922daf5f8a
+
+	column Title
+		dataType: string
+		lineageTag: 18270135-da63-4332-87b6-5eb9bc61e347
+		summarizeBy: none
+		sourceColumn: Title
+
+		annotation SummarizationSetBy = Automatic
+
+	column Linha
+		dataType: double
+		lineageTag: a589a8dc-3ef2-4b82-a0bc-eca4bbd23b66
+		summarizeBy: sum
+		sourceColumn: Linha
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Mangueira
+		dataType: string
+		lineageTag: c7c14ea7-e9cc-4c83-8972-fffa634cbaf3
+		summarizeBy: none
+		sourceColumn: Mangueira
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trancadeira
+		dataType: string
+		lineageTag: 4d54c4fe-557a-4382-b90c-325f8c4045e5
+		summarizeBy: none
+		sourceColumn: Trancadeira
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantidade
+		dataType: string
+		lineageTag: 59fb71f0-eef0-4847-beed-89ee3c3a4da2
+		summarizeBy: none
+		sourceColumn: Quantidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: b9a56646-9f82-43ba-8c5c-a7f405b7c59a
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column CodProduto
+		dataType: string
+		lineageTag: 65c35f25-3af9-4b91-a370-604886a0d0b2
+		summarizeBy: none
+		sourceColumn: CodProduto
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdBobinas
+		dataType: double
+		lineageTag: 9fab4483-5401-4e9f-b604-9666df0ca1fd
+		summarizeBy: sum
+		sourceColumn: QtdBobinas
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metragem
+		dataType: double
+		lineageTag: af2baa4a-354b-43d4-b647-130be732d406
+		summarizeBy: sum
+		sourceColumn: Metragem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NFios
+		dataType: double
+		lineageTag: 08333264-b871-4b02-bb0e-b6ebedfcd929
+		summarizeBy: sum
+		sourceColumn: NFios
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RT
+		dataType: string
+		lineageTag: fe39691d-d7a8-43a7-83c1-b184b263cf3a
+		summarizeBy: none
+		sourceColumn: RT
+
+		annotation SummarizationSetBy = Automatic
+
+	column LI
+		dataType: string
+		lineageTag: ac1bcda4-0b22-4cc6-af51-c6c2cae0a030
+		summarizeBy: none
+		sourceColumn: LI
+
+		annotation SummarizationSetBy = Automatic
+
+	column Operador
+		dataType: string
+		lineageTag: 8814481d-30ff-4487-92d5-630afc225e70
+		summarizeBy: none
+		sourceColumn: Operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno
+		dataType: double
+		lineageTag: e1a4337b-22fa-4d8a-bec0-fae92e9b2340
+		summarizeBy: sum
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataHoraInicio
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1eeed9db-9b12-42e5-9b94-e456e6353e98
+		summarizeBy: none
+		sourceColumn: DataHoraInicio
+
+		variation Variation
+			isDefault
+			relationship: f58c2301-28c1-47e4-be3d-7190cefa71bd
+			defaultHierarchy: LocalDateTable_48518691-51b5-49f2-93c5-88c4a0340eef.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraSalvo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: edcc16fd-0b6a-4059-80e2-46d6dd73f3a7
+		summarizeBy: none
+		sourceColumn: DataHoraSalvo
+
+		variation Variation
+			isDefault
+			relationship: d07f8538-654c-45e6-9de0-4010ac98addb
+			defaultHierarchy: LocalDateTable_f60ed9ef-ef1d-4225-bda7-60ede38f367f.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraFinal
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ba753649-73f9-48ee-9d7f-6cb28bb6cad6
+		summarizeBy: none
+		sourceColumn: DataHoraFinal
+
+		variation Variation
+			isDefault
+			relationship: 730eb58d-29e1-4998-b804-7d3ded4ecbef
+			defaultHierarchy: LocalDateTable_1f127b39-40a7-4261-8ab1-be83a4a5443b.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Maquina de Bobinagem'
+		dataType: string
+		lineageTag: dc8ea449-3434-42b6-a2c5-d01cf63d92f7
+		summarizeBy: none
+		sourceColumn: Maquina de Bobinagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação
+		dataType: string
+		lineageTag: e173d8b2-8f72-40f7-b935-524532dc4344
+		summarizeBy: none
+		sourceColumn: Observação
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Color Tag'
+		dataType: string
+		lineageTag: 860250ca-8921-4851-b9b5-0a1b1da9ca6a
+		summarizeBy: none
+		sourceColumn: Color Tag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Compliance Asset Id'
+		dataType: string
+		lineageTag: a971e86d-6a88-4a2d-99cb-d542318807f0
+		summarizeBy: none
+		sourceColumn: Compliance Asset Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 480d193c-586c-47ad-8621-e5d6b3917e1b
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Content Type'
+		dataType: string
+		lineageTag: 13d1ebb9-ce0f-488e-87e9-2f1fff5b51b9
+		summarizeBy: none
+		sourceColumn: Content Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2e27b776-5931-4661-b2ed-95dcb2c6d2b2
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: bd84252e-cf68-41e2-802e-6c21d0d2ef47
+			defaultHierarchy: LocalDateTable_d0d2b04f-f3d8-4592-a89c-fcfd17319074.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 879a7c5e-7b54-4c6e-a9d9-a856b0e6500f
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: 861a1cdc-a18d-4470-9cec-2faabd5bd0b0
+			defaultHierarchy: LocalDateTable_380a0ed5-bed7-4a2b-890b-e7458871bd92.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: a3f6cf0c-5ae6-49b8-a686-a0cb9063c23f
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: 16934f3d-54d9-466c-9c8d-74269655c4ba
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: 65c8bcf1-e4dd-4987-82e1-9e39d1c90df1
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: f5f904f8-0581-46e4-bbe1-a7d1d9e28851
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: 0a852b16-1717-46bc-bcc2-8c2db687d0a7
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: be261eba-8d37-4023-8105-8df1ef1ad627
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item Child Count'
+		dataType: string
+		lineageTag: 37cd454b-44d8-4edd-8035-68645c8f0173
+		summarizeBy: none
+		sourceColumn: Item Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Folder Child Count'
+		dataType: string
+		lineageTag: 3b189f09-e139-46bc-b3de-06efd6edb8ca
+		summarizeBy: none
+		sourceColumn: Folder Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label setting'
+		dataType: string
+		lineageTag: d827e190-a7af-4c8f-bf0c-7c3bf10b034c
+		summarizeBy: none
+		sourceColumn: Label setting
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label'
+		dataType: string
+		lineageTag: 6c893939-9f4a-4241-865f-cf9985943eb8
+		summarizeBy: none
+		sourceColumn: Retention label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 4dbfcf3c-e7dc-4bb7-94ba-293dc9ec1772
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: 9b1e183d-8a6c-42e4-9954-eab3972f5328
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: b4ce3274-0472-4876-9768-893922970ae6
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Created By'
+		dataType: string
+		lineageTag: 208fc350-50e9-4f3e-a1aa-e024c799950a
+		summarizeBy: none
+		sourceColumn: App Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Modified By'
+		dataType: string
+		lineageTag: 3b94cfae-81e3-4ea0-b70c-447fcd95453b
+		summarizeBy: none
+		sourceColumn: App Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column OP_Consumo
+		dataType: string
+		lineageTag: a8afeb81-3841-410d-9dc0-fc1692fd160a
+		summarizeBy: none
+		sourceColumn: OP_Consumo
+
+		annotation SummarizationSetBy = Automatic
+
+	column FichaID_Consumo
+		dataType: double
+		lineageTag: 18e83b63-f304-4523-9fe6-98c518462b34
+		summarizeBy: sum
+		sourceColumn: FichaID_Consumo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataHoraConsumo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e69f545a-9ffb-4078-94ec-fd8e280e4669
+		summarizeBy: none
+		sourceColumn: DataHoraConsumo
+
+		variation Variation
+			isDefault
+			relationship: c6573119-3f72-4692-9c00-b9129e1f4147
+			defaultHierarchy: LocalDateTable_926f24c6-c8f8-4b0e-bffc-b064083ae6b0.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Carrinho
+		dataType: double
+		lineageTag: 5d333a8b-dc99-4165-9dd2-9ef8e481b3cd
+		summarizeBy: sum
+		sourceColumn: Carrinho
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MotivoCancelamento
+		dataType: string
+		lineageTag: fbb11011-fbfa-4d37-9d3f-7999c2a0e9f6
+		summarizeBy: none
+		sourceColumn: MotivoCancelamento
+
+		annotation SummarizationSetBy = Automatic
+
+	column CanceladoPor
+		dataType: string
+		lineageTag: ff1ea156-c438-4873-b691-04d65db54348
+		summarizeBy: none
+		sourceColumn: CanceladoPor
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraCancelamento
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fb530059-a0c7-4cc7-87b5-ac425ca85b4c
+		summarizeBy: none
+		sourceColumn: DataHoraCancelamento
+
+		variation Variation
+			isDefault
+			relationship: 5829d1fe-6c93-43a9-b122-37d34762c045
+			defaultHierarchy: LocalDateTable_b34e2cf7-7808-4cbe-986c-d9b22e460532.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FifoBobinadeira = m
+		mode: import
+		source =
+				let
+				  Origem = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation = "2.0", ViewMode = "All"]),
+				  #"Navegação 1" = Origem{[Id = "2992a898-8c79-4e84-91bf-1eb9d8ca7d6e"]}[Items]
+				in
+				  #"Navegação 1"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,165 @@
+table Eventos_Producao
+	lineageTag: a7b02fd1-60ea-4809-bf54-b9902f56c8e7
+
+	column Eventos
+		dataType: string
+		lineageTag: deedd5cc-c12f-40f4-be2d-4c2fc5024941
+		summarizeBy: none
+		sourceColumn: Eventos
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 4a8680ab-478b-4eda-9742-242da7942e69
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem_ID
+		dataType: double
+		lineageTag: 40876db6-8241-4847-ba17-b16fc9f65561
+		summarizeBy: count
+		sourceColumn: origem_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column etapa
+		dataType: string
+		lineageTag: af048411-687d-4b34-a70c-fd33beb64055
+		summarizeBy: none
+		sourceColumn: etapa
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo
+		dataType: string
+		lineageTag: 85d301f6-aeb3-499e-b299-105cee2f9310
+		summarizeBy: none
+		sourceColumn: tipo
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 69081480-533a-4206-85c4-ae30d7ce9646
+		summarizeBy: none
+		sourceColumn: data_hora
+
+		variation Variation
+			isDefault
+			relationship: bd3bd05b-1f30-4013-bd03-2d6406383320
+			defaultHierarchy: LocalDateTable_339bf2dd-5616-43dd-aed0-e695db7c9b09.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_ref
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5433c8f2-82b7-415f-88cb-08a096524f88
+		summarizeBy: none
+		sourceColumn: data_ref
+
+		variation Variation
+			isDefault
+			relationship: c3137cd9-25d4-4484-99e0-a4e43126c69a
+			defaultHierarchy: LocalDateTable_52705749-cda3-4d1d-a69d-52d6489df3d7.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column turno
+		dataType: double
+		lineageTag: 2334f458-3118-4ad7-8ed6-32393a5ceba0
+		summarizeBy: sum
+		sourceColumn: turno
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column bitola
+		dataType: double
+		lineageTag: c6e81e19-b7e4-44cf-8ea7-204f25fd5aa1
+		summarizeBy: sum
+		sourceColumn: bitola
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column metros
+		dataType: double
+		lineageTag: 89f698c2-9d58-4030-b537-8eac7aff99f3
+		summarizeBy: sum
+		sourceColumn: metros
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column refugo
+		dataType: double
+		lineageTag: 65bfd460-42ac-4d10-8640-729ed68f9441
+		summarizeBy: sum
+		sourceColumn: refugo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador
+		dataType: string
+		lineageTag: 99df4756-a8a2-4c55-a03d-e09e304cadc0
+		summarizeBy: none
+		sourceColumn: operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column recurso
+		dataType: string
+		lineageTag: 9fee046c-8328-4398-84fc-836f6258c3e3
+		summarizeBy: none
+		sourceColumn: recurso
+
+		annotation SummarizationSetBy = Automatic
+
+	column carretel
+		dataType: string
+		lineageTag: 4a1dee58-a3d6-47c9-aea2-2f08600412fb
+		summarizeBy: none
+		sourceColumn: carretel
+
+		annotation SummarizationSetBy = Automatic
+
+	column sobra
+		dataType: double
+		lineageTag: 5ec3b9c1-04df-440b-b1a2-4e289d431009
+		summarizeBy: sum
+		sourceColumn: sobra
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Eventos_Producao = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    #"f2d877fa-be02-4dbf-b635-5703c01dc83f" = Fonte{[Id="f2d877fa-be02-4dbf-b635-5703c01dc83f"]}[Items],
+				    #"Colunas Removidas" = Table.RemoveColumns(#"f2d877fa-be02-4dbf-b635-5703c01dc83f",{"Color Tag", "Compliance Asset Id", "ID", "Content Type", "Modified", "Created", "Created By", "Modified By", "Version", "Attachments", "Edit", "Type", "Item Child Count", "Folder Child Count", "Label setting", "Retention label", "Retention label Applied", "Label applied by", "Item is a Record", "App Created By", "App Modified By"}),
+				    #"Colunas Renomeadas" = Table.RenameColumns(#"Colunas Removidas",{{"Title", "Eventos"}}),
+				    #"Tipo Alterado" = Table.TransformColumnTypes(#"Colunas Renomeadas",{{"data_ref", type date}})
+				in
+				    #"Tipo Alterado"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,180 @@
+table 'Part Number x Construction'
+	lineageTag: 12168577-6e70-40e8-9a0e-6922a38a58c7
+
+	column Title
+		dataType: string
+		lineageTag: 6fd1dd3a-990c-43fc-b9bc-05ee1e70e7d2
+		summarizeBy: none
+		sourceColumn: Title
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dash size'
+		dataType: double
+		lineageTag: cc0fd761-5886-4210-b6ff-f18acfb33684
+		summarizeBy: sum
+		sourceColumn: Dash size
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Wide Braiders'
+		dataType: string
+		lineageTag: dc070ed1-ff7f-409c-89df-cca610168a5e
+		summarizeBy: none
+		sourceColumn: Wide Braiders
+
+		annotation SummarizationSetBy = Automatic
+
+	column Construction
+		dataType: string
+		lineageTag: 36254ab8-3a87-4036-9c6e-4b4f8981e9a9
+		summarizeBy: none
+		sourceColumn: Construction
+
+		annotation SummarizationSetBy = Automatic
+
+	column Braider
+		dataType: string
+		lineageTag: b73ee404-d66b-4f78-bc6d-281316570cf4
+		summarizeBy: none
+		sourceColumn: Braider
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 655a12d8-1827-484e-983a-7e532083aff3
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f7768d8a-783e-4c1a-9cfd-9465fac5064c
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: d35c7c62-b986-4563-84c6-71bf91d69748
+			defaultHierarchy: LocalDateTable_42f7986b-21fb-4463-9a78-bef90374d72c.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5dd212db-ffc7-46f1-8f82-164ea75e2026
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: 43294db8-7cb0-4768-a976-def13fad8374
+			defaultHierarchy: LocalDateTable_980bcfb3-b25e-4d34-9668-a249e0b315eb.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: 740d08a4-91bc-499e-b045-5ff2b6a4fa98
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: 1afba4e6-4ecd-4d22-92f3-4b40d4ef40dc
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: c903763c-63ce-4f49-9b22-7df48763b207
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: 357c7f0e-ba3f-45ec-a501-43613c870d34
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: e5b4e9fd-60aa-453d-929f-b2b9befb0a97
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: e5fd164f-093e-42f6-bdbe-76784d204665
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 64fdc5bf-6511-46f8-ac44-65e3eeb9ae0e
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: 230b3683-700d-4416-b968-a4241adc4394
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: 1c2a2aee-600e-41f5-973e-8acce8985464
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column C_Standard_Plan = VAR con = TRIM('Part Number x Construction'[Construction]) VAR dash = 'Part Number x Construction'[Dash size] RETURN IF(UPPER(con) = "TEXTILE", IF(dash <= 6, "TEXTILE-03/04/05/06", "TEXTILE-07/08/10/12/16"), con)
+		lineageTag: 7851afc3-d287-4d04-8364-610e782f46a4
+
+	column Decks_Plan = SWITCH('Part Number x Construction'[C_Standard_Plan], "TEXTILE-03/04/05/06", "Textil", "TEXTILE-07/08/10/12/16", "Textil", "SD24-08/10/12", "Wire SD (08-12)", "DD24-08/10/12", "Wire DD (08-12)", "SD20-04/06", "Wire SD (04-06)", "DD20-04/06", "Wire DD (04-06)", "SD/DD36-16", "Wire SD/DD (16)", "SPIRAL", "Spiral", 'Part Number x Construction'[C_Standard_Plan])
+		lineageTag: 569b4957-4279-4395-96f9-942713b96185
+
+	column Wires_Plan = SWITCH('Part Number x Construction'[C_Standard_Plan], "TEXTILE-03/04/05/06", "Textil", "TEXTILE-07/08/10/12/16", "Textil", "SD20-04/06", "Wire 20C", "DD20-04/06", "Wire 20C", "SD24-08/10/12", "Wire 24C", "DD24-08/10/12", "Wire 24C", "SD/DD36-16", "Wire 36C", "SPIRAL", "Spiral", 'Part Number x Construction'[C_Standard_Plan])
+		lineageTag: 89790b3f-59d7-419d-b48b-071462b959ed
+
+	column Tipo_Plan = SWITCH('Part Number x Construction'[C_Standard_Plan], "TEXTILE-03/04/05/06", "1T", "TEXTILE-07/08/10/12/16", "1T", "SD20-04/06", "1A", "SD24-08/10/12", "1A", "DD20-04/06", "2A", "DD24-08/10/12", "2A", "SPIRAL", "4A", "SD/DD36-16", "1A/2A (-16)", 'Part Number x Construction'[C_Standard_Plan])
+		lineageTag: 2c95b570-5cfb-457c-afd4-33086e2fb236
+
+	partition 'Part Number x Construction' = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    Origem = Table.Buffer(Fonte{[Id="7afd5577-863d-499b-8496-d2262847a2c1"]}[Items]),
+				    Limpo = Table.RemoveColumns(Origem, {"Color Tag","Compliance Asset Id","Content Type","Item Child Count","Folder Child Count","Label setting","Retention label","App Created By","App Modified By"}, MissingField.Ignore)
+				in
+				    Limpo
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

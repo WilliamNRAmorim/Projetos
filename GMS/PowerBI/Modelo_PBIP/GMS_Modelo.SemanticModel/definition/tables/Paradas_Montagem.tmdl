@@ -1,0 +1,95 @@
+table Paradas_Montagem
+	lineageTag: 4bfbfb56-32bd-45f8-abd1-2f56cf48b670
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2c4aa2e9-95c9-4c61-b555-97569f146096
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Turno
+		dataType: string
+		lineageTag: 74bb513c-dc8c-44ef-9020-ae6bff5dba82
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Celula
+		dataType: string
+		lineageTag: 2d8176c1-ea8e-4552-aab2-fd3629aed233
+		summarizeBy: none
+		sourceColumn: Celula
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegistradoEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 58fa5d45-9f69-4c15-ac98-d61da77441ad
+		summarizeBy: none
+		sourceColumn: RegistradoEm
+
+		variation Variation
+			isDefault
+			relationship: 0b5ecfca-296c-4bb7-96de-527f2c1a9250
+			defaultHierarchy: LocalDateTable_17251797-051e-4515-af43-8473d50c1229.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Motivo
+		dataType: string
+		lineageTag: dc1ec3a0-0b3d-4ff9-8d92-eb7260aa99d6
+		summarizeBy: none
+		sourceColumn: Motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column TempoParadoMin
+		dataType: double
+		lineageTag: 0cc48247-6914-46f8-ab44-c7deb322ea07
+		summarizeBy: sum
+		sourceColumn: TempoParadoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Observacao
+		dataType: string
+		lineageTag: 3b7bfd25-4aea-4b4b-91c2-0deea9882240
+		summarizeBy: none
+		sourceColumn: Observacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column OPVinculada
+		dataType: string
+		lineageTag: 3e399341-4b1f-4405-bb3b-425de3ebb8b7
+		summarizeBy: none
+		sourceColumn: OPVinculada
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Paradas_Montagem = m
+		mode: import
+		source =
+				let
+				    Fonte = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation="2.0", ViewMode="All"]),
+				    #"189dc512-5a9c-4c4b-99c7-33379dea47a3" = Fonte{[Id="189dc512-5a9c-4c4b-99c7-33379dea47a3"]}[Items],
+				    #"Colunas Removidas" = Table.RemoveColumns(#"189dc512-5a9c-4c4b-99c7-33379dea47a3",{"Color Tag", "Compliance Asset Id", "ID", "Content Type", "Modified", "Created", "Created By", "Modified By", "Version", "Attachments", "Edit", "Type", "Item Child Count", "Folder Child Count", "Label setting", "Retention label", "Retention label Applied", "Label applied by", "Item is a Record", "App Created By", "App Modified By", "Data", "Turno", "Celula"}),
+				    #"Dividir Coluna por Delimitador" = Table.SplitColumn(#"Colunas Removidas", "Title", Splitter.SplitTextByDelimiter("-", QuoteStyle.Csv), {"Title.1", "Title.2", "Title.3"}),
+				    #"Tipo Alterado" = Table.TransformColumnTypes(#"Dividir Coluna por Delimitador",{{"Title.1", type date}, {"Title.2", type text}, {"Title.3", type text}}),
+				    #"Colunas Renomeadas" = Table.RenameColumns(#"Tipo Alterado",{{"Title.1", "Data"}, {"Title.2", "Turno"}, {"Title.3", "Celula"}})
+				in
+				    #"Colunas Renomeadas"
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

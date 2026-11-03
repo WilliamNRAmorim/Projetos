@@ -1,0 +1,249 @@
+table Medidas
+	lineageTag: 262554e3-cd22-4e6e-b920-22295ef19b7a
+
+	measure Hoje = NOW()
+		formatString: General Date
+		lineageTag: cd765bdb-448c-410d-ba35-5438a88e42c0
+
+	measure 'Célula Gargalo' = ```
+			
+			VAR TabelaResumo = 
+			    TOPN(
+			        1, 
+			        SUMMARIZE(
+			            'Hora-Hora', 
+			            'Hora-Hora'[Célula], 
+			            "TotalParado", SUM('Hora-Hora'[Tempo Parado (min)])
+			        ), 
+			        [TotalParado], 
+			        DESC
+			    )
+			RETURN
+			MAXX(TabelaResumo, 'Hora-Hora'[Célula])
+			```
+		lineageTag: b7489a46-3d78-4b46-8d6d-084723232ec6
+
+	measure 'Total Horas' =
+			
+			VAR TotalMinutos = SUM('Hora-Hora'[Tempo Parado (min)])
+			VAR Horas = QUOTIENT(TotalMinutos, 60)
+			VAR Minutos = MOD(TotalMinutos, 60)
+			RETURN
+			FORMAT(Horas, "0") & "h " & FORMAT(Minutos, "0") & "m"
+		lineageTag: a270e957-e864-4b47-8eb2-bf2802f4727d
+
+	measure 'Horas Decimais' = SUM('Hora-Hora'[Tempo Parado (min)]) / 60
+		lineageTag: a5b0050f-1f51-47d0-9d79-8c85cc65d8ef
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Motivo Mais Frequente' =
+			
+			VAR MaxContagem =
+			    MAXX(
+			        VALUES('Hora-Hora'[Motivo]),
+			        CALCULATE(COUNT('Hora-Hora'[Motivo]))
+			    )
+			VAR MotivosEmpatados =
+			    FILTER(
+			        VALUES('Hora-Hora'[Motivo]),
+			        CALCULATE(COUNT('Hora-Hora'[Motivo])) = MaxContagem
+			    )
+			RETURN
+			    CONCATENATEX(MotivosEmpatados, 'Hora-Hora'[Motivo], ", ")
+		lineageTag: aa583abe-d5da-40cf-aaa7-c4309e439124
+
+	measure 'Inicio em Selecionado' =
+			
+			IF(
+			    HASONEVALUE('Producao_Montagem'[PN]),
+			    MAX('Producao_Montagem'[InicioEm])
+			)
+		formatString: General Date
+		lineageTag: 6bd68b18-b6a1-4b14-8ca0-faf8e722d0ff
+
+	measure 'Fim em Selecionado' =
+			
+			IF(
+			    HASONEVALUE('Producao_Montagem'[PN]),
+			    MAX('Producao_Montagem'[FimEm])
+			)
+		formatString: General Date
+		lineageTag: 266ec66b-7fff-41d0-9b70-0dd7f24dfb61
+
+	measure 'Ordens em Andamento' =
+			
+			CALCULATE(
+			    COUNTROWS('Producao_Montagem'),
+			    'Producao_Montagem'[Status] <> "Finalizado"
+			)
+		formatString: 0
+		lineageTag: e2e78302-809a-4a97-affe-dec44f952080
+
+	measure 'Horas Decimais Montagem' = SUM('Paradas_Montagem'[TempoParadoMin]) / 60
+		lineageTag: ca3c6c6e-9463-46d6-aca8-669f72bcf2cb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Célula Gargalo Montagem' = ```
+			
+			VAR TabelaResumo = 
+			    TOPN(
+			        1, 
+			        SUMMARIZE(
+			            'Paradas_Montagem', 
+			            'Paradas_Montagem'[Celula], 
+			            "TotalParado", SUM('Paradas_Montagem'[TempoParadoMin])
+			        ), 
+			        [TotalParado], 
+			        DESC
+			    )
+			RETURN
+			MAXX(TabelaResumo, 'Paradas_Montagem'[Celula])
+			```
+		lineageTag: db3af3a3-3fe8-4d75-b36d-5000b8fabd8c
+
+	measure 'Motivo Mais Frequente Montagem' =
+			
+			VAR MaxContagem =
+			    MAXX(
+			        VALUES('Paradas_Montagem'[Motivo]),
+			        CALCULATE(COUNT('Paradas_Montagem'[Motivo]))
+			    )
+			VAR MotivosEmpatados =
+			    FILTER(
+			        VALUES('Paradas_Montagem'[Motivo]),
+			        CALCULATE(COUNT('Paradas_Montagem'[Motivo])) = MaxContagem
+			    )
+			RETURN
+			    CONCATENATEX(MotivosEmpatados, 'Paradas_Montagem'[Motivo], ", ")
+		lineageTag: 131f6d1f-76d8-4610-9361-ada96d93dafa
+
+	measure 'Refugo PPM' = VAR bom = [Metragem Produzida] VAR ruim = [Refugo (m)] RETURN IF(bom > 0, DIVIDE(ruim, bom + ruim) * 1000000)
+		lineageTag: 7a7da9a9-f615-46bc-a643-7186a591094b
+
+	measure 'Refugo (m)' = SUM('TiposErros'[Quantidade])
+		lineageTag: bef7a2ce-c0e2-4d2a-87e2-0c89ed4863d4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Tempo Parado (h)' = DIVIDE(SUM('Hora-Hora'[Tempo Parado (min)]), 60)
+		lineageTag: 6421e349-743a-46f2-9a1d-fef88ef0985b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Acumulado Paradas' = VAR tabela = ADDCOLUMNS(ALLSELECTED('Hora-Hora'[Motivo]), "@min", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR total = SUMX(tabela, [@min]) VAR atual = CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)])) VAR acumulado = SUMX(FILTER(tabela, [@min] >= atual), [@min]) RETURN IF(NOT ISBLANK(atual), DIVIDE(acumulado, total))
+		lineageTag: 9f2a9374-f0b7-494d-ba30-013df848e493
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Acumulado Refugo' = VAR tabela = ADDCOLUMNS(ALLSELECTED('TiposErros'[CodigoErro]), "@qtd", CALCULATE(SUM('TiposErros'[Quantidade]))) VAR total = SUMX(tabela, [@qtd]) VAR atual = CALCULATE(SUM('TiposErros'[Quantidade])) VAR acumulado = SUMX(FILTER(tabela, [@qtd] >= atual), [@qtd]) RETURN IF(NOT ISBLANK(atual), DIVIDE(acumulado, total))
+		lineageTag: f77fa68a-253a-42f5-af32-16e60d80318c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Refugo Cabine' = VAR bom = [Metragem Produzida] VAR ruim = [Refugo (m)] RETURN IF(bom > 0, DIVIDE(ruim, bom + ruim))
+		lineageTag: ff43b2ed-2343-4ce6-9367-97475494b878
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Tempo Parado' = DIVIDE([Tempo Parado (h)], [Tempo Disponível (h)])
+		lineageTag: b8cf452f-a632-4c9b-84d9-de66221d01e4
+
+	measure 'Tempo Disponível (h)' = VAR baseTurnos = CALCULATETABLE(SUMMARIZE('Hora-Hora', 'Hora-Hora'[Célula], 'Hora-Hora'[Data], 'Hora-Hora'[Turno]), REMOVEFILTERS('Hora-Hora'[Motivo]), REMOVEFILTERS('Hora-Hora'[Motivo 2])) VAR comMinutos = ADDCOLUMNS(baseTurnos, "@min", SWITCH('Hora-Hora'[Turno], "1º Turno", 507, "2º Turno", 533, "3º Turno", 398, 0)) RETURN DIVIDE(SUMX(comMinutos, [@min]), 60)
+		lineageTag: 3a580a18-dd82-4c5c-bab4-e666ab8b40da
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure '% Top 3 Paradas' = VAR tabela = ADDCOLUMNS(ALLSELECTED('Hora-Hora'[Motivo]), "@min", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR total = SUMX(tabela, [@min]) VAR top3 = SUMX(TOPN(3, tabela, [@min], DESC), [@min]) RETURN DIVIDE(top3, total)
+		lineageTag: e1a12728-4877-4c52-904f-a4ce68afd316
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Dado Atualizado até' = VAR ultProd = CALCULATE(MAX('RegistrosInspeção'[DataInspecao]), REMOVEFILTERS('dCalendario'), REMOVEFILTERS('RegistrosInspeção')) VAR ultHH = CALCULATE(MAX('Hora-Hora'[Data]), REMOVEFILTERS('dCalendario'), REMOVEFILTERS('Hora-Hora')) VAR atraso = DATEDIFF(ultProd, TODAY(), DAY) RETURN "Produção até " & FORMAT(ultProd, "dd/mm") & "  ·  Hora-Hora até " & FORMAT(ultHH, "dd/mm") & IF(atraso >= 2, "  ·  " & atraso & " dias sem lançamento", "")
+		lineageTag: de145a47-eb20-48fe-8fc3-c68c973d34a4
+
+	measure 'Disponibilidade %' = VAR disp = [Tempo Disponível (h)] VAR parado = [Tempo Parado (h)] RETURN IF(disp > 0, DIVIDE(disp - parado, disp))
+		lineageTag: e9c09c07-6de0-4e93-89c3-dc0e10e7b782
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Eventos Apontados' = CALCULATE(COUNTROWS('Eventos_Producao'), 'Eventos_Producao'[tipo] = "Fim")
+		formatString: 0
+		lineageTag: b9da801b-4e6b-477f-8b31-ac89b411ea17
+
+	measure 'Fila no Gargalo (h)' = MAXX(VALUES(fFluxoEtapas[Etapa]), [Fila Mediana (h)])
+		lineageTag: 6e132349-7919-4e19-bb32-be47945696ef
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Horas Perdidas Motivo Nº1' = VAR tabela = ADDCOLUMNS(ALLSELECTED('Hora-Hora'[Motivo]), "@min", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) RETURN DIVIDE(MAXX(tabela, [@min]), 60)
+		lineageTag: 6bec51a7-dd7c-471d-90b5-0a0c5bd4e8d9
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Meta do Dia' = IF([Metragem Produzida] > 0, [Meta Diaria Planejada])
+		lineageTag: 457a04fe-5d3c-49ca-ae5b-b61989daa3de
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metragem Média Diária' = VAR dias = CALCULATE(DISTINCTCOUNT('RegistrosInspeção'[DataInspecao]), 'RegistrosInspeção'[Quantidade] > 0) RETURN DIVIDE([Metragem Produzida], dias)
+		lineageTag: fb944f48-7552-41cb-8543-29ad818a384c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metragem por Célula' = VAR cel = SELECTEDVALUE('Hora-Hora'[Célula]) RETURN IF(NOT ISBLANK(cel), CALCULATE(SUM('RegistrosInspeção'[Quantidade]), FILTER(ALL('RegistrosInspeção'[Trançadeira]), SUBSTITUTE(SUBSTITUTE('RegistrosInspeção'[Trançadeira], "-", ""), ".", "") = cel)))
+		lineageTag: 907f9445-be50-4625-b649-312b47492d2c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Metros por Hora Disponível' = DIVIDE([Metragem por Célula], [Tempo Disponível (h)])
+		lineageTag: 0eab2ffa-8a79-40ff-884a-8620f1a60b45
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Motivo Nº1' = VAR tabela = ADDCOLUMNS(ALLSELECTED('Hora-Hora'[Motivo]), "@min", CALCULATE(SUM('Hora-Hora'[Tempo Parado (min)]))) VAR topo = TOPN(1, FILTER(tabela, NOT ISBLANK([@min])), [@min], DESC) VAR nome = CONCATENATEX(topo, 'Hora-Hora'[Motivo]) VAR pos = FIND(" - ", nome, 1, 0) RETURN IF(pos > 0, MID(nome, pos + 3, 200), nome)
+		lineageTag: a180aa4e-a9ba-4967-b96d-ca56d39ae547
+
+	measure 'Ordem da Etapa' = SWITCH(SELECTEDVALUE('Eventos_Producao'[etapa]), "Mandril", 1, "Tubo", 2, "Trançagem", 3, "Cobertura", 4, "Bandagem", 5, "Vulcanização", 6, "Debandagem", 7, "Extração", 8, 99)
+		formatString: 0
+		lineageTag: da0dcd57-8fc0-43c7-8353-fb39002fef3a
+
+	measure 'Produção por Célula' = VAR cel = SELECTEDVALUE('Hora-Hora'[Célula]) RETURN IF(NOT ISBLANK(cel), SUMX(FILTER('Eventos_Producao', 'Eventos_Producao'[etapa] = "Debandagem" && 'Eventos_Producao'[tipo] = "Fim" && SUBSTITUTE(SUBSTITUTE('Eventos_Producao'[recurso], "-", ""), ".", "") = cel), 'Eventos_Producao'[metros]))
+		lineageTag: 856bfe79-caba-4b9d-a0cd-e659a93cb8ac
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Produção por Etapa' = CALCULATE(SUM('Eventos_Producao'[metros]), 'Eventos_Producao'[tipo] = "Fim")
+		lineageTag: e405b6d9-fad3-46ec-b516-09d26df5522e
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Produtividade da Célula (m/h)' = VAR inicioEv = CALCULATE(MIN('Eventos_Producao'[data_ref]), REMOVEFILTERS('Eventos_Producao'), REMOVEFILTERS('dCalendario')) VAR dispNoPeriodo = CALCULATE([Tempo Disponível (h)], KEEPFILTERS('dCalendario'[Date] >= inicioEv)) RETURN DIVIDE([Produção por Célula], dispNoPeriodo)
+		lineageTag: a3a6a660-10a9-4083-9a85-b2345b97f97f
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Refugo PPM vs Mês Anterior' = VAR atual = [Refugo PPM] VAR anterior = CALCULATE([Refugo PPM], PREVIOUSMONTH('dCalendario'[Date])) RETURN IF(NOT ISBLANK(atual) && NOT ISBLANK(anterior), atual - anterior)
+		lineageTag: 98c2573d-e523-41f4-8084-d3d0c25f93e6
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Turnos-Célula Ativos' = COUNTROWS(SUMMARIZE('Hora-Hora', 'Hora-Hora'[Célula], 'Hora-Hora'[Data], 'Hora-Hora'[Turno]))
+		formatString: 0
+		lineageTag: f640ecd0-b0cd-4c45-b964-6ac3c861e00e
+
+	partition Medidas = m
+		mode: import
+		source =
+				let
+				    Fonte = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [#"Coluna 1" = _t]),
+				    #"Tipo Alterado" = Table.TransformColumnTypes(Fonte,{{"Coluna 1", type text}}),
+				    #"Colunas Removidas" = Table.RemoveColumns(#"Tipo Alterado",{"Coluna 1"})
+				in
+				    #"Colunas Removidas"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navegação
+
