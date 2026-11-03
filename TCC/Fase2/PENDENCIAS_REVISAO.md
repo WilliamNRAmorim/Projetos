@@ -1,4 +1,7 @@
-# TCC II: ajustes pedidos pelo William (03/11/2026), a fazer
+# TCC II: ajustes pedidos pelo William (03/11/2026)
+
+**Status: os 16 itens foram feitos em 03/11/2026**, junto com uma revisão ortográfica e gramatical do texto inteiro. O PDF continua com 30 páginas. Para caber, saíram também repetições e detalhes pontuais: a lista das onze funções MESA na 2.1 (está no Quadro 7), as três falhas da 4.2, os números da leitura dos painéis na 4.6, a linha "Unidades" do Quadro 8 e frases repetidas na 4.5, 4.9, 4.10 e na conclusão. A Figura 3 (arquitetura) foi atualizada: sem QA, sem Code 39/128, com computador, 19 seções, mais de 30 listas e cerca de 30 telas. Item 3 (MOM): a definição foi completada na 2.1. Item 12: ficaram os valores de R$ 15,7 mil e R$ 38,6 mil.
+
 
 Pedido: "deixa anotado e vc arruma depois". Ao fazer, regerar docx e PDF pelo `ferramentas/build_docx.py` e `exportar_pdf.ps1`, manter no máximo 30 páginas e riscar aqui o que foi feito.
 

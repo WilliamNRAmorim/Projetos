@@ -272,16 +272,16 @@ def fig05():
 
     y = 10
     camada(y, 116, 'Chão de fábrica e dispositivos', [
-        'Tablet por estação (terminal autenticado)', 'Leitor de código de barras',
-        'Impressora de packing list (Code 39 e Code 128)', 'TV de gestão (Painel da Célula)'], fill=L2, stroke=MID)
+        'Tablet ou computador por estação', 'Leitor de código de barras',
+        'Impressora de packing list', 'TV de gestão (Painel da Célula)'], fill=L2, stroke=MID)
     gap_seta(160, 126, 170, 'entrada (toque, leitura) e saída (impressão, TV)', both=True, w=500)
     camada(170, 140, 'Coleta: Power Apps (Canvas)', [
-        '28 telas de operação e gestão', 'Power Fx: fórmulas nomeadas e funções do usuário (16 seções)',
+        'Cerca de 30 telas de operação e gestão', 'Power Fx: fórmulas nomeadas e funções do usuário (19 seções)',
         'Tokens de design e templates de tela', 'Código-fonte YAML por tela'])
     gap_seta(160, 310, 356, 'grava e consulta', w=200)
     gap_seta(470, 310, 356, 'pendências da conferência<br>na tela de tratativa', up=True, w=250)
     camada(356, 150, 'Persistência: Microsoft Lists (SharePoint Online)', [
-        '≈ 28 listas', 'ficha_producao: passaporte da OP (1 linha por OP)',
+        'Mais de 30 listas', 'ficha_producao: passaporte da OP (1 linha por OP)',
         'Inspeção, refugo, Hora-Hora, carretéis, packing, conferência',
         'Dados mestres de engenharia (Excel Online)'], th=44)
     f.box(MX + MW - 196, 362, 184, 38, 'consultas delegáveis<br>e colunas indexadas', fill=WHITE,
@@ -321,7 +321,7 @@ def fig05():
     ye = ys + 44 + 18
     f.rect(10, ye, 980, 62, L2, MID, 1.5, 6)
     f.html(20, ye, 190, 62, 'Engenharia do sistema', 17, NAVY, align='left', weight='bold', pad=0)
-    itens = ['Norma escrita', 'Diário de decisões', 'Backlog rastreável', 'QA automatizado (Python)']
+    itens = ['Norma escrita', 'Diário de decisões', 'Backlog rastreável', 'Código versionado']
     iw = (980 - 210 - 12 - 36) / 4
     for i, t in enumerate(itens):
         f.box(220 + i * (iw + 12), ye + 11, iw, 40, t, fill=WHITE, stroke=MID, sw=1.3, size=15, pad=4)
