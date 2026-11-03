@@ -265,3 +265,11 @@ Cartões de etapa esperados (Data de Referência, mesmo período):
   for, terá de reaproveitar a `dTurno` do Bloco 0 (chave numérica, §B.2.3).
 - **Versão final no `GMS_Painel`:** trocar a paleta do piloto pelos tokens `fx_` no tema claro (seção 1) e decidir
   com o William se a página leva o tema escuro ou não.
+
+## Validação no Desktop (03/11/2026, cópia local GMS_Teste, dados atualizados do SharePoint)
+Com os blocos 0 a 4 aplicados, limite de 2.000 m por ficha, normalização de operador e as correções de quantidade e operador feitas na origem. Consulta com dCalendario[Date] <= 06/10/2026, dia pela data civil do fim (regra do HTML):
+- Dias produtivos 184 (HTML 184) · pessoas 6,8 trançagem / 5,0 cabine (HTML 6,9 / 5,0) · eficiência de balanceamento 57% (HTML 57%) · CV 23% (HTML 23%) · rendimento 86% (HTML 85%) · lead time médio das medianas 31,5 h (HTML 31).
+- Vazão da cabine 5.748 m/dia e WIP 7.542 m (HTML 5.499 e 7.196): diferença de dados, porque a lista foi corrigida depois do CSV usado no HTML.
+- Maior quantidade por ficha na tabela: 1.800 m (os erros de digitação acima de 2.000 m saíram).
+Regra oficial (Data de Referência, virada 05:20), mesmo período, por etapa (m/dia · pessoas/dia · pessoas por 1.000 m): Trançagem 6.654 · 6,8 · 1,02; Cabine 5.508 · 4,8 · 0,88; Bandagem 6.383 · 3,2 · 0,50; Mandril 8.185 · 3,2 · 0,39; Cobertura 6.650 · 2,6 · 0,39; Debandagem 5.541 · 2,0 · 0,37; Vulcanização 6.524 · 2,2 · 0,33; Tubo 7.203 · 2,3 · 0,32. Trançagem e Cabine concentram mais gente por metro.
+Pendente: números por turno, segmentações e visuais ainda não foram montados no relatório.
