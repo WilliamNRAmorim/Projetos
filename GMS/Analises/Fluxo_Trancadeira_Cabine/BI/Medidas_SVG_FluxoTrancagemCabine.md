@@ -13,6 +13,10 @@ Precisa do Bloco 1 a 3 de `Medidas_FluxoTrancagemCabine.md` já aplicado (usa `P
 Cores fixas do tema escuro da ilustração (o SVG não lê o tema do Power BI). No SVG, `#` vira `%23` (senão o
 navegador corta a URL no `#`). Percentual também não pode aparecer cru no SVG; por isso a fração do ícone vai em 0–1.
 
+Etapa sem apontamento e com 0 m no filtro: as 4 medidas devolvem BLANK e o cartão some. Nunca aparece cartão zerado.
+Pastas: `Produção\Fluxo Tranç→Cabine\Visual` (as 4 medidas `SVG ...`) e `Auxiliares\Fluxo Tranç→Cabine` (os 2
+fragmentos ocultos).
+
 ## Como marcar "URL da imagem"
 
 Depois de aplicar, para cada uma das 4 medidas `SVG ...`:
@@ -47,7 +51,7 @@ createOrReplace
 	ref table Medidas
 
 		measure '_SVG Pessoas (fragmento)' =
-				-- Ícones de pessoa (7 por linha, até 14): 1 por pessoa da média, o último preenchido pela fração, cinza até o máximo do dia. Fragmento sem <svg>.
+				-- Ícones de pessoa (7 por linha, até 14): 1 por pessoa da média, o último preenchido pela fração, cinza até o máximo do dia; fragmento sem <svg> · MEL-???
 				VAR Pessoas = [Pessoas por Dia]
 				VAR Maximo = [Pessoas Máx no Dia]
 				VAR CorOn = "%235b9bf0"
@@ -74,10 +78,10 @@ createOrReplace
 				        )
 				    )
 			isHidden
-			displayFolder: Fluxo Tranç→Cabine\Auxiliares
+			displayFolder: Auxiliares\Fluxo Tranç→Cabine
 
 		measure '_SVG Barra Metros (fragmento)' =
-				-- Trilho de 156 px e barra de metros/dia proporcional à maior vazão do trecho (+5%). Fragmento sem <svg>.
+				-- Trilho de 156 px e barra de metros/dia proporcional à maior vazão do trecho (+5%); fragmento sem <svg> · MEL-??? · C3
 				VAR Metros = [Vazão por Etapa (m/dia)]
 				VAR Escala = [_Maior Vazão do Trecho] * 1.05
 				VAR L = IF ( Escala > 0 && NOT ISBLANK ( Metros ), ROUND ( 156 * DIVIDE ( Metros, Escala ), 1 ), 0 )
@@ -85,10 +89,10 @@ createOrReplace
 				    "<rect x='0' y='0' width='156' height='10' rx='5' fill='%2322344d'/>"
 				        & IF ( L > 0, "<rect x='0' y='0' width='" & FORMAT ( L, "0.0", "en-US" ) & "' height='10' rx='5' fill='%235b9bf0'/>" )
 			isHidden
-			displayFolder: Fluxo Tranç→Cabine\Auxiliares
+			displayFolder: Auxiliares\Fluxo Tranç→Cabine
 
 		measure 'SVG Cartão Etapa' =
-				-- Cartão da etapa no layout aprovado (ilustracao_headcount.html). Laranja = 2 etapas com mais pessoas por 1.000 m no filtro.
+				-- Cartão da etapa no layout aprovado (ilustracao_headcount.html); laranja = 2 etapas com mais pessoas por 1.000 m; sem apontamento e 0 m = BLANK · MEL-??? · C3
 				VAR Ordem = SELECTEDVALUE ( dEtapa[Ordem_Fluxo] )
 				VAR Nome = SELECTEDVALUE ( dEtapa[Etapa no Fluxo] )
 				VAR NoTrecho = SELECTEDVALUE ( dEtapa[Trecho Tranç-Cabine] )
@@ -110,6 +114,10 @@ createOrReplace
 				VAR LaranjaFundo = "%233a2418"
 				VAR Verde = "%235fcf75"
 				VAR VerdeFundo = "%231c3323"
+				-- Selo igual nos dois temas: fundo laranja, texto escuro (7,8:1)
+				VAR SeloFundo = "%23ff8a50"
+				VAR SeloTexto = "%2311161d"
+				VAR SemDado = NOT ( Metros > 0 ) && NOT ( Pessoas > 0 )
 				VAR Contorno =
 				    IF (
 				        Quente,
@@ -120,8 +128,8 @@ createOrReplace
 				VAR Selo =
 				    IF (
 				        Quente,
-				        "<rect x='67' y='1' width='104' height='21' rx='10.5' fill='" & Laranja & "'/>"
-				            & "<text x='119' y='15.5' text-anchor='middle' font-size='11' font-weight='700' fill='%2311161d'>mais gente/metro</text>"
+				        "<rect x='67' y='1' width='104' height='21' rx='10.5' fill='" & SeloFundo & "'/>"
+				            & "<text x='119' y='15.5' text-anchor='middle' font-size='11' font-weight='700' fill='" & SeloTexto & "'>mais gente/metro</text>"
 				    )
 				VAR Cabecalho =
 				    "<text x='15' y='40' font-size='11' font-weight='700' letter-spacing='0.7' fill='" & Suave & "'>ETAPA " & ( Ordem - Primeira + 1 ) & "</text>"
@@ -146,40 +154,41 @@ createOrReplace
 				    )
 				RETURN
 				    IF (
-				        NOT NoTrecho || ( ISBLANK ( Metros ) && ISBLANK ( Pessoas ) ),
+				        NOT NoTrecho || SemDado,
 				        BLANK (),
 				        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='208' height='304' viewBox='0 0 208 304' font-family='Segoe UI, sans-serif'>"
 				            & Contorno & Selo & Cabecalho & Icones & Numero & Barra & Caixa & Seta & "</svg>"
 				    )
 			dataCategory: ImageUrl
-			displayFolder: Fluxo Tranç→Cabine
+			displayFolder: Produção\Fluxo Tranç→Cabine\Visual
 
 		measure 'SVG Pessoas' =
-				-- (b) Só os ícones de pessoa da etapa (mesma regra do cartão).
+				-- (b) Só os ícones de pessoa da etapa (mesma regra do cartão); sem pessoas e sem metros = BLANK · MEL-???
 				VAR Frag = [_SVG Pessoas (fragmento)]
+				VAR SemDado = NOT ( [Vazão por Etapa (m/dia)] > 0 ) && NOT ( [Pessoas por Dia] > 0 )
 				RETURN
 				    IF (
-				        NOT ISBLANK ( Frag ),
+				        NOT ISBLANK ( Frag ) && NOT SemDado,
 				        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='154' height='50' viewBox='0 0 154 50'>" & Frag & "</svg>"
 				    )
 			dataCategory: ImageUrl
-			displayFolder: Fluxo Tranç→Cabine
+			displayFolder: Produção\Fluxo Tranç→Cabine\Visual
 
 		measure 'SVG Barra Metros' =
-				-- (a) Barra de metros/dia da etapa com o valor à direita.
+				-- (a) Barra de metros/dia da etapa com o valor à direita; 0 m ou sem dado = BLANK · MEL-??? · C3
 				VAR Metros = [Vazão por Etapa (m/dia)]
 				RETURN
 				    IF (
-				        NOT ISBLANK ( Metros ),
+				        Metros > 0,
 				        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='22' viewBox='0 0 240 22' font-family='Segoe UI, sans-serif'>"
 				            & "<g transform='translate(0 6)'>" & [_SVG Barra Metros (fragmento)] & "</g>"
 				            & "<text x='236' y='15.5' text-anchor='end' font-size='13' font-weight='700' fill='%23e7ebf0'>" & FORMAT ( Metros, "#,0", "pt-BR" ) & "</text></svg>"
 				    )
 			dataCategory: ImageUrl
-			displayFolder: Fluxo Tranç→Cabine
+			displayFolder: Produção\Fluxo Tranç→Cabine\Visual
 
 		measure 'SVG Conteúdo' =
-				-- (c) Pessoas por 1.000 m da etapa; tracejado = média do trecho. Laranja nas 2 maiores, verde nas demais.
+				-- (c) Pessoas por 1.000 m da etapa; tracejado = média do trecho; laranja nas 2 maiores, verde nas demais; sem metros = BLANK (DIVIDE) · MEL-???
 				VAR Conteudo = [Conteúdo de Mão de Obra (pessoas/1.000 m)]
 				VAR Media = [Conteúdo Médio do Trecho (pessoas/1.000 m)]
 				VAR Escala = [_Maior Conteúdo do Trecho] * 1.1
@@ -200,7 +209,7 @@ createOrReplace
 				            & FORMAT ( Conteudo, "0.00", "pt-BR" ) & "</text></svg>"
 				    )
 			dataCategory: ImageUrl
-			displayFolder: Fluxo Tranç→Cabine
+			displayFolder: Produção\Fluxo Tranç→Cabine\Visual
 ```
 
 ## Geometria do cartão (208 × 304, para ajuste fino)
@@ -208,7 +217,7 @@ createOrReplace
 | Elemento | Posição |
 |---|---|
 | Cartão | x 3, y 12, 180 × 288, cantos 14; borda 1 px cinza ou 1,5 px laranja + halo de 6 px |
-| Selo "mais gente/metro" | x 67, y 1, 104 × 21 (centrado em x 119); texto escuro `#11161d` sobre laranja (7,6:1). Branco, como na ilustração, dá 2,3:1 e reprova a §B.6.4 |
+| Selo "mais gente/metro" | x 67, y 1, 104 × 21 (centrado em x 119); `#ff8a50` com texto `#11161d` (7,8:1) **nos dois temas** (VARs `SeloFundo`/`SeloTexto`, não mudam no claro). Branco, como na ilustração, dá 2,3:1 e reprova a §B.6.4 |
 | "ETAPA n" / nome | y 40 / y 60, x 15 |
 | Ícones | início em (15, 72); 7 por linha, passo 22 px, linhas a cada 26 px; até 14 ícones |
 | Pessoas/dia + máx | y 148 |
@@ -220,7 +229,22 @@ Mais de 14 pessoas por dia numa etapa: os ícones param em 14 e o número abaixo
 
 ## Tema claro (se um dia trocar)
 
-O SVG não segue o tema. Para a versão clara, troque os valores das VARs (mesmos nomes) pelos da ilustração no modo claro:
-`Cartao %23ffffff`, `Tinta %231b2430`, `Suave %235b6675`, `Linha %23dfe3e9`, `Laranja %23d9480f`,
-`LaranjaFundo %23fde7dc`, `Verde %232f9e44`, `VerdeFundo %23e3f4e6`; nos fragmentos: ícone `%233a7bd5` / apagado
-`%23d9dee5`, trilho `%23d6e4f7`, barra `%233a7bd5`; no `SVG Conteúdo` o texto e a linha da média passam a `%231b2430`.
+O SVG não segue o tema. Para a versão clara, troque os valores das VARs (mesmos nomes). Laranja e verde ficaram mais
+escuros que os da ilustração clara (`#d9480f` dá 3,6:1 e `#2f9e44` dá 3,0:1 sobre as caixas, abaixo do 4,5:1):
+
+| VAR / trecho | Escuro (padrão) | Claro | Contraste no claro |
+|---|---|---|---|
+| `Cartao` | `%231a212b` | `%23ffffff` | — |
+| `Tinta` | `%23e7ebf0` | `%231b2430` | 15,7:1 no cartão |
+| `Suave` | `%239aa5b3` | `%235b6675` | 5,8:1 no cartão; 5,1:1 na caixa verde; 4,9:1 na laranja |
+| `Linha` | `%232b3440` | `%23dfe3e9` | borda (não é texto) |
+| `Laranja` | `%23ff8a50` | `%23b83d0c` | 4,8:1 na caixa laranja |
+| `LaranjaFundo` | `%233a2418` | `%23fde7dc` | — |
+| `Verde` | `%235fcf75` | `%231e7b34` | 4,7:1 na caixa verde |
+| `VerdeFundo` | `%231c3323` | `%23e3f4e6` | — |
+| `SeloFundo` / `SeloTexto` | `%23ff8a50` / `%2311161d` | **iguais** | 7,8:1 |
+| ícone ligado / apagado (fragmento) | `%235b9bf0` / `%23333d4a` | `%233a7bd5` / `%23d9dee5` | gráfico |
+| trilho / barra (fragmento) | `%2322344d` / `%235b9bf0` | `%23d6e4f7` / `%233a7bd5` | gráfico |
+| `SVG Conteúdo`: texto e linha da média | `%23e7ebf0` | `%231b2430` | 15,7:1 |
+| `SVG Conteúdo`: barra e texto laranja / barra verde | `%23ff8a50` / `%235fcf75` | `%23b83d0c` / `%231e7b34` | 5,5:1 no branco |
+| `SVG Barra Metros`: valor | `%23e7ebf0` | `%231b2430` | 15,7:1 |
