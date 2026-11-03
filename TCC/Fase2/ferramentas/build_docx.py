@@ -17,9 +17,9 @@ MAX_W = 5760000   # 16 cm em EMU
 MAX_H = 7200000   # 20 cm em EMU
 FIG_ESPECIAL = "fig04_evolucao_interface.png"
 CM = 360000  # EMU por cm
-LARG_CM = {"fig01": 15, "fig02": 11, "fig03": 11, "fig05": 11, "fig06": 12.5, "fig07": 13.5,
-           "fig08": 14, "fig09": 11.5, "fig10": 13.5, "fig11": 8.5, "fig12": 13, "fig13": 13,
-           "print": 12.5}
+LARG_CM = {"fig01": 14, "fig02": 11, "fig03": 11, "fig05": 11, "fig06": 12.5, "fig07": 12.5,
+           "fig08": 13, "fig09": 11.5, "fig10": 13.5, "fig11": 8.5, "fig12": 13, "fig13": 13,
+           "print": 11}
 FIG04_CM = 7.8  # largura de cada tela (a) e (b) reaproveitada do TCC I
 
 FONT = ('<w:rFonts w:ascii="Times New Roman" w:cs="Times New Roman" '
