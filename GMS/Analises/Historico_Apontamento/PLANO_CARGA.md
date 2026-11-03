@@ -38,7 +38,7 @@ Regras: nunca apagar em definitivo (só lixeira); um "sim" do William vale para 
 ## Progresso
 | Ano | Linhas | Status |
 |---|---|---|
-| 2025 | 4.006 | 3 de 4.006 carregadas (Title 24869 a 24871, teste conferido); falta Title 24872 a 28874 |
+| 2025 | 4.006 | CONCLUÍDO em 03/11/2026: Title 24869 a 28874 (4.006 itens, sem duplicatas), QtdAprovada 1.837.314,9 e QtdReprovada 7.195,5 conferidas |
 | 2026 | 175 | pendente |
 | 2024 | 3.193 | pendente |
 | 2023 | 3.537 | pendente |
