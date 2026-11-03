@@ -370,27 +370,38 @@ def v_tabela_leitura():
     }
 
 
-def v_linhas(series, titulo, alt):
-    """Linhas por dia: eixo dCalendario[Date] continuo, Y a partir de 0; series, eixos e grade em hex claros."""
-    data = col("dCalendario", "Date")
+# Eixo dos graficos mensais: dCalendario[AnoMes] (numero AAAAMM, ex.: 202512). E a unica coluna de mes do modelo que
+# ordena certo sozinha; "Mes" ("jan".."dez") nao tem Classificar por coluna e sairia em ordem alfabetica. Rotulo curto
+# "dez/25" exige coluna de texto nova no dCalendario (decisao do William; ver LEIAME secao 7).
+EIXO_MES = col("dCalendario", "AnoMês")
+COR_TRANC, COR_CABINE = HEX_AZUL, HEX_LARANJA  # iguais nos 2 graficos (cabine = laranja das etapas destaque)
+
+
+def v_colunas(series, titulo, alt, formato, fonte_rotulo):
+    """Colunas agrupadas por mes: media dos dias produtivos no mes, rotulo de dado em cada coluna, eixo Y oculto e
+    sem grade (o rotulo ja da o numero), colunas largas, legenda no topo. series = [(medida, rotulo, cor)]."""
     return {
-        "visualType": "lineChart",
-        "query": {"queryState": {"Category": {"projections": [proj(data, ativo=True)]},
-                                 "Y": {"projections": [proj(med(m)) for m, _ in series]}}},
+        "visualType": "clusteredColumnChart",
+        "query": {"queryState": {"Category": {"projections": [proj(EIXO_MES, "Mês", ativo=True)]},
+                                 "Y": {"projections": [proj(med(m), r, formato=formato) for m, r, _ in series]}},
+                  "sortDefinition": ordenar(EIXO_MES)},
         "objects": {
-            "categoryAxis": [{"properties": {"axisType": txt("Scalar"), "labelColor": cor_hex(HEX_SUAVE),
-                                             "fontSize": num(9), "showAxisTitle": boo(False),
-                                             "gridlineShow": boo(False)}}],
-            "valueAxis": [{"properties": {"start": num(0), "labelColor": cor_hex(HEX_SUAVE), "fontSize": num(9),
-                                          "showAxisTitle": boo(False), "gridlineShow": boo(True),
-                                          "gridlineColor": cor_hex(HEX_BORDA)}}],
+            "categoryAxis": [{"properties": {"show": boo(True), "axisType": txt("Categorical"),
+                                             "labelColor": cor_hex(HEX_SUAVE), "fontSize": num(9),
+                                             "showAxisTitle": boo(False), "gridlineShow": boo(False),
+                                             "innerPadding": num(8), "concatenateLabels": boo(False)}}],
+            "valueAxis": [{"properties": {"show": boo(False), "start": num(0), "showAxisTitle": boo(False),
+                                          "gridlineShow": boo(False)}}],
             "legend": [{"properties": {"show": boo(True), "position": txt("Top"), "labelColor": cor_hex(HEX_SUAVE),
-                                       "fontSize": num(10)}}],
-            "lineStyles": [{"properties": {"strokeWidth": num(2)}}],
+                                       "fontSize": num(10), "showTitle": boo(False)}}],
+            "labels": [{"properties": {"show": boo(True), "color": cor_hex(HEX_TINTA), "fontSize": num(fonte_rotulo),
+                                       "fontFamily": txt("Segoe UI"), "labelDisplayUnits": num(1),
+                                       "labelPosition": txt("OutsideEnd"), "enableBackground": boo(False)}}],
             "dataPoint": [{"properties": {"fill": cor_hex(c)}, "selector": {"metadata": f"{M}.{m}"}}
-                          for m, c in series],
+                          for m, _, c in series],
         },
-        "visualContainerObjects": caixa(titulo, alt=alt, tam_titulo=12),
+        "visualContainerObjects": caixa(titulo, alt=alt, tam_titulo=12, pad=(8, 6, 8, 8)),
+        "filterConfig": {"filters": [filtro_nao_vazio(EIXO_MES, "f_sem_vazio_mes")]},
         "drillFilterOtherVisuals": True,
     }
 
@@ -464,14 +475,16 @@ def pg_fluxo_2(outras):
     h_g = FIM_CONT - y_g                              # 216, termina em 660
     p.add("t_conteudo", 16, Y_CONT, 616, h_tab, v_tabela_conteudo())
     p.add("t_leitura", 648, Y_CONT, 616, h_tab, v_tabela_leitura())
-    p.add("g_metros", 16, y_g, 616, h_g, v_linhas(
-        [("Metros Trançagem no Dia", HEX_AZUL), ("Metros Cabine no Dia", HEX_VERDE)],
-        "Quanto a trançagem e a cabine fazem por dia (m)?",
-        "Metros por dia da trançagem e da cabine nos dias produtivos."))
-    p.add("g_pessoas", 648, y_g, 616, h_g, v_linhas(
-        [("Pessoas Trançagem no Dia", HEX_LARANJA), ("Pessoas Cabine no Dia", HEX_VERDE)],
-        "Quantas pessoas a trançagem e a cabine usam por dia?",
-        "Pessoas por dia na trançagem e na cabine nos dias produtivos."))
+    # Metros "6.654" a 8 pt (~26 px) cabem em colunas de ~24 px com 12 meses em 616 px so com espaco entre
+    # categorias pequeno; pessoas "6,8" a 9 pt sobram.
+    p.add("g_metros", 16, y_g, 616, h_g, v_colunas(
+        [("Vazão Trançagem (m/dia)", "Trançagem", COR_TRANC), ("Vazão Cabine (m/dia)", "Cabine", COR_CABINE)],
+        "Metros por dia · média dos dias produtivos, por mês",
+        "Colunas por mês: metros por dia da trançagem e da cabine, média dos dias produtivos.", "#,0", 8))
+    p.add("g_pessoas", 648, y_g, 616, h_g, v_colunas(
+        [("Pessoas Trançagem (por dia)", "Trançagem", COR_TRANC), ("Pessoas Cabine (por dia)", "Cabine", COR_CABINE)],
+        "Pessoas por dia · média dos dias produtivos, por mês",
+        "Colunas por mês: pessoas por dia na trançagem e na cabine, média dos dias produtivos.", "#,0.0", 9))
     return p
 
 
@@ -638,6 +651,23 @@ def valida(rel):
         cps = {m[1] for m in membros}
         if pags != set(PAGINAS) or len(cps) != 1:
             erros.append(f"syncGroup '{g}': precisa do mesmo campo nas 2 paginas ({sorted(membros)})")
+    for g in ("g_metros", "g_pessoas"):
+        arq = pages_dir / "pg_fluxo_2" / "visuals" / g / "visual.json"
+        if not arq.exists():
+            erros.append(f"pg_fluxo_2/{g}: nao existe")
+            continue
+        v = le(arq)["visual"]
+        qs = v["query"]["queryState"]
+        cat = qs.get("Category", {}).get("projections", [])
+        sort = v["query"].get("sortDefinition", {}).get("sort", [])
+        ok = (v["visualType"] == "clusteredColumnChart" and len(cat) == 1
+              and cat[0]["queryRef"] == qref(EIXO_MES) and len(qs.get("Y", {}).get("projections", [])) == 2
+              and sort and sort[0]["field"] == EIXO_MES and sort[0]["direction"] == "Ascending"
+              and v["objects"]["categoryAxis"][0]["properties"]["axisType"] == txt("Categorical")
+              and v["objects"]["labels"][0]["properties"]["show"] == boo(True))
+        if not ok:
+            erros.append(f"pg_fluxo_2/{g}: precisa ser colunas agrupadas por {qref(EIXO_MES)} (categorico, crescente), "
+                         "2 series e rotulos ligados")
     if erros:
         print("VALIDACAO FALHOU:")
         for e in erros:

@@ -94,8 +94,8 @@ Visuais de análise: 2 (limite da §B.6.3: 8).
 |---|---|---|---|---|---|
 | Tabela de conteúdo de mão de obra | `dEtapa[Etapa no Fluxo]`, `SVG Conteúdo` (imagem 400 × 29) | 16 | 92 | 616 | 340 |
 | Tabela da leitura automática | `Leitura Automática` (uma coluna, fonte 11, coluna 556) | 648 | 92 | 616 | 340 |
-| Gráfico de linhas: metros por dia | eixo `dCalendario[Date]`; `Metros Trançagem no Dia`, `Metros Cabine no Dia` | 16 | 444 | 616 | 216 |
-| Gráfico de linhas: pessoas por dia | eixo `dCalendario[Date]`; `Pessoas Trançagem no Dia`, `Pessoas Cabine no Dia` | 648 | 444 | 616 | 216 |
+| Colunas agrupadas: metros por dia, por mês | eixo `dCalendario[AnoMês]` (categórico, crescente); `Vazão Trançagem (m/dia)`, `Vazão Cabine (m/dia)` | 16 | 444 | 616 | 216 |
+| Colunas agrupadas: pessoas por dia, por mês | eixo `dCalendario[AnoMês]` (categórico, crescente); `Pessoas Trançagem (por dia)`, `Pessoas Cabine (por dia)` | 648 | 444 | 616 | 216 |
 
 Visuais de análise: 4.
 
@@ -162,11 +162,13 @@ Texto alternativo: "Seis cartões, da trançagem à cabine: pessoas por dia, met
   "Leitura automática"). Valores: **Quebra automática de texto ligada**, Segoe UI 11; largura da coluna 556; grade
   desligada; totais desligados. A medida separa os parágrafos com quebra de linha (`UNICHAR(10)`), que a tabela mostra
   com a quebra automática ligada. Sem dado: "Sem dados no filtro."
-- **Linha, metros por dia:** título "Quanto a trançagem e a cabine fazem por dia (m)?". Eixo X `dCalendario[Date]`
-  **contínuo**, sem hierarquia; Y a partir de 0; marcadores desligados. Trançagem = azul `#2A78D6`, cabine = verde `#0CA30C`.
-- **Linha, pessoas por dia:** título "Quantas pessoas a trançagem e a cabine usam por dia?". Trançagem = cor 3 do
-  laranja `#EB6834`, cabine = verde `#0CA30C`. Eixos `#55534D`, grade `#E1E0D9`.
-- Dia fora da média (trançagem < 3.000 m) fica em branco nas séries, como no HTML. Com um dia só escolhido, ele aparece.
+- **Gráficos mensais (03/11/2026; substituem as linhas diárias, que tinham muito pico e as 2 linhas sobrepostas):**
+  colunas agrupadas, eixo `dCalendario[AnoMês]` categórico e crescente (rótulo `202512`; o `Mês` "jan".."dez" sairia
+  em ordem alfabética, ver seção 7). Cada coluna é a média dos dias produtivos do mês (mesma regra dos KPIs).
+  Trançagem azul `#2A78D6`, cabine laranja `#EB6834` nos 2 gráficos. Rótulo de dado ligado em todas as colunas
+  (metros `#,0` a 8 pt, pessoas `#,0.0` a 9 pt), eixo Y oculto e sem grade, espaço entre categorias 8%, legenda no
+  topo em 10. Títulos: "Metros por dia · média dos dias produtivos, por mês" e "Pessoas por dia · média dos dias
+  produtivos, por mês". Ano, Mês, Dia e Turno filtram os 2 (com um mês escolhido fica 1 grupo de colunas).
 - Cores em hex da paleta clara em cada visual (as páginas não dependem do tema do relatório; seção 1).
 
 ### 5.6 Rodapé
@@ -277,6 +279,9 @@ Cartões de etapa esperados (Data de Referência, mesmo período):
 - **Data do dia diferente das páginas atuais.** `ficha_producao[DataProducao]` e `Etapas[Data]` usam a data civil,
   sem a virada das 05:20. O piloto usa a `Data de Referência` (§A.3), então um mesmo dia pode mostrar números
   diferentes do piloto e da Visão Geral. É esperado, e a diferença é a mesma explicada na 6.4.
+- **Rótulo do mês nos gráficos mensais:** sai `202512` porque `dCalendario[AnoMês]` é número. Para "dez/25" é preciso
+  uma coluna de texto nova no `dCalendario` (ex.: `"Mês Ano", FORMAT([Date], "mmm/yy", "pt-BR")`, classificada por
+  `AnoMês`) e trocar `EIXO_MES` no gerador. Mudança no modelo: decisão do William, não aplicada.
 - **Ordem do Mês:** `dCalendario[Mês]` ("jan", "fev"…) não tem "Classificar por coluna" no modelo e a segmentação sai
   em ordem alfabética. Ajuste de 1 clique: modelo → `dCalendario[Mês]` → Classificar por coluna → `Mês Nº`. Muda a
   ordem do Mês em qualquer visual que o use (para melhor), por isso é decisão do William.
