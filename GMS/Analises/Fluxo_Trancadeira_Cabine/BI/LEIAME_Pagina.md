@@ -6,8 +6,9 @@ Arquivos desta pasta:
 |---|---|
 | `Medidas_FluxoTrancagemCabine.md` | Bloco 0 (funções `fn_*` e `dTurno`, necessário), Bloco 1 (`dEtapa` e `fPessoasEtapaOP`), Bloco 2 (relacionamentos), Bloco 3 (medidas) e a DECISÃO, provada no TMDL, de usar tabela própria em vez da `Etapas` |
 | `Medidas_SVG_FluxoTrancagemCabine.md` | Bloco 4: cartões SVG por etapa (layout da `ilustracao_headcount.html`) e barras/ícones avulsos |
-| `Tema_FluxoTrancagem.json` | tema escuro do piloto (padrão), paleta da ilustração |
-| `Tema_FluxoTrancagem_Claro.json` | tema claro do piloto, paleta do `painel_template.html` |
+| `Tema_FluxoTrancagem.json` | tema escuro do piloto: **fora de uso desde 03/11/2026** (histórico) |
+| `Tema_FluxoTrancagem_Claro.json` | paleta clara do piloto (**padrão**), referência das cores em hex das páginas e do SVG |
+| `gerar_paginas_fluxo.py` | gera as 2 páginas em PBIR na cópia de teste e valida (ver "Como regenerar", no fim) |
 | este LEIAME | onde montar, ordem de aplicação, layout das 2 páginas com X/Y/L/A e checklist de conferência |
 
 ## 1. Onde montar e qual tema
@@ -15,17 +16,20 @@ Arquivos desta pasta:
 - **Relatório-piloto separado**, com conexão dinâmica ao modelo (GMS) (Obter dados → Modelos semânticos do Power BI →
   GMS). No Power BI o tema vale para o relatório inteiro, não por página. Importar este tema no `GMS_Painel`
   recoloriria as 6 páginas existentes, cujo layout salvo não pode mudar.
-- **O piloto usa a paleta do HTML** aprovado (escuro da ilustração; claro do `painel_template.html`).
+- **Tema claro é o padrão (William, 03/11/2026); o escuro não é mais usado.** As 2 páginas são **autossuficientes**:
+  o gerador não importa nem registra tema no relatório. Fundo da página `#F6F5F2` no `page.json`; cada visual traz
+  em hex cartão branco, borda `#E1E0D9` e cantos de 12, texto `#14130F` (18,6:1), secundário `#55534D` (7,7:1 no
+  branco; 7,1:1 no fundo), séries azul `#2A78D6`, laranja `#EB6834` e verde `#0CA30C` (só linha, barra e borda).
+  As 5 páginas antigas da cópia continuam no tema delas.
 - **A versão final, quando for para o `GMS_Painel`, usa os tokens `fx_` da §B.6.1 no tema claro** (`GMS_Tema_BI.json`):
   série principal `fx_CorInfo #2C6FBF`, OK `#16A34A`, alerta `#E67E22`, erro `#C0392B`, fundo `#F5F7FA`, cartão
   `#FFFFFF`, texto `#0F172A`/`#64748B`, borda `#E2E8F0`. Contraste conferido sobre branco: `#2C6FBF` 5,1:1, `#C0392B`
   5,4:1 e `#64748B` 4,8:1 servem para texto. `#16A34A` (3,3:1), `#E67E22` (2,8:1) e `fx_CorRotulo #94A3B8` (2,6:1) só
   servem para barra, linha e borda. Nesses papéis, texto de estado usa o tom escuro: verde `#1E7B34`, laranja `#B83D0C`.
-- **Claro/escuro automático não existe no Power BI.** O relatório não lê o modo do sistema (`prefers-color-scheme`):
-  é um tema por relatório. Para trocar, importe o outro JSON e troque as cores das VARs das medidas SVG (tabela no fim
-  do arquivo SVG). O selo laranja com texto escuro é o mesmo nos dois.
+- **Claro/escuro automático não existe no Power BI** (o relatório não lê `prefers-color-scheme`). O piloto fica no
+  claro; o SVG tem as cores nas VARs (tabela no fim do arquivo SVG, com a escura como histórico).
 
-Contraste conferido nos dois temas do piloto (texto ≥ 4,5:1; série ≥ 3:1):
+Contraste dos dois temas de referência (texto ≥ 4,5:1; série ≥ 3:1; o escuro é só histórico):
 
 | | Escuro | Claro |
 |---|---|---|
@@ -42,7 +46,7 @@ Contraste conferido nos dois temas do piloto (texto ≥ 4,5:1; série ≥ 3:1):
    `FichaJaEmHoraLocal = true`; troque para `false` só se a prévia vier 3 h adiantada.
 3. **Bloco 1** → Aplicar → **Atualizar** o modelo. **Bloco 2** → Aplicar.
 4. **Bloco 3** e **Bloco 4** → Aplicar. Conferir que as 4 medidas `SVG ...` ficaram com Categoria de dados = **URL da imagem**.
-5. Relatório-piloto: **Exibir → Temas → Procurar temas → `Tema_FluxoTrancagem.json`**.
+5. Relatório-piloto: **não importar tema** (as páginas trazem as próprias cores; ver seção 1).
 6. Criar as 2 páginas, cada uma com **Formatar página → Configurações da tela: 16:9, 1280 × 720**.
 7. Montar os visuais das seções 3 e 4. Depois, **Exibir → Sincronizar segmentações**: Ano, Mês, Dia e Turno
    sincronizados **e** visíveis nas 2 páginas do piloto (mesmo grupo de sincronização).
@@ -51,26 +55,36 @@ Contraste conferido nos dois temas do piloto (texto ≥ 4,5:1; série ≥ 3:1):
 ## 3. Layout (px; Formatar → Geral → Propriedades → Tamanho e posição)
 
 Grade de 16 px, largura útil 1248. Segmentações e rodapé **nas mesmas posições nas duas páginas** (§B.6.5).
+Regras de encaixe (William, 03/11/2026): margem mínima de 16 px nos 4 lados e laterais simétricas (16 a 1264);
+nenhuma rolagem interna; nenhum texto com reticências; ~10% de folga nas larguras de texto. O gerador confere
+margem, simetria, sobreposição e página 1280 × 720 em "Ajustar à página".
+Faixa 16–80, conteúdo 92–660, rodapé 672–704.
 
 ### Faixa comum (as duas páginas)
 
 | Visual | Campos | X | Y | L | A |
 |---|---|---|---|---|---|
-| Caixa de texto (título) | texto fixo, ver 5.1 | 16 | 16 | 588 | 56 |
-| Segmentação Ano | `dCalendario[Ano]` | 620 | 16 | 152 | 56 |
-| Segmentação Mês | `dCalendario[Mês]` ("jan"…"dez"; ordem certa depende de classificar por `Mês Nº`, ver seção 7) | 784 | 16 | 152 | 56 |
-| Segmentação Dia | `dCalendario[Dia]` | 948 | 16 | 152 | 56 |
-| Segmentação Turno | `dTurno[Rótulo]` (classificado por `Turno`) | 1112 | 16 | 152 | 56 |
-| Caixa de texto (rodapé: definição) | texto fixo, ver 5.6 | 16 | 676 | 720 | 28 |
-| Navegador de páginas | Inserir → Botões → Navegador → Navegador de página (só as 2 páginas do piloto) | 752 | 672 | 224 | 36 |
-| Cartão (carimbo de atualização) | medida `Dado Atualizado até` (a que as outras páginas já usam) | 992 | 676 | 272 | 28 |
+| Caixa de texto (título) | texto fixo, ver 5.1 | 16 | 16 | 588 | 64 |
+| Segmentação Ano | `dCalendario[Ano]` | 620 | 16 | 152 | 64 |
+| Segmentação Mês | `dCalendario[Mês]` ("jan"…"dez"; ordem certa depende de classificar por `Mês Nº`, ver seção 7) | 784 | 16 | 152 | 64 |
+| Segmentação Dia | `dCalendario[Dia]` | 948 | 16 | 152 | 64 |
+| Segmentação Turno | `dTurno[Rótulo]` (classificado por `Turno`) | 1112 | 16 | 152 | 64 |
+| Caixa de texto (rodapé: definição) | texto fixo, ver 5.6 | 16 | 672 | 576 | 32 |
+| Navegador de páginas | Inserir → Botões → Navegador → Navegador de página (só as 2 páginas do piloto), fonte 9 | 608 | 672 | 368 | 32 |
+| Cartão (carimbo de atualização) | medida `Dado Atualizado até` (a que as outras páginas já usam) | 992 | 672 | 272 | 32 |
+
+Segmentação: preenchimento do visual 4/4/8/8 (12/14 cortava a caixa "Todos"), cabeçalho 9, itens 10.
 
 ### Página 1 — "Fluxo · Etapas" (título, segmentações, KPIs, cartões)
 
 | Visual | Campos | X | Y | L | A |
 |---|---|---|---|---|---|
-| Cartão (novo), 9 medidas | ver 5.3 | 16 | 88 | 1248 | 104 |
-| Matriz dos 6 cartões de etapa | `dEtapa[Etapa no Fluxo]` em Colunas, `SVG Cartão Etapa` em Valores | 16 | 208 | 1248 | 372 |
+| Cartão (novo), 9 medidas | ver 5.3 | 16 | 92 | 1248 | 104 |
+| Matriz dos 6 cartões de etapa | `dEtapa[Etapa no Fluxo]` em Colunas, `SVG Cartão Etapa` em Valores; imagem 190 × 278 | 16 | 244 | 1248 | 340 |
+| Caixa de texto (legenda das cores) | "Borda laranja = as 2 etapas com mais gente por metro · caixa verde = as demais · seta = sentido do fluxo" (Segoe UI 10) | 16 | 596 | 1248 | 28 |
+
+Matriz + legenda centralizadas no vão de 208 a 660 (36 px em cima e embaixo). 200 × 292 deixaria ~8 px por coluna e
+poderia voltar a rolar, por isso a imagem fica em 190 × 278.
 
 Visuais de análise: 2 (limite da §B.6.3: 8).
 
@@ -78,10 +92,10 @@ Visuais de análise: 2 (limite da §B.6.3: 8).
 
 | Visual | Campos | X | Y | L | A |
 |---|---|---|---|---|---|
-| Tabela de conteúdo de mão de obra | `dEtapa[Etapa no Fluxo]`, `SVG Conteúdo` | 16 | 88 | 616 | 300 |
-| Tabela da leitura automática | `Leitura Automática` (uma coluna) | 648 | 88 | 616 | 300 |
-| Gráfico de linhas: metros por dia | eixo `dCalendario[Date]`; `Metros Trançagem no Dia`, `Metros Cabine no Dia` | 16 | 404 | 616 | 256 |
-| Gráfico de linhas: pessoas por dia | eixo `dCalendario[Date]`; `Pessoas Trançagem no Dia`, `Pessoas Cabine no Dia` | 648 | 404 | 616 | 256 |
+| Tabela de conteúdo de mão de obra | `dEtapa[Etapa no Fluxo]`, `SVG Conteúdo` (imagem 400 × 29) | 16 | 92 | 616 | 340 |
+| Tabela da leitura automática | `Leitura Automática` (uma coluna, fonte 11, coluna 556) | 648 | 92 | 616 | 340 |
+| Gráfico de linhas: metros por dia | eixo `dCalendario[Date]`; `Metros Trançagem no Dia`, `Metros Cabine no Dia` | 16 | 444 | 616 | 216 |
+| Gráfico de linhas: pessoas por dia | eixo `dCalendario[Date]`; `Pessoas Trançagem no Dia`, `Pessoas Cabine no Dia` | 648 | 444 | 616 | 216 |
 
 Visuais de análise: 4.
 
@@ -98,14 +112,14 @@ Visuais de análise: 4.
 ## 5. Configuração de cada visual
 
 ### 5.1 Título
-Página 1: "Fluxo da trançagem até a cabine · etapas". Página 2: "Fluxo da trançagem até a cabine · mão de obra e evolução".
-Linha 2 nas duas: "Fonte: ficha de produção · dia produtivo de 05:20 a 05:20 · médias dos dias com trançagem ≥ 3.000 m"
-(Segoe UI 11, cor suave). Linha 1 em Segoe UI Semibold 20. Sem fundo e sem borda (Formatar → Geral → Efeitos).
+Página 1: "Fluxo trançagem → cabine · etapas". Página 2: "Fluxo trançagem → cabine · mão de obra" (o título longo
+quebrava em 2 linhas e cortava). Linha 2 nas duas: "Ficha de produção · dia de 05:20 a 05:20 · média dos dias com
+trançagem ≥ 3.000 m" (Segoe UI 10, cor suave). Linha 1 em Segoe UI Semibold 18. Sem fundo e sem borda.
 
 ### 5.2 Segmentações (Ano, Mês, Dia, Turno)
 - Estilo **Lista suspensa**. Cabeçalho ligado ("Ano", "Mês", "Dia", "Turno"), Segoe UI 10, cor suave.
 - **Seleção única desligada** e **"Mostrar opção Selecionar tudo" ligada** (equivale ao "Todos" do HTML).
-- Fundo, borda de 1 px e cantos de 12 vêm do tema.
+- Fundo branco, borda `#E1E0D9` de 1 px e cantos de 12 em hex no próprio visual.
 - Sincronizar só entre as 2 páginas do piloto (passo 7 da seção 2).
 - `Dia` é o dia do mês. Com Mês = Todos, escolher "15" pega todo dia 15, mesmo efeito do HTML.
 
@@ -125,30 +139,35 @@ Visual **Cartão** (o novo, com várias medidas). Layout horizontal, 9 por linha
 | 9 | `Rendimento de Fluxo` | rendimento de fluxo | cabine ÷ trançagem |
 
 Valor em Segoe UI Semibold 24, rótulo em Segoe UI 10 na cor suave. Sem dado, o cartão fica em branco (nunca 0).
+**Como ficou no gerador (03/11, para caber sem reticências):** valor 20 (16 em "pessoas tranç./cab."), rótulo 9,
+unidades de exibição = Nenhuma (no visual), formato só do visual `#,0 "h"` no lead time e `#,0 "m"` no WIP.
+Rótulos curtos (alias do visual, `displayName`; a medida não muda), na ordem: m/dia cabine · pessoas no trecho ·
+pessoas tranç./cab. · m/pessoa cabine · eficiência · lead time · em processo · CV vazão · rendimento.
 Texto alternativo: "Nove indicadores do trecho trançagem→cabine no filtro escolhido."
 
 ### 5.4 Matriz dos cartões (página 1)
 Passo a passo em `Medidas_SVG_FluxoTrancagemCabine.md` ("Montar os 6 cartões"). Resumo: filtro do visual
-`Trecho Tranç-Cabine` = Verdadeiro; subtotais desligados; grade desligada; **Tamanho da imagem 304 (altura) × 208
-(largura)**; preenchimento 0, sem fundo e sem borda; título por fx = `Título Cartões`. Etapa sem apontamento e com
+`Trecho Tranç-Cabine` = Verdadeiro; subtotais desligados; grade desligada; **Tamanho da imagem 278 (altura) × 190
+(largura)** (208 × 304 na mesma razão, para os 6 caberem em 1.248 px sem rolagem); cabeçalho de coluna escondido
+(fonte 1, cor e fundo `#F6F5F2`, a cor da página; células também `#F6F5F2`); preenchimento 0, sem fundo e sem borda; título por fx = `Título Cartões`. Etapa sem apontamento e com
 0 m no filtro some (BLANK).
 Texto alternativo: "Seis cartões, da trançagem à cabine: pessoas por dia, metros por dia e pessoas a cada 1.000 m de cada etapa."
 
 ### 5.5 Página 2
 - **Tabela de conteúdo:** colunas `Etapa no Fluxo` (largura 130) e `SVG Conteúdo` (renomear para
-  "Pessoas a cada 1.000 m"). Tamanho da imagem 32 × 440. Classificar por `Etapa no Fluxo` crescente (ordem física do
+  "Pessoas a cada 1.000 m"). Tamanho da imagem 29 × 400 (440 × 32 na mesma razão, sem rolagem). Classificar por `Etapa no Fluxo` crescente (ordem física do
   fluxo). Filtro do visual `Trecho Tranç-Cabine` = Verdadeiro. Título por fx = `Título Conteúdo`.
   Texto alternativo: "Pessoas a cada 1.000 m por etapa; laranja são as duas etapas com mais gente por metro; tracejado é a média."
 - **Leitura automática:** visual **Tabela** com **uma coluna só**, a medida `Leitura Automática` (renomear para
-  "Leitura automática"). Valores: **Quebra automática de texto ligada**, Segoe UI 12; largura da coluna 584; grade
+  "Leitura automática"). Valores: **Quebra automática de texto ligada**, Segoe UI 11; largura da coluna 556; grade
   desligada; totais desligados. A medida separa os parágrafos com quebra de linha (`UNICHAR(10)`), que a tabela mostra
   com a quebra automática ligada. Sem dado: "Sem dados no filtro."
 - **Linha, metros por dia:** título "Quanto a trançagem e a cabine fazem por dia (m)?". Eixo X `dCalendario[Date]`
-  **contínuo**, sem hierarquia; Y a partir de 0; marcadores desligados. Trançagem = cor 1 do tema (azul), cabine = cor 2 (verde).
+  **contínuo**, sem hierarquia; Y a partir de 0; marcadores desligados. Trançagem = azul `#2A78D6`, cabine = verde `#0CA30C`.
 - **Linha, pessoas por dia:** título "Quantas pessoas a trançagem e a cabine usam por dia?". Trançagem = cor 3 do
-  tema (laranja), cabine = cor 2 (verde).
+  laranja `#EB6834`, cabine = verde `#0CA30C`. Eixos `#55534D`, grade `#E1E0D9`.
 - Dia fora da média (trançagem < 3.000 m) fica em branco nas séries, como no HTML. Com um dia só escolhido, ele aparece.
-- Cor só pelo tema (escolher a cor do tema no seletor, nunca digitar hex). O SVG é a única exceção.
+- Cores em hex da paleta clara em cada visual (as páginas não dependem do tema do relatório; seção 1).
 
 ### 5.6 Rodapé
 Texto fixo (Segoe UI 9, cor suave): "Pessoas = operadores distintos que apontaram a etapa no dia (estimativa, não é
@@ -264,7 +283,7 @@ Cartões de etapa esperados (Data de Referência, mesmo período):
 - **`dTurno` da Montagem:** o `montagem_modelo.md` propõe outra `dTurno`, com chave de texto. Ela não foi aplicada. Se
   for, terá de reaproveitar a `dTurno` do Bloco 0 (chave numérica, §B.2.3).
 - **Versão final no `GMS_Painel`:** trocar a paleta do piloto pelos tokens `fx_` no tema claro (seção 1) e decidir
-  com o William se a página leva o tema escuro ou não.
+  com o William (o piloto já é claro).
 
 ## Validação no Desktop (03/11/2026, cópia local GMS_Teste, dados atualizados do SharePoint)
 Com os blocos 0 a 4 aplicados, limite de 2.000 m por ficha, normalização de operador e as correções de quantidade e operador feitas na origem. Consulta com dCalendario[Date] <= 06/10/2026, dia pela data civil do fim (regra do HTML):
@@ -273,3 +292,8 @@ Com os blocos 0 a 4 aplicados, limite de 2.000 m por ficha, normalização de op
 - Maior quantidade por ficha na tabela: 1.800 m (os erros de digitação acima de 2.000 m saíram).
 Regra oficial (Data de Referência, virada 05:20), mesmo período, por etapa (m/dia · pessoas/dia · pessoas por 1.000 m): Trançagem 6.654 · 6,8 · 1,02; Cabine 5.508 · 4,8 · 0,88; Bandagem 6.383 · 3,2 · 0,50; Mandril 8.185 · 3,2 · 0,39; Cobertura 6.650 · 2,6 · 0,39; Debandagem 5.541 · 2,0 · 0,37; Vulcanização 6.524 · 2,2 · 0,33; Tubo 7.203 · 2,3 · 0,32. Trançagem e Cabine concentram mais gente por metro.
 Pendente: números por turno, segmentações e visuais ainda não foram montados no relatório.
+
+## Como regenerar as 2 páginas (código)
+1. Feche o `GMS_Teste.pbip` no Desktop e rode, nesta pasta: `python gerar_paginas_fluxo.py` (padrão: `..\..\..\PowerBI\Modelo_PBIP_teste\GMS_Modelo.Report`; outro `.Report` vai como 1º argumento, e fora de pasta `*_teste` só com `--forcar`).
+2. O script apaga e recria só `pg_fluxo_1` e `pg_fluxo_2`, põe as 2 no fim do `pages.json` sem trocar a página ativa, **não mexe no `report.json` nem no tema** e valida no fim (JSON, campos no TMDL, nomes, margem de 16 e simetria em 1280 × 720, sobreposição, tema escuro não registrado); `--validar` só confere.
+3. Ajuste feito à mão no Desktop nessas 2 páginas some na próxima geração: leve o ajuste para o script antes de regerar.
