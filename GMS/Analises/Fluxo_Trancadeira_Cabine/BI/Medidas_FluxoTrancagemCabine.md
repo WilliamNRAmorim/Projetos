@@ -354,6 +354,18 @@ createOrReplace
 				    ParaTexto = (v as any) as nullable text =>
 				        if v = null then null
 				        else let t = Text.Trim(Text.From(v)) in if t = "" then null else t,
+				    // Operador normalizado só para contar pessoas distintas: maiúsculas, sem acento, sem pontuação e sem espaço duplo.
+				    // "Joao  Silva", "JOÃO SILVA" e "joão silva." viram a mesma pessoa. O dado de origem não é alterado.
+				    MapaAcento = {{"Á","A"},{"À","A"},{"Â","A"},{"Ã","A"},{"Ä","A"},{"É","E"},{"È","E"},{"Ê","E"},{"Ë","E"},{"Í","I"},{"Ì","I"},{"Î","I"},{"Ï","I"},{"Ó","O"},{"Ò","O"},{"Ô","O"},{"Õ","O"},{"Ö","O"},{"Ú","U"},{"Ù","U"},{"Û","U"},{"Ü","U"},{"Ç","C"},{"Ñ","N"}},
+				    NormOperador = (v as any) as nullable text =>
+				        if v = null then null
+				        else
+				            let
+				                t = Text.Upper(Text.Trim(Text.From(v))),
+				                sem = List.Accumulate(MapaAcento, t, (s, p) => Text.Replace(s, p{0}, p{1})),
+				                limpo = Text.Combine(List.Select(Text.Split(Text.Remove(sem, {".", ",", "-", "_", "/"}), " "), each _ <> ""), " ")
+				            in
+				                if limpo = "" then null else limpo,
 				    // Lead time por ficha no formato largo (BI3: camada mais barata). Vai só na linha da Extração/Teste.
 				    ComLead = Table.AddColumn(Colunas, "_LT", each
 				        let
@@ -374,7 +386,7 @@ createOrReplace
 				    Tipada = Table.TransformColumns(Empilhada, {
 				        {"_Fim", ParaDataHora, type nullable datetime},
 				        {"_Qtd", (q) => let n = ParaNumero(q) in if n <> null and n > QtdMaxFicha then null else n, type nullable number},
-				        {"_Op", ParaTexto, type nullable text}}),
+				        {"_Op", NormOperador, type nullable text}}),
 				    Concluidas = Table.SelectRows(Tipada, each [_Fim] <> null),
 				    // Turno e Data de Referência carimbados uma vez, pelas funções do modelo (§B.3.3).
 				    ComTurno = Table.AddColumn(Concluidas, "Turno", each fn_Turno(fn_MinutoDoDia([_Fim])), Int64.Type),
