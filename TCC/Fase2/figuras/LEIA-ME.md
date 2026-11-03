@@ -6,7 +6,7 @@ Fonte editável: `fonte/gerar_figuras.py` gera todas (`python gerar_figuras.py` 
 
 | Arquivo | Pixels (PNG) | Tamanho sugerido no documento | Observações |
 |---|---|---|---|
-| fig01_fluxo_antes_depois.png | 2000 × 940 | 16 cm de largura (≈ 7,5 cm de altura) | Notas com 387 fichas, ≈ 2.900 lançamentos, ≈ 28 fontes e 4.162 h, conforme a especificação |
+| fig01_fluxo_antes_depois.png | 2000 × 940 | 16 cm de largura (≈ 7,5 cm de altura) | Notas com 387 fichas, ≈ 2.900 lançamentos, ≈ 28 fontes e "conferir uma OP com o SAP custava uma manhã" |
 | fig02_isa95.png | 2000 × 1160 | 16 cm (≈ 9,3 cm) | Rodapé interno "Base: ANSI/ISA-95" |
 | fig03_ciclo_rad.png | 2000 × 1096 | 16 cm (≈ 8,8 cm) | |
 | fig05_arquitetura.png | 2000 × 1904 | 16 cm (≈ 15,2 cm) | Figura principal; mais alta que os 13 cm previstos |

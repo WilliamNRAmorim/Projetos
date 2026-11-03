@@ -146,7 +146,7 @@ def fig01():
         'Lançamento no SAP',
         'Supervisão recebe o relato do dia anterior'], L2, MID, DARK, 'defasagem de 1 a 2 dias', RED)
     notas = ['387 fichas de papel em um mês', '≈ 2.900 lançamentos manuais por mês',
-             '≈ 28 fontes de dados desconectadas', 'uma OP ficou 4.162 h numa etapa sem ser notada']
+             '≈ 28 fontes de dados desconectadas', 'conferir uma OP com o SAP custava uma manhã']
     nw = (990 - x0 - 3 * 14) / 4
     for i, t in enumerate(notas):
         f.box(x0 + i * (nw + 14), 168, nw, 54, t, fill=WHITE, stroke=RED, sw=1.2, dash='5 4', size=15)
