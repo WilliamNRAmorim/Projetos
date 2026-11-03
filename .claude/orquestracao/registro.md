@@ -117,3 +117,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-10-30 | Histórico de apontamento 2018-2026 para o BI (CSV de carga de 29.049 linhas; lista SharePoint pendente) e remoção de 17 linhas duplicadas de 2026 na planilha 2025-2026 | chefe (Sonnet 5.5), sem subagentes | trabalho curto e em arquivos locais | custo: ver uso.ps1
 2026-11-03 | TCC II: print da página de paradas do Power BI como Figura 7, PDF mantido em 30 páginas | chefe (Opus 5.5) direto, sem subagente | captura no navegador em 4 partes e costura local; nada enviado para fora | uso.ps1 não mediu
 2026-11-03 | TH07 30/10: criar 2º e 3º turno com Manutenção Preventiva | chefe (Sonnet 5.5), sem subagente | pedido simples, feito direto | custo não medido
+2026-11-03 | TCC II: lista de ajustes da revisão do William anotada em TCC/Fase2/PENDENCIAS_REVISAO.md (16 itens) | chefe (Opus 5.5) direto | só anotar, a pedido | uso.ps1 não mediu
