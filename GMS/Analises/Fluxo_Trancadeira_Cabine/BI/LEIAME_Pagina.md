@@ -4,7 +4,7 @@ Arquivos desta pasta:
 
 | Arquivo | O que é |
 |---|---|
-| `Medidas_FluxoTrancagemCabine.md` | Bloco 0 (funções e `dTurno`, só se faltarem), Bloco 1 (`dEtapa` e `fPessoasEtapaOP`), Bloco 2 (relacionamentos), Bloco 3 (medidas) e a DECISÃO sobre `Etapas` × tabela nova |
+| `Medidas_FluxoTrancagemCabine.md` | Bloco 0 (funções `fn_*` e `dTurno`, necessário), Bloco 1 (`dEtapa` e `fPessoasEtapaOP`), Bloco 2 (relacionamentos), Bloco 3 (medidas) e a DECISÃO, provada no TMDL, de usar tabela própria em vez da `Etapas` |
 | `Medidas_SVG_FluxoTrancagemCabine.md` | Bloco 4: cartões SVG por etapa (layout da `ilustracao_headcount.html`) e barras/ícones avulsos |
 | `Tema_FluxoTrancagem.json` | tema escuro do piloto (padrão), paleta da ilustração |
 | `Tema_FluxoTrancagem_Claro.json` | tema claro do piloto, paleta do `painel_template.html` |
@@ -36,8 +36,10 @@ Contraste conferido nos dois temas do piloto (texto ≥ 4,5:1; série ≥ 3:1):
 
 ## 2. Ordem de aplicação
 
-1. Modelo (GMS), TMDL view: **Bloco 0** só com o que faltar (`fn_MinutoDoDia`, `fn_Turno`, `fn_DataRef`, `dTurno`).
-2. **Checar o fuso** (seção "Fuso" do arquivo de medidas) e ajustar `FichaJaEmHoraLocal` se precisar.
+1. Modelo (GMS), TMDL view: **Bloco 0 inteiro**. O modelo publicado não tem `fn_MinutoDoDia`, `fn_Turno`,
+   `fn_DataRef` nem `dTurno` (conferido no TMDL de 03/11 e na lista de tabelas do servidor).
+2. **Conferir o fuso numa ficha conhecida** (seção "Fuso" do arquivo de medidas). O padrão é
+   `FichaJaEmHoraLocal = true`; troque para `false` só se a prévia vier 3 h adiantada.
 3. **Bloco 1** → Aplicar → **Atualizar** o modelo. **Bloco 2** → Aplicar.
 4. **Bloco 3** e **Bloco 4** → Aplicar. Conferir que as 4 medidas `SVG ...` ficaram com Categoria de dados = **URL da imagem**.
 5. Relatório-piloto: **Exibir → Temas → Procurar temas → `Tema_FluxoTrancagem.json`**.
@@ -56,7 +58,7 @@ Grade de 16 px, largura útil 1248. Segmentações e rodapé **nas mesmas posiç
 |---|---|---|---|---|---|
 | Caixa de texto (título) | texto fixo, ver 5.1 | 16 | 16 | 588 | 56 |
 | Segmentação Ano | `dCalendario[Ano]` | 620 | 16 | 152 | 56 |
-| Segmentação Mês | `dCalendario[Mês]` (classificado por `Mês Nº`) | 784 | 16 | 152 | 56 |
+| Segmentação Mês | `dCalendario[Mês]` ("jan"…"dez"; ordem certa depende de classificar por `Mês Nº`, ver seção 7) | 784 | 16 | 152 | 56 |
 | Segmentação Dia | `dCalendario[Dia]` | 948 | 16 | 152 | 56 |
 | Segmentação Turno | `dTurno[Rótulo]` (classificado por `Turno`) | 1112 | 16 | 152 | 56 |
 | Caixa de texto (rodapé: definição) | texto fixo, ver 5.6 | 16 | 676 | 720 | 28 |
@@ -85,7 +87,8 @@ Visuais de análise: 4.
 
 ## 4. Turno nas medidas
 
-- A `fPessoasEtapaOP` leva `Turno` (pela `fn_Turno`) e liga em `dTurno`. O turno é o do **fim** da etapa.
+- A `fPessoasEtapaOP` leva `Turno` (pela `fn_Turno`, fronteiras da norma: 05:20 / 13:57 / 22:20) e liga em `dTurno`.
+  O turno é o do **fim** da etapa. As páginas atuais usam 13:40 para o 2º turno (seção 7).
 - **O dia produtivo continua sendo do dia inteiro** (Trançagem ≥ 3.000 m somando os 3 turnos). Com um turno escolhido,
   vazão, pessoas e conteúdo são a média daquele turno nos dias produtivos. Sem isso quase nenhum dia passaria do corte
   num turno só.
@@ -156,8 +159,9 @@ escala oficial)." Carimbo `Dado Atualizado até` ao lado, Segoe UI 9, sem rótul
 ### 6.1 Antes dos números
 - [ ] `fPessoasEtapaOP` atualizou sem erro. Contagem: para cada etapa, linhas = fichas da `ficha_producao` com
       `data_hora_final_<etapa>` preenchido (não há junção).
-- [ ] **Fuso:** uma ficha conhecida no app (Consulta OP) tem o mesmo `Fim da Etapa` na `fPessoasEtapaOP`. Diferença de
-      3 h a mais = `FichaJaEmHoraLocal` deveria ser `false`. Diferença de 3 h a menos = deveria ser `true` (converteu duas vezes).
+- [ ] **Fuso:** uma ficha conhecida no app (Consulta OP) tem o mesmo `Fim da Etapa` na `fPessoasEtapaOP` (padrão
+      `FichaJaEmHoraLocal = true`). 3 h a mais: a lista está em UTC, troque para `false`, atualize e registre no diário
+      (as colunas de turno do modelo atual também estariam deslocadas).
 - [ ] Virada das 05:20 (§B.9.3): fim às 05:19 cai na `Data de Referência` do dia anterior; às 05:21, no próprio dia.
       Turno: 05:19 → 3; 05:21 → 1; 13:57 → 2; 22:20 → 3.
 - [ ] `Quantidade (m)`: a soma da Trançagem de um dia bate com o rodapé do app (texto "1.200" tem de virar 1.200 m, não 1,2).
@@ -245,10 +249,19 @@ Cartões de etapa esperados (Data de Referência, mesmo período):
 - [ ] Carimbo de atualização visível no rodapé das 2 páginas.
 - [ ] Linhas de diário (fim de `Medidas_FluxoTrancagemCabine.md`) coladas depois de conferido; ID MEL real pelo `gms.py --novo`.
 
-## 7. Pendências
-- **`Etapas` × `fPessoasEtapaOP`:** o TMDL do modelo não está no repositório. Se a `Etapas` tiver operador, turno e
-  data de referência por etapa, as medidas migram para ela (seção 0 do arquivo de medidas).
-- **`dTurno`:** se a versão com chave de texto do `montagem_modelo.md` já foi aplicada, o Bloco 0/2 precisa de ajuste
-  antes de colar.
+## 7. Pendências (para o William e o `revisor`)
+- **Fronteira de turno divergente no modelo atual.** O piloto segue a norma (2º turno a partir de 13:57, 837 min). O
+  modelo existente usa outras fronteiras e **não foi alterado**: `Etapas[Turno]` e `ficha_producao[Turno_Producao]`
+  com 320/820/1340 (13:40) e a medida `Turno Atual` com 320/828/1361. Fins entre 13:40 e 13:56 caem em turnos
+  diferentes no piloto e nas páginas atuais. A correção é do `revisor`/William.
+- **Fuso:** o padrão `FichaJaEmHoraLocal = true` é hipótese tirada do modelo atual. Conferir numa ficha antes de aplicar.
+- **Data do dia diferente das páginas atuais.** `ficha_producao[DataProducao]` e `Etapas[Data]` usam a data civil,
+  sem a virada das 05:20. O piloto usa a `Data de Referência` (§A.3), então um mesmo dia pode mostrar números
+  diferentes do piloto e da Visão Geral. É esperado, e a diferença é a mesma explicada na 6.4.
+- **Ordem do Mês:** `dCalendario[Mês]` ("jan", "fev"…) não tem "Classificar por coluna" no modelo e a segmentação sai
+  em ordem alfabética. Ajuste de 1 clique: modelo → `dCalendario[Mês]` → Classificar por coluna → `Mês Nº`. Muda a
+  ordem do Mês em qualquer visual que o use (para melhor), por isso é decisão do William.
+- **`dTurno` da Montagem:** o `montagem_modelo.md` propõe outra `dTurno`, com chave de texto. Ela não foi aplicada. Se
+  for, terá de reaproveitar a `dTurno` do Bloco 0 (chave numérica, §B.2.3).
 - **Versão final no `GMS_Painel`:** trocar a paleta do piloto pelos tokens `fx_` no tema claro (seção 1) e decidir
   com o William se a página leva o tema escuro ou não.

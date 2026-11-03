@@ -19,39 +19,50 @@ C1, K07/K08 → C4.
 
 ## 0. Decisão: `Etapas` × tabela nova
 
-**Procurado:** o TMDL do modelo (`GMS/PowerBI/*.SemanticModel/definition/tables`). **Não existe no repositório.** O
-`GMS_Painel.pbip` só aponta para `GMS_Painel.Report`, o modelo (GMS) vive no serviço e o `.pbix` guarda o modelo
-compactado. Também não há `.tmdl.md` da `Etapas` nem da `fFluxoEtapas` em `PowerBI/modelo/`, e nenhum relatório
-versionado usa coluna de operador, `Data de Referência` ou `Turno` dessas tabelas (o relatório só usa `Etapas[Etapa]`,
-`Etapas[OrdemEtapa]` e as medidas `Realizado Etapa`/`Planejado Etapa`).
+**Evidência** (TMDL do modelo, snapshot de 03/11/2026 em
+`GMS/PowerBI/Modelo_PBIP/GMS_Modelo.SemanticModel/definition`):
+- `tables/Etapas.tmdl`: a `Etapas` é **tabela calculada** (`UNION` de `SELECTCOLUMNS` sobre a `ficha_producao`) com
+  as colunas `OP`, `Mangueira`, `Etapa`, `OrdemEtapa`, `DataHora`, `Metragem`, `Data`, `Turno` e `AnoMes`.
+  - **Não tem operador.**
+  - `Metragem` é a `Metragem_Extracao` repetida em todas as etapas. Não mede a vazão de cada etapa.
+  - Não tem Vulcanização.
+  - `Data` é a data civil de `DataHora`, sem a virada das 05:20.
+  - `Turno` usa as fronteiras 320/820/1340.
+- O modelo publicado não tem `fEtapaOP`, `dTurno` nem as funções `fn_*`.
 
-**Decisão:** sem prova de que a `Etapas` tem o operador por etapa, o piloto usa uma tabela própria com outro nome,
-**`fPessoasEtapaOP`**, para não ocupar o nome canônico `fEtapaOP` (MEL-116) nem duplicar a `Etapas` se ela já servir.
-A `Metros Produzidos` (K01) também **não** é criada aqui. O piloto usa a auxiliar `_Metros Fluxo`, com a mesma
-definição, para não deixar a K01 numa tabela provisória.
-
-**Como trocar depois (5 minutos no TMDL view):** abra a `Etapas` no TMDL view. Se ela tiver colunas de operador,
-quantidade, fim da etapa, `Data de Referência` e `Turno` no grão ficha × etapa, me mande os nomes. Eu devolvo as
-medidas apontando para a `Etapas`, e o Bloco 1 sai. As medidas leem a fato só em 5 colunas: `Quantidade (m)`,
-`Operador`, `Lead Time Tranç→Cabine (h)`, `Data de Referência` (relacionamento) e `Turno` (relacionamento).
+**Decisão (provada):** a `Etapas` não serve para pessoas nem para vazão por etapa. O piloto usa a tabela própria
+**`fPessoasEtapaOP`**, montada da `ficha_producao`, que tem `quantidade_*`, `operador_*` e `data_hora_final_*` de
+cada etapa. O nome canônico `fEtapaOP` fica livre para a MEL-116. A `Metros Produzidos` (K01) também **não** é criada
+aqui: o piloto usa a auxiliar `_Metros Fluxo`, com a mesma definição, para não deixar a K01 numa tabela provisória.
 
 Linha para o diário (colar quando aplicar):
 ```
-2026-11-03 | DECISÃO | PowerBI/fPessoasEtapaOP | v0.1 | MEL-116 A.3 | Piloto Fluxo Tranç→Cabine usa tabela própria fPessoasEtapaOP (ficha × etapa com Operador, Turno e Data de Referência) porque o TMDL da Etapas não está no repositório e não há prova de que ela traga o operador por etapa; o nome canônico fEtapaOP fica livre para a MEL-116. Se a Etapas tiver operador, as medidas migram para ela e a fPessoasEtapaOP sai
+2026-11-03 | DECISÃO | PowerBI/fPessoasEtapaOP | v0.1 | MEL-116 A.3 | Piloto Fluxo Tranç→Cabine usa tabela própria fPessoasEtapaOP (ficha × etapa com Quantidade, Operador, Turno e Data de Referência) montada da ficha_producao. Provado no TMDL de 03/11: a Etapas é tabela calculada sem operador, com Metragem = Metragem_Extracao repetida em todas as etapas (não mede vazão por etapa), sem Vulcanização e com data civil sem a virada das 05:20. O nome canônico fEtapaOP fica livre para a MEL-116
 ```
 
 ---
 
-## Bloco 0 — Só o que ainda não existir no modelo (funções da §B.3.3 e `dTurno` da §B.2.3)
+## Bloco 0 — Funções da §B.3.3 e `dTurno` da §B.2.3 (necessário)
 
-Confira no TMDL view (pasta **Expressões** e lista de tabelas). Se `fn_MinutoDoDia`, `fn_Turno`, `fn_DataRef` e
-`dTurno` já existirem, **pule este bloco**: a fato abaixo chama as do modelo. As funções estão copiadas da §B.3.3 já
-com as fronteiras da MEL-250 (T1 320–836, T2 837–1339, T3 1340–319). Não reescreva fronteira aqui; mudança de turno
-passa pelo `revisor`.
+**Este bloco é obrigatório.** O modelo publicado não tem `fn_MinutoDoDia`, `fn_Turno`, `fn_DataRef` nem `dTurno`:
+o `expressions.tmdl` só tem `Refugo_Bobinadeira` e `RefugoExtrusora_estrutura`, e a lista de tabelas do servidor
+não tem `dTurno`. As funções estão copiadas da §B.3.3 com as fronteiras da norma (MEL-250: T1 320–836, T2 837–1339,
+T3 1340–319). Não mexa nas fronteiras aqui: mudança de turno passa pelo `revisor`.
+
+**Divergência de turno no modelo atual (não alterar, só registrar):**
+
+| Onde | Fronteiras |
+|---|---|
+| `Etapas[Turno]` e `ficha_producao[Turno_Producao]` | 320 / **820** / 1340 (2º turno às 13:40) |
+| medida `ficha_producao[Turno Atual]` | 320 / **828** / **1361** (2º às 13:48, 3º às 22:41) |
+| Norma (`GMS/CLAUDE.md`, §B.2.3 após a MEL-250) e este piloto | 320 / **837** / 1340 (2º às 13:57, 3º às 22:20) |
+
+Um mesmo fim entre 13:40 e 13:56 cai no 2º turno nas páginas atuais e no 1º turno no piloto. Pendência para o
+`revisor`/William (linha no fim do arquivo).
 
 **Atenção:** o `PowerBI/modelo/montagem_modelo.md` propõe uma `dTurno` com chave de texto ("1º TURNO") para a
-Montagem. A §B.2.3 manda chave numérica 1–3. Se aquela versão já tiver sido aplicada, **não cole a `dTurno` abaixo**:
-me avise, porque o relacionamento do Bloco 2 precisa da chave numérica.
+Montagem. Ela não foi aplicada: não está na lista do servidor. Se um dia for, terá de usar esta `dTurno` (chave
+numérica da §B.2.3) em vez de criar outra.
 
 ```
 createOrReplace
@@ -133,20 +144,31 @@ createOrReplace
 
 ### Fuso (regra no M, não no checklist)
 
-A lista do SharePoint grava a data-hora em UTC. A `ParaDataHora` abaixo converte para a hora da fábrica (UTC−3, sem
-horário de verão desde 2019):
-- valor com fuso (`datetimezone`): troca para −3 e tira o fuso. Sempre certo, não depende de nada.
-- valor sem fuso (`datetime`) ou texto: tratado como UTC e recebe −3 h, **a não ser que a `ficha_producao` já
-  converta**. Nesse caso, mude o primeiro passo para `FichaJaEmHoraLocal = true`, senão a conversão acontece duas vezes.
+**Padrão: `FichaJaEmHoraLocal = true`** (a data-hora da `ficha_producao` já está na hora da fábrica; não subtrai 3 h).
 
-**Como checar se a `ficha_producao` já converte (uma vez, antes de aplicar):**
-1. Transformar dados → consulta `ficha_producao` → Editor avançado. Procure, aplicado às colunas
-   `data_hora_final_*`: `DateTimeZone.SwitchZone`, `DateTimeZone.ToLocal`, `DateTimeZone.RemoveZone` ou
-   `#duration(0, 3, 0, 0)`/`#duration(0, -3, 0, 0)`. Achou: `FichaJaEmHoraLocal = true`.
-2. Não achou nada: na prévia da `ficha_producao`, pegue uma ficha e compare `data_hora_final_extracao` com a hora da
-   mesma ficha no app (Consulta OP) ou na lista do SharePoint aberta no navegador. Prévia 3 h adiantada: deixe
-   `false` (padrão). Prévia igual ao app: `true`.
-3. Depois de aplicar, o item 5.1 do LEIAME confere o resultado com uma ficha.
+É uma hipótese, tirada do uso do modelo atual (TMDL de 03/11):
+- A partição da `ficha_producao` não converte fuso: `SharePoint.Tables` → `Origem` → renomeia/remove colunas, sem
+  `DateTimeZone` nem `#duration`. As `data_hora_final_*` chegam como `dateTime`.
+- O modelo trata esses valores como hora local. `Etapas[Turno]` e `ficha_producao[Turno_Producao]` aplicam
+  `HOUR()`/`MINUTE()` direto sobre eles, com o 1º turno a partir de 05:20 (320 min), e `DataProducao` é a data civil
+  do mesmo valor. Se fosse UTC, todos os turnos das páginas atuais estariam 3 h deslocados.
+
+**O William confere numa ficha conhecida antes de aplicar:** na prévia da `ficha_producao` (Transformar dados), pegue
+uma ficha e compare `data_hora_final_extracao` com a hora da mesma ficha no app (Consulta OP).
+- Igual: deixe `true`.
+- 3 h adiantada: os valores estão em UTC. Troque para `FichaJaEmHoraLocal = false` (a `ParaDataHora` passa a subtrair
+  3 h) e registre isso no diário, porque aí as colunas de turno do modelo atual também estão erradas.
+
+O que a `ParaDataHora` faz em cada caso: valor com fuso (`datetimezone`) sempre vira UTC−3 e perde o fuso, sem depender
+do padrão. Valor sem fuso (`datetime`) ou texto só recebe −3 h quando `FichaJaEmHoraLocal = false`.
+
+**Colunas da `ficha_producao` usadas (conferidas no `tables/ficha_producao.tmdl`):** `ID` (int64), `OP` (double,
+convertida para texto) e, para cada etapa, `data_hora_final_*` (dateTime), `quantidade_*` (double no snapshot; a
+`ParaNumero` aceita número ou texto) e `operador_*` (string). As 8 trincas do `Mapa` batem exatamente com os nomes do
+modelo. A coluna da Trançagem é `data_hora_final_trancadeira`, mas a quantidade e o operador são
+`quantidade_trancagem` e `operador_trancagem`. As colunas `Turno_mandril`, `Turno_Tubo`, `Turno_Trançagem`,
+`Turno_Cobertura`, `Turno_Bandagem`, `Turno_Vulcanização`, `Turno_Debandagem`, `Turno_Extr/Teste` e `Turno_Producao`
+**não são usadas**: o turno sai da `fn_Turno` sobre o fim da etapa.
 
 ```
 createOrReplace
@@ -276,8 +298,8 @@ createOrReplace
 			mode: import
 			source =
 				let
-				    // Fuso: true só se a consulta ficha_producao já converte UTC → hora da fábrica (ver "Como checar").
-				    FichaJaEmHoraLocal = false,
+				    // Fuso: true = data_hora_final_* já está na hora da fábrica (como o modelo atual usa). Se a ficha conferida estiver 3 h adiantada (UTC), troque para false.
+				    FichaJaEmHoraLocal = true,
 				    // Grão de entrada: ficha_producao, 1 linha por ficha. Saída: 1 linha por ficha × etapa concluída.
 				    // Não há junção; conferência de contagem: linhas da saída = soma, por etapa, das fichas com data_hora_final preenchida.
 				    Origem = ficha_producao,
@@ -292,9 +314,9 @@ createOrReplace
 				        {"Extração/Teste", "data_hora_final_extracao",     "quantidade_extracao",     "operador_extracao"}
 				    },
 				    Colunas = Table.SelectColumns(Origem, {"ID", "OP"} & List.Combine(List.Transform(Mapa, each List.Skip(_, 1))), MissingField.UseNull),
-				    // UTC sem fuso → hora da fábrica (UTC−3), salvo se a ficha_producao já converteu.
+				    // Sem fuso: mantém (FichaJaEmHoraLocal = true) ou trata como UTC e passa para UTC−3 (false).
 				    DeUTC = (d as datetime) as datetime => if FichaJaEmHoraLocal then d else d - #duration(0, 3, 0, 0),
-				    // Data-hora: datetimezone vira UTC−3; datetime e texto sem fuso são tratados como UTC; date fica como está.
+				    // Data-hora: datetimezone vira UTC−3; datetime e texto sem fuso seguem o DeUTC; date fica como está.
 				    ParaDataHora = (v as any) as nullable datetime =>
 				        if v = null then null
 				        else if Value.Is(v, type datetimezone) then DateTimeZone.RemoveZone(DateTimeZone.SwitchZone(v, -3))
@@ -368,8 +390,10 @@ createOrReplace
 **Antes de colar:**
 - Se o TMDL recusar com "duplicate"/"already exists" em `dEtapa` ou `fPessoasEtapaOP`, o nome já existe: não
   sobrescreva, me avise.
-- A partição lê a consulta `ficha_producao` e as funções `fn_*` pelo nome. Se o serviço recusar a referência à
-  `ficha_producao`, copie os passos `Origem` e `Lista` da partição dela no lugar de `Origem = ficha_producao`.
+- A partição lê a consulta `ficha_producao` e as funções `fn_*` (Bloco 0) pelo nome. Se o serviço recusar a
+  referência à `ficha_producao`, troque `Origem = ficha_producao` pelos 4 passos da partição dela (`Fonte`, `Origem`
+  com o `Id` da lista, `Renomeado`, `Limpo`) e chame o resultado de `Origem`.
+- Os relacionamentos do Bloco 2 usam `dCalendario[Date]`, que existe no modelo (calculada, 2025–2027).
 
 ## Bloco 2 — Relacionamentos (muitos-para-um, sentido único, da dimensão para o fato)
 
@@ -992,7 +1016,9 @@ são cerca de 5.000 m (ver LEIAME 5.4).
 ## Linhas de diário (para colar depois de aplicar e conferir)
 
 ```
-2026-11-03 | DECISÃO | PowerBI/fPessoasEtapaOP | v0.1 | MEL-116 A.3 | Piloto Fluxo Tranç→Cabine usa tabela própria fPessoasEtapaOP (ficha × etapa com Operador, Turno e Data de Referência) porque o TMDL da Etapas não está no repositório e não há prova de que ela traga o operador por etapa; o nome canônico fEtapaOP fica livre para a MEL-116. Se a Etapas tiver operador, as medidas migram para ela e a fPessoasEtapaOP sai
+2026-11-03 | DECISÃO | PowerBI/fPessoasEtapaOP | v0.1 | MEL-116 A.3 | Piloto Fluxo Tranç→Cabine usa tabela própria fPessoasEtapaOP (ficha × etapa com Quantidade, Operador, Turno e Data de Referência) montada da ficha_producao. Provado no TMDL de 03/11: a Etapas é tabela calculada sem operador, com Metragem = Metragem_Extracao repetida em todas as etapas (não mede vazão por etapa), sem Vulcanização e com data civil sem a virada das 05:20. O nome canônico fEtapaOP fica livre para a MEL-116
 2026-11-03 | ENTREGUE | PowerBI/Fluxo Tranç→Cabine | v0.2 | MEL-??? | Medidas da página-piloto (vazão, pessoas, m/pessoa, conteúdo de MO, balanceamento, lead time mediano K07, WIP de Little com vazão de calendário × lead time médio, CV, rendimento, restrições, leitura automática e cartões SVG) em Analises/Fluxo_Trancadeira_Cabine/BI; aguarda colar e conferir contra o HTML
 2026-11-03 | DECISÃO | PowerBI/Fluxo Tranç→Cabine | v0.2 | C4 | Lead time oficial do trecho trançagem→cabine = mediana única do período (K07/C4); a média das medianas diárias do painel HTML fica só como conferência. WIP de Little = vazão por dia de calendário × lead time médio
+2026-11-03 | PENDÊNCIA | PowerBI/turno | — | MEL-250 B.2.3 | Fronteira de turno divergente no modelo: Etapas[Turno] e ficha_producao[Turno_Producao] usam 320/820/1340 (2º turno às 13:40), a medida Turno Atual usa 320/828/1361; a norma e o piloto Fluxo Tranç→Cabine (fn_Turno) usam 320/837/1340. Revisor/William decidem a correção; o piloto não altera o modelo existente
+2026-11-03 | PENDÊNCIA | PowerBI/fPessoasEtapaOP | — | B.3.3 | Fuso da ficha_producao assumido como hora local (FichaJaEmHoraLocal = true), pelo uso do modelo atual; William confere numa ficha conhecida antes de aplicar
 ```
