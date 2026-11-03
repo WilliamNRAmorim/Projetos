@@ -30,4 +30,4 @@ Regra geral do William: nada de fato pontual da fábrica no relatório (datas de
 15. Quadro 4 e seção 4.1: incluir o delineamento (cadastros da Engenharia, DM_*, lidos pelas telas) e a conferência de especificação na hora da produção (a tela compara o que o operador mede com o delineamento e avisa quando sai da faixa).
 
 ## Inglês (opcional pela norma)
-16. Proposta: acrescentar título, *abstract* e *keywords* em inglês (a NBR 6022 trata o resumo em língua estrangeira como opcional). Ajuda a banca e serve de material para Forest City. Custa cerca de meia página; os cortes acima liberam espaço.
+16. **Decidido (03/11):** acrescentar só título, *abstract* e *keywords* em inglês (a NBR 6022 trata o resumo em língua estrangeira como opcional); o resto do artigo fica em português. Fazer o *abstract* depois dos cortes, traduzindo o resumo já revisado. Custa cerca de meia página; os cortes acima liberam espaço.
