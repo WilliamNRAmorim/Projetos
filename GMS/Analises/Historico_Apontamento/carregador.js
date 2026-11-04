@@ -19,7 +19,10 @@ window.__carregar=async(ini,linhas)=>{const dig=(await (await fetch(site+'/_api/
  const w=async()=>{while(fila.length){const [n,l]=fila.shift();try{const r=await fetch(LB+'/items',{method:'POST',headers:H,body:JSON.stringify(window.__item(n,l))});if(r.status==201)ok++;else err.push(n+':'+r.status);}catch(e){err.push(n+':x');}}};
  await Promise.all(Array.from({length:8},w));return {ok,err:err.slice(0,10),nerr:err.length};};
 // conferencia: contagem e soma por faixa de Title
-window.__conferir=async(a,b)=>{let n=0,sa=0,sr=0,pos=LB+`/items?$select=Title,QtdAprovada,QtdReprovada&$filter=Id ge 1&$top=5000`;
- const r=await (await fetch(LB+`/items?$select=Id,Title,QtdAprovada,QtdReprovada&$top=5000`,{headers:{Accept:'application/json;odata=nometadata'}})).json();
- for(const x of r.value){const t=Number(x.Title);if(t>=a&&t<=b){n++;sa+=x.QtdAprovada||0;sr+=x.QtdReprovada||0;}}return {n,aprov:Math.round(sa*10)/10,rep:Math.round(sr*10)/10};};
+// percorre odata.nextLink (a lista tem mais de 5.000 itens); devolve tambem duplicatas de Title na faixa
+window.__conferir=async(a,b)=>{let n=0,sa=0,sr=0,tot=0,seen=new Set(),dup=0,url=LB+`/items?$select=Id,Title,QtdAprovada,QtdReprovada&$top=5000`;
+ while(url){const r=await (await fetch(url,{headers:{Accept:'application/json;odata=nometadata'}})).json();
+  for(const x of r.value){tot++;const t=Number(x.Title);if(t>=a&&t<=b){n++;if(seen.has(t))dup++;seen.add(t);sa+=x.QtdAprovada||0;sr+=x.QtdReprovada||0;}}
+  url=r['odata.nextLink']||null;}
+ return {n,dup,totalLista:tot,aprov:Math.round(sa*10)/10,rep:Math.round(sr*10)/10};};
 return 'carregador pronto: '+window.__tipo;})()
