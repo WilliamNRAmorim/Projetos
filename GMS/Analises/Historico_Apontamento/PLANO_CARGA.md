@@ -42,7 +42,7 @@ Regras: nunca apagar em definitivo (só lixeira); um "sim" do William vale para 
 | 2026 | 175 | pendente |
 | 2024 | 3.193 | CONCLUÍDO em 03/11/2026: Title 21676 a 24868 (3.193 itens, sem duplicatas), QtdAprovada 2.012.173,3 e QtdReprovada 27.675,2 conferidas com o CSV; lista com 7.199 itens |
 | 2023 | 3.537 | CONCLUÍDO em 04/11/2026: Title 18139 a 21675 (3.537 itens, sem duplicatas), QtdAprovada 2.308.208,9 e QtdReprovada 8.440,3 conferidas com o CSV; lista com 10.736 itens |
-| 2022 | 4.445 | pendente |
+| 2022 | 4.445 | CONCLUÍDO em 04/11/2026: Title 13694 a 18138 (4.445 itens, sem duplicatas), QtdAprovada 2.536.867,0 e QtdReprovada 9.382,3 conferidas com o CSV; lista com 15.181 itens |
 | 2021 | 4.887 | pendente |
 | 2020 | 2.742 | pendente |
 | 2019 | 3.926 | pendente |
