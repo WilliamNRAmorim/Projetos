@@ -41,7 +41,7 @@ Regras: nunca apagar em definitivo (só lixeira); um "sim" do William vale para 
 | 2025 | 4.006 | CONCLUÍDO em 03/11/2026: Title 24869 a 28874 (4.006 itens, sem duplicatas), QtdAprovada 1.837.314,9 e QtdReprovada 7.195,5 conferidas |
 | 2026 | 175 | pendente |
 | 2024 | 3.193 | CONCLUÍDO em 03/11/2026: Title 21676 a 24868 (3.193 itens, sem duplicatas), QtdAprovada 2.012.173,3 e QtdReprovada 27.675,2 conferidas com o CSV; lista com 7.199 itens |
-| 2023 | 3.537 | PARCIAL em 04/11/2026: 3.383 itens carregados (sem duplicatas), faltam 154 (Title entre 21387 e 21675, dentro do último bloco, provável limitação de taxa do SharePoint). Antes de completar, listar os Title faltantes e carregar só eles; depois conferir aprovada 2.308.208,9 e reprovada 8.440,3 (hoje 2.212.479,4 e 8.237,0). Lista com 10.582 itens |
+| 2023 | 3.537 | CONCLUÍDO em 04/11/2026: Title 18139 a 21675 (3.537 itens, sem duplicatas), QtdAprovada 2.308.208,9 e QtdReprovada 8.440,3 conferidas com o CSV; lista com 10.736 itens |
 | 2022 | 4.445 | pendente |
 | 2021 | 4.887 | pendente |
 | 2020 | 2.742 | pendente |
