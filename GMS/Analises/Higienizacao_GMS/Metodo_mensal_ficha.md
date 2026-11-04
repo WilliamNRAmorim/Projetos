@@ -12,7 +12,7 @@ Sem nomes de funcionários e sem dado de produção linha a linha (estes ficam e
    - Nome parcial com **um único** colaborador da lista que contém o token = lote de alta confiança (William confirma o lote).
    - Código, dupla e zero: só com confirmação do William (diretório de funcionários).
 3. Máquina: `TE01`/`TE0` = Spiral (não é lixo); variações de hífen/ponto padronizam; `T004` e vazios com evidência.
-4. Bitola: o sufixo da mangueira (`HC139-7`, `GH781-12`) indica a bitola. Bitola 7 existe (HC139-7) mas não está na tabela de carretel: William define os metros.
+4. Bitola e lote padrão do carretel (decisão do William, 04/11/2026): 3→800 m, 4→800, 5→800, 6→680, 7→680, 8→680, 10→460, 12→400, 16→250. O sufixo da mangueira (`HC139-7`, `GH781-12`) indica a bitola (ficha com bitola 17 ou vazia: corrigir pelo sufixo). O mandril carrega 2 carretéis, então a quantidade do mandril pode ser até o dobro do lote; nas outras etapas, acima de 130% do lote é suspeito.
 5. Quantidades: regra anterior = seguinte + refugo da seguinte (defeito_tubo/trancagem/cobertura); nunca subtrair refugo do lote nem mexer nos `defeito_*`. **Valores 111, 1111 e 11111 são digitação de preenchimento**: não servem de âncora da cadeia; a cobertura recebe a quantidade da bandagem. Razão acima de 8× entre etapas vai para decisão (provável zero a mais). Ficha com etapa seguinte vazia e ancoragem em etapa posterior conflitante vai para decisão.
 6. Gravar só com "sim" do William (uma gravação por aprovação), relendo cada item antes, conferindo depois, guardando valor antigo (CSV em Downloads).
 
