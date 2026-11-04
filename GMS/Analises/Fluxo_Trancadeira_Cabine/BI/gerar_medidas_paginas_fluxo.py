@@ -45,31 +45,30 @@ M = "Medidas"
 
 # ---- regras de negocio (fonte unica) ---------------------------------------
 QTD_MAX = 2000          # m por ficha e etapa; acima disso e erro de digitacao e vira vazio
-CORTE_DIA = 3000        # dia produtivo: trancagem + espiral (com maquina lixo) >= 3.000 m no dia inteiro
+CORTE_DIA = 3000        # dia produtivo: trancagem (linha inteira, toda maquina e todo turno) >= 3.000 m no dia
 VIRADA_MIN = 320        # 05:20
 T2_MIN, T3_MIN = 837, 1340  # 2o turno a partir de 13:57, 3o a partir de 22:20 (norma, MEL-250)
 LT_MIN, LT_MAX = 0.5, 720
 CARRETEL = [(4, 800), (6, 680), (8, 680), (10, 460), (12, 400), (16, 250)]  # bitola -> metros por carretel
 BRAIDERS = ["TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07", "TM01", "TM04", "TO04"]
-ESPIRAL = ["SPIRAL", "TE01", "TE0"]
-TE = "{ 0, 2, 3 }"      # E da linha da trancadeira: 2 = trancagem, 3 = espiral, 0 = maquina vazia/lixo
+ESPIRAL = ["SPIRAL", "TE01", "TE0"]   # a mesma maquina (Spiral no app = TE01 na planilha): chave normalizada SPIRAL
 
-# (E, nome, coluna do fim, quantidade, operador). Trancagem e Espiral leem a mesma trinca e se separam pela maquina.
+# Serie de 7 etapas (William, 04/11): a Espiral nao e etapa, e maquina da Trancagem e vira FILTRO de maquina por ficha.
+# (E, nome, coluna do fim, quantidade, operador)
 ETAPAS = [
     (1, "Tubo", "data_hora_final_tubo", "quantidade_tubo", "operador_tubo"),
     (2, "Trançagem", "data_hora_final_trancadeira", "quantidade_trancagem", "operador_trancagem"),
-    (3, "Espiral", "data_hora_final_trancadeira", "quantidade_trancagem", "operador_trancagem"),
-    (4, "Cobertura", "data_hora_final_cobertura", "quantidade_cobertura", "operador_cobertura"),
-    (5, "Bandagem", "data_hora_final_bandagem", "quantidade_bandagem", "operador_bandagem"),
-    (6, "Vulcanização", "data_hora_final_vulcanizacao", "quantidade_vulcanizacao", "operador_vulcanizacao"),
-    (7, "Debandagem", "data_hora_final_debandagem", "quantidade_debandagem", "operador_debandagem"),
-    (8, "Cabine (teste)", "data_hora_final_extracao", "quantidade_extracao", "operador_extracao"),
+    (3, "Cobertura", "data_hora_final_cobertura", "quantidade_cobertura", "operador_cobertura"),
+    (4, "Bandagem", "data_hora_final_bandagem", "quantidade_bandagem", "operador_bandagem"),
+    (5, "Vulcanização", "data_hora_final_vulcanizacao", "quantidade_vulcanizacao", "operador_vulcanizacao"),
+    (6, "Debandagem", "data_hora_final_debandagem", "quantidade_debandagem", "operador_debandagem"),
+    (7, "Cabine (teste)", "data_hora_final_extracao", "quantidade_extracao", "operador_extracao"),
 ]
 NOME = {e: n for e, n, *_ in ETAPAS}
 TODAS = [e for e, *_ in ETAPAS]
-CAB = 8
-COL_MAQ = "ficha_producao[Trançadeira]"
-COL_TURNO = "fHoraHora[Turno]"  # segmentacao de Turno (coluna que o GMS_Painel ja usa na pagina Hora-Hora)
+TR, CAB = 2, 7
+COL_MAQ = "ficha_producao[Trançadeira]"   # segmentacao de Maquina (coluna existente da ficha)
+COL_TURNO = "fHoraHora[Turno]"            # segmentacao de Turno (coluna que o GMS_Painel ja usa na pagina Hora-Hora)
 
 ACENTOS = [("Á", "A"), ("À", "A"), ("Â", "A"), ("Ã", "A"), ("Ä", "A"), ("É", "E"), ("È", "E"), ("Ê", "E"),
            ("Ë", "E"), ("Í", "I"), ("Ì", "I"), ("Î", "I"), ("Ï", "I"), ("Ó", "O"), ("Ò", "O"), ("Ô", "O"),
@@ -82,7 +81,7 @@ def fc(c):
 
 
 # Nomes de VAR: o DAX nao diferencia maiusculas e nao aceita repetir um nome na mesma medida, nem em escopo aninhado
-# (erro do Desktop em 04/11: "__corLa" da paleta x "__LA" do nucleo). Toda VAR aninhada leva o sufixo da fonte (s);
+# (erro do Desktop em 04/11: "__La" da paleta x "__LA" do nucleo). Toda VAR aninhada leva o sufixo da fonte (s);
 # a validacao lista os repetidos por medida.
 def dia_ref(fim, s):
     """Dia de producao: fim da etapa menos 05:20, so a data."""
@@ -111,6 +110,15 @@ def norm_op(c):
     return f'SUBSTITUTE({e},"/","|")'
 
 
+def norm_maq(col_expr, s):
+    """Maquina normalizada: maiusculas, sem ponto, hifen, espaco e sublinhado; SPIRAL, TE01 e TE0 = 'SPIRAL'."""
+    lim = col_expr
+    for p in (".", "-", " ", "_"):
+        lim = f'SUBSTITUTE ( {lim}, "{p}", "" )'
+    es = ", ".join(f'"{x}"' for x in ESPIRAL)
+    return f'VAR __mq{s} = UPPER ( {lim} ) RETURN IF ( __mq{s} IN {{ {es} }}, "SPIRAL", __mq{s} )'
+
+
 def carretel(c, s):
     """VARs __c<s> (quantidade), __cv<s> (quantidade limpa) e __mc<s> (metros do carretel da bitola)."""
     sw = ", ".join(f"{b}, {m}" for b, m in CARRETEL)
@@ -118,18 +126,10 @@ def carretel(c, s):
             f"VAR __mc{s} = SWITCH ( ficha_producao[Bitola], {sw} )")
 
 
-def classe_maquina():
-    lim = COL_MAQ
-    for p in (".", "-", " ", "_"):
-        lim = f'SUBSTITUTE ( {lim}, "{p}", "" )'
-    br = ", ".join(f'"{x}"' for x in BRAIDERS)
-    es = ", ".join(f'"{x}"' for x in ESPIRAL)
-    return (f"VAR __mq = UPPER ( {lim} ) "
-            f"RETURN IF ( __mq IN {{ {br} }}, 2, IF ( __mq IN {{ {es} }}, 3, 0 ) )")
-
-
-def fonte(e_expr, fim, q, op, com_op, com_car, s):
-    cols = [f'"@E", {e_expr}', f'"@Dia", {dia_ref(fim, s)}', f'"@T", {turno_do_fim(fim, s)}', f'"@Q", {qtd(q, s)}']
+def fonte(e, fim, q, op, com_op, com_car, s):
+    """Linhas ficha x etapa concluida, no dia da selecao. @M = maquina da ficha (vale para TODAS as etapas dela)."""
+    cols = [f'"@E", {e}', f'"@Dia", {dia_ref(fim, s)}', f'"@T", {turno_do_fim(fim, s)}', f'"@Q", {qtd(q, s)}',
+            f'"@M", {norm_maq(COL_MAQ, s)}']
     if com_op:
         cols.append(f'"@Op", {norm_op(op)}')
     if com_car:
@@ -141,23 +141,18 @@ def fonte(e_expr, fim, q, op, com_op, com_car, s):
 
 
 def nucleo(etapas=TODAS, com_op=False, com_car=False, com_lt=False):
-    """VARs comuns. etapas: quais E entram (a linha da trancadeira entra sempre: define o dia produtivo).
+    """VARs comuns. etapas: quais E entram (a Trancagem entra sempre: define o dia produtivo).
 
-    Contexto: a selecao do dCalendario e capturada ANTES de qualquer limpeza (VAR __Datas). A ficha e lida com
-    ALL ( ficha_producao ), que ignora os relacionamentos ativos (DataProducao -> dCalendario) e qualquer filtro;
-    o dia vem da data de referencia calculada aqui. Turno: so le o conjunto de turnos da segmentacao fHoraHora[Turno]
-    (ISFILTERED), sem usar Turno_* da ficha nem Etapas[Turno]."""
-    fontes = []
-    for e, _, fim, q, op in ETAPAS:
-        if e == 3:
-            continue  # espiral sai da mesma fonte da trancagem
-        if e == 2:
-            fontes.append(fonte(classe_maquina(), fim, q, op, com_op, com_car, f"S{e}"))
-        elif e in etapas:
-            fontes.append(fonte(str(e), fim, q, op, com_op, com_car, f"S{e}"))
+    Contexto: as selecoes (datas do dCalendario, turnos da fHoraHora[Turno], maquinas da ficha_producao[Trançadeira])
+    sao capturadas em VAR ANTES de qualquer limpeza. A ficha e lida com ALL ( ficha_producao ), que ignora o
+    relacionamento ativo DataProducao -> dCalendario e a propria segmentacao de maquina; o dia vem da data de
+    referencia calculada aqui, e turno e maquina sao reaplicados por linha. Sem Turno_* da ficha nem Etapas[Turno]."""
+    fontes = [fonte(str(e), fim, q, op, com_op, com_car, f"S{e}") for e, _, fim, q, op in ETAPAS
+              if e in etapas or e == TR]
     base = fontes[0] if len(fontes) == 1 else "UNION (\n    " + ",\n    ".join(fontes) + "\n)"
     v = [
-        "VAR __Datas = CALCULATETABLE ( VALUES ( dCalendario[Date] ), REMOVEFILTERS ( fHoraHora[Turno] ) )",
+        "VAR __Datas = CALCULATETABLE ( VALUES ( dCalendario[Date] ), REMOVEFILTERS ( fHoraHora[Turno] ), "
+        f"REMOVEFILTERS ( {COL_MAQ} ) )",
         "VAR __UmDia = COUNTROWS ( __Datas ) = 1",
         f"VAR __FT = ISFILTERED ( {COL_TURNO} )",
         "VAR __Turnos =\n    FILTER (\n        SELECTCOLUMNS (\n"
@@ -167,15 +162,23 @@ def nucleo(etapas=TODAS, com_op=False, com_car=False, com_lt=False):
         "VAR __tPm = MIN ( MIN ( __tP1, __tP2 ), __tP3 ) "
         "RETURN IF ( __tPm = 999, BLANK (), IF ( __tPm = __tP1, 1, IF ( __tPm = __tP2, 2, 3 ) ) )\n"
         "        ),\n        NOT ISBLANK ( [@T] )\n    )",
+        # Maquina: FILTERS devolve so o que a segmentacao escolheu (sem o filtro cruzado das datas)
+        f"VAR __FM = ISFILTERED ( {COL_MAQ} )",
+        f'VAR __Maqs = DISTINCT ( SELECTCOLUMNS ( FILTERS ( {COL_MAQ} ), "@M", {norm_maq(COL_MAQ, "Sel")} ) )',
+        'VAR __MaqTxt = CONCATENATEX ( FILTER ( __Maqs, [@M] <> "" ), [@M], ", ", [@M], ASC )',
+        'VAR __TemSp = "SPIRAL" IN __Maqs',
+        'VAR __TemBr = NOT ISEMPTY ( FILTER ( __Maqs, [@M] <> "SPIRAL" ) )',
+        'VAR __NomeTr = IF ( NOT __FM || ( __TemSp && __TemBr ), "Trançagem + Espiral", '
+        'IF ( __TemSp, "Espiral", "Trançagem" ) )',
         "VAR __B =\n" + base,
-        f"VAR __BTE = FILTER ( __B, [@E] IN {TE} )",
+        f"VAR __BTr = FILTER ( __B, [@E] = {TR} )",
         'VAR __DiasCom = DISTINCT ( SELECTCOLUMNS ( __B, "@Dia", [@Dia] ) )',
+        # dia produtivo: linha inteira (toda maquina, todo turno), como o corte do turno
         "VAR __DiasProd =\n    FILTER (\n        __DiasCom,\n        VAR __dProd = [@Dia]\n"
-        f"        RETURN __UmDia || SUMX ( FILTER ( __BTE, [@Dia] = __dProd ), [@Q] ) >= {CORTE_DIA}\n    )",
+        f"        RETURN __UmDia || SUMX ( FILTER ( __BTr, [@Dia] = __dProd ), [@Q] ) >= {CORTE_DIA}\n    )",
         "VAR __nD = COUNTROWS ( __DiasProd )",
-        "VAR __LA = FILTER ( __B, NOT __FT || [@T] IN __Turnos )",
+        "VAR __LA = FILTER ( __B, ( NOT __FT || [@T] IN __Turnos ) && ( NOT __FM || [@M] IN __Maqs ) )",
         "VAR __LP = FILTER ( __LA, [@Dia] IN __DiasProd )",
-        f"VAR __MTE = DIVIDE ( SUMX ( FILTER ( __LP, [@E] IN {TE} ), [@Q] ), __nD )",
     ]
     for e in etapas:
         v.append(f"VAR __M{e} = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = {e} ), [@Q] ), __nD )")
@@ -191,38 +194,31 @@ def nucleo(etapas=TODAS, com_op=False, com_car=False, com_lt=False):
             "            ),\n"
             '            "@E", [@E], "@Dia", [@Dia], "@Pe", [@Pe]\n'
             "        )\n    )")
-        v.append(f'VAR __PpTE = DIVIDE ( COUNTROWS ( DISTINCT ( SELECTCOLUMNS ( FILTER ( __P, [@E] IN {TE} ), '
-                 '"@Dia", [@Dia], "@Pe", [@Pe] ) ) ), __nD )')
         for e in etapas:
             v.append(f"VAR __Pp{e} = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = {e} ) ), __nD )")
             v.append(f"VAR __K{e} = DIVIDE ( __Pp{e}, DIVIDE ( __M{e}, 1000 ) )")
         if set(etapas) == set(TODAS):
-            # 8 cartoes individuais: destaque "mais gente/metro" e a etapa individual de maior conteudo
             v.append("VAR __Kt = { " + ", ".join(f"( {e}, __K{e} )" for e in TODAS) + " }")
             v.append("VAR __Kv = FILTER ( __Kt, NOT ISBLANK ( [Value2] ) )")
+            v.append("VAR __KMedia = AVERAGEX ( __Kv, [Value2] )")
             v.append("VAR __KMaior = MAXX ( __Kv, [Value2] )")
-            # serie de 7 etapas: Trancagem + Espiral (maquinas paralelas, com lixo) = 1 etapa (chave 2)
-            v.append("VAR __KTE = DIVIDE ( __PpTE, DIVIDE ( __MTE, 1000 ) )")
-            v.append("VAR __KSt = { " + ", ".join(f"( {k}, {x} )" for k, x in serie("__K")) + " }")
-            v.append("VAR __KSv = FILTER ( __KSt, NOT ISBLANK ( [Value2] ) )")
-            v.append("VAR __KSMedia = AVERAGEX ( __KSv, [Value2] )")
-            v.append("VAR __KSMaior = MAXX ( __KSv, [Value2] )")
     if com_car:
         for e in etapas:
             v.append(f"VAR __C{e} = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = {e} ), [@Car] ), __nD )")
             v.append(f"VAR __Cob{e} = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = {e} ), [@Cob] ), "
                      f"SUMX ( FILTER ( __LP, [@E] = {e} ), [@Q] ) )")
     if set(etapas) == set(TODAS):
-        v.append("VAR __Vt = { " + ", ".join(f"( {e}, __M{e} )" for e in TODAS) + " }")  # escala das barras
-        v.append("VAR __VSt = { " + ", ".join(f"( {k}, {x} )" for k, x in serie("__M")) + " }")  # serie de 7
+        v.append("VAR __Vt = { " + ", ".join(f"( {e}, __M{e} )" for e in TODAS) + " }")
     if com_lt:
         fe, ft = "data_hora_final_extracao", "data_hora_final_trancadeira"
         v.append(
             "VAR __LTt =\n    FILTER (\n        SELECTCOLUMNS (\n"
             f"            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( {fc(fe)} ) && NOT ISBLANK ( {fc(ft)} ) ),\n"
             f'            "@Dia", {dia_ref(fe, "LT")},\n            "@T", {turno_do_fim(fe, "LT")},\n'
+            f'            "@M", {norm_maq(COL_MAQ, "LT")},\n'
             f'            "@LT", ( {fc(fe)} - {fc(ft)} ) * 24\n        ),\n'
-            f"        [@Dia] IN __Datas && ( NOT __FT || [@T] IN __Turnos ) && [@LT] >= {LT_MIN} && [@LT] <= {LT_MAX}\n"
+            f"        [@Dia] IN __Datas && ( NOT __FT || [@T] IN __Turnos ) && ( NOT __FM || [@M] IN __Maqs )\n"
+            f"            && [@LT] >= {LT_MIN} && [@LT] <= {LT_MAX}\n"
             "    )")
         v.append("VAR __LTMediana = MEDIANX ( FILTER ( __LTt, [@Dia] IN __DiasProd ), [@LT] )")
         v.append("VAR __LTMedio = AVERAGEX ( __LTt, [@LT] )")
@@ -233,39 +229,30 @@ def nucleo(etapas=TODAS, com_op=False, com_car=False, com_lt=False):
     return "\n".join(v)
 
 
-def serie(pref):
-    """Etapas em serie (7): Trancagem + Espiral viram 1 etapa (chave 2, VAR <pref>TE); a Espiral (3) sai."""
-    return [(e, f"{pref}TE" if e == 2 else f"{pref}{e}") for e in TODAS if e != 3]
-
-
-NOME_SERIE = {e: ("Trançagem+Espiral" if e == 2 else n) for e, n in NOME.items() if e != 3}
-
-
-def nome_etapa_dax(var_idx, nomes=None):
-    nomes = nomes or NOME
-    pares = ", ".join(f'{e}, "{n}"' for e, n in nomes.items())
+def nome_etapa_dax(var_idx):
+    """Nome da etapa; a Trancagem leva o nome dinamico do filtro de maquina (__NomeTr)."""
+    pares = ", ".join((f"{e}, __NomeTr" if e == TR else f'{e}, "{n}"') for e, n in NOME.items())
     return f"SWITCH ( {var_idx}, {pares} )"
 
 
 def cv_dax():
-    return (f"VAR __DiasCV = FILTER ( __DiasCom, VAR __dCV = [@Dia] RETURN SUMX ( FILTER ( __BTE, [@Dia] = __dCV ), [@Q] ) >= {CORTE_DIA} )\n"
-            f"VAR __TEt = FILTER ( __LA, [@E] IN {TE} )\n"
+    return (f"VAR __DiasCV = FILTER ( __DiasCom, VAR __dCV = [@Dia] RETURN SUMX ( FILTER ( __BTr, [@Dia] = __dCV ), [@Q] ) >= {CORTE_DIA} )\n"
+            f"VAR __TRt = FILTER ( __LA, [@E] = {TR} )\n"
             "VAR __CV =\n    IF (\n        COUNTROWS ( __DiasCV ) >= 2,\n        DIVIDE (\n"
-            "            STDEVX.S ( __DiasCV, VAR __dSd = [@Dia] RETURN SUMX ( FILTER ( __TEt, [@Dia] = __dSd ), [@Q] ) + 0 ),\n"
-            "            AVERAGEX ( __DiasCV, VAR __dAv = [@Dia] RETURN SUMX ( FILTER ( __TEt, [@Dia] = __dAv ), [@Q] ) + 0 )\n"
+            "            STDEVX.S ( __DiasCV, VAR __dSd = [@Dia] RETURN SUMX ( FILTER ( __TRt, [@Dia] = __dSd ), [@Q] ) + 0 ),\n"
+            "            AVERAGEX ( __DiasCV, VAR __dAv = [@Dia] RETURN SUMX ( FILTER ( __TRt, [@Dia] = __dAv ), [@Q] ) + 0 )\n"
             "        )\n    )")
 
 
 def eficiencia_dax():
-    """Balanceamento na serie de 7 etapas (Trancagem + Espiral combinadas)."""
-    return "VAR __Ef = DIVIDE ( SUMX ( __KSv, [Value2] ), COUNTROWS ( __KSv ) * __KSMaior )"
+    """Balanceamento nas 7 etapas em serie."""
+    return "VAR __Ef = DIVIDE ( SUMX ( __Kv, [Value2] ), COUNTROWS ( __Kv ) * __KMaior )"
 
 
 def restricoes_dax():
-    """Restricao de vazao na serie de 7 (nunca a Espiral sozinha); maior conteudo entre os 8 cartoes individuais."""
-    return ("VAR __iV = MAXX ( TOPN ( 1, FILTER ( __VSt, [Value2] > 0 ), [Value2], ASC, [Value1], ASC ), [Value1] )\n"
+    return ("VAR __iV = MAXX ( TOPN ( 1, FILTER ( __Vt, [Value2] > 0 ), [Value2], ASC, [Value1], ASC ), [Value1] )\n"
             "VAR __iC = MAXX ( TOPN ( 1, FILTER ( __Kt, [Value2] > 0 ), [Value2], DESC, [Value1], ASC ), [Value1] )\n"
-            "VAR __MenorV = MINX ( FILTER ( __VSt, [Value2] > 0 ), [Value2] )")
+            "VAR __MenorV = MINX ( FILTER ( __Vt, [Value2] > 0 ), [Value2] )")
 
 
 # ---- SVG -------------------------------------------------------------------
@@ -277,10 +264,15 @@ SVG_VARS = " ".join(f'VAR __cor{n} = "%23{h}"' for n, h in CORES)
 CARD_W, CARD_H = 272, 184      # viewBox e tamanho da imagem do cartao (2 x 4 em 1.248 px, sem rolagem)
 ICONES_MAX = 12
 PASSO_ICONE = 17
+# width/height = tamanho do visual Imagem que mostra o SVG; viewBox = coordenadas do desenho (mesma proporcao)
+SVG_ABRE = ("\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{h}' "
+            "viewBox='0 0 {vw} {vh}' font-family='Segoe UI, sans-serif'>\"")
 
 
 def svg_cartao(e, n):
-    """Cartao horizontal 272 x 184: ETAPA n, nome, pessoas, carreteis, barra de m/dia e caixa de m/pessoa."""
+    """Cartao horizontal 272 x 184: ETAPA n, nome, pessoas, carreteis, barra de m/dia e caixa de m/pessoa.
+    Cartao 2 (Trancagem): nome pelo filtro de maquina (Trançagem + Espiral / Trançagem / Espiral)."""
+    nome = '" & __NomeTr & "' if e == TR else n
     corpo = f"""{nucleo(TODAS, com_op=True, com_car=True)}
 {SVG_VARS}
 VAR __Pes = __Pp{e}
@@ -345,7 +337,7 @@ VAR __Selo =
     )
 VAR __Cab =
     "<text x='14' y='22' font-size='10' font-weight='700' letter-spacing='0.6' fill='" & __corSu & "'>ETAPA {e}</text>"
-        & "<text x='14' y='41' font-size='15' font-weight='700' fill='" & __corTi & "'>{n}</text>"
+        & "<text x='14' y='43' font-size='15' font-weight='700' fill='" & __corTi & "'>{nome}</text>"
 VAR __Pessoas =
     "<g transform='translate(14 50)'>" & __IcP & __XP & "</g>"
         & "<text x='14' y='84' fill='" & __corTi & "'><tspan font-size='14' font-weight='700'>" & IF ( ISBLANK ( __Pes ), "–", FORMAT ( __Pes, "0.0", "pt-BR" ) ) & "</tspan>"
@@ -371,46 +363,77 @@ RETURN
     IF (
         __SemDado,
         BLANK (),
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='{CARD_W}' height='{CARD_H}' viewBox='0 0 {CARD_W} {CARD_H}' font-family='Segoe UI, sans-serif'>"
+        {SVG_ABRE.format(w=CARD_VW, h=CARD_VH, vw=CARD_W, vh=CARD_H)}
             & __Contorno & __Selo & __Cab & __Pessoas & __Carreteis & __Barra & __Caixa & "</svg>"
     )"""
     return corpo
 
 
-CONT_W, CONT_H = 560, 286     # SVG unico das 8 barras (pagina 2)
+def svg_linha():
+    """8o slot do 2 x 4: resumo da linha (cabine m/dia, carreteis/dia na cabine, pessoas nas 7 etapas, dias, maquina)."""
+    soma_p = " + ".join(f"__Pp{e}" for e in TODAS)
+    return f"""{nucleo(TODAS, com_op=True, com_car=True)}
+{SVG_VARS}
+VAR __PesT = {soma_p}
+VAR __MaqLin = IF ( __FM, IF ( LEN ( __MaqTxt ) > 34, LEFT ( __MaqTxt, 32 ) & "…", __MaqTxt ), "todas" )
+VAR __CarCab =
+    IF ( __C{CAB} > 0, FORMAT ( __C{CAB}, "0.0", "pt-BR" ), "n/d" )
+RETURN
+    IF (
+        NOT ( __M{CAB} > 0 ) && NOT ( __PesT > 0 ),
+        BLANK (),
+        {SVG_ABRE.format(w=CARD_VW, h=CARD_VH, vw=CARD_W, vh=CARD_H)}
+            & "<rect x='1.5' y='1.5' width='269' height='181' rx='12' fill='" & __corCa & "' stroke='" & __corLi & "' stroke-width='1'/>"
+            & "<text x='14' y='22' font-size='10' font-weight='700' letter-spacing='0.6' fill='" & __corSu & "'>LINHA</text>"
+            & "<text x='14' y='43' font-size='15' font-weight='700' fill='" & __corTi & "'>Resumo do fluxo</text>"
+            & "<text x='14' y='76' fill='" & __corTi & "'><tspan font-size='20' font-weight='700'>" & IF ( ISBLANK ( __M{CAB} ), "–", FORMAT ( __M{CAB}, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='11' fill='" & __corSu & "'> m/dia na cabine</tspan></text>"
+            & "<text x='14' y='104' fill='" & __corTi & "'><tspan font-size='16' font-weight='700'>" & __CarCab & "</tspan><tspan font-size='11' fill='" & __corSu & "'> carretéis/dia na cabine</tspan></text>"
+            & "<text x='14' y='132' fill='" & __corTi & "'><tspan font-size='16' font-weight='700'>" & IF ( ISBLANK ( __PesT ), "–", FORMAT ( __PesT, "0.0", "pt-BR" ) ) & "</tspan><tspan font-size='11' fill='" & __corSu & "'> pessoas/dia nas 7 etapas</tspan></text>"
+            & "<text x='14' y='155' font-size='10' fill='" & __corSu & "'>" & FORMAT ( __nD, "#,0", "pt-BR" ) & IF ( __nD = 1, " dia", " dias produtivos" ) & " no filtro</text>"
+            & "<text x='14' y='172' font-size='10' fill='" & __corSu & "'>máquina: " & __MaqLin & "</text>"
+            & "</svg>"
+    )"""
+
+
+CONT_W, CONT_H = 560, 286     # desenho das 7 barras (pagina 2), dentro do cartao branco do proprio SVG
+CONT_VW, CONT_VH = 616, 340   # visual Imagem t_conteudo = tamanho do SVG (o cartao branco e a borda vem do SVG)
+CONT_DX, CONT_DY = 28, 27     # desenho centrado no cartao
+PASSO_CONT = 34
 
 
 def svg_conteudo():
     linhas = []
     for i, e in enumerate(TODAS):
-        y = 36 + i * 31
+        y = 36 + i * PASSO_CONT
+        nome = '" & __NomeTr & "' if e == TR else NOME[e]
         linhas.append(
             f"VAR __Pos{e} = IF ( NOT ISBLANK ( __K{e} ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K{e} ) ) + 1 )\n"
             f"VAR __Q{e} = NOT ISBLANK ( __Pos{e} ) && __Pos{e} <= 2\n"
-            f"VAR __L{e} = IF ( __Esc > 0 && __K{e} > 0, ROUND ( 360 * DIVIDE ( __K{e}, __Esc ), 1 ), 0 )\n"
+            f"VAR __L{e} = IF ( __Esc > 0 && __K{e} > 0, ROUND ( 340 * DIVIDE ( __K{e}, __Esc ), 1 ), 0 )\n"
             f"VAR __R{e} =\n"
-            f"    \"<text x='0' y='{y + 16}' font-size='12' fill='\" & __corTi & \"'>{NOME[e]}</text>\"\n"
-            f"        & \"<rect x='120' y='{y + 4}' width='360' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n"
-            f"        & IF ( __L{e} > 0, \"<rect x='120' y='{y + 4}' width='\" & FORMAT ( __L{e}, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q{e}, __corLa, __corVeB ) & \"'/>\" )\n"
+            f"    \"<text x='0' y='{y + 16}' font-size='12' fill='\" & __corTi & \"'>{nome}</text>\"\n"
+            f"        & \"<rect x='140' y='{y + 4}' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n"
+            f"        & IF ( __L{e} > 0, \"<rect x='140' y='{y + 4}' width='\" & FORMAT ( __L{e}, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q{e}, __corLa, __corVeB ) & \"'/>\" )\n"
             f"        & \"<text x='556' y='{y + 17}' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q{e}, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K{e} ), \"–\", FORMAT ( __K{e}, \"0.00\", \"pt-BR\" ) ) & \"</text>\"")
-    y_fim = 36 + len(TODAS) * 31
+    y_fim = 36 + len(TODAS) * PASSO_CONT
     juntar = " & ".join(f"__R{e}" for e in TODAS)
     return f"""{nucleo(TODAS, com_op=True)}
 {SVG_VARS}
-VAR __Esc = MAX ( __KMaior, __KSMaior ) * 1.1
-VAR __XM = IF ( __Esc > 0 && NOT ISBLANK ( __KSMedia ), FORMAT ( 120 + ROUND ( 360 * DIVIDE ( __KSMedia, __Esc ), 1 ), "0.0", "en-US" ) )
+VAR __Esc = __KMaior * 1.1
+VAR __XM = IF ( __Esc > 0 && NOT ISBLANK ( __KMedia ), FORMAT ( 140 + ROUND ( 340 * DIVIDE ( __KMedia, __Esc ), 1 ), "0.0", "en-US" ) )
 {chr(10).join(linhas)}
 VAR __Titulo =
     "<text x='0' y='16' fill='" & __corTi & "'><tspan font-size='13' font-weight='700'>Quais etapas usam mais gente por 1.000 m?</tspan>"
-        & "<tspan font-size='11' fill='" & __corSu & "'>" & IF ( NOT ISBLANK ( __KSMedia ), "  ·  tracejado = média do trecho " & FORMAT ( __KSMedia, "0.00", "pt-BR" ) ) & "</tspan></text>"
+        & "<tspan font-size='11' fill='" & __corSu & "'>" & IF ( NOT ISBLANK ( __KMedia ), "  ·  tracejado = média " & FORMAT ( __KMedia, "0.00", "pt-BR" ) ) & "</tspan></text>"
 VAR __Media =
     IF ( NOT ISBLANK ( __XM ), "<line x1='" & __XM & "' x2='" & __XM & "' y1='30' y2='{y_fim}' stroke='" & __corTi & "' stroke-width='1.5' stroke-dasharray='4 3'/>" )
 RETURN
     IF (
         ISBLANK ( __KMaior ),
         BLANK (),
-        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='{CONT_W}' height='{CONT_H}' viewBox='0 0 {CONT_W} {CONT_H}' font-family='Segoe UI, sans-serif'>"
-            & __Titulo & {juntar} & __Media & "</svg>"
+        {SVG_ABRE.format(w=CONT_VW, h=CONT_VH, vw=CONT_VW, vh=CONT_VH)}
+            & "<rect x='0.5' y='0.5' width='{CONT_VW - 1}' height='{CONT_VH - 1}' rx='12' fill='" & __corCa & "' stroke='" & __corLi & "' stroke-width='1'/>"
+            & "<g transform='translate({CONT_DX} {CONT_DY})'>" & __Titulo & {juntar} & __Media & "</g></svg>"
     )"""
 
 
@@ -419,9 +442,12 @@ def leitura():
     return f"""{nucleo(TODAS, com_op=True, com_lt=True)}
 {eficiencia_dax()}
 {restricoes_dax()}
-VAR __EtV = {nome_etapa_dax("__iV", NOME_SERIE)}
+VAR __EtV = {nome_etapa_dax("__iV")}
 VAR __EtC = {nome_etapa_dax("__iC")}
 VAR __UmDiaDado = __UmDia && NOT ISEMPTY ( __DiasCom )
+VAR __P0 =
+    IF ( __FM && __MaqTxt <> "",
+        "Filtro de máquina: " & __MaqTxt & ". Cada ficha que passou nessa(s) máquina(s) entra com o fluxo inteiro dela, em todas as etapas; o dia produtivo continua sendo o da linha toda." )
 VAR __P1 =
     IF ( NOT ISBLANK ( __iV ),
         "A etapa que mais limita a vazão é " & __EtV & " (" & FORMAT ( __MenorV, "#,0", "pt-BR" )
@@ -429,7 +455,7 @@ VAR __P1 =
 VAR __P2 =
     IF ( NOT ISBLANK ( __iC ),
         "A etapa que mais consome gente por metro é " & __EtC & " (" & FORMAT ( __KMaior, "0.00", "pt-BR" )
-            & " pessoas por 1.000 m, " & FORMAT ( DIVIDE ( __KMaior, __KSMedia ), "0.0", "pt-BR" )
+            & " pessoas por 1.000 m, " & FORMAT ( DIVIDE ( __KMaior, __KMedia ), "0.0", "pt-BR" )
             & "× a média do trecho). É onde está a maior movimentação de pessoas." )
 VAR __P3 =
     IF ( NOT ISBLANK ( __Ef ),
@@ -438,12 +464,12 @@ VAR __P3 =
 VAR __P4 =
     IF ( NOT ISBLANK ( __WIP ),
         "Pela Lei de Little, cerca de " & FORMAT ( __WIP, "#,0", "pt-BR" )
-            & " m ficam em processo entre a trançagem/espiral e a cabine (lead time médio de " & FORMAT ( __LTMedio, "#,0", "pt-BR" )
+            & " m ficam em processo entre a trançagem e a cabine (lead time médio de " & FORMAT ( __LTMedio, "#,0", "pt-BR" )
             & " h" & IF ( NOT ISBLANK ( __LTMediana ), "; mediana de " & FORMAT ( __LTMediana, "#,0", "pt-BR" ) & " h" )
             & "). Reduzir lead time ou variabilidade reduz esse estoque sem mexer na vazão." )
 VAR __P5 =
     IF ( __UmDiaDado, "Dia único: a média é o próprio dia, então a leitura de variabilidade não se aplica." )
-VAR __Partes = {{ ( 1, __P1 ), ( 2, __P2 ), ( 3, __P3 ), ( 4, __P4 ), ( 5, __P5 ) }}
+VAR __Partes = {{ ( 0, __P0 ), ( 1, __P1 ), ( 2, __P2 ), ( 3, __P3 ), ( 4, __P4 ), ( 5, __P5 ) }}
 VAR __Texto = CONCATENATEX ( FILTER ( __Partes, [Value2] <> "" ), [Value2], UNICHAR ( 10 ) & UNICHAR ( 10 ), [Value1], ASC )
 RETURN
     IF ( __Texto = "", "Sem dados no filtro.", __Texto )"""
@@ -459,14 +485,14 @@ def medidas():
     pv = PASTA
     pvis = PASTA + "\\Visual"
     ms.append((PREFIXO + "Vazão Cabine (m/dia)", "Double", m_simples([CAB], False, f"__M{CAB}"), "#,0", None, pv))
-    ms.append((PREFIXO + "Vazão Tranç+Esp (m/dia)", "Double", m_simples([CAB], False, "__MTE"), "#,0", None, pv))
-    ms.append((PREFIXO + "Pessoas nas 8 Etapas", "Double",
+    ms.append((PREFIXO + "Vazão Trançagem (m/dia)", "Double", m_simples([TR], False, f"__M{TR}"), "#,0", None, pv))
+    ms.append((PREFIXO + "Pessoas nas 7 Etapas", "Double",
                m_simples(TODAS, True, " + ".join(f"__Pp{e}" for e in TODAS)), "#,0.0", None, pv))
-    ms.append((PREFIXO + "Pessoas Tranç+Esp (por dia)", "Double", m_simples([CAB], True, "__PpTE"), "#,0.0", None, pv))
+    ms.append((PREFIXO + "Pessoas Trançagem (por dia)", "Double", m_simples([TR], True, f"__Pp{TR}"), "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Cabine (por dia)", "Double", m_simples([CAB], True, f"__Pp{CAB}"), "#,0.0", None, pv))
-    ms.append((PREFIXO + "Pessoas Tranç+Esp / Cabine", "Text", m_simples([CAB], True,
-               f'IF ( NOT ISBLANK ( __PpTE ) || NOT ISBLANK ( __Pp{CAB} ), '
-               f'IF ( ISBLANK ( __PpTE ), "–", FORMAT ( __PpTE, "0.0", "pt-BR" ) ) & " / " & '
+    ms.append((PREFIXO + "Pessoas Trançagem / Cabine", "Text", m_simples([TR, CAB], True,
+               f'IF ( NOT ISBLANK ( __Pp{TR} ) || NOT ISBLANK ( __Pp{CAB} ), '
+               f'IF ( ISBLANK ( __Pp{TR} ), "–", FORMAT ( __Pp{TR}, "0.0", "pt-BR" ) ) & " / " & '
                f'IF ( ISBLANK ( __Pp{CAB} ), "–", FORMAT ( __Pp{CAB}, "0.0", "pt-BR" ) ) )'), None, None, pv))
     ms.append((PREFIXO + "m por Pessoa Cabine", "Double",
                m_simples([CAB], True, f"DIVIDE ( __M{CAB}, __Pp{CAB} )"), "#,0", None, pv))
@@ -475,15 +501,16 @@ def medidas():
     ms.append((PREFIXO + "Lead Time (h)", "Double", m_simples([CAB], False, "__LTMediana", com_lt=True),
                "#,0", None, pv))
     ms.append((PREFIXO + "WIP Little (m)", "Double", m_simples([CAB], False, "__WIP", com_lt=True), "#,0", None, pv))
-    ms.append((PREFIXO + "CV Vazão Tranç+Esp", "Double", m_simples([CAB], False, "__CV", extra=cv_dax()),
+    ms.append((PREFIXO + "CV Vazão Trançagem", "Double", m_simples([TR], False, "__CV", extra=cv_dax()),
                "0.0%", None, pv))
     ms.append((PREFIXO + "Rendimento de Fluxo", "Double",
-               m_simples([CAB], False, f"DIVIDE ( __M{CAB}, __MTE )"), "0%", None, pv))
-    ms.append((PREFIXO + "Dias Produtivos", "Double", m_simples([CAB], False, "IF ( __nD > 0, __nD )"),
+               m_simples([TR, CAB], False, f"DIVIDE ( __M{CAB}, __M{TR} )"), "0%", None, pv))
+    ms.append((PREFIXO + "Dias Produtivos", "Double", m_simples([TR], False, "IF ( __nD > 0, __nD )"),
                "#,0", None, pv))
     ms.append((PREFIXO + "Leitura Automática", "Text", leitura(), None, None, pvis))
     for e, n, *_ in ETAPAS:
         ms.append((nome_svg(e), "Text", svg_cartao(e, n), None, "ImageUrl", pvis))
+    ms.append((PREFIXO + "SVG Linha", "Text", svg_linha(), None, "ImageUrl", pvis))
     ms.append((PREFIXO + "SVG Conteúdo", "Text", svg_conteudo(), None, "ImageUrl", pvis))
     return ms
 
@@ -543,13 +570,13 @@ def nivel_data(nivel):
 
 KPIS = [  # (medida, rotulo curto <= 19 caracteres, formato do visual)
     (PREFIXO + "Vazão Cabine (m/dia)", "m/dia cabine", "#,0"),
-    (PREFIXO + "Pessoas nas 8 Etapas", "pessoas no trecho", "#,0.0"),
-    (PREFIXO + "Pessoas Tranç+Esp / Cabine", "pessoas tranç./cab.", None),
+    (PREFIXO + "Pessoas nas 7 Etapas", "pessoas no trecho", "#,0.0"),
+    (PREFIXO + "Pessoas Trançagem / Cabine", "pessoas tranç./cab.", None),
     (PREFIXO + "m por Pessoa Cabine", "m/pessoa cabine", "#,0"),
     (PREFIXO + "Eficiência de Balanceamento", "eficiência", "0%"),
     (PREFIXO + "Lead Time (h)", "lead time", '#,0 "h"'),
     (PREFIXO + "WIP Little (m)", "em processo", '#,0 "m"'),
-    (PREFIXO + "CV Vazão Tranç+Esp", "CV vazão", "0.0%"),
+    (PREFIXO + "CV Vazão Trançagem", "CV vazão", "0.0%"),
     (PREFIXO + "Rendimento de Fluxo", "rendimento", "0%"),
 ]
 
@@ -578,26 +605,19 @@ def v_kpis():
     }
 
 
-def v_imagem(medida, rotulo, img_w, img_h, alt, fundo_cartao=False):
-    """Tabela de 1 coluna com 1 medida SVG (ImageUrl). Cabecalho invisivel (fonte 1, cor e fundo iguais ao fundo),
-    sem total, sem grade. fundo_cartao: o visual tem cartao branco (pagina 2); senao some na pagina (pagina 1)."""
-    m = mx(medida)
-    fundo = HEX_CARTAO if fundo_cartao else HEX_PAGINA
+def v_imagem(medida, alt):
+    """Visual Imagem nativo com a URL = medida SVG (fx -> valor do campo). Vencedor do teste de 04/11 (pagina
+    pg_teste_tooltip, variante B): desenha o SVG inteiro e NAO mostra o texto bruto 'data:image/svg+xml...' ao passar o
+    mouse. Tabela/matriz mostra esse texto (atributo title nativo da celula) mesmo com a dica de ferramenta desligada;
+    o cartao novo (cardVisual) tambem. Propriedades copiadas exatamente da variante B (sem modo de ajuste: o SVG ja
+    tem o tamanho do visual). Dica de ferramenta desligada."""
     return {
-        "visualType": "tableEx",
-        "query": {"queryState": {"Values": {"projections": [proj(m, rotulo)]}}},
-        "objects": {
-            "columnHeaders": [{"properties": {"fontSize": num(1), "fontColor": cor_hex(fundo), "backColor": cor_hex(fundo),
-                                              "wordWrap": boo(False)}}],
-            "values": [{"properties": {"backColorPrimary": cor_hex(fundo), "backColorSecondary": cor_hex(fundo),
-                                       "fontColorPrimary": cor_hex(fundo), "fontColorSecondary": cor_hex(fundo)}}],
-            "grid": [{"properties": {"gridVertical": boo(False), "gridHorizontal": boo(False),
-                                     "outlineColor": cor_hex(fundo), "rowPadding": num(0),
-                                     "imageHeight": num(img_h), "imageWidth": num(img_w)}}],
-            "total": [{"properties": {"totals": boo(False)}}],
-            "columnWidth": [{"properties": {"value": num(img_w + 8)}, "selector": {"metadata": f"{M}.{medida}"}}],
+        "visualType": "image",
+        "objects": {"image": [{"properties": {"sourceType": txt("imageUrl"), "sourceUrl": {"expr": mx(medida)}}}]},
+        "visualContainerObjects": {
+            **caixa(None, fundo=False, pad=0, alt=alt),
+            "visualTooltip": [{"properties": {"show": boo(False)}}],
         },
-        "visualContainerObjects": caixa(None, fundo=fundo_cartao, pad=(12, 12, 14, 14) if fundo_cartao else 0, alt=alt),
         "drillFilterOtherVisuals": True,
     }
 
@@ -653,30 +673,35 @@ def v_colunas(series, titulo, alt, formato, fonte_rotulo):
 
 
 # ---- paginas ---------------------------------------------------------------
-LINHA2 = "Ficha de produção · dia de 05:20 a 05:20 · média dos dias com trançagem + espiral ≥ 3.000 m"
+LINHA2 = "Ficha de produção · dia de 05:20 a 05:20 · média dos dias com trançagem ≥ 3.000 m na linha"
 RODAPE = "Pessoas = operadores distintos que apontaram a etapa no dia (estimativa, não é escala oficial)."
-LEGENDA = ("Laranja = as 2 etapas com mais gente por 1.000 m · p/1.000 m = pessoas a cada 1.000 m · carretel: "
-           "4→800 m, 6 e 8→680, 10→460, 12→400, 16→250 · n/d = bitola fora da tabela · Turno pelo fim da etapa")
+LEGENDA = ("Laranja = 2 etapas com mais gente por 1.000 m (p/1.000 m) · carretel: 4→800 m, 6 e 8→680, 10→460, "
+           "12→400, 16→250; n/d = bitola fora da tabela · turno pelo fim da etapa · máquina filtra a ficha inteira")
 Y_FAIXA, H_FAIXA = 16, 64
 Y_CONT = Y_FAIXA + H_FAIXA + 12          # 92
 Y_RODAPE, H_RODAPE = 672, 32
 FIM_CONT = Y_RODAPE - 12                 # 660
+# 5 segmentacoes de 124 px (passo 136) de 596 a 1264; titulo 16-584.
+SEG_W, SEG_X0, W_TITULO = 124, 596, 568
 SEGMENTACOES = [  # (nome, campo, rotulo, grupo, x)
-    ("seg_ano", col("dCalendario", "Ano"), "Ano", "fluxo_ano", 620),
-    ("seg_mes", col("dCalendario", "Mês"), "Mês", "fluxo_mes", 784),
-    ("seg_dia", col("dCalendario", "Dia"), "Dia", "fluxo_dia", 948),
-    ("seg_turno", col("fHoraHora", "Turno"), "Turno", "fluxo_turno", 1112),
+    ("seg_ano", col("dCalendario", "Ano"), "Ano", "fluxo_ano", SEG_X0),
+    ("seg_mes", col("dCalendario", "Mês"), "Mês", "fluxo_mes", SEG_X0 + 136),
+    ("seg_dia", col("dCalendario", "Dia"), "Dia", "fluxo_dia", SEG_X0 + 2 * 136),
+    ("seg_turno", col("fHoraHora", "Turno"), "Turno", "fluxo_turno", SEG_X0 + 3 * 136),
+    # Maquina: coluna existente da ficha; as medidas leem a escolha (ISFILTERED + FILTERS) e filtram a ficha inteira
+    ("seg_maquina", col("ficha_producao", "Trançadeira"), "Máquina", "fluxo_maquina", SEG_X0 + 4 * 136),
 ]
-# Pagina 1: KPIs 92-188; cartoes 2 x 4 de 303 x 206 (200-406 e 418-624); legenda 636-660.
+# Pagina 1: KPIs 92-188; cartoes 2 x 4 de 303 x 205 (200-405 e 417-622); legenda 634-660.
+# 303 x 205 = proporcao do desenho 272 x 184 (1,478): o SVG preenche o visual Imagem sem sobra nem corte.
 H_KPI = 96
-CARD_VW, CARD_VH, GAP = 303, 206, 12
+CARD_VW, CARD_VH, GAP = 303, 205, 12
 
 
 def faixa_comum(p, titulo1, outras):
-    p.add("titulo", 16, Y_FAIXA, 588, H_FAIXA, v_texto([(titulo1, 18, "Segoe UI Semibold", HEX_TINTA),
+    p.add("titulo", 16, Y_FAIXA, W_TITULO, H_FAIXA, v_texto([(titulo1, 18, "Segoe UI Semibold", HEX_TINTA),
                                                          (LINHA2, 10, "Segoe UI", HEX_SUAVE)]))
     for nome, campo, rot, grupo, x in SEGMENTACOES:
-        p.add(nome, x, Y_FAIXA, 152, H_FAIXA, v_segmentacao(campo, rot, grupo))
+        p.add(nome, x, Y_FAIXA, SEG_W, H_FAIXA, v_segmentacao(campo, rot, grupo))
     p.add("rodape", 16, Y_RODAPE, 576, H_RODAPE, v_texto([(RODAPE, 9, "Segoe UI", HEX_SUAVE)]))
     p.add("nav", 608, Y_RODAPE, 368, H_RODAPE, v_navegador(outras))
     p.add("atualizado", 992, Y_RODAPE, 272, H_RODAPE, v_carimbo())
@@ -687,14 +712,17 @@ def pg_fluxo_1(outras):
     faixa_comum(p, "Fluxo tubo → cabine · etapas e carretéis", outras)
     p.add("kpis", 16, Y_CONT, 1248, H_KPI, v_kpis())
     y0 = Y_CONT + H_KPI + GAP                                         # 200
-    for i, (e, n, *_) in enumerate(ETAPAS):
+    slots = [(f"cartao_{e}", nome_svg(e), n,
+              f"Etapa {e}, {n}: pessoas por dia, carretéis por dia, metros por dia e metros por pessoa.")
+             for e, n, *_ in ETAPAS]
+    slots.append(("cartao_linha", PREFIXO + "SVG Linha", "Linha",
+                  "Resumo da linha: metros e carretéis por dia na cabine, pessoas por dia nas 7 etapas e filtro de máquina."))
+    for i, (nome, medida, rot, alt) in enumerate(slots):   # 7 etapas + Linha no 8o slot do 2 x 4
         lin, colu = divmod(i, 4)
         x = 16 + colu * (CARD_VW + GAP)
         y = y0 + lin * (CARD_VH + GAP)
-        p.add(f"cartao_{e}", x, y, CARD_VW, CARD_VH, v_imagem(
-            nome_svg(e), n, CARD_W, CARD_H,
-            f"Etapa {e}, {n}: pessoas por dia, carretéis por dia, metros por dia e metros por pessoa."))
-    y_leg = y0 + 2 * CARD_VH + GAP + GAP                               # 636
+        p.add(nome, x, y, CARD_VW, CARD_VH, v_imagem(medida, alt))
+    y_leg = y0 + 2 * CARD_VH + GAP + GAP                               # 634
     p.add("legenda", 16, y_leg, 1248, FIM_CONT - y_leg, v_texto([(LEGENDA, 9, "Segoe UI", HEX_SUAVE)],
                                                                 alt="Legenda das cores e dos carretéis."))
     return p
@@ -706,23 +734,28 @@ def pg_fluxo_2(outras):
     h_tab = 340
     y_g = Y_CONT + h_tab + 12                       # 444
     h_g = FIM_CONT - y_g                            # 216
-    p.add("t_conteudo", 16, Y_CONT, 616, h_tab, v_imagem(
-        PREFIXO + "SVG Conteúdo", "Pessoas a cada 1.000 m", CONT_W, CONT_H,
-        "Pessoas a cada 1.000 m nas 8 etapas; laranja são as duas com mais gente por metro; tracejado é a média.",
-        fundo_cartao=True))
+    p.add("t_conteudo", 16, Y_CONT, CONT_VW, CONT_VH, v_imagem(
+        PREFIXO + "SVG Conteúdo",
+        "Pessoas a cada 1.000 m nas 7 etapas; laranja são as duas com mais gente por metro; tracejado é a média."))
     p.add("t_leitura", 648, Y_CONT, 616, h_tab, v_leitura())
     p.add("g_metros", 16, y_g, 616, h_g, v_colunas(
-        [(PREFIXO + "Vazão Tranç+Esp (m/dia)", "Trançagem + espiral", HEX_AZUL),
+        [(PREFIXO + "Vazão Trançagem (m/dia)", "Trançagem", HEX_AZUL),
          (PREFIXO + "Vazão Cabine (m/dia)", "Cabine", HEX_LARANJA)],
         "Metros por dia · média dos dias produtivos, por mês",
-        "Colunas por mês: metros por dia da trançagem mais espiral e da cabine, média dos dias produtivos.", "#,0", 8))
+        "Colunas por mês: metros por dia da trançagem e da cabine, média dos dias produtivos.", "#,0", 8))
     p.add("g_pessoas", 648, y_g, 616, h_g, v_colunas(
-        [(PREFIXO + "Pessoas Tranç+Esp (por dia)", "Trançagem + espiral", HEX_AZUL),
+        [(PREFIXO + "Pessoas Trançagem (por dia)", "Trançagem", HEX_AZUL),
          (PREFIXO + "Pessoas Cabine (por dia)", "Cabine", HEX_LARANJA)],
         "Pessoas por dia · média dos dias produtivos, por mês",
-        "Colunas por mês: pessoas por dia na trançagem mais espiral e na cabine, média dos dias produtivos.",
+        "Colunas por mês: pessoas por dia na trançagem e na cabine, média dos dias produtivos.",
         "#,0.0", 9))
     return p
+
+
+
+# Pagina de experimento do teste de 04/11 (dica nativa do SVG): concluido, a variante B (visual Imagem) virou o padrao.
+# O gerador so a remove, se ainda existir na copia.
+PG_EXP = "pg_teste_tooltip"
 
 
 # ---- saida (tudo em memoria; gravar e conferir idempotencia usam o mesmo mapa) ----
@@ -741,15 +774,17 @@ def saidas(rel):
         ents.append(ent)
     ent["measures"] = [x for x in ent.get("measures", []) if not x["name"].startswith(PREFIXO)] + ext_json(medidas())
     meta = le(d / "pages" / "pages.json")
-    outras = [p for p in meta.get("pageOrder", []) if p not in PAGINAS]
+    outras = [p for p in meta.get("pageOrder", []) if p not in PAGINAS and p != PG_EXP]
     meta["pageOrder"] = outras + list(PAGINAS)
     out = {d / "reportExtensions.json": dumps(ext), d / "pages" / "pages.json": dumps(meta)}
-    for p in (pg_fluxo_1(outras), pg_fluxo_2(outras)):
-        out[d / "pages" / p.nome / "page.json"] = dumps({
+    paginas = [pg_fluxo_1(outras), pg_fluxo_2(outras)]
+    for p in paginas:
+        pagina = {
             "$schema": f"{SCH}/page/{V_PAGE}/schema.json", "name": p.nome, "displayName": p.titulo,
             "displayOption": "FitToPage", "height": H_PAG, "width": W_PAG,
             "objects": {"background": [{"properties": {"color": cor_hex(HEX_PAGINA), "transparency": num(0)}}],
-                        "outspace": [{"properties": {"color": cor_hex(HEX_PAGINA), "transparency": num(0)}}]}})
+                        "outspace": [{"properties": {"color": cor_hex(HEX_PAGINA), "transparency": num(0)}}]}}
+        out[d / "pages" / p.nome / "page.json"] = dumps(pagina)
         for v in p.visuais:
             out[d / "pages" / p.nome / "visuals" / v["name"] / "visual.json"] = dumps(v)
     out[ARQ_CONF] = consulta_conferencia()
@@ -758,7 +793,7 @@ def saidas(rel):
 
 def gera(rel):
     out = saidas(rel)
-    for nome in PAGINAS:
+    for nome in PAGINAS + (PG_EXP,):
         alvo = rel / "definition" / "pages" / nome
         if alvo.exists():
             shutil.rmtree(alvo)
@@ -776,8 +811,6 @@ def tabela_etapas():
     for e, n, *_ in ETAPAS:
         linhas.append(f'( "{e} {n}", __M{e}, __Pp{e}, DIVIDE ( __M{e}, __Pp{e} ), __K{e}, __C{e}, __Cob{e}, '
                       f"DIVIDE ( __C{e}, __Pp{e} ) )")
-    linhas.append('( "Tranç+Esp com máquina lixo (= Trançagem do piloto)", __MTE, __PpTE, DIVIDE ( __MTE, __PpTE ), '
-                  "DIVIDE ( __PpTE, DIVIDE ( __MTE, 1000 ) ), BLANK (), BLANK (), BLANK () )")
     linhas.append('( "Dias produtivos", __nD, BLANK (), BLANK (), BLANK (), BLANK (), BLANK (), BLANK () )')
     cols = ['"Etapa", [Value1]', '"m/dia", [Value2]', '"pessoas/dia", [Value3]', '"m/pessoa", [Value4]',
             '"pessoas/1.000 m", [Value5]', '"carretéis/dia", [Value6]', '"fatia com carretel", [Value7]',
@@ -793,6 +826,13 @@ def ind(s, n):
 def consulta_conferencia():
     filtro_data = "dCalendario[Date] <= DATE ( 2026, 10, 6 )"
     filtro_t1 = 'FILTER ( ALL ( fHoraHora[Turno] ), CONTAINSSTRING ( fHoraHora[Turno], "1" ) )'
+    lim = COL_MAQ
+    for c in (".", "-", " ", "_"):
+        lim = f'SUBSTITUTE ( {lim}, "{c}", "" )'
+    es = ", ".join(f'"{x}"' for x in ESPIRAL)
+    br = ", ".join(f'"{x}"' for x in BRAIDERS)
+    filtro_sp = f"FILTER ( ALL ( {COL_MAQ} ), UPPER ( {lim} ) IN {{ {es} }} )"
+    filtro_br = f"FILTER ( ALL ( {COL_MAQ} ), UPPER ( {lim} ) IN {{ {br} }} )"
     defs, campos_row = [], []
     for n, t, e, f, cat, _ in medidas():
         if cat:
@@ -802,33 +842,34 @@ def consulta_conferencia():
         campos_row.append(f'"{n[len(PREFIXO):]}", [{cn}]')
     row = "ROW (\n        " + ",\n        ".join(campos_row) + "\n    )"
     tab = ind(tabela_etapas(), 8)
-    return f"""// Consulta de conferência do Fluxo v2 (tubo, espiral, carretéis). GERADO por gerar_medidas_paginas_fluxo.py: não edite à mão.
+    return f"""// Consulta de conferência do Fluxo v2 (tubo → cabine, filtro de máquina, carretéis). GERADO por gerar_medidas_paginas_fluxo.py: não edite à mão.
 // Onde rodar: Power BI Desktop com GMS_PainelTeste.pbip aberto (ligado ao vivo ao (GMS)) -> Exibição de consulta DAX -> colar -> Executar.
 // As medidas abaixo (DEFINE) são cópia exata das medidas do relatório 'Fluxo · ...' (reportExtensions.json), com prefixo 'Conf2 · ' para não colidir.
 // Recorte: dCalendario[Date] <= 06/10/2026 (a virada 05:20 vem da regra: fim em 07/10 antes das 05:20 conta no dia 06/10).
 //
-// Esperado (validação do piloto em 03/11, Data de Referência, mesmo período; LEIAME_Pagina.md, fim):
-//   1) Por etapa: a linha "Tranç+Esp com máquina lixo" ≈ Trançagem do piloto (6.654 m/dia · 6,8 pessoas · 1,02 p/1.000 m);
-//      Trançagem + Espiral (cartões, sem máquina lixo) um pouco abaixo; Cabine ≈ 5.508 m/dia e 4,8 pessoas (0,88 p/1.000 m);
-//      Tubo ≈ 7.203 · 2,3; Cobertura ≈ 6.650 · 2,6; Bandagem ≈ 6.383 · 3,2; Vulcanização ≈ 6.524 · 2,2; Debandagem ≈ 5.541 · 2,0.
-//      "fatia com carretel" < 1 nas etapas com bitola 7, 3, 5, 17 ou vazia (os metros contam; o carretel fica n/d).
-//   2) Totais: dias produtivos ≈ 185; rendimento ≈ cabine ÷ trançagem+espiral; lead time (mediana) ≈ 22 h.
-//      Eficiência de balanceamento na série de 7 etapas (Trançagem+Espiral = 1 etapa, máquinas paralelas). Na leitura
-//      automática a restrição nunca pode ser "Espiral" sozinha (piloto: Debandagem); a frase de mão de obra cita a
-//      etapa individual (pode ser Espiral) e compara com a média do trecho (7 etapas).
-//   3) Turno = 1 (texto de fHoraHora[Turno] com "1"): cabine 1º turno ≈ 1.920 m/dia e ≈ 1,6 pessoa; o nº de dias
-//      produtivos NÃO muda (o corte de 3.000 m é do dia inteiro).
+// Esperado:
+//   1) Por etapa, sem filtro de máquina (TODAS as fichas, inclusive máquina vazia/lixo): os mesmos números da 2ª geração
+//      (teste no Desktop de 04/11): Cabine ≈ 5.679 m/dia e 4,9 pessoas; Trançagem ≈ 6.055 + 669 ≈ 6.724 m/dia (braiders +
+//      espiral) e 6,7 pessoas. Piloto de 03/11 (referência): Tubo ≈ 7.203 · 2,3; Cobertura ≈ 6.650 · 2,6; Bandagem ≈ 6.383 · 3,2;
+//      Vulcanização ≈ 6.524 · 2,2; Debandagem ≈ 5.541 · 2,0. "fatia com carretel" < 1 onde há bitola 7, 3, 5, 17 ou vazia.
+//   2) Totais: dias produtivos ≈ 185; rendimento = cabine ÷ trançagem; lead time (mediana) ≈ 22 h; a leitura automática
+//      não cita filtro de máquina.
+//   3) Turno = 1 (texto de fHoraHora[Turno] com "1"): cabine 1º turno ≈ 1.920 m/dia e ≈ 1,6 pessoa; dias produtivos iguais.
+//   4) Só Spiral (Spiral/TE01/TE0): Trançagem ≈ 669 m/dia; as outras etapas mostram só as fichas que passaram na espiral;
+//      dias produtivos iguais aos da consulta 1 (o corte de 3.000 m é da linha inteira).
+//   5) Sem Spiral (TH01–TH07, TM01, TM04, TO04): Trançagem ≈ 6.055 m/dia; 4) + 5) ≈ 1) em metros, a menos das fichas de
+//      máquina vazia/lixo, que só entram sem filtro.
 DEFINE
 {chr(10).join(defs)}
 
-// 1) Por etapa, todos os turnos
+// 1) Por etapa, todos os turnos, todas as máquinas
 EVALUATE
 CALCULATETABLE (
 {tab},
     {filtro_data}
 )
 
-// 2) Totais (as mesmas medidas dos cartões de KPI e dos gráficos), todos os turnos
+// 2) Totais (as mesmas medidas dos cartões de KPI, dos gráficos e da leitura), todos os turnos e máquinas
 EVALUATE
 CALCULATETABLE (
     {row},
@@ -841,6 +882,22 @@ CALCULATETABLE (
 {tab},
     {filtro_data},
     {filtro_t1}
+)
+
+// 4) Por etapa, só a espiral (filtro direto em ficha_producao[Trançadeira], como a segmentação Máquina)
+EVALUATE
+CALCULATETABLE (
+{tab},
+    {filtro_data},
+    {filtro_sp}
+)
+
+// 5) Por etapa, sem a espiral (só braiders)
+EVALUATE
+CALCULATETABLE (
+{tab},
+    {filtro_data},
+    {filtro_br}
 )
 """
 
@@ -948,6 +1005,11 @@ def valida_dax(nome, e, colunas_ficha, nomes_rel, tabelas_modelo=()):
             erros.append(f"{nome}: chama a medida do relatorio [{r}] (nao pode: escrever por extenso)")
     if "__LP" in sem and f"ISFILTERED ( {COL_TURNO} )" not in sem:
         erros.append(f"{nome}: nao le a segmentacao de turno (ISFILTERED ( {COL_TURNO} ))")
+    if "__LP" in sem and (f"ISFILTERED ( {COL_MAQ} )" not in sem or f"FILTERS ( {COL_MAQ} )" not in sem
+                          or "[@M] IN __Maqs" not in sem):
+        erros.append(f"{nome}: nao aplica o filtro de maquina por ficha (ISFILTERED/FILTERS ( {COL_MAQ} ))")
+    if re.search(r"Espiral\b", tira_strings(nome)) or "Tranç+Esp" in nome:
+        erros.append(f"{nome}: Espiral nao e mais etapa (vira filtro de maquina)")
     if "ALL ( ficha_producao )" in sem and "VAR __Datas = CALCULATETABLE ( VALUES ( dCalendario[Date] )" not in sem:
         erros.append(f"{nome}: precisa capturar a selecao do dCalendario antes de limpar a ficha")
     if re.search(r"Turno_|Etapas\[", sem):
@@ -995,7 +1057,11 @@ def valida(rel, checar_idem=True):
     for p in meta.get("pageOrder", []):
         if not (d / "pages" / p / "page.json").exists():
             erros.append(f"pages.json cita {p}, que nao existe")
-    grupos, total = {}, 0
+    grupos, total, n_svg = {}, 0, 0
+    svgs = {m["name"] for m in medidas_ext if m.get("dataCategory") == "ImageUrl"}
+    if PG_EXP in meta.get("pageOrder", []) or (d / "pages" / PG_EXP).exists():
+        erros.append(f"pagina de experimento {PG_EXP} ainda esta na copia (rode o gerador)")
+    expr_svg = {m["name"]: m["expression"] for m in medidas_ext if m.get("dataCategory") == "ImageUrl"}
     for nome in PAGINAS:
         pdir = d / "pages" / nome
         try:
@@ -1018,6 +1084,32 @@ def valida(rel, checar_idem=True):
             if x < MARGEM or y < MARGEM or x + w > W_PAG - MARGEM or y + h > H_PAG - MARGEM:
                 erros.append(f"{nome}/{n}: fora da area util ({x},{y},{w},{h})")
             caixas.append((n, x, y, x + w, y + h))
+            # visual com imagem SVG: dica de ferramenta desligada (senao mostra o texto bruto do data URI)
+            usa_svg = any(c[0] == "Measure" and c[3] == "extension" and c[2] in svgs for c in campos(v))
+            tip = v.get("visual", {}).get("visualContainerObjects", {}).get("visualTooltip", [{}])
+            if usa_svg and tip[0].get("properties", {}).get("show") != boo(False):
+                erros.append(f"{nome}/{n}: imagem SVG com dica de ferramenta ligada (visualTooltip.show = false)")
+            if usa_svg:
+                n_svg += 1
+                vis = v.get("visual", {})
+                props = vis.get("objects", {}).get("image", [{}])[0].get("properties", {})
+                url = props.get("sourceUrl", {}).get("expr", {}).get("Measure", {})
+                med = url.get("Property")
+                if vis.get("visualType") != "image" or props.get("sourceType") != txt("imageUrl") or med not in svgs \
+                        or url.get("Expression", {}).get("SourceRef", {}).get("Schema") != "extension":
+                    erros.append(f"{nome}/{n}: SVG tem de ir em visual Imagem (image.sourceType 'imageUrl', "
+                                 "image.sourceUrl = medida do relatorio); tabela mostra o texto bruto ao passar o mouse")
+                else:
+                    mt = re.search(r"<svg xmlns='[^']*' width='(\d+)' height='(\d+)' viewBox='0 0 (\d+) (\d+)'",
+                                   expr_svg[med])
+                    if not mt:
+                        erros.append(f"{nome}/{n}: SVG de '{med}' sem width/height/viewBox")
+                    else:
+                        sw, sh, vbw, vbh = map(int, mt.groups())
+                        if (sw, sh) != (w, h):
+                            erros.append(f"{nome}/{n}: SVG de {sw}x{sh} num visual de {w}x{h} (sobra ou corte)")
+                        if abs(vbw / vbh - w / h) > 0.01 * (w / h):
+                            erros.append(f"{nome}/{n}: proporcao do desenho {vbw}x{vbh} diferente do visual {w}x{h}")
             for c in campos(v):
                 k, ent, prop = c[0], c[1], c[2]
                 if k == "HierarchyLevel":
@@ -1055,14 +1147,14 @@ def valida(rel, checar_idem=True):
     for g, membros in grupos.items():
         if {m[0] for m in membros} != set(PAGINAS) or len({m[1] for m in membros}) != 1:
             erros.append(f"syncGroup '{g}': precisa do mesmo campo nas 2 paginas ({sorted(membros)})")
-    turno = [g for g, ms in grupos.items() if {m[1] for m in ms} == {"fHoraHora.Turno"}]
-    if len(turno) != 1:
-        erros.append("segmentacao 'Turno' (fHoraHora[Turno]) precisa existir nas 2 paginas com o mesmo syncGroup")
-    # encaixe das imagens: o cartao SVG (com o cabecalho invisivel ~10 px) cabe no visual sem rolagem
-    if CARD_W + 8 + 10 > CARD_VW or CARD_H + 14 > CARD_VH:
-        erros.append("cartao SVG nao cabe no visual sem rolagem")
-    if CONT_W + 8 + 10 > 616 - 28 or CONT_H + 14 > 340 - 24:
-        erros.append("SVG de conteudo nao cabe no visual sem rolagem")
+    for campo_seg, rot in (("fHoraHora.Turno", "Turno"), ("ficha_producao.Trançadeira", "Máquina")):
+        if len([g for g, ms in grupos.items() if {m[1] for m in ms} == {campo_seg}]) != 1:
+            erros.append(f"segmentacao '{rot}' ({campo_seg}) precisa existir nas 2 paginas com o mesmo syncGroup")
+    # desenho de conteudo: barras dentro do desenho e desenho dentro do cartao do SVG
+    if 36 + len(TODAS) * PASSO_CONT > CONT_H:
+        erros.append("SVG de conteudo: as barras passam da altura do desenho")
+    if CONT_DX + CONT_W > CONT_VW - 8 or CONT_DY + CONT_H > CONT_VH - 8:
+        erros.append("SVG de conteudo: desenho passa do cartao")
     if checar_idem:
         for c, t in saidas(rel).items():
             if not c.exists() or c.read_text(encoding="utf-8") != t:
@@ -1074,7 +1166,7 @@ def valida(rel, checar_idem=True):
             print("  -", e)
         return False
     print(f"validacao ok: {len(fluxo)} medidas 'Fluxo · ' (DAX conferido), {total} visuais, campos no TMDL/paginas "
-          f"atuais, {len(grupos)} grupos de sincronizacao (Turno incluso), sem sobreposicao, margem >= {MARGEM} px, "
+          f"atuais, {len(grupos)} grupos de sincronizacao (Turno e Maquina), {n_svg} imagens SVG em visual Imagem sem dica, sem sobreposicao, margem >= {MARGEM} px, "
           "idempotente")
     return True
 
