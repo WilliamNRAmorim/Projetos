@@ -18,3 +18,12 @@ Sem nomes de funcionários e sem dado de produção linha a linha (estes ficam e
 
 ## Janeiro/2026 (292 fichas criadas em jan)
 Cobertura contra o CP: trançagem 69%, bandagem 79%, debandagem 70%, extração 36% (só 154 fichas com quantidade_extracao; só 1 ficha com data de fim da debandagem).
+
+## Regra de datas de fim (proposta em 04/11/2026, aguarda aprovação do William)
+Medido nas fichas Finalizado de 2026: de abril em diante as datas já vêm em ordem (288 de 288 em abril); o problema está em jan a mar (app antigo).
+- **R1 trançagem:** se fim_trançagem > início_cobertura, fim_trançagem = início_cobertura − 5 min (nunca antes do início da trançagem). O fim da trançagem é fechado tarde pelo operador.
+- **R2 debandagem sem fim:** fim = início_debandagem + 22 min (mediana); sem início, fim_vulcanização + 271 min (mediana).
+- **R3 extração com hora 04:00:00Z:** 507 de 676 fins de extração em jan a mar têm exatamente 04:00:00Z, ou seja, só a data foi informada. Mantém o dia e põe a hora = fim_debandagem + 175 min (mediana), no máximo 23:59 do mesmo dia.
+- **R4 extração sem fim:** início_extração + 90 min (mediana); sem início, fim_debandagem + 175 min.
+- Só campos de data de fim (trançagem, debandagem, extração), fichas Finalizado, nunca as reconstruídas. Fichas ainda fora de ordem depois da regra vão para decisão.
+- Efeito simulado (fichas com todas as datas em ordem): jan 23 → 254 de 292; fev 11 → 262 de 295; mar 191 → 347 de 349.
