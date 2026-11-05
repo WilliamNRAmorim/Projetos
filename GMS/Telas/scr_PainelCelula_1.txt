@@ -1,4 +1,4 @@
-# scr_PainelCelula_1 · Painel da Célula v0.15.0 (MEL-261: Saída da Extração pelos lances da RegistrosInspeção, por Created e TurnoTeste, igual à tela da Cabine) · v0.14.1 (AJUSTE DE TELA 27/10: Wrap false nos rótulos estreitos, título do Tubo e chips de bitola em fonte menor, horas das bateladas em 2 linhas) · v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
+# scr_PainelCelula_1 · Painel da Célula v0.15.1 (MEL-263: produção da Trançagem pela Hora-Hora) · v0.15.0 (MEL-261: Saída da Extração pelos lances da RegistrosInspeção, por Created e TurnoTeste, igual à tela da Cabine) · v0.14.1 (AJUSTE DE TELA 27/10: Wrap false nos rótulos estreitos, título do Tubo e chips de bitola em fonte menor, horas das bateladas em 2 linhas) · v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
 # Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md · v0.14.0: ver _patch_PainelCelula_v0.14.0_ficha.md
 Screens:
   scr_PainelCelula_1:
@@ -1471,7 +1471,23 @@ Screens:
               =With(
                   {
                       _src: If(ctxModoPnl = "VIVO", colEvDiaPnl, colEvHistPnl),
-                      _ins: If(ctxModoPnl = "VIVO", colInspDiaPnl, colInspHistPnl)
+                      _ins: If(ctxModoPnl = "VIVO", colInspDiaPnl, colInspHistPnl),
+                      // v0.15.1 (MEL-263): Trancagem = Real apontado no Hora-Hora, ultima linha de cada janela. TH01 e TO04 ja gravam mangueira pronta.
+                      _trc: If(
+                          ctxModoPnl = "VIVO",
+                          ShowColumns(
+                              AddColumns(
+                                  Filter(colHHConsPnl As _hc0, _hc0.DataRef = fx_DataRefEm(varAgoraPnl)),
+                                  TurnoTxt,
+                                  Text(Turno, "[$-en-US]0"),
+                                  metros,
+                                  Real
+                              ),
+                              TurnoTxt,
+                              metros
+                          ),
+                          colHHHistPnl
+                      )
                   },
                   // UMA agregacao para os dois modos: colEvDiaPnl (AO VIVO) ou colEvHistPnl (dia escolhido), mesmo esquema de colunas.
                   // Soma de `metros` dos eventos Fim e Parcial; na VULCANIZACAO, dos eventos Inicio (o que entrou na autoclave: o Fim so sai depois da cura); na EXTRACAO, dos lances inspecionados (v0.15.0). Sem registro no turno = Blank() (a tela mostra "—", nunca 0).
@@ -1484,6 +1500,8 @@ Screens:
                                   _ev: If(
                                       _pe.Etapa = "Extração",
                                       ShowColumns(_ins, TurnoTxt, metros),
+                                      _pe.Etapa = "Trançagem",
+                                      _trc,
                                       ShowColumns(
                                           Filter(
                                               _src As _pv,
@@ -1571,14 +1589,40 @@ Screens:
                                   Quantidade
                               )
                           );
+                          // v0.15.1 (MEL-263): Hora-Hora do dia escolhido, ultima linha de cada janela apontada.
+                          ClearCollect(
+                              colHHHistPnl,
+                              ForAll(
+                                  GroupBy(
+                                      AddColumns(
+                                          Filter(
+                                              Filter('Hora-Hora', Data = _d) As _x,
+                                              Text(_x.Célula) in fx_CelulasTrancagem.Celula
+                                          ),
+                                          ChaveJan,
+                                          Text(Célula) & "|" & Text(Turno) & "|" & Hora
+                                      ),
+                                      ChaveJan,
+                                      LinhasJan
+                                  ) As _gh,
+                                  With(
+                                      { _r: First(Sort(_gh.LinhasJan, ID, SortOrder.Descending)) },
+                                      {
+                                          TurnoTxt: Text(fx_TurnoNum(Text(_r.Turno)), "[$-en-US]0"),
+                                          metros: Coalesce(_r.'Real. Hora', 0)
+                                      }
+                                  )
+                              )
+                          );
                           UpdateContext({ ctxHistDiaPnl: _d });
                           true,
                           UpdateContext({ ctxHistFalhaPnl: true, ctxHistDiaPnl: Blank() });
                           Clear(colEvHistPnl);
                           Clear(colInspHistPnl);
+                          Clear(colHHHistPnl);
                           false
                       );
-                      UpdateContext({ ctxHistTruncPnl: CountRows(colEvHistPnl) >= fx_PainelLinhasAlerta || CountRows(colInspHistPnl) >= fx_PainelLinhasAlerta })
+                      UpdateContext({ ctxHistTruncPnl: CountRows(colEvHistPnl) >= fx_PainelLinhasAlerta || CountRows(colInspHistPnl) >= fx_PainelLinhasAlerta || CountRows(colHHHistPnl) >= fx_PainelLinhasAlerta })
                   );
                   Select(btn_AgregaPnl)
               )
