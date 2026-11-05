@@ -291,7 +291,7 @@ DEFINE
         VAR __KMaior = MAXX ( __Kv, [Value2] )
         VAR __Vt = { ( 1, __M1 ), ( 2, __M2 ), ( 3, __M3 ), ( 4, __M4 ), ( 5, __M5 ), ( 6, __M6 ), ( 7, __M7 ), ( 8, __M8 ) }
         RETURN
-            __Pp1 + __Pp2 + __Pp3 + __Pp4 + __Pp5 + __Pp6 + __Pp7 + __Pp8
+            DIVIDE ( COUNTROWS ( DISTINCT ( SELECTCOLUMNS ( __P, "@Dia", [@Dia], "@Pe", [@Pe] ) ) ), __nD )
     MEASURE Medidas[Conf2 · Pessoas Trançagem (por dia)] =
         VAR __Datas = CALCULATETABLE ( VALUES ( dCalendario[Date] ), REMOVEFILTERS ( fHoraHora[Turno] ), REMOVEFILTERS ( ficha_producao[Trançadeira] ) )
         VAR __UmDia = COUNTROWS ( __Datas ) = 1

@@ -411,7 +411,9 @@ def medidas():
     ms.append((PREFIXO + "Vazão Cabine (m/dia)", "Double", m_simples([CAB], False, f"__M{CAB}"), "#,0", None, pv))
     ms.append((PREFIXO + "Vazão Trançagem (m/dia)", "Double", m_simples([TR], False, f"__M{TR}"), "#,0", None, pv))
     ms.append((PREFIXO + "Pessoas nas 8 Etapas", "Double",
-               m_simples(TODAS, True, " + ".join(f"__Pp{e}" for e in TODAS)), "#,0.0", None, pv))
+               m_simples(TODAS, True,
+                         'DIVIDE ( COUNTROWS ( DISTINCT ( SELECTCOLUMNS ( __P, "@Dia", [@Dia], "@Pe", [@Pe] ) ) ), __nD )'),
+               "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Trançagem (por dia)", "Double", m_simples([TR], True, f"__Pp{TR}"), "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Cabine (por dia)", "Double", m_simples([CAB], True, f"__Pp{CAB}"), "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Trançagem / Cabine", "Text", m_simples([TR, CAB], True,
@@ -492,7 +494,7 @@ def nivel_data(nivel):
 
 KPIS = [  # (medida, rotulo curto <= 19 caracteres, formato do visual)
     (PREFIXO + "Vazão Cabine (m/dia)", "m/dia cabine", "#,0"),
-    (PREFIXO + "Pessoas nas 8 Etapas", "pessoas no processo", "#,0.0"),
+    (PREFIXO + "Pessoas nas 8 Etapas", "pessoas diferentes", "#,0.0"),
     (PREFIXO + "Pessoas Trançagem / Cabine", "pessoas tranç./cab.", None),
     (PREFIXO + "m por Pessoa Cabine", "m/pessoa cabine", "#,0"),
     (PREFIXO + "Eficiência de Balanceamento", "eficiência", "0%"),
@@ -576,7 +578,8 @@ def v_colunas(series, titulo, alt, formato, fonte_rotulo):
 
 # ---- paginas ---------------------------------------------------------------
 LINHA2 = "Ficha de produção · dia de 05:20 a 05:20 · média dos dias com trançagem ≥ 3.000 m na linha"
-RODAPE = "Pessoas = operadores distintos que apontaram a etapa no dia (estimativa, não é escala oficial)."
+RODAPE = ("Pessoas = operadores distintos que apontaram a etapa no dia · máx = maior dia do período "
+          "(estimativa, não é escala oficial).")
 LEGENDA = ("Laranja = 2 etapas com mais gente por 1.000 m (p/1.000 m) · carretel: 4→800 m, 6 e 8→680, 10→460, "
            "12→400, 16→250; n/d = bitola fora da tabela · turno pelo fim da etapa · máquina filtra a ficha inteira")
 
