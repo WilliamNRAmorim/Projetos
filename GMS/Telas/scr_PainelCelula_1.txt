@@ -48,7 +48,7 @@ Screens:
               If(varR1Pnl || varR2Pnl || varR3Pnl, Set(varFalhaPnl, true));
               If(
                   IsBlank(varVelDiaPnl) || varVelDiaPnl <> fx_DataRefEm(varAgoraPnl),
-                  IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); Refresh(DM_ENGRENAGENS_DESVIO); true, Set(varFalhaPnl, true); false)
+                  IfError(Refresh(DM_TRANÇAGEM); Refresh(DM_ENGRENAGENS); Refresh(DESVIO); true, Set(varFalhaPnl, true); false)
               );
               // v0.10.0 · AUTONOMIA DE TUBO (C10 · C23). Velocidade pelo MESMO caminho do Hora-Hora v0.5.9:
               // mangueira -> DM_TRANCAGEM._2BRD_CODE -> DM_ENGRENAGENS (maquina + construcao) -> _13TEORICA_M_H.
@@ -84,7 +84,7 @@ Screens:
                               // [DESVIO] só as linhas do desvio que estão valendo hoje (Inicio..Fim).
                               _dsv: ForAll(
                                   Filter(
-                                      DM_ENGRENAGENS_DESVIO,
+                                      DESVIO,
                                       fx_DesvioAtivo(Desvio, Inicio, Fim, fx_DataRefEm(varAgoraPnl))
                                   ) As _x,
                                   {
