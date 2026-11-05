@@ -48,25 +48,28 @@ QTD_MAX = 2000          # m por ficha e etapa; acima disso e erro de digitacao e
 CORTE_DIA = 3000        # dia produtivo: trancagem (linha inteira, toda maquina e todo turno) >= 3.000 m no dia
 VIRADA_MIN = 320        # 05:20
 T2_MIN, T3_MIN = 837, 1340  # 2o turno a partir de 13:57, 3o a partir de 22:20 (norma, MEL-250)
-LT_MIN, LT_MAX = 0.5, 720
+LT_MIN, LT_MAX = 0.5, 1440   # lead time do processo: fim do mandril -> fim da cabine
 CARRETEL = [(4, 800), (6, 680), (8, 680), (10, 460), (12, 400), (16, 250)]  # bitola -> metros por carretel
 BRAIDERS = ["TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07", "TM01", "TM04", "TO04"]
 ESPIRAL = ["SPIRAL", "TE01", "TE0"]   # a mesma maquina (Spiral no app = TE01 na planilha): chave normalizada SPIRAL
 
-# Serie de 7 etapas (William, 04/11): a Espiral nao e etapa, e maquina da Trancagem e vira FILTRO de maquina por ficha.
+# Processo inteiro em serie (William, 05/11): 8 etapas, do Mandril ("Solda de mandril", nome da tela no app) a Cabine.
+# A Espiral nao e etapa: e maquina da Trancagem e vira FILTRO de maquina por ficha (04/11).
 # (E, nome, coluna do fim, quantidade, operador)
 ETAPAS = [
-    (1, "Tubo", "data_hora_final_tubo", "quantidade_tubo", "operador_tubo"),
-    (2, "Trançagem", "data_hora_final_trancadeira", "quantidade_trancagem", "operador_trancagem"),
-    (3, "Cobertura", "data_hora_final_cobertura", "quantidade_cobertura", "operador_cobertura"),
-    (4, "Bandagem", "data_hora_final_bandagem", "quantidade_bandagem", "operador_bandagem"),
-    (5, "Vulcanização", "data_hora_final_vulcanizacao", "quantidade_vulcanizacao", "operador_vulcanizacao"),
-    (6, "Debandagem", "data_hora_final_debandagem", "quantidade_debandagem", "operador_debandagem"),
-    (7, "Cabine (teste)", "data_hora_final_extracao", "quantidade_extracao", "operador_extracao"),
+    (1, "Solda de mandril", "data_hora_final_mandril", "quantidade_mandril", "operador_mandril"),
+    (2, "Tubo", "data_hora_final_tubo", "quantidade_tubo", "operador_tubo"),
+    (3, "Trançagem", "data_hora_final_trancadeira", "quantidade_trancagem", "operador_trancagem"),
+    (4, "Cobertura", "data_hora_final_cobertura", "quantidade_cobertura", "operador_cobertura"),
+    (5, "Bandagem", "data_hora_final_bandagem", "quantidade_bandagem", "operador_bandagem"),
+    (6, "Vulcanização", "data_hora_final_vulcanizacao", "quantidade_vulcanizacao", "operador_vulcanizacao"),
+    (7, "Debandagem", "data_hora_final_debandagem", "quantidade_debandagem", "operador_debandagem"),
+    (8, "Cabine (teste)", "data_hora_final_extracao", "quantidade_extracao", "operador_extracao"),
 ]
 NOME = {e: n for e, n, *_ in ETAPAS}
 TODAS = [e for e, *_ in ETAPAS]
-TR, CAB = 2, 7
+TR, CAB = 3, 8
+MAQ_LISTA = BRAIDERS + ["Spiral"]   # itens da segmentacao Maquina (filtro de nivel do visual)
 COL_MAQ = "ficha_producao[Trançadeira]"   # segmentacao de Maquina (coluna existente da ficha)
 COL_TURNO = "fHoraHora[Turno]"            # segmentacao de Turno (coluna que o GMS_Painel ja usa na pagina Hora-Hora)
 
@@ -210,7 +213,7 @@ def nucleo(etapas=TODAS, com_op=False, com_car=False, com_lt=False):
     if set(etapas) == set(TODAS):
         v.append("VAR __Vt = { " + ", ".join(f"( {e}, __M{e} )" for e in TODAS) + " }")
     if com_lt:
-        fe, ft = "data_hora_final_extracao", "data_hora_final_trancadeira"
+        fe, ft = "data_hora_final_extracao", "data_hora_final_mandril"  # lead time do processo inteiro
         v.append(
             "VAR __LTt =\n    FILTER (\n        SELECTCOLUMNS (\n"
             f"            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( {fc(fe)} ) && NOT ISBLANK ( {fc(ft)} ) ),\n"
@@ -245,7 +248,7 @@ def cv_dax():
 
 
 def eficiencia_dax():
-    """Balanceamento nas 7 etapas em serie."""
+    """Balanceamento nas 8 etapas em serie (do mandril a cabine)."""
     return "VAR __Ef = DIVIDE ( SUMX ( __Kv, [Value2] ), COUNTROWS ( __Kv ) * __KMaior )"
 
 
@@ -270,7 +273,8 @@ SVG_ABRE = ("\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' w
 
 
 def svg_cartao(e, n):
-    """Cartao horizontal 272 x 184: ETAPA n, nome, pessoas, carreteis, barra de m/dia e caixa de m/pessoa.
+    """Cartao horizontal 272 x 184: ETAPA n, nome, icones de pessoa, numero de carreteis (sem desenho de carretel,
+    William 05/11), barra de m/dia e caixa de m/pessoa.
     Cartao 2 (Trancagem): nome pelo filtro de maquina (Trançagem + Espiral / Trançagem / Espiral)."""
     nome = '" & __NomeTr & "' if e == TR else n
     corpo = f"""{nucleo(TODAS, com_op=True, com_car=True)}
@@ -305,23 +309,6 @@ VAR __IcP =
         )
     )
 VAR __XP = IF ( __TotP > {ICONES_MAX}, "<text x='{ICONES_MAX * PASSO_ICONE + 2}' y='13' font-size='10' fill='" & __corSu & "'>+" & ( __TotP - {ICONES_MAX} ) & "</text>" )
-VAR __TotC = ROUNDUP ( __Car, 0 )
-VAR __NC = MIN ( {ICONES_MAX}, __TotC )
-VAR __IcC =
-    IF (
-        __NC > 0,
-        CONCATENATEX (
-            GENERATESERIES ( 0, __NC - 1, 1 ),
-            VAR __iCa = [Value]
-            VAR __frCa = FORMAT ( MAX ( 0, MIN ( 1, __Car - __iCa ) ), "0.00", "en-US" )
-            RETURN
-                "<linearGradient id='c" & __iCa & "' gradientUnits='userSpaceOnUse' x1='0' y1='0' x2='14' y2='0'><stop offset='" & __frCa & "' stop-color='" & __corOn & "'/><stop offset='" & __frCa & "' stop-color='" & __corOff & "'/></linearGradient>"
-                    & "<g transform='translate(" & __iCa * {PASSO_ICONE} & " 0)'><rect x='0' y='0' width='3' height='16' rx='1' fill='url(%23c" & __iCa & ")'/><rect x='11' y='0' width='3' height='16' rx='1' fill='url(%23c" & __iCa & ")'/><rect x='3' y='3.5' width='8' height='9' fill='url(%23c" & __iCa & ")'/><path d='M5 4v8M7 4v8M9 4v8' stroke='" & __corCa & "' stroke-width='0.6'/></g>",
-            "",
-            [Value], ASC
-        )
-    )
-VAR __XC = IF ( __TotC > {ICONES_MAX}, "<text x='{ICONES_MAX * PASSO_ICONE + 2}' y='12' font-size='10' fill='" & __corSu & "'>+" & ( __TotC - {ICONES_MAX} ) & "</text>" )
 VAR __Contorno =
     IF (
         __Quente,
@@ -345,20 +332,19 @@ VAR __Pessoas =
 VAR __Carreteis =
     IF (
         __Car > 0,
-        "<g transform='translate(14 92)'>" & __IcC & __XC & "</g>"
-            & "<text x='14' y='124' fill='" & __corTi & "'><tspan font-size='13' font-weight='700'>" & FORMAT ( __Car, "0.0", "pt-BR" ) & "</tspan>"
+        "<text x='14' y='110' fill='" & __corTi & "'><tspan font-size='14' font-weight='700'>" & FORMAT ( __Car, "0.0", "pt-BR" ) & "</tspan>"
             & "<tspan font-size='10.5' fill='" & __corSu & "'> carretéis/dia" & IF ( NOT ISBLANK ( __CPe ), " · " & FORMAT ( __CPe, "0.0", "pt-BR" ) & " por pessoa" ) & "</tspan></text>"
-            & IF ( __Cob < 0.995, "<text x='14' y='137' font-size='9.5' fill='" & __corSu & "'>carretéis em " & FORMAT ( __Cob * 100, "0" ) & "%25 dos metros</text>" ),
-        IF ( __Met > 0, "<text x='14' y='112' font-size='10.5' fill='" & __corSu & "'>carretéis n/d (bitola fora da tabela)</text>" )
+            & IF ( __Cob < 0.995, "<text x='14' y='125' font-size='9.5' fill='" & __corSu & "'>carretéis em " & FORMAT ( __Cob * 100, "0" ) & "%25 dos metros</text>" ),
+        IF ( __Met > 0, "<text x='14' y='110' font-size='10.5' fill='" & __corSu & "'>carretéis n/d (bitola fora da tabela)</text>" )
     )
 VAR __Barra =
-    "<rect x='14' y='148' width='136' height='8' rx='4' fill='" & __corLi & "'/>"
-        & IF ( __Lb > 0, "<rect x='14' y='148' width='" & FORMAT ( __Lb, "0.0", "en-US" ) & "' height='8' rx='4' fill='" & __corOn & "'/>" )
-        & "<text x='14' y='173' fill='" & __corTi & "'><tspan font-size='13' font-weight='700'>" & IF ( ISBLANK ( __Met ), "–", FORMAT ( __Met, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='10.5'> m/dia</tspan></text>"
+    "<rect x='14' y='144' width='136' height='8' rx='4' fill='" & __corLi & "'/>"
+        & IF ( __Lb > 0, "<rect x='14' y='144' width='" & FORMAT ( __Lb, "0.0", "en-US" ) & "' height='8' rx='4' fill='" & __corOn & "'/>" )
+        & "<text x='14' y='170' fill='" & __corTi & "'><tspan font-size='13' font-weight='700'>" & IF ( ISBLANK ( __Met ), "–", FORMAT ( __Met, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='10.5'> m/dia</tspan></text>"
 VAR __Caixa =
-    "<rect x='156' y='142' width='102' height='34' rx='8' fill='" & IF ( __Quente, __corLaF, __corVeF ) & "'/>"
-        & "<text x='164' y='157' fill='" & __corTi & "'><tspan font-size='14' font-weight='700' fill='" & IF ( __Quente, __corLaT, __corVe ) & "'>" & IF ( ISBLANK ( __MPe ), "–", FORMAT ( __MPe, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='10'> m/pessoa</tspan></text>"
-        & "<text x='164' y='170' font-size='9' fill='" & __corSu & "'>" & IF ( ISBLANK ( __Con ), "–", FORMAT ( __Con, "0.00", "pt-BR" ) ) & " p/1.000 m</text>"
+    "<rect x='156' y='136' width='102' height='38' rx='8' fill='" & IF ( __Quente, __corLaF, __corVeF ) & "'/>"
+        & "<text x='164' y='153' fill='" & __corTi & "'><tspan font-size='14' font-weight='700' fill='" & IF ( __Quente, __corLaT, __corVe ) & "'>" & IF ( ISBLANK ( __MPe ), "–", FORMAT ( __MPe, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='10'> m/pessoa</tspan></text>"
+        & "<text x='164' y='167' font-size='9' fill='" & __corSu & "'>" & IF ( ISBLANK ( __Con ), "–", FORMAT ( __Con, "0.00", "pt-BR" ) ) & " p/1.000 m</text>"
 RETURN
     IF (
         __SemDado,
@@ -369,36 +355,11 @@ RETURN
     return corpo
 
 
-def svg_linha():
-    """8o slot do 2 x 4: resumo da linha (cabine m/dia, carreteis/dia na cabine, pessoas nas 7 etapas, dias, maquina)."""
-    soma_p = " + ".join(f"__Pp{e}" for e in TODAS)
-    return f"""{nucleo(TODAS, com_op=True, com_car=True)}
-{SVG_VARS}
-VAR __PesT = {soma_p}
-VAR __MaqLin = IF ( __FM, IF ( LEN ( __MaqTxt ) > 34, LEFT ( __MaqTxt, 32 ) & "…", __MaqTxt ), "todas" )
-VAR __CarCab =
-    IF ( __C{CAB} > 0, FORMAT ( __C{CAB}, "0.0", "pt-BR" ), "n/d" )
-RETURN
-    IF (
-        NOT ( __M{CAB} > 0 ) && NOT ( __PesT > 0 ),
-        BLANK (),
-        {SVG_ABRE.format(w=CARD_VW, h=CARD_VH, vw=CARD_W, vh=CARD_H)}
-            & "<rect x='1.5' y='1.5' width='269' height='181' rx='12' fill='" & __corCa & "' stroke='" & __corLi & "' stroke-width='1'/>"
-            & "<text x='14' y='22' font-size='10' font-weight='700' letter-spacing='0.6' fill='" & __corSu & "'>LINHA</text>"
-            & "<text x='14' y='43' font-size='15' font-weight='700' fill='" & __corTi & "'>Resumo do fluxo</text>"
-            & "<text x='14' y='76' fill='" & __corTi & "'><tspan font-size='20' font-weight='700'>" & IF ( ISBLANK ( __M{CAB} ), "–", FORMAT ( __M{CAB}, "#,0", "pt-BR" ) ) & "</tspan><tspan font-size='11' fill='" & __corSu & "'> m/dia na cabine</tspan></text>"
-            & "<text x='14' y='104' fill='" & __corTi & "'><tspan font-size='16' font-weight='700'>" & __CarCab & "</tspan><tspan font-size='11' fill='" & __corSu & "'> carretéis/dia na cabine</tspan></text>"
-            & "<text x='14' y='132' fill='" & __corTi & "'><tspan font-size='16' font-weight='700'>" & IF ( ISBLANK ( __PesT ), "–", FORMAT ( __PesT, "0.0", "pt-BR" ) ) & "</tspan><tspan font-size='11' fill='" & __corSu & "'> pessoas/dia nas 7 etapas</tspan></text>"
-            & "<text x='14' y='155' font-size='10' fill='" & __corSu & "'>" & FORMAT ( __nD, "#,0", "pt-BR" ) & IF ( __nD = 1, " dia", " dias produtivos" ) & " no filtro</text>"
-            & "<text x='14' y='172' font-size='10' fill='" & __corSu & "'>máquina: " & __MaqLin & "</text>"
-            & "</svg>"
-    )"""
-
-
-CONT_W, CONT_H = 560, 286     # desenho das 7 barras (pagina 2), dentro do cartao branco do proprio SVG
-CONT_VW, CONT_VH = 616, 340   # visual Imagem t_conteudo = tamanho do SVG (o cartao branco e a borda vem do SVG)
-CONT_DX, CONT_DY = 28, 27     # desenho centrado no cartao
-PASSO_CONT = 34
+CONT_VW, CONT_VH = 1248, 340  # visual Imagem t_conteudo = tamanho do SVG (William ampliou a barra em 05/11)
+CONT_DX, CONT_DY = 24, 20     # desenho dentro do cartao branco do proprio SVG
+CONT_W, CONT_H = 1200, 300    # desenho das 8 barras
+PASSO_CONT = 32
+CONT_X0, CONT_BW = 170, 940   # inicio e largura da barra; rotulo da etapa a esquerda, valor a direita
 
 
 def svg_conteudo():
@@ -409,18 +370,18 @@ def svg_conteudo():
         linhas.append(
             f"VAR __Pos{e} = IF ( NOT ISBLANK ( __K{e} ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K{e} ) ) + 1 )\n"
             f"VAR __Q{e} = NOT ISBLANK ( __Pos{e} ) && __Pos{e} <= 2\n"
-            f"VAR __L{e} = IF ( __Esc > 0 && __K{e} > 0, ROUND ( 340 * DIVIDE ( __K{e}, __Esc ), 1 ), 0 )\n"
+            f"VAR __L{e} = IF ( __Esc > 0 && __K{e} > 0, ROUND ( {CONT_BW} * DIVIDE ( __K{e}, __Esc ), 1 ), 0 )\n"
             f"VAR __R{e} =\n"
             f"    \"<text x='0' y='{y + 16}' font-size='12' fill='\" & __corTi & \"'>{nome}</text>\"\n"
-            f"        & \"<rect x='140' y='{y + 4}' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n"
-            f"        & IF ( __L{e} > 0, \"<rect x='140' y='{y + 4}' width='\" & FORMAT ( __L{e}, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q{e}, __corLa, __corVeB ) & \"'/>\" )\n"
-            f"        & \"<text x='556' y='{y + 17}' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q{e}, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K{e} ), \"–\", FORMAT ( __K{e}, \"0.00\", \"pt-BR\" ) ) & \"</text>\"")
+            f"        & \"<rect x='{CONT_X0}' y='{y + 4}' width='{CONT_BW}' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n"
+            f"        & IF ( __L{e} > 0, \"<rect x='{CONT_X0}' y='{y + 4}' width='\" & FORMAT ( __L{e}, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q{e}, __corLa, __corVeB ) & \"'/>\" )\n"
+            f"        & \"<text x='{CONT_W - 4}' y='{y + 17}' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q{e}, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K{e} ), \"–\", FORMAT ( __K{e}, \"0.00\", \"pt-BR\" ) ) & \"</text>\"")
     y_fim = 36 + len(TODAS) * PASSO_CONT
     juntar = " & ".join(f"__R{e}" for e in TODAS)
     return f"""{nucleo(TODAS, com_op=True)}
 {SVG_VARS}
 VAR __Esc = __KMaior * 1.1
-VAR __XM = IF ( __Esc > 0 && NOT ISBLANK ( __KMedia ), FORMAT ( 140 + ROUND ( 340 * DIVIDE ( __KMedia, __Esc ), 1 ), "0.0", "en-US" ) )
+VAR __XM = IF ( __Esc > 0 && NOT ISBLANK ( __KMedia ), FORMAT ( {CONT_X0} + ROUND ( {CONT_BW} * DIVIDE ( __KMedia, __Esc ), 1 ), "0.0", "en-US" ) )
 {chr(10).join(linhas)}
 VAR __Titulo =
     "<text x='0' y='16' fill='" & __corTi & "'><tspan font-size='13' font-weight='700'>Quais etapas usam mais gente por 1.000 m?</tspan>"
@@ -438,43 +399,6 @@ RETURN
 
 
 # ---- medidas ---------------------------------------------------------------
-def leitura():
-    return f"""{nucleo(TODAS, com_op=True, com_lt=True)}
-{eficiencia_dax()}
-{restricoes_dax()}
-VAR __EtV = {nome_etapa_dax("__iV")}
-VAR __EtC = {nome_etapa_dax("__iC")}
-VAR __UmDiaDado = __UmDia && NOT ISEMPTY ( __DiasCom )
-VAR __P0 =
-    IF ( __FM && __MaqTxt <> "",
-        "Filtro de máquina: " & __MaqTxt & ". Cada ficha que passou nessa(s) máquina(s) entra com o fluxo inteiro dela, em todas as etapas; o dia produtivo continua sendo o da linha toda." )
-VAR __P1 =
-    IF ( NOT ISBLANK ( __iV ),
-        "A etapa que mais limita a vazão é " & __EtV & " (" & FORMAT ( __MenorV, "#,0", "pt-BR" )
-            & " m/dia). Pela Teoria das Restrições, só o que melhora ali aumenta a entrega da linha." )
-VAR __P2 =
-    IF ( NOT ISBLANK ( __iC ),
-        "A etapa que mais consome gente por metro é " & __EtC & " (" & FORMAT ( __KMaior, "0.00", "pt-BR" )
-            & " pessoas por 1.000 m, " & FORMAT ( DIVIDE ( __KMaior, __KMedia ), "0.0", "pt-BR" )
-            & "× a média do trecho). É onde está a maior movimentação de pessoas." )
-VAR __P3 =
-    IF ( NOT ISBLANK ( __Ef ),
-        "Eficiência de balanceamento de " & FORMAT ( __Ef, "0%", "pt-BR" )
-            & " (100% seria o mesmo número de pessoas por metro em todas as etapas). Cada etapa tem uma natureza de trabalho; a diferença só vira espaço de realocação onde há ociosidade." )
-VAR __P4 =
-    IF ( NOT ISBLANK ( __WIP ),
-        "Pela Lei de Little, cerca de " & FORMAT ( __WIP, "#,0", "pt-BR" )
-            & " m ficam em processo entre a trançagem e a cabine (lead time médio de " & FORMAT ( __LTMedio, "#,0", "pt-BR" )
-            & " h" & IF ( NOT ISBLANK ( __LTMediana ), "; mediana de " & FORMAT ( __LTMediana, "#,0", "pt-BR" ) & " h" )
-            & "). Reduzir lead time ou variabilidade reduz esse estoque sem mexer na vazão." )
-VAR __P5 =
-    IF ( __UmDiaDado, "Dia único: a média é o próprio dia, então a leitura de variabilidade não se aplica." )
-VAR __Partes = {{ ( 0, __P0 ), ( 1, __P1 ), ( 2, __P2 ), ( 3, __P3 ), ( 4, __P4 ), ( 5, __P5 ) }}
-VAR __Texto = CONCATENATEX ( FILTER ( __Partes, [Value2] <> "" ), [Value2], UNICHAR ( 10 ) & UNICHAR ( 10 ), [Value1], ASC )
-RETURN
-    IF ( __Texto = "", "Sem dados no filtro.", __Texto )"""
-
-
 def m_simples(etapas, com_op, ret, com_car=False, com_lt=False, extra=""):
     return f"{nucleo(etapas, com_op=com_op, com_car=com_car, com_lt=com_lt)}\n{extra}{'' if not extra else chr(10)}RETURN\n    {ret}"
 
@@ -486,7 +410,7 @@ def medidas():
     pvis = PASTA + "\\Visual"
     ms.append((PREFIXO + "Vazão Cabine (m/dia)", "Double", m_simples([CAB], False, f"__M{CAB}"), "#,0", None, pv))
     ms.append((PREFIXO + "Vazão Trançagem (m/dia)", "Double", m_simples([TR], False, f"__M{TR}"), "#,0", None, pv))
-    ms.append((PREFIXO + "Pessoas nas 7 Etapas", "Double",
+    ms.append((PREFIXO + "Pessoas nas 8 Etapas", "Double",
                m_simples(TODAS, True, " + ".join(f"__Pp{e}" for e in TODAS)), "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Trançagem (por dia)", "Double", m_simples([TR], True, f"__Pp{TR}"), "#,0.0", None, pv))
     ms.append((PREFIXO + "Pessoas Cabine (por dia)", "Double", m_simples([CAB], True, f"__Pp{CAB}"), "#,0.0", None, pv))
@@ -498,7 +422,7 @@ def medidas():
                m_simples([CAB], True, f"DIVIDE ( __M{CAB}, __Pp{CAB} )"), "#,0", None, pv))
     ms.append((PREFIXO + "Eficiência de Balanceamento", "Double",
                m_simples(TODAS, True, "__Ef", extra=eficiencia_dax()), "0%", None, pv))
-    ms.append((PREFIXO + "Lead Time (h)", "Double", m_simples([CAB], False, "__LTMediana", com_lt=True),
+    ms.append((PREFIXO + "Lead Time do Processo (h)", "Double", m_simples([CAB], False, "__LTMediana", com_lt=True),
                "#,0", None, pv))
     ms.append((PREFIXO + "WIP Little (m)", "Double", m_simples([CAB], False, "__WIP", com_lt=True), "#,0", None, pv))
     ms.append((PREFIXO + "CV Vazão Trançagem", "Double", m_simples([TR], False, "__CV", extra=cv_dax()),
@@ -507,10 +431,8 @@ def medidas():
                m_simples([TR, CAB], False, f"DIVIDE ( __M{CAB}, __M{TR} )"), "0%", None, pv))
     ms.append((PREFIXO + "Dias Produtivos", "Double", m_simples([TR], False, "IF ( __nD > 0, __nD )"),
                "#,0", None, pv))
-    ms.append((PREFIXO + "Leitura Automática", "Text", leitura(), None, None, pvis))
     for e, n, *_ in ETAPAS:
         ms.append((nome_svg(e), "Text", svg_cartao(e, n), None, "ImageUrl", pvis))
-    ms.append((PREFIXO + "SVG Linha", "Text", svg_linha(), None, "ImageUrl", pvis))
     ms.append((PREFIXO + "SVG Conteúdo", "Text", svg_conteudo(), None, "ImageUrl", pvis))
     return ms
 
@@ -570,11 +492,11 @@ def nivel_data(nivel):
 
 KPIS = [  # (medida, rotulo curto <= 19 caracteres, formato do visual)
     (PREFIXO + "Vazão Cabine (m/dia)", "m/dia cabine", "#,0"),
-    (PREFIXO + "Pessoas nas 7 Etapas", "pessoas no trecho", "#,0.0"),
+    (PREFIXO + "Pessoas nas 8 Etapas", "pessoas no processo", "#,0.0"),
     (PREFIXO + "Pessoas Trançagem / Cabine", "pessoas tranç./cab.", None),
     (PREFIXO + "m por Pessoa Cabine", "m/pessoa cabine", "#,0"),
     (PREFIXO + "Eficiência de Balanceamento", "eficiência", "0%"),
-    (PREFIXO + "Lead Time (h)", "lead time", '#,0 "h"'),
+    (PREFIXO + "Lead Time do Processo (h)", "lead time processo", '#,0 "h"'),
     (PREFIXO + "WIP Little (m)", "em processo", '#,0 "m"'),
     (PREFIXO + "CV Vazão Trançagem", "CV vazão", "0.0%"),
     (PREFIXO + "Rendimento de Fluxo", "rendimento", "0%"),
@@ -622,26 +544,6 @@ def v_imagem(medida, alt):
     }
 
 
-def v_leitura():
-    m = PREFIXO + "Leitura Automática"
-    return {
-        "visualType": "tableEx",
-        "query": {"queryState": {"Values": {"projections": [proj(mx(m), "Leitura automática")]}}},
-        "objects": {
-            "values": [{"properties": {"wordWrap": boo(True), "fontSize": num(11), "fontFamily": txt("Segoe UI"),
-                                       **VALORES_CLAROS}}],
-            "columnHeaders": [{"properties": CABECALHO_CLARO}],
-            "grid": [{"properties": {"gridVertical": boo(False), "gridHorizontal": boo(False),
-                                     "outlineColor": cor_hex(HEX_BORDA)}}],
-            "total": [{"properties": {"totals": boo(False)}}],
-            "columnWidth": [{"properties": {"value": num(556)}, "selector": {"metadata": f"{M}.{m}"}}],
-        },
-        "visualContainerObjects": caixa(None, alt="Leitura automática do fluxo: restrição, mão de obra, "
-                                                  "balanceamento, Little e avisos do filtro escolhido."),
-        "drillFilterOtherVisuals": True,
-    }
-
-
 EIXO = [nivel_data("Ano"), nivel_data("Mês")]  # hierarquia de datas do dCalendario, expandida ate o mes
 
 
@@ -677,6 +579,20 @@ LINHA2 = "Ficha de produção · dia de 05:20 a 05:20 · média dos dias com tra
 RODAPE = "Pessoas = operadores distintos que apontaram a etapa no dia (estimativa, não é escala oficial)."
 LEGENDA = ("Laranja = 2 etapas com mais gente por 1.000 m (p/1.000 m) · carretel: 4→800 m, 6 e 8→680, 10→460, "
            "12→400, 16→250; n/d = bitola fora da tabela · turno pelo fim da etapa · máquina filtra a ficha inteira")
+
+
+def filtro_lista_maquinas():
+    """Filtro de NIVEL DO VISUAL (basico) na segmentacao Maquina: so as maquinas que existem (William, 05/11). Nao filtra
+    as medidas: sem selecao direta na segmentacao, todas as fichas entram. Sai quando a limpeza da fonte terminar."""
+    ent, prop = "ficha_producao", "Trançadeira"
+    return {
+        "name": "f_lista_maquinas", "field": col(ent, prop), "type": "Categorical",
+        "filter": {"Version": 2, "From": [{"Name": "f", "Entity": ent, "Type": 0}],
+                   "Where": [{"Condition": {"In": {
+                       "Expressions": [{"Column": {"Expression": {"SourceRef": {"Source": "f"}}, "Property": prop}}],
+                       "Values": [[{"Literal": {"Value": "'" + m + "'"}}] for m in MAQ_LISTA]}}}]},
+        "howCreated": "User",
+    }
 Y_FAIXA, H_FAIXA = 16, 64
 Y_CONT = Y_FAIXA + H_FAIXA + 12          # 92
 Y_RODAPE, H_RODAPE = 672, 32
@@ -701,7 +617,10 @@ def faixa_comum(p, titulo1, outras):
     p.add("titulo", 16, Y_FAIXA, W_TITULO, H_FAIXA, v_texto([(titulo1, 18, "Segoe UI Semibold", HEX_TINTA),
                                                          (LINHA2, 10, "Segoe UI", HEX_SUAVE)]))
     for nome, campo, rot, grupo, x in SEGMENTACOES:
-        p.add(nome, x, Y_FAIXA, SEG_W, H_FAIXA, v_segmentacao(campo, rot, grupo))
+        seg = v_segmentacao(campo, rot, grupo)
+        if nome == "seg_maquina":
+            seg["filterConfig"] = {"filters": [filtro_lista_maquinas()]}  # a lista ja exclui vazio e lixo
+        p.add(nome, x, Y_FAIXA, SEG_W, H_FAIXA, seg)
     p.add("rodape", 16, Y_RODAPE, 576, H_RODAPE, v_texto([(RODAPE, 9, "Segoe UI", HEX_SUAVE)]))
     p.add("nav", 608, Y_RODAPE, 368, H_RODAPE, v_navegador(outras))
     p.add("atualizado", 992, Y_RODAPE, 272, H_RODAPE, v_carimbo())
@@ -709,15 +628,13 @@ def faixa_comum(p, titulo1, outras):
 
 def pg_fluxo_1(outras):
     p = Pagina("pg_fluxo_1", "Fluxo · Etapas")
-    faixa_comum(p, "Fluxo tubo → cabine · etapas e carretéis", outras)
+    faixa_comum(p, "Fluxo mandril → cabine · etapas e carretéis", outras)
     p.add("kpis", 16, Y_CONT, 1248, H_KPI, v_kpis())
     y0 = Y_CONT + H_KPI + GAP                                         # 200
     slots = [(f"cartao_{e}", nome_svg(e), n,
               f"Etapa {e}, {n}: pessoas por dia, carretéis por dia, metros por dia e metros por pessoa.")
              for e, n, *_ in ETAPAS]
-    slots.append(("cartao_linha", PREFIXO + "SVG Linha", "Linha",
-                  "Resumo da linha: metros e carretéis por dia na cabine, pessoas por dia nas 7 etapas e filtro de máquina."))
-    for i, (nome, medida, rot, alt) in enumerate(slots):   # 7 etapas + Linha no 8o slot do 2 x 4
+    for i, (nome, medida, rot, alt) in enumerate(slots):   # 8 etapas na grade 2 x 4
         lin, colu = divmod(i, 4)
         x = 16 + colu * (CARD_VW + GAP)
         y = y0 + lin * (CARD_VH + GAP)
@@ -730,14 +647,13 @@ def pg_fluxo_1(outras):
 
 def pg_fluxo_2(outras):
     p = Pagina("pg_fluxo_2", "Fluxo · Mão de obra")
-    faixa_comum(p, "Fluxo tubo → cabine · mão de obra", outras)
-    h_tab = 340
-    y_g = Y_CONT + h_tab + 12                       # 444
+    faixa_comum(p, "Fluxo mandril → cabine · mão de obra", outras)
+    y_g = Y_CONT + CONT_VH + 12                     # 444
     h_g = FIM_CONT - y_g                            # 216
     p.add("t_conteudo", 16, Y_CONT, CONT_VW, CONT_VH, v_imagem(
         PREFIXO + "SVG Conteúdo",
-        "Pessoas a cada 1.000 m nas 7 etapas; laranja são as duas com mais gente por metro; tracejado é a média."))
-    p.add("t_leitura", 648, Y_CONT, 616, h_tab, v_leitura())
+        "Pessoas a cada 1.000 m nas 8 etapas; laranja são as duas com mais gente por metro; tracejado é a média."))
+    # Leitura automatica removida pelo William em 05/11; a barra ocupa a largura toda (1248 x 340).
     p.add("g_metros", 16, y_g, 616, h_g, v_colunas(
         [(PREFIXO + "Vazão Trançagem (m/dia)", "Trançagem", HEX_AZUL),
          (PREFIXO + "Vazão Cabine (m/dia)", "Cabine", HEX_LARANJA)],
@@ -840,23 +756,29 @@ def consulta_conferencia():
         cn = "Conf2 · " + n[len(PREFIXO):]
         defs.append(f"    MEASURE {M}[{cn}] =\n{ind(e, 8)}")
         campos_row.append(f'"{n[len(PREFIXO):]}", [{cn}]')
+    restr = (f"{nucleo(TODAS, com_op=True)}\n{restricoes_dax()}\n"
+             f"RETURN\n    IF ( NOT ISBLANK ( __iV ), {nome_etapa_dax('__iV')} & \" (\" & FORMAT ( __MenorV, \"#,0\" ) & \" m/dia)\" )")
+    defs.append(f"    MEASURE {M}[Conf2 · Restrição (menor m/dia)] =\n{ind(restr, 8)}")
+    campos_row.append('"Restrição (menor m/dia)", [Conf2 · Restrição (menor m/dia)]')
     row = "ROW (\n        " + ",\n        ".join(campos_row) + "\n    )"
     tab = ind(tabela_etapas(), 8)
-    return f"""// Consulta de conferência do Fluxo v2 (tubo → cabine, filtro de máquina, carretéis). GERADO por gerar_medidas_paginas_fluxo.py: não edite à mão.
+    return f"""// Consulta de conferência do Fluxo v2 (mandril → cabine, filtro de máquina, carretéis). GERADO por gerar_medidas_paginas_fluxo.py: não edite à mão.
 // Onde rodar: Power BI Desktop com GMS_PainelTeste.pbip aberto (ligado ao vivo ao (GMS)) -> Exibição de consulta DAX -> colar -> Executar.
 // As medidas abaixo (DEFINE) são cópia exata das medidas do relatório 'Fluxo · ...' (reportExtensions.json), com prefixo 'Conf2 · ' para não colidir.
+// 'Conf2 · Restrição' só existe aqui (a leitura automática saiu da página 2).
 // Recorte: dCalendario[Date] <= 06/10/2026 (a virada 05:20 vem da regra: fim em 07/10 antes das 05:20 conta no dia 06/10).
 //
 // Esperado:
-//   1) Por etapa, sem filtro de máquina (TODAS as fichas, inclusive máquina vazia/lixo): os mesmos números da 2ª geração
-//      (teste no Desktop de 04/11): Cabine ≈ 5.679 m/dia e 4,9 pessoas; Trançagem ≈ 6.055 + 669 ≈ 6.724 m/dia (braiders +
-//      espiral) e 6,7 pessoas. Piloto de 03/11 (referência): Tubo ≈ 7.203 · 2,3; Cobertura ≈ 6.650 · 2,6; Bandagem ≈ 6.383 · 3,2;
-//      Vulcanização ≈ 6.524 · 2,2; Debandagem ≈ 5.541 · 2,0. "fatia com carretel" < 1 onde há bitola 7, 3, 5, 17 ou vazia.
-//   2) Totais: dias produtivos ≈ 185; rendimento = cabine ÷ trançagem; lead time (mediana) ≈ 22 h; a leitura automática
-//      não cita filtro de máquina.
+//   1) Por etapa, sem filtro de máquina (TODAS as fichas): Cabine ≈ 5.679 m/dia e 4,9 pessoas e Trançagem ≈ 6.724 m/dia e
+//      6,7 pessoas (iguais à 3ª geração, conferida no Desktop em 04/11: o mandril não muda as outras etapas nem o dia
+//      produtivo). Solda de mandril ≈ 8.185 m/dia e 3,2 pessoas (piloto de 03/11; o mandril corta lance longo, ver LEIAME).
+//      Piloto: Tubo ≈ 7.203 · 2,3; Cobertura ≈ 6.650 · 2,6; Bandagem ≈ 6.383 · 3,2; Vulcanização ≈ 6.524 · 2,2;
+//      Debandagem ≈ 5.541 · 2,0. "fatia com carretel" < 1 onde há bitola 7, 3, 5, 17 ou vazia.
+//   2) Totais: dias produtivos ≈ 185; rendimento = cabine ÷ trançagem; eficiência de balanceamento nas 8 etapas;
+//      lead time do processo (mediana por ficha, fim do mandril → fim da cabine, 0,5 a 1.440 h): número novo, sem
+//      referência (o do trecho trançagem→cabine era ≈ 22 h; o do processo tem de ser maior); restrição = a etapa de menor m/dia.
 //   3) Turno = 1 (texto de fHoraHora[Turno] com "1"): cabine 1º turno ≈ 1.920 m/dia e ≈ 1,6 pessoa; dias produtivos iguais.
-//   4) Só Spiral (Spiral/TE01/TE0): Trançagem ≈ 669 m/dia; as outras etapas mostram só as fichas que passaram na espiral;
-//      dias produtivos iguais aos da consulta 1 (o corte de 3.000 m é da linha inteira).
+//   4) Só Spiral (Spiral/TE01/TE0): Trançagem ≈ 669 m/dia; as outras etapas (mandril incluso) só com as fichas da espiral.
 //   5) Sem Spiral (TH01–TH07, TM01, TM04, TO04): Trançagem ≈ 6.055 m/dia; 4) + 5) ≈ 1) em metros, a menos das fichas de
 //      máquina vazia/lixo, que só entram sem filtro.
 DEFINE
@@ -1052,8 +974,7 @@ def valida(rel, checar_idem=True):
     meta = le(d / "pages" / "pages.json")
     if meta.get("pageOrder", [])[-2:] != list(PAGINAS):
         erros.append("pages.json: as 2 paginas do fluxo nao estao no fim")
-    if meta.get("activePageName") in PAGINAS:
-        erros.append("pages.json: pagina ativa mudou para o fluxo")
+    # A pagina ativa e a que o William deixou aberta ao salvar no Desktop: o gerador nunca a muda (nao e erro).
     for p in meta.get("pageOrder", []):
         if not (d / "pages" / p / "page.json").exists():
             erros.append(f"pages.json cita {p}, que nao existe")
@@ -1147,6 +1068,38 @@ def valida(rel, checar_idem=True):
     for g, membros in grupos.items():
         if {m[0] for m in membros} != set(PAGINAS) or len({m[1] for m in membros}) != 1:
             erros.append(f"syncGroup '{g}': precisa do mesmo campo nas 2 paginas ({sorted(membros)})")
+    # estrutura pedida pelo William em 05/11: 8 cartoes, sem Linha, sem leitura, barra de conteudo 1248 x 340,
+    # mandril como 1a etapa, sem desenho de carretel, segmentacao Maquina com a lista final (filtro de nivel do visual)
+    pg1 = d / "pages" / "pg_fluxo_1" / "visuals"
+    pg2 = d / "pages" / "pg_fluxo_2" / "visuals"
+    if {f.name for f in pg1.glob("cartao_*")} != {f"cartao_{e}" for e in TODAS}:
+        erros.append("pg_fluxo_1: precisa de exatamente os 8 cartoes cartao_1..cartao_8 (sem cartao_linha)")
+    if (pg2 / "t_leitura").exists() or any(m["name"] == PREFIXO + "Leitura Automática" for m in fluxo):
+        erros.append("pg_fluxo_2: a leitura automatica saiu (visual e medida)")
+    if (pg2 / "t_conteudo" / "visual.json").exists():
+        pc = le(pg2 / "t_conteudo" / "visual.json")["position"]
+        if (pc["x"], pc["y"], pc["width"], pc["height"]) != (16, Y_CONT, 1248, 340):
+            erros.append("pg_fluxo_2/t_conteudo: precisa ficar em x16 y92 1248 x 340")
+    else:
+        erros.append("pg_fluxo_2/t_conteudo: nao existe")
+    if ETAPAS[0][2] != "data_hora_final_mandril":
+        erros.append("o mandril (Solda de mandril) tem de ser a 1a etapa")
+    for m in fluxo:
+        if "SVG" in m["name"] or m["name"].startswith(PREFIXO + "Lead Time"):
+            if "data_hora_final_mandril" not in m["expression"]:
+                erros.append(f"{m['name']}: nao inclui o mandril")
+        if m["name"].startswith(PREFIXO + "SVG ") and ("gradientUnits='userSpaceOnUse'" in m["expression"]
+                                                        or "__IcC" in m["expression"]):
+            erros.append(f"{m['name']}: ainda desenha o carretel (so o numero fica)")
+    for pg in PAGINAS:
+        f = d / "pages" / pg / "visuals" / "seg_maquina" / "visual.json"
+        if not f.exists():
+            continue
+        fs = le(f).get("filterConfig", {}).get("filters", [])
+        vals = [x[0]["Literal"]["Value"].strip("'") for fl in fs if fl.get("type") == "Categorical"
+                for x in fl["filter"]["Where"][0]["Condition"]["In"]["Values"]]
+        if sorted(vals) != sorted(MAQ_LISTA):
+            erros.append(f"{pg}/seg_maquina: filtro de nivel do visual precisa ser so {', '.join(MAQ_LISTA)}")
     for campo_seg, rot in (("fHoraHora.Turno", "Turno"), ("ficha_producao.Trançadeira", "Máquina")):
         if len([g for g, ms in grupos.items() if {m[1] for m in ms} == {campo_seg}]) != 1:
             erros.append(f"segmentacao '{rot}' ({campo_seg}) precisa existir nas 2 paginas com o mesmo syncGroup")

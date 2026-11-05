@@ -1,9 +1,10 @@
-# Fluxo v2 (tubo → cabine, filtro de máquina, carretéis) no GMS_Painel · como gerar e conferir
+# Fluxo v2 (mandril → cabine, filtro de máquina, carretéis) no GMS_Painel · como gerar e conferir
 
-Status (04/11/2026, 4ª geração): **gerado só na cópia local** `GMS/PowerBI/Painel_PBIP_teste` (fora do git). Nada foi
-gravado no `GMS_Painel.Report`, no `Modelo_PBIP`, no `Modelo_PBIP_teste` nem no modelo publicado. Falta reabrir no
+Status (05/11/2026, 5ª geração): **gerado só na cópia local** `GMS/PowerBI/Painel_PBIP_teste` (fora do git), que é a
+pasta que o William abre no Desktop. Nada foi gravado no `GMS_Painel.Report`, no `Modelo_PBIP`, no `Modelo_PBIP_teste` nem no modelo publicado. Falta reabrir no
 Desktop, rodar a conferência e a revisão (`revisor`, Opus: turno, máquina e contexto de filtro).
-Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e virou filtro de máquina: William, 04/11).
+Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral virou filtro de máquina em 04/11; o Mandril entrou como 1ª etapa,
+a leitura automática e o desenho de carretel saíram em 05/11: William).
 
 | Arquivo | O que é |
 |---|---|
@@ -19,7 +20,8 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
 3. O script tira do `reportExtensions.json` só as medidas `Fluxo · ...` e põe as novas no fim; apaga e recria só
    `pg_fluxo_1` e `pg_fluxo_2`, põe as 2 no fim do `pages.json` (a página ativa não muda); não mexe no `report.json`,
    no tema nem nas outras páginas. Regera `Consulta_Conferencia_v2.dax`. Rodar 2 vezes dá os mesmos arquivos.
-4. Ajuste feito à mão no Desktop nessas 2 páginas some na próxima geração: leve o ajuste para o script.
+4. Ajuste feito à mão no Desktop nessas 2 páginas some na próxima geração: leve o ajuste para o script (feito em 05/11:
+   a leitura automática removida e a barra de conteúdo em 1248 × 340 viraram padrão do gerador).
 5. Cópia de trabalho refeita do zero: copiar `GMS_Painel.pbip` (como `GMS_PainelTeste.pbip`) e `GMS_Painel.Report`
    sem `.pbi`, com `.gitignore` = `*` dentro da pasta.
 
@@ -30,7 +32,7 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
 - **Medida do relatório não pode chamar outra medida do relatório** (erro semântico no serviço). Cada medida
   `Fluxo · ...` é escrita por extenso a partir do mesmo núcleo DAX, montado pelo script (`nucleo()`): uma regra mudou,
   muda no script e regera tudo. Nunca edite a medida à mão no Desktop.
-- Prefixo `Fluxo · ` em todas (23 medidas); a validação confere colisão com o TMDL e com as medidas do relatório.
+- Prefixo `Fluxo · ` em todas (22 medidas); a validação confere colisão com o TMDL e com as medidas do relatório.
 - SVG: `dataType` Text com `dataCategory` = `ImageUrl` (se o Desktop não aceitar a categoria pelo arquivo, marcar à mão:
   Ferramentas de medida → Categoria de dados → URL da imagem).
 - **Nomes de VAR:** o DAX não diferencia maiúsculas e recusa repetir um nome na mesma medida, mesmo em escopo aninhado
@@ -39,9 +41,14 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
   por medida, as VAR repetidas e as que têm nome de tabela do modelo.
 
 ## 3. Regras de cálculo (todas direto da `ficha_producao` e do `dCalendario`)
-- **Etapas em série (7):** Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Cabine (Extração/Teste).
-  **Mandril fora.** A Espiral **não é etapa**: é uma máquina da Trançagem e entra pelo filtro de máquina (seção 5).
-  Restrição, eficiência de balanceamento, conteúdo médio, rendimento e WIP usam as 7.
+- **Etapas em série (8, processo inteiro):** Solda de mandril (nome da tela do Mandril no app; `data_hora_final_mandril`,
+  `quantidade_mandril`, `operador_mandril`), Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Cabine
+  (Extração/Teste). A Espiral **não é etapa**: é uma máquina da Trançagem e entra pelo filtro de máquina (seção 5).
+  Eficiência de balanceamento, conteúdo médio, rendimento, WIP e a restrição (só na conferência) usam as 8.
+- **Limitação do Mandril:** o mandril solda **lance longo** (ex.: 1.560 m numa ficha), maior que o carretel final.
+  Os metros/dia dele são de lance e os carretéis do mandril, pela mesma tabela de bitola, são "carretéis equivalentes"
+  (metros ÷ metros do carretel), não carretéis físicos. O corte de 2.000 m por ficha também vale no mandril: lance acima
+  disso vira vazio (a pessoa conta). Conferir no Desktop se há muitas fichas do mandril acima de 2.000 m.
 - **Dia** = data do fim da etapa menos 05:20. **Dia produtivo** = Trançagem da **linha inteira** (toda máquina, todo
   turno) ≥ 3.000 m no dia. Turno e máquina escolhidos não mudam os dias; as médias são do recorte nesses dias. Com 1
   dia filtrado, ele entra sempre se houver apontamento.
@@ -51,21 +58,19 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
   referência calculada na medida, e turno e máquina são reaplicados por linha.
 - **Quantidade** > 2.000 m por ficha e etapa = erro de digitação, vira vazio (a pessoa continua contada).
 - **Pessoas** = operadores distintos normalizados (maiúsculas, sem acento, sem `.`, `,`, `-`, `_`, espaço único) por
-  dia e etapa; "A / B" conta 2 pessoas. Média nos dias produtivos (dia sem apontamento conta 0). "pessoas no trecho" =
-  soma das 7 etapas (a mesma pessoa em 2 etapas conta nas 2).
+  dia e etapa; "A / B" conta 2 pessoas. Média nos dias produtivos (dia sem apontamento conta 0). "pessoas no processo" =
+  soma das 8 etapas (a mesma pessoa em 2 etapas conta nas 2).
 - **Carretéis** por ficha = metros ÷ metros do carretel da `Bitola`: 4 → 800 · 6 → 680 · 8 → 680 · 10 → 460 ·
   12 → 400 · 16 → 250. Bitola fora da tabela (7, 3, 5, 17, vazia): os metros contam, o carretel fica **n/d** e o
   cartão mostra a fatia coberta ("carretéis em 96% dos metros"). Carretéis/dia = média dos dias produtivos; por pessoa
   = carretéis/dia ÷ pessoas/dia.
-- KPIs: vazão, m/pessoa, pessoas por 1.000 m, eficiência de balanceamento (Σ conteúdo ÷ (n × maior), 7 etapas),
-  restrição (menor m/dia), lead time (mediana única por ficha, fim da trançagem → fim da cabine, 0,5 a 720 h, fichas
-  que saíram da cabine em dia produtivo), WIP de Little (vazão da cabine por dia de calendário × lead time médio ÷ 24),
-  CV da vazão da Trançagem, rendimento (cabine ÷ trançagem). Destaque "mais gente/metro" = as 2 etapas de maior
-  conteúdo entre as 7.
-- Leitura automática: com filtro de máquina, abre com "Filtro de máquina: TH05, SPIRAL. Cada ficha que passou nessa(s)
-  máquina(s) entra com o fluxo inteiro dela…"; depois restrição, mão de obra (comparada com a média das 7), balanceamento
-  ("Cada etapa tem uma natureza de trabalho; a diferença só vira espaço de realocação onde há ociosidade."), Little e
-  aviso de dia único. O nome da Trançagem no texto segue o filtro (Trançagem + Espiral / Trançagem / Espiral).
+- KPIs: vazão, m/pessoa, pessoas por 1.000 m, eficiência de balanceamento (Σ conteúdo ÷ (n × maior), 8 etapas),
+  **lead time do processo** (mediana única por ficha, fim do mandril → fim da cabine, 0,5 a 1.440 h, fichas que saíram
+  da cabine em dia produtivo), WIP de Little (vazão da cabine por dia de calendário × lead time médio do processo ÷ 24),
+  CV da vazão da Trançagem, rendimento (cabine ÷ trançagem). Destaque "mais gente/metro" = as 2 etapas de maior conteúdo
+  entre as 8.
+- **Leitura automática: removida** (William, 05/11, à mão no Desktop; o gerador não a recria). A restrição (etapa de
+  menor m/dia) segue só na `Consulta_Conferencia_v2.dax`.
 
 ## 4. Turno (segmentação `fHoraHora[Turno]`)
 - O modelo ao vivo não tem `dTurno`. A segmentação **Turno** usa **`fHoraHora[Turno]`**, a mesma coluna da página
@@ -86,10 +91,15 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
   cada ficha são **normalizados** (maiúsculas, sem ponto, hífen, espaço e sublinhado); `SPIRAL`, `TE01` e `TE0` viram a
   mesma máquina `SPIRAL`; as demais ficam como estão (TH01–TH07, TM01, TM04, TO04…).
 - O filtro vale **por ficha em todas as etapas**: a ficha que passou na máquina escolhida carrega o fluxo inteiro dela
-  (tubo, cobertura, …, cabine). Sem filtro direto, **todas** as fichas entram, inclusive máquina vazia/lixo: os números
+  (mandril, tubo, cobertura, …, cabine). Sem filtro direto, **todas** as fichas entram, inclusive máquina vazia/lixo: os números
   sem filtro são os mesmos da 2ª geração (cabine ≈ 5.679 m/dia, pessoas 6,7 / 4,9; trançagem ≈ 6.055 + 669 ≈ 6.724).
 - Título do cartão 2: **"Trançagem + Espiral"** sem filtro (ou com braiders e espiral), **"Trançagem"** sem espiral
-  escolhida, **"Espiral"** só com a espiral. O 8º cartão (Linha) mostra a máquina escolhida ou "todas".
+  escolhida, **"Espiral"** só com a espiral (cartão 3).
+- **Lista da segmentação só com as máquinas que existem (William, 05/11):** filtro de **nível do visual** (básico) na
+  própria segmentação, nas 2 páginas: TH01, TH02, TH03, TH04, TH05, TH06, TH07, TM01, TM04, TO04 e Spiral (somem vazio,
+  1, 4, T004, TE0, TE01). Ele só limpa a lista: as medidas continuam normalizando (Spiral = TE01 = TE0) e, sem seleção
+  direta, todas as fichas entram. **A limpeza da coluna na fonte está em andamento em outra sessão; depois dela este
+  filtro pode sair** (`filtro_lista_maquinas()` / `MAQ_LISTA` no script).
 - **Botões rápidos por favoritos (Com/Sem/Só Spiral): não feitos.** O favorito em PBIR (`definition/bookmarks`) guarda o
   estado da segmentação pelo nome do visual e um filtro com os valores literais da coluna (`explorationState`); a cópia
   do `GMS_Painel` não tem pasta de favoritos e os valores exatos da coluna (grafias de Spiral/TE01) só existem no modelo
@@ -99,7 +109,7 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
   na lista quando há data escolhida (as máquinas se repetem, o efeito é pequeno).
 
 ## 6. Imagens SVG: visual Imagem nativo (sem o texto bruto ao passar o mouse)
-- **Decisão (teste no Desktop, 04/11):** os 9 SVG (7 cartões, Linha e a barra de conteúdo) ficam em **visual Imagem
+- **Decisão (teste no Desktop, 04/11):** os 9 SVG (8 cartões e a barra de conteúdo) ficam em **visual Imagem
   nativo** (`visualType` `image`), com `objects.image` = `sourceType` `'imageUrl'` e `sourceUrl` = a medida SVG por
   formatação condicional (fx → valor do campo, medida do relatório com `Schema: extension`), dica de ferramenta desligada
   (`visualContainerObjects.visualTooltip.show = false`). Sem modo de ajuste: o SVG traz `width`/`height` iguais ao
@@ -112,7 +122,6 @@ Plano: `PLANO_v2_tubo_espiral_carreteis.md` (a Espiral deixou de ser etapa e vir
 - O esquema oficial (`formattingObjectDefinitions` 1.5.0) não lista as propriedades por tipo de visual: os nomes
   `sourceType`/`sourceUrl` foram provados no Desktop, não no esquema. A validação exige o visual Imagem com essas
   propriedades, a medida SVG existente, a dica desligada e o tamanho do SVG igual ao do visual.
-- A Leitura automática continua em tabela (é texto, o `title` da célula repete o próprio texto).
 
 ## 7. Limites (o que não dá sem mexer no modelo)
 - **Sem Mês/Ano:** os gráficos mensais usam a hierarquia de datas automática do `dCalendario[Date]` (Ano e Mês,
@@ -130,25 +139,23 @@ Página 1 "Fluxo · Etapas":
 
 | Visual | X | Y | L | A |
 |---|---|---|---|---|
-| Cartão novo, 9 KPIs `Fluxo · ...` | 16 | 92 | 1248 | 96 |
-| `cartao_1` Tubo · `cartao_2` Trançagem · `cartao_3` Cobertura · `cartao_4` Bandagem | 16 · 331 · 646 · 961 | 200 | 303 | 205 |
-| `cartao_5` Vulcanização · `cartao_6` Debandagem · `cartao_7` Cabine · `cartao_linha` Linha | 16 · 331 · 646 · 961 | 417 | 303 | 205 |
+| Cartão novo, 9 KPIs `Fluxo · ...` (rótulos "lead time processo" e "pessoas no processo") | 16 | 92 | 1248 | 96 |
+| `cartao_1` Solda de mandril · `cartao_2` Tubo · `cartao_3` Trançagem · `cartao_4` Cobertura | 16 · 331 · 646 · 961 | 200 | 303 | 205 |
+| `cartao_5` Bandagem · `cartao_6` Vulcanização · `cartao_7` Debandagem · `cartao_8` Cabine | 16 · 331 · 646 · 961 | 417 | 303 | 205 |
 | Legenda | 16 | 634 | 1248 | 26 |
 
 Cada cartão é um visual Imagem com a medida `Fluxo · SVG n Etapa` (SVG 303 × 205, desenho 272 × 184 na mesma
-proporção, sem dica de ferramenta; seção 6): "ETAPA n", nome, ícones de pessoa (até 12, cinza até o máximo do dia, "+N"), pessoas/dia e máx, ícones de
-carretel (dois flanges e núcleo, azul `#2A78D6`/apagado `#CFD6DF`, o último pela fração, até 12 e "+N"),
-"X carretéis/dia · Y por pessoa" (ou "n/d"), fatia coberta quando < 100%, barra de m/dia (escala = maior etapa) e caixa
-de m/pessoa com pessoas por 1.000 m. Borda e selo laranja "mais gente/metro" nas 2 etapas com mais gente por 1.000 m.
-**Linha** (`Fluxo · SVG Linha`, 8º slot): m/dia na cabine, carretéis/dia na cabine, pessoas/dia nas 7 etapas, dias
-produtivos e máquina do filtro.
+proporção, sem dica de ferramenta; seção 6): "ETAPA n", nome, ícones de pessoa (até 12, cinza até o máximo do dia,
+"+N"), pessoas/dia e máx, **número** de carretéis ("X carretéis/dia · Y por pessoa", ou "n/d"; **sem desenho de
+carretel** desde 05/11), fatia coberta quando < 100% ("carretéis em 95% dos metros"), barra de m/dia (escala = maior
+etapa) e caixa de m/pessoa com pessoas por 1.000 m. Borda e selo laranja "mais gente/metro" nas 2 etapas com mais
+gente por 1.000 m. O cartão "Linha" saiu (o resumo está na faixa de KPIs).
 
 Página 2 "Fluxo · Mão de obra":
 
 | Visual | X | Y | L | A |
 |---|---|---|---|---|
-| Visual Imagem com `Fluxo · SVG Conteúdo` (SVG 616 × 340 com o cartão branco, as 7 barras, título e tracejado da média) | 16 | 92 | 616 | 340 |
-| Tabela `Fluxo · Leitura Automática` (quebra de linha, fonte 11) | 648 | 92 | 616 | 340 |
+| Visual Imagem `t_conteudo` com `Fluxo · SVG Conteúdo` (SVG 1248 × 340: cartão branco, 8 barras, título e tracejado da média) | 16 | 92 | 1248 | 340 |
 | Colunas: metros/dia por mês (trançagem azul, cabine laranja) | 16 | 444 | 616 | 216 |
 | Colunas: pessoas/dia por mês | 648 | 444 | 616 | 216 |
 
@@ -162,27 +169,35 @@ nenhuma chamada a outra medida do relatório, `ISFILTERED ( fHoraHora[Turno] )` 
 de "Espiral" como etapa; tudo em 1280 × 720 com margem 16, laterais simétricas, sem sobreposição; segmentações **Turno e
 Máquina** nas 2 páginas com o mesmo `syncGroup`; **todo SVG em visual Imagem (`image.sourceType` `'imageUrl'`,
 `image.sourceUrl` = medida), nenhum em tabela, dica desligada, `width`/`height` do SVG = tamanho do visual e mesma
-proporção do desenho**; página de teste ausente; idempotência.
+proporção do desenho**; página de teste ausente; **8 cartões (`cartao_1`..`cartao_8`, sem Linha), mandril como 1ª
+etapa em todas as medidas SVG e no lead time, nenhum desenho de carretel, `t_leitura` e a medida da leitura ausentes,
+`t_conteudo` em 16, 92, 1248 × 340, segmentação Máquina com o filtro de nível do visual = a lista final**; idempotência.
+A página ativa do `pages.json` é a que o William salvou (não é erro).
 
 **No Desktop (William):**
 1. Abrir `GMS/PowerBI/Painel_PBIP_teste/GMS_PainelTeste.pbip` (ou "Aplicar alterações externas"). Erro no
    `reportExtensions.json`: a mensagem diz a medida e a posição; me passe o texto.
 2. As 9 imagens SVG aparecem inteiras (visual Imagem) e não mostram texto nenhum ao passar o mouse.
 3. Exibição de consulta DAX → colar `Consulta_Conferencia_v2.dax` → Executar (dias ≤ 06/10/2026):
-   - consulta 1 (sem filtro): Cabine ≈ 5.679 m/dia e 4,9 pessoas; Trançagem ≈ 6.724 m/dia e 6,7 pessoas;
+   - consulta 1 (sem filtro): Cabine ≈ 5.679 m/dia e 4,9 pessoas; Trançagem ≈ 6.724 m/dia e 6,7 pessoas; Solda de
+     mandril ≈ 8.185 m/dia e 3,2 pessoas (piloto de 03/11);
+   - consulta 2: lead time do processo (novo, maior que os ≈ 22 h do trecho trançagem→cabine) e a restrição;
    - consulta 3 (turno 1): cabine ≈ 1.920 m/dia e ≈ 1,6 pessoa; dias produtivos iguais aos da consulta 1;
    - consulta 4 (só Spiral): Trançagem ≈ 669 m/dia; consulta 5 (sem Spiral): Trançagem ≈ 6.055 m/dia; dias iguais.
-4. Segmentação Máquina: escolher só Spiral muda o título do cartão 2 para "Espiral" e a Linha mostra "máquina: SPIRAL".
+4. Segmentação Máquina: a lista mostra só TH01–TH07, TM01, TM04, TO04 e Spiral; escolher só Spiral muda o título do
+   cartão 3 para "Espiral".
 5. Performance Analyzer nas 2 páginas (seção 10).
 
 **Histórico dos testes no Desktop (04/11):** 1ª geração: KPIs, gráficos mensais (eixo hierárquico) e leitura
 calcularam; os cartões e o SVG de conteúdo falharam por VAR repetida (`__La`/`__LA`), corrigido na 2ª. 3ª geração
 Espiral virou filtro de máquina, 7 etapas + Linha (filtro, Linha, título dinâmico e totais conferidos no Desktop); o
 texto bruto do SVG continuava (célula da tabela). Teste de 4 visuais: o visual Imagem nativo venceu. 4ª geração (esta):
-os 9 SVG em visual Imagem. Falta reabrir e conferir.
+os 9 SVG em visual Imagem. 05/11: William removeu a leitura e ampliou a barra (à mão); 5ª geração (esta): Mandril como
+1ª etapa (8 cartões, sem Linha), lead time do processo, sem desenho de carretel, lista final na segmentação Máquina.
+Falta reabrir e conferir.
 
 ## 10. Riscos
-- **Desempenho:** cada medida relê a ficha inteira (7 leituras com normalização de nome e de máquina) e não reaproveita
+- **Desempenho:** cada medida relê a ficha inteira (8 leituras com normalização de nome e de máquina) e não reaproveita
   a das outras; a página 1 dispara 9 KPIs + 8 imagens. Com ~3 mil fichas deve ficar em segundos, mas é medido no
   Desktop. Se passar de ~3 s por visual, o caminho é levar o núcleo para o modelo (tabela `fPessoasEtapaOP` do piloto),
   mudança de modelo que precisa do "sim" do William.
@@ -197,3 +212,7 @@ os 9 SVG em visual Imagem. Falta reabrir e conferir.
   Imagem não tem estado de "sem dados": medida em branco deixa o espaço vazio (é o esperado).
 - Hierarquia de datas automática e `fHoraHora[Turno]` vêm do modelo ao vivo (o snapshot de 18 dias não tem a
   `fHoraHora`); `quantidade_*` tratadas como número (double no TMDL).
+- **Mandril:** lance longo (seção 3); o lead time do processo depende do fim do mandril estar preenchido (fichas sem ele
+  ficam fora da mediana) e o limite de 1.440 h (60 dias) corta fichas paradas há mais tempo.
+- **Filtro da lista de máquinas:** valores fixos no visual; máquina nova na fonte não aparece na segmentação até entrar
+  em `MAQ_LISTA` (ou até o filtro sair depois da limpeza da fonte).
