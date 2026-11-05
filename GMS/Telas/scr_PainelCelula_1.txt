@@ -1,4 +1,4 @@
-# scr_PainelCelula_1 · Painel da Célula v0.14.1 (AJUSTE DE TELA 27/10: Wrap false nos rótulos estreitos, título do Tubo e chips de bitola em fonte menor, horas das bateladas em 2 linhas) · v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
+# scr_PainelCelula_1 · Painel da Célula v0.15.0 (MEL-261: Saída da Extração pelos lances da RegistrosInspeção, por Created e TurnoTeste, igual à tela da Cabine) · v0.14.1 (AJUSTE DE TELA 27/10: Wrap false nos rótulos estreitos, título do Tubo e chips de bitola em fonte menor, horas das bateladas em 2 linhas) · v0.14.0 (FICHA COM A PRODUÇÃO POR TURNO: varDetEtapaPnl, bloco lbl_DetProd*Pnl, modo processo MAND/TRANCP/BOB, btn_FichaMandPnl/TrancPnl/BobPnl; v0.13.0: FILTRO DE DIA E DE TURNO: ctxModoPnl/ctxDiaPnl, colEvHistPnl, btn_AgregaPnl; v0.12.0: metragem por turno e processo, colProdEtapaTurnoPnl; v0.11.1: Concurrent sem Set da mesma variável, timers visíveis)
 # Patch por bloco no Studio (layout ajustado à mão): nunca reimportar. Itens 1 a 7: ver Telas/_patch_PainelCelula_v0.11.0.md · v0.13.0: ver _patch_PainelCelula_v0.13.0_filtro.md · v0.14.0: ver _patch_PainelCelula_v0.14.0_ficha.md
 Screens:
   scr_PainelCelula_1:
@@ -157,8 +157,13 @@ Screens:
               Set(varC4Pnl, false);
               Set(varC5Pnl, false);
               Set(varC6Pnl, false);
+              Set(varC7Pnl, false);
               With(
-                  { _hoje: fx_DataRefEm(varAgoraPnl) },
+                  {
+                      _hoje: fx_DataRefEm(varAgoraPnl),
+                      _iniIns: fx_PeriodoIniEm(fx_DataRefEm(varAgoraPnl), "DIA", 1),
+                      _fimIns: fx_PeriodoFimEm(fx_DataRefEm(varAgoraPnl), "DIA", 1)
+                  },
                   // v0.11.0 (item 2 · A3): cada ClearCollect do Concurrent fecha o IfError com "true" / "false".
                   // Antes so os Refresh estavam protegidos: carga que falhava deixava varSincPnl avancar e o
                   // andon dizia "celula em dia" sem dado.
@@ -237,10 +242,29 @@ Screens:
                           Set(varBobSemFontePnl, true);
                           Set(varC6Pnl, true);
                           false
+                      ),
+                      // v0.15.0 (MEL-261): saida da Extracao = lances inspecionados do dia, a mesma conta da tela da Cabine.
+                      IfError(
+                          ClearCollect(
+                              colInspDiaPnl,
+                              AddColumns(
+                                  Filter(
+                                      RegistrosInspeção,
+                                      Created >= _iniIns,
+                                      Created < _fimIns
+                                  ),
+                                  TurnoTxt,
+                                  Text(TurnoTeste),
+                                  metros,
+                                  Quantidade
+                              )
+                          );
+                          true,
+                          Set(varC7Pnl, true); false
                       )
                   )
               );
-              If(varC1Pnl || varC2Pnl || varC3Pnl || varC4Pnl || varC5Pnl || varC6Pnl, Set(varFalhaPnl, true));
+              If(varC1Pnl || varC2Pnl || varC3Pnl || varC4Pnl || varC5Pnl || varC6Pnl || varC7Pnl, Set(varFalhaPnl, true));
               ClearCollect(colEvVulcPnl, Filter(colEvDiaPnl, EtapaTxt = "Vulcanização"));
               ClearCollect(colEvMandPnl, Filter(colEvDiaPnl, EtapaTxt = "Mandril"));
               ClearCollect(colEvSaidaPnl, Filter(colEvDiaPnl, EtapaTxt = "Extração"));
@@ -254,7 +278,8 @@ Screens:
                   CountRows(colHHHojePnl) >= fx_PainelLinhasAlerta ||
                   CountRows(colAtivasPnl) >= fx_PainelLinhasAlerta ||
                   CountRows(colAguardPnl) >= fx_PainelLinhasAlerta ||
-                  CountRows(colEvDiaPnl) >= fx_PainelLinhasAlerta,
+                  CountRows(colEvDiaPnl) >= fx_PainelLinhasAlerta ||
+                  CountRows(colInspDiaPnl) >= fx_PainelLinhasAlerta,
                   Set(varTruncaPnl, true)
               );
               ClearCollect(colHH2dPnl, colHHOntemPnl, colHHHojePnl);
@@ -1444,18 +1469,29 @@ Screens:
             HoverFill: =Color.Transparent
             OnSelect: |-
               =With(
-                  { _src: If(ctxModoPnl = "VIVO", colEvDiaPnl, colEvHistPnl) },
+                  {
+                      _src: If(ctxModoPnl = "VIVO", colEvDiaPnl, colEvHistPnl),
+                      _ins: If(ctxModoPnl = "VIVO", colInspDiaPnl, colInspHistPnl)
+                  },
                   // UMA agregacao para os dois modos: colEvDiaPnl (AO VIVO) ou colEvHistPnl (dia escolhido), mesmo esquema de colunas.
-                  // Soma de `metros` dos eventos Fim e Parcial; na VULCANIZACAO, dos eventos Inicio (o que entrou na autoclave: o Fim so sai depois da cura). Sem evento no turno = Blank() (a tela mostra "—", nunca 0).
+                  // Soma de `metros` dos eventos Fim e Parcial; na VULCANIZACAO, dos eventos Inicio (o que entrou na autoclave: o Fim so sai depois da cura); na EXTRACAO, dos lances inspecionados (v0.15.0). Sem registro no turno = Blank() (a tela mostra "—", nunca 0).
                   ClearCollect(
                       colProdEtapaTurnoPnl,
                       ForAll(
                           fx_EtapasLinha As _pe,
                           With(
                               {
-                                  _ev: Filter(
-                                      _src As _pv,
-                                      _pv.EtapaTxt = _pe.Etapa && If(_pe.Etapa = "Vulcanização", _pv.TipoTxt = "Início", _pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                                  _ev: If(
+                                      _pe.Etapa = "Extração",
+                                      ShowColumns(_ins, TurnoTxt, metros),
+                                      ShowColumns(
+                                          Filter(
+                                              _src As _pv,
+                                              _pv.EtapaTxt = _pe.Etapa && If(_pe.Etapa = "Vulcanização", _pv.TipoTxt = "Início", _pv.TipoTxt = "Fim" || _pv.TipoTxt = "Parcial")
+                                          ),
+                                          TurnoTxt,
+                                          metros
+                                      )
                                   )
                               },
                               {
@@ -1498,7 +1534,11 @@ Screens:
             HoverFill: =Color.Transparent
             OnSelect: |-
               =With(
-                  { _d: ctxDiaPnl },
+                  {
+                      _d: ctxDiaPnl,
+                      _iniIns: fx_PeriodoIniEm(ctxDiaPnl, "DIA", 1),
+                      _fimIns: fx_PeriodoFimEm(ctxDiaPnl, "DIA", 1)
+                  },
                   // Historico: UMA consulta delegavel por escolha de DIA (trocar de turno no mesmo dia nao consulta de novo).
                   // Hoje (ou falha anterior) sempre le de novo. Sem timer de carga, sem Refresh.
                   If(
@@ -1517,13 +1557,28 @@ Screens:
                                   Text(turno)
                               )
                           );
+                          ClearCollect(
+                              colInspHistPnl,
+                              AddColumns(
+                                  Filter(
+                                      RegistrosInspeção,
+                                      Created >= _iniIns,
+                                      Created < _fimIns
+                                  ),
+                                  TurnoTxt,
+                                  Text(TurnoTeste),
+                                  metros,
+                                  Quantidade
+                              )
+                          );
                           UpdateContext({ ctxHistDiaPnl: _d });
                           true,
                           UpdateContext({ ctxHistFalhaPnl: true, ctxHistDiaPnl: Blank() });
                           Clear(colEvHistPnl);
+                          Clear(colInspHistPnl);
                           false
                       );
-                      UpdateContext({ ctxHistTruncPnl: CountRows(colEvHistPnl) >= fx_PainelLinhasAlerta })
+                      UpdateContext({ ctxHistTruncPnl: CountRows(colEvHistPnl) >= fx_PainelLinhasAlerta || CountRows(colInspHistPnl) >= fx_PainelLinhasAlerta })
                   );
                   Select(btn_AgregaPnl)
               )

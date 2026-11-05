@@ -1322,7 +1322,7 @@ Screens:
                   {
                       _r: LookUp(ficha_producao, ID = varFichaAtiva.ID),
                       _q: fx_Num(inp_QtdMand_2.Text),
-                      _turno: fx_TurnoEm(Now())
+                      _agora: Now()
                   },
                   If(
                       IsBlank(_r.ID),
@@ -1341,6 +1341,7 @@ Screens:
                       Set(varProcessando, false),
                       With(
                           {
+                              _turno: fx_TurnoEm(_agora),
                               _ja: Coalesce(_r.Qtd_Turno1, 0) +
                                    Coalesce(_r.Qtd_Turno2, 0) +
                                    Coalesce(_r.Qtd_Turno3, 0)
@@ -1359,16 +1360,44 @@ Screens:
                                   Qtd_Turno3: If(_turno = 3, Max(0, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja)), _r.Qtd_Turno3),
                                   Turno_mandril: Text(_turno)
                               }
+                          );
+                          If(
+                              !IsEmpty(Errors(ficha_producao)),
+                              Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
+                              Set(varProcessando, false),
+                              // MEL-260: o parcial tambem vira evento (so a diferenca), senao o painel e o Fim perdem esses metros.
+                              If(
+                                  _q <> _ja,
+                                  Patch(
+                                      Eventos_Producao,
+                                      Defaults(Eventos_Producao),
+                                      {
+                                          Title: Text(_r.ID) & "-Mandril-Parcial-T" & Text(_turno),
+                                          origem: {Value: "ficha_producao"},
+                                          origem_ID: _r.ID,
+                                          etapa: {Value: "Mandril"},
+                                          tipo: {Value: "Parcial"},
+                                          data_hora: _agora,
+                                          data_ref: fx_DataRefEm(_agora),
+                                          turno: _turno,
+                                          bitola: Coalesce(varMandrilSelecionado.Bitola, _r.Bitola),
+                                          metros: _q - _ja,
+                                          sobra: 0,
+                                          carretel: _r.'Carretel Saida',
+                                          recurso: Coalesce(_r.maquina_mandril, varPostoAtivo),
+                                          operador: cmb_OperadorMand_2.Selected.Nome
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(Eventos_Producao)),
+                                      Notify("Parcial salvo, mas o evento NÃO gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                  )
+                              );
+                              Set(varUltimoLote3, Trim(inp_LoteMand_2.Text));
+                              Select(btn_CarregarPostoMand_2);
+                              Set(varProcessando, false);
+                              Notify("Parcial do mandril salvo.", NotificationType.Success, 4000)
                           )
-                      );
-                      If(
-                          !IsEmpty(Errors(ficha_producao)),
-                          Notify("Falha ao salvar o parcial: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 10000);
-                          Set(varProcessando, false),
-                          Set(varUltimoLote3, Trim(inp_LoteMand_2.Text));
-                          Select(btn_CarregarPostoMand_2);
-                          Set(varProcessando, false);
-                          Notify("Parcial do mandril salvo.", NotificationType.Success, 4000)
                       )
                   )
               )
@@ -1554,7 +1583,7 @@ Screens:
                                           data_ref: fx_DataRefEm(_agora),
                                           turno: _turno,
                                           bitola: _bitola,
-                                          metros: Max(0, _consumo - _ja),
+                                          metros: _consumo - _ja,
                                           sobra: _sobra,
                                           carretel: _carretelSaida,
                                           recurso: _posto,
