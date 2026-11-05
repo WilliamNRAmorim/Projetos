@@ -119,3 +119,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-03 | TH07 30/10: criar 2º e 3º turno com Manutenção Preventiva | chefe (Sonnet 5.5), sem subagente | pedido simples, feito direto | custo não medido
 2026-11-03 | TCC II: lista de ajustes da revisão do William anotada em TCC/Fase2/PENDENCIAS_REVISAO.md (16 itens) | chefe (Opus 5.5) direto | só anotar, a pedido | uso.ps1 não mediu
 2026-11-03 | TCC II: os 16 ajustes da revisão do William, abstract em inglês, revisão ortográfica e Figura 3 atualizada; PDF em 30 páginas | chefe (Opus 5.5) direto, sem subagente (revisor-leve inexistente) | edição de um documento com montador próprio | uso.ps1 não mediu
+2026-11-05 | Análise de dados: Eficiência 2026 (verdade) x ficha x tabela de headcount; relatório local fora do Git | chefe (Sonnet 5.5) direto, sem subagente | análise com dados pessoais, sem escrita no banco | uso.ps1 não mediu (caminho do script errado)
