@@ -3856,6 +3856,27 @@ Screens:
                                             15000
                                         )
                                     );
+                                    // MEL-260: OP descartada nao conta como producao. Parcial ja gravado fica com 0 m.
+                                    ClearCollect(
+                                        colParcCancMand,
+                                        Filter(
+                                            Filter(Eventos_Producao, origem_ID = _r.ID) As _e0,
+                                            _e0.tipo.Value = "Parcial" && _e0.etapa.Value = "Mandril"
+                                        )
+                                    );
+                                    ForAll(
+                                        colParcCancMand As _ep,
+                                        Patch(Eventos_Producao, LookUp(Eventos_Producao, ID = _ep.ID), {metros: 0})
+                                    );
+                                    If(
+                                        !IsEmpty(Errors(Eventos_Producao)),
+                                        Notify(
+                                            "OP descartada, mas os parciais NÃO foram zerados e seguem no painel: " &
+                                            First(Errors(Eventos_Producao)).Message,
+                                            NotificationType.Error,
+                                            15000
+                                        )
+                                    );
                                     Patch(
                                         colPostosMandril,
                                         LookUp(colPostosMandril, Posto = _posto),
