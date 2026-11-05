@@ -1,5 +1,5 @@
 // =============================================================================
-//  GMS · App.Formulas · v3.0.16 · 2026-10-27
+//  GMS · App.Formulas · v3.0.17 · 2026-11-05
 //  Arquivo ÚNICO. Base: export do Studio de 30/09/2026 (o cabeçalho dele ainda dizia
 //  v2.8, mas o conteúdo já era v2.8 + a §14 do Painel colada por cima).
 //  [05/10] Parte do texto original deste cabeçalho estava truncada e foi reescrita só com
@@ -1084,16 +1084,45 @@ fx_MaquinaEngrenagens(célula: Text): Text =
 // [DESVIO] Desvio de velocidade (DM_ENGRENAGENS_DESVIO): enquanto hoje (data de referência do turno) estiver
 // entre Inicio e Fim (inclusive) e Desvio = 1, a velocidade do desvio É a oficial da máquina+construção.
 // Passou do Fim (ex.: 31/12/2026) ele deixa de valer sozinho e volta a velocidade de DM_ENGRENAGENS.
-// Inicio/Fim entram como Number para aceitar as duas formas que o conector Excel pode entregar: data serial
-// do Excel (ex.: 46387) ou Date (vira milissegundos desde 1970, valor enorme → convertido pra serial).
-fx_DesvioAtivo(desvio: Number, inicio: Number, fim: Number, hoje: Date): Boolean =
+// [v3.0.17 · MEL-262] Inicio/Fim entram como Text: o conector Excel entrega "31/12/2026", e como Number isso dava
+// erro em toda leitura (o painel acusava "Sem conexão" e não carregava a velocidade). Aceita dd/mm/aaaa, serial do
+// Excel (46387) e milissegundos desde 1970. Linha vazia ou data ruim = desvio inativo, nunca erro.
+fx_DesvioData(v: Text): Number =
     With(
-        {
-            _h: DateDiff(Date(1899, 12, 30), hoje, TimeUnit.Days),
-            _i: If(inicio > 1000000, Int(inicio / 86400000) + 25569, inicio),
-            _f: If(fim > 1000000, Int(fim / 86400000) + 25569, fim)
-        },
-        desvio = 1 && !IsBlank(inicio) && !IsBlank(fim) && _h >= _i && _h <= _f
+        { _p: Split(Trim(v), "/") },
+        If(
+            CountRows(_p) = 3,
+            DateDiff(
+                Date(1899, 12, 30),
+                Date(
+                    Value(Last(_p).Value, "en-US"),
+                    Value(Index(_p, 2).Value, "en-US"),
+                    Value(First(_p).Value, "en-US")
+                ),
+                TimeUnit.Days
+            ),
+            With(
+                { _n: Value(Trim(v), "en-US") },
+                If(_n > 1000000, Int(_n / 86400000) + 25569, _n)
+            )
+        )
+    );
+
+fx_DesvioAtivo(desvio: Number, inicio: Text, fim: Text, hoje: Date): Boolean =
+    If(
+        desvio <> 1 || IsBlank(desvio),
+        false,
+        IfError(
+            With(
+                {
+                    _h: DateDiff(Date(1899, 12, 30), hoje, TimeUnit.Days),
+                    _i: fx_DesvioData(inicio),
+                    _f: fx_DesvioData(fim)
+                },
+                !IsBlank(_i) && !IsBlank(_f) && _h >= _i && _h <= _f
+            ),
+            false
+        )
     );
 
 fx_VelocidadeTeorica(maquina: Text, construcao: Text): Number =
