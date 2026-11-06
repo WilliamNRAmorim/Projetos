@@ -5,3 +5,6 @@ Aprovado pelo William ("sim o pacote", incluindo retirar o que for teste). Valor
 - Nomes de teste (William e Luis Augusto): 0 células restantes na ficha_producao. Termo "teste" nas observações é a cabine de teste (processo), não registro de teste.
 - Janeiro: 292 de 292 fichas com todas as datas em ordem; fevereiro: 295 de 295; sem data ausente.
 - Achado: 30 das 42 fichas criadas à mão pelo William (4018 a 4089, de 15 a 19/10) têm datas iguais às de outra ficha (cópia de modelo). São produção real (OPs do SAP), mas com datas e operadores copiados. Pendente de decisão.
+## 30 fichas criadas à mão em outubro (06/11/2026), aprovado "Sim, aprovar"
+- 20 das 30 batem em até 3 dias com o 1º lançamento da OP no SAP e ficam como estão. 10 foram fora: todas as datas da ficha deslocadas em dias inteiros (hora mantida, turno intacto) para o dia do SAP: 4034 -9, 4035 e 4037 -13, 4038 +7, 4043 +5, 4044 -71, 4045 +4, 4019 +4, 4054 -7, 4085 -6 (307 campos de data). Marca "[Ficha criada a mao a partir de ficha modelo ...]" na observação da trançagem das 30. 0 falhas; conferência 307/307 datas e 30/30 marcas. Desfazer em `ficha_undo_2026-11-06_fichas_manuais.md` (Downloads).
+- Operadores dessas 30 seguem herdados da ficha modelo (marcados como não registro).
