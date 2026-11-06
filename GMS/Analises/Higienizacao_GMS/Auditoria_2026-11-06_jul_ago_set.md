@@ -24,3 +24,6 @@ Aprovado pelo William ("sim, os 88", olhando CP, SAP, GMS e BD Packing List). Se
 | set | — | 112% | 107% | 95% |
 - De fevereiro a abril CP, SAP e GMS ficam entre 98% e 112% um do outro. Janeiro é o mais fraco do GMS (fichas apagadas); maio e junho ficam em 90 a 93% do CP.
 - Fora (decisão): agosto 3150, 3173, 3201 e 3362; setembro 3523, 3588, 3644 e 3705 (valor novo acima de 1,5x o lote).
+## Fichas pendentes (grupo 1), aprovado "Sim, os 25"
+- 25 campos de quantidade em 23 fichas (jan a set) em que um único valor destoava dos vizinhos da própria ficha (zero a mais, 1 digitado, valor alto isolado), trazidos ao nível dos vizinhos. 0 recusas, 0 falhas; conferência 25/25. Valores antigos em `ficha_undo_2026-11-06_grupo1.md` (Downloads).
+- Restam 16 fichas ambíguas (1315, 1438, 1470, 1499, 1608, 1954, 2525, 2570, 2611, 2682, 2735, 3150, 3523, 4036, 4054, 4166) para decisão do William.
