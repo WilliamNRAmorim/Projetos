@@ -32,8 +32,9 @@ Sem nomes e sem metros de produção (estes ficam em `C:\Users\U445131\Downloads
 - Operadores estimados (jan a mai) refletem o turno e a etapa, não necessariamente quem trabalhou na OP.
 - Julho: sem produção de 04 a 26/07 (férias coletivas), não é lacuna.
 
-## Pendências que dependem do William
-1. Códigos de operador (jan a mai): diretório de funcionários para trocar a estimativa pelo nome real.
-2. Fichas 2735 e 4036 (quantidades idênticas em meses diferentes): conferir se uma é cópia.
-3. Ficha 1047 de janeiro (OP sem lançamento no SAP) e as 20 fichas de janeiro e 3 de fevereiro sem data de fim em alguma etapa.
-4. Outubro e novembro: só a saúde de outubro foi medida (93,6%) e as quantidades corrigidas; novembro tem 19 fichas em andamento.
+## Situação final das pendências (06/11/2026)
+1. Códigos de operador (jan a mai): ficam estimados pelo turno e marcados (decisão do William, assunto encerrado).
+2. Fichas 2735 e 4036: resolvido. A 4036 copiava datas e operadores da 2735; quantidades da 4036 corrigidas pela cadeia do SAP.
+3. Ficha 1047: OP corrigida para 27528690 e a reconstruída 4322 apagada. Datas ausentes das 23 fichas de janeiro e fevereiro estimadas (inspeção, SAP ou regra): janeiro 292/292 e fevereiro 295/295 com as datas em ordem.
+4. Outubro e novembro: conferidos (só 1 OP do SAP sem ficha em outubro, 66,8 m); nome de teste removido (ficha 4094); 30 fichas criadas à mão em outubro marcadas e, quando fora do SAP, com as datas deslocadas para o dia do SAP.
+Nada pendente de gravação. Detalhes em `Auditoria_2026-11-06_pacote_final.md`.
