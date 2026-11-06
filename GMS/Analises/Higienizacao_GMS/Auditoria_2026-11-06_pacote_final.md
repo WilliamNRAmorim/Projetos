@@ -1,0 +1,7 @@
+# Auditoria: pacote final (06/11/2026)
+Aprovado pelo William ("sim o pacote", incluindo retirar o que for teste). Valores antigos em `C:\Users\U445131\Downloads\ficha_undo_2026-11-06_pacote_final.md` e `Pendencias_finais_proposta_2026-11-06.md` (fora do Git).
+- 60 campos em 26 fichas gravados, 0 falhas na conferência: 23 datas de fim ausentes (20 de janeiro e 3 de fevereiro; fonte: inspeção da cabine quando há, senão 1º lançamento no SAP às 12:00, senão regra R4), 15 operadores da extração estimados pelo turno, 7 quantidades de extração com digitação "45" corrigidas, ficha 4036 pela cadeia do SAP (a OP 29276154 copiava datas e operadores da 2735), ficha 4094 (operador de teste trocado por estimado) e ficha 1047.
+- Ficha 1047: a OP 27599322 não existe no SAP; corrigida para 27528690 (GH781-12, 400,0 m exatos, SAP em 30/01) e a reconstruída 4322 (mesma OP) foi para a lixeira (a coluna OP é única). A 1047 ganhou debandagem, extração, datas e operadores estimados.
+- Nomes de teste (William e Luis Augusto): 0 células restantes na ficha_producao. Termo "teste" nas observações é a cabine de teste (processo), não registro de teste.
+- Janeiro: 292 de 292 fichas com todas as datas em ordem; fevereiro: 295 de 295; sem data ausente.
+- Achado: 30 das 42 fichas criadas à mão pelo William (4018 a 4089, de 15 a 19/10) têm datas iguais às de outra ficha (cópia de modelo). São produção real (OPs do SAP), mas com datas e operadores copiados. Pendente de decisão.
