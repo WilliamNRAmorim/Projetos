@@ -108,3 +108,18 @@ With(
 Digitar `3,6`, `3.6` e `36`: devem gravar 3,6 / 3,6 / 36. Texto como `abc` deixa a borda vermelha e o Registrar desabilitado.
 
 O arquivo `Telas/scr_RefugoBobinadeira_1.txt` já foi regravado com as mesmas 4 propriedades.
+
+## 5. scr_RefugoBobinadeira_1 · lbl_TituloTabelaBob · Text
+
+Achado na foto de 06/11: a lista mostrava 2,27 como "2.270" e a soma "49.150," (formato sem cultura fixa; o `[$-pt-BR]` da v0.4.0 tinha sumido). Com o formato fixo, 2,27 aparece "2,27" e inteiro aparece "3,0".
+
+```
+="REGISTROS DE " & Text(fx_DataRefEm(ctxAgora), "dd/mm") & "  ·  " & CountRows(colRefugoBob) & " registros  ·  " &
+Text(Sum(colRefugoBob, QuantidadeRefugo), "[$-pt-BR]#.##0,0#") & " refugados"
+```
+
+## 6. scr_RefugoBobinadeira_1 · lbl_RowQtdBob (dentro da galeria) · Text
+
+```
+=Text(ThisItem.QuantidadeRefugo, "[$-pt-BR]#.##0,0#")
+```
