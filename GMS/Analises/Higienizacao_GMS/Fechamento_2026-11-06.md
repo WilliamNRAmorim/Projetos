@@ -27,8 +27,9 @@ Sem nomes e sem metros de produção (estes ficam em `C:\Users\U445131\Downloads
 | Setembro | 98,5% | 0% |
 
 ## Atenção para o BI (sessão do BI)
-- Filtrar `Title` começando em `RECONSTRUIDA_SAP` nas visões de pessoas, refugo e rastreio por OP; o `Created` dessas fichas é novembro, o mês certo vem das datas de fim.
-- Operadores estimados: a observação da trançagem começa com "[Operadores estimados ...]" (jan a mai); essas fichas só servem para tendência por turno, não para quem trabalhou na OP.
+- **Decisão do William (06/11/2026): sem filtros no BI.** As fichas reconstruídas, as com operador estimado e as criadas à mão entram no BI como qualquer outra ficha. As marcas na observação da trançagem ("Operadores estimados ...", "Ficha criada a mao ...", Title `RECONSTRUIDA_SAP`) são só informativas e não devem excluir nada.
+- Ressalva técnica (não é filtro): o `Created` das fichas reconstruídas é novembro; para o mês certo o BI deve usar as datas de fim das etapas.
+- Operadores estimados (jan a mai) refletem o turno e a etapa, não necessariamente quem trabalhou na OP.
 - Julho: sem produção de 04 a 26/07 (férias coletivas), não é lacuna.
 
 ## Pendências que dependem do William
