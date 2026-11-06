@@ -27,3 +27,6 @@ Aprovado pelo William ("sim, os 88", olhando CP, SAP, GMS e BD Packing List). Se
 ## Fichas pendentes (grupo 1), aprovado "Sim, os 25"
 - 25 campos de quantidade em 23 fichas (jan a set) em que um único valor destoava dos vizinhos da própria ficha (zero a mais, 1 digitado, valor alto isolado), trazidos ao nível dos vizinhos. 0 recusas, 0 falhas; conferência 25/25. Valores antigos em `ficha_undo_2026-11-06_grupo1.md` (Downloads).
 - Restam 16 fichas ambíguas (1315, 1438, 1470, 1499, 1608, 1954, 2525, 2570, 2611, 2682, 2735, 3150, 3523, 4036, 4054, 4166) para decisão do William.
+## Fichas pendentes (grupo 2), aprovado "Sim, os 35"
+- 35 campos de quantidade em 15 fichas ambíguas (1315, 1438, 1470, 1499, 1608, 1954, 2525, 2570, 2682, 2735, 3150, 3523, 4036, 4054, 4166), alinhando o valor discrepante ao bloco coerente da própria ficha; defeito_* nunca alterado. 0 recusas, 0 falhas; conferência 35/35. Valores antigos em `ficha_undo_2026-11-06_grupo2.md` (Downloads).
+- Fica para o William: ficha 2611 (sem palpite seguro) e a conferência de 2735 e 4036, que têm quantidades idênticas em meses diferentes (possível cópia).
