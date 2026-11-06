@@ -35,36 +35,36 @@ def card(sl, x, y, w, h, grande, legenda, fill=PINK, cor=RED, leg=BLACK):
     sl.shapes[-1].text_frame.paragraphs[0].runs[0].font.bold = True
     txt(sl, x + 150000, y + 620000, w - 300000, h - 700000, legenda, size=11, color=leg)
 
-s = p.slides.add_slide(LAY['Only title'])
-s.shapes.title.text = 'Refugo de fio da bobinadeira: o separador decimal sumia e o banco precisou ser corrigido'
-for r in s.shapes.title.text_frame.paragraphs[0].runs: r.font.size = Pt(26)
+def novo(titulo):
+    s = p.slides.add_slide(LAY['Only title']); s.shapes.title.text = titulo
+    for r in s.shapes.title.text_frame.paragraphs[0].runs: r.font.size = Pt(26)
+    return s
 
-# coluna 1: o que aconteceu
-txt(s, L, 1650000, 3700000, 4500000, [
+# ------------------------------------------------ slide 1: o que aconteceu + video
+s = novo('Refugo de fio da bobinadeira: o separador decimal sumia ao digitar')
+txt(s, L, 1650000, 3500000, 4500000, [
     ('O que aconteceu', {'b': True, 'c': RED, 's': 15}),
     'Na tela de refugo de fio, o campo de quantidade engolia a vírgula e o ponto. O operador digitava 3,6 e o app guardava 36.',
     'Foi preciso corrigir todo o banco (lista Refugo_Bobinadeira) para os valores voltarem à escala certa.',
     ('Causa', {'b': True, 'c': RED, 's': 15}),
-    'A vírgula foi uma das causas, não a única: ela agravou os erros de divergência, mas não impedia o lançamento.',
-    ('Correção na tela', {'b': True, 'c': RED, 's': 15}),
-    'O campo passa a aceitar vírgula e ponto com o mesmo peso, igual à cabine e ao mandril. Texto inválido deixa a borda vermelha e bloqueia o Registrar.'],
-    size=12, space=5)
+    'A vírgula foi uma das causas, não a única: ela agravou os erros de divergência, mas não impedia o lançamento.'],
+    size=12, space=6)
+VX, VW = 4200000, 7578000; VH = int(VW * 9 / 16)
+s.shapes.add_movie('Ocorrencia_Refugo_Fio_video.mp4', Emu(VX), Emu(1650000), Emu(VW), Emu(VH),
+                   poster_frame_image='img_refugo_fio/poster_video.png', mime_type='video/mp4')
+txt(s, VX, 1650000 + VH + 120000, VW, 300000, 'Vídeo da tela em 06/11/2026, em câmera lenta: digitar 3,6 ou 3.6 gravava 36.', size=11, color=GREY)
+txt(s, L, 6330000, W, 250000, 'Fonte: vídeo da tela de refugo de fio de 06/11/2026 (antes da correção).', size=10, color=GREY)
 
-# coluna 2: evidência do vídeo
-txt(s, 4400000, 1650000, 3800000, 300000, ('Evidência (vídeo de 06/11)', {'b': True, 'c': RED, 's': 15}))
-txt(s, 4400000, 2050000, 3800000, 250000, ('Digitado: 3.6', {'b': True, 's': 12}))
-s.shapes.add_picture('img_refugo_fio/digitado_3_6.png', Emu(4400000), Emu(2330000), width=Emu(3800000))
-txt(s, 4400000, 3720000, 3800000, 250000, ('Ficou gravado no campo: 36', {'b': True, 'c': RED, 's': 12}))
-s.shapes.add_picture('img_refugo_fio/ficou_36.png', Emu(4400000), Emu(4000000), width=Emu(3800000))
-
-# coluna 3: números
-X = 8600000; CW = 3178000
+# ------------------------------------------------ slide 2: depois da correcao
+s = novo('Depois: tela aceita vírgula e ponto e o banco foi corrigido')
+IW = 6900000; IH = int(IW * 758 / 1357)
+s.shapes.add_picture('img_refugo_fio/depois_tela.png', Emu(L), Emu(1650000), width=Emu(IW))
+txt(s, L, 1650000 + IH + 120000, IW, 600000, 'Tela de 06/11 após a correção: o campo aceita 3,6 e a lista mostra os valores certos (2.27, 31.06, total 49.15; antes 2.270, 31.060 e 49.150).', size=11, color=GREY)
+X = 7600000; CW = 4178000
 card(s, X, 1650000, CW, 1300000, '≈640', 'dos 1.229 registros (52%) tinham o separador decimal perdido e foram corrigidos em 05 e 06/11')
 card(s, X, 3080000, CW, 1300000, '1554 → 15,54', 'exemplo real (ID 1032): sem o ponto, o valor ficava 100× maior', fill=LGREY, cor=DARK)
 card(s, X, 4510000, CW, 1300000, '13', 'registros duplicados ou com quantidade zero apagados (lixeira, restauráveis por 93 dias)', fill=RED, cor=WHITE, leg=WHITE)
+txt(s, L, 6330000, W, 250000, 'Fontes: histórico de correções do Refugo_Bobinadeira de 05 e 06/11/2026 (192 + 268 + 110 + 55 + 13 itens), foto da tela publicada em 06/11/2026.', size=10, color=GREY)
 
-txt(s, L, 6330000, W, 250000, 'Fontes: histórico de correções do Refugo_Bobinadeira de 05 e 06/11/2026 (192 + 268 + 110 + 55 + 13 itens), vídeo da tela de 06/11/2026.', size=10, color=GREY)
-for sh in list(s.placeholders):
-    print(sh.placeholder_format.type, sh.name, sh.has_text_frame and sh.text_frame.text[:40])
-p.save('Ocorrencia_Refugo_Fio.pptx')
+p.save('Ocorrencia_Refugo_Fio_com_video.pptx')
 print('ok')
