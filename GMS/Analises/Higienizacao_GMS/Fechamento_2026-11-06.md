@@ -28,7 +28,7 @@ Sem nomes e sem metros de produção (estes ficam em `C:\Users\U445131\Downloads
 
 ## Atenção para o BI (sessão do BI)
 - **Decisão do William (06/11/2026): sem filtros no BI.** As fichas reconstruídas, as com operador estimado e as criadas à mão entram no BI como qualquer outra ficha. As marcas na observação da trançagem ("Operadores estimados ...", "Ficha criada a mao ...", Title `RECONSTRUIDA_SAP`) são só informativas e não devem excluir nada.
-- Ressalva técnica (não é filtro): o `Created` das fichas reconstruídas é novembro; para o mês certo o BI deve usar as datas de fim das etapas.
+- O `Created` das 130 fichas reconstruídas foi ajustado para o início do mandril de cada uma (06/11/2026, aprovado), então o BI agrupa por mês como nas demais; nada a fazer no BI. As 30 fichas criadas à mão em outubro continuam com `Created` de 15 a 19/10 (as datas das etapas é que valem).
 - Operadores estimados (jan a mai) refletem o turno e a etapa, não necessariamente quem trabalhou na OP.
 - Julho: sem produção de 04 a 26/07 (férias coletivas), não é lacuna.
 
