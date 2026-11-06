@@ -66,5 +66,5 @@ card(s, X, 3080000, CW, 1300000, '1554 → 15,54', 'exemplo real (ID 1032): sem 
 card(s, X, 4510000, CW, 1300000, '13', 'registros duplicados ou com quantidade zero apagados (lixeira, restauráveis por 93 dias)', fill=RED, cor=WHITE, leg=WHITE)
 txt(s, L, 6330000, W, 250000, 'Fontes: histórico de correções do Refugo_Bobinadeira de 05 e 06/11/2026 (192 + 268 + 110 + 55 + 13 itens), foto da tela publicada em 06/11/2026.', size=10, color=GREY)
 
-p.save('Ocorrencia_Refugo_Fio_com_video.pptx')
+p.save('Ocorrencia_Refugo_Fio_v3.pptx')
 print('ok')

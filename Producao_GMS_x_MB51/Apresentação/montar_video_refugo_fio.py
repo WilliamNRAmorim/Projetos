@@ -54,8 +54,6 @@ def card(linhas, seg=2.0):
     return [cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)] * int(30 * seg)
 
 wr = cv2.VideoWriter(OUT, cv2.VideoWriter_fourcc(*'mp4v'), 30, (W, H))
-for f in card([('Refugo de fio da bobinadeira', FB, (0, 0, 0)), ('O campo engolia a vírgula e o ponto', FM, RED),
-               ('Vídeo da tela de 06/11/2026', FS, (135, 136, 150))]): wr.write(f)
 topo, base = 'ANTES: a tela de refugo de fio', 'Digitou 3,6 ou 3.6 → o campo gravou 36'
 n = F1 - F0
 for j in range(n):
