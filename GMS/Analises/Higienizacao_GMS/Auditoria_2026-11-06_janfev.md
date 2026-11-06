@@ -1,5 +1,5 @@
 # Auditoria: janeiro e fevereiro/2026, segunda rodada (05 e 06/11/2026)
-Aprovado pelo William ("Sim, os dois"). Sem nomes e sem linhas de produção; desfazer em `C:\Users\U445131\Downloads\ficha_undo_2026-11-05_janfev.md` e `Janeiro_Fevereiro_propostas.md` (fora do Git).
+Aprovado pelo William ("Sim, os dois"). Sem nomes e sem linhas de produção; desfazer em `GMS/Analises/Tratamento_Ficha_2026-11/ficha_undo_2026-11-05_janfev.md` e `Janeiro_Fevereiro_propostas.md` (fora do Git).
 ## Gravação
 - Lote E: quantidades estimadas em etapas com data de fim e quantidade vazia. Lote Op: operadores estimados pelo turno do horário real do fim (originais na observação da trançagem, com a marca "[Operadores estimados pelo turno em 05/11/2026 ...]"). **Quase todos os operadores desses dois meses passam a ser estimativa (~97% das células).**
 - A primeira execução foi interrompida pela queda da sessão do Microsoft (232 das 292 fichas de janeiro prontas, nenhuma de fevereiro); retomada em 06/11 só com o que faltava (355 fichas, 1.939 campos). Cada ficha é gravada de uma vez, então não há ficha pela metade.

@@ -1,5 +1,5 @@
 # Fechamento da higienização da ficha_producao, janeiro a setembro/2026 (04 a 06/11/2026)
-Sem nomes e sem metros de produção (estes ficam em `C:\Users\U445131\Downloads\` e na própria lista). Detalhe por rodada: `Auditoria_2026-11-04_*.md`, `Auditoria_2026-11-05_*.md`, `Auditoria_2026-11-06_*.md` e `Metodo_mensal_ficha.md`.
+Sem nomes e sem metros de produção (estes ficam em `GMS/Analises/Tratamento_Ficha_2026-11/` e na própria lista). Detalhe por rodada: `Auditoria_2026-11-04_*.md`, `Auditoria_2026-11-05_*.md`, `Auditoria_2026-11-06_*.md` e `Metodo_mensal_ficha.md`.
 
 ## O que foi feito (tudo com "sim" do William, guarda de releitura, conferência depois e valor antigo guardado)
 | Frente | Resultado |

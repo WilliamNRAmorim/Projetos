@@ -1,5 +1,5 @@
 # Auditoria: julho, agosto e setembro/2026 (06/11/2026)
-Aprovado pelo William ("sim, os 88", olhando CP, SAP, GMS e BD Packing List). Sem nomes e sem linhas de produção; valores antigos em `C:\Users\U445131\Downloads\Jul_Ago_Set_propostas.md` e conciliação em `Conciliacao_fontes_jan_set_2026.md` (fora do Git, com metros).
+Aprovado pelo William ("sim, os 88", olhando CP, SAP, GMS e BD Packing List). Sem nomes e sem linhas de produção; valores antigos em `GMS/Analises/Tratamento_Ficha_2026-11/Jul_Ago_Set_propostas.md` e conciliação em `Conciliacao_fontes_jan_set_2026.md` (fora do Git, com metros).
 ## Gravação
 - Lote Q: 88 campos de quantidade em 50 fichas Finalizado (julho 20 em 9, agosto 29 em 17, setembro 39 em 24): etapa anterior = seguinte + refugo; valor digitado errado = etapa seguinte; tolerância 1,5x o lote. 0 recusas, 0 falhas; conferência 88/88; nenhum evento nem histórico gerado.
 - Julho teve parada de férias coletivas (nenhuma etapa terminou de 04 a 26/07): tratada como parada real, sem ajuste nem reconstrução. Nenhuma OP do SAP de julho sem ficha; em agosto e setembro a extração da ficha é 114% e 112% do SAP.

@@ -1,5 +1,5 @@
 # Auditoria: março/2026 (05/11/2026)
-Aprovado pelo William ("Estime por turno" e "Sim, os 4 lotes"). Sem nomes e sem linhas de produção; desfazer em `C:\Users\U445131\Downloads\ficha_undo_2026-11-05_marco.md` e `Marco_propostas.md` (fora do Git).
+Aprovado pelo William ("Estime por turno" e "Sim, os 4 lotes"). Sem nomes e sem linhas de produção; desfazer em `GMS/Analises/Tratamento_Ficha_2026-11/ficha_undo_2026-11-05_marco.md` e `Marco_propostas.md` (fora do Git).
 ## Gravação
 - Lote Q: 26 quantidades corrigidas (regra anterior = seguinte + refugo; tolerância 1,5x o lote).
 - Lote E: 122 quantidades estimadas em etapas com data de fim e quantidade vazia (etapa anterior; extração = última etapa x 0,97).

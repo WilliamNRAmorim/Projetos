@@ -1,5 +1,5 @@
 # Auditoria: junho/2026 (06/11/2026)
-Aprovado pelo William ("Sim, os 50"). Sem nomes e sem linhas de produção; valores antigos em `C:\Users\U445131\Downloads\Junho_propostas.md` (fora do Git).
+Aprovado pelo William ("Sim, os 50"). Sem nomes e sem linhas de produção; valores antigos em `GMS/Analises/Tratamento_Ficha_2026-11/Junho_propostas.md` (fora do Git).
 - Junho já estava saudável: operadores 99,9% válidos, máquina e bitola 100%, datas 321 de 322 em ordem. Só o lote de quantidades (cadeia anterior = seguinte + refugo; valor digitado errado = etapa seguinte; tolerância 1,5x o lote).
 - Gravado: 50 campos de quantidade em 24 fichas Finalizado. 0 recusas, 0 falhas. Conferência 50/50; nenhum evento nem histórico gerado; total de itens 3.186.
 - Não propostos: lote E (sem etapa vazia com data), lote Op (sem operador a estimar) e reconstruídas (296 OPs do SAP e só 1 sem ficha, de 7,5 m).

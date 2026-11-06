@@ -1,5 +1,5 @@
 # Auditoria: limpeza da ficha_producao, janeiro/2026 (04/11/2026)
-Sem nomes e sem linhas de produção. O arquivo de desfazer (com valores antigos por ficha e campo) fica em `C:\Users\U445131\Downloads\ficha_undo_2026-11-04_janeiro.md`, fora do Git.
+Sem nomes e sem linhas de produção. O arquivo de desfazer (com valores antigos por ficha e campo) fica em `GMS/Analises/Tratamento_Ficha_2026-11/ficha_undo_2026-11-04_janeiro.md`, fora do Git.
 
 ## Gravação (aprovada pelo William: "sim, lotes 1 a 4")
 - 119 campos em 100 fichas; 0 falhas, 0 recusas pela guarda (cada item relido e só gravado se o valor vivo fosse o esperado).

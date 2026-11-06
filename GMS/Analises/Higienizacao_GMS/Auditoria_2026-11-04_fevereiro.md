@@ -1,5 +1,5 @@
 # Auditoria: fevereiro/2026 na ficha_producao (04/11/2026)
-Sem nomes e sem linhas de produção (listas em `C:\Users\U445131\Downloads\`: `Fevereiro_propostas.md` e `ficha_undo_2026-11-04_fevereiro.md`).
+Sem nomes e sem linhas de produção (listas em `GMS/Analises/Tratamento_Ficha_2026-11/`: `Fevereiro_propostas.md` e `ficha_undo_2026-11-04_fevereiro.md`).
 ## Gravação (aprovada pelo William: "Sim, os 5 lotes")
 - Lotes 1 a 4: 211 campos em 162 fichas (operadores por nome parcial com único candidato: 165; quantidades por placeholder e cadeia anterior = seguinte + refugo: 34; bitola da ficha vazia pelo sufixo da mangueira: 1; extração estimada nas fichas de confiança alta: 11). 0 falhas, 0 recusas pela guarda; conferência 211/211; nenhum outro campo das fichas tocadas mudou.
 - Lote 5: 15 fichas reconstruídas (IDs 4327 a 4341), mesmas regras de janeiro; 0 OPs duplicadas; conferência sem divergência real (só formato de data com ou sem milissegundos). 4 OPs sem ficha modelo ficaram de fora.

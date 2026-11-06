@@ -1,5 +1,5 @@
 # Auditoria: fichas reconstruídas de janeiro/2026 e limpeza correlata (04/11/2026)
-Sem nomes e sem linhas de produção (listas completas em `C:\Users\U445131\Downloads\`).
+Sem nomes e sem linhas de produção (listas completas em `GMS/Analises/Tratamento_Ficha_2026-11/`).
 ## Gravação (aprovada pelo William)
 - 59 fichas na `ficha_producao` (IDs 4268 a 4326): 3 de teste atualizadas e 56 criadas, 0 falhas, 0 OPs duplicadas, 0 campos divergentes do planejado na conferência. Total de itens: 3.087 (3.033 − 2 apagadas + 56).
 - Regra: OP sem ficha no SAP/MB51 de janeiro (66 OPs de mangueira; 60 com ficha modelo da mesma mangueira; 59 gravadas; a de modelo a 46 dias e as 6 sem modelo ficaram de fora). Herdam da ficha modelo mangueira, bitola, compostos, trançadeira, defeitos e turnos; datas deslocadas em dias inteiros (horário preservado); turno por horário (NORMA); operador só entre os mais frequentes daquela etapa, turno e período (até 2 nomes); quantidade = saldo SAP (aprovado + reprovado) e cadeia anterior = seguinte + defeito; `Title = RECONSTRUIDA_SAP <OP>` e observação da trançagem avisando que é estimativa.

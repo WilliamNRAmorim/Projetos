@@ -1,5 +1,5 @@
 # Auditoria: maio/2026 (06/11/2026)
-Aprovado pelo William ("Sim, os 4 lotes"). Sem nomes e sem linhas de produção; listas e desfazer em `C:\Users\U445131\Downloads\Maio_propostas.md` e `ficha_undo_2026-11-06_maio.md` (fora do Git).
+Aprovado pelo William ("Sim, os 4 lotes"). Sem nomes e sem linhas de produção; listas e desfazer em `GMS/Analises/Tratamento_Ficha_2026-11/Maio_propostas.md` e `ficha_undo_2026-11-06_maio.md` (fora do Git).
 ## Gravação
 - Lote Q: 22 quantidades. Lote E: 77 quantidades estimadas (39 mil m). Lote Op: 672 células de operador em 272 fichas (15 parciais com candidato único; 657 estimadas pelo turno do horário real do fim, incluindo 411 células vazias em etapas executadas; **cerca de 26% dos operadores de maio passam a ser estimativa**, marcados na observação da trançagem com os originais; 266 fichas marcadas em 06/11/2026). Lote R: 29 fichas reconstruídas (IDs 4396 a 4425, exceto 4417).
 - Guarda: 0 recusas, 0 falhas. Conferência 771/771 campos; 0 OPs duplicadas; nenhum evento nem histórico gerado; total de itens 3.186.
