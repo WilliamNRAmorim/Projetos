@@ -31,7 +31,7 @@ def txt(sl, x, y, w, h, linhas, size=14, color=BLACK, space=5, align=PP_ALIGN.LE
 def card(sl, x, y, w, h, grande, legenda, fill=PINK, cor=RED, leg=BLACK):
     r = sl.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Emu(x), Emu(y), Emu(w), Emu(h))
     r.adjustments[0] = 0.08; r.fill.solid(); r.fill.fore_color.rgb = fill; r.line.fill.background(); r.shadow.inherit = False
-    txt(sl, x + 150000, y + 100000, w - 300000, 500000, grande, size=26, color=cor, space=0)
+    txt(sl, x + 150000, y + 100000, w - 300000, 500000, grande, size=24, color=cor, space=0)
     sl.shapes[-1].text_frame.paragraphs[0].runs[0].font.bold = True
     txt(sl, x + 150000, y + 620000, w - 300000, h - 700000, legenda, size=11, color=leg)
 
@@ -59,11 +59,11 @@ s.shapes.add_picture('img_refugo_fio/ficou_36.png', Emu(4400000), Emu(4000000), 
 
 # coluna 3: números
 X = 8600000; CW = 3178000
-card(s, X, 1650000, CW, 1300000, '1.229', 'registros de refugo de fio, de mai a nov/2026')
-card(s, X, 3080000, CW, 1300000, '1.042', 'com ponto decimal (ex.: 18.3); 187 são inteiros', fill=LGREY, cor=DARK)
-card(s, X, 4510000, CW, 1300000, '7.706', 'soma no banco corrigido; o BI chegou a mostrar 287.578,93 em 23/10', fill=RED, cor=WHITE, leg=WHITE)
+card(s, X, 1650000, CW, 1300000, '≈640', 'dos 1.229 registros (52%) tinham o separador decimal perdido e foram corrigidos em 05 e 06/11')
+card(s, X, 3080000, CW, 1300000, '1554 → 15,54', 'exemplo real (ID 1032): sem o ponto, o valor ficava 100× maior', fill=LGREY, cor=DARK)
+card(s, X, 4510000, CW, 1300000, '13', 'registros duplicados ou com quantidade zero apagados (lixeira, restauráveis por 93 dias)', fill=RED, cor=WHITE, leg=WHITE)
 
-txt(s, L, 6330000, W, 250000, 'Fontes: Refugo_Bobinadeira_2026-11-06.csv, vídeo da tela de 06/11/2026, GMS_Diario (23/10). Patch: GMS/Telas/_patch_RefugoBobinadeira_virgula_ponto_2026-11-06.md.', size=10, color=GREY)
+txt(s, L, 6330000, W, 250000, 'Fontes: histórico de correções do Refugo_Bobinadeira de 05 e 06/11/2026 (192 + 268 + 110 + 55 + 13 itens), vídeo da tela de 06/11/2026.', size=10, color=GREY)
 for sh in list(s.placeholders):
     print(sh.placeholder_format.type, sh.name, sh.has_text_frame and sh.text_frame.text[:40])
 p.save('Ocorrencia_Refugo_Fio.pptx')
