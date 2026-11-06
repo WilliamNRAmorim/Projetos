@@ -13,3 +13,6 @@ Aprovado pelo William ("Sim, os dois"). Sem nomes e sem linhas de produção; de
 | Datas de fim em ordem | 87% (antes da rodada) → 69,5% | 89% → 80% |
 | Volume contra o CP, com as reconstruídas (tr/ba/de/ex) | 96,5 / 111 / 86,8 / 88,4% | 91,5 / 103 / 92,9 / 98,2% |
 - A queda das datas em ordem vem de etapas que antes eram ignoradas (quantidade vazia) e agora contam: as quebras restantes são sobretudo fim da trançagem depois do fim da cobertura ou da bandagem (39 em janeiro, 19 em fevereiro) e extração antes da debandagem/vulcanização. Pendente: estender a regra R1 da trançagem.
+## Extensão das datas (06/11/2026, aprovado "Sim, os 101")
+- Regras R1b (trançagem não termina depois de etapa posterior) e R5 (etapa não termina antes da anterior): 101 campos em 89 fichas de jan a mar gravados, 0 recusas; conferência 101/101. Valores antigos em `Datas_R1b_R5_proposta.md` (Downloads).
+- Resultado: março 349 de 349 em ordem; janeiro 254 de 292 e fevereiro 246 de 295. A simulação previa 272 e 292, mas foi feita antes da gravação das quantidades estimadas de fevereiro; com a cobertura agora contando como executada surgiram mais 65 quebras (tranc > cob). Segunda passada proposta em `Datas_R1b_R5_segunda_passada.md` (67 campos), aguardando o sim do William.
