@@ -129,3 +129,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-06 | Texto do pedido de acesso ao Copilot Studio (comentário e justificativa) | chefe (Opus 5.5) direto, sem subagentes | pedido simples, só redação | ver relatorios/uso_2026-11-06.md
 2026-11-06 | Texto do chamado de TI para acesso ao Dataverse (permissão no ambiente Dev) | chefe (Opus 5.5) direto, sem subagentes | pedido simples, só redação | ver relatorios/uso_2026-11-06.md
 2026-11-06 | Hora-Hora: lote 3 gravado (9.815 linhas de Rascunho de fev a ago, só status, MEL-264) | chefe (Sonnet 5.5) direto | gravação em massa pela API do SharePoint com o libero do William, ETag como guarda, releitura | uso.ps1 não medido
+2026-11-06 | Hora-Hora: lote 4 gravado (9 linhas ND/NT, MEL-264) após análise de velocidade do agente Opus | chefe (Sonnet 5.5) direto, análise por executor Opus | gravação pela API com o libero do William e releitura | uso.ps1 não medido
