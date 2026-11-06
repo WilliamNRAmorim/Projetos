@@ -333,13 +333,13 @@ Screens:
           Control: Classic/TextInput@2.3.2
           Properties:
             AccessibleLabel: ="Quantidade de fio refugado"
-            BorderColor: =If(Coalesce(Value(Self.Text), 0) <= 0, fx_CorErro, fx_CorBorda)
+            BorderColor: =If(fx_EhNum(Self.Text) && fx_Num(Self.Text) > 0, fx_CorBorda, fx_CorErro)
             Default: =""
             DelayOutput: =true
             DisplayMode: =If(varProcessando, DisplayMode.Disabled, DisplayMode.Edit)
             Font: =fx_FonteFamilia
             FontWeight: =FontWeight.Semibold
-            Format: =TextFormat.Number
+            Format: =TextFormat.Text
             Height: =fx_AlturaCampo
             HintText: |-
               ="Ex: 3"
@@ -722,7 +722,8 @@ Screens:
                   !IsBlank(cmb_MaquinaBob.Selected.Value) &&
                   !IsBlank(cmb_FioBob.Selected.Value) &&
                   !IsBlank(cmb_MotivoBob.Selected.Value) &&
-                  Coalesce(Value(inp_QtdBob.Text), 0) > 0,
+                  fx_EhNum(inp_QtdBob.Text) &&
+                  fx_Num(inp_QtdBob.Text) > 0,
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -736,7 +737,7 @@ Screens:
               With(
                   {
                       _agora: Now(),
-                      _qtd: Coalesce(Value(inp_QtdBob.Text), 0),
+                      _qtd: Coalesce(fx_Num(inp_QtdBob.Text), 0),
                       _operador: cmb_OperadorBob.Selected.Nome,
                       _maquina: cmb_MaquinaBob.Selected.Value,
                       _fio: cmb_FioBob.Selected.Value,
