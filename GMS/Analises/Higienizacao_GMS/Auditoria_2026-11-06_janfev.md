@@ -16,3 +16,6 @@ Aprovado pelo William ("Sim, os dois"). Sem nomes e sem linhas de produção; de
 ## Extensão das datas (06/11/2026, aprovado "Sim, os 101")
 - Regras R1b (trançagem não termina depois de etapa posterior) e R5 (etapa não termina antes da anterior): 101 campos em 89 fichas de jan a mar gravados, 0 recusas; conferência 101/101. Valores antigos em `Datas_R1b_R5_proposta.md` (Downloads).
 - Resultado: março 349 de 349 em ordem; janeiro 254 de 292 e fevereiro 246 de 295. A simulação previa 272 e 292, mas foi feita antes da gravação das quantidades estimadas de fevereiro; com a cobertura agora contando como executada surgiram mais 65 quebras (tranc > cob). Segunda passada proposta em `Datas_R1b_R5_segunda_passada.md` (67 campos), aguardando o sim do William.
+## Segunda passada das datas (06/11/2026, aprovado "Sim, os 67")
+- 67 campos de data de fim em 65 fichas (janeiro 20 em 19, fevereiro 47 em 46), 0 recusas, 0 falhas; conferência 67/67. Valores antigos em `Datas_R1b_R5_segunda_passada.md` (Downloads).
+- Resultado: fichas com as datas de fim em ordem: janeiro 272 de 292 (93,2%), fevereiro 292 de 295 (99%), março 349 de 349 e abril 288 de 288 (100%). As que sobram não têm data em alguma etapa (20 em janeiro e 3 em fevereiro); não inventamos data.
