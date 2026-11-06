@@ -7,9 +7,12 @@
 | [`Refugo/`](Refugo) | Análises de refugo: `Refugo_por_Material`, `Refugo_SAP_vs_GMS`, `PPM_Refugo`. |
 | [`Packlists/`](Packlists) | Geradores e PDFs de packlist (`Packlists_Lote_Oficial`, `Packlists_6e7_Outubro`, `Lote_Teste_PackList`) e planos em `docs/`. |
 | [`Dados_Historicos/`](Dados_Historicos) | Dados de antes do GMS e planilhas de controle: `HoraHora_pre_GMS/` (bancos de Hora-Hora 2023–2026 e a ferramenta Excel antiga) e `Eficiencia_Processo/2026/` (Controle do Processo Mangueira, uma aba por dia). |
+| [`Dados_Brutos/`](Dados_Brutos) | Exports crus mais recentes (Hora-Hora, ficha_producao, mb51, coois, Máscara, CP_2026, Refugo). Só a versão mais nova de cada; fora do Git. |
 | [`Documentos_GMS/`](Documentos_GMS) | Notas e auditorias soltas do GMS (MEL-231, MEL-240, automações Power Automate, saúde da ficha). |
 | [`Conteudo_Bit/`](Conteudo_Bit) | Conteúdo de redes sobre os projetos (marca, vídeos, motor de render, Will Station). |
 | [`FinAgent/`](FinAgent) · [`Sala_Agentes/`](Sala_Agentes) · [`TCC/`](TCC) · [`Ferramentas/`](Ferramentas) · `Missão Manutenção - Longe de Casa/` | Projetos próprios e utilitários. |
+
+Trabalho com dado de pessoa ou log de tratamento (propostas, undo, relatórios com nomes) vai em pasta ignorada pelo Git: `GMS/Analises/Tratamento_Ficha_2026-11/` e `GMS/Analises/Fluxo_Trancadeira_Cabine/Relatorios_locais/`. A raiz só tem `CLAUDE.md`, `PLANO.md`, `README.md` e as pastas de projeto; nada solto.
 
 Regras e roteamento de modelos: `CLAUDE.md` e `PLANO.md`. Subagentes em `.claude/agents/`.
 
