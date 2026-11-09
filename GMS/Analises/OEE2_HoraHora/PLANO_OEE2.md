@@ -40,7 +40,10 @@ Fonte: `Dados_Brutos/Factbird_Governance_OEE.pdf`, páginas 10 a 12 e 17 a 20.
    - Por máquina: TH06 67% · TM01 63% · TO04 63% · TH01 60% · TH02 60% · TH07 58% · TH05 54% · TH03 41% · TM04 36% · **Spiral 18%**. A Spiral sugere velocidade validada errada; a meta das duas passadas (MEL-241) afeta TH01 e TO04.
 3. **A refeição só é declarada em 59% dos turnos de máquina com produção** (1º turno 48%, 2º 65%, 3º 75%; mediana de 45/45/60 min).
    - Nos outros turnos a pausa cai em Motivo Não Declarado ou em outro motivo vermelho.
-   - Isso derruba o OEE2 em cerca de 4 pontos (≈ 16.600 min, estimativa). É a decisão Q1.
+   - Isso derruba o OEE2 em cerca de 4 pontos (≈ 16.600 min, estimativa).
+   - **Decidido pelo William em 09/11 (Q1): pausa fixa de 45 min em cada turno.** Com a regra da seção B, o OEE2 de set a nov fica ≈ 55,1% sem qualidade e ≈ 54,3% com qualidade (disponibilidade 83,5%, performance 66,0%). Detalhes:
+     - 786 turnos de máquina com produção × 45 min = 35.365 min de pausa, contra 25.818 min declarados como refeição.
+     - Em 253 turnos a refeição declarada passou de 45 min; os 3.358 min de sobra ficam como perda vermelha.
 4. **509 linhas de set a nov têm `Minutos` = 0**, com 16.586 min de Tempo Parado. Elas saem do cálculo até o BI derivar os minutos do rótulo da hora (fase 1).
 5. **Motivo 2 não tem tempo próprio** (1.112 linhas): entra só como contagem, nunca no Pareto de minutos.
 6. **A regra dos 21h35 (1295/1440) não pode entrar no OEE2.** Ela já é uma pausa planejada embutida na meta. Somada ao cinza, a pausa seria descontada duas vezes. `HH Meta Útil (m)` e `HH Aderência` ficam como estão.
@@ -108,7 +111,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 - **Amostra** fica cinza (validação), porque a meta já é zero no app.
 - **Falta de tubo** fica vermelha (falta de material a montante). Só seria azul se não houvesse OP planejada; para isso existe Falta de Demanda.
 - **Motivo Não Declarado e Sem apontamento** ficam vermelhos: perda dentro do tempo planejado, sem causa, igual ao "unregistered" do Factbird.
-- **Refeição** depende da Q1.
+- **Refeição** fica cinza pela pausa fixa de 45 min por turno (Q1, seção B).
 
 **Categorias do padrão que o GMS não tem:**
 - Fim de semana e feriado: saem do calendário, não de motivo.
@@ -133,7 +136,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 
 **Tempos:**
 - Janela = Σ Min
-- Planejada = Σ P das linhas azuis e cinzas (mais a pausa fixa, se a Q1 aprovar)
+- Planejada = Σ P das linhas azuis e cinzas (com a pausa fixa de 45 min por turno no lugar da refeição declarada; ver abaixo)
 - Produção = Janela − Planejada
 - Amarela = Σ P das linhas amarelas
 - Vermelha = Σ P das linhas vermelhas e não declaradas
@@ -145,6 +148,18 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 - Qualidade = 1 − Refugo (m) ÷ Real (m). Refugo = `TiposErros[Quantidade]` com `Trançadeira` normalizada (TH-02→TH02, TM.01→TM01), na data do refugo (aproximação declarada).
 - **OEE2 = D × P × Q**
 - **TCU = Valorizado × Q ÷ (1.440 × dias do filtro × máquinas na `fx_CelulasTrancagem` com "conta no TCU")**. As horas sem linha no Hora-Hora são azuis (sem atividade).
+
+**Pausa de refeição (decisão do William, 09/11/2026: 45 min fixos em cada turno):**
+- **Quem recebe a pausa:** todo turno de máquina (Data × Turno × Célula) com Real > 0 recebe pausa planejada de MIN(45, Σ Min do turno). Ela entra em Planejada (cinza).
+- **Refeição declarada nesses turnos:** os minutos com motivo Refeição ou Almoço saem do cinza e são absorvidos pela pausa fixa.
+- **Turno sem produção:** a refeição declarada segue cinza, como qualquer motivo.
+- **Valorizado:** Janela − Σ P de todas as linhas, independente da pausa. Por isso a pausa fixa não desconta duas vezes.
+- **Vermelha na cascata:** é o resíduo, Produção − Amarela − Valorizado. Ela inclui:
+  - a refeição declarada acima de 45 min;
+  - a pausa não declarada que o operador lançou em outro motivo.
+- **Pareto:** continua mostrando o motivo declarado.
+- **Fica de fora:** a regra dos 21h35 (145 min/dia) continua valendo só em `HH Meta Útil (m)` e `HH Aderência`. Ela não entra no OEE2.
+- **Revisor:** confere esta regra (cálculo de parada).
 
 **Conferência obrigatória:**
 - Medida de controle `OEE Valorizado (Real)` = Σ MIN(Real BI, Meta BI) × Min ÷ Meta BI.
@@ -216,9 +231,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 | 5 | Depois de 1 mês: decidir Limpeza e Treinamento, e a pausa fixa | — | revisor | — | — |
 
 ## F. Perguntas para o William (só o que é dele)
-- **Q1 (recomendo a):** pausa de refeição no OEE2.
-  - (a) Pausa planejada fixa por turno de máquina, que fecha com os 21h35 (1º 45, 2º 45, 3º 55 = 145 min). A refeição declarada fica absorvida, sem desconto em dobro. É assim que o Factbird trata pausa: vem da escala do turno.
-  - (b) Só a refeição declarada. Hoje ela falta em 41% dos turnos e tira cerca de 4 pontos do OEE2.
+- **Q1: RESPONDIDA em 09/11/2026.** Pausa fixa de 45 min em cada turno (135 min/dia por máquina), com a regra da seção B. A sugestão era 45/45/55; o William fixou 45 nos três turnos.
 - **Q2:** quantas máquinas contam no TCU. A TH04 está na `fx_CelulasTrancagem`, mas não tem linha de set a nov. Recomendo 10 e marcar a TH04 como fora até voltar.
 - **Q3:** meta do cartão. Recomendo a do Factbird da planta (a página 12 mostra 55% de OEE2 e 50% de TCU como exemplo; confirmar a de Guaratinguetá).
 
