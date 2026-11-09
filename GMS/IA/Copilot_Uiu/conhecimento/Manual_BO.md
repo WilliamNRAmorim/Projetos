@@ -24,8 +24,8 @@ Cada receita traz: **Sintoma · Consulta · Como confirmar · Causa provável ·
 **Sintoma.** "Cadê a OP X?", OP que não aparece na fila da etapa seguinte, painel com OP há muitas horas na mesma etapa.
 
 **Consulta.**
-1. `ficha_producao` com `OP eq X` → `ID`, `field_10` (etapa atual), `field_11` (situação), início e fim da etapa atual (ex.: Trançadeira `field_19`/`field_20`), quantidade da etapa.
-2. `Eventos_Producao` com `origem_ID eq <ID da ficha>`, ordenado por `data_hora` desc, Top 20.
+1. `ficha_producao` com `OP eq X` → `ID`, `field_10` (etapa atual), `field_11` (situação), início e fim da etapa atual (ex.: Trançadeira `field_19`/`field_20`), `InicioAguardando_*` e `InicioEmProcesso_*` da etapa (desde quando está na fila e desde quando está em processo), quantidade da etapa.
+2. `Eventos_Producao` com `data_ref` (IDX) nos últimos dias e `origem_ID eq <ID da ficha>`, ordenado por `data_hora` desc, Top 20. Só `origem_ID` falha pelo limite de 5.000.
 3. Se a etapa usa carretel: `lista_carreteis` / `Historico_Carretel` pelo carretel do último evento.
 
 **Como confirmar.**
@@ -97,7 +97,7 @@ Cada receita traz: **Sintoma · Consulta · Como confirmar · Causa provável ·
 **Sintoma.** Produção do GMS não bate com o SAP por mangueira, por OP ou no mês.
 
 **Consulta.**
-- GMS: produção boa = `field_46` (quantidade da Extração) da `ficha_producao`, por OP; refugo GMS = `TiposErros` pela OP.
+- GMS: produção boa = `field_46` (quantidade da Extração) da `ficha_producao`, por OP; refugo GMS = `TiposErros` pela OP (`OP_ID`, quantidade em `_x0043_`).
 - SAP (export MB51): por OP (`Order`), só unidade **M**, movimento 101 menos 102, **sem** os lançamentos dos usuários de refugo (U445131 e U452021).
 - Somar por mangueira: divergência = **soma SAP − soma GMS**. Negativa = faltou lançar no SAP; positiva = sobrou no SAP.
 
@@ -153,8 +153,8 @@ Cada receita traz: **Sintoma · Consulta · Como confirmar · Causa provável ·
 
 **Consulta.**
 - `Eventos_Producao` com `carretel eq '<n>'`, Top 20, ordenado por `data_hora`.
-- `Eventos_Producao` com `origem_ID eq <ID>` e `tipo eq 'Fim'`: mais de um Fim da mesma etapa para a mesma ficha.
-- `lista_carreteis` / `Historico_Carretel` pelo carretel.
+- `Eventos_Producao` com `data_ref` (IDX) no período, `origem_ID eq <ID>` e `tipo eq 'Fim'`: mais de um Fim da mesma etapa para a mesma ficha.
+- `lista_carreteis` pelo carretel; `Historico_Carretel` (sem índice) só por faixa de ID.
 
 **Como confirmar.**
 - Duas OPs no mesmo carretel, uma rodando e outra aguardando, é **legítimo** (a fila conta carretel, não OP).
@@ -175,7 +175,7 @@ Cada receita traz: **Sintoma · Consulta · Como confirmar · Causa provável ·
 
 **Consulta.**
 - `ficha_producao` com `field_11 eq 'Cancelado'` (por período, Top 50) → IDs.
-- `Eventos_Producao` com `origem_ID eq <ID>` → eventos com `metros` > 0.
+- `Eventos_Producao` com `data_ref` (IDX) no período e `origem_ID eq <ID>` → eventos com `metros` > 0.
 
 **Como confirmar.**
 - Evento `tipo` = Cancelado com `metros` > 0 → errado: Cancelado tem `metros` = 0 e `sobra` = metragem que virou refugo (NORMA 02/09).

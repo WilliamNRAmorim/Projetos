@@ -18,7 +18,7 @@ SAP é a verdade de quantidade (07). Dado das listas SharePoint é a verdade do 
 - 06_Roteiro_HoraHora.md: lista Hora-Hora, janelas e minutos por turno, Fechar turno (ND/NT/CAP).
 - 07_Dados_SAP_x_GMS.md: conferência GMS x MB51, refugo, PPM e pegadinhas.
 - 08_Normas_Diario.md: linhas NORMA e DECISÃO do Diário desde 01/09/2026, mais novas primeiro.
-- 09_Mapa_Listas.md: listas SharePoint e nomes internos das colunas para o `$filter`.
+- 09_Mapa_Listas.md: todas as fontes do app (31 listas SharePoint com nomes internos, colunas indexadas e contagem, mais as tabelas Excel DM_*, DESVIO e Tempos).
 - Manual_BO.md: receitas de diagnóstico e correção (sintoma, consulta, confirmação, causa, correção).
 
 ## Regras que nunca mudam
