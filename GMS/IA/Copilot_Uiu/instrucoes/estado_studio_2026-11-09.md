@@ -21,3 +21,7 @@ Pergunta "apontamento às 22:30 de 15/10 caiu em qual turno?": o Uiu leu a lista
 1. Editar o .md em `GMS/IA/Copilot_Uiu/conhecimento/` (o 08 sai de `gerar_normas_diario.py`) e commitar.
 2. Subir o .md novo para `PackLists/Copilot_Uiu/conhecimento/` no SharePoint.
 3. Regravar as linhas daquele `Arquivo` na `Uiu_Conhecimento` (apagar as antigas para a lixeira e inserir as novas, uma por seção `##`), com o "sim" do William.
+
+## Correção de 09/11 (tarde)
+- Erro "ModelDisplayName excede 64 caracteres": 28 das ferramentas originais tinham nome de 65 a 81 caracteres. Todas renomeadas com a regra "Retrieve specific" → "Get", "Create new" → "Create", sem o sufixo "SharePoint table/table" (ex.: "Get production record from ficha_producao"). Conferido: nenhuma das 62 passa de 64. O erro saiu da lista de avisos.
+- Avisos que sobram (4): nenhum canal configurado; ferramentas usam a credencial do autor; nenhuma avaliação rodada; **o agente usa recurso premium e precisa de licença premium para publicar**. Este último trava a publicação, e sem publicar não dá para pôr no Teams. O William ligou o Deep reasoning (premium) em 09/11.
