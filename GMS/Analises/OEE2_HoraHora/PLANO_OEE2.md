@@ -227,15 +227,19 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 |---|---|---|---|---|---|
 | 0 | Gravar este plano em `Analises/OEE2_HoraHora/`, mais `mapa_oee2.csv` e o script de conferência (pandas). Diário MEL-266 ABERTO | nenhum | revisor-leve | — | git revert |
 | 1 | Modelo: `dMotivoParada` estendida, `Minutos OEE`, `dEtapaOEE`, medidas OEE2. Refresh | médio: medida errada no painel vivo; DATATABLE com chave duplicada | **revisor** (parada/setup, turno, pausa de 45 min, 21h45, excedido) | William aplica o refresh; eu aplico no TMDL só com libero | script TMDL anterior salvo; apagar colunas, tabela e medidas novas |
-| 2 | Validar: TH07 de uma semana, GMS × Factbird (`factbird_metrics`, OEE2 da TH07), e um dia × turno × máquina contra a lista | — | — | — | — |
+| 2 | Validar no próprio GMS: conciliação Hora-Hora × ficha (seção G) e um dia × turno × máquina contra a lista | — | — | — | — |
 | 3 | Relatório: página `pg_oee2` | baixo: página nova; o William precisa reabrir o projeto antes de publicar | revisor-leve | **William** pelo Desktop | apagar a pasta da página |
 | 4 | App: colunas na `fx_MotivosParada` / `Cobertura`, `Items` ordenado, Divergência de volta (depois do export) | baixo: o texto gravado não muda | revisor-leve (sem regra de parada) | **William** cola e publica | colar o `Formulas.txt` anterior do git |
+| 4b | App: no Hora-Hora da Trançagem, a mangueira da janela sai da OP "Em processo" daquela trançadeira na `ficha_producao`, não é digitada à parte (seção G). Plano próprio antes | médio: muda o fluxo do operador | revisor-leve | **William** | `Telas/` anterior do git |
 | 5 | Depois de 1 mês: decidir Limpeza e Treinamento, e a pausa fixa | — | revisor | — | — |
 
 ## F. Perguntas para o William (só o que é dele)
 - **Q1: RESPONDIDA em 09/11/2026.** Pausa fixa de 45 min em cada turno (135 min/dia por máquina), com a regra da seção B. A sugestão era 45/45/55; o William fixou 45 nos três turnos.
 - **Q2: RESPONDIDA em 09/11/2026.** O TCU conta todas as 11 máquinas, inclusive a TH04. O planejamento muda a todo momento, então não se define máquina fora; o critério vai ficando mais certeiro com o uso do padrão.
-- **Q3:** meta do cartão. Recomendo a do Factbird da planta (a página 12 mostra 55% de OEE2 e 50% de TCU como exemplo; confirmar a de Guaratinguetá).
+- **Q3: RESPONDIDA em 09/11/2026.** Não há Factbird; a fonte é o GMS.
+  - Sem meta fixa por enquanto. O cartão mostra a **referência de partida do GMS** (set a nov: OEE2 ≈ 54%, TCU ≈ 19%) e a tendência.
+  - A meta é definida depois que a conciliação com a ficha (seção G) estiver limpa.
+  - Na verificação, a comparação com o Factbird sai e entra a conciliação com a ficha.
 
 **Escolhas adotadas pelo padrão Danfoss, sem pergunta:**
 - Falta de operador e Falta de tubo vermelhas.
@@ -247,11 +251,41 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 - Nenhum motivo novo agora.
 - Quebra em Performance.
 
+## G. Conciliação Hora-Hora × ficha de produção (pedido do William, 09/11/2026)
+Regra: o produto que o Hora-Hora aponta numa janela tem de ser o da OP que a `ficha_producao` mostra na mesma trançadeira naquela hora, e os metros têm de fechar.
+O cruzamento é por OP: cada OP com trançagem, mesma `Trançadeira`, e as janelas do Hora-Hora com produção cujo meio cai entre `data_hora_inicio_trancadeira` e `data_hora_final_trancadeira`.
+
+Período de 04/09 a 06/11/2026. É uma primeira leitura, estimativa:
+- 670 OPs com trançagem; 600 têm janela do Hora-Hora dentro do intervalo.
+- **Metros fecham no total**: ficha 301.109 m, Hora-Hora 306.658 m (razão 1,02). Por OP, porém, só 54% ficam entre 0,8 e 1,2 (mediana 0,95).
+- **Produto**: em 3.938 janelas dentro de OP, 79,5% têm a mesma mangueira da ficha. Em 56 OPs nenhuma janela bate.
+- **Janela sem OP**: 795 de 4.623 janelas com produção (17%, 54.622 m) não caem em OP nenhuma da ficha naquela máquina e hora. 280 delas são da TO04.
+
+O que mais explica a divergência de produto:
+- **Mesmo produto escrito diferente** (não é erro de apontamento):
+  - GH781-6 × GH781-6-2 (duas passadas, MEL-241);
+  - HC139-7_SGX × HC139-7(S/G);
+  - EC118-08L × EC118-08L-RL;
+  - HC139-7-250MTS × HC139-7.
+- **Produto diferente de verdade**:
+  - TH01: ficha EC215-06L × Hora-Hora GH781-6 (97 janelas);
+  - TH07: EC215-08L × GH781-8 (40);
+  - TH02: EC115-08L × EC118-08L (51).
+
+Uso no plano:
+1. **BI, fase 1:** coluna `Confere Ficha` na `fHoraHora`, com OK, produto diferente ou sem OP. Mais um cartão de % de janelas conferidas na página OEE2.
+   - O OEE2 por mangueira só vale para as janelas conferidas. A velocidade validada (a Meta) depende do produto, então produto errado é meta errada.
+   - A comparação usa uma tabela de sinônimos de nome, reaproveitando o `Producao_GMS_x_MB51/dados/aliases_mangueira.csv`; o mesmo produto não conta como divergência.
+2. **App, fase 4b:** a mangueira da janela do Hora-Hora da Trançagem passa a vir da OP "Em processo" daquela trançadeira na ficha, que é o mesmo sinal da máquina ativa (MEL-111). O operador só escolhe entre as OPs da máquina. Plano próprio antes de mexer.
+3. **Histórico:** nada é regravado. As divergências viram lista de conferência para a supervisão, por máquina.
+
 ## Verificação
 - Script pandas (fase 0) recalcula do CSV os números da seção "Achados". O BI tem de bater com ele em ±0,5 ponto para o mesmo período e o mesmo filtro.
 - Os dois caminhos do Valorizado (perdas × Real ÷ velocidade) têm de ficar dentro de 2%.
 - Σ por família = Tempo Parado capado total (soma fecha).
-- TH07: OEE2 do GMS × OEE2 do Factbird na mesma semana. A diferença esperada vem da microparada e da velocidade; documentar.
+- Conciliação com a ficha (seção G):
+  - Os metros do Hora-Hora dentro das OPs fecham com a `quantidade_trancagem` em ±5% no total.
+  - O % de janelas conferidas sobe a cada mês.
 - Um dia × turno × máquina explicado linha a linha.
 
 ## Arquivos
