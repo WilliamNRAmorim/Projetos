@@ -48,3 +48,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-03 | TCC II: não quer fato pontual da fábrica no texto (datas, lotes, contagens de um mês), números difíceis de provar (+0,22%, R$ 75,4 mil, OP de 4.162 h) nem detalhe operacional (fronteira de turno, Code 39/128); prefere ideia sem número
 2026-11-07 | Visual do motor das histórias: aceitou as 3 recomendadas (personagem em vetor melhorado, flat com atmosfera, edgeprof para _arquivo antes de apagar) e aprovou o plano; começar F0–F1
 2026-11-09 | OEE2: recusou a pausa sugerida de 45/45/55 (fechando com os 21h35) e escolheu 45 min fixos em cada turno; aprovou o plano sem a Montagem (só Hora-Hora de mangueira)
+2026-11-09 | Uiu (Copilot Studio): aceitou as recomendadas de escrita com confirmação e log, premium ligados (Code interpreter e Deep reasoning) e execução em sessão nova; recusou abrir aos supervisores (usuário só ele)
