@@ -146,3 +146,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-09 | Uiu copiado para o ambiente DPS - Non Prod (pac copilot extract-template/create) para fugir da DLP de canal do Default; testado com dado real | chefe (Opus 5.5) com pac CLI e navegador do app | precisava de login e cliques do William; sem regra de negócio | uso.ps1 sem transcrição do dia
 2026-11-09 | Uiu publicado no DPS - Non Prod e canal Teams/M365 adicionado (só o William) | chefe (Opus 5.5) no navegador do app | ação com sim do William | uso.ps1 sem transcrição do dia
 2026-11-09 | Uiu DPS: respostas em português (formatação, instruções, saudação, fallback) e conversa liberada | chefe (Opus 5.5) no navegador do app | ajuste de configuração no Studio | uso.ps1 sem transcrição do dia
+2026-11-09 | Uiu: passagem para amanhã (PROXIMA_SESSAO.md) com estado, IDs, pendências e plano F2 | chefe (Opus 5.5) direto | documento de passagem | uso.ps1 sem transcrição do dia
