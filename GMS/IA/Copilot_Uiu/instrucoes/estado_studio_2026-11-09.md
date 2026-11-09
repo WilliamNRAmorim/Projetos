@@ -34,3 +34,4 @@ Pergunta "apontamento às 22:30 de 15/10 caiu em qual turno?": o Uiu leu a lista
 - Conexão SharePoint criada pelo William no DPS; as duas referências de conexão (a das 30 ferramentas antigas e a da Ler conhecimento) ligadas e salvas.
 - Teste: "OPs em processo na Trançadeira" devolveu 5 OPs reais com máquina, turno e aviso de UTC.
 - O Uiu do Default continua intacto (cópia de segurança). O ambiente DPS - Non Prod é compartilhado com outras equipes e é de não-produção.
+- Publicado no DPS - Non Prod em 09/11/2026 14:39 (com "sim" do William) e canal "Microsoft 365 and Microsoft Teams" adicionado ("The channel was added"), com "Make agent available in Microsoft 365 Copilot" marcado. Não foi compartilhado com ninguém: só o William usa. Para abrir: Studio → Uiu → Channels → Microsoft 365 and Microsoft Teams → "See agent in Teams".
