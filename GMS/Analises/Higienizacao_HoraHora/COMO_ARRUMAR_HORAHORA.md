@@ -168,7 +168,7 @@ Escolha uma máquina e um dia (usamos TH07). Compare `minutos BI` por turno (1º
 
 ### Decisões que substituem as da seção 10
 - **Meta do BI NÃO é proporcional à refeição.** `Meta Hora BI = Meta Hora × Minutos BI ÷ Minutos` (VAR ref = 0). A hora do jantar mostra a meta cheia. A decisão de 23/10 ("meta proporcional") foi revogada pelo William em 30/10.
-- **Regra dos 21h35 (1295/1440)**: vale só nas medidas do relatório `HH Meta Útil (m)` (cartão Meta) e `HH Aderência`, e só quando nenhuma hora está filtrada: `SUM(fHoraHora[Meta Hora BI]) * IF(ISFILTERED(fHoraHora[Hora BI]), 1, 1295/1440)`. As barras por hora usam a meta cheia. Medida de relatório não pode referenciar outra medida de relatório (erro semântico): copie a expressão.
+- **Regra dos 21h45 (1305/1440)**: vale só nas medidas do relatório `HH Meta Útil (m)` (cartão Meta) e `HH Aderência`, e só quando nenhuma hora está filtrada: `SUM(fHoraHora[Meta Hora BI]) * IF(ISFILTERED(fHoraHora[Hora BI]), 1, 1305/1440)`. A pausa é de 45 min em cada um dos 3 turnos (135 min/dia), a mesma do OEE2. Era 21h35 (1295/1440) até 09/11/2026, quando o William alinhou a regra com a pausa do OEE2 (MEL-266). As barras por hora usam a meta cheia. Medida de relatório não pode referenciar outra medida de relatório (erro semântico): copie a expressão.
 - Parado e Principal parada seguem sem refeição ("Almoço" do Motivo Padrão).
 
 ### Como fazer, com o navegador do app (testado)

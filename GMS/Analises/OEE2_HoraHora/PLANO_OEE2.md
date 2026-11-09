@@ -36,7 +36,7 @@ Fonte: `Dados_Brutos/Factbird_Governance_OEE.pdf`, páginas 10 a 12 e 17 a 20.
 
    - **OEE2 sem qualidade ≈ 53,7%**, pelo 2º caminho 52,9%. A diferença vem dos 929 min de produção acima da meta e do arredondamento do Tempo Parado.
    - Disponibilidade 84,0% · Performance 64,0% · Qualidade ≈ 98,5% (`TiposErros`: 5.534 m de refugo com trançadeira contra 378.344 m produzidos; a data é a do refugo, não a da trança) → **OEE2 ≈ 52,9%**.
-   - **TCU ≈ 19% a 21%**: 10 ou 11 máquinas × 24 h × 67 dias.
+   - **TCU ≈ 19%**: valorizado 202.924 min × Q 0,985 ÷ (11 máquinas × 1.440 min × 67 dias). A pausa fixa não muda o TCU.
    - Por máquina: TH06 67% · TM01 63% · TO04 63% · TH01 60% · TH02 60% · TH07 58% · TH05 54% · TH03 41% · TM04 36% · **Spiral 18%**. A Spiral sugere velocidade validada errada; a meta das duas passadas (MEL-241) afeta TH01 e TO04.
 3. **A refeição só é declarada em 59% dos turnos de máquina com produção** (1º turno 48%, 2º 65%, 3º 75%; mediana de 45/45/60 min).
    - Nos outros turnos a pausa cai em Motivo Não Declarado ou em outro motivo vermelho.
@@ -46,7 +46,9 @@ Fonte: `Dados_Brutos/Factbird_Governance_OEE.pdf`, páginas 10 a 12 e 17 a 20.
      - Em 253 turnos a refeição declarada passou de 45 min; os 3.358 min de sobra ficam como perda vermelha.
 4. **509 linhas de set a nov têm `Minutos` = 0**, com 16.586 min de Tempo Parado. Elas saem do cálculo até o BI derivar os minutos do rótulo da hora (fase 1).
 5. **Motivo 2 não tem tempo próprio** (1.112 linhas): entra só como contagem, nunca no Pareto de minutos.
-6. **A regra dos 21h35 (1295/1440) não pode entrar no OEE2.** Ela já é uma pausa planejada embutida na meta. Somada ao cinza, a pausa seria descontada duas vezes. `HH Meta Útil (m)` e `HH Aderência` ficam como estão.
+6. **A regra do dia útil não pode entrar no OEE2.** Ela já é uma pausa planejada embutida na meta; somada ao cinza, a pausa seria descontada duas vezes.
+   - Em 09/11/2026 o William trocou 21h35 (1295/1440) por **21h45 (1305/1440)**: são os mesmos 45 min por turno do OEE2.
+   - A troca foi feita em `HH Meta Útil (m)` e `HH Aderência`, no `reportExtensions.json`. Só vale depois que ele reabrir o projeto e publicar.
 
 ## A. Mapeamento: motivo → família / categoria / OEE2 / componente
 Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A coluna de minutos é de 01/09 a 06/11/2026, motivo principal, Tempo Parado capado na janela; os motivos numerados antigos estão somados ao texto limpo.
@@ -147,7 +149,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 - Performance = Valorizado ÷ (Produção − Amarela)
 - Qualidade = 1 − Refugo (m) ÷ Real (m). Refugo = `TiposErros[Quantidade]` com `Trançadeira` normalizada (TH-02→TH02, TM.01→TM01), na data do refugo (aproximação declarada).
 - **OEE2 = D × P × Q**
-- **TCU = Valorizado × Q ÷ (1.440 × dias do filtro × máquinas na `fx_CelulasTrancagem` com "conta no TCU")**. As horas sem linha no Hora-Hora são azuis (sem atividade).
+- **TCU = Valorizado × Q ÷ (1.440 × dias do filtro × todas as 11 máquinas da `fx_CelulasTrancagem`)**. É fixo e não depende do planejamento, que muda o tempo todo (William, 09/11). As horas sem linha no Hora-Hora são azuis (sem atividade).
 
 **Pausa de refeição (decisão do William, 09/11/2026: 45 min fixos em cada turno):**
 - **Quem recebe a pausa:** todo turno de máquina (Data × Turno × Célula) com Real > 0 recebe pausa planejada de MIN(45, Σ Min do turno). Ela entra em Planejada (cinza).
@@ -158,7 +160,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
   - a refeição declarada acima de 45 min;
   - a pausa não declarada que o operador lançou em outro motivo.
 - **Pareto:** continua mostrando o motivo declarado.
-- **Fica de fora:** a regra dos 21h35 (145 min/dia) continua valendo só em `HH Meta Útil (m)` e `HH Aderência`. Ela não entra no OEE2.
+- **Fica de fora:** a regra dos 21h45 (135 min/dia, a mesma pausa) continua valendo só em `HH Meta Útil (m)` e `HH Aderência`. Ela não entra no OEE2.
 - **Revisor:** confere esta regra (cálculo de parada).
 
 **Conferência obrigatória:**
@@ -202,7 +204,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
    - Tabela desconectada `dEtapaOEE` para a cascata: Janela, Planejada, Produção, Amarela, Vermelha, Operando, Valorizado, Refugo, Valorizado bom.
    - **Medidas base no modelo, pasta "OEE2"**: Janela, Planejada, Produção, Amarela, Vermelha, Valorizado, Valorizado (Real), Disponibilidade, Performance, Qualidade, OEE2, TCU e Cascata (SWITCH).
      - Vão no modelo porque medida de relatório não pode chamar outra medida de relatório (seção 11 do roteiro).
-     - **Medida existente não muda**: `HH Meta Útil (m)`, `HH Aderência`, `HH Parado (min)` e os 21h35 ficam como estão.
+     - **Medida existente não muda**: `HH Meta Útil (m)`, `HH Aderência`, `HH Parado (min)` e a regra dos 21h45 ficam como estão.
 3. **Relatório** (PBIR por JSON, `json.dump(indent=2, ensure_ascii=False)`, CRLF):
    - **Página nova** `pg_oee2` "OEE2 Trançagem". Não regerar nem mexer no layout das páginas salvas.
    - Visuais:
@@ -224,7 +226,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 | Fase | O quê | Risco | Revisor | Publica | Volta |
 |---|---|---|---|---|---|
 | 0 | Gravar este plano em `Analises/OEE2_HoraHora/`, mais `mapa_oee2.csv` e o script de conferência (pandas). Diário MEL-266 ABERTO | nenhum | revisor-leve | — | git revert |
-| 1 | Modelo: `dMotivoParada` estendida, `Minutos OEE`, `dEtapaOEE`, medidas OEE2. Refresh | médio: medida errada no painel vivo; DATATABLE com chave duplicada | **revisor** (parada/setup, turno, 21h35, excedido) | William aplica o refresh; eu aplico no TMDL só com libero | script TMDL anterior salvo; apagar colunas, tabela e medidas novas |
+| 1 | Modelo: `dMotivoParada` estendida, `Minutos OEE`, `dEtapaOEE`, medidas OEE2. Refresh | médio: medida errada no painel vivo; DATATABLE com chave duplicada | **revisor** (parada/setup, turno, pausa de 45 min, 21h45, excedido) | William aplica o refresh; eu aplico no TMDL só com libero | script TMDL anterior salvo; apagar colunas, tabela e medidas novas |
 | 2 | Validar: TH07 de uma semana, GMS × Factbird (`factbird_metrics`, OEE2 da TH07), e um dia × turno × máquina contra a lista | — | — | — | — |
 | 3 | Relatório: página `pg_oee2` | baixo: página nova; o William precisa reabrir o projeto antes de publicar | revisor-leve | **William** pelo Desktop | apagar a pasta da página |
 | 4 | App: colunas na `fx_MotivosParada` / `Cobertura`, `Items` ordenado, Divergência de volta (depois do export) | baixo: o texto gravado não muda | revisor-leve (sem regra de parada) | **William** cola e publica | colar o `Formulas.txt` anterior do git |
@@ -232,7 +234,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 
 ## F. Perguntas para o William (só o que é dele)
 - **Q1: RESPONDIDA em 09/11/2026.** Pausa fixa de 45 min em cada turno (135 min/dia por máquina), com a regra da seção B. A sugestão era 45/45/55; o William fixou 45 nos três turnos.
-- **Q2:** quantas máquinas contam no TCU. A TH04 está na `fx_CelulasTrancagem`, mas não tem linha de set a nov. Recomendo 10 e marcar a TH04 como fora até voltar.
+- **Q2: RESPONDIDA em 09/11/2026.** O TCU conta todas as 11 máquinas, inclusive a TH04. O planejamento muda a todo momento, então não se define máquina fora; o critério vai ficando mais certeiro com o uso do padrão.
 - **Q3:** meta do cartão. Recomendo a do Factbird da planta (a página 12 mostra 55% de OEE2 e 50% de TCU como exemplo; confirmar a de Guaratinguetá).
 
 **Escolhas adotadas pelo padrão Danfoss, sem pergunta:**
