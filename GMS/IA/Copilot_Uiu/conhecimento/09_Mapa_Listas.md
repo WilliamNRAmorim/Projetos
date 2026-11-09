@@ -34,8 +34,8 @@ Formato de cada coluna: `nome_interno` = nome de exibição (tipo). **IDX** = co
 - Pegadinhas: o Tubo divide a ficha quando sobra tubo (`field_6` reduzido, ficha filha "(devolvida)"); 111/1111/11111 são preenchimento; lote padrão por bitola 3/4/5 → 800 m, 6/7/8 → 680, 10 → 460, 12 → 400, 16 → 250. Mês da ficha = `Created`.
 
 ### Eventos_Producao (16.243) — um evento por etapa
-- `origem` (Choice: ficha_producao, ControleExtrusora, FifoBobinadeira) · `origem_ID` (ID na lista de origem; **sem índice**) · `etapa` (Choice **IDX**: Mandril, Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Extração, Extrusora, Bobinadeira) · `tipo` (Choice **IDX**: Início, Fim, Parcial; 'Cancelado' também é gravado) · `data_hora` (**IDX**) · `data_ref` (**IDX**) · `turno` (número) · `bitola` · `metros` · `refugo` · `sobra` · `operador` · `recurso` · `carretel` · `Title`.
-- Para achar os eventos de uma ficha: filtre primeiro por `data_ref` (IDX) numa faixa de datas e depois `origem_ID eq <ID>`; só `origem_ID` falha pelo limite de 5.000.
+- `origem` (Choice: ficha_producao, ControleExtrusora, FifoBobinadeira) · `origem_ID` (ID na lista de origem, **IDX** desde 09/11/2026) · `etapa` (Choice **IDX**: Mandril, Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Extração, Extrusora, Bobinadeira) · `tipo` (Choice **IDX**: Início, Fim, Parcial; 'Cancelado' também é gravado) · `data_hora` (**IDX**) · `data_ref` (**IDX**) · `turno` (número) · `bitola` · `metros` · `refugo` · `sobra` · `operador` · `recurso` · `carretel` · `Title`.
+- Para achar os eventos de uma ficha: `origem_ID eq <ID>` (indexado, funciona direto). Junte `origem eq 'ficha_producao'` se precisar separar da extrusora e da bobinadeira.
 - Fim = etapa concluída. Parcial = fechamento de turno com a etapa aberta. Cancelado = OP descartada: `metros` = 0 e `sobra` = refugo; nunca é produção.
 - `recurso` é a trançadeira de ORIGEM da ficha, não a máquina da etapa; tem grafias diferentes (TH07/TH-07, TO04/TO-04, TH05/TH.05).
 
