@@ -134,3 +134,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-07 | Guia dos vídeos semanais para outro modelo (GPT) assumir a produção | chefe/Opus 5.5 sozinho | leitura de briefing, README do motor e aprendizados; um arquivo | custo: ver uso.ps1
 2026-11-07 | Semana 2: série Porto Sereno pronta (28 MP4 em Semanal/saga-dia1..7, 28 capas), publicação 09 a 16/11 | sessão contos-semana2 e 3 filhas em Sonnet 5.5 (1 teste Opus descartado) | William pediu série única de 28 eps | custo: ver uso.ps1
 2026-11-09 | Hora-Hora: lote 5 gravado (9 linhas, Divergência do Tempo Padrão, MEL-264) | chefe (Sonnet 5.5) direto | gravação pela API com o libero do William e releitura | uso.ps1 não medido
+2026-11-09 | Hora-Hora: lote 7 gravado (46 linhas de 06 e 07/11, regra ND/NT, status e meta da TM01 05:20, MEL-264) | chefe (Sonnet 5.5) direto | gravação pela API com o libero do William, guarda por valor e releitura | uso.ps1 não medido
