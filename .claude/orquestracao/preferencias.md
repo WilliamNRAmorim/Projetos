@@ -49,3 +49,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-07 | Visual do motor das histórias: aceitou as 3 recomendadas (personagem em vetor melhorado, flat com atmosfera, edgeprof para _arquivo antes de apagar) e aprovou o plano; começar F0–F1
 2026-11-09 | OEE2: recusou a pausa sugerida de 45/45/55 (fechando com os 21h35) e escolheu 45 min fixos em cada turno; aprovou o plano sem a Montagem (só Hora-Hora de mangueira)
 2026-11-09 | Uiu (Copilot Studio): aceitou as recomendadas de escrita com confirmação e log, premium ligados (Code interpreter e Deep reasoning) e execução em sessão nova; recusou abrir aos supervisores (usuário só ele)
+2026-11-09 | Uiu: aceitou a recomendada de levar o conhecimento para uma lista SharePoint (Uiu_Conhecimento) lida por Get items, já que a DLP bloqueia Knowledge por arquivo e por SharePoint; não quer arrastar arquivo quando houver outro jeito
