@@ -89,3 +89,12 @@ Os números são os da mensagem anterior. Esta tabela cobre todos de 1 a 50; ele
 6. “Complete=true” deve provar término da extração, não ausência de erros semânticos. Completude, qualidade e atualidade são dimensões separadas.
 
 Esses pontos são propostas de resolução de conflito, não emendas ao Mestre nem correções publicadas nas fontes de conhecimento.
+
+## Evidência de leitura para D02–D04 (10/11/2026, só leitura)
+
+Janela de 11/10 a 09/11/2026. Decisões continuam abertas; estas são propostas para o William escolher.
+
+- **D02 (cancelamento):** Cobertura não é afetada (nenhum cancelado tem Fim de Cobertura). Cancelados no período: 16 de Mandril e 1 de Tubo. Caso real: OP 4207 tem Fim de Mandril com 1 m e depois Tubo cancelado. Proposta: Fim da etapa concluída conta como produção dela, mesmo se a OP for cancelada depois; Cancelado é só registro de descarte. Impacto no período: 1 m.
+- **D03 (data da inspeção x Created):** afeta só a Extração. Dos cadastros feitos desde 11/10, 336 têm inspeção antes do cadastro. A diferença de 18.552 m vem de cadastro atrasado de inspeções anteriores a 11/10. Exemplo: inspeção de 27/10 às 22h30 cadastrada em 28/10. Proposta: DataHoraInspecao para dia e turno; Created só para auditoria; painel que usa Created declarado como diferente.
+- **D04 (janela ausente):** Cobertura não aparece na lista Hora-Hora nesse período (células presentes: Spiral, TH01/02/03/05/06/07, TM01/04, TO04). Logo, a janela da Cobertura não tem fonte aqui e D04 não se aplica a ela por esta lista. Nas células presentes, há 1 linha com Real vazio em 3.600; real 0 é janela inteira parada. Proposta: real registrado sempre; janela sem apontamento vira "sem apontamento", nunca zero nem estimativa sem rótulo.
+- **Pares Início/Fim:** só 1 OP de Cobertura tem Fim sem Início na janela (OP 4232, Fim em 03/11). As diferenças dia a dia vêm de OP que cruza a virada do dia.
