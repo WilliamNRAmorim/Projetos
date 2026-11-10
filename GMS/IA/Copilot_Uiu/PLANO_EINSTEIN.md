@@ -2,7 +2,7 @@
 
 Proposta do Fable para o pedido do William de 10/11. **Nada foi aplicado.** No Copilot Studio só houve leitura da página do agente. Este arquivo é a fonte única do texto que vai para o Studio e para a lista `Uiu_Conhecimento`; os arquivos de instrução, de conhecimento e de carga saem dele por script depois do "sim".
 
-Estado da revisão: as regras de turno, parada, setup, meta e OEE2 (Anexo B, arquivo 10, seções 4 a 8; bloco "REGRAS QUE NUNCA QUEBRAM" das instruções; regra do simulador no arquivo 12) **passam pelo `revisor` antes de entrar no Uiu**. O parecer fica registrado na seção 10.
+Estado da revisão: as regras de turno, parada, setup, meta e OEE2 (Anexo B, arquivo 10, seções 4 a 8; bloco "REGRAS QUE NUNCA QUEBRAM" das instruções; regra do simulador no arquivo 12) passaram pelo `revisor` em 10/11: reprovado na primeira passada por 3 problemas, os três corrigidos aqui. Parecer e decisões que sobram para o William na seção 10.
 
 ## 0. Resumo
 
@@ -61,7 +61,7 @@ Três camadas, nesta ordem de efeito:
 
 ## 3. Instruções v3, prontas para colar
 
-Texto integral entre os marcadores. Tamanho medido por script: **7.328 caracteres** sem o bloco opcional e **7.685** com ele (limite do Studio: 8.000). O bloco "LEITURA COMPACTA" só entra se a ferramenta REST for criada (passo P5).
+Texto integral entre os marcadores. Tamanho medido por script: **7.430 caracteres** sem o bloco opcional e **7.787** com ele (limite do Studio: 8.000). O bloco "LEITURA COMPACTA" só entra se a ferramenta REST for criada (passo P5).
 
 <!-- INICIO:instrucoes_v3 -->
 ```text
@@ -109,7 +109,7 @@ CRUZAMENTO ENTRE ÁREAS:
 - Em "por que caiu" ou "por que subiu": decomponha (tempo disponível, parada por motivo, ritmo contra a velocidade teórica, mix de mangueira, troca, refugo), meça cada parcela e diga qual explica mais.
 
 REGRAS QUE NUNCA QUEBRAM (detalhe em 10_Processos_e_Relacoes.md):
-- Parada real, pausa programada e tempo excedido nunca se somam.
+- Parada real, pausa programada e tempo excedido nunca se somam numa perda total. No OEE2 as perdas vêm por família (amarela, vermelha): mostre as famílias separadas.
 - O Tempo Parado da Hora-Hora (field_11) é déficit contra a meta convertido em minutos, não cronômetro de máquina parada.
 - OP aguardando é fila, não parada: diga "na etapa X desde", nunca "parada desde".
 - Metros da célula contam uma vez, na etapa final. Somar as 8 etapas multiplica por 8.
@@ -223,7 +223,7 @@ Não entra neste pacote: atualizar o `00_LEIA_PRIMEIRO.md` na lista para citar o
 | T07 | Top 10 de refugo do ano por mangueira. | Tenta por partes. Entrega o ranking com cobertura ou o parcial com "PARCIAL: cobre X de Y". Diz que a mangueira vem da ficha pela OP. Não inventa nem responde só "consulte o Power BI". | total anual (falhou em 09/11) |
 | T08 | A OP (uma OP real com refugo recente) teve refugo de quê? Onde pode ter nascido e que lotes ela usou? | Refugo por código (TiposErros por `OP_ID`), etapa de origem como hipótese com o teste que confirma, e da ficha: trançadeira, lotes de composto do tubo e da cobertura, lote do fio e do mandril, operador e turno por etapa. | cruzamento qualidade x produção x engenharia |
 | T09 | Por que a aderência da (máquina de pior aderência ontem) ficou baixa? | Decompõe: janelas com Real 0, minutos por motivo, troca de mangueira (muda `field_4`), ritmo nas janelas sem motivo. Diz qual parcela pesa mais. Causa marcada como hipótese. | diagnóstico |
-| T10 | Posso somar parada com tempo excedido para ter a perda total? | Não. Parada real, pausa programada e tempo excedido nunca se somam. Define os três. Cita o arquivo 10. | regra |
+| T10 | Posso somar parada com tempo excedido para ter a perda total? | Não. Parada real, pausa programada e tempo excedido nunca se somam numa perda total. Define os três. Ressalva: o OEE2 agrupa as perdas por família (amarela e vermelha) e as mostra separadas. Cita o arquivo 10. | regra |
 | T11 | O Tempo Parado da Hora-Hora é o tempo que a máquina ficou parada? | Não. É o déficit contra a meta em minutos (Real 0 = janela inteira; senão proporcional), automático desde 29/10 (MEL-255). Na Cobertura chama OCIOSO. | regra |
 | T12 | Como o GMS mede setup? | Intervalo entre a última peça boa de uma OAP e a primeira boa da próxima, nunca por clique. Na Hora-Hora, "Set-up" é motivo programado; no OEE2 é família amarela, perda de disponibilidade. | regra |
 | T13 | A meta cheia do dia é 1.000 m. Quanto mostra o cartão Meta do BI sem hora filtrada? | 906,25 m = 1.000 × 1305 ÷ 1440. O fator vale só no cartão Meta e na HH Aderência, sem hora filtrada, e nunca no OEE2. | cálculo |
@@ -252,7 +252,7 @@ Quem clica é a subsessão Haiku, no navegador embutido (`mcp__Claude_Browser__*
   - numa aba nova, a lista `Uiu_Conhecimento` em `https://danfoss.sharepoint.com/sites/OperationsGuaratingueta`: nomes internos das colunas e, das linhas de `04_Glossario.md`, os campos Title, Secao, Ordem e os 80 primeiros caracteres de Texto.
   - Conferir: o arquivo existe e lista 32 ferramentas.
 - **P2. Cópia de segurança.** Ler o campo Instructions e gravar em `instrucoes/instrucoes_atuais_2026-11-10.md`. Conferir: 5.651 caracteres.
-- **P3. Colar as instruções v3.** Overview → Instructions → Edit → selecionar tudo → colar o conteúdo de `instrucoes/instrucoes_uiu_v3.md` → Save. Conferir: o contador mostra 7.328 (diferença de poucas unidades por quebra de linha é aceitável; acima de 8.000 não salva); o campo relido começa com "IDIOMA: responda SEMPRE" e termina com "00_LEIA_PRIMEIRO.md"; não há aviso de erro.
+- **P3. Colar as instruções v3.** Overview → Instructions → Edit → selecionar tudo → colar o conteúdo de `instrucoes/instrucoes_uiu_v3.md` → Save. Conferir: o contador mostra 7.430 (diferença de poucas unidades por quebra de linha é aceitável; acima de 8.000 não salva); o campo relido começa com "IDIOMA: responda SEMPRE" e termina com "00_LEIA_PRIMEIRO.md"; não há aviso de erro.
 - **P4. Code interpreter (só com "sim" do item 3).** Settings → Generative AI → Code interpreter → ligar → Save. Conferir: a chave aparece ligada depois de recarregar a página. Se o Studio pedir licença ou mostrar aviso, parar e anotar o texto.
 - **P5. Ferramenta REST (só com "sim" do item 4).** Tools → Add tool → conector SharePoint → ação "Send an HTTP request to SharePoint" → usar a conexão que já existe.
   - Nome: `Consultar lista do GMS por REST`
@@ -263,7 +263,7 @@ Quem clica é a subsessão Haiku, no navegador embutido (`mcp__Claude_Browser__*
   - Headers: valor fixo, chave `Accept`, valor `application/json;odata=nometadata`
   - Body: vazio
   - Save. Conferir: a ferramenta aparece ligada em Tools e Method não está como "preenchido pela IA".
-  - Depois, colar o bloco LEITURA COMPACTA nas instruções, logo depois do bloco COBERTURA, e salvar. Conferir: contador em 7.685.
+  - Depois, colar o bloco LEITURA COMPACTA nas instruções, logo depois do bloco COBERTURA, e salvar. Conferir: contador em 7.787.
   - Se a ação não existir, pedir conexão nova ou aparecer "Policy violation": parar este passo, anotar o texto e seguir sem o bloco. Não tentar outro conector.
 - **Fim da fase 1.** Devolver: o que aplicou, o que falhou e o caminho dos arquivos gravados. Não ir à fase 2 sem mensagem do Fable.
 
@@ -297,7 +297,25 @@ Sem o item 3 e o 4 o pacote ainda vale (método, conhecimento, fonte e cobertura
 
 ## 10. Parecer do `revisor`
 
-Pendente. Preenchido antes do "sim" da gravação na lista.
+Revisão de 10/11/2026, feita pelo `executor` em Opus com as instruções do `revisor.md` (o tipo `revisor` não carregou nesta sessão). Só leitura.
+
+**Primeira passada: REPROVADO, 3 problemas. Os três foram corrigidos neste arquivo.**
+
+| # | Problema apontado | Correção aplicada |
+|---|---|---|
+| 1 | "Parada, pausa e tempo excedido nunca se somam" estava sem ressalva, e o OEE2 desconta as famílias amarela e vermelha do mesmo tempo. O Uiu ia se contradizer. | Instruções, arquivo 10 seção 5 e gabarito do T10: a regra vale para painel, andon e "perda total"; o OEE2 agrupa por família e mostra as famílias separadas. |
+| 2 | Faltava avisar que o "PAUSA cinza" do painel (MEL-247) não é a família cinza do OEE2. | Arquivo 10 seção 6: no OEE2, Set-up e Check List são amarelos; o amarelo é o "Set-up declarado", não o KPI de setup. |
+| 3 | Os números de referência do OEE2 eram de antes da pausa fixa de 45 min. | Arquivo 10 seção 8: as duas contas lado a lado (≈ 54% do cartão; 55,1% e 54,3% com a pausa fixa). |
+
+Conferido e aprovado na mesma passada: turnos de 517, 503 e 420 min e as 26 janelas; fator 1305 ÷ 1440 e o gabarito de 906,25 m; Tempo Parado automático desde 29/10 e o limiar do MEL-264; produção por turno do painel (Hora-Hora na Trançagem, Início na Vulcanização, Fim e Parcial nas demais, cancelada não conta); redação de tempo excedido; regra do simulador marcada como não norma. Nenhum setup por clique e nenhum turno fora de `fx_Turno` e `dTurno`.
+
+As correções 2 e 3 foram conferidas por mim contra o `PLANO_OEE2.md` (linhas 44 e 176) e a linha do MEL-247. A redação nova do item 1 não voltou ao `revisor`.
+
+**Decisões que são do William** (nenhuma trava este pacote; o texto já sai com a ressalva):
+
+1. O OEE2 vira exceção escrita à regra "nunca se somam"? Hoje não há linha NORMA dizendo isso.
+2. Data de publicação da v3.0.15: o texto diz "entre 27 e 29/10". O `04_Glossario.md` (linha 39) diz "até 27/10" e diverge do `06_Roteiro_HoraHora.md`.
+3. Meta das duas passadas de TH01 e TO04, adiada desde 23/10.
 
 ---
 
@@ -378,7 +396,7 @@ A coluna Tran_x00e7_adeira da TiposErros é a trançadeira de origem da OP. Rank
 
 ## 5. Parada, pausa, tempo excedido e o Tempo Parado da Hora-Hora
 
-- São três coisas diferentes e nunca se somam:
+- São três coisas diferentes e nunca se somam: nem no painel, nem no andon, nem numa "perda total" (MEL-247):
   - **Parada real:** a célula está incapaz de produzir.
   - **Pausa programada:** motivo do tipo "Programada" (Refeição, Reunião, Set-up, Manut. Preventiva, Check List, Amostra, MPT, TESTE ENGENHARIA). É pausa, não parada (DECISÃO de 22/10/2026, MEL-247).
   - **Tempo excedido:** a célula está produzindo, mas gastou mais tempo que o padrão. Texto da norma no GMS/CLAUDE.md: "produzindo acima da meta". Na Montagem é o motivo TE.
@@ -388,6 +406,7 @@ A coluna Tran_x00e7_adeira da TiposErros é a trançadeira de origem da OP. Rank
 - OP aguardando etapa é fila (WIP), não parada de máquina. Diga "na etapa X desde", nunca "parada desde".
 - Montagem: parada real = Paradas_Montagem sem TE (tempo excedido) e sem RF (refeição), o mesmo critério do BI (MEL-246).
 - MTBF e MTTR só fazem sentido com motivo do tipo falha. Sem separar falha de pausa programada, o número existe e não quer dizer nada (K17).
+- O OEE2 (seção 8) é a única conta que desconta mais de uma classe do mesmo tempo: ele agrupa as perdas por família (amarela e vermelha), no padrão Danfoss (MEL-266). Mesmo ali, mostre as famílias separadas e não chame a soma de "tempo parado". Se o OEE2 é exceção oficial à regra "nunca se somam", ainda não está escrito como NORMA: decisão pendente do William em 10/11/2026.
 
 ## 6. Setup
 
@@ -395,6 +414,8 @@ A coluna Tran_x00e7_adeira da TiposErros é a trançadeira de origem da OP. Rank
 - Na Hora-Hora, "Set-up" é um motivo do tipo Programada: no painel conta como pausa, não como parada (MEL-247).
 - No OEE2 (seção 8) o Set-up é da família amarela, troca de lote, e entra como perda de Disponibilidade.
 - As duas coisas valem ao mesmo tempo, cada uma no seu indicador. Ao responder, diga de qual indicador está falando.
+- Cuidado com a cor: no Painel da Célula o motivo programado vira "PAUSA cinza" (MEL-247). O cinza do painel não é o cinza do OEE2: no OEE2, cinza é atividade não produtiva, e Set-up e Check List são amarelos.
+- O amarelo do OEE2 é o "Set-up declarado no Hora-Hora". O KPI de setup continua sendo o da definição acima.
 - Os minutos com motivo Set-up na Hora-Hora são déficit contra a meta com esse motivo (seção 5). Não são o setup da definição, que pede a hora das peças boas.
 - O simulador da célula usa uma aproximação de setup por troca de mangueira entre turnos. É regra do simulador, não a norma (12_Diagnostico_e_Simulador.md).
 
@@ -425,7 +446,11 @@ Padrão Danfoss adotado para a Hora-Hora de mangueira (MEL-266, 09/11/2026). Fon
 - TCU = tempo valorizado ÷ tempo total do equipamento, 24 horas por 7 dias. Azul e cinza entram. O TCU conta as 11 máquinas.
 - Pausa de refeição planejada: 45 min fixos em cada um dos 3 turnos, 135 min por dia e por máquina.
 - A fonte é o GMS, sem Factbird (que só cobre a TH07). Por isso o OEE2 é estimativa de apontamento, não de sensor: a separação entre disponibilidade e performance vem só da classificação do motivo.
-- Referência de 01/09 a 06/11/2026 na Trançagem: OEE2 perto de 54% sem qualidade e 52,9% com qualidade; Disponibilidade 84,0%, Performance 64,0%, Qualidade perto de 98,5%; TCU perto de 19%. Por máquina: TH06 67%, TM01 63%, TO04 63%, TH01 60%, TH02 60%, TH07 58%, TH05 54%, TH03 41%, TM04 36%, Spiral 18%. O cartão OEE2 não tem meta fixa.
+- Referência de 01/09 a 06/11/2026 na Trançagem, em duas contas:
+  - Antes da pausa fixa (é a referência que o cartão mostra, OEE2 ≈ 54% e TCU ≈ 19%): OEE2 perto de 54% sem qualidade e 52,9% com qualidade; Disponibilidade 84,0%, Performance 64,0%, Qualidade perto de 98,5%.
+  - Com a pausa fixa de 45 min por turno, que é a regra vigente: OEE2 ≈ 55,1% sem qualidade e ≈ 54,3% com qualidade; Disponibilidade 83,5%, Performance 66,0%. A pausa fixa não muda o TCU.
+  - Por máquina, na conta anterior à pausa fixa: TH06 67%, TM01 63%, TO04 63%, TH01 60%, TH02 60%, TH07 58%, TH05 54%, TH03 41%, TM04 36%, Spiral 18%.
+  - O cartão OEE2 não tem meta fixa. Ao citar um desses números, diga de qual conta ele é.
 - A refeição só é declarada em 59% dos turnos de máquina com produção. No resto ela cai em Motivo Não Declarado ou em motivo vermelho e piora a Performance.
 - A conciliação Hora-Hora x ficha foi adiada pelo William: os metros fecham no total (razão 1,02), mas só 54% das OPs ficam em ±20%.
 - O "OEE-lite" (K18 do Mestre_BI: Disponibilidade × Performance × Qualidade com outra definição) é outra fórmula. Não misture os dois.
