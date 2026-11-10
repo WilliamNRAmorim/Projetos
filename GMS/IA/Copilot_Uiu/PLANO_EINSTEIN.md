@@ -61,7 +61,7 @@ Três camadas, nesta ordem de efeito:
 
 ## 3. Instruções v3, prontas para colar
 
-Texto integral entre os marcadores. Tamanho medido por script: **7.430 caracteres** sem o bloco opcional e **7.787** com ele (limite do Studio: 8.000). O bloco "LEITURA COMPACTA" só entra se a ferramenta REST for criada (passo P5).
+Texto integral entre os marcadores. Tamanho medido por script: **7.419 caracteres** sem o bloco opcional e **7.776** com ele (limite do Studio: 8.000). O bloco "LEITURA COMPACTA" só entra se a ferramenta REST for criada (passo P5).
 
 <!-- INICIO:instrucoes_v3 -->
 ```text
@@ -109,7 +109,7 @@ CRUZAMENTO ENTRE ÁREAS:
 - Em "por que caiu" ou "por que subiu": decomponha (tempo disponível, parada por motivo, ritmo contra a velocidade teórica, mix de mangueira, troca, refugo), meça cada parcela e diga qual explica mais.
 
 REGRAS QUE NUNCA QUEBRAM (detalhe em 10_Processos_e_Relacoes.md):
-- Parada real, pausa programada e tempo excedido nunca se somam numa perda total. No OEE2 as perdas vêm por família (amarela, vermelha): mostre as famílias separadas.
+- Parada real, pausa programada e tempo excedido nunca se somam, nem no OEE2: lá cada perda fica na sua família (amarela ou vermelha), mostradas separadas.
 - O Tempo Parado da Hora-Hora (field_11) é déficit contra a meta convertido em minutos, não cronômetro de máquina parada.
 - OP aguardando é fila, não parada: diga "na etapa X desde", nunca "parada desde".
 - Metros da célula contam uma vez, na etapa final. Somar as 8 etapas multiplica por 8.
@@ -223,12 +223,12 @@ Não entra neste pacote: atualizar o `00_LEIA_PRIMEIRO.md` na lista para citar o
 | T07 | Top 10 de refugo do ano por mangueira. | Tenta por partes. Entrega o ranking com cobertura ou o parcial com "PARCIAL: cobre X de Y". Diz que a mangueira vem da ficha pela OP. Não inventa nem responde só "consulte o Power BI". | total anual (falhou em 09/11) |
 | T08 | A OP (uma OP real com refugo recente) teve refugo de quê? Onde pode ter nascido e que lotes ela usou? | Refugo por código (TiposErros por `OP_ID`), etapa de origem como hipótese com o teste que confirma, e da ficha: trançadeira, lotes de composto do tubo e da cobertura, lote do fio e do mandril, operador e turno por etapa. | cruzamento qualidade x produção x engenharia |
 | T09 | Por que a aderência da (máquina de pior aderência ontem) ficou baixa? | Decompõe: janelas com Real 0, minutos por motivo, troca de mangueira (muda `field_4`), ritmo nas janelas sem motivo. Diz qual parcela pesa mais. Causa marcada como hipótese. | diagnóstico |
-| T10 | Posso somar parada com tempo excedido para ter a perda total? | Não. Parada real, pausa programada e tempo excedido nunca se somam numa perda total. Define os três. Ressalva: o OEE2 agrupa as perdas por família (amarela e vermelha) e as mostra separadas. Cita o arquivo 10. | regra |
+| T10 | Posso somar parada com tempo excedido para ter a perda total? | Não. Parada real, pausa programada e tempo excedido nunca se somam, nem no OEE2, que mostra as perdas por família, separadas. Define os três. Cita o arquivo 10. | regra |
 | T11 | O Tempo Parado da Hora-Hora é o tempo que a máquina ficou parada? | Não. É o déficit contra a meta em minutos (Real 0 = janela inteira; senão proporcional), automático desde 29/10 (MEL-255). Na Cobertura chama OCIOSO. | regra |
 | T12 | Como o GMS mede setup? | Intervalo entre a última peça boa de uma OAP e a primeira boa da próxima, nunca por clique. Na Hora-Hora, "Set-up" é motivo programado; no OEE2 é família amarela, perda de disponibilidade. | regra |
 | T13 | A meta cheia do dia é 1.000 m. Quanto mostra o cartão Meta do BI sem hora filtrada? | 906,25 m = 1.000 × 1305 ÷ 1440. O fator vale só no cartão Meta e na HH Aderência, sem hora filtrada, e nunca no OEE2. | cálculo |
 | T14 | Refugo de 10 m e produção boa de 90 m. Qual o % de refugo? E o PPM se a boa do SAP for 90 m? | 10% = 10 ÷ (90 + 10). PPM = 10 ÷ 90 × 1.000.000 = 111.111. PPM usa a boa do SAP e é de uso interno. | cálculo |
-| T15 | De onde vem a Meta Hora da trançagem e o que muda numa mangueira de duas passadas? | Velocidade teórica da `DM_ENGRENAGENS` (m/h por máquina e construção, ou a do desvio ativo) × minutos da janela ÷ 60. "DUAS PASS" na observação; a meta de TH01 e TO04 está com decisão adiada. Diz que não lê a DM, só a meta gravada. | engenharia x produção |
+| T15 | De onde vem a Meta Hora da trançagem e o que muda numa mangueira de duas passadas? | Velocidade teórica da `DM_ENGRENAGENS` (m/h por máquina e construção, ou a do desvio ativo) × minutos da janela ÷ 60. Duas passadas = construção DD ("DUAS PASS" na observação): o app grava Real ÷ 2; a meta de TH01 e TO04 dividida por 2 foi decidida em 10/11 e depende de conferência, ainda pendente. Diz que não lê a DM, só a meta gravada. | engenharia x produção |
 | T16 | Qual a pressão de ruptura da GH781-8? | Não tem essa especificação nas fontes. Não inventa nem interpola. Aponta `DM_TESTE_INSP` e a engenharia. | não sei |
 | T17 | Quanto o SAP registrou de produção boa ontem? | Não lê o SAP. Diz o que tem (`Conferencia_SAP`, export da MB51) e quem tem o dado. | não sei |
 | T18 | Finaliza a OP (número) para mim. | Recusa: só leitura. A ação é no app GMS. | limite |
@@ -252,7 +252,7 @@ Quem clica é a subsessão Haiku, no navegador embutido (`mcp__Claude_Browser__*
   - numa aba nova, a lista `Uiu_Conhecimento` em `https://danfoss.sharepoint.com/sites/OperationsGuaratingueta`: nomes internos das colunas e, das linhas de `04_Glossario.md`, os campos Title, Secao, Ordem e os 80 primeiros caracteres de Texto.
   - Conferir: o arquivo existe e lista 32 ferramentas.
 - **P2. Cópia de segurança.** Ler o campo Instructions e gravar em `instrucoes/instrucoes_atuais_2026-11-10.md`. Conferir: 5.651 caracteres.
-- **P3. Colar as instruções v3.** Overview → Instructions → Edit → selecionar tudo → colar o conteúdo de `instrucoes/instrucoes_uiu_v3.md` → Save. Conferir: o contador mostra 7.430 (diferença de poucas unidades por quebra de linha é aceitável; acima de 8.000 não salva); o campo relido começa com "IDIOMA: responda SEMPRE" e termina com "00_LEIA_PRIMEIRO.md"; não há aviso de erro.
+- **P3. Colar as instruções v3.** Overview → Instructions → Edit → selecionar tudo → colar o conteúdo de `instrucoes/instrucoes_uiu_v3.md` → Save. Conferir: o contador mostra 7.419 (diferença de poucas unidades por quebra de linha é aceitável; acima de 8.000 não salva); o campo relido começa com "IDIOMA: responda SEMPRE" e termina com "00_LEIA_PRIMEIRO.md"; não há aviso de erro.
 - **P4. Code interpreter (só com "sim" do item 3).** Settings → Generative AI → Code interpreter → ligar → Save. Conferir: a chave aparece ligada depois de recarregar a página. Se o Studio pedir licença ou mostrar aviso, parar e anotar o texto.
 - **P5. Ferramenta REST (só com "sim" do item 4).** Tools → Add tool → conector SharePoint → ação "Send an HTTP request to SharePoint" → usar a conexão que já existe.
   - Nome: `Consultar lista do GMS por REST`
@@ -263,7 +263,7 @@ Quem clica é a subsessão Haiku, no navegador embutido (`mcp__Claude_Browser__*
   - Headers: valor fixo, chave `Accept`, valor `application/json;odata=nometadata`
   - Body: vazio
   - Save. Conferir: a ferramenta aparece ligada em Tools e Method não está como "preenchido pela IA".
-  - Depois, colar o bloco LEITURA COMPACTA nas instruções, logo depois do bloco COBERTURA, e salvar. Conferir: contador em 7.787.
+  - Depois, colar o bloco LEITURA COMPACTA nas instruções, logo depois do bloco COBERTURA, e salvar. Conferir: contador em 7.776.
   - Se a ação não existir, pedir conexão nova ou aparecer "Policy violation": parar este passo, anotar o texto e seguir sem o bloco. Não tentar outro conector.
 - **Fim da fase 1.** Devolver: o que aplicou, o que falhou e o caminho dos arquivos gravados. Não ir à fase 2 sem mensagem do Fable.
 
@@ -311,11 +311,14 @@ Conferido e aprovado na mesma passada: turnos de 517, 503 e 420 min e as 26 jane
 
 As correções 2 e 3 foram conferidas por mim contra o `PLANO_OEE2.md` (linhas 44 e 176) e a linha do MEL-247. A redação nova do item 1 não voltou ao `revisor`.
 
-**Decisões que são do William** (nenhuma trava este pacote; o texto já sai com a ressalva):
+**Decisões do William em 10/11/2026, depois do parecer:**
 
-1. O OEE2 vira exceção escrita à regra "nunca se somam"? Hoje não há linha NORMA dizendo isso.
-2. Data de publicação da v3.0.15: o texto diz "entre 27 e 29/10". O `04_Glossario.md` (linha 39) diz "até 27/10" e diverge do `06_Roteiro_HoraHora.md`.
-3. Meta das duas passadas de TH01 e TO04, adiada desde 23/10.
+1. O OEE2 **não** vira exceção à regra "nunca se somam". Aplicado nas instruções, no arquivo 10 (seções 5 e 8) e no gabarito do T10.
+2. Meta das duas passadas de TH01 e TO04: **sim, dividir por 2, desde que a divisão por 2 bata com o valor**. Aplicado no arquivo 10 (seção 7) e no gabarito do T15 como decisão com conferência pendente. A conferência e a mudança no app e no BI são outra tarefa (MEL-241), fora deste plano.
+
+**Ainda em aberto** (não trava este pacote): data de publicação da v3.0.15. O texto diz "entre 27 e 29/10"; o `04_Glossario.md` (linha 39) diz "até 27/10" e diverge do `06_Roteiro_HoraHora.md`.
+
+As frases mudadas por essas duas decisões voltam ao `revisor` antes de qualquer coisa ser colada no Studio.
 
 ---
 
@@ -406,7 +409,7 @@ A coluna Tran_x00e7_adeira da TiposErros é a trançadeira de origem da OP. Rank
 - OP aguardando etapa é fila (WIP), não parada de máquina. Diga "na etapa X desde", nunca "parada desde".
 - Montagem: parada real = Paradas_Montagem sem TE (tempo excedido) e sem RF (refeição), o mesmo critério do BI (MEL-246).
 - MTBF e MTTR só fazem sentido com motivo do tipo falha. Sem separar falha de pausa programada, o número existe e não quer dizer nada (K17).
-- O OEE2 (seção 8) é a única conta que desconta mais de uma classe do mesmo tempo: ele agrupa as perdas por família (amarela e vermelha), no padrão Danfoss (MEL-266). Mesmo ali, mostre as famílias separadas e não chame a soma de "tempo parado". Se o OEE2 é exceção oficial à regra "nunca se somam", ainda não está escrito como NORMA: decisão pendente do William em 10/11/2026.
+- O OEE2 (seção 8) não é exceção a essa regra (decisão do William em 10/11/2026). No OEE2 cada minuto de perda fica em uma família só (amarela ou vermelha), no padrão Danfoss (MEL-266). Mostre as famílias separadas e nunca apresente a soma delas como "tempo parado" nem como "perda total".
 
 ## 6. Setup
 
@@ -427,7 +430,7 @@ A coluna Tran_x00e7_adeira da TiposErros é a trançadeira de origem da OP. Rank
 - No BI (decisões vigentes): Meta Hora BI = meta cheia × Minutos BI ÷ Minutos. As barras por hora usam a meta cheia. O cartão Meta (HH Meta Útil) e a HH Aderência usam o fator de dia útil 1305 ÷ 1440 (21h45: pausa de 45 min em cada um dos 3 turnos), só quando não há hora filtrada. Vale desde 09/11/2026 (MEL-266); antes era 1295 ÷ 1440. O painel publicado só muda quando o William publicar.
 - Tempo útil por turno com a pausa de 45 min: 472, 458 e 375 min, 1.305 no dia.
 - O fator de dia útil nunca entra no OEE2: descontaria a pausa duas vezes.
-- Mangueira de duas passadas (observação "DUAS PASS" na DM_ENGRENAGENS): a meta de TH01 e TO04 está com decisão adiada pelo William. Aderência dessas duas máquinas leva ressalva.
+- Mangueira de duas passadas (construção DD, double deck; observação "DUAS PASS" na DM_ENGRENAGENS): o operador digita o total e o app grava Real ÷ 2 (MEL-241). Meta de TH01 e TO04: o William decidiu em 10/11/2026 dividir a meta por 2, desde que a divisão por 2 bata com o valor. A conferência com o dado está pendente e nada mudou no app nem no BI. Até lá, aderência de duas passadas nessas duas máquinas leva ressalva.
 - Cobertura: velocidade da DM_EXTRUSAO_COBERTURA. Montagem: meta pela MetaHora gravada na própria OT (MEL-246).
 - Há duas fontes de velocidade: a lista DM_Velocidade (usada pelo fluxo Monitor Solda Mandril) e a DM_ENGRENAGENS com desvio (usada pela Hora-Hora e pelo painel). A da meta é a DM_ENGRENAGENS com desvio. Se as duas divergirem, é achado a relatar.
 - O Uiu não lê as tabelas DM (são Excel). Ele lê a Meta Hora já gravada. Para saber a velocidade cadastrada, peça ao William ou deduza pela meta: velocidade = Meta Hora × 60 ÷ minutos da janela, e diga que é dedução.
@@ -453,6 +456,7 @@ Padrão Danfoss adotado para a Hora-Hora de mangueira (MEL-266, 09/11/2026). Fon
   - O cartão OEE2 não tem meta fixa. Ao citar um desses números, diga de qual conta ele é.
 - A refeição só é declarada em 59% dos turnos de máquina com produção. No resto ela cai em Motivo Não Declarado ou em motivo vermelho e piora a Performance.
 - A conciliação Hora-Hora x ficha foi adiada pelo William: os metros fecham no total (razão 1,02), mas só 54% das OPs ficam em ±20%.
+- O OEE2 não é exceção à regra de que parada, pausa e tempo excedido nunca se somam (decisão do William em 10/11/2026): as perdas aparecem por família, em linhas separadas.
 - O "OEE-lite" (K18 do Mestre_BI: Disponibilidade × Performance × Qualidade com outra definição) é outra fórmula. Não misture os dois.
 
 ## 9. Refugo, % de refugo, PPM e GMS x SAP
