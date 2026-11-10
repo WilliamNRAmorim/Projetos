@@ -72,3 +72,46 @@ Até 16/11 ficam escritos: `MOTOR_GUIA.md`, contratos de dados, bateria do Uiu, 
 - Fatias em % são estimativa até a calibração do B1.
 - `python gms.py --estado` quebra no Windows com acento (cp1252). Corrigir com `PYTHONIOENCODING=utf-8` ou `-X utf8` antes do B5.
 - Fase 5 do motor (cenários em PNG pelo Gemini) fica com o `produtor-de-artes`, é imagem.
+
+---
+
+# 10. V3 — ESCOPO AMBICIOSO (10/11/2026). Substitui as seções 2, 3 e 4.
+
+Motivo: a v2 media o Fable pelo tamanho do Sonnet. O gargalo real é a barra (limite de 5 h e semanal), não a capacidade. Então cada janela de 5 h vira **uma missão grande, ponta a ponta**, e não vários blocos pequenos.
+
+## 10.1 Como o Fable trabalha (muda tudo)
+- **Brief por resultado, não por passo.** O chefe escreve só: objetivo, critério de aceite, o que não pode quebrar, onde gravar. O Fable decide arquitetura, ordem e ferramentas. Nada de micro-instrução do Sonnet.
+- **Missão = uma sessão Fable inteira, longa e autônoma**, com ferramentas liberadas (código, testes, navegador, Power BI MCP, pac CLI), commit a cada marco.
+- **Ele se audita:** a última hora de cada missão é ele mesmo atacando a entrega (teste, caso extremo, regressão) e corrigindo.
+- **Paralelismo:** se você escrever "ultracode" ou "use um workflow", o Fable abre vários agentes na missão. Custa muito mais barra; uso só na missão P1 e P2.
+- Trava: barra geral > 85% pausa; produção real (app em uso na fábrica, SAP, normas) nunca é alterada sem seu "sim" e sem cópia de segurança.
+
+## 10.2 As missões (ordem de valor)
+
+**P1. Motor de cinema do Bit.** Reconstruir o motor de vídeo em 3D/WebGL: Three.js com PBR, iluminação, sombras, câmera com lente e movimento, pós-processamento (bloom, grão, profundidade de campo, color grading), personagens riggados com expressão, cenários procedurais, render determinístico em MP4. Meta: qualidade de curta animado, não de slide. Entrega: motor + `MOTOR_GUIA.md` + 3 episódios-teste + hash dos publicados intactos. Depois, Sonnet/Opus só escrevem o JSON do episódio e rodam o render.
+
+**P2. Gêmeo digital da célula GMS.** Simulador completo (8 etapas, turnos, paradas, setup, refugo, headcount) calibrado com o histórico real, com backtest. Faz what-if de demanda x pessoas e sequenciamento (APS), e entrega o resultado no Power BI. É a pendência de 01/11 (simulador headcount x demanda), agora sem o corte de tamanho.
+
+**P3. Uiu / William do GMS completo.** F2 inteira: `Uiu_Agregados`, 4 agentes-filho, escrita com confirmação, bateria de 50+ perguntas com resposta esperada rodando sozinha, e uma versão local de reserva (Ollama + DuckDB) caso a DLP bloqueie. Fable opera o Studio e o SharePoint direto.
+
+**P4. Auditor noturno do GMS.** Sistema que confere todo dia: GMS x MB51/SAP, refugo duplicado, turno, divergência de tempo padrão, dado parado, e abre as MELs sozinho no diário. Roda por Power Automate/Python. Cobre Qualidade, Engenharia, Produção e apontamento de uma vez.
+
+**P5. GMS Cockpit + app de tablet em Code App (protótipo paralelo).** Painel único local (estado, backlog, diário, agentes, uso, alertas) e um protótipo React/Power Apps Code App do apontamento e do painel de célula, com PCF de Gantt/OEE. **Só protótipo ao lado**; o app em produção não é tocado.
+
+Power BI e Power Apps não viram missão própria: entram dentro de P2, P4 e P5 e na triagem das 254 MELs (feita pela P4 no primeiro dia).
+
+## 10.3 Calendário (uma missão por janela de 5 h; 2 janelas por dia)
+| Quando | Missão |
+|---|---|
+| Ter 10 | **P1** (manhã, a maior) e **P3** (tarde) |
+| Qua 11 | **P2** (dia inteiro, é a mais pesada em raciocínio) |
+| Qui 12 | **P4** e continuação da P2 se não fechou |
+| Sex 13 | **P5** |
+| Sáb 14 | Continuação do que ficou aberto + correções que o Sonnet/Opus acharem. Rotina do Bit (20h) segue no Sonnet |
+| Dom 15 (após 08h, barra nova) | **P1 fase 2**: polimento, mais personagens e cenários; `MOTOR_GUIA.md` final |
+| Seg 16 | Revisão cruzada de tudo e manual "como usar sem o Fable" |
+
+Calibração: a primeira missão (P1) mede quanto da barra uma missão grande consome. Se estourar, a ordem de corte é P5, depois P4; P1, P2 e P3 ficam.
+
+## 10.4 O que isso não é
+Não tenho como afirmar o teto do Fable 5.2: a escolha dos projetos acima é a minha aposta do que mais rende para você, e você pode trocar qualquer um. Se o Fable fizer mais do que o brief pede, melhor.
