@@ -130,3 +130,19 @@ Nova ordem: **P2 → P3 → P4 → P5 → P1.** Onde roda:
 - **Aqui (este PC), sem o PC da fábrica:** análise, código, simulação, backtest, bateria do Uiu, auditor em Python sobre os dados exportados (`GMS/IA/dados`, `Producao_GMS_x_MB51/dados`, `Dados_Historicos`, `dados_diarios.json`) e edição dos arquivos do modelo (PBIP/TMDL) e das telas (`Telas/`).
 - **Só no PC da fábrica:** abrir o Power BI Desktop com o modelo vivo para validar DAX contra o dia conferido, atualizar/publicar o relatório, e pegar export novo do SAP (MB51). Nada disso é pré-requisito para o Fable começar.
 - **Depende do login, não do PC:** SharePoint, Copilot Studio e Power Automate pelo navegador do app, `pac`, Factbird. Confirmar no B1 se este PC está logado.
+
+## 10.7 Pedidos de 10/11 (noite): layout, Automates e cuidado com a barra
+**Nova missão L (alta prioridade, entra logo depois da P2): revisão de layout e eficácia.**
+- **Layout do Power BI:** Fable avalia o relatório (`GMS/PowerBI`, `layout_salvo.json`, `Mestre_BI`) como diretor de design e de leitura de dados: hierarquia, o que o supervisor precisa ver em 5 s, cores, densidade, mobile/tablet. Entrega: diagnóstico com prioridade + proposta aplicável + mockup (folha antes/depois).
+- **Layout do Power Apps:** mesma avaliação sobre `Telas/` (tablet na linha: toque, tamanho de alvo, fluxo do apontamento, cliques até concluir, erro e feedback, desempenho). Respeita a regra: patch por bloco, nunca mexer em X/Y/Width/Height sem listar.
+- **Power Automate:** auditoria de eficácia (gatilhos, concorrência, paginação, tratamento de erro, execuções paralelas, custo premium, tempo de execução) e padrão novo de fluxo. **Depende do export dos fluxos** (William exporta antes, ou o Fable lê pelo navegador se o login estiver ativo).
+- Primeiro só diagnóstico e proposta. Nada vai para produção sem o "sim" do William e sem cópia de segurança.
+
+**Cuidado para não queimar a barra de uma vez (valem para todas as sessões Fable):**
+1. Uma missão por sessão, sessão nova, brief em arquivo. Nunca pergunta solta e comprida no Fable.
+2. Contexto da sessão Fable abaixo de ~150k tokens; passou disso, ele commita, escreve o estado em arquivo e abre sessão nova.
+3. Sem ler arquivo grande inteiro (diário, Mestre, xlsx): usar `gms.py`, trechos e `grep`. Triagem e busca vão ao `explorador` (Haiku), não ao Fable.
+4. Fable não faz clique repetitivo, formatação, git nem lote de dados.
+5. `get_usage` antes e depois de cada missão; anotar o delta no `registro.md`. Passou do dobro do previsto, para e commita.
+6. Paralelismo ("ultracode") só com o seu pedido explícito.
+7. Barra geral > 85% pausa tudo.
