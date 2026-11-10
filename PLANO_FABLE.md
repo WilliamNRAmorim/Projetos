@@ -115,3 +115,11 @@ Calibração: a primeira missão (P1) mede quanto da barra uma missão grande co
 
 ## 10.4 O que isso não é
 Não tenho como afirmar o teto do Fable 5.2: a escolha dos projetos acima é a minha aposta do que mais rende para você, e você pode trocar qualquer um. Se o Fable fizer mais do que o brief pede, melhor.
+
+## 10.5 Redefinição do Fable (vale até 17/11, informada pelo William em 10/11)
+Regra: **usar quando a barra Fable estiver em 90% ou mais e ainda houver missão pendente. Nunca com sobra.**
+- Provável dia: quinta 12 ou sexta 13, depois de P1, P2 e P3. A calibração da P1 confirma o ritmo.
+- Não esperar até domingo com a barra zerada: ficaria 2 a 3 dias parado, e a janela de 5 h limita o que dá para gastar em 15 e 16/11.
+- Antes de clicar: `get_usage` e anotar o `resetsAt` do Fable. Depois de clicar: ler de novo. Se o horário passar a ser 7 dias após o clique, o ciclo mudou e a reinicialização de 15/11 08h deixou de existir; seguir o calendário só com a barra nova. Se ficou em 15/11 08h, ganhou uma terceira barra.
+- Nunca depois de 16/11: a promoção do Fable 5.2 acaba nesse dia, então não sobra janela para gastar.
+- Efeito no calendário: o Fable nunca fica parado esperando barra; P4 e P5 sobem um dia se a redefinição vier cedo.
