@@ -147,3 +147,5 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-09 | Uiu publicado no DPS - Non Prod e canal Teams/M365 adicionado (só o William) | chefe (Opus 5.5) no navegador do app | ação com sim do William | uso.ps1 sem transcrição do dia
 2026-11-09 | Uiu DPS: respostas em português (formatação, instruções, saudação, fallback) e conversa liberada | chefe (Opus 5.5) no navegador do app | ajuste de configuração no Studio | uso.ps1 sem transcrição do dia
 2026-11-09 | Uiu: passagem para amanhã (PROXIMA_SESSAO.md) com estado, IDs, pendências e plano F2 | chefe (Opus 5.5) direto | documento de passagem | uso.ps1 sem transcrição do dia
+2026-11-09 | push da pasta Projetos ao GitHub | sem subagentes (chefe, Sonnet) | tarefa simples de git | custo baixo
+2026-11-09 | Plano de uso do Fable até 16/11 (PLANO_FABLE.md), auditado e corrigido uma vez | chefe (Sonnet 5.5) direto, sem subagente | leitura de PLANO, licoes, registro, PLANO_VISUAL e get_usage; decisão de estratégia sem regra de negócio | custo baixo, uso.ps1 não medido
