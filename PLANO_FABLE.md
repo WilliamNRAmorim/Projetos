@@ -123,3 +123,10 @@ Regra: **usar quando a barra Fable estiver em 90% ou mais e ainda houver missão
 - Antes de clicar: `get_usage` e anotar o `resetsAt` do Fable. Depois de clicar: ler de novo. Se o horário passar a ser 7 dias após o clique, o ciclo mudou e a reinicialização de 15/11 08h deixou de existir; seguir o calendário só com a barra nova. Se ficou em 15/11 08h, ganhou uma terceira barra.
 - Nunca depois de 16/11: a promoção do Fable 5.2 acaba nesse dia, então não sobra janela para gastar.
 - Efeito no calendário: o Fable nunca fica parado esperando barra; P4 e P5 sobem um dia se a redefinição vier cedo.
+
+## 10.6 Ajuste de 10/11: P1 (motor de cinema) deixa de ser prioridade
+William: gosta, mas não é prioridade. P1 vira a última, só com barra que sobrar (ou na barra nova de 15/11).
+Nova ordem: **P2 → P3 → P4 → P5 → P1.** Onde roda:
+- **Aqui (este PC), sem o PC da fábrica:** análise, código, simulação, backtest, bateria do Uiu, auditor em Python sobre os dados exportados (`GMS/IA/dados`, `Producao_GMS_x_MB51/dados`, `Dados_Historicos`, `dados_diarios.json`) e edição dos arquivos do modelo (PBIP/TMDL) e das telas (`Telas/`).
+- **Só no PC da fábrica:** abrir o Power BI Desktop com o modelo vivo para validar DAX contra o dia conferido, atualizar/publicar o relatório, e pegar export novo do SAP (MB51). Nada disso é pré-requisito para o Fable começar.
+- **Depende do login, não do PC:** SharePoint, Copilot Studio e Power Automate pelo navegador do app, `pac`, Factbird. Confirmar no B1 se este PC está logado.
