@@ -1,5 +1,7 @@
 # Plano: Uiu vira o "William dentro do Copilot Studio"
 
+> **Histórico do plano aprovado em 09/11/2026.** Para executar, começar pelo [PLANO_EXECUCAO_GMS.md](PLANO_EXECUCAO_GMS.md), que detalha F0–F5 e resolve lacunas de planejamento. O estado do Default, o caminho Knowledge nativo e algumas propostas técnicas abaixo foram superados pelos registros posteriores. As decisões de negócio aprovadas são preservadas; este texto não deve ser usado isoladamente como roteiro atual.
+
 Data: 2026-11-09. Agente: Uiu (Copilot Studio, ambiente Default Danfoss). Situação hoje, vista no Studio:
 - Orquestração generativa ligada, modelo GPT Chat Latest (Oct 2026), instruções com 4.595 de 8.000 caracteres.
 - 60 ferramentas de SharePoint; as de criar e apagar estão desligadas e as de listar, ligadas. Nenhuma fonte de conhecimento.

@@ -1,5 +1,9 @@
 # Uiu: onde parou (09/11/2026) e o que executar a seguir
 
+> **Atualização da retomada — planejamento v2.0, 09/11/2026.** Começar por [PLANO_EXECUCAO_GMS.md](PLANO_EXECUCAO_GMS.md), depois [gaps e decisões](planejamento/GAPS_E_DECISOES.md), [contratos](planejamento/CONTRATOS_E_METRICAS.md) e [execução e aceite](planejamento/EXECUCAO_E_ACEITE.md). Próximo pacote: E0, conferência do agente DPS e das versões de fonte; depois E1/E2, definição e prova de extração da TiposErros. O material abaixo é o histórico anterior, não uma ordem para executar diretamente a lista de agregados.
+>
+> Correções de planejamento: não excluir refugo só pela combinação OP/erro/quantidade/data; não usar Code Interpreter como garantia de leitura completa; não agregar todas as etapas apenas por Fim; não usar recurso dos eventos como máquina da etapa. A implantação das melhorias e os testes no tenant permanecem pendentes. O português no Teams deve ser conferido antes de republicar, pois o estado documentado pode ter mudado.
+
 Para abrir a próxima sessão: "seguir `GMS/IA/Copilot_Uiu/PROXIMA_SESSAO.md`". Ler também `PLANO_UIU.md` e `instrucoes/estado_studio_2026-11-09.md` (histórico detalhado do dia).
 
 ## Estado em 09/11 à noite
