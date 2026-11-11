@@ -7,7 +7,7 @@
 >   - Code interpreter ligado;
 >   - ferramenta nova **Somar no GMS**, um fluxo de agente (workflow `739dd213-efdd-f111-84e8-6045bd92c91f`, definição em `fluxo_somar_gms/clientdata.json`): GET fixo, lista permitida, filtro obrigatório, agrupa por até 2 colunas e devolve só os totais.
 >   - O Uiu preenche as 5 entradas, com "-" para vazio e "0" para todos os grupos.
-> - **Teams:** ainda está a versão de 10/11, que responde em inglês e desiste. Republicar pede o "sim" do William.
+> - **Teams:** **publicado em 11/11 às 14:28**, com "Force newest version" e o "sim" do William; o Teams tem a mesma versão do rascunho.
 > - **Conhecimento:** a `Uiu_Conhecimento` tem 99 linhas; os arquivos 10, 11 e 12 entraram em 11/11.
 > - **Índice:** criado em `TiposErros.DataHoraRefugo`.
 > - **Testes:** em `instrucoes/gabarito_teste_2026-11-11.md`. O volume por processo bateu 100%.
