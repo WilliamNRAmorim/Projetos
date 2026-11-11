@@ -1,3 +1,28 @@
+# Uiu: onde parou (11/11/2026, tarde)
+
+> **Estado vigente em 11/11.** Tudo abaixo desta caixa é histórico.
+> - **Rascunho do agente DPS:**
+>   - modelo Claude Opus 4.8;
+>   - instruções v3.2 (`instrucoes/instrucoes_uiu_v3_2.md`, 7.890 caracteres, idênticas ao Studio);
+>   - Code interpreter ligado;
+>   - ferramenta nova **Somar no GMS**, um fluxo de agente (workflow `739dd213-efdd-f111-84e8-6045bd92c91f`, definição em `fluxo_somar_gms/clientdata.json`): GET fixo, lista permitida, filtro obrigatório, agrupa por até 2 colunas e devolve só os totais.
+>   - O Uiu preenche as 5 entradas, com "-" para vazio e "0" para todos os grupos.
+> - **Teams:** ainda está a versão de 10/11, que responde em inglês e desiste. Republicar pede o "sim" do William.
+> - **Conhecimento:** a `Uiu_Conhecimento` tem 99 linhas; os arquivos 10, 11 e 12 entraram em 11/11.
+> - **Índice:** criado em `TiposErros.DataHoraRefugo`.
+> - **Testes:** em `instrucoes/gabarito_teste_2026-11-11.md`. O volume por processo bateu 100%.
+> - **Pendências:**
+>   1. reforçar "dia produtivo 08:20Z" na receita de refugo;
+>   2. retestar Tempo Parado por motivo;
+>   3. medir o custo do Opus 4.8 por pergunta no admin center (se pesar, voltar ao GPT Chat Latest Nov, já que a soma agora sai da ferramenta);
+>   4. testar refugo por mangueira e Montagem;
+>   5. a tela da ferramenta no Studio não mostra as entradas (o fluxo e as instruções já cobrem isso).
+> - **Lições do Studio no navegador do app:**
+>   - Para trocar as instruções: abrir o editor, clicar dentro, ctrl+a, Delete, conferir que está vazio, colar o texto inteiro por ClipboardEvent, conferir que ficou igual ao arquivo e só então salvar. Colagem parcial e "selectAll" sem foco gravaram texto embaralhado em 11/11.
+>   - A URL direta /overview às vezes trava; entrar pela Home e clicar no Uiu.
+>   - Fluxo de agente se cria e se altera pela API do Dataverse (`/api/data/v9.2/workflows`, aba em org4c52fdd5.crm4.dynamics.com), não pelo designer, que não aceita digitação.
+> - **Nome de coluna:** na API REST do SharePoint, coluna cujo nome interno começa com "_" ganha o prefixo "OData_" (`_x0043_` vira `OData__x0043_`).
+
 # Uiu: onde parou (09/11/2026) e o que executar a seguir
 
 > **Atualização da retomada — planejamento v2.0, 09/11/2026.** Começar por [PLANO_EXECUCAO_GMS.md](PLANO_EXECUCAO_GMS.md), depois [gaps e decisões](planejamento/GAPS_E_DECISOES.md), [contratos](planejamento/CONTRATOS_E_METRICAS.md) e [execução e aceite](planejamento/EXECUCAO_E_ACEITE.md). Próximo pacote: E0, conferência do agente DPS e das versões de fonte; depois E1/E2, definição e prova de extração da TiposErros. O material abaixo é o histórico anterior, não uma ordem para executar diretamente a lista de agregados.

@@ -1,0 +1,506 @@
+{
+ "properties": {
+  "connectionReferences": {
+   "shared_sharepointonline": {
+    "runtimeSource": "embedded",
+    "connection": {
+     "connectionReferenceLogicalName": "cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016"
+    },
+    "api": {
+     "name": "shared_sharepointonline"
+    }
+   }
+  },
+  "definition": {
+   "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+    "$connections": {
+     "defaultValue": {},
+     "type": "Object"
+    },
+    "$authentication": {
+     "defaultValue": {},
+     "type": "SecureObject"
+    }
+   },
+   "triggers": {
+    "manual": {
+     "type": "Request",
+     "kind": "Skills",
+     "inputs": {
+      "schema": {
+       "type": "object",
+       "properties": {
+        "text": {
+         "title": "lista",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Nome exato da lista SharePoint do GMS, por exemplo Eventos_Producao ou Hora-Hora",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_1": {
+         "title": "filtro",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Filtro OData com nomes internos de coluna; o primeiro critério deve ser coluna indexada (data, OP_ID, origem_ID) ou faixa de ID",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_2": {
+         "title": "agrupar",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Até 2 colunas internas separadas por vírgula (ex.: etapa ou etapa,turno); use - para total geral",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_3": {
+         "title": "somar",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Coluna numérica interna a somar (ex.: metros, field_7); use - para contar linhas",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_4": {
+         "title": "top",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Quantos grupos devolver, os maiores primeiro; use 0 para todos",
+         "x-ms-content-hint": "TEXT"
+        }
+       },
+       "required": [
+        "text",
+        "text_1",
+        "text_2",
+        "text_3",
+        "text_4"
+       ]
+      }
+     }
+    }
+   },
+   "actions": {
+    "Permitidas": {
+     "type": "Compose",
+     "inputs": [
+      "Eventos_Producao",
+      "Hora-Hora",
+      "TiposErros",
+      "RegistrosInspeção",
+      "ficha_producao",
+      "Producao_Montagem",
+      "Paradas_Montagem",
+      "Plano_OPs",
+      "Refugo_Bobinadeira",
+      "RefugoExtrusora_estrutura",
+      "Controle_Catenaria"
+     ],
+     "runAfter": {}
+    },
+    "Parametros": {
+     "type": "Compose",
+     "inputs": {
+      "lista": "@{trim(coalesce(triggerBody()?['text'], ''))}",
+      "filtro": "@{trim(coalesce(triggerBody()?['text_1'], ''))}",
+      "g1": "@{if(empty(if(equals(trim(coalesce(triggerBody()?['text_2'], '')), '-'), '', trim(coalesce(triggerBody()?['text_2'], '')))), '', trim(first(split(if(equals(trim(coalesce(triggerBody()?['text_2'], '')), '-'), '', trim(coalesce(triggerBody()?['text_2'], ''))), ','))))}",
+      "g2": "@{if(greater(length(split(if(equals(trim(coalesce(triggerBody()?['text_2'], '')), '-'), '', trim(coalesce(triggerBody()?['text_2'], ''))), ',')), 1), trim(split(if(equals(trim(coalesce(triggerBody()?['text_2'], '')), '-'), '', trim(coalesce(triggerBody()?['text_2'], ''))), ',')[1]), '')}",
+      "s": "@{if(equals(trim(coalesce(triggerBody()?['text_3'], '')), '-'), '', trim(coalesce(triggerBody()?['text_3'], '')))}",
+      "top": "@if(or(empty(if(equals(trim(coalesce(triggerBody()?['text_4'], '')), '-'), '', trim(coalesce(triggerBody()?['text_4'], '')))), equals(if(equals(trim(coalesce(triggerBody()?['text_4'], '')), '-'), '', trim(coalesce(triggerBody()?['text_4'], ''))), '0')), 1000, int(if(equals(trim(coalesce(triggerBody()?['text_4'], '')), '-'), '', trim(coalesce(triggerBody()?['text_4'], '')))))"
+     },
+     "runAfter": {
+      "Permitidas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Valido": {
+     "type": "If",
+     "expression": {
+      "and": [
+       {
+        "contains": [
+         "@outputs('Permitidas')",
+         "@outputs('Parametros')?['lista']"
+        ]
+       },
+       {
+        "not": {
+         "equals": [
+          "@outputs('Parametros')?['filtro']",
+          ""
+         ]
+        }
+       }
+      ]
+     },
+     "actions": {
+      "Ler_paginas": {
+       "type": "Until",
+       "expression": "@or(equals(variables('Uri'), ''), greaterOrEquals(variables('Paginas'), 10))",
+       "limit": {
+        "count": 12,
+        "timeout": "PT80S"
+       },
+       "actions": {
+        "Ler": {
+         "type": "OpenApiConnection",
+         "inputs": {
+          "host": {
+           "connectionName": "shared_sharepointonline",
+           "operationId": "HttpRequest",
+           "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+           "dataset": "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta",
+           "parameters/method": "GET",
+           "parameters/uri": "@variables('Uri')",
+           "parameters/headers": {
+            "Accept": "application/json;odata=nometadata"
+           }
+          },
+          "authentication": "@parameters('$authentication')"
+         },
+         "runAfter": {}
+        },
+        "Juntar": {
+         "type": "Compose",
+         "inputs": "@union(variables('Linhas'), body('Ler')?['value'])",
+         "runAfter": {
+          "Ler": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Guardar_linhas": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Linhas",
+          "value": "@outputs('Juntar')"
+         },
+         "runAfter": {
+          "Juntar": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Contar_pagina": {
+         "type": "IncrementVariable",
+         "inputs": {
+          "name": "Paginas",
+          "value": 1
+         },
+         "runAfter": {
+          "Guardar_linhas": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Proxima_pagina": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Uri",
+          "value": "@{if(empty(body('Ler')?['odata.nextLink']), '', replace(body('Ler')?['odata.nextLink'], 'https://danfoss.sharepoint.com/sites/OperationsGuaratingueta/', ''))}"
+         },
+         "runAfter": {
+          "Contar_pagina": [
+           "Succeeded"
+          ]
+         }
+        }
+       },
+       "runAfter": {}
+      },
+      "Pares": {
+       "type": "Select",
+       "inputs": {
+        "from": "@variables('Linhas')",
+        "select": {
+         "k": "@{if(empty(outputs('Parametros')?['g1']), 'total', concat(if(empty(string(item()?[outputs('Parametros')?['g1']])), '(vazio)', string(item()?[outputs('Parametros')?['g1']])), if(empty(outputs('Parametros')?['g2']), '', concat(' | ', if(empty(string(item()?[outputs('Parametros')?['g2']])), '(vazio)', string(item()?[outputs('Parametros')?['g2']]))))))}",
+         "v": "@if(empty(outputs('Parametros')?['s']), 1, float(coalesce(item()?[outputs('Parametros')?['s']], 0)))"
+        }
+       },
+       "runAfter": {
+        "Ler_paginas": [
+         "Succeeded"
+        ]
+       }
+      },
+      "So_chaves": {
+       "type": "Select",
+       "inputs": {
+        "from": "@body('Pares')",
+        "select": "@item()?['k']"
+       },
+       "runAfter": {
+        "Pares": [
+         "Succeeded"
+        ]
+       }
+      },
+      "Distintas": {
+       "type": "Compose",
+       "inputs": "@union(body('So_chaves'), body('So_chaves'))",
+       "runAfter": {
+        "So_chaves": [
+         "Succeeded"
+        ]
+       }
+      },
+      "Poucos_grupos": {
+       "type": "If",
+       "expression": {
+        "lessOrEquals": [
+         "@length(outputs('Distintas'))",
+         300
+        ]
+       },
+       "actions": {
+        "Cada_grupo": {
+         "type": "Foreach",
+         "foreach": "@outputs('Distintas')",
+         "runtimeConfiguration": {
+          "concurrency": {
+           "repetitions": 20
+          }
+         },
+         "actions": {
+          "Do_grupo": {
+           "type": "Query",
+           "inputs": {
+            "from": "@body('Pares')",
+            "where": "@equals(item()?['k'], items('Cada_grupo'))"
+           },
+           "runAfter": {}
+          },
+          "Valores": {
+           "type": "Select",
+           "inputs": {
+            "from": "@body('Do_grupo')",
+            "select": "@item()?['v']"
+           },
+           "runAfter": {
+            "Do_grupo": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Guardar_grupo": {
+           "type": "AppendToArrayVariable",
+           "inputs": {
+            "name": "Grupos",
+            "value": {
+             "chave": "@items('Cada_grupo')",
+             "soma": "@xpath(xml(json(concat('{\"r\":{\"v\":', string(body('Valores')), '}}'))), 'sum(/r/v)')",
+             "linhas": "@length(body('Do_grupo'))"
+            }
+           },
+           "runAfter": {
+            "Valores": [
+             "Succeeded"
+            ]
+           }
+          }
+         },
+         "runAfter": {}
+        },
+        "Todos_valores": {
+         "type": "Select",
+         "inputs": {
+          "from": "@body('Pares')",
+          "select": "@item()?['v']"
+         },
+         "runAfter": {
+          "Cada_grupo": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Responder_ok": {
+         "type": "Response",
+         "kind": "Skills",
+         "inputs": {
+          "statusCode": 200,
+          "body": {
+           "resultado": "@{string(outputs('Resultado'))}"
+          },
+          "schema": {
+           "type": "object",
+           "properties": {
+            "resultado": {
+             "title": "resultado",
+             "type": "string",
+             "x-ms-content-hint": "TEXT",
+             "x-ms-dynamically-added": true
+            }
+           },
+           "additionalProperties": {}
+          }
+         },
+         "runAfter": {
+          "Resultado": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Resultado": {
+         "type": "Compose",
+         "inputs": {
+          "lista": "@outputs('Parametros')?['lista']",
+          "filtro": "@outputs('Parametros')?['filtro']",
+          "agrupar": "@{outputs('Parametros')?['g1']}@{if(empty(outputs('Parametros')?['g2']),'',concat(',',outputs('Parametros')?['g2']))}",
+          "somar": "@if(empty(outputs('Parametros')?['s']),'(contagem)',outputs('Parametros')?['s'])",
+          "total_soma": "@if(equals(length(body('Todos_valores')),0),0,xpath(xml(json(concat('{\"r\":{\"v\":',string(body('Todos_valores')),'}}'))),'sum(/r/v)'))",
+          "total_linhas": "@length(variables('Linhas'))",
+          "paginas_lidas": "@variables('Paginas')",
+          "completo": "@equals(variables('Uri'),'')",
+          "grupos_total": "@length(outputs('Distintas'))",
+          "grupos": "@take(reverse(sort(variables('Grupos'),'soma')),outputs('Parametros')?['top'])"
+         },
+         "runAfter": {
+          "Todos_valores": [
+           "Succeeded"
+          ]
+         }
+        }
+       },
+       "else": {
+        "actions": {
+         "Responder_muitos": {
+          "type": "Response",
+          "kind": "Skills",
+          "inputs": {
+           "statusCode": 200,
+           "body": {
+            "resultado": "{\"erro\":\"agrupamento com @{length(outputs('Distintas'))} grupos (limite 300): filtre mais ou agrupe por outra coluna\",\"total_linhas\":@{length(variables('Linhas'))}}"
+           },
+           "schema": {
+            "type": "object",
+            "properties": {
+             "resultado": {
+              "title": "resultado",
+              "type": "string",
+              "x-ms-content-hint": "TEXT",
+              "x-ms-dynamically-added": true
+             }
+            },
+            "additionalProperties": {}
+           }
+          },
+          "runAfter": {}
+         }
+        }
+       },
+       "runAfter": {
+        "Distintas": [
+         "Succeeded"
+        ]
+       }
+      }
+     },
+     "else": {
+      "actions": {
+       "Responder_invalido": {
+        "type": "Response",
+        "kind": "Skills",
+        "inputs": {
+         "statusCode": 200,
+         "body": {
+          "resultado": "{\"erro\":\"lista fora da lista permitida ou filtro vazio. Permitidas: @{join(outputs('Permitidas'), ', ')}\"}"
+         },
+         "schema": {
+          "type": "object",
+          "properties": {
+           "resultado": {
+            "title": "resultado",
+            "type": "string",
+            "x-ms-content-hint": "TEXT",
+            "x-ms-dynamically-added": true
+           }
+          },
+          "additionalProperties": {}
+         }
+        },
+        "runAfter": {}
+       }
+      }
+     },
+     "runAfter": {
+      "Ini_Grupos": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Uri": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Uri",
+        "type": "string",
+        "value": "_api/web/lists/getbytitle('@{encodeUriComponent(outputs('Parametros')?['lista'])}')/items?$select=ID@{if(empty(outputs('Parametros')?['g1']), '', concat(',', outputs('Parametros')?['g1']))}@{if(empty(outputs('Parametros')?['g2']), '', concat(',', outputs('Parametros')?['g2']))}@{if(empty(outputs('Parametros')?['s']), '', concat(',', outputs('Parametros')?['s']))}&$filter=@{encodeUriComponent(outputs('Parametros')?['filtro'])}&$orderby=ID&$top=5000"
+       }
+      ]
+     },
+     "runAfter": {
+      "Parametros": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Linhas": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Linhas",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Uri": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Paginas": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Paginas",
+        "type": "integer",
+        "value": 0
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Linhas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Grupos": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Grupos",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Paginas": [
+       "Succeeded"
+      ]
+     }
+    }
+   }
+  },
+  "templateName": ""
+ },
+ "schemaVersion": "1.0.0.0"
+}
