@@ -31,3 +31,18 @@ Também inventou uma explicação ("OPs termofusão/vibracional"). **Reprovado.*
 ## Erro meu no diagnóstico de 11/11
 
 No primeiro gabarito usei `data_ref` de 08:20Z a 08:20Z. Essa faixa pega o dia 11, porque o `data_ref` é gravado como D às 03:00Z. A faixa certa é 00:00Z a 00:00Z. Na resposta ruim que o Uiu deu no Teams, ele cometeu o mesmo erro.
+
+## Rodada 2 (11/11, 12:37): Opus 4.8 + v3.1 + Code interpreter ligado
+
+Ele usou o Code (Preview) e a conta em Python bate com os números que ele pôs no código. Esses números, porém, já entram abaixo do real: o modelo copia as linhas da ferramenta para dentro do código e perde parte delas.
+
+| Etapa | Uiu | Real |
+|---|---|---|
+| Tubo | 7.260 | 7.510 |
+| Trançagem | 5.210, pelos eventos | 7.544 pela Hora-Hora (os eventos somam 7.210) |
+| Cobertura | 6.000 | 7.970 |
+| Bandagem | 6.480 | 7.585 |
+| Extração | 5.893 | 6.720 |
+| Vulcanização | 5.440 | 6.575 |
+
+**Reprovado nos números; aprovado em comportamento** (filtro certo, regra certa, português, não desistiu). Conclusão: com o conector Get items, total não pode depender de o modelo copiar linhas. O total tem de chegar pronto (lista `Uiu_Agregados`, F2/E2 do plano), e o Uiu só lê e explica.

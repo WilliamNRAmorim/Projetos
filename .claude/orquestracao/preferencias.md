@@ -53,3 +53,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-11 | BI hora cheia: recusou a refeição em hora fixa (escolheu onde o operador lançou o Almoço) e na Montagem escolheu RF lançado na OT em vez de OT que cruza a refeição; manteve 21h35 no cartão mesmo com dupla contagem; quer todos os itens do Fable e o menu separado em Mangueira e Montagem
 2026-11-11 | BI hora cheia: aceitou as recomendadas (refeição em hora padrão 11-12, 19-20, 02-03 no turno sem Almoço lançado; paleta cinza #3C3C3B e vermelho Danfoss #E2000F); quer refeição fora dos gráficos de Paradas Mont.
 2026-11-11 | BI cores: preferiu barras em vermelho Danfoss e linha de meta em cinza (o cinza nas barras deixou o painel 'morto'), contra a recomendação da norma B.6.1
+2026-11-11 | Uiu: aprovou o plano de 5 passos (instruções v3.1, modelo Claude Opus 4.8, Code interpreter) e deu o sim para ligar o Code interpreter
