@@ -113,3 +113,16 @@ Por turno BI: 1º Turno: min 540.0, meta 1881.4, real 1084.0, parado 242.9; 2º 
 Leitura: a `05:00 - 05:20` da noite anterior (Data 2026-09-23, 3º turno) entra no 05:00-06:00 do dia 2026-09-24; a `05:00 - 05:20` deste dia (Data 2026-09-24) sai para o dia 2026-09-25. Por isso o total do dia difere do da base só por essas duas janelas.
 
 Referência para o DAX de conferência de `fHoraCheia.tmdl.md`: comparar com a tabela 'Depois' acima (dia 2026-09-24, célula TH07).
+
+## 5. Modelo vivo (11/11/2026, depois de aplicar e do refresh)
+- Script aplicado pelo TMDL view com o Libero do William. Na 1ª aplicação, o parado deu 244.465 min contra 750.491 min na base. A causa: 11.052 linhas de jan a set vêm sem `Minutos`, e o teto da fatia zerava o parado delas. Corrigido com `Mn` (Minutos da linha ou, vazio, a duração do rótulo), reaplicado e feito novo refresh.
+- Totais na base inteira, depois da correção:
+  - Real: 1.432.435,5 = base.
+  - Parado: 722.651,6 contra 750.491,1. Os 3,7% de diferença são parado acima da duração da janela, que a regra corta; só nas linhas com Minutos são 12.891 min.
+  - Meta: 3.928.649 contra 4.077.690, porque os 45 min do almoço saem agora também em jan a set.
+  - 34.652 fatias, 225 horas cheias acima de 60 min (duplicatas e hora extra), 0 colunas em erro (`INFO.COLUMNS`).
+- TH07, 24/09:
+  - 1º e 2º turno: minutos, meta e real iguais ao protótipo.
+  - 3º turno: 60 min e 228 m de meta a menos, porque a hora extra 22:20-23:20 desse dia não está no modelo vivo.
+  - Parado maior que no backup (254,7, 278,0 e 185,8 min), por causa das correções de ND e NT feitas na lista depois de 15/10.
+- `Minutos Excedidos Montagem` testada como medida de consulta: TE de 80.065,7 vira 72.700 min no período todo (1º turno 42.240,7 → 37.917; 2º 37.078 → 34.036; 3º 747 → 747). Todas as linhas da Montagem caem num turno da `dTurno`.

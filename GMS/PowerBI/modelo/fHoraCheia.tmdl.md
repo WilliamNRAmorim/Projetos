@@ -12,6 +12,8 @@ Cada linha da `fHoraHora` é uma janela (`Hora` = "hh:mm - hh:mm"). O início sa
 - A tabela calculada só tem valor depois de um **refresh**. Consulta antes dá "needs to be recalculated or refreshed".
 - Sem `IFERROR` em volta de `VALUE` o refresh quebra se algum `Hora` vier malformado; aqui já está protegido (`IFERROR(..., -1)` e o filtro descarta a linha).
 
+> **11/11/2026, aplicado no modelo vivo.** Correção depois da 1ª aplicação: de jan a set, 11.052 linhas da lista vêm sem `Minutos`; sem minutos, o teto do parado zerava 506 mil min. Agora `Mn` = `Minutos` da linha ou, vazio, a duração do rótulo; vale para Minutos, teto do parado e desconto do almoço.
+
 ## 1) Script TMDL (cole inteiro)
 ```
 createOrReplace
@@ -153,7 +155,8 @@ createOrReplace
 				VAR Calc =
 				ADDCOLUMNS (
 				Fatias,
-				"Fr", DIVIDE ( MIN ( [Efim], ( [Value] + 1 ) * 60 ) - MAX ( [Sini], [Value] * 60 ), [Efim] - [Sini] )
+				"Fr", DIVIDE ( MIN ( [Efim], ( [Value] + 1 ) * 60 ) - MAX ( [Sini], [Value] * 60 ), [Efim] - [Sini] ),
+				"Mn", IF ( COALESCE ( [Min], 0 ) > 0, [Min], [Efim] - [Sini] )
 				)
 				RETURN
 				SELECTCOLUMNS (
@@ -164,10 +167,10 @@ createOrReplace
 				"Turno BI", IF ( MOD ( [Value], 24 ) < 9, "1º Turno", IF ( MOD ( [Value], 24 ) < 17, "2º Turno", "3º Turno" ) ),
 				"Hora", FORMAT ( MOD ( 5 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00 - " & FORMAT ( MOD ( 6 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00",
 				"HoraOrdem", MOD ( [Value], 24 ),
-				"Minutos", COALESCE ( [Min], 0 ) * [Fr],
-				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Motivo Padrão] = "Almoço" && COALESCE ( [Min], 0 ) > 0, MAX ( 0, [Min] - 45 ) / [Min], 1 ) * [Fr],
+				"Minutos", [Mn] * [Fr],
+				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Motivo Padrão] = "Almoço" && [Mn] > 0, MAX ( 0, [Mn] - 45 ) / [Mn], 1 ) * [Fr],
 				"Real", COALESCE ( [Real0], 0 ) * [Fr],
-				"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], COALESCE ( [Min], 0 ) * [Fr] ),
+				"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ),
 				"Motivo", [Motivo],
 				"Motivo Padrão", [Motivo Padrão],
 				"Motivo 2", [Motivo 2],
