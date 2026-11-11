@@ -187,55 +187,55 @@
         {
           "name": "Minutos Excedidos Montagem",
           "dataType": "Double",
-          "expression": "COALESCE(CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\")), 0)",
+          "expression": "COALESCE(SUMX(VALUES(Paradas_Montagem[OPVinculada]), VAR op = Paradas_Montagem[OPVinculada] VAR te = CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\")) VAR temRF = NOT ISBLANK(op) && TRIM(op) <> \"\" && CALCULATE(COUNTROWS(FILTER(Paradas_Montagem, LEFT(TRIM(Paradas_Montagem[Motivo]), 2) = \"RF\")), REMOVEFILTERS(Paradas_Montagem[Motivo])) > 0 RETURN IF(temRF, MAX(0, te - 45), te)), 0)",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Meta (m)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Meta Hora BI])",
+          "expression": "SUM(fHoraCheia[Meta])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Meta Útil (m)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Meta Hora BI]) * IF(ISFILTERED(fHoraHora[Hora BI]), 1, 1305 / 1440)",
+          "expression": "SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440)",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Real (m)",
           "dataType": "Double",
-          "expression": "SUM(fHoraHora[Real BI])",
+          "expression": "SUM(fHoraCheia[Real])",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Aderência",
           "dataType": "Double",
-          "expression": "DIVIDE(SUM(fHoraHora[Real BI]), SUM(fHoraHora[Meta Hora BI]) * IF(ISFILTERED(fHoraHora[Hora BI]), 1, 1305 / 1440))",
+          "expression": "DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440))",
           "formatString": "0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Parado (min)",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(fHoraHora[Parado BI]), KEEPFILTERS(fHoraHora[Motivo Padrão] <> \"Almoço\"))",
+          "expression": "CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\"))",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Principal Parada",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraHora[Motivo Padrão]), NOT ISBLANK(fHoraHora[Motivo Padrão]) && fHoraHora[Motivo Padrão] <> \"Almoço\"), \"MinParado\", CALCULATE(SUM(fHoraHora[Parado BI]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraHora[Motivo Padrão]))",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"MinParado\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraCheia[Motivo Padrão]))",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Dia Produtivo",
           "dataType": "Text",
-          "expression": "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1, \"dd/mm\") & \" 05:20 até \" & FORMAT(d1 + 1, \"dd/mm\") & \" 05:20\", \"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 05:20 às 05:20 do dia seguinte\")",
+          "expression": "VAR d1 = MIN(dCalendario[Date]) VAR d2 = MAX(dCalendario[Date]) RETURN IF(d1 = d2, \"Dia produtivo \" & FORMAT(d1, \"dd/mm\") & \": de \" & FORMAT(d1, \"dd/mm\") & \" 05:00 até \" & FORMAT(d1 + 1, \"dd/mm\") & \" 05:00\", \"Dias produtivos \" & FORMAT(d1, \"dd/mm\") & \" a \" & FORMAT(d2, \"dd/mm\") & \": cada dia vai das 05:00 às 05:00 do dia seguinte\")",
           "displayFolder": "Painel (relatório)"
         },
         {
@@ -396,6 +396,126 @@
           "expression": "VAR __Datas = CALCULATETABLE ( VALUES ( dCalendario[Date] ), REMOVEFILTERS ( fHoraHora[Turno] ), REMOVEFILTERS ( ficha_producao[Trançadeira] ) )\nVAR __UmDia = COUNTROWS ( __Datas ) = 1\nVAR __FT = ISFILTERED ( fHoraHora[Turno] )\nVAR __Turnos =\n    FILTER (\n        SELECTCOLUMNS (\n            CALCULATETABLE ( VALUES ( fHoraHora[Turno] ), REMOVEFILTERS ( dCalendario ) ),\n            \"@T\", VAR __tTx = fHoraHora[Turno] & \"\" VAR __tP1 = SEARCH ( \"1\", __tTx, 1, 999 ) VAR __tP2 = SEARCH ( \"2\", __tTx, 1, 999 ) VAR __tP3 = SEARCH ( \"3\", __tTx, 1, 999 ) VAR __tPm = MIN ( MIN ( __tP1, __tP2 ), __tP3 ) RETURN IF ( __tPm = 999, BLANK (), IF ( __tPm = __tP1, 1, IF ( __tPm = __tP2, 2, 3 ) ) )\n        ),\n        NOT ISBLANK ( [@T] )\n    )\nVAR __FM = ISFILTERED ( ficha_producao[Trançadeira] )\nVAR __Maqs = DISTINCT ( SELECTCOLUMNS ( FILTERS ( ficha_producao[Trançadeira] ), \"@M\", VAR __mqSel = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqSel IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqSel ) ) )\nVAR __MaqTxt = CONCATENATEX ( FILTER ( __Maqs, [@M] <> \"\" ), [@M], \", \", [@M], ASC )\nVAR __TemSp = \"SPIRAL\" IN __Maqs\nVAR __TemBr = NOT ISEMPTY ( FILTER ( __Maqs, [@M] <> \"SPIRAL\" ) )\nVAR __NomeTr = IF ( NOT __FM || ( __TemSp && __TemBr ), \"Trançagem + Espiral\", IF ( __TemSp, \"Espiral\", \"Trançagem\" ) )\nVAR __B =\nUNION (\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_tubo] ) ),\n            \"@E\", 1,\n            \"@Dia\", VAR __fS1 = ficha_producao[data_hora_final_tubo] - 320 / 1440 RETURN DATE ( YEAR ( __fS1 ), MONTH ( __fS1 ), DAY ( __fS1 ) ),\n            \"@T\", VAR __mS1 = HOUR ( ficha_producao[data_hora_final_tubo] ) * 60 + MINUTE ( ficha_producao[data_hora_final_tubo] ) RETURN IF ( __mS1 >= 320 && __mS1 < 837, 1, IF ( __mS1 >= 837 && __mS1 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS1 = ficha_producao[quantidade_tubo] RETURN IF ( __qS1 > 2000, BLANK (), __qS1 ),\n            \"@M\", VAR __mqS1 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS1 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS1 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_tubo] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_trancadeira] ) ),\n            \"@E\", 2,\n            \"@Dia\", VAR __fS2 = ficha_producao[data_hora_final_trancadeira] - 320 / 1440 RETURN DATE ( YEAR ( __fS2 ), MONTH ( __fS2 ), DAY ( __fS2 ) ),\n            \"@T\", VAR __mS2 = HOUR ( ficha_producao[data_hora_final_trancadeira] ) * 60 + MINUTE ( ficha_producao[data_hora_final_trancadeira] ) RETURN IF ( __mS2 >= 320 && __mS2 < 837, 1, IF ( __mS2 >= 837 && __mS2 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS2 = ficha_producao[quantidade_trancagem] RETURN IF ( __qS2 > 2000, BLANK (), __qS2 ),\n            \"@M\", VAR __mqS2 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS2 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS2 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_trancagem] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_cobertura] ) ),\n            \"@E\", 3,\n            \"@Dia\", VAR __fS3 = ficha_producao[data_hora_final_cobertura] - 320 / 1440 RETURN DATE ( YEAR ( __fS3 ), MONTH ( __fS3 ), DAY ( __fS3 ) ),\n            \"@T\", VAR __mS3 = HOUR ( ficha_producao[data_hora_final_cobertura] ) * 60 + MINUTE ( ficha_producao[data_hora_final_cobertura] ) RETURN IF ( __mS3 >= 320 && __mS3 < 837, 1, IF ( __mS3 >= 837 && __mS3 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS3 = ficha_producao[quantidade_cobertura] RETURN IF ( __qS3 > 2000, BLANK (), __qS3 ),\n            \"@M\", VAR __mqS3 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS3 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS3 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_cobertura] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_bandagem] ) ),\n            \"@E\", 4,\n            \"@Dia\", VAR __fS4 = ficha_producao[data_hora_final_bandagem] - 320 / 1440 RETURN DATE ( YEAR ( __fS4 ), MONTH ( __fS4 ), DAY ( __fS4 ) ),\n            \"@T\", VAR __mS4 = HOUR ( ficha_producao[data_hora_final_bandagem] ) * 60 + MINUTE ( ficha_producao[data_hora_final_bandagem] ) RETURN IF ( __mS4 >= 320 && __mS4 < 837, 1, IF ( __mS4 >= 837 && __mS4 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS4 = ficha_producao[quantidade_bandagem] RETURN IF ( __qS4 > 2000, BLANK (), __qS4 ),\n            \"@M\", VAR __mqS4 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS4 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS4 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_bandagem] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_vulcanizacao] ) ),\n            \"@E\", 5,\n            \"@Dia\", VAR __fS5 = ficha_producao[data_hora_final_vulcanizacao] - 320 / 1440 RETURN DATE ( YEAR ( __fS5 ), MONTH ( __fS5 ), DAY ( __fS5 ) ),\n            \"@T\", VAR __mS5 = HOUR ( ficha_producao[data_hora_final_vulcanizacao] ) * 60 + MINUTE ( ficha_producao[data_hora_final_vulcanizacao] ) RETURN IF ( __mS5 >= 320 && __mS5 < 837, 1, IF ( __mS5 >= 837 && __mS5 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS5 = ficha_producao[quantidade_vulcanizacao] RETURN IF ( __qS5 > 2000, BLANK (), __qS5 ),\n            \"@M\", VAR __mqS5 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS5 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS5 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_vulcanizacao] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_debandagem] ) ),\n            \"@E\", 6,\n            \"@Dia\", VAR __fS6 = ficha_producao[data_hora_final_debandagem] - 320 / 1440 RETURN DATE ( YEAR ( __fS6 ), MONTH ( __fS6 ), DAY ( __fS6 ) ),\n            \"@T\", VAR __mS6 = HOUR ( ficha_producao[data_hora_final_debandagem] ) * 60 + MINUTE ( ficha_producao[data_hora_final_debandagem] ) RETURN IF ( __mS6 >= 320 && __mS6 < 837, 1, IF ( __mS6 >= 837 && __mS6 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS6 = ficha_producao[quantidade_debandagem] RETURN IF ( __qS6 > 2000, BLANK (), __qS6 ),\n            \"@M\", VAR __mqS6 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS6 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS6 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_debandagem] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    ),\n    FILTER (\n        SELECTCOLUMNS (\n            FILTER ( ALL ( ficha_producao ), NOT ISBLANK ( ficha_producao[data_hora_final_extracao] ) ),\n            \"@E\", 7,\n            \"@Dia\", VAR __fS7 = ficha_producao[data_hora_final_extracao] - 320 / 1440 RETURN DATE ( YEAR ( __fS7 ), MONTH ( __fS7 ), DAY ( __fS7 ) ),\n            \"@T\", VAR __mS7 = HOUR ( ficha_producao[data_hora_final_extracao] ) * 60 + MINUTE ( ficha_producao[data_hora_final_extracao] ) RETURN IF ( __mS7 >= 320 && __mS7 < 837, 1, IF ( __mS7 >= 837 && __mS7 < 1340, 2, 3 ) ),\n            \"@Q\", VAR __qS7 = ficha_producao[quantidade_extracao] RETURN IF ( __qS7 > 2000, BLANK (), __qS7 ),\n            \"@M\", VAR __mqS7 = UPPER ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( SUBSTITUTE ( ficha_producao[Trançadeira], \".\", \"\" ), \"-\", \"\" ), \" \", \"\" ), \"_\", \"\" ) ) RETURN IF ( __mqS7 IN { \"SPIRAL\", \"TE01\", \"TE0\" }, \"SPIRAL\", __mqS7 ),\n            \"@Op\", SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(SUBSTITUTE(UPPER ( ficha_producao[operador_extracao] ),\"Á\",\"A\"),\"À\",\"A\"),\"Â\",\"A\"),\"Ã\",\"A\"),\"Ä\",\"A\"),\"É\",\"E\"),\"È\",\"E\"),\"Ê\",\"E\"),\"Ë\",\"E\"),\"Í\",\"I\"),\"Ì\",\"I\"),\"Î\",\"I\"),\"Ï\",\"I\"),\"Ó\",\"O\"),\"Ò\",\"O\"),\"Ô\",\"O\"),\"Õ\",\"O\"),\"Ö\",\"O\"),\"Ú\",\"U\"),\"Ù\",\"U\"),\"Û\",\"U\"),\"Ü\",\"U\"),\"Ç\",\"C\"),\"Ñ\",\"N\"),\".\",\"\"),\",\",\"\"),\"-\",\"\"),\"_\",\"\"),\"/\",\"|\")\n        ),\n        [@Dia] IN __Datas\n    )\n)\nVAR __BTr = FILTER ( __B, [@E] = 2 )\nVAR __DiasCom = DISTINCT ( SELECTCOLUMNS ( __B, \"@Dia\", [@Dia] ) )\nVAR __DiasProd =\n    FILTER (\n        __DiasCom,\n        VAR __dProd = [@Dia]\n        RETURN __UmDia || SUMX ( FILTER ( __BTr, [@Dia] = __dProd ), [@Q] ) >= 3000\n    )\nVAR __nD = COUNTROWS ( __DiasProd )\nVAR __LA = FILTER ( __B, ( NOT __FT || [@T] IN __Turnos ) && ( NOT __FM || [@M] IN __Maqs ) )\nVAR __LP = FILTER ( __LA, [@Dia] IN __DiasProd )\nVAR __M1 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 1 ), [@Q] ), __nD )\nVAR __M2 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 2 ), [@Q] ), __nD )\nVAR __M3 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 3 ), [@Q] ), __nD )\nVAR __M4 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 4 ), [@Q] ), __nD )\nVAR __M5 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 5 ), [@Q] ), __nD )\nVAR __M6 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 6 ), [@Q] ), __nD )\nVAR __M7 = DIVIDE ( SUMX ( FILTER ( __LP, [@E] = 7 ), [@Q] ), __nD )\nVAR __P =\n    DISTINCT (\n        SELECTCOLUMNS (\n            FILTER (\n                GENERATE (\n                    FILTER ( __LP, [@Op] <> \"\" ),\n                    VAR __sOp = [@Op]\n                    RETURN SELECTCOLUMNS ( GENERATESERIES ( 1, PATHLENGTH ( __sOp ) ), \"@Pe\", TRIM ( PATHITEM ( __sOp, [Value] ) ) )\n                ),\n                [@Pe] <> \"\"\n            ),\n            \"@E\", [@E], \"@Dia\", [@Dia], \"@Pe\", [@Pe]\n        )\n    )\nVAR __Pp1 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 1 ) ), __nD )\nVAR __K1 = DIVIDE ( __Pp1, DIVIDE ( __M1, 1000 ) )\nVAR __Pp2 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 2 ) ), __nD )\nVAR __K2 = DIVIDE ( __Pp2, DIVIDE ( __M2, 1000 ) )\nVAR __Pp3 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 3 ) ), __nD )\nVAR __K3 = DIVIDE ( __Pp3, DIVIDE ( __M3, 1000 ) )\nVAR __Pp4 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 4 ) ), __nD )\nVAR __K4 = DIVIDE ( __Pp4, DIVIDE ( __M4, 1000 ) )\nVAR __Pp5 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 5 ) ), __nD )\nVAR __K5 = DIVIDE ( __Pp5, DIVIDE ( __M5, 1000 ) )\nVAR __Pp6 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 6 ) ), __nD )\nVAR __K6 = DIVIDE ( __Pp6, DIVIDE ( __M6, 1000 ) )\nVAR __Pp7 = DIVIDE ( COUNTROWS ( FILTER ( __P, [@E] = 7 ) ), __nD )\nVAR __K7 = DIVIDE ( __Pp7, DIVIDE ( __M7, 1000 ) )\nVAR __Kt = { ( 1, __K1 ), ( 2, __K2 ), ( 3, __K3 ), ( 4, __K4 ), ( 5, __K5 ), ( 6, __K6 ), ( 7, __K7 ) }\nVAR __Kv = FILTER ( __Kt, NOT ISBLANK ( [Value2] ) )\nVAR __KMedia = AVERAGEX ( __Kv, [Value2] )\nVAR __KMaior = MAXX ( __Kv, [Value2] )\nVAR __Vt = { ( 1, __M1 ), ( 2, __M2 ), ( 3, __M3 ), ( 4, __M4 ), ( 5, __M5 ), ( 6, __M6 ), ( 7, __M7 ) }\nVAR __corCa = \"%23ffffff\" VAR __corTi = \"%2314130f\" VAR __corSu = \"%2355534d\" VAR __corLi = \"%23e1e0d9\" VAR __corLa = \"%23eb6834\" VAR __corLaF = \"%23fdebe3\" VAR __corLaT = \"%23b34510\" VAR __corVe = \"%230a6a0a\" VAR __corVeF = \"%23e8f5e8\" VAR __corSeF = \"%23ff8a50\" VAR __corSeT = \"%2311161d\" VAR __corOn = \"%232a78d6\" VAR __corOff = \"%23cfd6df\" VAR __corVeB = \"%230ca30c\"\nVAR __Esc = __KMaior * 1.1\nVAR __XM = IF ( __Esc > 0 && NOT ISBLANK ( __KMedia ), FORMAT ( 140 + ROUND ( 340 * DIVIDE ( __KMedia, __Esc ), 1 ), \"0.0\", \"en-US\" ) )\nVAR __Pos1 = IF ( NOT ISBLANK ( __K1 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K1 ) ) + 1 )\nVAR __Q1 = NOT ISBLANK ( __Pos1 ) && __Pos1 <= 2\nVAR __L1 = IF ( __Esc > 0 && __K1 > 0, ROUND ( 340 * DIVIDE ( __K1, __Esc ), 1 ), 0 )\nVAR __R1 =\n    \"<text x='0' y='52' font-size='12' fill='\" & __corTi & \"'>Tubo</text>\"\n        & \"<rect x='140' y='40' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L1 > 0, \"<rect x='140' y='40' width='\" & FORMAT ( __L1, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q1, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='53' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q1, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K1 ), \"–\", FORMAT ( __K1, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos2 = IF ( NOT ISBLANK ( __K2 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K2 ) ) + 1 )\nVAR __Q2 = NOT ISBLANK ( __Pos2 ) && __Pos2 <= 2\nVAR __L2 = IF ( __Esc > 0 && __K2 > 0, ROUND ( 340 * DIVIDE ( __K2, __Esc ), 1 ), 0 )\nVAR __R2 =\n    \"<text x='0' y='86' font-size='12' fill='\" & __corTi & \"'>\" & __NomeTr & \"</text>\"\n        & \"<rect x='140' y='74' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L2 > 0, \"<rect x='140' y='74' width='\" & FORMAT ( __L2, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q2, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='87' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q2, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K2 ), \"–\", FORMAT ( __K2, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos3 = IF ( NOT ISBLANK ( __K3 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K3 ) ) + 1 )\nVAR __Q3 = NOT ISBLANK ( __Pos3 ) && __Pos3 <= 2\nVAR __L3 = IF ( __Esc > 0 && __K3 > 0, ROUND ( 340 * DIVIDE ( __K3, __Esc ), 1 ), 0 )\nVAR __R3 =\n    \"<text x='0' y='120' font-size='12' fill='\" & __corTi & \"'>Cobertura</text>\"\n        & \"<rect x='140' y='108' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L3 > 0, \"<rect x='140' y='108' width='\" & FORMAT ( __L3, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q3, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='121' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q3, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K3 ), \"–\", FORMAT ( __K3, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos4 = IF ( NOT ISBLANK ( __K4 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K4 ) ) + 1 )\nVAR __Q4 = NOT ISBLANK ( __Pos4 ) && __Pos4 <= 2\nVAR __L4 = IF ( __Esc > 0 && __K4 > 0, ROUND ( 340 * DIVIDE ( __K4, __Esc ), 1 ), 0 )\nVAR __R4 =\n    \"<text x='0' y='154' font-size='12' fill='\" & __corTi & \"'>Bandagem</text>\"\n        & \"<rect x='140' y='142' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L4 > 0, \"<rect x='140' y='142' width='\" & FORMAT ( __L4, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q4, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='155' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q4, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K4 ), \"–\", FORMAT ( __K4, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos5 = IF ( NOT ISBLANK ( __K5 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K5 ) ) + 1 )\nVAR __Q5 = NOT ISBLANK ( __Pos5 ) && __Pos5 <= 2\nVAR __L5 = IF ( __Esc > 0 && __K5 > 0, ROUND ( 340 * DIVIDE ( __K5, __Esc ), 1 ), 0 )\nVAR __R5 =\n    \"<text x='0' y='188' font-size='12' fill='\" & __corTi & \"'>Vulcanização</text>\"\n        & \"<rect x='140' y='176' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L5 > 0, \"<rect x='140' y='176' width='\" & FORMAT ( __L5, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q5, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='189' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q5, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K5 ), \"–\", FORMAT ( __K5, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos6 = IF ( NOT ISBLANK ( __K6 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K6 ) ) + 1 )\nVAR __Q6 = NOT ISBLANK ( __Pos6 ) && __Pos6 <= 2\nVAR __L6 = IF ( __Esc > 0 && __K6 > 0, ROUND ( 340 * DIVIDE ( __K6, __Esc ), 1 ), 0 )\nVAR __R6 =\n    \"<text x='0' y='222' font-size='12' fill='\" & __corTi & \"'>Debandagem</text>\"\n        & \"<rect x='140' y='210' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L6 > 0, \"<rect x='140' y='210' width='\" & FORMAT ( __L6, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q6, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='223' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q6, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K6 ), \"–\", FORMAT ( __K6, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Pos7 = IF ( NOT ISBLANK ( __K7 ), COUNTROWS ( FILTER ( __Kt, [Value2] > __K7 ) ) + 1 )\nVAR __Q7 = NOT ISBLANK ( __Pos7 ) && __Pos7 <= 2\nVAR __L7 = IF ( __Esc > 0 && __K7 > 0, ROUND ( 340 * DIVIDE ( __K7, __Esc ), 1 ), 0 )\nVAR __R7 =\n    \"<text x='0' y='256' font-size='12' fill='\" & __corTi & \"'>Cabine (teste)</text>\"\n        & \"<rect x='140' y='244' width='340' height='16' rx='5' fill='\" & __corLi & \"'/>\"\n        & IF ( __L7 > 0, \"<rect x='140' y='244' width='\" & FORMAT ( __L7, \"0.0\", \"en-US\" ) & \"' height='16' rx='5' fill='\" & IF ( __Q7, __corLa, __corVeB ) & \"'/>\" )\n        & \"<text x='556' y='257' text-anchor='end' font-size='13' font-weight='700' fill='\" & IF ( __Q7, __corLaT, __corTi ) & \"'>\" & IF ( ISBLANK ( __K7 ), \"–\", FORMAT ( __K7, \"0.00\", \"pt-BR\" ) ) & \"</text>\"\nVAR __Titulo =\n    \"<text x='0' y='16' fill='\" & __corTi & \"'><tspan font-size='13' font-weight='700'>Quais etapas usam mais gente por 1.000 m?</tspan>\"\n        & \"<tspan font-size='11' fill='\" & __corSu & \"'>\" & IF ( NOT ISBLANK ( __KMedia ), \"  ·  tracejado = média \" & FORMAT ( __KMedia, \"0.00\", \"pt-BR\" ) ) & \"</tspan></text>\"\nVAR __Media =\n    IF ( NOT ISBLANK ( __XM ), \"<line x1='\" & __XM & \"' x2='\" & __XM & \"' y1='30' y2='274' stroke='\" & __corTi & \"' stroke-width='1.5' stroke-dasharray='4 3'/>\" )\nRETURN\n    IF (\n        ISBLANK ( __KMaior ),\n        BLANK (),\n        \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='616' height='340' viewBox='0 0 616 340' font-family='Segoe UI, sans-serif'>\"\n            & \"<rect x='0.5' y='0.5' width='615' height='339' rx='12' fill='\" & __corCa & \"' stroke='\" & __corLi & \"' stroke-width='1'/>\"\n            & \"<g transform='translate(28 27)'>\" & __Titulo & __R1 & __R2 & __R3 & __R4 & __R5 & __R6 & __R7 & __Media & \"</g></svg>\"\n    )",
           "dataCategory": "ImageUrl",
           "displayFolder": "Fluxo (relatório)\\Visual"
+        },
+        {
+          "name": "PA Tempo Parado (h)",
+          "dataType": "Double",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), 60)",
+          "formatString": "#,0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA Tempo Parado %",
+          "dataType": "Double",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0)))",
+          "formatString": "0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA Δ Tempo Parado vs mês ant.",
+          "dataType": "Double",
+          "expression": "VAR d = CALCULATE(MAX(fHoraCheia[Data BI])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
+          "formatString": "+0.0%;-0.0%;0.0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA Motivo Nº1",
+          "dataType": "Text",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(tabela, NOT ISBLANK([@min])), [@min], DESC) VAR nome = CONCATENATEX(topo, fHoraCheia[Motivo Padrão]) VAR pos = FIND(\" - \", nome, 1, 0) RETURN IF(pos > 0, MID(nome, pos + 3, 200), nome)",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA Horas Perdidas Motivo Nº1",
+          "dataType": "Double",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) RETURN DIVIDE(MAXX(tabela, [@min]), 60)",
+          "formatString": "#,0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA % Acumulado Paradas",
+          "dataType": "Double",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR total = SUMX(tabela, [@min]) VAR atual = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR acumulado = SUMX(FILTER(tabela, [@min] >= atual), [@min]) RETURN IF(NOT ISBLANK(atual), DIVIDE(acumulado, total))",
+          "formatString": "0%",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "PA Tempo Parado por Tipo (h)",
+          "dataType": "Double",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\"), KEEPFILTERS(TREATAS(VALUES(dMotivoParada[Motivo]), fHoraCheia[Motivo Padrão]))), 60)",
+          "formatString": "#,0.0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Metragem Status",
+          "dataType": "Text",
+          "expression": "VAR r = SUM(fHoraCheia[Real]) VAR m = SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440) VAR p = DIVIDE(r, m) RETURN IF(ISBLANK(p), \"Sem meta no período\", IF(p >= 1, \"▲ No ritmo · \", IF(p >= 0.9, \"▼ Atenção · \", \"▼ Abaixo · \")) & FORMAT(p, \"0%\") & \" de \" & FORMAT(m, \"#,0\") & \" m\")",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Metragem Cor",
+          "dataType": "Text",
+          "expression": "VAR p = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440)) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p >= 1, \"#16A34A\", IF(p >= 0.9, \"#E67E22\", \"#C0392B\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Aderência Status",
+          "dataType": "Text",
+          "expression": "VAR p = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440)) RETURN IF(ISBLANK(p), \"Sem meta no período\", IF(p >= 1, \"▲ No ritmo · meta 100%\", IF(p >= 0.9, \"▼ Atenção · \", \"▼ Abaixo · \") & \"faltam \" & FORMAT(1 - p, \"0%\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Aderência Cor",
+          "dataType": "Text",
+          "expression": "VAR p = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440)) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p >= 1, \"#16A34A\", IF(p >= 0.9, \"#E67E22\", \"#C0392B\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Parado Status",
+          "dataType": "Text",
+          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"Sem dados no período\", IF(p <= 0.05, \"▼ Dentro · \", IF(p <= 0.1, \"▲ Atenção · \", \"▲ Acima · \")) & FORMAT(p, \"0.0%\") & \" (limite 5%)\")",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Parado Cor",
+          "dataType": "Text",
+          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p <= 0.05, \"#16A34A\", IF(p <= 0.1, \"#E67E22\", \"#C0392B\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Refugo Status",
+          "dataType": "Text",
+          "expression": "VAR v = [Refugo PPM] VAR meta = 3900 RETURN IF(ISBLANK(v), \"Sem refugo medido\", IF(v <= meta, \"▼ Dentro · \", IF(v <= meta * 1.1, \"▲ Atenção · \", \"▲ Acima · \")) & FORMAT(v, \"#,0\") & \" de \" & FORMAT(meta, \"#,0\") & \" PPM\")",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Refugo Cor",
+          "dataType": "Text",
+          "expression": "VAR v = [Refugo PPM] VAR meta = 3900 VAR p = IF(ISBLANK(v), BLANK(), v) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p <= meta, \"#16A34A\", IF(p <= meta * 1.1, \"#E67E22\", \"#C0392B\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Montagem Status",
+          "dataType": "Text",
+          "expression": "VAR p = [% Montagem] RETURN IF(ISBLANK(p), \"Sem produção da Montagem\", IF(p >= 1, \"▲ No ritmo · \", IF(p >= 0.9, \"▼ Atenção · \", \"▼ Abaixo · \")) & FORMAT(p, \"0%\") & \" da meta\")",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Montagem Cor",
+          "dataType": "Text",
+          "expression": "VAR p = [% Montagem] RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p >= 1, \"#16A34A\", IF(p >= 0.9, \"#E67E22\", \"#C0392B\")))",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Pior Máquina",
+          "dataType": "Text",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula])), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = TOPN(1, FILTER(t, NOT ISBLANK([@ad])), [@ad], ASC) RETURN IF(COUNTROWS(pior) = 0, \"Sem dados no período\", \"Mais longe da meta: \" & MAXX(pior, fHoraCheia[Célula]) & \", com \" & FORMAT(MAXX(pior, [@ad]), \"0%\") & \" da meta\")",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Cor Máquina",
+          "dataType": "Text",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula])), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = MINX(FILTER(t, NOT ISBLANK([@ad])), [@ad]) VAR atual = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta])) RETURN IF(NOT ISBLANK(atual) && atual = pior, \"#C0392B\", \"#2C6FBF\")",
+          "displayFolder": "Painel (relatório)"
         }
       ]
     }

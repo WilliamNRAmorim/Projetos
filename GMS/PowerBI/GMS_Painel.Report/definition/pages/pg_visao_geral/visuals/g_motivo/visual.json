@@ -2,12 +2,12 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
   "name": "g_motivo",
   "position": {
-    "x": 15.617021276595789,
-    "y": 475.73556231003056,
-    "z": 18000,
-    "height": 240,
-    "width": 626,
-    "tabOrder": 18000
+    "x": 788,
+    "y": 244,
+    "z": 15000,
+    "height": 226,
+    "width": 476,
+    "tabOrder": 15000
   },
   "visual": {
     "visualType": "clusteredBarChart",
@@ -20,13 +20,13 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "Hora-Hora"
+                      "Entity": "fHoraCheia"
                     }
                   },
                   "Property": "Motivo Padrão"
                 }
               },
-              "queryRef": "Hora-Hora.Motivo Padrão",
+              "queryRef": "fHoraCheia.Motivo Padrão",
               "nativeQueryRef": "Motivo Padrão",
               "active": true
             }
@@ -39,14 +39,15 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
+                      "Schema": "extension",
                       "Entity": "Medidas"
                     }
                   },
-                  "Property": "Tempo Parado (h)"
+                  "Property": "HH Parado (min)"
                 }
               },
-              "queryRef": "Medidas.Tempo Parado (h)",
-              "nativeQueryRef": "Tempo Parado (h)"
+              "queryRef": "Medidas.HH Parado (min)",
+              "nativeQueryRef": "HH Parado (min)"
             }
           ]
         }
@@ -58,10 +59,11 @@
               "Measure": {
                 "Expression": {
                   "SourceRef": {
+                    "Schema": "extension",
                     "Entity": "Medidas"
                   }
                 },
-                "Property": "Tempo Parado (h)"
+                "Property": "HH Parado (min)"
               }
             },
             "direction": "Descending"
@@ -96,7 +98,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "9D"
+                  "Value": "12D"
                 }
               }
             },
@@ -120,7 +122,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "9D"
+                  "Value": "12D"
                 }
               }
             },
@@ -162,7 +164,7 @@
             "fontSize": {
               "expr": {
                 "Literal": {
-                  "Value": "9D"
+                  "Value": "12D"
                 }
               }
             },
@@ -195,7 +197,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Motivos de parada por tempo (h)'"
+                  "Value": "'Quais motivos mais pararam as máquinas (min)?'"
                 }
               }
             },
@@ -349,8 +351,178 @@
             }
           }
         }
+      ],
+      "general": [
+        {
+          "properties": {
+            "altText": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Gráfico de barras: minutos parados por motivo de parada, do maior para o menor. Quais motivos mais pararam as máquinas?'"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "f_sem_vazio",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fHoraCheia"
+              }
+            },
+            "Property": "Motivo Padrão"
+          }
+        },
+        "type": "Advanced",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "c_n",
+              "Entity": "fHoraCheia",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c_n"
+                            }
+                          },
+                          "Property": "Motivo Padrão"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "f_refeicoes",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "fHoraCheia"
+              }
+            },
+            "Property": "Motivo Padrão"
+          }
+        },
+        "type": "Categorical",
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "r_n",
+              "Entity": "fHoraCheia",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "Not": {
+                  "Expression": {
+                    "In": {
+                      "Expressions": [
+                        {
+                          "Column": {
+                            "Expression": {
+                              "SourceRef": {
+                                "Source": "r_n"
+                              }
+                            },
+                            "Property": "Motivo Padrão"
+                          }
+                        }
+                      ],
+                      "Values": [
+                        [
+                          {
+                            "Literal": {
+                              "Value": "'Almoço'"
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            "Literal": {
+                              "Value": "'Refeição'"
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            "Literal": {
+                              "Value": "'Janta'"
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            "Literal": {
+                              "Value": "'Café'"
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            "Literal": {
+                              "Value": "'Alimentação'"
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "howCreated": "User",
+        "objects": {
+          "general": [
+            {
+              "properties": {
+                "isInvertedSelectionMode": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "true"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }

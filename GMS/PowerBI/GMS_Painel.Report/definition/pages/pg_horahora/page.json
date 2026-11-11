@@ -34,94 +34,51 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "f_trancadeiras",
+        "name": "f_sem_vazio_celula",
         "field": {
           "Column": {
             "Expression": {
               "SourceRef": {
-                "Entity": "fHoraHora"
+                "Entity": "fHoraCheia"
               }
             },
             "Property": "Célula"
           }
         },
-        "type": "Categorical",
+        "type": "Advanced",
         "filter": {
           "Version": 2,
           "From": [
             {
               "Name": "c",
-              "Entity": "fHoraHora",
+              "Entity": "fHoraCheia",
               "Type": 0
             }
           ],
           "Where": [
             {
               "Condition": {
-                "In": {
-                  "Expressions": [
-                    {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Source": "c"
-                          }
-                        },
-                        "Property": "Célula"
+                "Not": {
+                  "Expression": {
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
+                            }
+                          },
+                          "Property": "Célula"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
                       }
                     }
-                  ],
-                  "Values": [
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH01'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH02'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH03'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH05'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH06'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'TH07'"
-                        }
-                      }
-                    ],
-                    [
-                      {
-                        "Literal": {
-                          "Value": "'Spiral'"
-                        }
-                      }
-                    ]
-                  ]
+                  }
                 }
               }
             }

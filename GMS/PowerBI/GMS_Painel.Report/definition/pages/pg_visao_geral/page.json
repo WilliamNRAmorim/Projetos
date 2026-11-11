@@ -8,24 +8,24 @@
   "filterConfig": {
     "filters": [
       {
-        "name": "f_refeicao_hh",
+        "name": "f_sem_vazio_celula",
         "field": {
           "Column": {
             "Expression": {
               "SourceRef": {
-                "Entity": "Hora-Hora"
+                "Entity": "fHoraCheia"
               }
             },
-            "Property": "Motivo Padrão"
+            "Property": "Célula"
           }
         },
-        "type": "Categorical",
+        "type": "Advanced",
         "filter": {
           "Version": 2,
           "From": [
             {
-              "Name": "h",
-              "Entity": "Hora-Hora",
+              "Name": "c",
+              "Entity": "fHoraCheia",
               "Type": 0
             }
           ],
@@ -34,28 +34,23 @@
               "Condition": {
                 "Not": {
                   "Expression": {
-                    "In": {
-                      "Expressions": [
-                        {
-                          "Column": {
-                            "Expression": {
-                              "SourceRef": {
-                                "Source": "h"
-                              }
-                            },
-                            "Property": "Motivo Padrão"
-                          }
-                        }
-                      ],
-                      "Values": [
-                        [
-                          {
-                            "Literal": {
-                              "Value": "'Almoço'"
+                    "Comparison": {
+                      "ComparisonKind": 0,
+                      "Left": {
+                        "Column": {
+                          "Expression": {
+                            "SourceRef": {
+                              "Source": "c"
                             }
-                          }
-                        ]
-                      ]
+                          },
+                          "Property": "Célula"
+                        }
+                      },
+                      "Right": {
+                        "Literal": {
+                          "Value": "null"
+                        }
+                      }
                     }
                   }
                 }
@@ -63,22 +58,7 @@
             }
           ]
         },
-        "howCreated": "User",
-        "objects": {
-          "general": [
-            {
-              "properties": {
-                "isInvertedSelectionMode": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "true"
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
+        "howCreated": "User"
       }
     ]
   },
