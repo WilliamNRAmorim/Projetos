@@ -516,6 +516,13 @@
           "dataType": "Text",
           "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula])), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = MINX(FILTER(t, NOT ISBLANK([@ad])), [@ad]) VAR atual = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta])) RETURN IF(NOT ISBLANK(atual) && atual = pior, \"#C0392B\", \"#2C6FBF\")",
           "displayFolder": "Painel (relatório)"
+        },
+        {
+          "dataType": "Double",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)",
+          "name": "Minutos por Motivo Montagem (min)",
+          "expression": "VAR mot = SELECTEDVALUE(Paradas_Montagem[Motivo])\nVAR te = COALESCE(SUMX(VALUES(Paradas_Montagem[OPVinculada]), VAR op = Paradas_Montagem[OPVinculada] VAR te = CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), KEEPFILTERS(Paradas_Montagem[Motivo] = \"TE - Tempo Excedido\")) VAR temRF = NOT ISBLANK(op) && TRIM(op) <> \"\" && CALCULATE(COUNTROWS(FILTER(Paradas_Montagem, LEFT(TRIM(Paradas_Montagem[Motivo]), 2) = \"RF\")), REMOVEFILTERS(Paradas_Montagem[Motivo])) > 0 RETURN IF(temRF, MAX(0, te - 45), te)), 0)\nVAR outros = CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), FILTER(VALUES(Paradas_Montagem[Motivo]), Paradas_Montagem[Motivo] <> \"TE - Tempo Excedido\" && LEFT(TRIM(Paradas_Montagem[Motivo]), 2) <> \"RF\"))\nVAR r = COALESCE(outros, 0) + te\nRETURN IF(LEFT(TRIM(mot), 2) = \"RF\" || r = 0, BLANK(), r)"
         }
       ]
     }

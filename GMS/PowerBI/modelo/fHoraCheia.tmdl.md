@@ -14,6 +14,8 @@ Cada linha da `fHoraHora` é uma janela (`Hora` = "hh:mm - hh:mm"). O início sa
 
 > **11/11/2026, aplicado no modelo vivo.** Correção depois da 1ª aplicação: de jan a set, 11.052 linhas da lista vêm sem `Minutos`; sem minutos, o teto do parado zerava 506 mil min. Agora `Mn` = `Minutos` da linha ou, vazio, a duração do rótulo; vale para Minutos, teto do parado e desconto do almoço.
 
+> **11/11/2026, 2ª regra da refeição (William):** turno com Almoço lançado perde os 45 min na janela lançada; turno sem Almoço lançado (Célula × Data BI × Turno BI) perde os 45 min na hora padrão: 1º 11:00-12:00 (HoraOrdem 6), 2º 19:00-20:00 (14), 3º 02:00-03:00 (21).
+
 ## 1) Script TMDL (cole inteiro)
 ```
 createOrReplace
@@ -158,17 +160,31 @@ createOrReplace
 				"Fr", DIVIDE ( MIN ( [Efim], ( [Value] + 1 ) * 60 ) - MAX ( [Sini], [Value] * 60 ), [Efim] - [Sini] ),
 				"Mn", IF ( COALESCE ( [Min], 0 ) > 0, [Min], [Efim] - [Sini] )
 				)
+				VAR Calc2 =
+				ADDCOLUMNS (
+				Calc,
+				"DataBI", [Data] + INT ( [Value] / 24 ),
+				"HO", MOD ( [Value], 24 ),
+				"TurnoBI", IF ( MOD ( [Value], 24 ) < 9, "1º Turno", IF ( MOD ( [Value], 24 ) < 17, "2º Turno", "3º Turno" ) )
+				)
+				VAR ComAlmoco =
+				DISTINCT ( SELECTCOLUMNS ( FILTER ( Calc2, [Motivo Padrão] = "Almoço" ), "C", [Célula], "D", [DataBI], "T", [TurnoBI] ) )
+				VAR Calc3 =
+				ADDCOLUMNS (
+				Calc2,
+				"Refeicao", [Motivo Padrão] = "Almoço" || ( [HO] = SWITCH ( [TurnoBI], "1º Turno", 6, "2º Turno", 14, 21 ) && NOT ( ( [Célula], [DataBI], [TurnoBI] ) IN ComAlmoco ) )
+				)
 				RETURN
 				SELECTCOLUMNS (
-				Calc,
+				Calc3,
 				"Célula", [Célula],
 				"Mangueira", [Mangueira],
-				"Data BI", [Data] + INT ( [Value] / 24 ),
-				"Turno BI", IF ( MOD ( [Value], 24 ) < 9, "1º Turno", IF ( MOD ( [Value], 24 ) < 17, "2º Turno", "3º Turno" ) ),
+				"Data BI", [DataBI],
+				"Turno BI", [TurnoBI],
 				"Hora", FORMAT ( MOD ( 5 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00 - " & FORMAT ( MOD ( 6 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00",
 				"HoraOrdem", MOD ( [Value], 24 ),
 				"Minutos", [Mn] * [Fr],
-				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Motivo Padrão] = "Almoço" && [Mn] > 0, MAX ( 0, [Mn] - 45 ) / [Mn], 1 ) * [Fr],
+				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Refeicao] && [Mn] > 0, MAX ( 0, [Mn] - 45 ) / [Mn], 1 ) * [Fr],
 				"Real", COALESCE ( [Real0], 0 ) * [Fr],
 				"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ),
 				"Motivo", [Motivo],
