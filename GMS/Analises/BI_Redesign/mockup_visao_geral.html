@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GMS BI Redesign</title>
+<style>
+:root{
+  --rail:#1E1E1E; --rail-2:#2A2A2A; --rail-txt:#BDBDBD; --rail-lbl:#7A7A7A;
+  --bg:#F2F3F5; --card:#FFFFFF; --borda:#E4E6EA; --grade:#EEF0F2;
+  --txt:#1F1F1E; --txt-2:#5F6368; --txt-3:#8A8F96;
+  --red:#E2000F; --red-2:#F4A3A8; --gray:#3C3C3B; --meta:#D5D8DD;
+  --ok:#16A34A; --alerta:#D97706; --ruim:#C0392B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#C9CCD1;font-family:"Segoe UI",system-ui,sans-serif;color:var(--txt);display:flex;justify-content:center;padding:24px 16px}
+.wrap{width:100%;max-width:1280px}
+.nota{font-size:13px;color:#333;margin-bottom:10px}
+.canvas{width:1280px;height:720px;background:var(--bg);display:flex;position:relative;transform-origin:top left;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.scaler{width:100%;overflow:hidden}
+/* rail */
+.rail{width:200px;background:var(--rail);color:var(--rail-txt);display:flex;flex-direction:column;padding:16px 0}
+.logo{margin:0 16px 4px;background:#fff;border-radius:4px;height:40px;display:flex;align-items:center;justify-content:center;font-weight:700;font-style:italic;color:var(--red);font-size:20px;letter-spacing:-.5px}
+.app{font-size:11px;color:var(--rail-lbl);margin:6px 16px 18px}
+.sec{font-size:10px;font-weight:600;letter-spacing:1.2px;color:var(--rail-lbl);margin:10px 16px 6px}
+.item{font-size:13px;padding:7px 16px 7px 19px;border-left:3px solid transparent;cursor:default}
+.item.on{background:var(--rail-2);color:#fff;border-left-color:var(--red);font-weight:600}
+.rail .fim{margin-top:auto;padding:0 16px;font-size:11px;color:var(--rail-lbl);line-height:1.5}
+.rail .fim b{color:var(--rail-txt);font-weight:600}
+/* conteúdo */
+.main{flex:1;padding:16px 16px 16px 16px;display:flex;flex-direction:column;gap:16px}
+.head{display:flex;justify-content:space-between;align-items:flex-start;height:52px}
+.head h1{font-size:22px;font-weight:600;letter-spacing:-.2px}
+.head p{font-size:12px;color:var(--txt-2);margin-top:3px}
+.filtros{display:flex;gap:8px}
+.flt{width:148px;height:44px;background:var(--card);border:1px solid var(--borda);border-radius:6px;padding:5px 10px}
+.flt span{display:block;font-size:10px;color:var(--txt-3);font-weight:600;letter-spacing:.6px}
+.flt b{font-size:12px;font-weight:600;display:flex;justify-content:space-between}
+.flt b i{font-style:normal;color:var(--txt-3)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;height:104px}
+.kpi{background:var(--card);border:1px solid var(--borda);border-radius:6px;position:relative;padding:12px 16px 12px 20px;overflow:hidden}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c)}
+.kpi .l{font-size:11px;color:var(--txt-2);font-weight:600;letter-spacing:.6px}
+.kpi .v{font-size:30px;font-weight:600;letter-spacing:-.5px;margin-top:2px;line-height:1.2}
+.kpi .v small{font-size:14px;color:var(--txt-2);font-weight:400;margin-left:3px}
+.kpi .r{font-size:12px;color:var(--txt-2);margin-top:4px}
+.kpi .r em{font-style:normal;font-weight:600;color:var(--c)}
+.grid{flex:1;display:grid;grid-template-columns:600px 1fr;grid-template-rows:1fr 1fr;gap:16px;min-height:0}
+.box{background:var(--card);border:1px solid var(--borda);border-radius:6px;padding:14px 16px 10px;display:flex;flex-direction:column;min-height:0}
+.box.alto{grid-row:span 2}
+.box h2{font-size:14px;font-weight:600}
+.box h3{font-size:11px;color:var(--txt-3);font-weight:400;margin-top:2px}
+.leg{display:flex;gap:14px;font-size:11px;color:var(--txt-2);margin-top:8px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.plot{flex:1;min-height:0;margin-top:6px}
+svg text{font-family:"Segoe UI",system-ui,sans-serif}
+.rod{position:absolute;right:16px;bottom:4px;font-size:10px;color:var(--txt-3)}
+.anot{margin-top:18px;font-size:13px;color:#222;line-height:1.55;max-width:1280px}
+.anot h4{font-size:14px;margin:10px 0 4px}
+.anot li{margin-left:18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="nota"><b>Protótipo da Visão Geral no visual novo.</b> Números ilustrativos; o layout é o que muda. Tudo aqui existe nativo no Power BI Desktop.</p>
+<div class="scaler" id="scaler">
+<div class="canvas" id="canvas">
+  <nav class="rail">
+    <div class="logo">Danfoss</div>
+    <div class="app">GMS · Guaratinguetá</div>
+    <div class="sec">MANGUEIRA</div>
+    <div class="item on">Visão Geral</div>
+    <div class="item">Hora-Hora</div>
+    <div class="item">Paradas</div>
+    <div class="item">Refugo PPM</div>
+    <div class="item">PPM por corte</div>
+    <div class="item">Extrusora</div>
+    <div class="item">Fluxo · Etapas</div>
+    <div class="item">Fluxo · Mão de obra</div>
+    <div class="sec" style="margin-top:16px">MONTAGEM</div>
+    <div class="item">Produção</div>
+    <div class="item">Paradas</div>
+    <div class="fim">Atualizado<br><b>12/11/2026 · 14:05</b><br>Fonte: GMS · Hora-Hora</div>
+  </nav>
+  <main class="main">
+    <div class="head">
+      <div><h1>Visão Geral da Produção</h1><p>Trançagem · 01/11 a 12/11/2026 · todos os turnos e máquinas</p></div>
+      <div class="filtros">
+        <div class="flt"><span>PERÍODO</span><b>01/11 – 12/11 <i>▾</i></b></div>
+        <div class="flt"><span>TURNO</span><b>Todos <i>▾</i></b></div>
+        <div class="flt"><span>MÁQUINA</span><b>Todas <i>▾</i></b></div>
+      </div>
+    </div>
+    <section class="kpis">
+      <div class="kpi" style="--c:var(--gray)"><div class="l">METRAGEM TRANÇADA</div><div class="v">174.820<small>m</small></div><div class="r">Meta 182.400 m · <em style="color:var(--ruim)">▼ 4,2%</em></div></div>
+      <div class="kpi" style="--c:var(--alerta)"><div class="l">ADERÊNCIA À META</div><div class="v">95,8<small>%</small></div><div class="r">Alvo ≥ 98% · <em>▼ 2,2 p.p.</em></div></div>
+      <div class="kpi" style="--c:var(--ruim)"><div class="l">TEMPO PARADO</div><div class="v">2.940<small>min</small></div><div class="r">49 h · <em>Nº1: falta de material</em></div></div>
+      <div class="kpi" style="--c:var(--ok)"><div class="l">REFUGO PPM</div><div class="v">3.120</div><div class="r">Base 2025: 3.900 · <em>▲ 20% melhor</em></div></div>
+    </section>
+    <section class="grid">
+      <div class="box alto">
+        <h2>Qual máquina está mais longe da meta?</h2><h3>Metros no período · ordenado pela aderência</h3>
+        <div class="leg"><span><i style="background:var(--red)"></i>Real</span><span><i style="background:var(--meta)"></i>Meta útil</span></div>
+        <div class="plot" id="pMaq"></div>
+      </div>
+      <div class="box">
+        <h2>Quais motivos mais pararam as máquinas?</h2><h3>Minutos parados · 5 maiores</h3>
+        <div class="plot" id="pMot"></div>
+      </div>
+      <div class="box">
+        <h2>A produção acompanhou a meta hora a hora?</h2><h3>Metros por hora cheia · média do período</h3>
+        <div class="plot" id="pHora"></div>
+      </div>
+    </section>
+  </main>
+</div>
+</div>
+
+<div class="anot">
+<h4>O que muda em relação ao painel de hoje</h4>
+<ul>
+<li><b>Menu lateral fixo</b> no lugar da faixa vermelha e das duas fileiras de botões: as 10 páginas sempre à vista, separadas em Mangueira e Montagem, com a página atual marcada.</li>
+<li><b>Cabeçalho que diz o recorte</b> (etapa, período, turno) e filtros sempre no mesmo canto, em todas as páginas.</li>
+<li><b>Cartões novos</b> (cartão do Power BI de 2024): valor grande, comparação com a meta numa linha só, e uma faixa de status à esquerda em cor + seta, em vez da borda grossa colorida.</li>
+<li><b>Barra real sobre a meta</b> (barras sobrepostas): lê-se em um olhar quanto faltou, sem duas barras lado a lado.</li>
+<li><b>Vermelho Danfoss nas barras e meta em cinza</b>, como você escolheu em 11/11; grade quase invisível, sem título de eixo, rótulo direto no dado.</li>
+<li><b>Um tema só manda na formatação</b>: fonte, cor, borda e espaçamento saem do tema, não de cada visual. Muda num arquivo, muda o painel inteiro.</li>
+</ul>
+</div>
+</div>
+
+<script>
+const C={red:'#E2000F',red2:'#F4A3A8',meta:'#D5D8DD',gray:'#3C3C3B',grade:'#EEF0F2',t2:'#5F6368',t3:'#8A8F96',txt:'#1F1F1E'};
+const fmt=n=>n.toLocaleString('pt-BR');
+function svg(el,w,h,inner){el.innerHTML=`<svg viewBox="0 0 ${w} ${h}" width="100%" height="100%" preserveAspectRatio="none">${inner}</svg>`}
+// máquinas: bullet (meta atrás, real na frente)
+(function(){
+  const d=[['TH05',18200,21600],['TH02',19100,21600],['TO04',15800,17800],['TH07',20300,21600],['TH03',20900,21600],['TH01',21300,21600],['TH04',21900,21600],['TH06',22400,21600],['TM04',13900,13400]]
+    .map(r=>({m:r[0],real:r[1],meta:r[2],a:r[1]/r[2]})).sort((x,y)=>x.a-y.a);
+  const el=document.getElementById('pMaq'),w=566,h=430,l=48,r=58,top=6,max=24000,rowH=(h-top-20)/d.length,sx=v=>l+(w-l-r)*v/max;
+  let s='';
+  [0,6000,12000,18000,24000].forEach(v=>{s+=`<line x1="${sx(v)}" x2="${sx(v)}" y1="${top}" y2="${h-18}" stroke="${C.grade}"/><text x="${sx(v)}" y="${h-4}" font-size="10" fill="${C.t3}" text-anchor="middle">${v/1000}k</text>`});
+  d.forEach((p,i)=>{const y=top+i*rowH,bh=rowH*.62,y0=y+(rowH-bh)/2;
+    s+=`<text x="${l-8}" y="${y0+bh/2+4}" font-size="12" fill="${C.t2}" text-anchor="end">${p.m}</text>`;
+    s+=`<rect x="${l}" y="${y0}" width="${sx(p.meta)-l}" height="${bh}" fill="${C.meta}" rx="2"/>`;
+    s+=`<rect x="${l}" y="${y0+bh*.22}" width="${sx(p.real)-l}" height="${bh*.56}" fill="${p.a<.95?C.red:C.gray}" rx="2"/>`;
+    s+=`<text x="${w-r+8}" y="${y0+bh/2+4}" font-size="12" font-weight="600" fill="${p.a<.95?C.red:C.txt}">${(p.a*100).toFixed(1).replace('.',',')}%</text>`;});
+  svg(el,w,h,s);
+})();
+// motivos
+(function(){
+  const d=[['Falta de material',860],['Troca de carretel',620],['Manutenção corretiva',540],['Setup de bitola',410],['Aguardando qualidade',230]];
+  const el=document.getElementById('pMot'),w=406,h=150,l=138,rowH=h/d.length,sx=v=>l+(w-l-44)*v/900;let s='';
+  d.forEach((p,i)=>{const y=i*rowH,bh=rowH*.6,y0=y+(rowH-bh)/2;
+    s+=`<text x="${l-8}" y="${y0+bh/2+4}" font-size="11.5" fill="${C.t2}" text-anchor="end">${p[0]}</text>`;
+    s+=`<rect x="${l}" y="${y0}" width="${sx(p[1])-l}" height="${bh}" fill="${i==0?C.red:C.red2}" rx="2"/>`;
+    s+=`<text x="${sx(p[1])+6}" y="${y0+bh/2+4}" font-size="11.5" font-weight="600" fill="${C.txt}">${fmt(p[1])}</text>`;});
+  svg(el,w,h,s);
+})();
+// hora a hora
+(function(){
+  const hrs=['05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','00','01','02','03','04'];
+  const real=[640,700,720,690,710,730,380,690,700,610,690,720,700,680,360,690,700,560,640,650,620,340,600,630];
+  const meta=hrs.map((h,i)=>[6,14,21].includes(i)?380:720);
+  const el=document.getElementById('pHora'),w=406,h=150,l=30,b=16,sx=i=>l+(w-l-6)*i/(hrs.length-1),sy=v=>(h-b)-(h-b-6)*v/800;
+  let s='';[0,400,800].forEach(v=>s+=`<line x1="${l}" x2="${w}" y1="${sy(v)}" y2="${sy(v)}" stroke="${C.grade}"/><text x="${l-6}" y="${sy(v)+3}" font-size="10" fill="${C.t3}" text-anchor="end">${v}</text>`);
+  hrs.forEach((t,i)=>{if(i%3==0)s+=`<text x="${sx(i)}" y="${h-2}" font-size="10" fill="${C.t3}" text-anchor="middle">${t}h</text>`});
+  const path=a=>a.map((v,i)=>(i?'L':'M')+sx(i).toFixed(1)+' '+sy(v).toFixed(1)).join(' ');
+  s+=`<path d="${path(real)} L${sx(23)} ${sy(0)} L${sx(0)} ${sy(0)}Z" fill="${C.red}" opacity=".07"/>`;
+  s+=`<path d="${path(meta)}" fill="none" stroke="${C.gray}" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  s+=`<path d="${path(real)}" fill="none" stroke="${C.red}" stroke-width="2"/>`;
+  s+=`<text x="${w-4}" y="${sy(720)-6}" font-size="10" fill="${C.gray}" text-anchor="end">meta</text>`;
+  svg(el,w,h,s);
+})();
+// escala para caber na tela
+function fit(){const sc=document.getElementById('scaler'),cv=document.getElementById('canvas'),k=Math.min(1,sc.clientWidth/1280);cv.style.transform=`scale(${k})`;sc.style.height=(720*k)+'px'}
+addEventListener('resize',fit);fit();
+</script>
+</body>
+</html>
