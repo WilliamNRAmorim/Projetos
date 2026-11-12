@@ -58,3 +58,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-11 | Uiu: aprovou o plano da ferramenta Somar no GMS e deu sim para criar o fluxo, gravar os 3 arquivos de conhecimento e indexar DataHoraRefugo
 2026-11-12 | Conferência SAP: aceitou o plano v1.2.0 inteiro e deu sim para OneDrive, fluxo e lista (reabrir 67, justificar 158)
 2026-11-12 | Hora-Hora pela ficha: aceitou as recomendadas (dia útil, 1º e 2º turno; Real = metros da ficha rateados com teto na meta) e liberou as 414 linhas
+2026-11-12 | OEE2: aceitou a recomendada de não dar a pausa de 45 min a turno com menos de 4 h (só hora extra)

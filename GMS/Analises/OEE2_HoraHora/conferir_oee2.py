@@ -40,6 +40,7 @@ CELULAS = ["TH01", "TH02", "TH03", "TH04", "TH05", "TH06", "TH07", "TO04", "TM01
 TURNOS = ["1º Turno", "2º Turno", "3º Turno"]
 MIN_TURNO = {"1º Turno": 540, "2º Turno": 480, "3º Turno": 420}   # horas cheias 05-14, 14-22, 22-05
 PAUSA = 45
+TURNO_MIN_PAUSA = 240  # turno com menos de 4 h (só hora extra) não recebe pausa (William, 12/11/2026)
 LIM_AVISO = 1.02            # Valorizado (Real) acima do Valorizado em mais de 2%
 
 
@@ -154,8 +155,9 @@ def turnos_de_maquina(f: pd.DataFrame) -> pd.DataFrame:
         Verm_decl=("P_vermelha", "sum"), AzCz=("P_azcz_sem_ref", "sum"), Ref=("P_ref", "sum"),
         SemFam=("P_semfam", "sum"), VR=("VR", "sum"), MetaOp=("Meta_op", "sum"), RealOp=("Real_op", "sum"),
         Meta=("MetaCheia", "sum"))
-    g["Pausa"] = np.where(g["Real"] > 0, np.minimum(PAUSA, g["Min"]), 0.0)
-    g["Plan"] = g["AzCz"] + np.where(g["Real"] > 0, g["Pausa"], g["Ref"])
+    recebe = (g["Real"] > 0) & (g["Min"] >= TURNO_MIN_PAUSA)
+    g["Pausa"] = np.where(recebe, PAUSA, 0.0)
+    g["Plan"] = g["AzCz"] + np.where(recebe, g["Pausa"], g["Ref"])
     return g
 
 
@@ -288,7 +290,7 @@ def main():
     print(f"   Produção - Amarela - Valorizado = Vermelha residual {t.Vermelha:,.0f}; "
           f"vermelha declarada {t.Vermelha_declarada:,.0f} + sem família {t.Sem_familia:,.0f} + refeição declarada nos turnos com "
           f"produção - pausa fixa = {t.Vermelha:,.0f} (a diferença é a refeição absorvida)")
-    n_turnos = int((g["Real"] > 0).sum())
+    n_turnos = int(((g["Real"] > 0) & (g["Min"] >= TURNO_MIN_PAUSA)).sum())
     print(f"   turnos de máquina: {len(g)}; com Real > 0 (recebem pausa): {n_turnos}; pausa fixa {g['Pausa'].sum():,.0f} min; "
           f"refeição declarada nesses turnos {g.loc[g['Real'] > 0, 'Ref'].sum():,.0f} min; "
           f"turnos com refeição declarada acima de 45 min: {int((g['Ref'] > PAUSA).sum())}")

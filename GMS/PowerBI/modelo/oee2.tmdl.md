@@ -9,7 +9,7 @@ Só BI. O app, a lista Hora-Hora e a `fHoraHora` não mudam. Regras: `Analises/O
 | `fHoraCheia` | tabela calculada | **alterada** (`createOrReplace`) | Só uma coluna nova, `Meta Cheia` (= Meta Hora x Fração, sem o desconto da refeição). O resto é o script vigente de 11/11, igual; os 2 relacionamentos (`Data BI` e `Turno BI`) são declarados de novo. |
 | `dEtapaOEE` | tabela calculada | **nova** | Eixo desconectado da cascata (5 etapas). |
 | `OEE2 Janela` | medida | nova | Minutos da janela (soma de fHoraCheia[Minutos]); dia produtivo 05:00-05:00, 24 h por máquina com linha lançada. |
-| `OEE2 Planejada` | medida | nova | Azul + cinza, com a pausa fixa: por Célula x Data BI x Turno BI com Real > 0, MIN(45, minutos do turno) no lugar da refeição declarada; turno sem produção mantém a refeição como cinza. |
+| `OEE2 Planejada` | medida | nova | Azul + cinza, com a pausa fixa: por Célula x Data BI x Turno BI com Real > 0 e pelo menos 240 min de janela, 45 min no lugar da refeição declarada; turno sem produção ou com menos de 4 h (só hora extra) não recebe pausa e mantém a refeição declarada como cinza (William, 12/11). |
 | `OEE2 Produção` | medida | nova | Tempo de produção = Janela - Planejada. |
 | `OEE2 Amarela` | medida | nova | Σ P (parado capado na fatia) dos motivos de família Amarela: troca de lote, perda de disponibilidade. |
 | `OEE2 Valorizado` | medida | nova | Valorizado = Janela - Σ P de todas as linhas (caminho oficial). A pausa fixa não entra: não desconta duas vezes. |
@@ -432,7 +432,7 @@ createOrReplace
 				"@ref", CALCULATE ( SUM ( fHoraCheia[Parado] ), KEEPFILTERS ( fHoraCheia[Motivo Padrão] = "Almoço" ) )
 				)
 				RETURN
-				SUMX ( Turnos, [@pl] + IF ( [@real] > 0, MIN ( 45, [@min] ), [@ref] ) )
+				SUMX ( Turnos, [@pl] + IF ( [@real] > 0 && [@min] >= 240, 45, [@ref] ) )
 			formatString: #,0
 			displayFolder: OEE2
 
@@ -590,7 +590,7 @@ createOrReplace
 ## 2) O que cada peça faz
 **Regras (seção B do plano, adaptadas à `fHoraCheia`)**
 - Grão: a linha da `fHoraCheia` (hora cheia, dia produtivo 05:00-05:00, `Turno BI` 05-14, 14-22 e 22-05). `P` = `fHoraCheia[Parado]`, que já vem capado na fatia.
-- Turno de máquina = `Célula x Data BI x Turno BI`. Com `Real > 0` ele recebe **pausa planejada de MIN(45, minutos do turno)**, que entra em Planejada (cinza); os minutos declarados como Almoço (refeição) saem do cinza e ficam absorvidos pela pausa. Turno sem produção: a refeição declarada segue cinza.
+- Turno de máquina = `Célula x Data BI x Turno BI`. Com `Real > 0` e **pelo menos 240 min de janela** ele recebe **pausa planejada de 45 min** (turno com menos de 4 h, que em geral é só a hora extra do 2º turno caindo no 3º Turno BI, não recebe pausa: William, 12/11), que entra em Planejada (cinza); os minutos declarados como Almoço (refeição) saem do cinza e ficam absorvidos pela pausa. Turno sem produção: a refeição declarada segue cinza.
 - **Valorizado = Janela - Σ P** de todas as linhas (pausa não entra: não desconta duas vezes). **Vermelha** é o resíduo (Produção - Amarela - Valorizado): inclui a refeição declarada acima de 45 min, a pausa lançada em outro motivo e linhas sem família.
 - **O 21h45 não entra.** A regra dos 135 min/dia segue só em `HH Meta Útil (m)` e `HH Aderência`.
 - OEE2 = D x P x Q, consolidado ponderado pelo tempo; sem tempo de produção ou sem metro produzido o resultado é **em branco**, nunca 0. TCU entra com 0 para máquina parada, porque é sobre as 24 h.
@@ -719,37 +719,37 @@ EVALUATE FILTER ( INFO.MEASURES (), [State] <> 1 )
 EVALUATE FILTER ( INFO.COLUMNS (), [State] <> 1 )
 ```
 
-**Esperado (pandas, 04/09 a 06/11, 64 dias; minutos e %)**
+**Esperado (pandas, 04/09 a 06/11, 64 dias; minutos e %; regra de 12/11: turno com menos de 240 min sem pausa)**
 
 Total:
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Total | 433.737 | 65.717 | 368.020 | 61.625 | 102.674 | 203.721 | 83.3% | 66.5% | 98.5% | 54.5% | 19.8% |
+| Total | 433.737 | 61.427 | 372.310 | 61.625 | 106.964 | 203.721 | 83.5% | 65.6% | 98.5% | 53.9% | 19.8% |
 
 Por turno BI (TCU do turno usa os minutos do turno: 540, 480 e 420):
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1º Turno | 206.534 | 31.057 | 175.476 | 27.158 | 57.354 | 90.965 | 84.5% | 61.3% | 99.1% | 51.3% | 23.7% |
-| 2º Turno | 167.738 | 22.615 | 145.123 | 27.079 | 36.123 | 81.921 | 81.3% | 69.4% | 98.0% | 55.3% | 23.8% |
-| 3º Turno | 59.465 | 12.045 | 47.420 | 7.388 | 9.196 | 30.836 | 84.4% | 77.0% | 98.3% | 63.9% | 10.3% |
+| 1º Turno | 206.534 | 30.607 | 175.926 | 27.158 | 57.804 | 90.965 | 84.6% | 61.2% | 99.1% | 51.2% | 23.7% |
+| 2º Turno | 167.738 | 22.300 | 145.438 | 27.079 | 36.438 | 81.921 | 81.4% | 69.2% | 98.0% | 55.2% | 23.8% |
+| 3º Turno | 59.465 | 8.520 | 50.945 | 7.388 | 12.721 | 30.836 | 85.5% | 70.8% | 98.3% | 59.5% | 10.3% |
 
 Por máquina (TH04 não tem linha no período: o BI não a mostra na matriz; ela só entra no denominador do TCU):
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| TH01 | 53.429 | 6.192 | 47.237 | 4.068 | 13.530 | 29.639 | 91.4% | 68.7% | 98.9% | 62.0% | 31.8% |
-| TH02 | 34.341 | 3.678 | 30.663 | 2.749 | 9.210 | 18.705 | 91.0% | 67.0% | 99.2% | 60.5% | 20.1% |
-| TH03 | 39.688 | 5.825 | 33.863 | 5.698 | 12.604 | 15.561 | 83.2% | 55.2% | 98.8% | 45.4% | 16.7% |
+| TH01 | 53.429 | 5.834 | 47.595 | 4.068 | 13.888 | 29.639 | 91.5% | 68.1% | 98.9% | 61.6% | 31.8% |
+| TH02 | 34.341 | 3.434 | 30.907 | 2.749 | 9.454 | 18.705 | 91.1% | 66.4% | 99.2% | 60.1% | 20.1% |
+| TH03 | 39.688 | 5.174 | 34.514 | 5.698 | 13.254 | 15.561 | 83.5% | 54.0% | 98.8% | 44.5% | 16.7% |
 | TH04 | 0 | 0 | 0 | 0 | 0 | 0 |  |  |  |  | 0.0% |
-| TH05 | 13.109 | 1.860 | 11.249 | 1.241 | 4.034 | 5.974 | 89.0% | 59.7% | 95.2% | 50.6% | 6.2% |
-| TH06 | 55.509 | 10.292 | 45.217 | 5.941 | 7.451 | 31.825 | 86.9% | 81.0% | 97.7% | 68.7% | 33.7% |
-| TH07 | 59.292 | 16.144 | 43.148 | 10.917 | 6.483 | 25.748 | 74.7% | 79.9% | 98.7% | 58.9% | 27.6% |
-| TO04 | 45.790 | 5.251 | 40.539 | 4.900 | 9.420 | 26.219 | 87.9% | 73.6% | 98.8% | 63.9% | 28.1% |
-| TM01 | 52.505 | 7.494 | 45.011 | 7.025 | 8.285 | 29.701 | 84.4% | 78.2% | 98.8% | 65.2% | 31.8% |
-| TM04 | 32.331 | 4.069 | 28.262 | 2.676 | 14.223 | 11.363 | 90.5% | 44.4% | 98.1% | 39.4% | 12.1% |
-| Spiral | 47.743 | 4.912 | 42.831 | 16.410 | 17.434 | 8.987 | 61.7% | 34.0% | 98.9% | 20.8% | 9.6% |
+| TH05 | 13.109 | 1.451 | 11.658 | 1.241 | 4.443 | 5.974 | 89.3% | 57.4% | 95.2% | 48.8% | 6.2% |
+| TH06 | 55.509 | 9.843 | 45.666 | 5.941 | 7.900 | 31.825 | 87.0% | 80.1% | 97.7% | 68.0% | 33.7% |
+| TH07 | 59.292 | 15.776 | 43.516 | 10.917 | 6.851 | 25.748 | 74.9% | 79.0% | 98.7% | 58.4% | 27.6% |
+| TO04 | 45.790 | 4.759 | 41.031 | 4.900 | 9.912 | 26.219 | 88.1% | 72.6% | 98.8% | 63.1% | 28.1% |
+| TM01 | 52.505 | 7.022 | 45.483 | 7.025 | 8.757 | 29.701 | 84.5% | 77.2% | 98.8% | 64.5% | 31.8% |
+| TM04 | 32.331 | 3.598 | 28.733 | 2.676 | 14.694 | 11.363 | 90.7% | 43.6% | 98.1% | 38.8% | 12.1% |
+| Spiral | 47.743 | 4.536 | 43.207 | 16.410 | 17.810 | 8.987 | 62.0% | 33.5% | 98.9% | 20.6% | 9.6% |
 
 Comparação com os "Achados" do plano (explicação das diferenças em `conferir_oee2.py`, seção de reconciliação): a mesma conta do plano, no grão linha e sem pausa, reproduz os números dele ao minuto (Janela 429.920, Planejada 51.431, Vermelha 114.532, Amarela 60.681); a diferença para o valorizado do plano (203.276 contra 202.924) são 352 min de linhas sem motivo.
 

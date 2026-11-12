@@ -225,6 +225,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
 
 **Pausa de refeição (decisão do William, 09/11/2026: 45 min fixos em cada turno):**
 - **Quem recebe a pausa:** todo turno de máquina (Data × Turno × Célula) com Real > 0 recebe pausa planejada de MIN(45, Σ Min do turno). Ela entra em Planejada (cinza).
+  - **Emenda de 12/11/2026 (William):** turno com menos de 240 min de janela não recebe pausa. Em geral é só a hora extra do 2º turno (22:00-23:20) caindo no 3º Turno BI; a refeição declarada nele segue cinza. Com isso, de 04/09 a 06/11: OEE2 53,9%, D 83,5%, P 65,6%, Q 98,5%, TCU 19,8%.
 - **Refeição declarada nesses turnos:** os minutos com motivo Refeição ou Almoço saem do cinza e são absorvidos pela pausa fixa.
 - **Turno sem produção:** a refeição declarada segue cinza, como qualquer motivo.
 - **Valorizado:** Janela − Σ P de todas as linhas, independente da pausa. Por isso a pausa fixa não desconta duas vezes.
