@@ -54,14 +54,10 @@ Um episódio é um JSON em `ep/`. O motor (`motor.js`) desenha cenário, persona
 ## Contos de terror (31/10/2026)
 `contos.html` carrega o motor + `contos.js` (cenários novos por peça, poses `curioso` e `cega`, objeto `maos_olhos`) + `sfx_contos.js` (grilos, crepitar, rumor, elevadorZumbido, ding, portaElevador). JSON da peça: `ep/c0N_*.json` (`cartela`, `cor`, `saida`, `arquivo`, `vozes`, `eleven`). Detalhes e armadilhas em `Serie/aprendizados.md` (seção "Contos de terror").
 
-## Atmosfera opcional (`visual`, 07/11/2026)
-Camada de pós-render ligada só pela chave `"visual"`. Sem a chave nada muda em nenhum pixel. Fica **abaixo** do texto de tela, das faixas de título/final e da legenda (entra logo depois do `escurece`). Vale no episódio (padrão) e na cena (sobrescreve campo a campo; `"visual": false` na cena desliga tudo nela; `"luz": null` desliga só a luz).
-```json
-"visual": { "vinheta": 0.6, "grao": 0.4, "neblina": 0.5, "poeira": 0.5,
-            "luz": { "tipo": "vela", "x": 0.2, "y": 0.6, "raio": 500, "intensidade": 0.7 } }
-```
-- `vinheta`, `grao`, `neblina`, `poeira`: intensidade 0 a 1 (0 ou ausente = desligado).
-- `grao`: textura de ruído gerada uma vez e reaproveitada, deslocada a cada 2 quadros (determinístico pelo número do quadro).
-- `neblina`: 5 faixas lentas na metade de baixo. `poeira`: 70 partículas lentas com semente fixa.
-- `luz`: objeto ou lista deles. `tipo` = `vela` (treme), `lanterna` (firme, cai de vez em quando), `lampada` (pisca). `x`,`y` até 2 = fração da tela, acima disso = pixels. `raio` (padrão 500) e `intensidade` (0-1, padrão 0,7).
-- Tudo é função do tempo/quadro e de sementes fixas (nada de `Math.random`), então o render sai igual toda vez.
+## Camada visual opcional (`visual`, 11/11/2026)
+Atmosfera, personagens em vetor v2, composição (câmera, chão, primeiro plano, legenda automática) e movimento ficam em `motor_fx.js` e só entram quando o JSON traz a chave `"visual"`. Sem a chave, nenhum pixel muda: `node linha_base.js conferir` compara 1686 quadros dos 60 episódios publicados com `linha_base.json`.
+
+- Como pedir cada efeito: **`MOTOR_GUIA.md`**.
+- Exemplos: `ep/c04_visual_teste.json` (id `t04`) e `ep/s01_visual_teste.json` (id `t_s01`).
+- Folhas antes/depois de cada fase: `preview/motor/`.
+- Estado e o que falta: `ESTADO_MOTOR.md`.

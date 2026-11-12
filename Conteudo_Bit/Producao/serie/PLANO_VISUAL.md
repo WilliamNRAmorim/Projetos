@@ -2,7 +2,7 @@
 
 Situação de partida: nota 7/10 (produção 9, áudio 8, visual 6, código 5).
 Objetivo: melhorar o visual sem mudar nenhum episódio já publicado e com prova em cada fase.
-Status: **aguardando aprovação do William.**
+Status: **fases 0 a 4 entregues em 11/11/2026** (missão P1 do PLANO_FABLE). Fases 5, 6 e 7 em aberto. Ver `ESTADO_MOTOR.md` e `MOTOR_GUIA.md`.
 
 ## Regras de todas as fases
 - Todo recurso novo é uma opção no JSON, desligada por padrão (`"visual": {...}` no episódio ou na cena).
