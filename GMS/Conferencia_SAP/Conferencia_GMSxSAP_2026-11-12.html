@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conferência GMS × SAP 12/11</title>
+<style>
+:root{--bg:#f6f6f5;--sup:#fff;--tx:#3c3c3b;--suave:#6b6b69;--borda:#dcdcda;--verm:#e2000f;--ok:#1d7a3a;--alerta:#b26a00;--info:#1f5fa8}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Segoe UI",Arial,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:28px 0 8px;border-bottom:2px solid var(--verm);padding-bottom:4px}
+.sub{color:var(--suave);margin:0 0 16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.k{background:var(--sup);border:1px solid var(--borda);border-radius:8px;padding:10px 12px}
+.k b{display:block;font-size:24px}.k span{color:var(--suave);font-size:12px}
+.k.r b{color:var(--verm)}.k.o b{color:var(--ok)}.k.a b{color:var(--alerta)}
+table{width:100%;border-collapse:collapse;background:var(--sup);border:1px solid var(--borda);margin:6px 0 4px;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--borda);text-align:left;vertical-align:top}
+th{background:#ececea;font-weight:600}td.n{text-align:right;white-space:nowrap}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600}
+.t-f{background:#e6f2ea;color:var(--ok)}.t-r{background:#fde8e9;color:var(--verm)}.t-t{background:#e8eef7;color:var(--info)}.t-a{background:#fbf0de;color:var(--alerta)}
+.nota{background:var(--sup);border-left:4px solid var(--info);padding:8px 12px;margin:8px 0}
+.wrap{overflow-x:auto}
+code{background:#ececea;padding:0 4px;border-radius:3px}
+</style></head><body><main>
+<h1>Conferência GMS × SAP × Packing</h1>
+<p class="sub">12/11/2026 · lista Conferencia_SAP lida ao vivo às ~11:40 · SAP = MB51 de 12/11 (101/102, M, GRT4) e COOIS de 12/11 · GMS = RegistrosInspeção, TiposErros, ficha_producao e Packing_Pallets ao vivo · histórico INTEIRO de cada OP (o fluxo só olha 30 dias)</p>
+
+<div class="kpis">
+<div class="k"><b>76</b><span>pendências abertas na lista hoje</span></div>
+<div class="k o"><b>45</b><span>não são divergência (5 de OP + 40 de pallet)</span></div>
+<div class="k a"><b>16</b><span>troca de OP no mesmo material: saldo zero, só rastreabilidade</span></div>
+<div class="k r"><b>15</b><span>divergência real com metro sobrando ou faltando</span></div>
+<div class="k r"><b>1</b><span>marcada Resolvido, mas ainda diverge (OP 30351277)</span></div>
+</div>
+
+<h2>1. O que NÃO é divergência (45): por que ainda aparecem</h2>
+<div class="wrap"><table>
+<tr><th>ID lista</th><th>Chave</th><th>Como está na lista</th><th>O que é de verdade</th><th>Causa no script</th></tr>
+<tr><td>157, 158, 159, 160</td><td>OPs 30078602, 29118845, 29788415, 29321285</td><td>"GMS apontou, SAP não lançou a OP" (1 a 4,8 m)</td><td><span class="tag t-f">bate</span> Com o histórico inteiro, GMS + refugo = SAP nas 4 (diferença 0). São refugos recriados em 19/10 na higienização (TiposErros 6464 a 6470) de OPs de junho a setembro.</td><td>A janela de 30 dias corta os lances e o SAP antigos e só enxerga o refugo novo.</td></tr>
+<tr><td>138</td><td>OP 30447069</td><td>"SAP lançou antes da Extração/Teste"</td><td><span class="tag t-f">bate</span> GMS 209,3 = SAP 209,3; a ficha está em <code>Finalizada</code> e a tratativa de 19/10 já resolveu.</td><td>O script só aceita <code>Finalizado</code> (com o); "Finalizada" com a cai como etapa anterior.</td></tr>
+<tr><td>40 itens "PP"</td><td>pallets de 14 fichas (ex.: PP 173 a 177, PP 328 a 336)</td><td>"Lance em mais de um pallet" (36) e "Pallet com lance que não existe no GMS" (4)</td><td><span class="tag t-f">reimpressão</span> Em todas as 14 fichas, todo lance atual da OP está no packing e nenhum lance aparece em ficha de outra OP. O que sobra são impressões antigas do mesmo packlist (ex.: ficha 4258: 9 linhas em 1h30, a última tem os 7 lances) e lances apagados que só ficaram na impressão velha.</td><td>Cada impressão grava uma linha nova em Packing_Pallets e o script trata cada uma como um pallet físico.</td></tr>
+</table></div>
+
+<h2>2. Troca de OP no mesmo material (16 itens, 8 pares): saldo zero</h2>
+<p>O metro existe nos dois sistemas, só está em OP diferente. O estoque do material bate; a rastreabilidade não. SAP é a verdade: corrigir a OP do lance no GMS (como nas tratativas de 19/10).</p>
+<div class="wrap"><table>
+<tr><th>Material</th><th>OP no GMS</th><th>OP no SAP (certa)</th><th class="n">Metros</th><th>Lances a mover no GMS</th></tr>
+<tr><td>GH781-4</td><td>30495038 (ID 148)</td><td>30495036 (ID 149)</td><td class="n">52,4</td><td>19168 (30,4), 19170 (6,9), 19175 (15,1)</td></tr>
+<tr><td>HC139-7</td><td>30678924 (ID 248)</td><td>30651981 (ID 249)</td><td class="n">440,4</td><td>12 lances de 31/10: 20478 a 20487, 20489, 20496. O 20478 está 51,1 no GMS e 51,6 no SAP (corrigir para 51,6)</td></tr>
+<tr><td>EC115-16L</td><td>30721225 (ID 254)</td><td>30707080 (ID 255)</td><td class="n">238,6</td><td>20513, 20514, 20516, 20517, 20518. E o lance 20530 de 0,1 m na 30707080 não existe no SAP: apagar</td></tr>
+<tr><td>HC139-7_S-GX</td><td>30678925 (ID 259)</td><td>30604956 (ID 260)</td><td class="n">103,9</td><td>20633 (41,8), 20634 (62,1)</td></tr>
+<tr><td>GH493-16</td><td>30750582 (ID 261)</td><td>30750535 (ID 262)</td><td class="n">57,9</td><td>20688 (57,9)</td></tr>
+<tr><td>GH781-8</td><td>30771528 (ID 275)</td><td>30771531 (ID 276)</td><td class="n">114,6</td><td>20840 (114,6)</td></tr>
+<tr><td>GH781-6 (refugo)</td><td>30604449 (ID 170)</td><td>30637729 (ID 196)</td><td class="n">15,8</td><td>Refugo de 15,8 m: o SAP lançou na 30637729 (doc 3029321856). A lista chama a 196 de "SAP lançou lance", mas é refugo</td></tr>
+<tr><td>GH781-6 (refugo)</td><td>30636253 (ID 219)</td><td>30619443 (ID 222)</td><td class="n">10,6</td><td>Refugo de 10,6 m: o SAP lançou na 30619443 (doc 3029324645). Mesmo caso</td></tr>
+</table></div>
+
+<h2>3. Divergência real (15 itens + 1 reaberta)</h2>
+<h3 style="font-size:15px">3a. GMS tem o lance, SAP não lançou: 288,3 m (4 lances)</h3>
+<p>Nenhuma OP do mesmo material tem esse metro no SAP. Três das 4 OPs estão TECO no COOIS (a 30447770 nem aparece no COOIS): o SAP não vai fechar sozinho. Confirmar o lance físico; se existe, lançar no SAP; se não existe, apagar do GMS.</p>
+<div class="wrap"><table>
+<tr><th>ID</th><th>OP</th><th>Material</th><th>Lance GMS</th><th class="n">Metros</th><th>Obs.</th></tr>
+<tr><td>65</td><td>30447770</td><td>GH681-8</td><td>17870 · 08/10 06:21</td><td class="n">86,8</td><td>Já estava na tratativa de 19/10 ("o William decide"). Não aparece na tela: detectada em 07/10, antes do corte de 09/10</td></tr>
+<tr><td>140</td><td>30447183</td><td>GH781-6</td><td>18425 · 14/10 21:16</td><td class="n">138,9</td><td></td></tr>
+<tr><td>144</td><td>30479026</td><td>GH781-4</td><td>18493 · 15/10 08:49</td><td class="n">26,4</td><td>Tratativa "Esperando Tratativa"</td></tr>
+<tr><td>148</td><td>30495038</td><td>GH781-4</td><td>19161 · 17/10 09:46</td><td class="n">36,2</td><td>Além da troca da seção 2</td></tr>
+</table></div>
+
+<h3 style="font-size:15px">3b. SAP lançou, GMS não tem o lance: 639,4 m</h3>
+<p>Nenhum lance do GMS em OP nenhuma tem essa metragem nos dias próximos. SAP é a verdade: apontar no GMS (ou estornar no SAP, se o lance não existe).</p>
+<div class="wrap"><table>
+<tr><th>ID</th><th>OP</th><th>Material</th><th>Docs SAP sem par no GMS</th><th class="n">Metros</th></tr>
+<tr><td>292</td><td>30750671</td><td>GH493-16</td><td>9 docs de 11/11 (U395391): 53,1 · 42,3 · 30,8 · 30,5 · 30,1 · 10,2 · 9,9 · 7,4 · 5,4. No GMS a OP só tem o lance 20905 de 1,0 m (07/11), que o SAP não tem. COOIS ainda REL/PCNF</td><td class="n">219,7</td></tr>
+<tr><td>175</td><td>30575954</td><td>HC139-7</td><td>50,3 · 51,1 · 44,1 (27/10, U395462)</td><td class="n">145,5</td></tr>
+<tr><td>180</td><td>30619643</td><td>FC735-12</td><td>106,1 (26/10, U395488)</td><td class="n">106,1</td></tr>
+<tr><td>277</td><td>30770798</td><td>GH493-8</td><td>40,7 (06/11, U395391)</td><td class="n">40,7</td></tr>
+<tr><td>253</td><td>30690631</td><td>GH781-4</td><td>37,0 (04/11, U395488)</td><td class="n">37,0</td></tr>
+<tr><td>199</td><td>30575840</td><td>GH781-4</td><td>35,4 (27/10, U395556)</td><td class="n">35,4</td></tr>
+<tr><td>282</td><td>30751352</td><td>FC839B-06</td><td>28,9 (09/11, U395391); e 2,5 m de refugo do GMS sem lançamento</td><td class="n">28,9</td></tr>
+<tr><td>263</td><td>30749038</td><td>EC415-16</td><td>26,1 (05/11, U398090); e o lance 20698 está 49,8 no GMS e 49,6 no SAP</td><td class="n">26,1</td></tr>
+</table></div>
+
+<h3 style="font-size:15px">3c. Refugo</h3>
+<div class="wrap"><table>
+<tr><th>ID</th><th>OP</th><th>Material</th><th>O que é</th><th class="n">Metros</th></tr>
+<tr><td>67</td><td>30351277</td><td>GH781-4</td><td><span class="tag t-r">reabrir</span> Marcada Resolvido em 05/11, mas o refugo de 05 e 06/10 (26,5 + 2,3 + 1,5 + 1,5 + 1,1) não está no SAP. A janela de 30 dias cortou o refugo e o lado SAP antigo, e o que sobrou bateu por acaso</td><td class="n">32,9</td></tr>
+<tr><td>150</td><td>30495028</td><td>GH781-10</td><td>GMS 11,6 × SAP 4,1</td><td class="n">7,5</td></tr>
+<tr><td>223</td><td>30637731</td><td>GH781-6</td><td>GMS 10,9 × SAP 6,1</td><td class="n">4,8</td></tr>
+<tr><td>194</td><td>30575946</td><td>GH781-12</td><td>refugo de 1,2 m sem lançamento</td><td class="n">1,2</td></tr>
+<tr><td>318</td><td>30800824</td><td>GH781-8</td><td><span class="tag t-a">aguardar</span> O SAP tem um doc de 15,4 m (U398090) sem par e o GMS tem 7,79 m de refugo (sobra 7,61 no SAP); lançado ontem, ver amanhã</td><td class="n">7,6</td></tr>
+</table></div>
+
+<h2>4. Melhorias propostas no script (v1.2.0)</h2>
+<div class="nota">Nada disto foi aplicado. Depende do seu "aprovado" no plano e passa pelo revisor antes de ir para o OneDrive.</div>
+<div class="wrap"><table>
+<tr><th>#</th><th>Mudança</th><th>O que resolve</th></tr>
+<tr><td>1</td><td>A OP é conferida com todo o histórico carregado; a janela só escolhe quem entra no dia. Se o SAP da OP é mais antigo que o lance mais antigo carregado, a OP fica "fora do alcance" e não gera pendência nova</td><td>Os 4 falsos de refugo antigo (157 a 160) e o falso Resolvido (67)</td></tr>
+<tr><td>2</td><td>"Finalizado" e "Finalizada" valem igual</td><td>O falso "SAP lançou antes" (138)</td></tr>
+<tr><td>3</td><td>Reimpressão: na mesma ficha, um pallet cujos lances (ainda existentes) estão todos num pallet impresso depois é reimpressão; não conta e não gera pendência. "Lance em mais de um pallet" só vale entre pallets vivos</td><td>Os 40 PP fecham sozinhos na próxima conferência</td></tr>
+<tr><td>4</td><td>Doc SAP do usuário de refugo (U452021, U445131) que sobra vira "Refugo a mais no SAP", não "SAP lançou lance". Refugo que sobra numa OP e falta na vizinha do mesmo material vira "Refugo lançado na OP errada", com a provável OP</td><td>196, 222 e os pares de refugo</td></tr>
+<tr><td>5</td><td>Na troca de OP, o detalhe diz "saldo do material zero" e a lista dos lances a mover; o e-mail separa troca de OP (rastreabilidade) de metro faltando ou sobrando</td><td>Leitura: os 16 itens da seção 2 deixam de parecer perda</td></tr>
+<tr><td>6</td><td>Fluxo: 2ª leitura de RegistrosInspeção (ID menor que o último da 1ª página) para ter ~110 dias de lances, e MB51 lido por 120 dias</td><td>Hoje o fluxo lê só os 5.000 lances mais novos (~55 dias); pendência mais velha que isso deixa de ser reconferida</td></tr>
+</table></div>
+<p>Uma vez só, na lista: reabrir o item 67 (Resolvido para Aberto). Os 45 falsos <b>não</b> serão fechados à mão: a conferência da manhã com a v1.2.0 fecha sozinha (C29, Resolvido só pela conferência).</p>
+<p class="sub">COOIS: o rendimento confirmado bate com o 101−102 do MB51 em todas as 31 OPs e 30 delas estão TECO. Por isso a seção 3 só fecha corrigindo GMS ou SAP; nenhuma vai se ajustar sozinha.</p>
+</main></body></html>
