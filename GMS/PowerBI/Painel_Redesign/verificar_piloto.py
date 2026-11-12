@@ -1,15 +1,21 @@
-"""Verificacao do piloto (passos 1-3): copia Painel_Redesign x vigente GMS_Painel.Report."""
+"""Verificacao do redesign (piloto + passo 5): copia Painel_Redesign x vigente GMS_Painel.Report, 10 paginas."""
 import json, os, re, filecmp, itertools, sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 VIG = os.path.normpath(os.path.join(AQUI, "..", "GMS_Painel.Report"))
 NOV = os.path.join(AQUI, "GMS_Painel.Report")
-PG = "pg_visao_geral"
 falhas = []
+
+DESTINO = {"sub_visao_geral": "pg_visao_geral", "sub_horahora": "pg_horahora", "sub_paradas": "pg_paradas",
+           "sub_refugo_ppm": "pg_refugo_ppm", "sub_refugo_ppm_cortes": "pg_refugo_ppm_cortes",
+           "sub_extrusora": "pg_extrusora", "sub_fluxo_1": "pg_fluxo_1", "sub_fluxo_2": "pg_fluxo_2",
+           "sub_producao_montagem": "pg_producao_montagem", "sub_paradas_montagem": "pg_paradas_montagem"}
+ATIVO = {v: k for k, v in DESTINO.items()}
+PAGINAS = sorted(ATIVO)
 
 
 def ok(c, msg):
-    print(("OK   " if c else "FALHA ") + msg)
+    print(("OK    " if c else "FALHA ") + msg)
     if not c:
         falhas.append(msg)
 
@@ -19,7 +25,20 @@ def lj(p):
         return json.load(f)
 
 
-# 1. todo json faz parse
+def medidas(d):
+    return set(re.findall(r'"Property": "([^"]+)"', json.dumps(d, ensure_ascii=False)))
+
+
+def vis(raiz, pg):
+    base = os.path.join(raiz, "definition", "pages", pg, "visuals")
+    return {n: lj(os.path.join(base, n, "visual.json")) for n in os.listdir(base)}
+
+
+def lit(n):
+    return n["expr"]["Literal"]["Value"].strip("'")
+
+
+# 1. parse
 n = 0
 for raiz, _, arqs in os.walk(NOV):
     for a in arqs:
@@ -31,90 +50,114 @@ for raiz, _, arqs in os.walk(NOV):
                 ok(False, f"parse {os.path.join(raiz, a)}: {e}")
 ok(True, f"1. {n} arquivos .json/.pbir da copia fazem parse")
 
-# 2. query / filterConfig / visualLink
-vv = os.path.join(VIG, "definition", "pages", PG, "visuals")
-nv = os.path.join(NOV, "definition", "pages", PG, "visuals")
-convertidos = {"kpi0", "kpi1", "kpi2", "kpi3"}
-comuns = sorted(set(os.listdir(vv)) & set(os.listdir(nv)))
-dif = []
-for nome in comuns:
-    if nome in convertidos:
-        continue
-    a, b = lj(os.path.join(vv, nome, "visual.json")), lj(os.path.join(nv, nome, "visual.json"))
-    for rotulo, ga, gb in (
-        ("query", a["visual"].get("query"), b["visual"].get("query")),
-        ("filterConfig", a.get("filterConfig"), b.get("filterConfig")),
-        ("visualLink", a["visual"].get("visualContainerObjects", {}).get("visualLink"),
-         b["visual"].get("visualContainerObjects", {}).get("visualLink")),
-        ("syncGroup", a["visual"].get("syncGroup"), b["visual"].get("syncGroup")),
-        ("sort/expansion", a["visual"].get("expansionStates"), b["visual"].get("expansionStates")),
-    ):
-        if ga != gb:
-            dif.append(f"{nome}.{rotulo}")
-ok(not dif, f"2a. query/filterConfig/visualLink/syncGroup idênticos em {len(comuns) - len(convertidos)} visuais comuns {dif or ''}")
-ok(set(comuns) >= convertidos, "2b. kpi0..3 existem nas duas")
+tot_vis = tot_mant = tot_conv = 0
+for pg in PAGINAS:
+    print(f"--- {pg}")
+    a, b = vis(VIG, pg), vis(NOV, pg)
+    pa = lj(os.path.join(VIG, "definition", "pages", pg, "page.json"))
+    pb = lj(os.path.join(NOV, "definition", "pages", pg, "page.json"))
 
-
-def medidas(d):
-    return set(re.findall(r'"Property": "([^"]+)"', json.dumps(d, ensure_ascii=False)))
-
-
-for k in sorted(convertidos):
-    a, b = lj(os.path.join(vv, k, "visual.json")), lj(os.path.join(nv, k, "visual.json"))
-    ma, mb = medidas(a), medidas(b)
-    ok(ma == mb and b["visual"]["visualType"] == "cardVisual",
-       f"2c. {k}: cardVisual, mesmas medidas {sorted(mb)}" + ("" if ma == mb else f" (antes {sorted(ma)})"))
-    qa = a["visual"]["query"]["queryState"]["Values"]["projections"][0]
-    qb = b["visual"]["query"]["queryState"]["Data"]["projections"][0]
-    qb2 = {x: y for x, y in qb.items() if x != "displayName"}
-    ok(qa == qb2, f"2d. {k}: projeção (campo, queryRef, nativeQueryRef, format) preservada")
-
-# 3. canvas e sobreposicao
-pos = {}
-for nome in os.listdir(nv):
-    d = lj(os.path.join(nv, nome, "visual.json"))
-    p = d["position"]
-    pos[nome] = (p["x"], p["y"], p["x"] + p["width"], p["y"] + p["height"])
-fora = [k for k, (x0, y0, x1, y1) in pos.items() if x0 < 0 or y0 < 0 or x1 > 1280 or y1 > 720]
-ok(not fora, f"3a. {len(pos)} visuais dentro de 1280x720 {fora or ''}")
-permitido = {frozenset(p) for p in [("faixa", "logo"), ("faixa", "txt_app")]}
-sobre = []
-for (a, ra), (b, rb) in itertools.combinations(pos.items(), 2):
-    if min(ra[2], rb[2]) > max(ra[0], rb[0]) and min(ra[3], rb[3]) > max(ra[1], rb[1]):
-        if "faixa" in (a, b):          # fundo do menu: tudo do menu fica em cima dele de proposito
+    # 2. query / filterConfig / visualLink em todo visual mantido
+    removidos = sorted(set(a) - set(b))
+    permitidos = {n for n in removidos if n in ("mod_mangueira", "mod_montagem") or re.fullmatch(r"kpi\d+_d", n)}
+    ok(set(removidos) == permitidos, f"2a. visuais removidos só mod_* e cards-delta fundidos: {removidos}")
+    dif, mantidos = [], 0
+    for nome in sorted(set(a) & set(b)):
+        va, vb = a[nome], b[nome]
+        if re.fullmatch(r"kpi\d+", nome) and va["visual"]["visualType"] == "card":
             continue
-        if {a, b} == {"nav_barra_ativa", "sub_visao_geral"}:
-            continue
-        sobre.append((a, b))
-ok(not sobre, f"3b. sem sobreposição fora o fundo do menu e a barra do item ativo {sobre or ''}")
-conteudo_fora_menu = [k for k, r in pos.items() if k != "faixa" and r[0] >= 200 or False]
-menu_vaza = [k for k, r in pos.items() if k != "faixa" and r[0] < 200 and r[2] > 200]
-ok(not menu_vaza, f"3c. itens do menu não passam de x=200 {menu_vaza or ''}")
+        mantidos += 1
+        for rot, ga, gb in (
+            ("query", va["visual"].get("query"), vb["visual"].get("query")),
+            ("filterConfig", va.get("filterConfig"), vb.get("filterConfig")),
+            ("visualLink", va["visual"].get("visualContainerObjects", {}).get("visualLink"),
+             vb["visual"].get("visualContainerObjects", {}).get("visualLink")),
+            ("syncGroup", va["visual"].get("syncGroup"), vb["visual"].get("syncGroup")),
+            ("expansionStates", va["visual"].get("expansionStates"), vb["visual"].get("expansionStates")),
+            ("tipo", va["visual"]["visualType"], vb["visual"]["visualType"]),
+        ):
+            if ga != gb:
+                dif.append(f"{nome}.{rot}")
+    ok(not dif, f"2b. {mantidos} visuais mantidos: query/filterConfig/visualLink/syncGroup/tipo idênticos {dif or ''}")
+    ok(pa.get("filterConfig") == pb.get("filterConfig") and
+       {k: v for k, v in pa.items() if k != "objects"} == {k: v for k, v in pb.items() if k != "objects"},
+       "2c. page.json: filtros e metadados da página idênticos (só o fundo muda)")
+    ok(lit(pb["objects"]["background"][0]["properties"]["color"]["solid"]["color"]) == "#F2F3F5",
+       "2d. fundo da página #F2F3F5")
 
-# 4. as outras paginas identicas
-iguais = True
-pg_dirs = [p for p in os.listdir(os.path.join(VIG, "definition", "pages")) if p.startswith("pg_") and p != PG]
-for pg in pg_dirs:
-    cmp = filecmp.dircmp(os.path.join(VIG, "definition", "pages", pg), os.path.join(NOV, "definition", "pages", pg))
-    def difere(c):
-        if c.left_only or c.right_only or c.diff_files or c.funny_files:
-            return True
-        return any(difere(s) for s in c.subdirs.values())
-    if difere(cmp):
-        iguais = False
-        print("   difere:", pg)
-ok(iguais and len(pg_dirs) == 9, f"4. {len(pg_dirs)} outras páginas idênticas à vigente")
+    # 3. cards convertidos ou fundidos
+    for nome in sorted(x for x in a if re.fullmatch(r"kpi\d+", x) and a[x]["visual"]["visualType"] == "card"):
+        antes = medidas(a[nome]) | (medidas(a[nome + "_d"]) if nome + "_d" in a else set())
+        vb = b[nome]
+        depois = medidas(vb)
+        qa = a[nome]["visual"]["query"]["queryState"]["Values"]["projections"][0]
+        qb = {k: v for k, v in vb["visual"]["query"]["queryState"]["Data"]["projections"][0].items()
+              if k != "displayName"}
+        ok(antes == depois and vb["visual"]["visualType"] == "cardVisual" and qa == qb,
+           f"3. {nome}{'+_d' if nome + '_d' in a else ''}: cardVisual, mesmas medidas {sorted(depois)}"
+           + ("" if antes == depois else f" (antes {sorted(antes)})"))
+        tot_conv += 1
 
-# fora das paginas: so tema muda
+    # 4. nenhuma medida perdida na página
+    ua = set().union(*[medidas(v) for v in a.values()])
+    ub = set().union(*[medidas(v) for v in b.values()])
+    ok(ua == ub, f"4. união de medidas/campos da página igual ({len(ua)})"
+       + ("" if ua == ub else f" perdidas {sorted(ua - ub)} novas {sorted(ub - ua)}"))
+
+    # 5. canvas e sobreposicao
+    pos = {}
+    for nome, d in b.items():
+        p = d["position"]
+        pos[nome] = (p["x"], p["y"], p["x"] + p["width"], p["y"] + p["height"])
+    fora = [k for k, (x0, y0, x1, y1) in pos.items() if x0 < 0 or y0 < 0 or x1 > 1280.001 or y1 > 720.001]
+    ok(not fora, f"5a. {len(pos)} visuais dentro de 1280x720 {fora or ''}")
+    sobre = []
+    for (n1, r1), (n2, r2) in itertools.combinations(pos.items(), 2):
+        if min(r1[2], r2[2]) > max(r1[0], r2[0]) + 0.01 and min(r1[3], r2[3]) > max(r1[1], r2[1]) + 0.01:
+            if "faixa" in (n1, n2):
+                continue
+            if "nav_barra_ativa" in (n1, n2) and (set([n1, n2]) - {"nav_barra_ativa"}) <= {ATIVO[pg]}:
+                continue
+            sobre.append((n1, n2))
+    ok(not sobre, f"5b. sem sobreposição fora o fundo do menu e a barra ativa {sobre or ''}")
+    vaza = [k for k, r in pos.items() if k != "faixa" and r[0] < 200 and r[2] > 200]
+    ok(not vaza, f"5c. itens do menu não passam de x=200 {vaza or ''}")
+    ok(all(r[0] >= 200 for k, r in pos.items() if k not in
+           {"faixa", "logo", "txt_app", "txt_secao_mangueira", "txt_secao_montagem", "nav_barra_ativa", "atualizado"}
+           and not k.startswith("sub_")), "5d. todo o resto fica à direita do menu (x ≥ 200)")
+
+    # 6. botoes de navegacao
+    botoes = {k for k in b if k.startswith("sub_")}
+    certo = botoes == set(DESTINO) and not any(k.startswith("mod_") for k in b)
+    for k in botoes & set(DESTINO):
+        vl = b[k]["visual"]["visualContainerObjects"]["visualLink"][0]["properties"]
+        certo &= lit(vl["type"]) == "PageNavigation" and lit(vl["navigationSection"]) == DESTINO[k]
+    ativos = [k for k in botoes if any("fillColor" in p["properties"] for p in b[k]["visual"]["objects"]["fill"])]
+    barra_y = b["nav_barra_ativa"]["position"]["y"]
+    ok(certo and ativos == [ATIVO[pg]] and barra_y == b[ATIVO[pg]]["position"]["y"],
+       f"6. 10 botões apontam certo, ativo = {ATIVO[pg]}, barra vermelha na altura dele")
+
+    tot_vis += len(b)
+    tot_mant += mantidos
+
+# 7. paginas e arquivos fora do esperado
+ok(filecmp.cmp(os.path.join(VIG, "definition", "reportExtensions.json"),
+               os.path.join(NOV, "definition", "reportExtensions.json"), shallow=False),
+   "7a. reportExtensions.json igual ao da vigente")
 difs = []
 for raiz, _, arqs in os.walk(NOV):
-    for a in arqs:
-        rel = os.path.relpath(os.path.join(raiz, a), NOV)
-        v = os.path.join(VIG, rel)
-        if rel.replace("\\", "/").startswith(f"definition/pages/{PG}/"):
+    for a_ in arqs:
+        rel = os.path.relpath(os.path.join(raiz, a_), NOV).replace("\\", "/")
+        if rel.startswith("definition/pages/pg_"):
             continue
-        if not os.path.exists(v) or not filecmp.cmp(v, os.path.join(raiz, a), shallow=False):
+        v = os.path.join(VIG, rel)
+        if not os.path.exists(v) or not filecmp.cmp(v, os.path.join(raiz, a_), shallow=False):
             difs.append(rel)
-print("   arquivos fora da pg_visao_geral que diferem da vigente:", difs)
+ok(difs == ["StaticResources/RegisteredResources/GMS_Tema.json"],
+   f"7b. fora das páginas só o tema difere da vigente {difs}")
+pj_ok = filecmp.cmp(os.path.join(VIG, "definition", "pages", "pages.json"),
+                    os.path.join(NOV, "definition", "pages", "pages.json"), shallow=False)
+ok(pj_ok, "7c. pages.json igual")
+print(f"\n{len(PAGINAS)} páginas, {tot_vis} visuais na cópia ({tot_mant} mantidos sem conversão, {tot_conv} cards convertidos)")
 print("RESULTADO:", "tudo certo" if not falhas else f"{len(falhas)} falha(s)")
 sys.exit(1 if falhas else 0)
