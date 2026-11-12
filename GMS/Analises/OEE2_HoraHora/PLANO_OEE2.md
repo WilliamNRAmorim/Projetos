@@ -233,7 +233,8 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
   - a refeição declarada acima de 45 min;
   - a pausa não declarada que o operador lançou em outro motivo.
 - **Pareto:** continua mostrando o motivo declarado.
-- **Fica de fora:** a regra dos 21h45 (135 min/dia, a mesma pausa) continua valendo só em `HH Meta Útil (m)` e `HH Aderência`. Ela não entra no OEE2.
+- **Revisor, 12/11/2026:** a pausa tem teto: MIN(45, refeição + vermelha + sem motivo lançadas no turno), para a Vermelha nunca sair negativa; e fatia sem metro (Real = 0) não tem tempo valorizado (`Parado OEE` = fatia inteira). Com isso, de 04/09 a 06/11: OEE2 52,3%, D 83,4%, P 63,6%, Q 98,5%, TCU 19,3%. Detalhes na seção 5 do `PowerBI/modelo/oee2.tmdl.md`.
+- **Fica de fora:** a regra dos 21h35 do cartão Meta (1295/1440, 145 min/dia; o 21h45 de 09/11 voltou a 21h35 em 11/11) continua valendo só em `HH Meta Útil (m)` e `HH Aderência`. Ela não entra no OEE2.
 - **Revisor:** confere esta regra (cálculo de parada).
 
 **Conferência obrigatória:**
@@ -277,7 +278,7 @@ Fora do OEE2 = parada planejada: sai do tempo de produção, mas entra no TCU. A
    - Tabela desconectada `dEtapaOEE` para a cascata: Janela, Planejada, Produção, Amarela, Vermelha, Operando, Valorizado, Refugo, Valorizado bom.
    - **Medidas base no modelo, pasta "OEE2"**: Janela, Planejada, Produção, Amarela, Vermelha, Valorizado, Valorizado (Real), Disponibilidade, Performance, Qualidade, OEE2, TCU e Cascata (SWITCH).
      - Vão no modelo porque medida de relatório não pode chamar outra medida de relatório (seção 11 do roteiro).
-     - **Medida existente não muda**: `HH Meta Útil (m)`, `HH Aderência`, `HH Parado (min)` e a regra dos 21h45 ficam como estão.
+     - **Medida existente não muda**: `HH Meta Útil (m)`, `HH Aderência`, `HH Parado (min)` e a regra dos 21h35 ficam como estão.
 3. **Relatório** (PBIR por JSON, `json.dump(indent=2, ensure_ascii=False)`, CRLF):
    - **Página nova** `pg_oee2` "OEE2 Trançagem". Não regerar nem mexer no layout das páginas salvas.
    - Visuais:

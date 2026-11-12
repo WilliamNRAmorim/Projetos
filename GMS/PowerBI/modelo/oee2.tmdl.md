@@ -1,4 +1,4 @@
-# OEE2 da Trançagem no modelo (GMS): script TMDL, conferência e volta (MEL-266, passo 1) — PENDENTE DE APLICAR (só com o "libero" do William, no TMDL view do modelo vivo, depois da revisão do `revisor`)
+# OEE2 da Trançagem no modelo (GMS): script TMDL, conferência e volta (MEL-266, passo 1) — REVISADO em 12/11 (seção 5), PENDENTE DE APLICAR (só com o "libero" do William, no TMDL view do modelo vivo)
 
 Só BI. O app, a lista Hora-Hora e a `fHoraHora` não mudam. Regras: `Analises/OEE2_HoraHora/PLANO_OEE2.md` (atualização de 12/11, seções A, B e D). Referência de números: `Analises/OEE2_HoraHora/conferir_oee2.py` e `oee2_referencia_2026-09-04_a_11-06.csv`. Página: `PowerBI/GMS_Painel.Report/definition/pages/pg_oee2` (`Painel_Redesign/build_oee2.py`).
 
@@ -6,14 +6,14 @@ Só BI. O app, a lista Hora-Hora e a `fHoraHora` não mudam. Regras: `Analises/O
 | Objeto | Tipo | Ação | O que é |
 |---|---|---|---|
 | `dMotivoParada` | tabela calculada | **alterada** (`createOrReplace`) | Mesmas colunas `Motivo` e `Tipo` (44 motivos antigos intactos) mais 15 motivos novos e 6 colunas: `Família`, `Categoria Danfoss`, `No OEE2`, `Componente`, `Ordem Família` (oculta) e `Cor`. Os 3 relacionamentos com `Hora-Hora` e `Paradas_Montagem` são declarados de novo no script. Fonte: `modelo/dMotivoParada.csv` (gerado por `gerar_mapa_motivos.py`). |
-| `fHoraCheia` | tabela calculada | **alterada** (`createOrReplace`) | Só uma coluna nova, `Meta Cheia` (= Meta Hora x Fração, sem o desconto da refeição). O resto é o script vigente de 11/11, igual; os 2 relacionamentos (`Data BI` e `Turno BI`) são declarados de novo. |
+| `fHoraCheia` | tabela calculada | **alterada** (`createOrReplace`) | Duas colunas novas: `Meta Cheia` (= Meta Hora x Fração, sem o desconto da refeição) e `Parado OEE` (= `Parado`, ou a fatia inteira quando Real = 0: fatia sem metro não tem tempo valorizado; revisor, 12/11). O resto é o script vigente de 11/11, igual; `Parado` não muda; os 2 relacionamentos (`Data BI` e `Turno BI`) são declarados de novo. |
 | `dEtapaOEE` | tabela calculada | **nova** | Eixo desconectado da cascata (5 etapas). |
 | `OEE2 Janela` | medida | nova | Minutos da janela (soma de fHoraCheia[Minutos]); dia produtivo 05:00-05:00, 24 h por máquina com linha lançada. |
-| `OEE2 Planejada` | medida | nova | Azul + cinza, com a pausa fixa: por Célula x Data BI x Turno BI com Real > 0 e pelo menos 240 min de janela, 45 min no lugar da refeição declarada; turno sem produção ou com menos de 4 h (só hora extra) não recebe pausa e mantém a refeição declarada como cinza (William, 12/11). |
+| `OEE2 Planejada` | medida | nova | Azul + cinza, com a pausa fixa: por Célula x Data BI x Turno BI com Real > 0 e pelo menos 240 min de janela, 45 min no lugar da refeição declarada; turno sem produção ou com menos de 4 h (só hora extra) não recebe pausa e mantém a refeição declarada como cinza (William, 12/11). Teto (revisor, 12/11): a pausa não passa da parada lançada que não é azul, cinza nem amarela (refeição + vermelha + sem motivo) daquele turno. |
 | `OEE2 Produção` | medida | nova | Tempo de produção = Janela - Planejada. |
-| `OEE2 Amarela` | medida | nova | Σ P (parado capado na fatia) dos motivos de família Amarela: troca de lote, perda de disponibilidade. |
-| `OEE2 Valorizado` | medida | nova | Valorizado = Janela - Σ P de todas as linhas (caminho oficial). A pausa fixa não entra: não desconta duas vezes. |
-| `OEE2 Vermelha` | medida | nova | Perdas na operação = resíduo (Produção - Amarela - Valorizado). Inclui refeição declarada acima de 45 min, pausa lançada em outro motivo e linhas sem família; pode sair negativa num recorte onde a pausa fixa é maior que o parado declarado. |
+| `OEE2 Amarela` | medida | nova | Σ P (`Parado OEE`) dos motivos de família Amarela: troca de lote, perda de disponibilidade. |
+| `OEE2 Valorizado` | medida | nova | Valorizado = Janela - Σ `Parado OEE` de todas as linhas (caminho oficial). A pausa fixa não entra: não desconta duas vezes. |
+| `OEE2 Vermelha` | medida | nova | Perdas na operação = resíduo (Produção - Amarela - Valorizado). Inclui refeição declarada acima de 45 min, pausa lançada em outro motivo e linhas sem motivo. Com o teto da pausa, nunca sai negativa num turno de máquina inteiro. |
 | `OEE2 Valorizado (Real)` | medida | nova | Medida de controle: Σ MIN(Real, Meta Cheia) x Minutos ÷ Meta Cheia (segundo caminho do valorizado, por velocidade). Compare com OEE2 Valorizado: a diferença total tem de ficar abaixo de 2%. |
 | `OEE2 Disponibilidade` | medida | nova | Disponibilidade = (Produção - Amarela) ÷ Produção. Em branco (nunca 0) sem produção ou sem tempo de produção. |
 | `OEE2 Performance` | medida | nova | Performance = Valorizado ÷ (Produção - Amarela). Em branco sem produção. |
@@ -31,7 +31,7 @@ Só BI. O app, a lista Hora-Hora e a `fHoraHora` não mudam. Regras: `Analises/O
 Pasta de exibição das 19 medidas novas: **OEE2**, na tabela `Medidas` existente. Nenhuma medida existente muda (`HH ...`, `PA ...`, `VG ...`, `Refugo (m)`, `Disponibilidade` etc. ficam como estão). Os nomes levam o prefixo `OEE2 ` porque `Disponibilidade` já existe como medida de relatório (não pode haver nome repetido) e para a pasta ficar legível; a medida do índice final se chama só `OEE2`.
 
 ## Antes de colar
-1. **Revisor.** A regra de parada e a pausa de 45 min (seção B do plano) passam pelo `revisor` antes do "libero". Pontos que ele tem de olhar estão no fim deste arquivo.
+1. **Revisor.** Aprovado em 12/11 com 3 correções já aplicadas (seção 5). Falta só o "libero" do William.
 2. **Nomes que o script supõe** (conferir no modelo vivo, DAX query view, devem rodar sem erro; os nomes vêm do snapshot de 05/11):
 ```
 EVALUATE
@@ -285,6 +285,12 @@ createOrReplace
 			summarizeBy: none
 			sourceColumn: [Parado]
 
+		column 'Parado OEE'
+			dataType: double
+			formatString: #,0.0
+			summarizeBy: none
+			sourceColumn: [Parado OEE]
+
 		column Motivo
 			dataType: string
 			summarizeBy: none
@@ -392,6 +398,7 @@ createOrReplace
 				"Meta Cheia", COALESCE ( [MetaHora], 0 ) * [Fr],
 				"Real", COALESCE ( [Real0], 0 ) * [Fr],
 				"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ),
+				"Parado OEE", IF ( COALESCE ( [Real0], 0 ) > 0, MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ), [Mn] * [Fr] ),
 				"Motivo", [Motivo],
 				"Motivo Padrão", [Motivo Padrão],
 				"Motivo 2", [Motivo 2],
@@ -423,16 +430,20 @@ createOrReplace
 				dMotivoParada[Família] IN { "Azul", "Cinza" },
 				dMotivoParada[Motivo] <> "Almoço"
 				)
+				VAR Am =
+				CALCULATETABLE ( VALUES ( dMotivoParada[Motivo] ), REMOVEFILTERS ( dMotivoParada ), dMotivoParada[Família] = "Amarela" )
 				VAR Turnos =
 				ADDCOLUMNS (
 				SUMMARIZE ( fHoraCheia, fHoraCheia[Célula], fHoraCheia[Data BI], fHoraCheia[Turno BI] ),
 				"@min", CALCULATE ( SUM ( fHoraCheia[Minutos] ) ),
 				"@real", CALCULATE ( SUM ( fHoraCheia[Real] ) ),
-				"@pl", CALCULATE ( SUM ( fHoraCheia[Parado] ), KEEPFILTERS ( TREATAS ( Sem, fHoraCheia[Motivo Padrão] ) ) ),
-				"@ref", CALCULATE ( SUM ( fHoraCheia[Parado] ), KEEPFILTERS ( fHoraCheia[Motivo Padrão] = "Almoço" ) )
+				"@tot", CALCULATE ( SUM ( fHoraCheia[Parado OEE] ) ),
+				"@pl", CALCULATE ( SUM ( fHoraCheia[Parado OEE] ), KEEPFILTERS ( TREATAS ( Sem, fHoraCheia[Motivo Padrão] ) ) ),
+				"@am", CALCULATE ( SUM ( fHoraCheia[Parado OEE] ), KEEPFILTERS ( TREATAS ( Am, fHoraCheia[Motivo Padrão] ) ) ),
+				"@ref", CALCULATE ( SUM ( fHoraCheia[Parado OEE] ), KEEPFILTERS ( fHoraCheia[Motivo Padrão] = "Almoço" ) )
 				)
 				RETURN
-				SUMX ( Turnos, [@pl] + IF ( [@real] > 0 && [@min] >= 240, 45, [@ref] ) )
+				SUMX ( Turnos, [@pl] + IF ( [@real] > 0 && [@min] >= 240, MIN ( 45, [@tot] - [@pl] - [@am] ), [@ref] ) )
 			formatString: #,0
 			displayFolder: OEE2
 
@@ -445,12 +456,12 @@ createOrReplace
 				VAR Am =
 				CALCULATETABLE ( VALUES ( dMotivoParada[Motivo] ), REMOVEFILTERS ( dMotivoParada ), dMotivoParada[Família] = "Amarela" )
 				RETURN
-				CALCULATE ( SUM ( fHoraCheia[Parado] ), KEEPFILTERS ( TREATAS ( Am, fHoraCheia[Motivo Padrão] ) ) )
+				CALCULATE ( SUM ( fHoraCheia[Parado OEE] ), KEEPFILTERS ( TREATAS ( Am, fHoraCheia[Motivo Padrão] ) ) )
 			formatString: #,0
 			displayFolder: OEE2
 
 		measure 'OEE2 Valorizado' =
-				[OEE2 Janela] - SUM ( fHoraCheia[Parado] )
+				[OEE2 Janela] - SUM ( fHoraCheia[Parado OEE] )
 			formatString: #,0
 			displayFolder: OEE2
 
@@ -578,7 +589,7 @@ createOrReplace
 			displayFolder: OEE2
 
 		measure 'OEE2 Ref. OEE2' =
-				"Ref. set–nov: 54%"
+				"Ref. set–nov: 52%"
 			displayFolder: OEE2
 
 		measure 'OEE2 Ref. TCU' =
@@ -589,10 +600,12 @@ createOrReplace
 
 ## 2) O que cada peça faz
 **Regras (seção B do plano, adaptadas à `fHoraCheia`)**
-- Grão: a linha da `fHoraCheia` (hora cheia, dia produtivo 05:00-05:00, `Turno BI` 05-14, 14-22 e 22-05). `P` = `fHoraCheia[Parado]`, que já vem capado na fatia.
+- Grão: a linha da `fHoraCheia` (hora cheia, dia produtivo 05:00-05:00, `Turno BI` 05-14, 14-22 e 22-05). `P` = `fHoraCheia[Parado OEE]`: o `Parado` (já capado na fatia) ou, se a fatia não tem metro (Real = 0), a fatia inteira. Fatia sem metro não tem tempo valorizado (é o que o segundo caminho, por velocidade, também dá); o que o `Parado` não cobria vai para o motivo da linha e, sem motivo, para o resíduo vermelho (como "Sem apontamento"). De 04/09 a 06/11 são 5.281 min, 257 deles em janelas sem meta, sem produção e sem parada.
 - Turno de máquina = `Célula x Data BI x Turno BI`. Com `Real > 0` e **pelo menos 240 min de janela** ele recebe **pausa planejada de 45 min** (turno com menos de 4 h, que em geral é só a hora extra do 2º turno caindo no 3º Turno BI, não recebe pausa: William, 12/11), que entra em Planejada (cinza); os minutos declarados como Almoço (refeição) saem do cinza e ficam absorvidos pela pausa. Turno sem produção: a refeição declarada segue cinza.
-- **Valorizado = Janela - Σ P** de todas as linhas (pausa não entra: não desconta duas vezes). **Vermelha** é o resíduo (Produção - Amarela - Valorizado): inclui a refeição declarada acima de 45 min, a pausa lançada em outro motivo e linhas sem família.
-- **O 21h45 não entra.** A regra dos 135 min/dia segue só em `HH Meta Útil (m)` e `HH Aderência`.
+- **Teto da pausa (revisor, 12/11):** a pausa é MIN(45, refeição + vermelha + sem motivo lançadas no turno). A pausa só tira do tempo de produção uma parada que o `Parado` registrou; sem o teto, o turno em que a refeição não aparece no `Parado` ficava com Vermelha negativa e Performance acima de 100%, e esse excedente compensava parada de outro turno no total (parada somada com tempo excedido). De 04/09 a 06/11 o teto baixa a pausa em 59 turnos.
+- **Valorizado = Janela - Σ P** de todas as linhas (pausa não entra: não desconta duas vezes). **Vermelha** é o resíduo (Produção - Amarela - Valorizado): inclui a refeição declarada acima de 45 min, a pausa lançada em outro motivo e linhas sem motivo. Com o teto, nunca é negativa num turno de máquina inteiro.
+- **A pausa é por turno inteiro.** A página só filtra Máquina, Turno e Período, que pegam turnos inteiros. Não use as medidas OEE2 com corte por Mangueira ou por Hora: o turno ficaria partido e a pausa sairia errada.
+- **O 21h35 não entra.** A regra do cartão Meta (1295/1440, 145 min/dia) segue só em `HH Meta Útil (m)` e `HH Aderência`; nenhuma medida OEE2 usa a coluna `Meta` (com desconto) nem o 1295/1440.
 - OEE2 = D x P x Q, consolidado ponderado pelo tempo; sem tempo de produção ou sem metro produzido o resultado é **em branco**, nunca 0. TCU entra com 0 para máquina parada, porque é sobre as 24 h.
 
 **Peças**
@@ -603,7 +616,7 @@ createOrReplace
 - `OEE2 Refugo (m)`: `TiposErros` não tem relação com a `fHoraCheia`; o corte de máquina é pelo texto da trançadeira normalizada (tira "-" e ".") e o de período é pela relação que já existe com `dCalendario[DataRefugo]`. Com turno filtrado, usa o `Turno Erro`.
 - `OEE2 TCU`: 11 máquinas da `fx_CelulasTrancagem` fixas na medida; com a segmentação de Máquina, conta só as selecionadas.
 - `OEE2 Aviso Velocidade`: não capa em silêncio. Avisa quando Real ÷ Meta Cheia (janelas com produção) passa de 100% (velocidade validada abaixo do real, o caso da TH01 nas duas passadas, MEL-241) ou quando `OEE2 Valorizado (Real)` passa de `OEE2 Valorizado` em mais de 2%. Só aparece na linha de total do turno da matriz.
-- Extras além da lista pedida (precisam estar no modelo para a página funcionar): `OEE2 Refugo (m)`, `OEE2 Minutos Parados` (Pareto), `OEE2 Cor Família` (cor do Pareto), `OEE2 Ref. OEE2` e `OEE2 Ref. TCU` (texto fixo "Ref. set–nov: 54%" e "19%").
+- Extras além da lista pedida (precisam estar no modelo para a página funcionar): `OEE2 Refugo (m)`, `OEE2 Minutos Parados` (Pareto), `OEE2 Cor Família` (cor do Pareto), `OEE2 Ref. OEE2` e `OEE2 Ref. TCU` (texto fixo "Ref. set–nov: 52%" e "19%").
 
 ## 3) Consultas de conferência (DAX query view, depois do refresh)
 Critério: **±0,5 ponto** em D, P, Q, OEE2 e TCU contra o `oee2_referencia_2026-09-04_a_11-06.csv` (mesmo período, mesmo filtro); minutos iguais ao inteiro. Os números vêm do `conferir_oee2.py` (CSV de 06/11 e `TiposErros` de 06/11; o modelo vivo tem dados mais novos, então **filtre até 06/11**, como abaixo, ou compare por dia). Se a lista foi corrigida depois de 06/11, diferenças pequenas são esperadas.
@@ -703,7 +716,7 @@ CALCULATETABLE (
         "Valorizado", [OEE2 Valorizado],
         "Valorizado (Real)", [OEE2 Valorizado (Real)],
         "Diferença", DIVIDE ( [OEE2 Valorizado (Real)], [OEE2 Valorizado] ) - 1,
-        "Parado total", SUM ( fHoraCheia[Parado] ),
+        "Parado total", SUM ( fHoraCheia[Parado OEE] ),
         "Amarela", [OEE2 Amarela],
         "Refugo (m)", [OEE2 Refugo (m)],
         "Real (m)", SUM ( fHoraCheia[Real] ),
@@ -719,37 +732,39 @@ EVALUATE FILTER ( INFO.MEASURES (), [State] <> 1 )
 EVALUATE FILTER ( INFO.COLUMNS (), [State] <> 1 )
 ```
 
-**Esperado (pandas, 04/09 a 06/11, 64 dias; minutos e %; regra de 12/11: turno com menos de 240 min sem pausa)**
+**Esperado (pandas, 04/09 a 06/11, 64 dias; minutos e %; regras de 12/11: turno com menos de 240 min sem pausa, teto da pausa e `Parado OEE`)**
 
 Total:
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Total | 433.737 | 61.427 | 372.310 | 61.625 | 106.964 | 203.721 | 83.5% | 65.6% | 98.5% | 53.9% | 19.8% |
+| Total | 433.737 | 59.805 | 373.932 | 61.923 | 113.569 | 198.440 | 83.4% | 63.6% | 98.5% | 52.3% | 19.3% |
 
 Por turno BI (TCU do turno usa os minutos do turno: 540, 480 e 420):
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| 1º Turno | 206.534 | 30.607 | 175.926 | 27.158 | 57.804 | 90.965 | 84.6% | 61.2% | 99.1% | 51.2% | 23.7% |
-| 2º Turno | 167.738 | 22.300 | 145.438 | 27.079 | 36.438 | 81.921 | 81.4% | 69.2% | 98.0% | 55.2% | 23.8% |
-| 3º Turno | 59.465 | 8.520 | 50.945 | 7.388 | 12.721 | 30.836 | 85.5% | 70.8% | 98.3% | 59.5% | 10.3% |
+| 1º Turno | 206.534 | 29.702 | 176.831 | 27.162 | 62.499 | 87.170 | 84.6% | 58.2% | 99.1% | 48.8% | 22.7% |
+| 2º Turno | 167.738 | 21.735 | 146.004 | 27.168 | 37.544 | 81.291 | 81.4% | 68.4% | 98.0% | 54.6% | 23.6% |
+| 3º Turno | 59.465 | 8.368 | 51.097 | 7.593 | 13.525 | 29.979 | 85.1% | 68.9% | 98.3% | 57.7% | 10.0% |
 
 Por máquina (TH04 não tem linha no período: o BI não a mostra na matriz; ela só entra no denominador do TCU):
 
 | Chave | Janela | Planejada | Produção | Amarela | Vermelha | Valorizado | D | P | Q | OEE2 | TCU |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| TH01 | 53.429 | 5.834 | 47.595 | 4.068 | 13.888 | 29.639 | 91.5% | 68.1% | 98.9% | 61.6% | 31.8% |
-| TH02 | 34.341 | 3.434 | 30.907 | 2.749 | 9.454 | 18.705 | 91.1% | 66.4% | 99.2% | 60.1% | 20.1% |
-| TH03 | 39.688 | 5.174 | 34.514 | 5.698 | 13.254 | 15.561 | 83.5% | 54.0% | 98.8% | 44.5% | 16.7% |
+| TH01 | 53.429 | 5.698 | 47.731 | 4.095 | 14.378 | 29.258 | 91.4% | 67.0% | 98.9% | 60.6% | 31.4% |
+| TH02 | 34.341 | 3.376 | 30.965 | 2.756 | 9.877 | 18.332 | 91.1% | 65.0% | 99.2% | 58.8% | 19.7% |
+| TH03 | 39.688 | 5.129 | 34.559 | 5.836 | 14.122 | 14.600 | 83.1% | 50.8% | 98.8% | 41.8% | 15.7% |
 | TH04 | 0 | 0 | 0 | 0 | 0 | 0 |  |  |  |  | 0.0% |
-| TH05 | 13.109 | 1.451 | 11.658 | 1.241 | 4.443 | 5.974 | 89.3% | 57.4% | 95.2% | 48.8% | 6.2% |
-| TH06 | 55.509 | 9.843 | 45.666 | 5.941 | 7.900 | 31.825 | 87.0% | 80.1% | 97.7% | 68.0% | 33.7% |
-| TH07 | 59.292 | 15.776 | 43.516 | 10.917 | 6.851 | 25.748 | 74.9% | 79.0% | 98.7% | 58.4% | 27.6% |
-| TO04 | 45.790 | 4.759 | 41.031 | 4.900 | 9.912 | 26.219 | 88.1% | 72.6% | 98.8% | 63.1% | 28.1% |
-| TM01 | 52.505 | 7.022 | 45.483 | 7.025 | 8.757 | 29.701 | 84.5% | 77.2% | 98.8% | 64.5% | 31.8% |
-| TM04 | 32.331 | 3.598 | 28.733 | 2.676 | 14.694 | 11.363 | 90.7% | 43.6% | 98.1% | 38.8% | 12.1% |
-| Spiral | 47.743 | 4.536 | 43.207 | 16.410 | 17.810 | 8.987 | 62.0% | 33.5% | 98.9% | 20.6% | 9.6% |
+| TH05 | 13.109 | 1.451 | 11.658 | 1.244 | 4.443 | 5.971 | 89.3% | 57.3% | 95.2% | 48.8% | 6.2% |
+| TH06 | 55.509 | 9.400 | 46.109 | 5.962 | 8.625 | 31.522 | 87.1% | 78.5% | 97.7% | 66.8% | 33.4% |
+| TH07 | 59.292 | 15.426 | 43.866 | 10.950 | 7.456 | 25.460 | 75.0% | 77.3% | 98.7% | 57.3% | 27.3% |
+| TO04 | 45.790 | 4.735 | 41.055 | 4.907 | 10.848 | 25.301 | 88.0% | 70.0% | 98.8% | 60.9% | 27.1% |
+| TM01 | 52.505 | 6.518 | 45.987 | 7.034 | 9.548 | 29.405 | 84.7% | 75.5% | 98.8% | 63.2% | 31.5% |
+| TM04 | 32.331 | 3.628 | 28.703 | 2.682 | 15.558 | 10.463 | 90.7% | 40.2% | 98.1% | 35.8% | 11.1% |
+| Spiral | 47.743 | 4.444 | 43.299 | 16.457 | 18.713 | 8.129 | 62.0% | 30.3% | 98.9% | 18.6% | 8.7% |
+
+Controle: `OEE2 Valorizado (Real)` ÷ `OEE2 Valorizado` − 1 = **+0,9%** (antes das correções do revisor era −1,7%); nenhum turno de máquina com Vermelha negativa.
 
 Comparação com os "Achados" do plano (explicação das diferenças em `conferir_oee2.py`, seção de reconciliação): a mesma conta do plano, no grão linha e sem pausa, reproduz os números dele ao minuto (Janela 429.920, Planejada 51.431, Vermelha 114.532, Amarela 60.681); a diferença para o valorizado do plano (203.276 contra 202.924) são 352 min de linhas sem motivo.
 
@@ -1032,8 +1047,14 @@ createOrReplace
 ```
 6. Refresh e conferir `EVALUATE FILTER ( INFO.COLUMNS (), [State] <> 1 )` vazio.
 
-## 5) O que o revisor tem de olhar
-- **Pausa fixa e o 3º Turno BI.** O 3º Turno BI (22:00-05:00) de muitas máquinas só tem a hora extra do 2º turno (22:00-23:20): mediana de 41 min. A regra "todo turno de máquina com Real > 0 recebe MIN(45, minutos do turno)" dá pausa de até 45 min a esse pedaço de turno (160 turnos de máquina com menos de 240 min, 132 deles no 3º Turno BI, somam 4.335 min de pausa no período). Isso tira o pedaço do tempo de produção, mas o valorizado dele continua na conta (Janela - Σ P), então o OEE2 sem qualidade sobe cerca de 0,6 ponto (55,4% com a regra do plano contra 54,7% se turno com menos de 240 min não recebesse pausa). O plano pediu a regra assim e o script a segue; o `revisor` decide se pausa de turno curto deve ser proporcional ou se a hora extra deve ser somada ao turno de origem. O plano pediu a regra assim; o `revisor` decide se pausa de turno curto deve ser proporcional ou se a hora extra deve ser somada ao turno de origem.
-- **Valorizado = Janela - Σ P** conta como valorizada a janela com meta zero, sem produção e sem parada (257 min, 0,1% da janela).
-- **Vermelha residual** pode sair negativa num recorte pequeno (pausa fixa de 45 min maior que o parado declarado naquele turno); ela fecha a cascata, mas não é "parada declarada" (a declarada vermelha vai a 116.262 min no total).
-- Regra de parada: o P usado é o capado na fatia (`fHoraCheia[Parado]`); o excedido (Real acima da meta) nunca abate parada de outra janela.
+## 5) Parecer do revisor (12/11/2026, revisão inline em Opus 5.5 seguindo `.claude/agents/revisor.md`; o subagente não carregou)
+**Aprovado com 3 correções, já aplicadas neste script e no `conferir_oee2.py`.**
+1. **Teto da pausa (grave, regra de parada).** Com 45 min fixos, 61 turnos de máquina ficavam com Vermelha negativa (−1.856 min) e Performance acima de 100%: a refeição não estava no `Parado`, então o tempo da pausa contava como valorizado e ainda saía do tempo de produção. No total esse excedente abatia parada vermelha de outros turnos, o que a regra "parada nunca somada com tempo excedido" proíbe. Correção: pausa = MIN(45, refeição + vermelha + sem motivo do turno). A decisão do William (45 min, Real > 0, janela ≥ 240 min) fica igual; o teto só age onde não houve parada lançada para absorver (59 turnos).
+2. **Fatia sem metro com tempo valorizado (média).** 5.281 min de fatias com Real = 0 contavam como valorizados porque o `Parado` lançado não cobria a fatia (3.710 min sem motivo, 918 min em Almoço, 257 min sem meta, sem produção e sem parada; em 217 turnos sem nenhum metro sobravam 1.142 min valorizados). Valorizado sem metro contraria a definição (valorizado = produção boa × tempo ideal) e o próprio controle por velocidade. Correção: coluna `Parado OEE`. Os 257 min caem aqui (resíduo vermelho, 0,1% da janela).
+3. **Texto: o 21h35 vigente é 1295/1440 (145 min/dia).** O script não usa o 21h35 nem a coluna `Meta` em nada do OEE2: correto. O texto deste arquivo e o rodapé da página diziam 21h45; corrigido.
+
+**Conferido sem achado:** pausa só com Real > 0 e ≥ 240 min, igual no DAX e no pandas; Valorizado = Janela − Σ P; `Meta Cheia` = Meta Hora × Fração, usada só no controle e no aviso; P capado por fatia (o excedido de uma janela não abate parada de outra); 59 motivos sem chave duplicada e iguais ao `dMotivoParada.csv`; Montagem sem família; Turno BI 05-14/14-22/22-05 é o da `fHoraCheia` aprovado em 11/11 (MEL-267), e por isso a hora extra do 2º turno cai no 3º Turno BI (o motivo da regra dos 240 min); TCU com 11 máquinas (a TH04 tem histórico na lista, então entra em `VALUES`). Nenhuma medida existente muda; Mestre e diário intactos.
+
+**Limitações que ficam declaradas (não bloqueiam):** pausa por turno inteiro (não cortar por Mangueira ou Hora); refugo pela data do refugo e pelo `Turno Erro` do app, não pelo Turno BI; o rótulo de setup no visual tem de ser "Set-up declarado no Hora-Hora" (o KPI de setup segue sendo entre peças boas).
+
+**Decisão humana:** o teto (item 1) e o `Parado OEE` (item 2) baixam a referência de set a nov de 53,9% para 52,3% (TCU de 19,8% para 19,3%). O William confirma isso no "libero".

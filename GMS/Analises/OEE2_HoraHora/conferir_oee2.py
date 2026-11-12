@@ -13,7 +13,9 @@ O que ele faz (nada é gravado fora do CSV de referência):
     05:00 a 05:00 (Data BI), Turno BI 05-14 / 14-22 / 22-05, Fração, Minutos, Meta Cheia (sem desconto de refeição),
     Real e Parado (capado na fatia).
  3. Aplica a regra da seção B do PLANO_OEE2.md: pausa fixa de 45 min por Célula x Data BI x Turno BI com Real > 0
-    (a refeição declarada fica absorvida); turno sem produção mantém a refeição declarada como cinza;
+    e janela >= 240 min, com teto MIN(45, refeição + vermelha + sem motivo do turno) (revisor, 12/11); a refeição
+    declarada fica absorvida; turno sem produção mantém a refeição declarada como cinza; P = Parado OEE (fatia sem
+    metro = fatia inteira parada);
     Valorizado = Janela - soma de P; Vermelha = resíduo (Produção - Amarela - Valorizado).
  4. Qualidade = 1 - refugo / Real; refugo = TiposErros[Quantidade] com a Trançadeira normalizada, na data do refugo
     (e, com turno filtrado, no Turno Erro igual ao turno).
@@ -129,6 +131,9 @@ def classificar(f: pd.DataFrame, mapa: pd.DataFrame) -> pd.DataFrame:
     f = f.copy()
     f["Familia"] = f["MotivoP"].map(mapa["Família"]).fillna("")
     f["Refeicao"] = f["MotivoP"] == "Almoço"
+    # revisor, 12/11: fatia sem metro (Real = 0) não tem tempo valorizado; o que o Parado não cobre vira parada do
+    # motivo da linha (sem motivo = resíduo vermelho, "Sem apontamento"). Igual à coluna fHoraCheia[Parado OEE].
+    f["ParadoOEE"] = np.where(f["Real"] > 0, f["Parado"], f["Minutos"])
     return f
 
 
@@ -142,21 +147,26 @@ def valorizado_real(f: pd.DataFrame) -> pd.Series:
 def turnos_de_maquina(f: pd.DataFrame) -> pd.DataFrame:
     """Uma linha por Célula x Data BI x Turno BI, com a pausa fixa aplicada (seção B do plano)."""
     f = f.copy()
-    f["P_amarela"] = np.where(f["Familia"] == "Amarela", f["Parado"], 0.0)
-    f["P_vermelha"] = np.where(f["Familia"] == "Vermelha", f["Parado"], 0.0)
-    f["P_azcz_sem_ref"] = np.where(f["Familia"].isin(["Azul", "Cinza"]) & ~f["Refeicao"], f["Parado"], 0.0)
-    f["P_ref"] = np.where(f["Refeicao"], f["Parado"], 0.0)
-    f["P_semfam"] = np.where(f["Familia"] == "", f["Parado"], 0.0)
+    po = f["ParadoOEE"]
+    f["P_amarela"] = np.where(f["Familia"] == "Amarela", po, 0.0)
+    f["P_vermelha"] = np.where(f["Familia"] == "Vermelha", po, 0.0)
+    f["P_azcz_sem_ref"] = np.where(f["Familia"].isin(["Azul", "Cinza"]) & ~f["Refeicao"], po, 0.0)
+    f["P_ref"] = np.where(f["Refeicao"], po, 0.0)
+    f["P_semfam"] = np.where(f["Familia"] == "", po, 0.0)
+    f["P_decl"] = f["Parado"]
     f["VR"] = valorizado_real(f)
     f["Meta_op"] = np.where(f["Real"] > 0, f["MetaCheia"], 0.0)
     f["Real_op"] = np.where(f["Real"] > 0, f["Real"], 0.0)
     g = f.groupby(["Célula", "TurnoBI", "DataBI"], as_index=False).agg(
-        Min=("Minutos", "sum"), Real=("Real", "sum"), P=("Parado", "sum"), Am=("P_amarela", "sum"),
+        Min=("Minutos", "sum"), Real=("Real", "sum"), P=("ParadoOEE", "sum"), Pdecl=("P_decl", "sum"), Am=("P_amarela", "sum"),
         Verm_decl=("P_vermelha", "sum"), AzCz=("P_azcz_sem_ref", "sum"), Ref=("P_ref", "sum"),
         SemFam=("P_semfam", "sum"), VR=("VR", "sum"), MetaOp=("Meta_op", "sum"), RealOp=("Real_op", "sum"),
         Meta=("MetaCheia", "sum"))
     recebe = (g["Real"] > 0) & (g["Min"] >= TURNO_MIN_PAUSA)
-    g["Pausa"] = np.where(recebe, PAUSA, 0.0)
+    # revisor, 12/11: a pausa só absorve parada lançada que não é planejada nem amarela (refeição, vermelha, sem família).
+    # Sem esse teto, o turno sem a refeição no Parado fica com Vermelha negativa e Performance acima de 100%,
+    # e o excedente compensa parada de outro turno no total.
+    g["Pausa"] = np.where(recebe, np.minimum(PAUSA, g["Ref"] + g["Verm_decl"] + g["SemFam"]), 0.0)
     g["Plan"] = g["AzCz"] + np.where(recebe, g["Pausa"], g["Ref"])
     return g
 
@@ -296,11 +306,15 @@ def main():
           f"turnos com refeição declarada acima de 45 min: {int((g['Ref'] > PAUSA).sum())}")
     print(f"   Valorizado (Real) / Valorizado - 1 = {t.Dif_Val_Real_pct * 100:+.1f}% (controle exige < 2% em módulo)")
     sem_plano = per[(per["MetaCheia"] == 0) & (per["Real"] == 0) & (per["Parado"] == 0)]
-    print(f"   janelas sem meta, sem produção e sem parada (contam como valorizado pela conta Janela - Σ P): "
+    print(f"   janelas sem meta, sem produção e sem parada (viram parada pelo Parado OEE, sem motivo = resíduo vermelho): "
           f"{sem_plano['Minutos'].sum():,.0f} min ({sem_plano['Minutos'].sum() / t.Janela * 100:.1f}% da janela)")
+    r0 = per[per["Real"] <= 0]
+    print(f"   fatias sem metro: Parado OEE - Parado lançado = {(r0['ParadoOEE'] - r0['Parado']).sum():,.0f} min "
+          f"(saem do valorizado); pausa abaixo de 45 min pelo teto: {int((((g['Real'] > 0) & (g['Min'] >= TURNO_MIN_PAUSA)) & (g['Pausa'] < PAUSA)).sum())} turnos")
     sem_real = g[g["Real"] == 0]
     print(f"   turnos de máquina sem nenhum metro (Real = 0): {len(sem_real)}, {sem_real['Min'].sum():,.0f} min na janela, "
-          f"Valorizado delas {(sem_real['Min'] - sem_real['P']).sum():,.0f} min")
+          f"Valorizado delas {(sem_real['Min'] - sem_real['P']).sum():,.0f} min; turnos com Vermelha < 0: "
+          f"{int(((g['Min'] - g['Plan']) - g['Am'] - (g['Min'] - g['P']) < -0.01).sum())}")
     avisos = c[(c["Corte"] == "Máquina") & c["Aviso"]]
     print("   máquinas com aviso de velocidade:", ", ".join(
         f"{r.Chave} (Real/Meta {r.Perf_velocidade * 100:.0f}%, VR/Val {r.Dif_Val_Real_pct * 100:+.0f}%)" for r in avisos.itertuples()) or "nenhuma")

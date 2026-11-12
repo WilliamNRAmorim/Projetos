@@ -159,7 +159,7 @@ def filtro_incluir(ent, prop, valores, alias, nome):
 def cartoes(out):
     """Faixa de cardVisual: OEE2, TCU, Disponibilidade, Performance e Qualidade (mesma geometria da pg_horahora)."""
     base = ler(vis_path("pg_horahora", "kpi0"))
-    lista = [("OEE2", "OEE2", "OEE2 Ref. OEE2", "Cartão: OEE2 (apontamento) do período. Referência de set a nov: 54%."),
+    lista = [("OEE2", "OEE2", "OEE2 Ref. OEE2", "Cartão: OEE2 (apontamento) do período. Referência de set a nov: 52%."),
              ("OEE2 TCU", "TCU", "OEE2 Ref. TCU", "Cartão: TCU (24/7) do período. Referência de set a nov: 19%."),
              ("OEE2 Disponibilidade", "DISPONIBILIDADE", None, "Cartão: Disponibilidade do OEE2."),
              ("OEE2 Performance", "PERFORMANCE", None, "Cartão: Performance do OEE2."),
@@ -247,7 +247,7 @@ def rodape(out):
                    "Limitações: OEE2 pelo apontamento do Hora-Hora, sem sensor (microparada e velocidade reduzida só aparecem "
                    "pelo motivo declarado). Qualidade pela data do refugo, não da trança; refugo sem trançadeira fica fora. "
                    "Pausa fixa de 45 min por turno com produção. Referência de set a nov do GMS, sem meta fixa. "
-                   "Os 21h45 do cartão Meta não entram no OEE2.",
+                   "Os 21h35 do cartão Meta não entram no OEE2.",
                    12, "#5F6368", REG, "Rodapé: limitações do OEE2 (apontamento, sem sensor; qualidade pela data do refugo).")
     out("rodape", d)
 
