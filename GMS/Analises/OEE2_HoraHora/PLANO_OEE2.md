@@ -40,6 +40,33 @@
 - **3. Relatório:** `pg_oee2` com os cartões OEE2, TCU, D, P e Q (referência de set a nov, sem meta fixa), cascata nas cores das famílias, Pareto por categoria e por motivo, matriz máquina × turno, linha por dia e rodapé com as limitações. Mais o item no menu.
 - **4. App** (depois): dropdown de motivos ordenado por família. Depende do export do App.Formulas.
 
+**O que a tela de OEE do app de homologação (PPLMS, dia 11/11/2026) ensina para o BI.** O William abriu essa tela em 12/11. Ela importa os apontamentos e a qualidade do GMS e calcula o OEE por máquina. Os números de 11/11:
+
+| Máquina | Metros | OEE | Disponibilidade | Performance | Qualidade |
+|---|---|---|---|---|---|
+| Spiral | 440 | 12,4% | 51,9% | 24,2% | 98,9% |
+| TH01 | 1.481 | 152,1% | 95,2% | 162,4% | 98,4% |
+| TH02 | 419 | 93,9% | 100% | 93,9% | 100% |
+| TH03 | 0 | 0% | 37,7% | 0% | 97,7% |
+| TH04 | 0 | 0% | 100% | 0% | 100% |
+| TH05 | 0 | — | — | — | — |
+| TH06 | 2.011 | 92,4% | 90,2% | 102,9% | 99,6% |
+| TH07 | 2.325 | 75,3% | 83,9% | 90,3% | 99,3% |
+| TM01 | 1.010 | 78,7% | 84,0% | 94,7% | 98,9% |
+| TM04 | 0 | 0% | 100% | 0% | 100% |
+| TO04 | 143 | 9,9% | 93,6% | 10,9% | 97,7% |
+
+- Média simples de 10 máquinas: OEE 51,5%, disponibilidade 83,7%, performance 57,9%, qualidade 99,0%.
+- Metas: OEE 69,8%, disponibilidade 70%, performance 100%, qualidade 99,8%.
+
+Quatro pontos em que a tela foge do documento. O BI tem de fazer diferente:
+1. **Performance acima de 100%** (TH01 162%, TH06 103%) significa que a velocidade validada está abaixo do real. Na TH01 isso já se sabe: são as duas passadas, MEL-241. Pelo documento, performance = velocidade real ÷ velocidade validada máxima, então não passa de 100%. O BI **não capa em silêncio**: mostra a máquina com aviso "velocidade validada abaixo do real" e conta no máximo a janela inteira como valorizada. Isso já vem da conta Janela − Σ P, porque o parado nunca é negativo.
+2. **Máquina sem produção planejada** (TH03, TH04 e TM04 com 0 m) é "sem atividade" (azul). Fica **fora do OEE2**, em branco e não 0%, e entra só no TCU. Na tela ela aparece com 0% e disponibilidade de 100%, o que derruba a média.
+3. **OEE consolidado é ponderado pelo tempo:** Σ valorizado ÷ Σ tempo de produção, nunca média simples das máquinas. A própria tela avisa que a média dela "não é OEE consolidado".
+4. **TO04 com 10,9% e a Spiral com 24%** são o mesmo sintoma do item 1 ao contrário: velocidade validada alta demais ou apontamento incompleto. O BI mostra isso sem esconder, e a lista de máquinas fora do padrão vai para o William.
+- **Conferência cruzada na validação (passo 2):** comparar o OEE2 do BI de 11/11 por máquina com esta tabela. Diferença só é aceita se for explicada por um dos 4 itens acima.
+- **Metas:** a tela usa 69,8% / 70% / 100% / 99,8%. O BI segue sem meta fixa (Q3 de 09/11) e mostra a referência de set a nov, até o William decidir adotar essas metas.
+
 **O que dá para garantir e o que não dá:**
 - **Dá:** depois dos passos 1 a 3, o BI calcula OEE2 e TCU exatamente pela definição das páginas 10 a 12, com cada motivo na família certa.
 - **Não dá sem sensor:**
