@@ -214,21 +214,21 @@ def pareto(out):
 
 
 def matriz(out):
-    q = {"queryState": {
-        "Rows": {"projections": [proj(c_col("fHoraCheia", "Célula"), ativo=True)]},
-        "Columns": {"projections": [proj(c_col("dTurno", "Turno"), ativo=True)]},
-        "Values": {"projections": [proj(c_med("OEE2")), proj(c_med("OEE2 Aviso Velocidade"))]}},
-        "sortDefinition": {"sort": [{"field": c_col("fHoraCheia", "Célula"), "direction": "Ascending"}]}}
-    tam = lit("9D")
-    o = {"columnHeaders": [{"properties": {"fontSize": tam, "wordWrap": lit("true")}}],
-         "rowHeaders": [{"properties": {"fontSize": tam}}],
-         "values": [{"properties": {"fontSize": tam}}],
-         "general": [{"properties": {"layout": s("Compact")}}]}
+    """12/11 (MEL-270): a matriz virou mapa de calor em SVG (imagem). A medida de RELATÓRIO 'OEE2 · SVG Mapa'
+    (reportExtensions.json) monta o desenho: máquinas da pior para a melhor, célula mais vermelha quanto mais
+    abaixo da referência de 52%, contorno na pior célula, barra do total da máquina e ▲ de aviso de velocidade."""
+    svg = {"Measure": {"Expression": {"SourceRef": {"Schema": "extension", "Entity": "Medidas"}},
+                       "Property": "OEE2 · SVG Mapa"}}
+    o = {"image": [{"properties": {"sourceType": lit("'imageUrl'"), "sourceUrl": {"expr": svg}}}],
+         "imageScaling": [{"properties": {"imageScalingType": lit("'Fit'")}}]}
     vco = container("Qual máquina e qual turno têm o menor OEE2?",
-                    "OEE2 por máquina e turno BI; o aviso aponta velocidade validada abaixo do real",
-                    "Matriz de OEE2 por máquina e turno BI, com uma coluna de aviso de velocidade validada abaixo do "
-                    "real. Qual máquina e qual turno têm o menor OEE2?")
-    out("g_matriz", visual("g_matriz", "pivotTable", 216, 208, 516, 304, 14200, q, o, vco))
+                    "Mais vermelho = mais abaixo da referência de 52% · contorno = pior célula · ▲ aviso de velocidade",
+                    "Mapa de calor de OEE2 por máquina e turno BI, da pior máquina para a melhor, com o total de cada "
+                    "máquina contra a referência de 52% e aviso de velocidade validada abaixo do real. "
+                    "Qual máquina e qual turno têm o menor OEE2?")
+    d = visual("g_matriz", "image", 216, 208, 516, 304, 14200, None, o, vco)
+    del d["visual"]["query"]
+    out("g_matriz", d)
 
 
 def linha_dia(out):

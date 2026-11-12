@@ -60,3 +60,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-12 | Hora-Hora pela ficha: aceitou as recomendadas (dia útil, 1º e 2º turno; Real = metros da ficha rateados com teto na meta) e liberou as 414 linhas
 2026-11-12 | OEE2: aceitou a recomendada de não dar a pausa de 45 min a turno com menos de 4 h (só hora extra)
 2026-11-12 | OEE2: aceitou a recomendada de trocar a referência do cartão TCU para o valor do modelo vivo (20%)
+2026-11-12 | OEE2 matriz máquina × turno: recusou a matriz do Power BI; aprovou o mapa de calor em SVG recomendado (vermelho abaixo da referência de 52%, cinza acima, pior célula com contorno)
