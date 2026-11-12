@@ -1,4 +1,4 @@
-# OEE2 da Trançagem no modelo (GMS): script TMDL, conferência e volta (MEL-266, passo 1) — REVISADO em 12/11 (seção 5), PENDENTE DE APLICAR (só com o "libero" do William, no TMDL view do modelo vivo)
+# OEE2 da Trançagem no modelo (GMS): script TMDL, conferência e volta (MEL-266, passo 1) — REVISADO e APLICADO no modelo (GMS) em 12/11/2026 (libero do William), refresh feito e conferido (seção 3)
 
 Só BI. O app, a lista Hora-Hora e a `fHoraHora` não mudam. Regras: `Analises/OEE2_HoraHora/PLANO_OEE2.md` (atualização de 12/11, seções A, B e D). Referência de números: `Analises/OEE2_HoraHora/conferir_oee2.py` e `oee2_referencia_2026-09-04_a_11-06.csv`. Página: `PowerBI/GMS_Painel.Report/definition/pages/pg_oee2` (`Painel_Redesign/build_oee2.py`).
 
@@ -767,6 +767,11 @@ Por máquina (TH04 não tem linha no período: o BI não a mostra na matriz; ela
 Controle: `OEE2 Valorizado (Real)` ÷ `OEE2 Valorizado` − 1 = **+0,9%** (antes das correções do revisor era −1,7%); nenhum turno de máquina com Vermelha negativa.
 
 Comparação com os "Achados" do plano (explicação das diferenças em `conferir_oee2.py`, seção de reconciliação): a mesma conta do plano, no grão linha e sem pausa, reproduz os números dele ao minuto (Janela 429.920, Planejada 51.431, Vermelha 114.532, Amarela 60.681); a diferença para o valorizado do plano (203.276 contra 202.924) são 352 min de linhas sem motivo.
+
+**Conferência no modelo vivo (12/11/2026, depois do apply e do refresh):**
+- `INFO.MEASURES` e `INFO.COLUMNS` sem nenhum objeto em erro; `dMotivoParada` com 59 motivos; `dEtapaOEE` com 5 etapas; os 3 relacionamentos da `dMotivoParada` com os GUIDs do script.
+- **Mesmo dado, 04/09 a 30/09** (a lista não mudou nesse trecho): Janela, Real e `Parado OEE` iguais ao minuto em todas as máquinas, e D, P, Q, OEE2 e TCU iguais ao pandas na 4ª casa, por máquina e por Turno BI. Total de setembro: OEE2 52,92%, TCU 18,09%. Cascata: 168.122 − 21.898 − 27.768 − 40.025 − 1.050 = 77.381 min de valorizado bom.
+- **04/09 a 06/11 no modelo:** OEE2 51,79%, D 84,22%, P 62,38%, Q 98,57%, TCU 20,31%, Valorizado (Real) +0,85%. A diferença para a tabela acima (52,3% e 19,3%) vem do dado, não da conta: depois do CSV de 06/11 entraram na lista os lotes 4 a 8 da higienização e os 46 turnos reconstruídos pela ficha (MEL-243). Por isso a janela do modelo é 459.705 min, contra 433.737 no CSV. Para a referência fechar de novo no período inteiro, rode o `conferir_oee2.py` sobre uma exportação nova da lista.
 
 ## 4) Roteiro de volta
 Em ordem (cada passo desfaz o anterior; nada mexe em dado do SharePoint):
