@@ -24,19 +24,19 @@ code{background:#ececea;padding:0 4px;border-radius:3px}
 <p class="sub">12/11/2026 · lista Conferencia_SAP lida ao vivo às ~11:40 · SAP = MB51 de 12/11 (101/102, M, GRT4) e COOIS de 12/11 · GMS = RegistrosInspeção, TiposErros, ficha_producao e Packing_Pallets ao vivo · histórico INTEIRO de cada OP (o fluxo só olha 30 dias)</p>
 
 <div class="kpis">
-<div class="k"><b>76</b><span>pendências abertas na lista hoje</span></div>
-<div class="k o"><b>45</b><span>não são divergência (5 de OP + 40 de pallet)</span></div>
+<div class="k"><b>75</b><span>pendências abertas na lista hoje</span></div>
+<div class="k o"><b>44</b><span>não são divergência (5 de OP + 39 de pallet)</span></div>
 <div class="k a"><b>16</b><span>troca de OP no mesmo material: saldo zero, só rastreabilidade</span></div>
 <div class="k r"><b>15</b><span>divergência real com metro sobrando ou faltando</span></div>
 <div class="k r"><b>1</b><span>marcada Resolvido, mas ainda diverge (OP 30351277)</span></div>
 </div>
 
-<h2>1. O que NÃO é divergência (45): por que ainda aparecem</h2>
+<h2>1. O que NÃO é divergência (44): por que ainda aparecem</h2>
 <div class="wrap"><table>
 <tr><th>ID lista</th><th>Chave</th><th>Como está na lista</th><th>O que é de verdade</th><th>Causa no script</th></tr>
 <tr><td>157, 158, 159, 160</td><td>OPs 30078602, 29118845, 29788415, 29321285</td><td>"GMS apontou, SAP não lançou a OP" (1 a 4,8 m)</td><td><span class="tag t-f">bate</span> Com o histórico inteiro, GMS + refugo = SAP nas 4 (diferença 0). São refugos recriados em 19/10 na higienização (TiposErros 6464 a 6470) de OPs de junho a setembro.</td><td>A janela de 30 dias corta os lances e o SAP antigos e só enxerga o refugo novo.</td></tr>
 <tr><td>138</td><td>OP 30447069</td><td>"SAP lançou antes da Extração/Teste"</td><td><span class="tag t-f">bate</span> GMS 209,3 = SAP 209,3; a ficha está em <code>Finalizada</code> e a tratativa de 19/10 já resolveu.</td><td>O script só aceita <code>Finalizado</code> (com o); "Finalizada" com a cai como etapa anterior.</td></tr>
-<tr><td>40 itens "PP"</td><td>pallets de 14 fichas (ex.: PP 173 a 177, PP 328 a 336)</td><td>"Lance em mais de um pallet" (36) e "Pallet com lance que não existe no GMS" (4)</td><td><span class="tag t-f">reimpressão</span> Em todas as 14 fichas, todo lance atual da OP está no packing e nenhum lance aparece em ficha de outra OP. O que sobra são impressões antigas do mesmo packlist (ex.: ficha 4258: 9 linhas em 1h30, a última tem os 7 lances) e lances apagados que só ficaram na impressão velha.</td><td>Cada impressão grava uma linha nova em Packing_Pallets e o script trata cada uma como um pallet físico.</td></tr>
+<tr><td>39 itens "PP"</td><td>pallets de 14 fichas (ex.: PP 173 a 177, PP 328 a 336)</td><td>"Lance em mais de um pallet" (35) e "Pallet com lance que não existe no GMS" (4)</td><td><span class="tag t-f">reimpressão</span> Em todas as 14 fichas, todo lance atual da OP está no packing e nenhum lance aparece em ficha de outra OP. O que sobra são impressões antigas do mesmo packlist (ex.: ficha 4258: 9 linhas em 1h30, a última tem os 7 lances) e lances apagados que só ficaram na impressão velha.</td><td>Cada impressão grava uma linha nova em Packing_Pallets e o script trata cada uma como um pallet físico.</td></tr>
 </table></div>
 
 <h2>2. Troca de OP no mesmo material (16 itens, 8 pares): saldo zero</h2>
@@ -94,11 +94,11 @@ code{background:#ececea;padding:0 4px;border-radius:3px}
 <tr><th>#</th><th>Mudança</th><th>O que resolve</th></tr>
 <tr><td>1</td><td>A OP é conferida com todo o histórico carregado; a janela só escolhe quem entra no dia. Se o SAP da OP é mais antigo que o lance mais antigo carregado, a OP fica "fora do alcance" e não gera pendência nova</td><td>Os 4 falsos de refugo antigo (157 a 160) e o falso Resolvido (67)</td></tr>
 <tr><td>2</td><td>"Finalizado" e "Finalizada" valem igual</td><td>O falso "SAP lançou antes" (138)</td></tr>
-<tr><td>3</td><td>Reimpressão: na mesma ficha, um pallet cujos lances (ainda existentes) estão todos num pallet impresso depois é reimpressão; não conta e não gera pendência. "Lance em mais de um pallet" só vale entre pallets vivos</td><td>Os 40 PP fecham sozinhos na próxima conferência</td></tr>
+<tr><td>3</td><td>Reimpressão: na mesma ficha, um pallet cujos lances (ainda existentes) estão todos num pallet impresso depois é reimpressão; não conta e não gera pendência. "Lance em mais de um pallet" só vale entre pallets vivos</td><td>Os 39 PP fecham sozinhos na próxima conferência</td></tr>
 <tr><td>4</td><td>Doc SAP do usuário de refugo (U452021, U445131) que sobra vira "Refugo a mais no SAP", não "SAP lançou lance". Refugo que sobra numa OP e falta na vizinha do mesmo material vira "Refugo lançado na OP errada", com a provável OP</td><td>196, 222 e os pares de refugo</td></tr>
 <tr><td>5</td><td>Na troca de OP, o detalhe diz "saldo do material zero" e a lista dos lances a mover; o e-mail separa troca de OP (rastreabilidade) de metro faltando ou sobrando</td><td>Leitura: os 16 itens da seção 2 deixam de parecer perda</td></tr>
 <tr><td>6</td><td>Fluxo: 2ª leitura de RegistrosInspeção (ID menor que o último da 1ª página) para ter ~110 dias de lances, e MB51 lido por 120 dias</td><td>Hoje o fluxo lê só os 5.000 lances mais novos (~55 dias); pendência mais velha que isso deixa de ser reconferida</td></tr>
 </table></div>
-<p>Uma vez só, na lista: reabrir o item 67 (Resolvido para Aberto). Os 45 falsos <b>não</b> serão fechados à mão: a conferência da manhã com a v1.2.0 fecha sozinha (C29, Resolvido só pela conferência).</p>
+<p>Uma vez só, na lista: reabrir o item 67 (Resolvido para Aberto). Os 44 falsos <b>não</b> serão fechados à mão: a conferência da manhã com a v1.2.0 fecha sozinha (C29, Resolvido só pela conferência).</p>
 <p class="sub">COOIS: o rendimento confirmado bate com o 101−102 do MB51 em todas as 31 OPs e 30 delas estão TECO. Por isso a seção 3 só fecha corrigindo GMS ou SAP; nenhuma vai se ajustar sozinha.</p>
 </main></body></html>

@@ -1,5 +1,12 @@
 /**
- * GMS_ConferenciaDiaria  v1.1.1  (08/10/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.2.0  (12/11/2026)  MEL-196  C29
+ * v1.2.0: (1) a OP e conferida com TODO o historico carregado (lances e refugo nao sao mais cortados pela janela; a janela
+ *   so limita a leitura do MB51). Guarda de alcance: OP que comecou antes do piso (dia mais antigo que as tres fontes
+ *   cobrem) nao e reconferida, nem para abrir nem para fechar. O inicio da OP vem do Created da ficha (fichaJson traz Created).
+ *   (2) "Finalizada" vale igual a "Finalizado". (3) Reimpressao de packlist: na mesma ficha, pallet cujos lances existentes ja
+ *   estao num pallet impresso depois e reimpressao, nao conta e nao gera pendencia. (4) Doc SAP de usuario de refugo que sobra
+ *   e refugo a mais, nao lance; refugo que sobra no SAP numa OP e falta na vizinha do mesmo PN vira "Refugo lancado na OP errada".
+ *   (5) Troca de OP diz no detalhe que o saldo do material bate.
  * v1.1.1: packing so e cobrado de OP Finalizada (OP ainda em Extr./Teste nao gera pendencia de packing); OP com lancamento no SAP
  *   e processo no GMS diferente de Finalizado/Extr./Teste vira "SAP lancou antes da Extracao/Teste". fichaJson passa a trazer "processo".
  * v1.1.0: o packing passa a vir do GMS (listas Packing_Pallets e Packing_Manual), nao mais do BD Packing List (apagado
@@ -74,7 +81,7 @@ interface InspIn { id?: Val; op?: Val; q?: Val; dt?: Val; cab?: Val;
   ID?: Val; OP_ID?: Val; Quantidade_Inspe_x00e7__x00e3_o?: Val; DataHoraInspecao?: Val; cabine_teste?: Val; }
 interface RefIn { id?: Val; op?: Val; q?: Val; dt?: Val; cod?: Val; cab?: Val;
   ID?: Val; OP_ID?: Val; _x0043_?: Val; Created?: Val; A?: Val; cabine_teste?: Val; }
-interface FichaIn { op?: Val; pn?: Val; proc?: Val; OP?: Val; Mangueira?: Val; processo?: Val; }
+interface FichaIn { op?: Val; pn?: Val; proc?: Val; OP?: Val; Mangueira?: Val; processo?: Val; Created?: Val; }
 interface PackIn { id: number; sl: number; pn: string; q: number; ts: string; c: boolean; }
 // Packing_Pallets e Packing_Manual (corpo CRU do SharePoint, nomes internos) ou formato curto
 interface PalletIn { id?: Val; ficha?: Val; pallet?: Val; op?: Val; lances?: Val; qtd?: Val; total?: Val; imp?: Val;
@@ -95,7 +102,7 @@ interface Slice { id: number; sl: number; pn: string; q: number; t: number; dia:
 interface AnaliseOP {
   op: string; pn: string; gms: number; ref: number; sap: number; dif: number;
   ug: Lance[]; us: DocSap[]; ur: Refugo[]; dup: DocSap[];
-  temSap: boolean; temGms: boolean; cab: string; provavel: string; refGraca: number;
+  temSap: boolean; temGms: boolean; cab: string; provavel: string; refGraca: number; provavelRef: string;
 }
 
 const MIN_H = 3600000;
@@ -105,7 +112,11 @@ const PACK_DEPOIS_H = 2;   // relogio do packing pode estar ate 2 h atras do GMS
 const PACK_JANELA_DIAS = 6;
 const PACK_GMS_DESDE = "2026-10-06";   // 1o dia com packing registrado no GMS; antes disso o BD (apagado) era a fonte
 const FUSO_H = -3;         // Brasilia, sem horario de verao
+const USR_REFUGO = ["U452021", "U445131"];   // usuarios SAP que lancam o lote de refugo (101 na propria OP)
+const REF_OP_DIAS = 7;     // refugo do GMS x doc de refugo do SAP em outra OP: ate 7 dias (lote + atraso; medido 12/11: 6 dias)
 let packingSemDia = false;
+let abertosForaAlcance = 0;   // v1.2.0: pendencias abertas que comecaram antes do piso (nao reconferidas)
+let pisoAlcance = "";
 
 interface Categoria { nome: string; prio: number; acao: string; quem: string; }
 const CAT: { [k: string]: Categoria } = {
@@ -113,6 +124,7 @@ const CAT: { [k: string]: Categoria } = {
   SAP_SEM_GMS: { nome: "SAP lançou, GMS não tem a OP", prio: 2, acao: "Conferir se a OP foi produzida fora do GMS; apontar no GMS ou estornar no SAP", quem: "Supervisão + PCP" },
   GMS_SEM_SAP: { nome: "GMS apontou, SAP não lançou a OP", prio: 3, acao: "Lançar no SAP (MIGO 101) os lances apontados no GMS", quem: "SAP / Logística" },
   LANCE_OP_ERRADA: { nome: "Lance apontado na OP errada", prio: 4, acao: "Mover o lance para a OP certa (no GMS ou no SAP, onde estiver errado)", quem: "Apontamento GMS / SAP" },
+  REF_OP: { nome: "Refugo lançado na OP errada", prio: 4, acao: "Mover o refugo no GMS para a OP em que o SAP lançou (ou estornar e relançar no SAP)", quem: "Apontamento GMS / SAP" },
   METRAGEM: { nome: "Metragem digitada diferente (GMS × SAP)", prio: 5, acao: "Conferir a etiqueta do lance e corrigir o lado errado", quem: "Apontamento GMS / SAP" },
   SAP_LANCE: { nome: "SAP lançou lance que o GMS não tem", prio: 6, acao: "Apontar o lance no GMS ou estornar (102) no SAP", quem: "Apontamento GMS / SAP" },
   GMS_LANCE: { nome: "GMS apontou lance que o SAP não tem", prio: 7, acao: "Lançar o lance no SAP (MIGO 101) ou excluir do GMS se não existe", quem: "SAP / Logística" },
@@ -254,11 +266,11 @@ function conferir(
   const lances: Lance[] = inspIn.map(r => {
     const t = instanteUTC(txt(pega(r.dt, r.DataHoraInspecao)));
     return { id: Number(pega(r.id, r.ID)), op: textoOP(pega(r.op, r.OP_ID)), q: num(pega(r.q, r.Quantidade_Inspe_x00e7__x00e3_o)), t: t, dia: diaDe(t), cab: limpo(txt(pega(r.cab, r.cabine_teste))), usado: false, slice: "" };
-  }).filter(l => l.op !== "" && l.dia >= inicio && l.dia <= d);
+  }).filter(l => l.op !== "" && l.t > 0 && l.dia <= d);   // v1.2.0: sem corte da janela
   const refugos: Refugo[] = refIn.map(r => {
     const t = instanteUTC(txt(pega(r.dt, r.Created)));
     return { id: Number(pega(r.id, r.ID)), op: textoOP(pega(r.op, r.OP_ID)), q: num(pega(r.q, r._x0043_)), t: t, dia: diaDe(t), cod: limpo(txt(pega(r.cod, r.A))), usado: false };
-  }).filter(x => x.op !== "" && x.dia >= inicio && x.dia <= d);
+  }).filter(x => x.op !== "" && x.t > 0 && x.dia <= d);
   const sap = sapDocs.filter(s => s.dia <= d);
   const slices: Slice[] = packIn.filter(p => !p.c).map(p => {
     const t = instanteLocal(p.ts);
@@ -270,6 +282,23 @@ function conferir(
   for (const s of sap) { if (s.pn) { pnPorOP.set(s.op, s.pn); } }   // SAP manda no PN
   const procPorOP = new Map<string, string>();
   for (const f of fichaIn) { const o = textoOP(pega(f.op, f.OP)); const pr = limpo(txt(pega(f.proc, f.processo))); if (o && pr) { procPorOP.set(o, pr); } }
+
+  // v1.2.0 guarda de alcance: piso = 1o dia que as tres fontes cobrem inteiro (o dia mais antigo carregado pode estar pela metade)
+  let piso = inicio;
+  // cobertura = dia do registro de MENOR ID carregado (as listas vem por ID desc; data antiga com ID alto nao conta)
+  const minLance = lances.length ? lances.reduce((m, l) => l.id < m.id ? l : m, lances[0]).dia : "";
+  const minRef = refugos.length ? refugos.reduce((m, r) => r.id < m.id ? r : m, refugos[0]).dia : "";
+  if (minLance && somaDias(minLance, 1) > piso) { piso = somaDias(minLance, 1); }
+  if (minRef && somaDias(minRef, 1) > piso) { piso = somaDias(minRef, 1); }
+  const inicioOP = new Map<string, string>();
+  const marcaInicio = (o: string, dia: string) => { if (!o || !dia) { return; } const x = inicioOP.get(o); if (!x || dia < x) { inicioOP.set(o, dia); } };
+  for (const f of fichaIn) { const t = instanteUTC(txt(pega(f.Created, null))); if (t > 0) { marcaInicio(textoOP(pega(f.op, f.OP)), diaDe(t)); } }
+  for (const l of lances) { marcaInicio(l.op, l.dia); }
+  for (const r of refugos) { marcaInicio(r.op, r.dia); }
+  for (const s of sap) { marcaInicio(s.op, s.dia); }
+  const noAlcance = (o: string) => (inicioOP.get(o) || "") >= piso;
+  abertosForaAlcance = 0;
+  pisoAlcance = piso;
 
   const lancesOP = agruparPorOP(lances);
   const refOP = agruparPorOP(refugos);
@@ -283,9 +312,10 @@ function conferir(
   }
   // OP trocada: sobra de lance do GMS numa OP casa com sobra de doc SAP de outra OP
   const poolSap = new Map<string, DocSap[]>();
-  for (const a of valoresMap(analise)) { for (const s of a.us) { const k = chaveQ(s.q); const l = poolSap.get(k); if (l) { l.push(s); } else { poolSap.set(k, [s]); } } }
+  // v1.2.0: OP fora do alcance tem dado parcial: nao entra nos pools de troca
+  for (const a of valoresMap(analise)) { if (!noAlcance(a.op)) { continue; } for (const s of a.us) { const k = chaveQ(s.q); const l = poolSap.get(k); if (l) { l.push(s); } else { poolSap.set(k, [s]); } } }
   const poolGms = new Map<string, Lance[]>();
-  for (const a of valoresMap(analise)) { for (const l of a.ug) { const k = chaveQ(l.q); const x = poolGms.get(k); if (x) { x.push(l); } else { poolGms.set(k, [l]); } } }
+  for (const a of valoresMap(analise)) { if (!noAlcance(a.op)) { continue; } for (const l of a.ug) { const k = chaveQ(l.q); const x = poolGms.get(k); if (x) { x.push(l); } else { poolGms.set(k, [l]); } } }
   for (const a of valoresMap(analise)) {
     if (Math.abs(a.dif) <= tol) { continue; }
     if (a.ug.length) { a.provavel = melhorCandidato(a.op, a.pn, a.ug.map(l => ({ q: l.q, dia: l.dia })), poolSap, pnPorOP); }
@@ -293,6 +323,22 @@ function conferir(
   }
 
   for (const a of valoresMap(analise)) { a.refGraca = soma(a.ur.filter(r => prazoRefugo(r.dia) > d).map(r => r.q)); }
+  // v1.2.0: refugo do GMS sem SAP numa OP x doc de refugo do SAP sobrando em outra OP do mesmo PN (lote lancado na OP vizinha)
+  const sobraRef = new Map<string, DocSap[]>();
+  for (const a of valoresMap(analise)) { if (!noAlcance(a.op) || a.dif >= -tol) { continue; } for (const s of a.us) { if (ehUsrRefugo(s.user)) { const k = chaveQ(s.q); const l = sobraRef.get(k); if (l) { l.push(s); } else { sobraRef.set(k, [s]); } } } }
+  for (const a of valoresMap(analise)) {
+    if (!a.ur.length || a.provavel || a.dif <= tol || !noAlcance(a.op)) { continue; }   // A falta refugo no SAP; B (sobraRef) sobra
+    const diaR = a.ur.map(r => r.dia).sort()[a.ur.length - 1];
+    const alvos = [soma(a.ur.map(r => r.q))].concat(a.ur.map(r => r.q));
+    for (let i = 0; i < alvos.length && !a.provavelRef; i++) {
+      for (const c of sobraRef.get(chaveQ(alvos[i])) || []) {
+        const b = analise.get(c.op);
+        if (!b || c.op === a.op || b.provavelRef || Math.abs(difDias(c.dia, diaR)) > REF_OP_DIAS) { continue; }
+        if (a.pn && b.pn && a.pn !== b.pn) { continue; }
+        a.provavelRef = c.op; b.provavelRef = a.op; break;
+      }
+    }
+  }
 
   // 3) packing × GMS (global, por PN + metragem + tempo)
   casarPacking(slices, lances, pnPorOP, sap);
@@ -300,7 +346,7 @@ function conferir(
   for (const s of slices) { if (s.opCasada) { packingPorOP.set(s.opCasada, (packingPorOP.get(s.opCasada) || 0) + s.q); } }
 
   // 3b) packing do GMS (Packing_Pallets): casamento EXATO por ID de lance (v1.1.0)
-  const pallets: Pallet[] = palletsIn.map(p => {
+  let pallets: Pallet[] = palletsIn.map(p => {
     const t = instanteUTC(txt(pega(p.imp, p.DataHoraImp)));
     return {
       id: Number(pega(pega(p.id, p.ID), p.Id)) || 0, ficha: Number(pega(p.ficha, p.FichaID)) || 0, n: Number(pega(p.pallet, p.Pallet)) || 0,
@@ -308,6 +354,27 @@ function conferir(
       total: num(pega(p.total, p.TotalM)), t: t, dia: diaDe(t)
     };
   }).filter(p => p.id > 0 && p.ids.length > 0);
+  const lancePorId = new Map<number, Lance>();
+  for (const l of lances) { lancePorId.set(l.id, l); }
+  // v1.2.0 reimpressao: cada impressao do packlist grava uma linha nova. Na mesma ficha, do mais novo para o mais velho,
+  // pallet cujos lances existentes ja estao num pallet impresso depois e reimpressao: sai da conferencia.
+  // Lance com ID menor que o menor carregado nao da para saber se existe: conta como existente.
+  const minIdLance = lances.length ? lances.reduce((m, l) => l.id < m ? l.id : m, lances[0].id) : 0;
+  const existe = (i: number) => lancePorId.has(i) || i < minIdLance;
+  const reimpresso = new Map<number, number>();   // id do pallet -> id do pallet que o substitui
+  const porFicha = new Map<string, Pallet[]>();
+  for (const p of pallets) { const k = p.ficha ? "F" + p.ficha : "O" + p.op; const l = porFicha.get(k); if (l) { l.push(p); } else { porFicha.set(k, [p]); } }
+  for (const grupo of valoresMap(porFicha)) {
+    grupo.sort((x, y) => y.t - x.t || y.id - x.id);
+    const coberto = new Map<number, number>();   // lance -> pallet mais novo que o tem
+    for (const p of grupo) {
+      const vivos = p.ids.filter(existe);
+      if (vivos.length && vivos.every(i => coberto.has(i))) { reimpresso.set(p.id, coberto.get(vivos[0]) || 0); continue; }
+      if (!vivos.length && p.id !== grupo[0].id) { reimpresso.set(p.id, grupo[0].id); continue; }   // so lance apagado, e ha impressao mais nova
+      for (const i of p.ids) { if (!coberto.has(i)) { coberto.set(i, p.id); } }
+    }
+  }
+  pallets = pallets.filter(p => !reimpresso.has(p.id));
   const palletsDoLance = new Map<number, number[]>();
   for (const p of pallets) {
     for (const i of p.ids) {
@@ -315,8 +382,6 @@ function conferir(
       if (!l) { palletsDoLance.set(i, [p.id]); } else if (l.indexOf(p.id) < 0) { l.push(p.id); }
     }
   }
-  const lancePorId = new Map<number, Lance>();
-  for (const l of lances) { lancePorId.set(l.id, l); }
   for (const l of lances) {
     const ps = palletsDoLance.get(l.id);
     if (ps && !l.slice) { l.slice = "P" + ps[0]; packingPorOP.set(l.op, (packingPorOP.get(l.op) || 0) + l.q); }
@@ -347,8 +412,9 @@ function conferir(
   for (const op of chavesSet(escopo)) {
     const a = analise.get(op);
     const ab = abertos.get(op);
-    if (!a) {
-      // aberto que saiu da janela de leitura: nao da para reconferir, mantem como esta
+    if (!a || !noAlcance(op)) {
+      // OP que comecou antes do piso (ou sem dado carregado): nao da para reconferir, mantem como esta (v1.2.0)
+      if (ab) { abertosForaAlcance++; }
       continue;
     }
     conferidas++;
@@ -356,12 +422,13 @@ function conferir(
     const cat = classificar(a, tol);
     const pack = packingPorOP.get(op) || 0;
     let catFinal = cat;
-    let detalhe = cat ? detalharOP(a, cat) : "";
+    const par = analise.get(a.provavel || a.provavelRef) || null;
+    let detalhe = cat ? detalharOP(a, cat, par, tol) : "";
     const procOP = procPorOP.get(op) || "";
     if (procOP !== "" && !ehFinalizada(procOP) && !ehExtracao(procOP) && a.sap > 0) {
       // SAP so lanca depois do apontamento na cabine (Extr./Teste): lancamento com a OP em etapa anterior e erro
       catFinal = CAT.SAP_CEDO;
-      detalhe = "No GMS a OP está em " + procOP + " (ainda não chegou à Extração/Teste), mas o SAP já lançou " + fmt(a.sap) + " m" + (cat ? " | " + detalharOP(a, cat) : "");
+      detalhe = "No GMS a OP está em " + procOP + " (ainda não chegou à Extração/Teste), mas o SAP já lançou " + fmt(a.sap) + " m" + (cat ? " | " + detalharOP(a, cat, par, tol) : "");
     }
     if (!cat) {
       // GMS x SAP ok: cobra packing de lance cujo dia de cobranca ja chegou
@@ -489,7 +556,9 @@ function conferir(
       itens.push({
         chave: k, idLista: Number(ab.id) || 0, op: "", pn: "", categoria: ab.categoria || "", prioridade: 99, status: "Resolvido",
         gmsM: 0, refugoGmsM: 0, sapM: 0, packingM: 0, difM: 0, provavelOP: "",
-        detalhe: "Conferido em " + dm(d) + ": pallet/packing manual removido ou fora da janela.", acao: "", quemResolve: "", cabine: "", dataRef: d, corpoSP: "", corpoSPNovo: ""
+        detalhe: "Conferido em " + dm(d) + ": " + (reimpresso.has(Number(k.substring(3))) && k.startsWith("PP ")
+          ? "reimpressão do packlist (os lances estão no pallet " + reimpresso.get(Number(k.substring(3))) + ", impresso depois)."
+          : "pallet/packing manual removido ou fora da janela."), acao: "", quemResolve: "", cabine: "", dataRef: d, corpoSP: "", corpoSPNovo: ""
       });
     }
   }
@@ -595,7 +664,7 @@ function analisarOP(op: string, ls: Lance[], rs: Refugo[], ss: DocSap[], pn: str
     op: op, pn: pn, gms: arred(g), ref: arred(r), sap: arred(s), dif: arred(g + r - s),
     ug: ls.filter(l => !l.usado), us: us, ur: refRest, dup: dup,
     temSap: ss.length > 0, temGms: ls.length + rs.length > 0,
-    cab: cabs.length ? cabs[cabs.length - 1].replace("CABINE_", "") : "", provavel: "", refGraca: 0
+    cab: cabs.length ? cabs[cabs.length - 1].replace("CABINE_", "") : "", provavel: "", refGraca: 0, provavelRef: ""
   };
 }
 
@@ -603,22 +672,32 @@ function classificar(a: AnaliseOP, tol: number): Categoria | null {
   if (Math.abs(a.dif - a.refGraca) <= tol) { return null; }   // so falta refugo ainda no prazo
   if (!a.temSap) { return a.provavel ? CAT.OP_ERRADA : CAT.GMS_SEM_SAP; }
   if (!a.temGms) { return CAT.SAP_SEM_GMS; }
+  // v1.2.0: doc do usuario de refugo que sobra e refugo, nao lance
+  const usProd = a.us.filter(s => !ehUsrRefugo(s.user));
+  const usRef = a.us.filter(s => ehUsrRefugo(s.user));
   if (a.provavel && (a.ug.length > 0 || a.us.length > 0)) { return CAT.LANCE_OP_ERRADA; }
-  if (a.ug.length && a.us.length) { return CAT.METRAGEM; }
-  if (a.us.length) { return CAT.SAP_LANCE; }
+  if (a.ug.length && usProd.length) { return CAT.METRAGEM; }
+  if (usProd.length) { return CAT.SAP_LANCE; }
   if (a.ug.length) { return CAT.GMS_LANCE; }
-  if (a.dup.length || a.dif < 0) { return CAT.REF_MAIS; }
+  if (a.provavelRef) { return CAT.REF_OP; }
+  if (a.dup.length || usRef.length || a.dif < 0) { return CAT.REF_MAIS; }
   if (a.ur.length > 0 || a.dif > 0) { return CAT.REF_FALTA; }
   return CAT.OUTRA;
 }
 
-function detalharOP(a: AnaliseOP, c: Categoria): string {
+function detalharOP(a: AnaliseOP, c: Categoria, par: AnaliseOP | null, tol: number): string {
   const partes: string[] = [];
   const dif = (a.dif > 0 ? "+" : "") + fmt(a.dif) + " m";
   partes.push("GMS " + fmt(a.gms) + " + refugo " + fmt(a.ref) + " × SAP " + fmt(a.sap) + " (" + dif + ")");
   if (a.provavel) { partes.push("Provável OP: " + a.provavel); }
+  if (a.provavelRef && c === CAT.REF_OP) { partes.push("Refugo trocado com a OP " + a.provavelRef + " (mesmo material)"); }
+  if ((c === CAT.LANCE_OP_ERRADA || c === CAT.REF_OP) && par) {
+    const resto = arred(a.dif + par.dif);
+    partes.push(Math.abs(resto) <= tol ? "Troca entre OPs do mesmo material: o saldo das duas OPs bate; falta só a OP certa"
+      : "Parte é troca com a OP " + par.op + "; somando as duas OPs sobram " + (resto > 0 ? "+" : "") + fmt(resto) + " m, que são divergência real");
+  }
   if (a.ug.length) { partes.push("No GMS e não no SAP: " + listar(a.ug.map(l => fmt(l.q) + " m (" + dm(l.dia) + " " + hm(l.t) + ", Id " + l.id + ")"), 6)); }
-  if (a.us.length) { partes.push("No SAP e não no GMS: " + listar(a.us.map(s => fmt(s.q) + " m (doc " + s.doc + ", " + dm(s.dia) + ", " + s.user + ")"), 6)); }
+  if (a.us.length) { partes.push("No SAP e não no GMS: " + listar(a.us.map(s => fmt(s.q) + " m (doc " + s.doc + ", " + dm(s.dia) + ", " + s.user + (ehUsrRefugo(s.user) ? ", lote de refugo" : "") + ")"), 6)); }
   if (a.dup.length) { partes.push("Refugo repetido no SAP: " + listar(a.dup.map(s => fmt(s.q) + " m (doc " + s.doc + ", " + dm(s.dia) + ", " + s.user + ")"), 6)); }
   if (a.ur.length) { partes.push("Refugo do GMS sem lançamento: " + listar(a.ur.map(r => fmt(r.q) + " m " + r.cod.substring(0, 1) + " (" + dm(r.dia) + ")"), 6)); }
   if (a.refGraca) { partes.push(fmt(a.refGraca) + " m desse refugo ainda está no prazo de lançamento do SAP"); }
@@ -629,14 +708,15 @@ function montarItem(op: string, ab: Aberto | undefined, a: AnaliseOP, c: Categor
   const st = status === "Resolvido" ? "Resolvido" : (ab && ab.status === "Justificado" ? "Justificado" : "Aberto");
   return {
     chave: op, idLista: ab ? Number(ab.id) || 0 : 0, op: op, pn: a.pn, categoria: c.nome, prioridade: c.prio, status: st,
-    gmsM: a.gms, refugoGmsM: a.ref, sapM: a.sap, packingM: arred(pack), difM: a.dif, provavelOP: a.provavel,
+    gmsM: a.gms, refugoGmsM: a.ref, sapM: a.sap, packingM: arred(pack), difM: a.dif, provavelOP: a.provavel || a.provavelRef,
     detalhe: detalhe, acao: c.acao, quemResolve: c.quem, cabine: a.cab, dataRef: d, corpoSP: "", corpoSPNovo: ""
   };
 }
 
 /** Processo da ficha sem acento/caixa: "Finalizado" e "Extr./Teste" sao as unicas etapas em que o SAP pode ter lancamento. */
 function semAcento(s: string): string { return String(s).toLowerCase().replace(/[áàâã]/g, "a").replace(/[éê]/g, "e").replace(/í/g, "i").replace(/[óôõ]/g, "o").replace(/ú/g, "u").replace(/ç/g, "c").trim(); }
-function ehFinalizada(p: string): boolean { return semAcento(p) === "finalizado"; }
+function ehFinalizada(p: string): boolean { return semAcento(p).indexOf("finaliz") === 0; }   // Finalizado e Finalizada (v1.2.0)
+function ehUsrRefugo(u: string): boolean { return USR_REFUGO.indexOf(String(u).trim().toUpperCase()) >= 0; }
 function ehExtracao(p: string): boolean { return semAcento(p).indexOf("extr") === 0; }
 
 function itemPallet(chave: string, ab: Aberto | undefined, op: string, pn: string, totalM: number, c: Categoria, detalhe: string, d: string, status: string = "Aberto"): ItemConferencia {
@@ -788,6 +868,10 @@ function montarHtml(r: Resultado, sap: DocSap[], d: string): string {
         "<td style=\"" + td + "\">" + esc(i.detalhe) + "</td></tr>";
     }
     h += "</table>";
+  }
+  if (abertosForaAlcance > 0) {
+    h += "<p style=\"font-size:12px;color:" + C.alerta + ";margin-top:12px;\">" + abertosForaAlcance + " pendência(s) aberta(s) de OP que começou antes de " + dm(pisoAlcance) +
+      " (limite do que o fluxo carrega): não foram reconferidas e seguem como estão. Feche pela tela (Justificar) ou corrija na origem.</p>";
   }
   if (r.refugoAguardandoM > 0) {
     h += "<p style=\"font-size:12px;color:" + C.suave + ";margin-top:12px;\">" + fmt(r.refugoAguardandoM) + " m de refugo apontado no GMS ainda não está no SAP, " +
