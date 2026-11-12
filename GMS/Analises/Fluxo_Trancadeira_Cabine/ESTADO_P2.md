@@ -4,6 +4,13 @@ Atualizado em 12/11/2026 (madrugada). **Missão pausada no marco 1**, pela regra
 
 Barra no início: geral 84%, Fable 62%, janela de 5 h 53%. Na pausa: geral 87%, Fable 69%, janela de 5 h 78%.
 
+## Marco 2 (12/11/2026, commitado): what-if e APS. **Pausado de novo: janela de 5 h em 99%** (geral 90%, Fable 74%; no início 88 / 88 / 71)
+- `gemeo/gemeo_whatif.py` (7 s): grava `saida/whatif_cenarios.csv`, `whatif_etapas.csv`, `whatif_inverso.csv`. Mix de 758 OPs dos últimos 90 dias, demanda base 38.822 m/semana liberados. Cenário base atende 98,9%, lead time 35,7 h (menor que os 56 h reais: a fábrica simulada começa vazia e a liberação é regular). Demanda +30% ainda atende 98%; +50% bate no limite de máquina da Trançagem (pessoa não resolve).
+- **Decisão a conferir:** no 3º turno ninguém aponta na Trançagem (equipe típica 0). Com a regra mín(posições, pessoas × 3) o cenário base atendia só 62%, o que contradiz o histórico. Então, em turno aberto sem apontador, as máquinas seguem rodando (igual ao backtest) e pessoa a mais nesse turno não muda nada. Máquinas viram lotes simultâneos por posições ÷ 11.
+- `gemeo/gemeo_aps.py`: grava `saida/aps_regras.csv` e `aps_diario.csv`, semana de 17/08/2026 (80 OPs). **As três regras quase não diferem**: com a liberação real a Trançagem não forma fila no modelo e o resultado é idêntico (setup 148 h, 11 trocas de bitola, lead 29,7 h). Liberando a carteira na segunda, agrupar não reduz troca (a máquina de cada OP é a do histórico, fixa) e piora o lead time (81 h × 68 h). Para o APS render, falta deixar o gêmeo escolher a máquina.
+- `gemeo.py`: única mudança, `pri.get(i, a)` em `simular()` (OP fora de `pri` segue por chegada). Backtest rodado de novo: `GEMEO_BACKTEST.md` e os CSV do backtest não mudaram.
+- **Não feito nesta sessão:** itens 3 a 6 abaixo (Power BI, revisor, os dois documentos, auto-ataque), linha do diário e do `registro.md`.
+
 ## Feito (marco 1, commitado)
 - `gemeo/gemeo.py`: motor de eventos discretos, OP a OP, pelas 8 etapas (Mandril a Extração/Teste), com turnos da NORMA de 27/10 (MEL-250), fila, servidores por turno, retomada na virada, posições por trançadeira, setup da Trançagem em 3 níveis, rendimento de metros por etapa e leitura do Hora-Hora antigo para o mix de paradas.
 - `gemeo/gemeo_backtest.py`: calibra no treino (01/03 a 12/08/2026), mede no teste (13/08 a 05/10/2026), grava `gemeo/gemeo_parametros.json`, `gemeo/saida/backtest_diario.csv`, `gemeo/saida/backtest_resumo.csv` e `GEMEO_BACKTEST.md`.
@@ -16,7 +23,7 @@ Barra no início: geral 84%, Fable 62%, janela de 5 h 53%. Na pausa: geral 87%, 
 - **A mediana fixa de metros por dia ainda erra menos que o gêmeo** no diário (Extração 14,1%) e no semanal (11,0%). O gêmeo ganha com folga do modelo "só desloca" (37,2% no diário da Extração). Ou seja: para prever um dia comum de um período estável, a média basta; o gêmeo serve para o "e se" (mudar pessoas, demanda, sequência), que a média não responde.
 - O `kappa` da Trançagem ficou em 1,75 e o do Mandril em 0,5, as bordas da grade: sinal de ajuste frágil nessas duas etapas.
 
-## Falta (nesta ordem)
+## Falta (nesta ordem; itens 1 e 2 feitos no marco 2)
 1. **What-if de demanda × pessoas** (`gemeo/gemeo_whatif.py`): gerar OPs pelo mix dos últimos 90 dias, equipe por etapa e turno, 6 semanas com 2 de aquecimento; saída por cenário (atendimento, gargalo, ocupação, fila, lead time) em `gemeo/saida/whatif_*.csv`; conta inversa (pessoas para a demanda). Na Trançagem, máquinas rodando = mín(posições, pessoas × `tranc_maq_por_pessoa`, hoje 3,0).
 2. **APS simples** (`gemeo/gemeo_aps.py`): mesma carteira de uma semana real, comparar ordem de chegada × agrupar por mangueira e bitola × menor lote primeiro; `simular()` já aceita `pri` (prioridade por OP na Trançagem).
 3. **Power BI**: tabelas `tGemeoBacktest`, `tGemeoCenario`, `tGemeoEtapa`, `tGemeoAPS` em TMDL (ver o padrão dos `PowerBI/modelo/*.tmdl.md`) lendo os CSV de `gemeo/saida/`, com medidas DAX documentadas; atualizar `DAX_simulador.md`. Nada é publicado daqui.

@@ -279,7 +279,7 @@ def simular(lotes, P, cal, ate=None, pri=None, usar_setup=True, fator_tranc=1.0,
             r = info[i]; q[i] = q[i] * P["rend"][e]
             jobs.append({"id": i, "arr": a + P["transf"][e], "work": tempo(P, e, q[i], r.fam, r.maq, fator_tranc),
                          "maq": r.maq if e == "tranc" else None, "mang": r.mang, "fam": r.fam,
-                         "pri": (pri[i] if (pri and e == "tranc") else a)})
+                         "pri": (pri.get(i, a) if (pri and e == "tranc") else a)})   # OP fora de `pri` segue por chegada
         out, uso[e] = rodar_etapa(jobs, cal[e], por_maquina=(e == "tranc"), setup=setup if (e == "tranc" and usar_setup) else None,
                                   pos=P.get("tranc_pos") if e == "tranc" else None)
         res[e + "_i"] = res.id.map(lambda i: out.get(i, (np.nan, np.nan))[0]); res[e + "_f"] = res.id.map(lambda i: out.get(i, (np.nan, np.nan))[1])
