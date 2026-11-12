@@ -525,10 +525,10 @@ window.Motor = (() => {
     g.save(); g.globalAlpha = alfa; if (v.luz) { g.shadowColor = 'rgba(255,222,140,0.95)'; g.shadowBlur = 60; } g.drawImage(camada, 0, 0); g.restore();
   }
   function corpo(g, o, t, v, img, ent, sai, fade) {
-    const pf = POSES[o.pose] || POSES.neutro, s = pf(o._tp ?? t), seed = hash(o.id), esc = o.escala || 1, dir = o.flip ? -1 : 1, costas = o.costas || s.costas;
-    const tr = s.tremer ? (rnd(Math.floor(t * 30) + seed) - 0.5) * s.tremer * 2 : 0, balanco = o.pose === 'correndo' ? 0 : Math.sin(t * 1.7 + seed) * 0.012, res = Math.sin(t * 2.2 + seed) * 3;
+    const pf = POSES[o.pose] || POSES.neutro, X = o._fx, FX = X && window.Motor.FX, V2 = X && X.personagens, seed = hash(o.id), s = X ? FX.vida(pf(o._tp ?? t), o, t, seed) : pf(o._tp ?? t), esc = o.escala || 1, dir = o.flip ? -1 : 1, costas = o.costas || s.costas;
+    const tr = s.tremer ? (rnd(Math.floor(t * 30) + seed) - 0.5) * s.tremer * 2 : 0, balanco = o.pose === 'correndo' ? 0 : Math.sin(t * 1.7 + seed) * 0.012, res = Math.sin(t * 2.2 + seed) * 3 * (s._resp || 1);
     g.save(); g.translate(o.x * W + tr + (o.semEntrada ? 0 : (1 - clamp(t / 0.4)) * 60 * dir) - (1 - sai) * 50 * dir, GY + (o.y || 0) + (1 - ent) * 40 - fade * 140 * esc);
-    if (!v.semSombra && !v.luz) { g.fillStyle = 'rgba(0,0,0,0.38)'; g.beginPath(); g.ellipse(0, 4, 120 * esc, 18 * esc, 0, 0, Math.PI * 2); g.fill(); } // sombra no chão (os hóspedes não têm)
+    if (!v.semSombra && !v.luz) { if (X && X.sombra) FX.sombra(g, o, s, esc); else { g.fillStyle = 'rgba(0,0,0,0.38)'; g.beginPath(); g.ellipse(0, 4, 120 * esc, 18 * esc, 0, 0, Math.PI * 2); g.fill(); } } // sombra no chão (os hóspedes não têm)
     g.scale(esc * dir * (0.94 + 0.06 * ent), esc * (0.94 + 0.06 * ent));
     g.translate(0, -(s.quica || 0)); g.rotate((s.inclina || 0) + balanco);
     if (img) { const hgt = (o.altura || 760), wd = img.width * hgt / img.height; g.drawImage(img, -wd / 2, -hgt + res, wd, hgt); g.restore(); return; }
@@ -548,7 +548,7 @@ window.Motor = (() => {
       g.restore(); }
     if (v.dino && !costas) rrect(g, -40, sy + 30, 80, 110, 30, '#A9B98F'); // barriga clara do pijama de dinossauro
     if (v.barriga && !costas) { g.fillStyle = v.camisa; g.beginPath(); g.ellipse(10, sy + 122, 76, 60, 0, 0, Math.PI * 2); g.fill(); g.fillStyle = 'rgba(255,255,255,0.08)'; g.beginPath(); g.ellipse(-4, sy + 104, 40, 26, 0, 0, Math.PI * 2); g.fill(); }
-    rrect(g, -72, sy - 14, 144, 30, 14, 'rgba(0,0,0,0.12)');
+    rrect(g, -72, sy - 14, 144, 30, 14, 'rgba(0,0,0,0.12)'); if (V2) FX.roupa(g, v, s, sy, res, costas);
     if (v.mochila && !costas) { rect(g, -52, sy - 12, 16, 130, mc); rect(g, 36, sy - 12, 16, 130, mc); } // alças
     if (v.mochila && costas) { rrect(g, -80, sy + 4, 160, 176, 24, mc); rrect(g, -56, sy + 96, 112, 70, 16, 'rgba(0,0,0,0.25)'); } // de costas: a mochila inteira
     if (v.capuz) { rrect(g, -62, sy - 34, 124, costas ? 80 : 44, 22, v.camisa); rrect(g, -62, sy - 34, 124, costas ? 80 : 44, 22, 'rgba(0,0,0,0.22)'); if (!costas) { line(g, -12, sy + 8, -14, sy + 60, '#EDE4D3', 5); line(g, 12, sy + 8, 14, sy + 60, '#EDE4D3', 5); } } // capuz do moletom
@@ -564,17 +564,18 @@ window.Motor = (() => {
     if (v.estilo === 'longo') { rrect(g, -84, cy - 30, 56, 150, 26, v.cabelo); rrect(g, 28, cy - 30, 56, 150, 26, v.cabelo); } // cabelo comprido caindo dos lados (sem cobrir o queixo)
     if (v.estilo === 'coque') circ(g, -6, cy - 80, 32, v.cabelo);
     if (v.estilo === 'calvo') { circ(g, -66, cy - 2, 20, v.cabelo); circ(g, 66, cy - 6, 13, v.cabelo); } // só os lados, por trás da cabeça
-    circ(g, 0, cy, 70, v.pele);
+    circ(g, 0, cy, 70, v.pele); if (V2) FX.cabecaBase(g, v, s, cy, costas);
     if (costas) { // de costas: o cabelo cobre a cabeça, sem rosto
       if (v.estilo !== 'calvo' && v.estilo !== 'careca') { circ(g, 0, cy - 2, 74, v.cabelo); if (v.estilo === 'longo') rrect(g, -76, cy - 10, 152, 150, 40, v.cabelo); if (v.estilo === 'coque') circ(g, 0, cy - 74, 34, v.cabelo); }
       if (v.capuz) rrect(g, -70, cy + 40, 140, 50, 24, v.camisa); }
-    else if (v.estilo !== 'calvo' && v.estilo !== 'careca') { g.fillStyle = v.cabelo; g.beginPath(); g.arc(0, cy, 74, Math.PI * 0.98, Math.PI * 2.02); g.quadraticCurveTo(46, cy - 44, -10, cy - 36); g.quadraticCurveTo(-52, cy - 28, -74, cy + 6); g.fill(); }
+    else if (v.estilo !== 'calvo' && v.estilo !== 'careca') { if (V2) FX.cabelo(g, v, cy); else { g.fillStyle = v.cabelo; g.beginPath(); g.arc(0, cy, 74, Math.PI * 0.98, Math.PI * 2.02); g.quadraticCurveTo(46, cy - 44, -10, cy - 36); g.quadraticCurveTo(-52, cy - 28, -74, cy + 6); g.fill(); } }
     if (v.bobes) for (let i = 0; i < 5; i++) rrect(g, -62 + i * 26, cy - 96 + Math.abs(i - 2) * 9, 22, 34, 8, '#C7BBAE');
     if (v.touca) { rect(g, -46, cy - 102, 92, 34, '#F2F0EA'); rect(g, -46, cy - 74, 92, 6, '#CFCBC0'); }
     if (v.dino) { const dc = typeof v.dino === 'string' ? v.dino : '#4E6B4A'; for (let i = -1; i <= 1; i++) poly(g, [[i * 40 - 18, cy - 62 + Math.abs(i) * 10], [i * 40, cy - 104 + Math.abs(i) * 14], [i * 40 + 18, cy - 62 + Math.abs(i) * 10]], dc); }
     if (v.fone) { g.strokeStyle = '#26252B'; g.lineWidth = 12; g.beginPath(); g.arc(0, cy, 82, Math.PI * 1.05, Math.PI * 1.95); g.stroke(); rrect(g, -94, cy - 26, 26, 56, 10, '#26252B'); rrect(g, 68, cy - 26, 26, 56, 10, '#26252B'); }
     if (costas) { g.restore(); g.restore(); return; }
-    const fx = 16 + (s.rosto || 0), ey = cy - 4, lk = (s.olhar || 0), ly = (s.olharY || 0); g.lineCap = 'round';
+    const fx = 16 + (s.rosto || 0), ey = cy - 4, lk = (s.olhar || 0), ly = (s.olharY || 0), my = cy + 38; g.lineCap = 'round';
+    if (V2) FX.rosto(g, s, v, fx, ey, cy, t); else { // rosto original (episódios publicados)
     const eye = ex => {
       if (s.olho === 'ponto') circ(g, ex, ey, 7, P.deep);
       else if (s.olho === 'fixo') { circ(g, ex, ey, 17, '#FFF'); circ(g, ex + 2, ey + ly, 5, P.deep); } // arregalado e parado (não pisca)
@@ -590,7 +591,7 @@ window.Motor = (() => {
     };
     eye(fx - 24); eye(fx + 24);
     if (s.sobr) { const a = 12 * s.sobr; line(g, fx - 42, ey - 34 - a * 0.6, fx - 10, ey - 34 - a * 1.4, P.deep, 6); line(g, fx + 10, ey - 34 - a * 1.4, fx + 42, ey - 34 - a * 0.6, P.deep, 6); }
-    const my = cy + 38; g.strokeStyle = P.deep; g.fillStyle = P.deep; g.lineWidth = 7;
+    g.strokeStyle = P.deep; g.fillStyle = P.deep; g.lineWidth = 7;
     if (s.boca === 'reta') line(g, fx - 12, my, fx + 12, my, P.deep, 7);
     else if (s.boca === 'O') { g.beginPath(); g.ellipse(fx, my + 2, 14, 20 + Math.sin(t * 14) * 2, 0, 0, Math.PI * 2); g.fill(); } // boca em "o" no susto
     else if (s.boca === 'aberta') { g.beginPath(); g.ellipse(fx + 4, my, 16, 11, 0, 0, Math.PI * 2); g.fill(); }
@@ -598,6 +599,7 @@ window.Motor = (() => {
     else if (s.boca === 'triste') { g.beginPath(); g.arc(fx, my + 14, 20, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); }
     else if (s.boca === 'sorrisinho') { g.beginPath(); g.arc(fx, my - 10, 16, Math.PI * 0.2, Math.PI * 0.8); g.stroke(); }
     else if (s.boca === 'sorriso') { g.beginPath(); g.moveTo(fx - 34, my - 8); g.quadraticCurveTo(fx, my + 46, fx + 34, my - 8); g.closePath(); g.fill(); g.fillStyle = '#F4F0E6'; g.beginPath(); g.moveTo(fx - 28, my - 4); g.lineTo(fx + 28, my - 4); g.quadraticCurveTo(fx, my + 10, fx - 28, my - 4); g.fill(); } // sorriso largo demais
+    }
     if (s.rachado) { const rc = (pts) => { g.strokeStyle = '#2A2226'; g.lineWidth = 3.5; g.beginPath(); pts.forEach(([a, b], i) => i ? g.lineTo(fx + a, b) : g.moveTo(fx + a, b)); g.stroke(); }; // rachaduras saindo do sorriso
       rc([[-34, my - 8], [-50, my - 26], [-46, my - 46], [-60, my - 70]]); rc([[34, my - 8], [52, my - 22], [48, my - 40], [62, my - 56]]); rc([[-50, my - 26], [-64, my - 20]]); rc([[6, cy - 66], [16, cy - 46], [4, cy - 30]]); }
     if (v.bigode) { g.fillStyle = typeof v.bigode === 'string' ? v.bigode : v.cabelo; g.beginPath(); g.ellipse(fx - 13, my - 14, 18, 9, 0.15, 0, Math.PI * 2); g.ellipse(fx + 13, my - 14, 18, 9, -0.15, 0, Math.PI * 2); g.fill(); }
@@ -799,23 +801,29 @@ window.Motor = (() => {
     const idxEm = tt => { const i = cenas.findIndex(c => tt < c.t0 + c.dur); return i < 0 ? cenas.length - 1 : i; };
     function frame(tt) {
       const i = idxEm(tt), c = cenas[i], u = tt - c.t0, fr = Math.round(tt * FPS), tr = out(clamp(u / 0.3)), claro = !c._img && CENARIOS[c.cenario] && CENARIOS[c.cenario].claro, kk = clamp(u / c.dur);
+      const FX = window.Motor.FX, vis = FX ? FX.cfg(ep, c) : null; // camada visual opcional (motor_fx.js): só existe se o JSON tiver "visual"
       g.fillStyle = claro ? P.bege : P.deep; g.fillRect(0, 0, W, H);
       // câmera: zoom lento (Ken Burns) + pan vertical; susto = tremor no começo da cena
       const [z0, z1] = c.zoom || [1, 1.07], [p0, p1] = c.pan || [0, 0], zmin = 1 + 2 * Math.max(Math.abs(p0), Math.abs(p1)) / H, z = Math.max(lerp(z0, z1, kk), zmin), pan = lerp(p0, p1, kk);
       const susto = (c.personagens || []).some(p => p.pose === 'assustado') ? Math.exp(-u * 5) : 0, sx = (rnd(fr) - 0.5) * 40 * susto, sy2 = (rnd(fr + 7) - 0.5) * 40 * susto;
-      g.save(); g.translate(W / 2 + sx + (1 - tr) * 50 * (i % 2 ? -1 : 1), H / 2 + pan + sy2); g.scale(z, z); g.translate(-W / 2, -H / 2);
+      const cam = vis ? FX.camera(vis, c, u, kk, z) : null;
+      const mundo = g => { // tudo que fica dentro da câmera (o parâmetro g permite desenhar numa camada à parte no plongée/contraplongée)
+      g.save(); g.translate(W / 2 + sx + (1 - tr) * 50 * (i % 2 ? -1 : 1), H / 2 + pan + sy2); g.scale(z, z); g.translate(-W / 2, -H / 2); if (cam) FX.olhar(g, cam);
             if (c.desfoque) g.filter = `blur(${c.desfoque}px)`; // fundo desfocado nos closes
       if (c.cenario === 'olho_magico' || c.cenario === 'espelho' || c.cenario === 'punho') c._elenco = elenco; if (c._img) g.drawImage(c._img, 0, 0, W, H); else CENARIOS[c.cenario](g, u, c);
-      g.filter = 'none'; if (c.desfoque) rect(g, 0, 0, W, H, P.deep, 0.25);
-      (c.personagens || []).forEach(p => { if (p.ate == null || u < p.ate) personagem(g, p.sobe ? subida(p, u - (p.entra || 0)) : p, u - (p.entra || 0), c.dur, elenco, p._img); }); // p.entra = segundos de atraso da entrada
+      g.filter = 'none'; if (c.desfoque) rect(g, 0, 0, W, H, P.deep, 0.25); if (vis) FX.chao(g, vis, c, tt);
+      (c.personagens || []).forEach(p => { if (p.ate == null || u < p.ate) { const po = p.sobe ? subida(p, u - (p.entra || 0)) : p; personagem(g, vis && (vis.personagens || vis.movimento || vis.sombra || p.olha != null) ? FX.pers(po, c, vis, u) : po, u - (p.entra || 0), c.dur, elenco, p._img); } }); // p.entra = segundos de atraso da entrada
       const s0 = c._segs[0], cx = { u, inicio: palavra => s0 ? inicioGrupo(s0.obj, palavra, s0.ini, s0.dur) : 0 }; // gatilhos de objetos seguem a primeira fala
       (c.objetos || []).forEach(ob => { const uu = u - (ob.entra ?? 0.3); if (uu >= 0) OBJETOS[ob.tipo](g, ob, uu, cx); });
-      g.restore();
+      if (vis) FX.frente(g, vis, c, u, kk);
+      g.restore(); };
+      if (cam && cam.key) FX.keystone(g, mundo, cam); else mundo(g);
       if (!claro) rect(g, 0, 0, W, H, P.deep, c.escurece ?? ep.escurece ?? 0.12); // escurece o conjunto (noite)
+      if (vis) FX.atmos(g, vis, c, tt, fr, cv); // atmosfera: abaixo do texto de tela, das faixas e da legenda
       if (c.textoTela) textoTela(g, c.textoTela, u - (c.textoEntra || 0), c.textoY ?? ep.textoY ?? 470, c.textoMono);
       faixaTitulo(g, ep, tt); if (ep.proxima) faixaFinal(g, ep, tt, DUR);
       let sg = null; for (const x of c._segs) if (u >= x.ini - 0.05) sg = x; // fala ativa (a anterior continua na tela até a próxima começar)
-      if (sg) { Object.assign(sg.obj, { legendaY: c.legendaY ?? ep.legendaY, legendaTam: c.legendaTam ?? ep.legendaTam }); if (modoFrase) legendaFrase(g, sg.texto, clamp((u - sg.ini) / sg.dur), dest); else legendaPalavras(g, sg.obj, u, sg.ini, sg.dur, dest); } // legenda por cima das faixas
+      if (sg) { Object.assign(sg.obj, { legendaY: c.legendaY ?? (vis && vis.legenda === 'auto' ? FX.legendaY(ep, c, vis, z) : ep.legendaY), legendaTam: c.legendaTam ?? ep.legendaTam }); if (vis && vis.legendaFundo) FX.fundoLegenda(g, vis, sg.obj.legendaY || 1030, sg.obj.legendaTam || 110); if (modoFrase) legendaFrase(g, sg.texto, clamp((u - sg.ini) / sg.dur), dest); else legendaPalavras(g, sg.obj, u, sg.ini, sg.dur, dest); } // legenda por cima das faixas
       const k = 1 - tr; if (k > 0) { rect(g, 0, 0, W, H, claro ? P.bege : P.deep, Math.pow(k, 1.5)); if (u < 0.1 && i > 0) { rect(g, 0, rnd(fr) * H, W, 6, ep.cor || P.accent, 0.8); rect(g, 0, rnd(fr + 3) * H, W, 3, P.paper, 0.5); } }
       grain(g, W, H, claro ? 0.04 : 0.07);
       if (c.glitch && u < c.glitch) { const ga = 1 - u / c.glitch; for (let q2 = 0; q2 < 5; q2++) { const gy = rnd(fr * 7 + q2) * H, gh = 16 + rnd(fr + q2 * 3) * 80, gdx = (rnd(fr * 3 + q2) - 0.5) * 140 * ga; g.drawImage(cv, 0, gy, W, gh, gdx, gy, W, gh); } rect(g, 0, rnd(fr + 11) * H, W, 5, P.accent, 0.7 * ga); } // glitch de recap (c.glitch = segundos)
@@ -870,8 +878,14 @@ window.Motor = (() => {
     if (q.has('mix')) { const m = await mixar(); window.MIX_INFO = m.info;
       if (q.has('wav')) { const b = new AudioBuffer({ length: m.L.length, numberOfChannels: 2, sampleRate: SR }); b.copyToChannel(m.L, 0); b.copyToChannel(m.R, 1); window.MIX_WAV = Sfx.toWav(b); }
       document.title = 'ready ' + DUR.toFixed(2); return; }
+    // &hash=1: impressão digital dos quadros (3 por cena), usada pelo linha_base.js para provar que episódio publicado não mudou
+    if (q.has('hash')) { const fnv = () => { const d = new Uint32Array(g.getImageData(0, 0, W, H).data.buffer); let h = 0x811c9dc5; for (let i = 0; i < d.length; i++) { h ^= d[i]; h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(16).padStart(8, '0'); };
+      const qs = []; for (const c of cenas) for (const u of [0.15, c.dur * 0.5, c.dur - 0.2]) { frame(c.t0 + clamp(u, 0, c.dur - 0.01)); qs.push(fnv()); }
+      window.HASH_INFO = { id: opts.id, dur: +DUR.toFixed(2), n: qs.length, hash: hash(qs.join('')).toString(16), quadros: qs }; document.title = 'ready ' + DUR.toFixed(2); return; }
+    if (q.has('tempo')) { const n = +q.get('tempo') || 60, t0 = performance.now(); for (let k = 0; k < n; k++) { frame((k + 0.5) / n * DUR); g.getImageData(0, 0, 1, 1); } const ms = (performance.now() - t0) / n;
+      window.TEMPO_INFO = { id: opts.id, quadros: n, msPorQuadro: +ms.toFixed(2), estimativaRenderS: +(ms * DUR * FPS / 1000).toFixed(1), dur: +DUR.toFixed(2) }; document.title = 'ready ' + DUR.toFixed(2); return; }
     if (!render) {
-      const ts = (q.get('t') || '1').split(',').map(Number);
+      const ts = q.get('t') === 'auto' ? cenas.map(c => +(c.t0 + c.dur * 0.55).toFixed(2)) : (q.get('t') || '1').split(',').map(Number);
       if (ts.length === 1) { frame(ts[0]); cv.style.cssText = 'width:360px'; document.body.append(cv); }
       else { const sw = 270, sh = 480, cols = Math.min(6, ts.length), sheet = document.createElement('canvas'); sheet.width = sw * cols; sheet.height = sh * Math.ceil(ts.length / cols); const sg = sheet.getContext('2d');
         ts.forEach((tt, n) => { frame(tt); sg.drawImage(cv, (n % cols) * sw, Math.floor(n / cols) * sh, sw, sh); }); sheet.style.cssText = 'width:100%'; document.body.append(sheet); }
