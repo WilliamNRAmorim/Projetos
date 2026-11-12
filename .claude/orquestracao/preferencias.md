@@ -56,3 +56,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-11 | Uiu: aprovou o plano de 5 passos (instruções v3.1, modelo Claude Opus 4.8, Code interpreter) e deu o sim para ligar o Code interpreter
 2026-11-11 | AM-DM-02: recusou a recomendada de apagar a folha simulada de 10/11 depois do teste; ela fica no SharePoint
 2026-11-11 | Uiu: aprovou o plano da ferramenta Somar no GMS e deu sim para criar o fluxo, gravar os 3 arquivos de conhecimento e indexar DataHoraRefugo
+2026-11-12 | Conferência SAP: aceitou o plano v1.2.0 inteiro e deu sim para OneDrive, fluxo e lista (reabrir 67, justificar 158)
