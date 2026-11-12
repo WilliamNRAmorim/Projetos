@@ -2,6 +2,51 @@
 
 > Plano aprovado pelo William em 09/11/2026 (escopo: só Hora-Hora de mangueira, sem Montagem). Execução fase a fase; nada no app, no SharePoint ou no modelo `(GMS)` muda sem o "libero" dele.
 
+## Atualização de 12/11/2026: o plano depois da hora cheia (MEL-267) e do redesign (MEL-268)
+
+**Documento conferido de novo.** O PDF que o William mandou em 12/11 (`Factbird Governance (1).pdf`) é o mesmo arquivo de `Dados_Brutos/Factbird_Governance_OEE.pdf` (mesmo MD5). As páginas 10, 11 e 12 batem com o resumo abaixo e com as seções A e B:
+- OEE2 = valorizado ÷ tempo de produção. O tempo de produção já tira o "sem atividade" e as "atividades não produtivas".
+- Troca, setup e limpeza são perda de disponibilidade.
+- Quebra, microparada, ociosidade e velocidade são perdas na operação.
+- Refugo é perda de qualidade.
+- TCU = valorizado ÷ tempo total (24/7).
+- A Danfoss chama o OEE2 só de "OEE".
+
+**Estado em 12/11.** Só a fase 0 está feita (este plano). O modelo não tem nenhuma medida OEE2 e o relatório não tem a página. **Hoje o Hora-Hora não calcula OEE2.**
+
+**O que muda nas seções B e D por causa do que entrou em 11/11:**
+1. **Grão.** Passa a ser a `fHoraCheia`, não a `fHoraHora`:
+   - dia produtivo de 05:00 a 05:00 (`Data BI`);
+   - `Turno BI` em 05-14, 14-22 e 22-05;
+   - `Min` = minutos da fatia;
+   - `P` = `fHoraCheia[Parado]`, que já vem capado na fatia.
+   - O achado 4 (linhas com `Minutos` = 0) já está resolvido: a `fHoraCheia` usa a duração do rótulo.
+2. **Pausa de 45 min.** Segue a regra da seção B, com o turno de máquina = `Célula × Data BI × Turno BI` e Real > 0.
+   - A `fHoraCheia` já coloca os 45 min na janela do Almoço lançado, ou na hora padrão quando o turno não lançou Almoço. Para o OEE2 isso só muda onde a pausa aparece no gráfico por hora; o total por turno é o mesmo.
+3. **A meta da `fHoraCheia` já vem sem os 45 min da refeição.**
+   - O valorizado oficial não usa a meta (Janela − Σ P), então não é afetado.
+   - A medida de controle `Valorizado (Real)` usa a meta. Ela precisa da meta **cheia**: coluna nova `Meta Cheia` = `Meta Hora × Fração`. Com a meta descontada, a janela da refeição contaria como tempo valorizado.
+4. **Os 21h35 (1295/1440)** continuam só no cartão Meta e na HH Aderência. Nunca entram no OEE2.
+5. **Página.** `pg_oee2` "OEE2 Trançagem" nasce no layout novo (menu lateral, cabeçalho e cardVisual) e vira o item "OEE2" no menu Mangueira das 11 páginas.
+
+**Passos para entregar, cada um com o "sim" do William:**
+- **1. Modelo** (script TMDL, aplicado com Libero; o **revisor** confere a regra de parada e a pausa):
+  - `dMotivoParada` com Família, Categoria, No OEE2, Componente, Ordem e Cor da seção A, gerada pelo `gerar_mapa_motivos.py`;
+  - coluna `Meta Cheia` na `fHoraCheia`;
+  - tabela `dEtapaOEE`;
+  - medidas da pasta OEE2.
+  - Nenhuma medida existente muda.
+- **2. Validação:** script pandas sobre o CSV da lista. O BI precisa bater em ±0,5 ponto no mesmo período e filtro, por máquina e por turno.
+- **3. Relatório:** `pg_oee2` com os cartões OEE2, TCU, D, P e Q (referência de set a nov, sem meta fixa), cascata nas cores das famílias, Pareto por categoria e por motivo, matriz máquina × turno, linha por dia e rodapé com as limitações. Mais o item no menu.
+- **4. App** (depois): dropdown de motivos ordenado por família. Depende do export do App.Formulas.
+
+**O que dá para garantir e o que não dá:**
+- **Dá:** depois dos passos 1 a 3, o BI calcula OEE2 e TCU exatamente pela definição das páginas 10 a 12, com cada motivo na família certa.
+- **Não dá sem sensor:**
+  - separar microparada e velocidade reduzida de parada (só pela classificação do motivo);
+  - a qualidade, que fica pela data do refugo.
+- Por isso o cartão leva o rótulo "OEE2 (apontamento)".
+
 ## Contexto
 Escopo: só o Hora-Hora da célula de mangueiras (Trançagem; Cobertura, Mandril e Tubo só no mapeamento). A Montagem fica fora.
 O William quer que o Hora-Hora siga o padrão de apontamento do OEE da Danfoss (o OEE2 do Factbird, que a Danfoss chama só de OEE) e que o Power BI chegue ao nível do relatório de paradas do Factbird: OEE2 e TCU, cascata, Pareto por categoria e causa, por célula, turno, mangueira e dia.
