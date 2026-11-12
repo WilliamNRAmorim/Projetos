@@ -488,6 +488,19 @@
           "displayFolder": "Painel (relatório)"
         },
         {
+          "name": "VG Cabine (m)",
+          "dataType": "Double",
+          "expression": "VAR __Datas = VALUES ( dCalendario[Date] )\nVAR __FT = ISFILTERED ( dTurno[Turno] )\nVAR __Turnos = VALUES ( dTurno[Ordem] )\nVAR __SelM = FILTER ( FILTERS ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) )\nVAR __FM = COUNTROWS ( __SelM ) < COUNTROWS ( FILTER ( ALL ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) ) )\nVAR __Maqs = SELECTCOLUMNS ( __SelM, \"@M\", UPPER ( fHoraCheia[Célula] ) )\nVAR __L =\n    FILTER (\n        ALL ( fFluxoBase ),\n        fFluxoBase[E] = 8\n            && fFluxoBase[Dia] IN __Datas\n            && ( NOT __FT || fFluxoBase[T] IN __Turnos )\n            && ( NOT __FM || fFluxoBase[M] IN __Maqs )\n    )\nRETURN\n    SUMX ( __L, fFluxoBase[Q] )",
+          "formatString": "#,0",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
+          "name": "VG Cabine Status",
+          "dataType": "Text",
+          "expression": "VAR __Datas = VALUES ( dCalendario[Date] )\nVAR __FT = ISFILTERED ( dTurno[Turno] )\nVAR __Turnos = VALUES ( dTurno[Ordem] )\nVAR __SelM = FILTER ( FILTERS ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) )\nVAR __FM = COUNTROWS ( __SelM ) < COUNTROWS ( FILTER ( ALL ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) ) )\nVAR __Maqs = SELECTCOLUMNS ( __SelM, \"@M\", UPPER ( fHoraCheia[Célula] ) )\nVAR __L =\n    FILTER (\n        ALL ( fFluxoBase ),\n        fFluxoBase[E] = 8\n            && fFluxoBase[Dia] IN __Datas\n            && ( NOT __FT || fFluxoBase[T] IN __Turnos )\n            && ( NOT __FM || fFluxoBase[M] IN __Maqs )\n    )\nVAR __Q = SUMX ( __L, fFluxoBase[Q] )\nVAR __nD = COUNTROWS ( DISTINCT ( SELECTCOLUMNS ( FILTER ( __L, NOT ISBLANK ( fFluxoBase[Q] ) ), \"@Dia\", fFluxoBase[Dia] ) ) )\nRETURN\n    IF ( ISBLANK ( __Q ), \"Sem cabine no período\", \"Média de \" & FORMAT ( DIVIDE ( __Q, __nD ), \"#,0\" ) & \" m/dia (\" & __nD & IF ( __nD = 1, \" dia)\", \" dias)\" ) )",
+          "displayFolder": "Painel (relatório)"
+        },
+        {
           "name": "VG Montagem Status",
           "dataType": "Text",
           "expression": "VAR p = [% Montagem] RETURN IF(ISBLANK(p), \"Sem produção da Montagem\", IF(p >= 1, \"▲ No ritmo · \", IF(p >= 0.9, \"▼ Atenção · \", \"▼ Abaixo · \")) & FORMAT(p, \"0%\") & \" da meta\")",
