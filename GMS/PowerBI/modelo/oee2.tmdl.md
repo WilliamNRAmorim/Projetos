@@ -593,7 +593,7 @@ createOrReplace
 			displayFolder: OEE2
 
 		measure 'OEE2 Ref. TCU' =
-				"Ref. set–nov: 19%"
+				"Ref. set–nov: 20%"
 			displayFolder: OEE2
 
 ```
@@ -616,7 +616,7 @@ createOrReplace
 - `OEE2 Refugo (m)`: `TiposErros` não tem relação com a `fHoraCheia`; o corte de máquina é pelo texto da trançadeira normalizada (tira "-" e ".") e o de período é pela relação que já existe com `dCalendario[DataRefugo]`. Com turno filtrado, usa o `Turno Erro`.
 - `OEE2 TCU`: 11 máquinas da `fx_CelulasTrancagem` fixas na medida; com a segmentação de Máquina, conta só as selecionadas.
 - `OEE2 Aviso Velocidade`: não capa em silêncio. Avisa quando Real ÷ Meta Cheia (janelas com produção) passa de 100% (velocidade validada abaixo do real, o caso da TH01 nas duas passadas, MEL-241) ou quando `OEE2 Valorizado (Real)` passa de `OEE2 Valorizado` em mais de 2%. Só aparece na linha de total do turno da matriz.
-- Extras além da lista pedida (precisam estar no modelo para a página funcionar): `OEE2 Refugo (m)`, `OEE2 Minutos Parados` (Pareto), `OEE2 Cor Família` (cor do Pareto), `OEE2 Ref. OEE2` e `OEE2 Ref. TCU` (texto fixo "Ref. set–nov: 52%" e "19%").
+- Extras além da lista pedida (precisam estar no modelo para a página funcionar): `OEE2 Refugo (m)`, `OEE2 Minutos Parados` (Pareto), `OEE2 Cor Família` (cor do Pareto), `OEE2 Ref. OEE2` e `OEE2 Ref. TCU` (texto fixo "Ref. set–nov: 52%" e "20%").
 
 ## 3) Consultas de conferência (DAX query view, depois do refresh)
 Critério: **±0,5 ponto** em D, P, Q, OEE2 e TCU contra o `oee2_referencia_2026-09-04_a_11-06.csv` (mesmo período, mesmo filtro); minutos iguais ao inteiro. Os números vêm do `conferir_oee2.py` (CSV de 06/11 e `TiposErros` de 06/11; o modelo vivo tem dados mais novos, então **filtre até 06/11**, como abaixo, ou compare por dia). Se a lista foi corrigida depois de 06/11, diferenças pequenas são esperadas.

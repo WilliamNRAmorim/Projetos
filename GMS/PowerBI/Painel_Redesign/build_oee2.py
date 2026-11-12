@@ -160,7 +160,7 @@ def cartoes(out):
     """Faixa de cardVisual: OEE2, TCU, Disponibilidade, Performance e Qualidade (mesma geometria da pg_horahora)."""
     base = ler(vis_path("pg_horahora", "kpi0"))
     lista = [("OEE2", "OEE2", "OEE2 Ref. OEE2", "Cartão: OEE2 (apontamento) do período. Referência de set a nov: 52%."),
-             ("OEE2 TCU", "TCU", "OEE2 Ref. TCU", "Cartão: TCU (24/7) do período. Referência de set a nov: 19%."),
+             ("OEE2 TCU", "TCU", "OEE2 Ref. TCU", "Cartão: TCU (24/7) do período. Referência de set a nov: 20%."),
              ("OEE2 Disponibilidade", "DISPONIBILIDADE", None, "Cartão: Disponibilidade do OEE2."),
              ("OEE2 Performance", "PERFORMANCE", None, "Cartão: Performance do OEE2."),
              ("OEE2 Qualidade", "QUALIDADE", None, "Cartão: Qualidade do OEE2 (refugo na data do refugo).")]
