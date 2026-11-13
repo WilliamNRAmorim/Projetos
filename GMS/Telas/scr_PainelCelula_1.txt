@@ -452,9 +452,12 @@ Screens:
                       Filter(fx_LayoutBalizas, tranc) As _b,
                       With(
                           {
+                              // Cimento (13/11): OP trançada em outra máquina e só passando cimento na TH05
+                              // (Cimento_Maquina = X) conta no posto X, não no posto que trançou.
                               _f: LookUp(
                                   colAtivasPnl As _a,
-                                  _a.processo = "Trançadeira" && _a.Trançadeira = _b.Trançadeira
+                                  _a.processo = "Trançadeira" &&
+                                  ((_a.Trançadeira = _b.Trançadeira && IsBlank(_a.Cimento_Maquina)) || _a.Cimento_Maquina = _b.Trançadeira)
                               ),
                               // v0.8.1: fila POR CARRETEL, nao por OP. Um carretel de tubo pode
                               // levar 2 OPs; contar OP mostrava "tubo atras" quando a 2a OP estava
@@ -469,7 +472,8 @@ Screens:
                                               Trim(
                                                   LookUp(
                                                       colAtivasPnl As _a0,
-                                                      _a0.processo = "Trançadeira" && _a0.Trançadeira = _b.Trançadeira
+                                                      _a0.processo = "Trançadeira" &&
+                                                      ((_a0.Trançadeira = _b.Trançadeira && IsBlank(_a0.Cimento_Maquina)) || _a0.Cimento_Maquina = _b.Trançadeira)
                                                   ).'Carretel Entrada'
                                               )
                                           ),
@@ -483,7 +487,8 @@ Screens:
                                                   AddColumns(
                                                       Filter(
                                                           colAguardPnl As _g,
-                                                          _g.processo = "Trançadeira" && _g.Trançadeira = _b.Trançadeira
+                                                          _g.processo = "Trançadeira" &&
+                                                          ((_g.Trançadeira = _b.Trançadeira && IsBlank(_g.Cimento_Maquina)) || _g.Cimento_Maquina = _b.Trançadeira)
                                                       ),
                                                       CarKey,
                                                       Coalesce(
@@ -525,7 +530,11 @@ Screens:
                                       Filter(colHHJanPnl As _j3, _j3.Celula = _b.Trançadeira && _j3.Prog),
                                       Parado
                                   ),
-                                  _maqN: fx_NormCodigo(fx_MaquinaEngrenagens(_b.Trançadeira))
+                                  _maqN: fx_NormCodigo(fx_MaquinaEngrenagens(_b.Trançadeira)),
+                                  // Cimento: _cim = passando cimento agora (InicioCimento preenchido, FimCimento vazio);
+                                  // _so = OP so-cimento (trancada em outra maquina): nao consome tubo aqui.
+                                  _cim: !IsBlank(_f.InicioCimento_Trancagem) && IsBlank(_f.FimCimento_Trancagem),
+                                  _so: !IsBlank(_f.Cimento_Maquina)
                               },
                               With(
                               {
@@ -536,6 +545,8 @@ Screens:
                                       "PAUSA",
                                       !IsBlank(_ult.Motivo),
                                       "PARADA",
+                                      _cim,
+                                      "CIMENTO",
                                       fx_EstadoPosto(!IsBlank(_f.ID), _n)
                                   ),
                                   // v0.10.0: velocidade da mangueira que esta NA MAQUINA (m/h).
@@ -566,7 +577,7 @@ Screens:
                                   //   turno sem linha nenhuma ........ 0 (a fabrica nao rodou)
                                   // Antes de ontem 05:20 o Hora-Hora nao foi carregado: ali vale velocidade x relogio.
                                   _consM: If(
-                                      IsBlank(_f.ID) || _vAtiva <= 0 || IsBlank(_f.data_hora_inicio_trancadeira),
+                                      IsBlank(_f.ID) || _so || _vAtiva <= 0 || IsBlank(_f.data_hora_inicio_trancadeira),
                                       0,
                                       With(
                                           {
@@ -608,7 +619,9 @@ Screens:
                                       ForAll(
                                           Filter(
                                               colAguardPnl As _g7,
-                                              _g7.processo = "Trançadeira" && _g7.Trançadeira = _b.Trançadeira
+                                              _g7.processo = "Trançadeira" &&
+                                              // OP so-cimento nao entra na autonomia: nao e tubo a trancar nesta maquina.
+                                              _g7.Trançadeira = _b.Trançadeira && IsBlank(_g7.Cimento_Maquina)
                                           ) As _o7,
                                           With(
                                               {
@@ -632,7 +645,7 @@ Screens:
                               With(
                               {
                                   _restM: If(
-                                      IsBlank(_f.ID),
+                                      IsBlank(_f.ID) || _so,
                                       0,
                                       Max(0, Coalesce(_f.quantidade_tubo, 0) - _consM)
                                   )
@@ -643,6 +656,7 @@ Screens:
                                   OP: Coalesce(_f.OP, 0),
                                   Mangueira: Coalesce(Text(_f.Mangueira), ""),
                                   Inicio: _f.data_hora_inicio_trancadeira,
+                                  InicioCimento: If(_cim, _f.InicioCimento_Trancagem, Blank()),
                                   Produzindo: !IsBlank(_f.ID),
                                   Estado: _est,
                                   Cor: If(_est = "PARADA", fx_CorErro, fx_CorEstadoPosto(_est)),
@@ -686,7 +700,7 @@ Screens:
                                       )
                                   ),
                                   AutonomiaMin: If(
-                                      _vAtiva > 0,
+                                      _vAtiva > 0 && !_cim,
                                       Round(_restM * 60 / _vAtiva + _minFila, 0),
                                       Blank()
                                   )
@@ -1693,7 +1707,8 @@ Screens:
                                           ForAll(
                                               Filter(
                                                   colAguardPnl As _g9,
-                                                  _g9.processo = "Trançadeira" && _g9.Trançadeira = _p.Posto &&
+                                                  _g9.processo = "Trançadeira" &&
+                                                  ((_g9.Trançadeira = _p.Posto && IsBlank(_g9.Cimento_Maquina)) || _g9.Cimento_Maquina = _p.Posto) &&
                                                   Upper(Trim(_g9.'Carretel Entrada')) = _carMaq
                                               ) As _m9,
                                               { ID: _m9.ID, Tag: "Mesmo carretel · entra em seguida", Ord: 0.5 }
@@ -1732,6 +1747,8 @@ Screens:
                                               "Parada · " & _p.Motivo & " · nesta janela há " & fx_CronoLongo(_p.InicioParada, ctxAgoraPnl),
                                               _p.Estado = "PAUSA",
                                               "Pausa programada · " & _p.Motivo & " · há " & fx_CronoLongo(_p.InicioParada, ctxAgoraPnl),
+                                              _p.Estado = "CIMENTO",
+                                              "Aplicando cimento há " & fx_CronoLongo(_p.InicioCimento, ctxAgoraPnl),
                                               _p.Produzindo,
                                               "Trançando há " & fx_CronoLongo(_p.Inicio, ctxAgoraPnl),
                                               _p.Fila > 0,
@@ -4172,6 +4189,8 @@ Screens:
                         fx_CorPainelTextoErro,
                         ThisItem.Estado = "PAUSA",
                         fx_CorPainelTextoRotulo,
+                        ThisItem.Estado = "CIMENTO",
+                        fx_CorPainelTextoGelo,
                         ThisItem.Produzindo && !IsBlank(ThisItem.AutonomiaMin),
                         With(
                             { _m: fx_AutonomiaAgora(ThisItem.AutonomiaMin, varSincPnl, ctxAgoraPnl) },
@@ -4193,6 +4212,8 @@ Screens:
                     =If(
                         (ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA") && !IsBlank(ThisItem.InicioParada),
                         fx_CronoLongo(ThisItem.InicioParada, ctxAgoraPnl),
+                        ThisItem.Estado = "CIMENTO",
+                        fx_CronoLongo(ThisItem.InicioCimento, ctxAgoraPnl),
                         ThisItem.Produzindo && !IsBlank(ThisItem.AutonomiaMin),
                         fx_AutonomiaTexto(fx_AutonomiaAgora(ThisItem.AutonomiaMin, varSincPnl, ctxAgoraPnl)),
                         ThisItem.Produzindo,
@@ -4210,6 +4231,7 @@ Screens:
                     =If(
                         ThisItem.Estado = "PARADA",   fx_CorPainelTextoErro,
                         ThisItem.Estado = "COM FILA", fx_CorPainelTextoAlerta,
+                        ThisItem.Estado = "CIMENTO",  fx_CorPainelTextoGelo,
                         fx_CorPainelTextoRotulo
                     )
                   Font: =fx_FonteFamilia
@@ -4222,6 +4244,8 @@ Screens:
                     =If(
                         ThisItem.Estado = "PARADA" || ThisItem.Estado = "PAUSA",
                         ThisItem.Motivo & If(ThisItem.Produzindo, "  ·  OP " & Text(ThisItem.OP, "[$-en-US]0"), ""),
+                        ThisItem.Estado = "CIMENTO",
+                        "CIMENTO  ·  OP " & Text(ThisItem.OP, "[$-en-US]0"),
                         ThisItem.Produzindo,
                         fx_Ou(ThisItem.Mangueira) & "  ·  OP " & Text(ThisItem.OP, "[$-en-US]0"),
                         ThisItem.Estado = "COM FILA",

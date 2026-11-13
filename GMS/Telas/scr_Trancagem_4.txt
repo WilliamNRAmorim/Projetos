@@ -175,7 +175,8 @@ Screens:
                           Filter(
                               ficha_producao,
                               processo = "Trançadeira",
-                              Trançadeira = cmb_FiltroTr3_1.Selected.Filtro
+                              (Trançadeira = cmb_FiltroTr3_1.Selected.Filtro && IsBlank(Cimento_Maquina)) ||
+                              Cimento_Maquina = cmb_FiltroTr3_1.Selected.Filtro
                           ),
                           Coalesce(status_processo, "") <> "Cancelado"
                       ),
@@ -282,15 +283,17 @@ Screens:
                   BorderColor: =Color.Transparent
                   BorderThickness: =0
                   Color: |-
-                    =If(
-                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
-                        fx_CorOK,
+                    =Switch(
+                        fx_EstadoTranc(ThisItem.status_processo, ThisItem.InicioCimento_Trancagem),
+                        "TRANÇANDO", fx_CorOK,
+                        "CIMENTO",   fx_CorGelo,
                         fx_CorAlerta
                     )
                   Fill: |-
-                    =If(
-                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
-                        fx_CorOKSuave,
+                    =Switch(
+                        fx_EstadoTranc(ThisItem.status_processo, ThisItem.InicioCimento_Trancagem),
+                        "TRANÇANDO", fx_CorOKSuave,
+                        "CIMENTO",   fx_CorGeloSuave,
                         fx_CorAlertaSuave
                     )
                   Font: =fx_FonteFamilia
@@ -304,9 +307,10 @@ Screens:
                   RadiusTopRight: =fx_Raio
                   Size: =fx_FonteApoio
                   Text: |-
-                    =If(
-                        fx_EstadoContinuo(ThisItem.status_processo) = "PRODUZINDO",
-                        "Produzindo",
+                    =Switch(
+                        fx_EstadoTranc(ThisItem.status_processo, ThisItem.InicioCimento_Trancagem),
+                        "TRANÇANDO", "Produzindo",
+                        "CIMENTO",   "Cimento",
                         "Aguardando"
                     )
                   Width: =98
@@ -324,17 +328,44 @@ Screens:
                   Size: =fx_FonteCorpo
                   Text: |-
                     =fx_Crono(
-                        fx_InicioCronoContinuo(
-                            fx_EstadoContinuo(ThisItem.status_processo),
-                            ThisItem.InicioAguardando_Trançadeira,
-                            ThisItem.data_hora_inicio_trancadeira,
-                            ThisItem.Created
+                        If(
+                            fx_EstadoTranc(ThisItem.status_processo, ThisItem.InicioCimento_Trancagem) = "CIMENTO",
+                            ThisItem.InicioCimento_Trancagem,
+                            fx_InicioCronoContinuo(
+                                fx_EstadoContinuo(ThisItem.status_processo),
+                                ThisItem.InicioAguardando_Trançadeira,
+                                ThisItem.data_hora_inicio_trancadeira,
+                                ThisItem.Created
+                            )
                         ),
                         ctxAgora
                     )
                   Width: =85
                   X: =208
                   Y: =68
+            - btn_SoCimentoFilaTr3_1:
+                Control: Classic/Button@2.2.0
+                Properties:
+                  BorderColor: =Color.Transparent
+                  BorderThickness: =0
+                  Color: =If(ThisItem.IsSelected, fx_CorSuperficie, fx_CorGelo)
+                  Fill: =If(ThisItem.IsSelected, fx_CorChip, fx_CorGeloSuave)
+                  Font: =fx_FonteFamilia
+                  FontWeight: =FontWeight.Bold
+                  Height: =26
+                  HoverFill: =Self.Fill
+                  OnSelect: =Select(Parent)
+                  PressedFill: =Self.Fill
+                  RadiusBottomLeft: =fx_RaioS
+                  RadiusBottomRight: =fx_RaioS
+                  RadiusTopLeft: =fx_RaioS
+                  RadiusTopRight: =fx_RaioS
+                  Size: =fx_FonteApoio
+                  Text: ="SÓ CIMENTO"
+                  Visible: =!IsBlank(ThisItem.Cimento_Maquina)
+                  Width: =84
+                  X: =122
+                  Y: =66
       - rct_HeaderTr3_1:
           Control: Rectangle@2.3.0
           Properties:
@@ -525,16 +556,24 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =18
             Size: =fx_FonteApoio
-            Text: ="SITUAÇÃO"
+            Text: |-
+              ="SITUAÇÃO" &
+              If(
+                  fx_EstadoTranc(gal_FilaTr3_1.Selected.status_processo, gal_FilaTr3_1.Selected.InicioCimento_Trancagem) = "CIMENTO",
+                  "  ·  " & fx_Crono(gal_FilaTr3_1.Selected.InicioCimento_Trancagem, ctxAgora),
+                  ""
+              )
+            Width: =170
             X: =948
             Y: =131
       - lbl_ValSituacaoTr3_1:
           Control: Label@2.5.1
           Properties:
             Color: |-
-              =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO",
-                  fx_CorOK,
+              =Switch(
+                  fx_EstadoTranc(gal_FilaTr3_1.Selected.status_processo, gal_FilaTr3_1.Selected.InicioCimento_Trancagem),
+                  "TRANÇANDO", fx_CorOK,
+                  "CIMENTO",   fx_CorGelo,
                   fx_CorAlerta
               )
             Font: =fx_FonteFamilia
@@ -542,11 +581,13 @@ Screens:
             Height: =28
             Size: =fx_FonteDestaque
             Text: |-
-              =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO",
-                  "Produzindo",
+              =Switch(
+                  fx_EstadoTranc(gal_FilaTr3_1.Selected.status_processo, gal_FilaTr3_1.Selected.InicioCimento_Trancagem),
+                  "TRANÇANDO", "Produzindo",
+                  "CIMENTO",   "Aplicando cimento",
                   "Aguardando"
               )
+            Width: =170
             X: =948
             Y: =144
       - lbl_RotCarretelTr3_1:
@@ -732,7 +773,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -789,7 +831,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -827,7 +870,8 @@ Screens:
             DisabledFill: =fx_CorFundo
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -905,7 +949,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -944,7 +989,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -988,7 +1034,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1026,7 +1073,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1075,7 +1123,8 @@ Screens:
             DisplayFields: =["field_1"]
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1115,7 +1164,8 @@ Screens:
             DelayOutput: =true
             DisplayMode: |-
               =If(
-                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando,
+                  fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" && !varProcessando &&
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
                   DisplayMode.Edit,
                   DisplayMode.Disabled
               )
@@ -1255,7 +1305,12 @@ Screens:
             FontWeight: =FontWeight.Semibold
             Height: =69
             Size: =fx_FonteCorpo
-            Text: ="Selecione a OP na fila e toque em Iniciar Trançagem — primeiro o delineamento, depois o carretel de saída. Os campos abrem quando a OP estiver produzindo."
+            Text: |-
+              =If(
+                  IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
+                  "Selecione a OP na fila e toque em Iniciar Trançagem — primeiro o delineamento, depois o carretel de saída. Os campos abrem quando a OP estiver produzindo.",
+                  "OP já trançada na " & Coalesce(gal_FilaTr3_1.Selected.Trançadeira, "—") & ". Toque em Iniciar cimento para passar o cimento na " & gal_FilaTr3_1.Selected.Cimento_Maquina & " e depois envie para a Cobertura."
+              )
             Visible: =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "AGUARDANDO"
             Width: =520
             X: =345
@@ -1328,7 +1383,8 @@ Screens:
               )
             Visible: |-
               =!IsBlank(Self.Text) &&
-              fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO"
+              fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" &&
+              IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina)
             Width: =773
             X: =345
             Y: =619
@@ -1378,15 +1434,76 @@ Screens:
             Height: =fx_AlturaAcao
             HoverFill: =ColorFade(Self.Fill, -20%)
             OnSelect: |-
-              =If(IsEmpty(colSpecTr3), ClearCollect(colSpecTr3, DM_TRANÇAGEM));
-              UpdateContext({ctxDelinModoInicioTr3: true, ctxModalDelinTr3: true})
+              =If(
+                  !IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina),
+                  Set(varProcessando, true);
+                  Refresh(ficha_producao);
+                  With(
+                      {
+                          _r: LookUp(ficha_producao, ID = gal_FilaTr3_1.Selected.ID),
+                          _agora: Now()
+                      },
+                      With(
+                          {_min: fx_MinutosDoDia(_agora)},
+                          If(
+                              _r.Modified <> gal_FilaTr3_1.Selected.Modified,
+                              Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
+                              Select(btn_RecarregarTr3_1);
+                              Set(varProcessando, false),
+                              _r.status_processo = "Em processo",
+                              Notify("Esta OP já foi iniciada por outro operador. Atualize a fila.", NotificationType.Error, 8000);
+                              Select(btn_RecarregarTr3_1);
+                              Set(varProcessando, false),
+                              Patch(
+                                  ficha_producao,
+                                  _r,
+                                  {
+                                      status_processo: "Em processo",
+                                      InicioCimento_Trancagem: _agora
+                                  }
+                              );
+                              If(
+                                  !IsEmpty(Errors(ficha_producao)),
+                                  Notify("Falha ao iniciar o cimento: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                                  Set(varProcessando, false),
+                                  Patch(
+                                      Eventos_Producao,
+                                      Defaults(Eventos_Producao),
+                                      {
+                                          Title: Text(_r.ID) & "-Trancagem-Cimento-Inicio",
+                                          origem: {Value: "ficha_producao"},
+                                          origem_ID: _r.ID,
+                                          etapa: {Value: "Trançagem"},
+                                          tipo: {Value: "Início"},
+                                          data_hora: _agora,
+                                          data_ref: fx_DataRefEm(_agora),
+                                          turno: fx_Turno(_min),
+                                          bitola: _r.Bitola,
+                                          recurso: _r.Cimento_Maquina,
+                                          operador: User().FullName
+                                      }
+                                  );
+                                  If(
+                                      !IsEmpty(Errors(Eventos_Producao)),
+                                      Notify("Evento de início do cimento não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                                  );
+                                  Select(btn_RecarregarTr3_1);
+                                  Set(varProcessando, false);
+                                  Notify("Cimento iniciado na " & _r.Cimento_Maquina & ".", NotificationType.Success, 5000)
+                              )
+                          )
+                      )
+                  ),
+                  If(IsEmpty(colSpecTr3), ClearCollect(colSpecTr3, DM_TRANÇAGEM));
+                  UpdateContext({ctxDelinModoInicioTr3: true, ctxModalDelinTr3: true})
+              )
             PressedFill: =ColorFade(Self.Fill, -30%)
             RadiusBottomLeft: =fx_RaioS
             RadiusBottomRight: =fx_RaioS
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            Text: ="Iniciar Trançagem"
+            Text: =If(IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina), "Iniciar Trançagem", "Iniciar cimento")
             Visible: =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "AGUARDANDO"
             Width: =360
             X: =549
@@ -1466,9 +1583,11 @@ Screens:
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteCorpo
             Text: ="Salvar Parcial"
-            Visible: =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO"
-            Width: =230
-            X: =560
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" &&
+              IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina)
+            Width: =If(btn_CimentoTr3_1.Visible, 140, 230)
+            X: =If(btn_CimentoTr3_1.Visible, 800, 560)
             Y: =700
       - btn_EnviarTr3_1:
           Control: Classic/Button@2.2.0
@@ -1502,8 +1621,186 @@ Screens:
             RadiusTopLeft: =fx_RaioS
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteDestaque
-            Text: ="Enviar p/ Cobertura"
-            Visible: =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO"
+            Text: |-
+              =If(
+                  gal_FilaTr3_1.Selected.Trançadeira <> "TH05" &&
+                  fx_PrecisaCimento(gal_FilaTr3_1.Selected.Mangueira),
+                  "Enviar para cimento na TH05",
+                  "Enviar p/ Cobertura"
+              )
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" &&
+              IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina)
+            Width: =If(btn_CimentoTr3_1.Visible, 180, 290)
+            X: =If(btn_CimentoTr3_1.Visible, 950, 810)
+            Y: =700
+      - btn_CimentoTr3_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTr3_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(Self.Fill, -20%)
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = gal_FilaTr3_1.Selected.ID),
+                      _agora: Now()
+                  },
+                  With(
+                      {_min: fx_MinutosDoDia(_agora)},
+                      If(
+                          _r.Modified <> gal_FilaTr3_1.Selected.Modified,
+                          Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
+                          Select(btn_RecarregarTr3_1);
+                          Set(varProcessando, false),
+                          _r.status_processo <> "Em processo",
+                          Notify("Esta OP não está em processo. Atualize a fila.", NotificationType.Error, 8000);
+                          Select(btn_RecarregarTr3_1);
+                          Set(varProcessando, false),
+                          !IsBlank(_r.InicioCimento_Trancagem),
+                          Notify("O cimento desta OP já foi iniciado. Atualize a fila.", NotificationType.Warning, 6000);
+                          Select(btn_RecarregarTr3_1);
+                          Set(varProcessando, false),
+                          Patch(
+                              ficha_producao,
+                              _r,
+                              {InicioCimento_Trancagem: _agora}
+                          );
+                          If(
+                              !IsEmpty(Errors(ficha_producao)),
+                              Notify("Falha ao iniciar o cimento: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                              Set(varProcessando, false),
+                              Patch(
+                                  Eventos_Producao,
+                                  Defaults(Eventos_Producao),
+                                  {
+                                      Title: Text(_r.ID) & "-Trancagem-Cimento-Inicio",
+                                      origem: {Value: "ficha_producao"},
+                                      origem_ID: _r.ID,
+                                      etapa: {Value: "Trançagem"},
+                                      tipo: {Value: "Início"},
+                                      data_hora: _agora,
+                                      data_ref: fx_DataRefEm(_agora),
+                                      turno: fx_Turno(_min),
+                                      bitola: _r.Bitola,
+                                      recurso: _r.Trançadeira,
+                                      operador: Coalesce(cmb_OperadorTr3_1.Selected.Nome, _r.operador_trancagem, User().FullName)
+                                  }
+                              );
+                              If(
+                                  !IsEmpty(Errors(Eventos_Producao)),
+                                  Notify("Evento de início do cimento não gravou: " & First(Errors(Eventos_Producao)).Message, NotificationType.Error, 10000)
+                              );
+                              Select(btn_RecarregarTr3_1);
+                              Set(varProcessando, false);
+                              Notify("Cimento iniciado. Quando terminar, toque em Enviar p/ Cobertura.", NotificationType.Success, 6000)
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(Self.Fill, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteCorpo
+            Text: ="Terminar trança → aplicar cimento"
+            Visible: |-
+              =gal_FilaTr3_1.Selected.Trançadeira = "TH05" &&
+              IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina) &&
+              fx_EstadoTranc(gal_FilaTr3_1.Selected.status_processo, gal_FilaTr3_1.Selected.InicioCimento_Trancagem) = "TRANÇANDO" &&
+              fx_PrecisaCimento(gal_FilaTr3_1.Selected.Mangueira)
+            Width: =236
+            X: =556
+            Y: =700
+      - btn_EnviarCimentoTr3_1:
+          Control: Classic/Button@2.2.0
+          Properties:
+            BorderColor: =Color.Transparent
+            BorderThickness: =0
+            Color: =fx_CorSuperficie
+            DisabledFill: =fx_CorBorda
+            DisplayMode: |-
+              =If(
+                  IsBlank(gal_FilaTr3_1.Selected.ID) || varProcessando,
+                  DisplayMode.Disabled,
+                  DisplayMode.Edit
+              )
+            Fill: =fx_CorOK
+            Font: =fx_FonteFamilia
+            FontWeight: =FontWeight.Bold
+            Height: =fx_AlturaAcao
+            HoverFill: =ColorFade(fx_CorOK, -20%)
+            OnSelect: |-
+              =Set(varProcessando, true);
+              Refresh(ficha_producao);
+              With(
+                  {
+                      _r: LookUp(ficha_producao, ID = gal_FilaTr3_1.Selected.ID),
+                      _agora: Now()
+                  },
+                  With(
+                      {_min: fx_MinutosDoDia(_agora)},
+                      If(
+                          _r.Modified <> gal_FilaTr3_1.Selected.Modified,
+                          Notify("Este registro foi alterado por outro usuário. A fila foi recarregada.", NotificationType.Error, 8000);
+                          Select(btn_RecarregarTr3_1);
+                          Set(varProcessando, false),
+                          _r.status_processo <> "Em processo",
+                          Notify("Esta OP não está em processo. Atualize a fila.", NotificationType.Error, 8000);
+                          Select(btn_RecarregarTr3_1);
+                          Set(varProcessando, false),
+                          IsBlank(_r.'Carretel Saida'),
+                          Notify("Esta OP está sem carretel de saída. Corrija em Editar OP antes de enviar.", NotificationType.Warning, 8000);
+                          Set(varProcessando, false),
+                          Patch(
+                              ficha_producao,
+                              _r,
+                              {
+                                  'Carretel Entrada': _r.'Carretel Saida',
+                                  'Carretel Saida': Blank(),
+                                  processo: "Cobertura",
+                                  status_processo: "Aguardando",
+                                  FimCimento_Trancagem: _agora,
+                                  InicioAguardandoCobertura: _agora
+                              }
+                          );
+                          If(
+                              !IsEmpty(Errors(ficha_producao)),
+                              Notify("Falha ao gravar a ficha: " & First(Errors(ficha_producao)).Message, NotificationType.Error, 12000);
+                              Set(varProcessando, false),
+                              Reset(gal_FilaTr3_1);
+                              Select(btn_RecarregarTr3_1);
+                              Set(varProcessando, false);
+                              Notify("Cimento concluído. Carretel enviado para a Cobertura.", NotificationType.Success, 6000)
+                          )
+                      )
+                  )
+              )
+            PressedFill: =ColorFade(fx_CorOK, -30%)
+            RadiusBottomLeft: =fx_RaioS
+            RadiusBottomRight: =fx_RaioS
+            RadiusTopLeft: =fx_RaioS
+            RadiusTopRight: =fx_RaioS
+            Size: =fx_FonteDestaque
+            Text: ="Enviar para Cobertura"
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" &&
+              !IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina)
             Width: =290
             X: =810
             Y: =700
@@ -2198,7 +2495,7 @@ Screens:
             Font: =fx_FonteFamilia
             Height: =26
             Size: =fx_FonteApoio
-            Text: ="Versão 0.3.2"
+            Text: ="Versão 0.4.0"
             Width: =183
             X: =1163
             Y: =740
@@ -3684,7 +3981,14 @@ Screens:
                   FontWeight: =FontWeight.Bold
                   Height: =32
                   Size: =fx_FonteDestaque
-                  Text: ="Confirmar envio para a Cobertura"
+                  Text: |-
+                    =If(
+                        gal_FilaTr3_1.Selected.Trançadeira <> "TH05" &&
+                        IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina) &&
+                        fx_PrecisaCimento(gal_FilaTr3_1.Selected.Mangueira),
+                        "Confirmar envio para cimento na TH05",
+                        "Confirmar envio para a Cobertura"
+                    )
                   Width: =480
                   X: =443
                   Y: =202
@@ -3882,7 +4186,8 @@ Screens:
                             {
                                 _min: fx_MinutosDoDia(_agora),
                                 _ja: Coalesce(_r.Qtd_Turno1, 0) + Coalesce(_r.Qtd_Turno2, 0) + Coalesce(_r.Qtd_Turno3, 0),
-                                _saida: _r.'Carretel Saida'
+                                _saida: _r.'Carretel Saida',
+                                _cim: _r.Trançadeira <> "TH05" && IsBlank(_r.Cimento_Maquina) && fx_PrecisaCimento(_r.Mangueira)
                             },
                             If(
                                 _r.Modified <> gal_FilaTr3_1.Selected.Modified,
@@ -3912,12 +4217,15 @@ Screens:
                                         Cod_Trançagem: Trim(inp_FioTr3_1.Text),
                                         operador_trancagem: cmb_OperadorTr3_1.Selected.Nome,
                                         Observação_Trançagem: inp_ObsTr3_1.Text,
-                                        'Carretel Entrada': _saida,
-                                        'Carretel Saida': Blank(),
-                                        processo: "Cobertura",
+                                        'Carretel Entrada': If(_cim, _r.'Carretel Entrada', _saida),
+                                        'Carretel Saida': If(_cim, _r.'Carretel Saida', Blank()),
+                                        processo: If(_cim, "Trançadeira", "Cobertura"),
                                         status_processo: "Aguardando",
+                                        Cimento_Maquina: If(_cim, "TH05", _r.Cimento_Maquina),
+                                        InicioAguardando_Trançadeira: If(_cim, _agora, _r.InicioAguardando_Trançadeira),
                                         data_hora_final_trancadeira: _agora,
-                                        InicioAguardandoCobertura: _agora,
+                                        InicioAguardandoCobertura: If(_cim, _r.InicioAguardandoCobertura, _agora),
+                                        FimCimento_Trancagem: If(!_cim && !IsBlank(_r.InicioCimento_Trancagem), _agora, _r.FimCimento_Trancagem),
                                         Qtd_Turno1: If(fx_Turno(_min) = 1, Coalesce(_r.Qtd_Turno1, 0) + (_q - _ja), _r.Qtd_Turno1),
                                         Qtd_Turno2: If(fx_Turno(_min) = 2, Coalesce(_r.Qtd_Turno2, 0) + (_q - _ja), _r.Qtd_Turno2),
                                         Qtd_Turno3: If(fx_Turno(_min) = 3, Coalesce(_r.Qtd_Turno3, 0) + (_q - _ja), _r.Qtd_Turno3),
@@ -4000,7 +4308,15 @@ Screens:
                                     Select(btn_RecarregarTr3_1);
                                     Reset(gal_FilaTr3_1);
                                     Set(varProcessando, false);
-                                    Notify("Apontamento registrado. Carretel enviado para a Cobertura.", NotificationType.Success, 6000)
+                                    Notify(
+                                        If(
+                                            _cim,
+                                            "Apontamento registrado. A mangueira segue no carretel " & Coalesce(_saida, "—") & " para o cimento na TH05.",
+                                            "Apontamento registrado. Carretel enviado para a Cobertura."
+                                        ),
+                                        NotificationType.Success,
+                                        6000
+                                    )
                                 )
                             )
                         )
@@ -4667,7 +4983,9 @@ Screens:
             RadiusTopRight: =fx_RaioS
             Size: =fx_FonteApoio
             Text: ="Cancelar OP"
-            Visible: =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO"
+            Visible: |-
+              =fx_EstadoContinuo(gal_FilaTr3_1.Selected.status_processo) = "PRODUZINDO" &&
+              IsBlank(gal_FilaTr3_1.Selected.Cimento_Maquina)
             Width: =130
             X: =420
             Y: =700
@@ -5024,7 +5342,7 @@ Screens:
                                               CountRows(
                                                   Filter(
                                                       colFilaBaseTr3 As _f,
-                                                      _f.Trançadeira = _cc.Celula && _f.status_processo = "Em processo"
+                                                      ((_f.Trançadeira = _cc.Celula && IsBlank(_f.Cimento_Maquina)) || _f.Cimento_Maquina = _cc.Celula) && _f.status_processo = "Em processo"
                                                   )
                                               ) > 0
                                       },

@@ -30,7 +30,9 @@
 
 ## App.Formulas
 
-> **Vigente (26/10/2026): `Telas/Formulas.txt` v3.0.14** — §11 ganha fx_TravaHHMin, fx_DataRefHH, fx_JanelaTravada, fx_AcertoHH e fx_ParadaPropHH (Hora-Hora Trançagem v0.7.0, MEL-248). Só aditiva. Antes dela (22/10): v3.0.13 — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
+> **Vigente (13/11/2026): `Telas/Formulas.txt` v3.0.18** — §6 ganha fx_PrecisaCimento e fx_EstadoTranc; §12 ganha "CIMENTO" em fx_CorEstadoPosto (MEL-272). Só aditiva.
+
+> **Antes (26/10/2026): `Telas/Formulas.txt` v3.0.14** — §11 ganha fx_TravaHHMin, fx_DataRefHH, fx_JanelaTravada, fx_AcertoHH e fx_ParadaPropHH (Hora-Hora Trançagem v0.7.0, MEL-248). Só aditiva. Antes dela (22/10): v3.0.13 — §18 nova (painéis de TV: fontes 20/24/28/40/48, cores de texto de parede, histórico, Montagem). Só aditiva. QA: `gms_qa_yaml.py` ganhou os testes 18 a 20 e sai com código 1 quando há FALHOU.
 
 | Camada | Arquivo |
 |---|---|
@@ -56,8 +58,8 @@
 | Extrusora de Mandril | `scr_ExtrusoraMandril_2` | — | — | **v0.2.0** + COLAR EstoqueSolda (25/09) |
 | Solda de Mandril | `scr_mandril_1` | v0.5.6 | `Telas/_patch_Solda_Cabine_2026-11-05.md` (aguarda publish) | — |
 | Tubo | `scr_tubo_1` | v0.4.0 | COLAR v0.4.1 + PATCH v0.4.1a | — |
-| Trançagem | `scr_Trancagem_3` | v0.5.0 | COLAR v0.5.1 ComboOperador, v0.5.2 FiltroMaquina | — |
-| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | **v0.7.0** (26/10, `Telas/`) — trava de 2 h após o fim da janela, Real só com mangueira, Motivo Não Declarado também no Salvar (MEL-248); **aguarda publish**, colar por blocos (layout ajustado à mão: nunca reimport); colar Formulas v3.0.14 antes | — | — |
+| Trançagem | `scr_Trancagem_4` | **v0.4.0** (13/11, `Telas/`) — fase de cimento na TH05 (Terminar trança → aplicar cimento; TM04 envia para cimento na TH05; fila SÓ CIMENTO; MEL-272); **aguarda publish**, colar por blocos de `Telas/_patch_Cimento_Trancagem_2026-11-13.md` depois de criar as 3 colunas e colar Formulas v3.0.18 | `_patch_Cimento_Trancagem_2026-11-13.md` | — |
+| Hora-Hora Trançagem | `scr_HoraHora_Trancagem_2` | **v0.7.3** (13/11: máquina ativa segue Cimento_Maquina, MEL-272; seção 4b do `_patch_Cimento_Trancagem_2026-11-13.md`) · base **v0.7.0** (26/10, `Telas/`) — trava de 2 h após o fim da janela, Real só com mangueira, Motivo Não Declarado também no Salvar (MEL-248); **aguarda publish**, colar por blocos (layout ajustado à mão: nunca reimport); colar Formulas v3.0.14 antes | — | — |
 | AM-DM-02 Controle de Trançagem | `scr_AMDM02_Trancagem_1` | **v0.5.1** (21/10, `Telas/`) — foto do pickômetro em tela cheia com zoom, pan e caneta só na tela; folha por trança (seletor 1ª/2ª no cabeçalho, chave Data|Máquina|Trança), coleta na hora real com prazo +2 h, dia produtivo 05:20–05:20, carta X̄-R pela hora; listas em `Engenharia/Trancagem/AMDM02_schema.md` (MEL-114) | — | Criar a coluna Tranca (número, indexada) na AMDM02_Folha; HoraColeta já feita; colar Formulas v3.0.12 (§17 nova) e a tela no Studio |
 | Hora-Hora Cobertura | `scr_HoraHora_Cobertura_1` (manual) e `scr_HoraHora_CoberturaGMS_1` (derivada) | v0.1.0 | — | — |
 | Cobertura | `scr_Cobertura_2` | v0.3.0 | COLAR v0.4.0 Delineamento | — |
