@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<title>Pranchas de rascunho · defesa do TCC</title>
+<!-- Autossuficiente: sem CDN, sem biblioteca, sem fonte baixada. Fontes do Windows: Bahnschrift, Consolas, Segoe Print.
+     Modos: pranchas.html (página completa) · ?folha=N (folha de contato, 12 quadros, 2400 px) · ?chave=ID (quadro final 1920x1080) -->
+<style>
+html,body{margin:0;background:#05070A;color:#F5F7FA;font-family:Bahnschrift,sans-serif}
+.b{font-family:Bahnschrift;font-weight:700;font-stretch:condensed}
+.s{font-family:Bahnschrift;font-weight:600;font-stretch:semi-condensed}
+.l{font-family:Bahnschrift;font-weight:350}
+.m{font-family:Consolas,monospace}
+.h{font-family:'Segoe Print','Ink Free',cursive}
+header{padding:28px 40px 6px}
+header h1{margin:0;font-size:36px;font-weight:700;font-stretch:condensed;letter-spacing:.5px}
+header p{margin:4px 0 0;color:#8B97A6;font-size:19px;font-weight:350}
+section{padding:4px 40px 14px}
+section h2{font-size:26px;margin:16px 0 12px;font-weight:600;border-left:10px solid;padding-left:14px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px 30px}
+.q svg{display:block;width:100%;height:auto;outline:1px solid #232B36}
+.cap{font-size:21px;margin-top:8px;display:flex;gap:12px;align-items:baseline}
+.cap b{font-size:26px;font-weight:700;font-stretch:condensed}
+.cap .t{color:#8B97A6;font-family:Consolas}
+.cap .c{margin-left:auto;font-size:16px;color:#8B97A6}
+.elo{font-size:18px;color:#8B97A6;margin-top:3px;line-height:1.3;font-weight:350;min-height:47px}
+.elo i{font-style:normal;color:#F5F7FA}
+body.chave{background:#07090D;overflow:hidden}
+body.chave svg{display:block;width:1920px;height:1080px}
+body.folha{width:2400px;overflow:hidden}
+body.folha .q{height:540px}
+</style></head><body><div id="app"></div><pre id="qa" style="display:none"></pre>
+<script>
+// ---------- paleta (storyboard, seção 4) ----------
+const BG='#07090D',SF='#10151C',LN='#232B36',TX='#F5F7FA',T2='#8B97A6',GR='#A9C7A0',SE='#C9B79A',RED='#E2231A',INK='#26386E',GD='#2F4A2A';
+const CH=['#3B82F6','#06B6D4','#6366F1','#8B5CF6','#F59E0B','#EF4444','#F97316','#10B981'];
+const CHN=['O problema','O método','A construção','A expansão e o ao vivo','Os resultados','As limitações','Forest City e o futuro','A tese'];
+const CHT=['0:00 a 3:30','3:30 a 6:00','6:00 a 9:35','9:35 a 14:30','14:30 a 17:20','17:20 a 18:05','18:05 a 19:25','19:25 a 20:00'];
+let A=CH[0], F=false, FRAC=0; // A = destaque do capítulo atual; F = visual final (quadros-chave)
+const r1=v=>Math.round(v*10)/10, esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const P=(cx,cy,r,a)=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];
+function arcD(cx,cy,r,a0,a1){const[x0,y0]=P(cx,cy,r,a0),[x1,y1]=P(cx,cy,r,a1);return`M${r1(x0)} ${r1(y0)} A${r} ${r} 0 ${Math.abs(a1-a0)>180?1:0} 1 ${r1(x1)} ${r1(y1)}`;}
+const pl=pts=>'M'+pts.map(p=>p.map(r1).join(' ')).join(' L');
+const K=(c,d)=>c==='@'?A:(c||d);
+const op=o=>o!=null?` opacity="${o}"`:'';
+
+// ---------- primitivas ----------
+function txt(x,y,s,z,o={}){const L=Array.isArray(s)?s:[s],lh=o.lh||z*1.12;
+  return L.map((ln,i)=>`<text class="${o.f||'l'}" x="${r1(x)}" y="${r1(y+i*lh)}" font-size="${z}" fill="${K(o.c,TX)}" text-anchor="${o.a||'start'}"${op(o.op)}${o.ls?` letter-spacing="${o.ls}"`:''}${o.rot?` transform="rotate(${o.rot} ${x} ${y})"`:''}${o.glow?' filter="url(#glow)"':''}${o.off?' data-off="1"':''}${o.halo?` stroke="${BG}" stroke-width="10" paint-order="stroke"`:''}>${esc(ln)}</text>`).join('');}
+function dot(x,y,r,c,o={}){return`<circle cx="${r1(x)}" cy="${r1(y)}" r="${r}" fill="${K(c,A)}"${op(o.op)}${o.glow||F?' filter="url(#glow)"':''}/>`;}
+function wire(d,o={}){if(Array.isArray(d))d=pl(d);return`<path d="${d}" fill="none" stroke="${K(o.c,A)}" stroke-width="${o.w||6}" stroke-linecap="round" stroke-linejoin="round"${o.dash?` stroke-dasharray="${o.dash===true?'18 14':o.dash}"`:''}${op(o.op)}${(o.glow||F)&&!o.flat?' filter="url(#glow)"':''}/>`;}
+// carretel: geometria de logo_gms_escuro.svg (r 82, traço 18, arcos de 37° a cada 45° a partir de -86°), lógica de ring() do render.html
+function reel(cx,cy,r,ch,frac,o={}){const lw=r*18/82,ins=Math.max(1.5,lw*0.2);let s='';
+  for(let k=0;k<8;k++){const a0=-86+45*k,d=arcD(cx,cy,r,a0,a0+37);
+    s+=`<path d="${d}" stroke="${LN}" stroke-width="${r1(lw)}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${o.bg||BG}" stroke-width="${r1(lw-2*ins)}" fill="none" stroke-linecap="round"/>`;}
+  for(let k=0;k<8;k++){const a0=-86+45*k,f=k<ch?1:k==ch?frac:0;if(f<=0)continue;
+    s+=`<path d="${arcD(cx,cy,r,a0,a0+37*f)}" stroke="${CH[k]}" stroke-width="${r1(lw)}" fill="none" stroke-linecap="round"${F?' filter="url(#glow)"':''}/>`;}
+  let ang=(o.logo||ch>=8)?-90:frac>0?-86+45*ch+37*frac:ch>0?-49+45*(ch-1):-90;
+  const[dx,dy]=P(cx,cy,r,ang);return s+`<circle cx="${r1(dx)}" cy="${r1(dy)}" r="${r1(r*11.2/82)}" fill="${RED}"/>`;}
+function card(x,y,w,h,o={}){const z=o.z||48,pad=o.pad||32,ty=o.ty||(z+26);
+  let s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${o.fill||SF}" stroke="${K(o.c,LN)}" stroke-width="${o.sw||3}"${o.dash?' stroke-dasharray="16 12"':''}${op(o.op)}/>`;
+  if(o.lit)s+=`<rect x="${x}" y="${y}" width="10" height="${h}" fill="${A}"${op(o.op)}/>`;
+  if(o.t)s+=txt(o.a=='middle'?x+w/2:x+pad,y+ty,o.t,z,{f:o.tf||'b',c:o.tc||TX,a:o.a,op:o.op});
+  if(o.sub)s+=txt(o.a=='middle'?x+w/2:x+pad,y+ty+z*1.15,o.sub,o.sz||36,{c:o.subc||T2,a:o.a,op:o.op});
+  return s;}
+function bar(x,y,w,h,frac,o={}){return`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${LN}"${op(o.op)}/><rect x="${x}" y="${y}" width="${r1(w*frac)}" height="${h}" fill="${o.c||A}"${op(o.op)}${F?' filter="url(#glow)"':''}/>`;}
+// ficha de papel (campos e valores fictícios; layout livre, inspirado numa ficha verde genérica)
+const FV=['000123','250 m','07','2º'],FL=['OP','METRAGEM','OPERADOR','TURNO'];
+const fv=(x,y,w,i)=>[x+0.52*w,y+1.25*w*(0.16+0.14*i+0.095)];
+function ficha(x,y,w,mode,o={}){const h=1.25*w,sw=Math.max(1.5,w*0.003);let s=`<g${op(o.op)}>`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${GR}"/>`;
+  if(F)s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#paper)"/>`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h*0.12}" fill="#94B58A"/>`;
+  if(w>=140)s+=txt(x+0.06*w,y+h*0.08,'CONTROLE DE ETAPAS · CÉLULA',w*0.04,{f:'m',c:GD,off:o.off});
+  for(let i=0;i<4;i++){const ry=y+h*(0.16+0.14*i);
+    s+=`<rect x="${x+0.04*w}" y="${ry}" width="${0.92*w}" height="${h*0.14}" fill="none" stroke="#5E7F57" stroke-width="${sw}"/><line x1="${x+0.45*w}" y1="${ry}" x2="${x+0.45*w}" y2="${ry+h*0.14}" stroke="#5E7F57" stroke-width="${sw}"/>`;
+    if(w>=140)s+=txt(x+0.07*w,ry+h*0.085,FL[i],w*0.045,{f:'m',c:GD,off:o.off});
+    const[vx,vy]=fv(x,y,w,i);
+    if(mode=='ink')s+=txt(vx,vy,FV[i],w*0.075,{f:'h',c:INK,off:o.off});
+    if(mode=='lit'){s+=`<rect x="${x+0.46*w}" y="${ry+h*0.01}" width="${0.49*w}" height="${h*0.12}" fill="${A}" opacity="${F?0.16:0.22}"/>`;
+      s+=txt(vx,vy,FV[i],w*0.075,{f:'h',c:TX,glow:true,off:o.off});}}
+  const gy=y+h*0.74;s+=`<rect x="${x+0.04*w}" y="${gy}" width="${0.92*w}" height="${h*0.13}" fill="none" stroke="#5E7F57" stroke-width="${sw}"/>`;
+  for(let j=1;j<3;j++)s+=`<line x1="${x+0.04*w+j*0.3067*w}" y1="${gy}" x2="${x+0.04*w+j*0.3067*w}" y2="${gy+h*0.13}" stroke="#5E7F57" stroke-width="${sw}"/>`;
+  if(w>=140)['TRANÇAGEM','DEBANDAGEM','EXTR./TESTE'].forEach((t,j)=>s+=txt(x+0.06*w+j*0.3067*w,gy+h*0.04,t,w*0.028,{f:'m',c:GD,off:o.off}));
+  if(mode=='ink'&&w>=140)['✕','✓','✓'].forEach((t,j)=>s+=txt(x+0.19*w+j*0.3067*w,gy+h*0.11,t,w*0.05,{f:'h',c:INK,a:'middle',off:o.off}));
+  if(w>=140)s+=txt(x+0.06*w,y+h*0.95,'SUPERVISÃO: ____________',w*0.035,{f:'m',c:GD,off:o.off});
+  if(o.ink)s+=`<path d="M${x+0.6*w} ${y+0.2*h} q ${w*0.1} ${h*0.3} ${-w*0.2} ${h*0.5}" stroke="#2C2C2C" stroke-width="${w*0.03}" opacity=".18" fill="none"/>`;
+  return s+'</g>';}
+function tablet(x,y,w,h,o={}){const m=w*0.05;let s=`<g${op(o.op)}>`;
+  s+=`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${w*0.04}" fill="${o.screen=='outline'?'none':'#0D1117'}" stroke="${K(o.c,T2)}" stroke-width="${o.sw||4}"/>`;
+  if(o.screen!='outline')s+=`<rect x="${x+m}" y="${y+m}" width="${w-2*m}" height="${h-2*m}" fill="${BG}" stroke="${LN}" stroke-width="2"/>`;
+  if(o.screen=='button'){const bx=x+w*0.25,by=y+h*0.37,bw=w*0.5,bh=h*0.26;
+    s+=`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="${A}"/>`+txt(bx+bw/2,by+bh*0.66,'APONTAR',bh*0.42,{f:'b',a:'middle',c:BG});
+    if(o.cota){const cx=x+w*0.81;s+=`<path d="M${cx} ${by} V${by+bh} M${cx-14} ${by} H${cx+14} M${cx-14} ${by+bh} H${cx+14}" stroke="${A}" stroke-width="3"/>`+txt(cx+24,by+bh/2+14,'48 px',40,{f:'m',c:A});}}
+  if(o.screen=='panel'){for(let i=0;i<6;i++){const bh=(h-4*m)*[0.5,0.8,0.35,0.9,0.6,0.7][i];s+=`<rect x="${x+2*m+i*(w-4*m)/6}" y="${y+h-2*m-bh}" width="${(w-4*m)/6-6}" height="${bh}" fill="${i==3?A:LN}"/>`;}}
+  if(o.pulse){const cx=x+w/2,cy=y+h/2;s+=`<circle cx="${cx}" cy="${cy}" r="70" fill="none" stroke="${RED}" stroke-width="3" opacity=".3"/><circle cx="${cx}" cy="${cy}" r="44" fill="none" stroke="${RED}" stroke-width="3" opacity=".6"/>`+dot(cx,cy,20,RED);}
+  return s+'</g>';}
+function glove(x,y){return`<g transform="rotate(-28 ${x} ${y})"><rect x="${x-36}" y="${y}" width="72" height="230" rx="36" fill="#3A4350" stroke="${T2}" stroke-width="3"/><rect x="${x-80}" y="${y+150}" width="160" height="220" rx="40" fill="#3A4350" stroke="${T2}" stroke-width="3"/></g>`;}
+function hose(x1,x2,y,th,o={}){const t=th/2;let s=`<g${op(o.op)}>`;
+  s+=`<rect x="${x1}" y="${y-t}" width="${x2-x1}" height="${th}" fill="#161C24" stroke="${o.c||LN}" stroke-width="${o.sw||2}"/>`;
+  s+=`<rect x="${x1}" y="${y-t}" width="${x2-x1}" height="${th}" fill="url(#braid)" opacity=".22"/>`;
+  s+=`<line x1="${x1}" y1="${y-t*0.55}" x2="${x2}" y2="${y-t*0.55}" stroke="#3A4552" stroke-width="${th*0.08}"/>`;
+  s+=wire([[x1,y+t*0.45],[x2,y+t*0.45]],{w:Math.max(3,th*0.03),op:0.85});
+  if(o.cap!==false)s+=`<ellipse cx="${x2}" cy="${y}" rx="${th*0.16}" ry="${t}" fill="#0B0F14" stroke="${T2}" stroke-width="2"/><ellipse cx="${x2}" cy="${y}" rx="${th*0.08}" ry="${t*0.5}" fill="${BG}"/>`;
+  if(o.fit)s+=`<rect x="${x1-130}" y="${y-t*1.2}" width="130" height="${th*1.2}" fill="#3A424D" stroke="${T2}" stroke-width="2"/>`+[1,2,3].map(i=>`<line x1="${x1-130+i*32}" y1="${y-t*1.2}" x2="${x1-130+i*32}" y2="${y+t*1.2}" stroke="${T2}" stroke-width="2" opacity=".6"/>`).join('');
+  return s+'</g>';}
+// mangueira em vista explodida: terminal, tubo, trança, cobertura (lit = quantas camadas acesas)
+const HP=[{cx:375,n:'terminal',L:'Coleta',t:'Power Apps'},{cx:745,n:'tubo',L:'Dados',t:'Microsoft Lists'},{cx:1115,n:'trança',L:'Orquestração',t:'Power Automate'},{cx:1485,n:'cobertura',L:'Análise',t:'Power BI'}];
+function hoseX(lit,o={}){const Y=o.y||540;let s='';
+  const part=(i,body)=>{const on=i<lit;return`<g opacity="${on?1:0.45}"${on&&F?' filter="url(#soft)"':''}>${body(on?A:LN,on)}</g>`;};
+  s+=wire([[200,Y],[1700,Y]],{c:LN,w:3,dash:'6 10',flat:1});
+  s+=part(0,(c)=>`<rect x="225" y="${Y-105}" width="175" height="210" fill="#3A424D" stroke="${c}" stroke-width="4"/>${[1,2,3,4].map(i=>`<line x1="${225+i*35}" y1="${Y-105}" x2="${225+i*35}" y2="${Y+105}" stroke="#59626E" stroke-width="3"/>`).join('')}<rect x="400" y="${Y-50}" width="125" height="100" fill="#2B323B" stroke="${c}" stroke-width="4"/>${[0,1,2].map(i=>`<path d="M${415+i*36} ${Y-50} l18 -12 l18 12" fill="none" stroke="#59626E" stroke-width="3"/>`).join('')}`);
+  s+=part(1,(c)=>`<rect x="595" y="${Y-55}" width="305" height="110" fill="#20262E" stroke="${c}" stroke-width="4"/><ellipse cx="595" cy="${Y}" rx="20" ry="55" fill="#2A313B" stroke="${c}" stroke-width="4"/><ellipse cx="595" cy="${Y}" rx="10" ry="30" fill="${BG}"/>`);
+  s+=part(2,(c)=>`<rect x="960" y="${Y-70}" width="310" height="140" fill="#1A2029" stroke="${c}" stroke-width="4"/><rect x="960" y="${Y-70}" width="310" height="140" fill="url(#braid)" opacity=".75"/><ellipse cx="960" cy="${Y}" rx="24" ry="70" fill="#1A2029" stroke="${c}" stroke-width="4"/>`);
+  s+=part(3,(c,on)=>`<rect x="1330" y="${Y-88}" width="310" height="176" fill="#12171E" stroke="${c}" stroke-width="4"/><line x1="1330" y1="${Y-50}" x2="1640" y2="${Y-50}" stroke="#2E3744" stroke-width="14"/><ellipse cx="1330" cy="${Y}" rx="30" ry="88" fill="#12171E" stroke="${c}" stroke-width="4"/>${on?`<line x1="1340" y1="${Y+44}" x2="1640" y2="${Y+44}" stroke="${A}" stroke-width="5"/>`:''}`);
+  HP.forEach((p,i)=>{const on=i<lit;
+    if(o.names!==false)s+=txt(p.cx,Y+175,p.n,36,{f:'m',c:on?TX:T2,a:'middle',op:on?1:0.7});
+    if(on){s+=txt(p.cx,300,p.L,60,{f:'b',c:A,a:'middle',glow:F})+`<line x1="${p.cx}" y1="324" x2="${p.cx}" y2="${Y-118}" stroke="${A}" stroke-width="2" stroke-dasharray="4 6"/>`+txt(p.cx,Y+240,p.t,42,{c:TX,a:'middle'});}});
+  return s;}
+function ring(cx,cy,r,segs,o={}){const w=o.w||r*0.13;let s='';
+  segs.forEach(g=>{const d=arcD(cx,cy,r,g.a0,g.a1),c=g.c||A;
+    if(g.st!='on'&&g.st!='pulse')s+=`<path d="${d}" stroke="${LN}" stroke-width="${w}" fill="none"/>`;
+    if(g.st=='on')s+=`<path d="${d}" stroke="${c}" stroke-width="${w}" fill="none"${op(g.op)}${F?' filter="url(#glow)"':''}/>`;
+    if(g.st=='half')s+=`<path d="${arcD(cx,cy,r,g.a0,(g.a0+g.a1)/2)}" stroke="${c}" stroke-width="${w}" fill="none" opacity=".55"/>`;
+    if(g.st=='pulse')s+=`<path d="${d}" stroke="${c}" stroke-width="${w*2.2}" fill="none" opacity=".22"/><path d="${d}" stroke="${c}" stroke-width="${w}" fill="none"/>`;
+    if(g.st=='dash')s+=`<path d="${d}" stroke="${c}" stroke-width="3" fill="none" stroke-dasharray="10 8"/>`;
+    if(g.lab){const m=(g.a0+g.a1)/2,[lx,ly]=P(cx,cy,r+w+44,m);s+=txt(lx,ly+14,g.lab,40,{f:'m',c:T2,a:'middle'});}});
+  return s;}
+// globo de pontos (projeção ortográfica), Américas grosseiras
+const LAND=[[[-168,66],[-140,70],[-95,72],[-75,62],[-60,50],[-67,45],[-75,35],[-81,25],[-97,26],[-97,20],[-87,15],[-78,8],[-83,9],[-105,20],[-117,32],[-125,48],[-135,58],[-160,58]],
+ [[-78,8],[-60,10],[-50,0],[-35,-6],[-40,-22],[-48,-28],[-58,-38],[-65,-55],[-72,-50],[-72,-30],[-70,-18],[-80,-5],[-80,1]],
+ [[-55,60],[-20,72],[-30,82],[-60,80],[-72,77]],[[-18,15],[-10,35],[-5,36],[10,37],[32,31],[43,12],[51,11],[40,-15],[20,-35],[12,-17],[9,4],[-8,4]]];
+function inPoly(x,y,p){let c=false;for(let i=0,j=p.length-1;i<p.length;j=i++){const[xi,yi]=p[i],[xj,yj]=p[j];if(((yi>y)!=(yj>y))&&(x<(xj-xi)*(y-yi)/(yj-yi)+xi))c=!c;}return c;}
+const G0={lon:-62,lat:8};
+function gproj(cx,cy,r,lon,lat){const d=Math.PI/180,l=(lon-G0.lon)*d,p=lat*d,p0=G0.lat*d;
+  return{x:cx+r*Math.cos(p)*Math.sin(l),y:cy-r*(Math.cos(p0)*Math.sin(p)-Math.sin(p0)*Math.cos(p)*Math.cos(l)),v:Math.sin(p0)*Math.sin(p)+Math.cos(p0)*Math.cos(p)*Math.cos(l)};}
+function globe(cx,cy,r,o={}){const st=o.step||(r>200?4:8);let s=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${F?'url(#gl)':SF}" stroke="${LN}" stroke-width="2"/>`;
+  for(let lat=-80;lat<=80;lat+=st)for(let lon=-180;lon<180;lon+=st){const q=gproj(cx,cy,r,lon,lat);if(q.v<=0.02)continue;
+    const land=LAND.some(p=>inPoly(lon,lat,p));s+=`<circle cx="${r1(q.x)}" cy="${r1(q.y)}" r="${land?r*0.009+0.8:r*0.004+0.4}" fill="${land?T2:LN}" opacity="${r1(0.35+0.65*q.v)}"/>`;}
+  return s;}
+const GUA=[-45.2,-22.8],FOR=[-81.9,35.3];
+function wall(x,y){let s='';for(let r=0;r<8;r++)for(let c=0;c<2;c++){const bx=x+c*90+(r%2?45:0)-(r%2&&c==1?0:0),lit=r==3&&c==0;
+  if(lit){s+=`<rect x="${x}" y="${y+r*80}" width="180" height="76" fill="${A}" opacity=".18"/><rect x="${x}" y="${y+r*80}" width="180" height="76" fill="none" stroke="${A}" stroke-width="3"/>`;continue;}
+  if(r==3)continue;s+=`<rect x="${bx}" y="${y+r*80}" width="${r%2&&c==1?45:86}" height="76" fill="${SF}" stroke="${LN}" stroke-width="3"/>`;}
+  return s;}
+function stations(dim){const xs=[380,720,1060,1400],pts=[[120,420]];xs.forEach(x=>pts.push([x,420]));pts.push([1560,420],[1560,700]);[...xs].reverse().forEach(x=>pts.push([x,700]));pts.push([120,700]);
+  let s=wire(pts,{c:A,w:5,op:0.7,flat:1});
+  [...xs.map(x=>[x,420]),...[...xs].reverse().map(x=>[x,700])].forEach(([x,y],i)=>s+=`<rect x="${x-70}" y="${y-70}" width="140" height="140" fill="${SF}" stroke="${LN}" stroke-width="3"/>`+txt(x,y+16,String(i+1),48,{f:'m',c:T2,a:'middle'}));
+  return s;}
+function stamp(x,y,t){return`<g transform="rotate(-9 ${x} ${y})"><rect x="${x-150}" y="${y-62}" width="300" height="100" fill="none" stroke="${SE}" stroke-width="6"/>${txt(x,y+12,t,64,{f:'b',c:SE,a:'middle',ls:6})}</g>`;}
+// rede das pontas (slide 16): lit = pontas acesas, dashed = nós tracejados
+const TIPS=[{n:'Manufatura',x:640,y:230,L:1,it:['8 etapas apontadas na estação','Hora-Hora','painéis de TV da Célula','e da Montagem']},
+ {n:'Qualidade',x:1290,y:230,L:0,it:['inspeção e refugo tipificado','medida conferida contra','a especificação','carta X̄-R da trançagem','(em paralelo ao papel)']},
+ {n:'Planejamento',x:600,y:560,L:1,it:['OP escolhida no','plano sincronizado','exceção aprovada','pela supervisão']},
+ {n:'Logística',x:1310,y:720,L:0,it:['packing list por pallet','com código de barras','conferência diária','com o SAP']},
+ {n:'Engenharia',x:640,y:880,L:1,it:['delineamento lido pelas telas','ciclo, gargalo e paradas no BI']}];
+const DN=[[960,120],[1560,560],[1120,960],[300,450],[820,1000]];
+function net16(lit,dashed){const cx=960,cy=540,R=150;let s='';
+  if(dashed)DN.forEach(([x,y])=>{const a=Math.atan2(y-cy,x-cx),[sx,sy]=[cx+Math.cos(a)*(R+30),cy+Math.sin(a)*(R+30)];s+=wire([[sx,sy],[x,y]],{c:T2,w:3,dash:'10 10',flat:1})+`<circle cx="${x}" cy="${y}" r="26" fill="${BG}" stroke="${T2}" stroke-width="3" stroke-dasharray="8 7"/>`;});
+  TIPS.forEach((t,i)=>{const on=i<lit,a=Math.atan2(t.y-cy,t.x-cx),sx=cx+Math.cos(a)*(R+30),sy=cy+Math.sin(a)*(R+30);
+    s+=wire([[sx,sy],[t.x,t.y]],{c:on?A:LN,w:on?6:3,flat:!on});
+    s+=`<circle cx="${t.x}" cy="${t.y}" r="20" fill="${on?A:BG}" stroke="${on?A:LN}" stroke-width="4"${on&&F?' filter="url(#glow)"':''}/>`;
+    const tx=t.L?t.x-44:t.x+44,an=t.L?'end':'start';
+    s+=txt(tx,t.y-6,t.n,54,{f:'b',c:on?TX:T2,a:an,op:on?1:0.55});
+    if(on)s+=txt(tx,t.y+44,t.it,32,{c:T2,a:an,lh:40});});
+  return s+reel(cx,cy,R,3,FRAC);}
+function mosaic(){const C=[['Paradas',1],['Hora-Hora',1],['Montagem',1],['Fila por etapa',1,1],['Extrusora',1],['OEE por hora',0],[['Simulador de','demanda × pessoas'],0],[['Genealogia','entre lotes'],0]];
+  let s='<g transform="skewY(-5) translate(0,120)">';
+  C.forEach(([t,on,cel],i)=>{const x=170+(i%4)*370,y=200+Math.floor(i/4)*320;
+    s+=card(x,y,340,280,{dash:!on,c:on?(cel?A:'#3A4552'):T2,fill:on?SF:'none',t,z:40,ty:62,tc:on?TX:T2,sw:cel?5:3});
+    if(on)for(let k=0;k<7;k++){const h=[60,110,80,140,95,120,70][(k+i)%7];s+=`<rect x="${x+34+k*40}" y="${y+250-h}" width="28" height="${h}" fill="${k==(i%7)?A:'#2A3340'}"/>`;}});
+  return s+'</g>';}
+
+// ---------- os 44 quadros como dados ----------
+const W=700,NX=[700,1040,1330,1580]; // altura do fio horizontal do capítulo 1
+const FR=[
+ {id:'1a',t:'0:08',ch:0,elo:'Primeiro quadro',d:[['ficha',660,70,600,'ink',{ink:1}]]},
+ {id:'1b',t:'0:08',ch:0,elo:'A mesma ficha, maior',d:[['ficha',210,-260,1500,'lit',{off:1}]]},
+ {id:'1c',t:'0:08',ch:0,elo:'Os mesmos números, agora fora do papel',d:[['ficha',120,240,400,'blank'],
+   ...FV.map((v,i)=>['txt',NX[i],560+[-40,30,-70,10][i],v,92,{f:'h',a:'middle',glow:1}])]},
+ {id:'1d',t:'0:08',ch:0,elo:'Cada número vira um ponto do fio',d:[['ficha',120,240,400,'blank',{op:0.45}],['wire',[[680,W],[1640,W]]],
+   ...FV.map((v,i)=>['dot',NX[i],W,16]),['dot',1640,W,14,RED]]},
+ {id:'1e',t:'0:08',ch:0,elo:'O fio entra no carretel',d:[['ficha',120,240,400,'blank',{op:0.3}],['wire',`M680 ${W} L1600 ${W} C1720 ${W} 1804 780 1804 921`],...FV.map((v,i)=>['dot',NX[i],W,16])]},
+ {id:'2',t:'0:20',ch:0,big:[500,540,280],elo:'O carretel cresce e vai para a esquerda; o texto entra',d:[
+   ['txt',900,390,'[Título do TCC]',110,{f:'b'}],['txt',900,480,'[Autor] · [Curso] · [Instituição]',48,{c:T2}],
+   ['txt',900,660,'Guaratinguetá Manufacturing System',66,{f:'s',c:'@'}]]},
+ {id:'3',t:'0:35',ch:0,elo:'O carretel volta ao canto e o fio se estica de ponta a ponta',d:[['wire',[[320,W],[1600,W]]],['ficha',130,590,180,'ink'],
+   ['card',1610,620,230,160,{t:'mesa',sub:'supervisão',z:44,sz:32,a:'middle'}],['txt',960,520,'1 a 2 dias',300,{f:'b',a:'middle'}]]},
+ {id:'4',t:'0:40',ch:0,elo:'O número encolhe e vira rótulo do fio',d:[
+   ['wire',`M320 ${W} L500 ${W} C500 840 620 840 620 ${W} L900 ${W} C900 840 1020 840 1020 ${W} L1300 ${W} C1300 840 1420 840 1420 ${W} L1600 ${W}`],
+   ['ficha',130,590,180,'ink'],['card',1610,620,230,160,{t:'mesa',sub:'supervisão',z:44,sz:32,a:'middle'}],['txt',330,660,'1 a 2 dias',40,{f:'m',c:'@'}],
+   ['ficha',510,450,100,'ink'],['card',890,500,140,130,{t:'XLS',z:48,a:'middle',ty:82}],['card',1290,500,140,130,{t:'SAP',z:48,a:'middle',ty:82}],
+   ...[['Ficha','8 etapas',560],['Excel','turno seguinte',960],['SAP','lançamento',1360]].map(([a,b,x])=>['txt',x,920,[a],56,{f:'b',a:'middle'}]),
+   ...[['8 etapas',560],['turno seguinte',960],['lançamento',1360]].map(([b,x])=>['txt',x,975,b,40,{c:T2,a:'middle'}])]},
+ {id:'5',t:'0:35',ch:0,elo:'As três paradas encolhem e o fio vira o percurso da célula',d:[['txt',120,180,'Cegueira operacional',120,{f:'b'}],['stamp',1600,190,'ONTEM'],['stations'],
+   ['txt',120,1000,'OEE: impossível. Achar uma OP fechada: uma manhã.',56,{c:T2}]]},
+ {id:'6',t:'0:40',ch:0,elo:'As 8 estações encolhem em 8 pontos',d:[['txt',960,340,'O dado já existia.',110,{f:'b',a:'middle'}],
+   ...[0,1,2,3,4,5,6,7].map(i=>['dot',400+i*160,540,18,'@',{op:0.35}]),['txt',960,720,'O custo era chegar até ele.',64,{a:'middle'}],
+   ['txt',960,880,'tempo · visibilidade · conexão',64,{f:'s',c:'@',a:'middle'}]]},
+ // capítulo 2
+ {id:'7',t:'0:40',ch:1,elo:'O arco azul fecha. Os 8 pontos se juntam num anel',d:[
+   ['ring',1060,540,290,[{a0:-84,a1:30,st:'on',lab:'1º'},{a0:36,a1:150,st:'on',op:0.7,lab:'2º'},{a0:156,a1:270,st:'on',op:0.45,lab:'3º'}]],
+   ['dot',...P(1060,540,290,96),20,RED],['txt',1060,580,'24 h',120,{f:'b',a:'middle'}],
+   ['txt',120,400,'2 semanas',90,{f:'b'}],['txt',120,560,'3 turnos',90,{f:'b'}],['txt',120,720,'12 processos',90,{f:'b'}]]},
+ {id:'8',t:'0:35',ch:1,elo:'Os três turnos viram os três trechos do ciclo',d:[
+   ['ring',1060,540,290,[{a0:-84,a1:30,st:'on'},{a0:36,a1:150,st:'on',op:0.7},{a0:156,a1:270,st:'on',op:0.45}]],['dot',...P(1060,540,290,-84),20,RED],
+   ['txt',1060,580,'1 dia',120,{f:'b',a:'middle'}],['txt',120,160,'Ciclo diário',90,{f:'b'}],
+   ['txt',1430,250,['manhã','na estação'],56,{f:'b'}],['txt',1060,960,'tarde · desenvolvendo',56,{f:'b',a:'middle'}],['txt',690,330,['turno seguinte','versão nova'],56,{f:'b',a:'end'}]]},
+ {id:'9',t:'0:40',ch:1,elo:'O anel desenrola e vira o fio',d:[['wall',1100,320],['wire',[[120,600],[1520,600]]],['dot',1520,600,16,RED],
+   ['txt',120,180,['Low-code por restrição,','não por preferência.'],96,{f:'b'}],['txt',1190,295,'governança de TI',36,{f:'m',c:T2,a:'middle'}],
+   ['txt',1310,680,['plataforma','já homologada'],44,{c:'@'}]]},
+ {id:'10',t:'0:35',ch:1,elo:'A câmera atravessa a passagem, que vira a tela',d:[['txt',960,170,'Avisar, não bloquear.',100,{f:'b',a:'middle'}],
+   ['tablet',560,260,800,540,{screen:'button',cota:1}],['glove',1060,560]]},
+ // capítulo 3
+ {id:'11a',t:'0:55',p:'passo 1/4',ch:2,elo:'O arco ciano fecha. O tablet encolhe e vira o terminal da mangueira',d:[['tablet',90,430,330,220,{screen:'button'}],['hose',560,1650,540,170,{fit:1}]]},
+ {id:'11b',t:'',p:'passo 2/4',ch:2,elo:'A mangueira gira e se abre em vista explodida',d:[['hoseX',0]]},
+ {id:'11c',t:'',p:'passo 3/4',ch:2,elo:'Terminal e tubo acendem com o rótulo da camada',d:[['hoseX',2]]},
+ {id:'11d',t:'',p:'passo 4/4',ch:2,elo:'Trança e cobertura acendem: as 4 camadas rotuladas',d:[['hoseX',4]]},
+ {id:'12',t:'0:30',ch:2,elo:'A mangueira fecha e deita na faixa do meio',d:[
+   ['card',120,190,1520,190,{t:'Nível 4 · SAP',z:56,ty:115,op:0.5}],['card',120,410,1520,260,{t:'Nível 3 · GMS',z:56,ty:150,c:'@',lit:1}],
+   ['hose',760,1580,540,96],['card',120,700,1520,180,{t:'Níveis 1 e 2 · máquinas (ainda não alimentam)',z:56,ty:110,op:0.4}],
+   ['txt',120,1000,'O dado nasce do apontamento do operador',60,{c:T2}]]},
+ {id:'13a',t:'1:00',p:'passo 1/3',ch:2,elo:'A faixa do meio se estica e vira o fio da linha do tempo',d:[['tl',1]]},
+ {id:'13b',t:'',p:'passo 2/3',ch:2,elo:'A câmera segue pelo fio: papel e digital em paralelo',d:[['tl',2]]},
+ {id:'13c',t:'',p:'passo 3/3',ch:2,elo:'O fio chega à consolidação; a ponta segue tracejada',d:[['tl',3]]},
+ {id:'14',t:'0:40',ch:2,elo:'Os dois primeiros trechos da linha do tempo viram as duas barras',d:[['txt',960,400,'2 × 7',300,{f:'b',a:'middle'}],
+   ['bar',250,490,320,64,1],['txt',600,538,'2 meses · desenvolvendo',44],['bar',250,600,1120,64,1,{op:0.7}],['txt',1400,648,'7 meses · implantando',44],
+   ['txt',960,840,'A barreira foi a adoção, não a técnica.',72,{f:'b',a:'middle'}],['txt',120,1010,'Atkin et al. (2017)',40,{f:'m',c:T2}]]},
+ {id:'15',t:'0:30',ch:2,elo:'As duas barras se dividem em três cartões',d:[['txt',120,230,'Low-code com disciplina de software',96,{f:'b'}],
+   ...[['Norma escrita','§'],['Diário de decisões','≡'],['Código versionado','</>']].map(([t,g],i)=>['cardg',120+i*520,380,480,380,t,g])]},
+ // capítulo 4
+ ...['a','b','c','d','e','f'].map((s,i)=>({id:'16'+s,t:i?'':'1:05',p:`passo ${i+1}/6`,ch:3,noReel:1,
+   elo:i==0?'O arco índigo fecha. Os três cartões se fundem no centro e o carretel sai do canto para virar o núcleo':
+     i<5?`O fio sai do núcleo e acende a ponta ${TIPS[i-1].n}`:'Acende Engenharia; surgem os nós tracejados, sem nome',d:[['net16',i,i==5]]})),
+ {id:'17',t:'0:30',ch:3,elo:'Os cartões das pontas inclinam e viram a parede; o carretel volta ao canto',d:[['mosaic']]},
+ {id:'18',t:'3:20',ch:3,elo:'O cartão do painel da Célula cresce e vira o contorno do tablet',d:[['txt',120,250,'Agora, ao vivo.',140,{f:'b'}],
+   ...['apontar uma etapa','ver o painel reagir','achar uma OP'].map((t,i)=>['txt',120,430+i*100,[`${i+1}  ${t}`],56,{}]),
+   ['txt',120,820,'No tablet, na mão.',56,{c:T2}],['tablet',1040,230,640,440,{screen:'outline',pulse:1,c:'@'}]]},
+ // capítulo 5
+ {id:'19',t:'0:40',ch:4,elo:'O arco violeta fecha. O tablet vai para a direita e a ficha da abertura volta à esquerda',d:[['ficha',90,300,300,'ink'],
+   ['tablet',1500,330,320,230,{screen:'panel'}],
+   ...[['Tempo','1 a 2 dias → no instante do registro; na TV em até 2 min'],['Visibilidade','nenhuma etapa com fila à vista → todas'],['Conexão','uma manhã para conferir uma OP → conferência diária com o SAP']]
+   .flatMap(([a,b],i)=>[['txt',945,300+i*210,a,56,{f:'b',c:'@',a:'middle'}],['txt',945,352+i*210,b,34,{a:'middle',c:T2}],['wire',[[420,380+i*210],[1470,380+i*210]],{w:3}]])]},
+ {id:'20',t:'0:30',ch:4,elo:'As três linhas viram os três números',d:[['txt',960,200,'O que o dossiê do Kaizen estima',72,{f:'b',a:'middle'}],
+   ...[['36×','resposta a reclamação',360],['87,5%','escopo de contenção',960],['97%','horas de consolidação',1560]].flatMap(([n,c,x])=>[['txt',x,560,n,200,{f:'b',a:'middle',c:'@'}],['txt',x,650,c,44,{a:'middle',c:T2}]]),
+   ['card',120,790,1560,110,{t:'estimativas da equipe, sem cronometragem',z:52,tf:'l',a:'middle',ty:72,c:'@'}]]},
+ {id:'21',t:'0:35',ch:4,elo:'O "36×" vira "8,3×" e os outros dois saem',d:[['txt',360,560,'8,3×',300,{f:'b',a:'middle',c:'@'}],
+   ['txt',780,380,['O volume da célula era','contado 8,3 vezes.'],64,{}],['txt',780,700,'74% da “parada” da Montagem era tempo excedido',48,{c:T2}],['bar',780,740,880,70,0.74]]},
+ {id:'22',t:'0:35',ch:4,elo:'A barra de 74% vira a de 96,4% e nasce a segunda',d:[
+   ['txt',160,300,'≤ 6%',110,{f:'b',c:'@'}],['txt',520,300,['Sensor · uma máquina, quinze dias:','tempo parado a até 6% do medido'],44,{c:T2}],['bar',160,420,1500,60,0.94,{op:0.85}],['bar',160,490,1500,20,1,{c:T2}],
+   ['txt',160,660,'96,4%',110,{f:'b',c:'@'}],['txt',520,640,['SAP · um mês: das OPs do GMS','também estão lá'],44,{c:T2}],['bar',160,740,1500,70,0.964]]},
+ {id:'23',t:'0:30',ch:4,elo:'As duas barras se curvam e viram arcos do anel',d:[
+   ['ring',1100,540,300,Array.from({length:11},(_,k)=>({a0:-90+k*(360/11)+3,a1:-90+(k+1)*(360/11)-3,st:k<6?'on':k==6?'pulse':k<9?'half':'dim'}))],
+   ['txt',1100,580,'MESA-11',72,{f:'m',a:'middle',c:T2}],
+   ...[['6','implementadas',1],['1','em expansão',1],['2','parciais',0.55],['2','fora do escopo',0.3]].flatMap(([n,t,o],i)=>[['txt',120,330+i*150,n,90,{f:'b',c:'@',op:o}],['txt',210,330+i*150,t,56,{}]])]},
+ // capítulo 6
+ {id:'24',t:'0:45',ch:5,elo:'O arco âmbar fecha. O anel do MESA-11 recua para a esquerda, apagado, e dele saem os quatro marcadores',d:[
+   ['ring',150,560,100,Array.from({length:11},(_,k)=>({a0:-90+k*(360/11)+4,a1:-90+(k+1)*(360/11)-4,st:'dim'}))],
+   ...[['Caso único, numa célula'],['Eu desenvolvi e avaliei'],['Pilha proprietária'],['Acurácia medida em uma máquina, por quinze dias,','e o 3º turno registra menos']].flatMap((t,i)=>[['rect',330,282+i*150,30,30,'@'],['txt',390,310+i*150,t,56,{lh:64}]])]},
+ // capítulo 7
+ {id:'25a',t:'0:50',p:'passo 1/3',ch:6,elo:'O arco vermelho fecha. As quatro linhas se recolhem num ponto, que é Guaratinguetá no globo',d:[['gl',1]]},
+ {id:'25b',t:'',p:'passo 2/3',ch:6,elo:'O fio sobe em arco e pousa em Forest City',d:[['gl',2]]},
+ {id:'25c',t:'',p:'passo 3/3',ch:6,elo:'Do pouso saem as seis etiquetas',d:[['gl',3]]},
+ {id:'26',t:'0:30',ch:6,elo:'O globo encolhe e vira o núcleo; as seis etiquetas se espalham e viram os nós tracejados',d:[['net26']]},
+ // capítulo 8
+ {id:'27',t:'0:25',ch:7,elo:'O arco laranja fecha. Os nós da rede se alinham no fio, e o fio engrossa até virar a mangueira',d:[
+   ['hose',-20,1940,540,170,{cap:false}],['txt',960,270,'Não criamos o dado.',110,{f:'b',a:'middle'}],['txt',960,870,'Zeramos o custo de acessá-lo.',110,{f:'b',a:'middle',c:'@'}]]},
+ {id:'28',t:'0:10',ch:7,big:[700,470,190],logo:1,elo:'A mangueira afina de volta em fio e se enrola no carretel',d:[
+   ['txt',950,555,'GMS',270,{f:'b',ls:4}],['txt',960,880,'Obrigado.',100,{f:'l',a:'middle'}]]},
+];
+// linha do tempo (slide 13): x = 250 + 85·mês, mês 0 = ago/2025
+function tl(step){const X=m=>250+85*m,Y=540;let s=wire([[150,Y],[1650,Y]],{c:LN,w:4,flat:1});
+  s+=wire([[150,Y],[X(2),Y]],{op:step>1?0.5:1});
+  s+=txt(X(0),Y-80,'ago/2025',36,{f:'m',c:T2,a:'middle',op:step>1?0.6:1})+txt(X(0),Y-130,'Gemba Walk e início',44,{a:'middle',op:step>1?0.5:1})+dot(X(0),Y,12,A);
+  s+=txt(X(2),Y+80,'out/2025',36,{f:'m',c:T2,a:'middle',op:step>1?0.6:1})+txt(X(2),Y+130,['primeiras telas','em produção'],44,{a:'middle',op:step>1?0.5:1})+dot(X(2),Y,12,A);
+  if(step>=2){s+=wire([[X(2),Y-16],[X(9),Y-16]],{c:SE,w:5,op:step>2?0.5:1,flat:1})+wire([[X(2),Y+16],[X(10),Y+16]],{op:step>2?0.6:1});
+    s+=txt(X(5.5),Y-40,'papel',36,{f:'m',c:SE,a:'middle',op:step>2?0.5:1})+txt(X(5.5),Y+64,'digital',36,{f:'m',c:A,a:'middle',op:step>2?0.5:1});
+    s+=dot(X(9),Y,12,TX)+txt(X(9),Y+130,'mai/2026',36,{f:'m',c:T2,a:'middle',op:step>2?0.6:1})+txt(X(9),Y+180,'a ficha sai',44,{a:'middle',op:step>2?0.5:1});}
+  if(step>=3){s+=wire([[X(10),Y],[X(14),Y]],{w:8})+wire([[X(14),Y],[1650,Y]],{dash:true})+[10,11,12,13,14].map(m=>dot(X(m),Y,10,A)).join('');
+    s+=txt(1060,150,'jun a out/2026',36,{f:'m',c:T2})+txt(1060,205,['qualificação','norma escrita','Kaizen Award','painel na TV','conferência diária com o SAP'],40,{lh:48});}
+  else s+=wire([[X(step==1?2:10),Y],[1650,Y]],{c:T2,w:3,dash:true,op:0.5,flat:1});
+  return s;}
+function gl(step){const cx=800,cy=560,r=420;let s=globe(cx,cy,r);const g=gproj(cx,cy,r,...GUA),f=gproj(cx,cy,r,...FOR);
+  s+=txt(g.x+30,g.y+50,'Guaratinguetá',40,{f:'m'});
+  if(step>=2){s+=wire(`M${r1(g.x)} ${r1(g.y)} Q${r1((g.x+f.x)/2+260)} ${r1((g.y+f.y)/2-140)} ${r1(f.x)} ${r1(f.y)}`)+dot(f.x,f.y,12,A)+txt(f.x-26,f.y-30,'Forest City, NC',40,{f:'m',a:'end'});}
+  s+=dot(g.x,g.y,16,RED);
+  if(step>=3){s+=txt(1290,200,['O que deu defeito aqui','virou requisito lá.'],64,{f:'b',lh:74});
+    ['data','decimal','fuso','idioma','turnos','ERP'].forEach((t,i)=>s+=card(1290+(i%2)*290,360+Math.floor(i/2)*130,260,96,{t,z:44,tf:'m',a:'middle',ty:62,c:A}));}
+  return s;}
+function net26(){const cx=960,cy=520;let s='';
+  const tips=[-90,-18,54,126,198].map((a,i)=>({...TIPS[[0,1,3,4,2][i]],p:P(cx,cy,250,a)}));
+  const NL=[['sensores nas máquinas',80,230,'start'],['Dataverse',80,390,'start'],['genealogia entre lotes',80,550,'start'],['programação detalhada',80,710,'start'],
+    ['modo offline',1860,230,'end'],['IA da plataforma',1860,390,'end'],['integração direta com o ERP',1860,550,'end']];
+  NL.forEach(([t,x,y,a])=>{const near=tips.reduce((b,q)=>Math.hypot(q.p[0]-x,q.p[1]-y)<Math.hypot(b.p[0]-x,b.p[1]-y)?q:b);
+    const ex=a=='start'?x+t.length*19+20:x-t.length*19-20;s+=wire([near.p,[ex,y-14]],{c:T2,w:2,dash:'8 8',flat:1})+txt(x,y,t,40,{a,c:T2});});
+  [['OEE por hora',640,990],['simulador',1280,990]].forEach(([t,x,y])=>s+=wire([P(cx,cy,250,x<960?126:54),[x,y-50]],{c:TX,w:4,dash:'14 8',flat:1})+card(x-150,y-50,300,76,{t,z:40,a:'middle',ty:52,dash:1,c:TX,fill:BG}));
+  tips.forEach(q=>{s+=wire([[cx,cy],q.p],{c:CH[3],w:4,op:0.8,flat:1})+dot(q.p[0],q.p[1],16,CH[3]);const[lx,ly]=P(cx,cy,330,Math.atan2(q.p[1]-cy,q.p[0]-cx)*180/Math.PI);s+=txt(lx,ly+12,q.n,36,{f:'s',a:'middle',halo:1});});
+  return s+globe(cx,cy,100);}
+const D={txt,dot,wire,reel,card,bar,ficha,tablet,glove,hose,hoseX,ring,wall,stations,stamp,net16,mosaic,tl,gl,net26,
+  rect:(x,y,w,h,c)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${K(c)}"/>`,
+  cardg:(x,y,w,h,t,g)=>card(x,y,w,h,{t,z:56,ty:h-50})+txt(x+32,y+150,g,110,{f:'m',c:A})};
+
+// progresso do carretel: cap. 1 começa apagado (1a) e cresce i/n; demais crescem (i+1)/(n+1); o arco fecha na entrada do capítulo seguinte; 28 fecha tudo
+const NCH=[0,0,0,0,0,0,0,0];FR.forEach(f=>NCH[f.ch]++);
+{const c=[0,0,0,0,0,0,0,0];FR.forEach(f=>{const i=c[f.ch]++,n=NCH[f.ch];f.frac=f.id=='28'?1:f.ch==0?i/n:(i+1)/(n+1);});}
+function defs(){return`<defs><filter id="glow" filterUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><feGaussianBlur stdDeviation="${F?7:4}" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="soft" filterUnits="userSpaceOnUse" x="0" y="0" width="1920" height="1080"><feGaussianBlur stdDeviation="10" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 0.39 0 0 0 0 0.40 0 0 0 0 0.95 0 0 0 .5 0" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<pattern id="braid" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M0 0L26 26M26 0L0 26" stroke="#8B97A6" stroke-width="2.5"/></pattern>
+<radialGradient id="bg" cx="50%" cy="45%" r="75%"><stop offset="0" stop-color="#0E141C"/><stop offset="1" stop-color="${BG}"/></radialGradient>
+<radialGradient id="gl" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#141B25"/><stop offset="1" stop-color="#0A0E14"/></radialGradient>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".10"/><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></linearGradient>
+<filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0"/></filter></defs>`;}
+function svg(f,extra=''){A=CH[f.ch];FRAC=f.frac;let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" data-id="${f.id}">${defs()}<rect width="1920" height="1080" fill="${F?'url(#bg)':BG}"/>`;
+  s+=f.d.map(([k,...a])=>D[k](...a)).join('')+extra;
+  if(!f.noReel)s+=f.big?reel(...f.big,f.ch,f.frac,{logo:f.logo}):reel(1800,985,62,f.ch,f.frac);
+  if(F)s+=`<rect width="1920" height="1080" filter="url(#grain)" opacity=".6"/>`;
+  return s+'</svg>';}
+function cell(f){return`<div class="q">${svg(f)}<div class="cap"><b>${f.id}</b><span class="t">${[f.t,f.p].filter(Boolean).join(' · ')}</span><span class="c" style="color:${CH[f.ch]}">cap. ${f.ch+1} · arco ${Math.round((f.ch+f.frac)/8*100)}%</span></div><div class="elo"><i>Elo:</i> ${esc(f.elo)}</div></div>`;}
+
+// ---------- modos ----------
+const Q=new URLSearchParams(location.search),app=document.getElementById('app');
+if(Q.get('chave')){F=true;document.body.className='chave';const id=Q.get('chave');
+  let f=FR.find(x=>x.id==id)||FR.find(x=>x.id==id+'a');
+  if(id=='16')f={...FR.find(x=>x.id=='16d'),d:[['net16',3,true]]};      // 3 pontas acesas + nós tracejados
+  if(id=='11')f=FR.find(x=>x.id=='11d');
+  if(id=='1b')f={...f,d:[...f.d,['txt',24,1056,'dado fictício',26,{f:'m',c:T2}]]};
+  app.innerHTML=svg(f);}
+else if(Q.get('folha')){document.body.className='folha';const n=+Q.get('folha'),sl=FR.slice((n-1)*12,n*12),tot=Math.ceil(FR.length/12);
+  app.innerHTML=`<header><h1>Defesa do TCC · pranchas de rascunho · folha ${n} de ${tot}</h1><p>Quadros ${sl[0].id} a ${sl[sl.length-1].id} · composição, texto e elo do storyboard v2 · carretel no progresso de cada quadro · rascunho, não arte final</p></header><section><div class="grid">${sl.map(cell).join('')}</div></section>`;}
+else{app.innerHTML=`<header><h1>Defesa do TCC · pranchas de rascunho (44 quadros)</h1><p>Storyboard v2, seções 3, 4 e 6 · cada quadro em 16:9 com número, tempo e elo · carretel no canto com o progresso do capítulo · tracejado = futuro · dado fictício</p></header>`+
+  CHN.map((n,c)=>`<section><h2 style="border-color:${CH[c]}">Capítulo ${c+1} · ${n} <span style="color:#8B97A6;font-weight:350">(${CHT[c]})</span></h2><div class="grid">${FR.filter(f=>f.ch==c).map(cell).join('')}</div></section>`).join('');}
+// ---------- conferência automática: texto fora do quadro, sobre o carretel do canto ou sobreposto ----------
+{const out=[];document.querySelectorAll('svg[data-id]').forEach(sv=>{const id=sv.dataset.id,f=FR.find(x=>x.id==id)||{},T=[...sv.querySelectorAll('text')].filter(t=>!t.dataset.off&&t.textContent.trim());
+  const B=T.map(t=>{const b=t.getBBox();return{t:t.textContent,x:b.x,y:b.y,w:b.width,h:b.height};});
+  B.forEach(b=>{if(b.x<-1||b.y<-1||b.x+b.w>1921||b.y+b.h>1081)out.push(`${id} FORA: "${b.t}" [${Math.round(b.x)},${Math.round(b.y)},${Math.round(b.x+b.w)},${Math.round(b.y+b.h)}]`);
+    if(!f.noReel&&!f.big&&b.x+b.w>1725&&b.y+b.h>905)out.push(`${id} CANTO: "${b.t}"`);});
+  for(let i=0;i<B.length;i++)for(let j=i+1;j<B.length;j++){const a=B[i],b=B[j],ix=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),iy=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);
+    if(ix>4&&iy>4&&ix*iy>0.15*Math.min(a.w*a.h,b.w*b.h))out.push(`${id} SOBREPOSTO: "${a.t}" x "${b.t}"`);}});
+ document.getElementById('qa').textContent='QA '+(out.length?out.join('\n'):'OK');}
+</script></body></html>
