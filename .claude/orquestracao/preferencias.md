@@ -61,3 +61,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-12 | OEE2: aceitou a recomendada de não dar a pausa de 45 min a turno com menos de 4 h (só hora extra)
 2026-11-12 | OEE2: aceitou a recomendada de trocar a referência do cartão TCU para o valor do modelo vivo (20%)
 2026-11-12 | OEE2 matriz máquina × turno: recusou a matriz do Power BI; aprovou o mapa de calor em SVG recomendado (vermelho abaixo da referência de 52%, cinza acima, pior célula com contorno)
+2026-11-13 | BI arredondamento: aceitou a recomendada (tirar o "mil" e pôr uma casa decimal em metros, minutos e %; contagens inteiras) e o ajuste só no relatório, sem mexer no modelo

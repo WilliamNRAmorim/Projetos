@@ -29,6 +29,11 @@ def grafico(extra=None):
         d.update(extra)
     return {"*": d}
 
+# Unidades de exibicao = Nenhum em todo visual (mostra 12.345 e nao "12 mil"); receita da doc da Microsoft
+# (desktop-dynamic-format-strings). William, 13/11/2026: o BI nao arredonda na visualizacao.
+SEM_UNIDADE = {"displayUnits": 1, "labelDisplayUnits": 1, "titleDisplayUnits": 1, "detailDisplayUnits": 1,
+               "valueDisplayUnits": 1, "secLabelDisplayUnits": 1, "titleLabelDisplayUnits": 1}
+
 sem_caixa = {  # textbox, botao, imagem, forma: sem cartao
     "background": [{"show": False}],
     "border": [{"show": False}],
@@ -62,8 +67,10 @@ tema = {
             "border": [{"show": True, "color": cor(BORDA), "radius": 6, "width": 1}],
             "dropShadow": [{"show": False}],
             "padding": [{"top": 12, "bottom": 12, "left": 16, "right": 16}],
+            "*": [dict(SEM_UNIDADE)],
         }},
         "cardVisual": {"*": {
+            "*": [dict({"$id": "default"}, **SEM_UNIDADE)],
             "layout": [{"$id": "default", "backgroundShow": False, "cellPadding": 0, "paddingUniform": 12}],
             "accentBar": [{"$id": "default", "show": True, "position": "Left", "width": 4, "color": cor("#3C3C3B")}],
             "value": [{"$id": "default", "fontSize": F(30), "fontFamily": SEMI, "fontColor": cor(TXT)}],
