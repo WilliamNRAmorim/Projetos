@@ -62,3 +62,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-12 | OEE2: aceitou a recomendada de trocar a referência do cartão TCU para o valor do modelo vivo (20%)
 2026-11-12 | OEE2 matriz máquina × turno: recusou a matriz do Power BI; aprovou o mapa de calor em SVG recomendado (vermelho abaixo da referência de 52%, cinza acima, pior célula com contorno)
 2026-11-13 | BI arredondamento: aceitou a recomendada (tirar o "mil" e pôr uma casa decimal em metros, minutos e %; contagens inteiras) e o ajuste só no relatório, sem mexer no modelo
+2026-11-13 | Defesa do TCC (30/11/2026): aceitou a recomendada de não mostrar nada por nome (empresa, logo, orientador); fotos e vídeos da fábrica só como referência, nunca na tela; recusou a recomendada do cabo: o tablet não vai ao projetor, é mostrado na mão na hora
