@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Máscara de Produção</title>
+<style>
+  :root{--fundo:#F4F4F4;--card:#FFFFFF;--texto:#3C3C3B;--suave:#8A8A88;--linha:#D9D9D9;--vermelho:#E2000F;--ok:#3C3C3B;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--fundo);font-family:"Segoe UI",Arial,sans-serif;color:var(--texto)}
+  .pagina{width:1280px;height:720px;margin:16px auto;padding:16px;background:var(--fundo);display:grid;grid-template-rows:56px 300px 1fr;gap:16px}
+  header{display:flex;align-items:center;justify-content:space-between;background:var(--card);border-radius:8px;padding:0 20px;border-left:6px solid var(--vermelho)}
+  header h1{font-size:20px;margin:0}
+  header span{font-size:13px;color:var(--suave)}
+  .faixa{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .bloco{background:var(--card);border-radius:8px;padding:12px 14px}
+  .bloco h2{font-size:13px;margin:0 0 4px;font-weight:600}
+  .bloco p{font-size:11px;margin:0;color:var(--suave)}
+  svg text{font-family:"Segoe UI",Arial,sans-serif}
+</style>
+</head>
+<body>
+<div class="pagina">
+  <header>
+    <h1>Estamos no ritmo para fechar a meta de novembro?</h1>
+    <span>MB51 até 12/11/2026 · 9 de 22 dias úteis · mockup com os números da planilha de 13/11</span>
+  </header>
+  <div class="faixa" id="cartoes"></div>
+  <div class="faixa" id="barras"></div>
+</div>
+<script>
+const dias=["03/11","04/11","05/11","06/11","07/11","09/11","10/11","11/11","12/11"];
+const P=[
+ {nome:"Mangueira",un:"m",meta:6600,dec:1,d:[2504.59,5837.10,6956.25,6453.06,7503.70,6498.47,7273.70,6099.10,8263.40]},
+ {nome:"Montagem",un:"pç",meta:2517,dec:0,d:[1868,2412,2695,3469,2335,1719,1960,1940,2642]},
+ {nome:"Fittings",un:"pç",meta:800,dec:0,d:[1220,2443,2164,1006,422,1005,0,1023,903]}];
+const UTEIS=22, VERM="#E2000F", OK="#3C3C3B", SUAVE="#8A8A88", LINHA="#D9D9D9";
+const f=(v,dec)=>v.toLocaleString("pt-BR",{minimumFractionDigits:dec,maximumFractionDigits:dec});
+function carinha(cx,cy,r,feliz){
+  const c=feliz?OK:VERM;
+  const boca=feliz?`M${cx-r*.45},${cy+r*.2} Q${cx},${cy+r*.65} ${cx+r*.45},${cy+r*.2}`
+                  :`M${cx-r*.45},${cy+r*.5} Q${cx},${cy+r*.1} ${cx+r*.45},${cy+r*.5}`;
+  return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${c}"/>
+  <circle cx="${cx-r*.35}" cy="${cy-r*.25}" r="${r*.11}" fill="#fff"/><circle cx="${cx+r*.35}" cy="${cy-r*.25}" r="${r*.11}" fill="#fff"/>
+  <path d="${boca}" stroke="#fff" stroke-width="${r*.12}" fill="none" stroke-linecap="round"/>`;
+}
+function cartao(p){
+  const n=p.d.length, acum=p.d.reduce((a,b)=>a+b,0), metaAc=p.meta*n, saldo=acum-metaAc, pct=acum/metaAc;
+  const feliz=saldo>=0, cor=feliz?OK:VERM, rest=UTEIS-n, ritmo=(p.meta*UTEIS-acum)/rest;
+  // burn-up: acumulado real x meta acumulada
+  const W=372,X0=16,Y0=286,H=96, mx=p.meta*n*1.15;
+  let a=0; const pts=p.d.map((v,i)=>{a+=v;return [X0+(i+1)*(W-X0-8)/n, Y0-a/mx*H]});
+  const real="M"+X0+","+Y0+" "+pts.map(q=>q.join(",")).join(" ");
+  const meta=`M${X0},${Y0} ${X0+(W-X0-8)},${Y0-metaAc/mx*H}`;
+  const ult=pts[pts.length-1];
+  return `<div class="bloco" style="padding:0"><svg viewBox="0 0 400 300" width="100%" height="100%" role="img" aria-label="${p.nome}: ${f(pct*100,1)}% da meta acumulada">
+  <rect x="0" y="0" width="400" height="300" rx="8" fill="#fff"/>
+  <rect x="0" y="0" width="400" height="6" rx="3" fill="${cor}"/>
+  ${carinha(52,62,34,feliz)}
+  <text x="100" y="44" font-size="16" font-weight="600" fill="${OK}">${p.nome}</text>
+  <text x="100" y="86" font-size="40" font-weight="700" fill="${cor}">${f(pct*100,1)}%</text>
+  <text x="246" y="86" font-size="12" fill="${SUAVE}">da meta acumulada</text>
+  <text x="16" y="130" font-size="12" fill="${SUAVE}">Produzido</text>
+  <text x="16" y="150" font-size="17" font-weight="600" fill="${OK}">${f(acum,p.dec)} ${p.un}</text>
+  <text x="140" y="130" font-size="12" fill="${SUAVE}">Meta até ontem</text>
+  <text x="140" y="150" font-size="17" font-weight="600" fill="${OK}">${f(metaAc,0)} ${p.un}</text>
+  <text x="270" y="130" font-size="12" fill="${SUAVE}">${feliz?"Adiantado":"Atrasado"}</text>
+  <text x="270" y="150" font-size="17" font-weight="700" fill="${cor}">${feliz?"+":"−"}${f(Math.abs(saldo),p.dec)} ${p.un}</text>
+  <rect x="16" y="162" width="368" height="0.8" fill="${LINHA}"/>
+  <text x="16" y="182" font-size="12" fill="${OK}">Para fechar o mês: <tspan font-weight="700" fill="${ritmo>p.meta?VERM:OK}">${f(ritmo,p.dec)} ${p.un}/dia</tspan> nos ${rest} dias que faltam <tspan fill="${SUAVE}">(meta ${f(p.meta,0)})</tspan></text>
+  <path d="${meta}" stroke="${SUAVE}" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>
+  <path d="${real}" stroke="${cor}" stroke-width="2.5" fill="none"/>
+  <circle cx="${ult[0]}" cy="${ult[1]}" r="3.5" fill="${cor}"/>
+  <text x="16" y="202" font-size="10" fill="${SUAVE}">Acumulado do mês</text>
+  <text x="120" y="202" font-size="10" fill="${SUAVE}">― real   - - meta</text>
+  </svg></div>`;
+}
+function barras(p){
+  const W=380,H=250,X0=8,Y0=212,TOP=48, mx=Math.max(p.meta,...p.d)*1.12, bw=(W-X0*2)/p.d.length;
+  const y=v=>Y0-v/mx*(Y0-TOP);
+  let s=`<rect width="400" height="${H}" rx="8" fill="#fff"/>
+  <text x="14" y="22" font-size="13" font-weight="600" fill="${OK}">Quanto ${p.nome==="Mangueira"?"de mangueira":p.nome==="Montagem"?"a Montagem":"de fitting"} saiu por dia?</text>
+  <text x="14" y="38" font-size="10" fill="${SUAVE}">${p.un==="m"?"metros":"peças"} · vermelho = abaixo da meta diária</text>`;
+  p.d.forEach((v,i)=>{const x=X0+10+i*bw, c=v<p.meta?VERM:OK, h=Y0-y(v);
+    s+=`<rect x="${x+bw*.15}" y="${y(v)}" width="${bw*.7}" height="${h}" rx="2" fill="${c}"/>
+    <text x="${x+bw/2}" y="${y(v)-4}" font-size="9" text-anchor="middle" fill="${c}">${f(v,0)}</text>
+    <text x="${x+bw/2}" y="${Y0+14}" font-size="9" text-anchor="middle" fill="${SUAVE}">${dias[i]}</text>`;});
+  s+=`<line x1="${X0+10}" x2="${W}" y1="${y(p.meta)}" y2="${y(p.meta)}" stroke="${SUAVE}" stroke-width="1.5" stroke-dasharray="5 4"/>
+  <text x="${W}" y="${TOP-4}" font-size="9" text-anchor="end" fill="${SUAVE}">- - meta ${f(p.meta,0)}</text>
+  <line x1="${X0+10}" x2="${W}" y1="${Y0}" y2="${Y0}" stroke="${LINHA}"/>`;
+  return `<div class="bloco" style="padding:0"><svg viewBox="0 0 400 ${H}" width="100%" height="100%" role="img" aria-label="Produção diária de ${p.nome}">${s}</svg></div>`;
+}
+document.getElementById("cartoes").innerHTML=P.map(cartao).join("");
+document.getElementById("barras").innerHTML=P.map(barras).join("");
+</script>
+</body>
+</html>
