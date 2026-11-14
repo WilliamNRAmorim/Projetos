@@ -179,9 +179,13 @@ function Get-Roteiro([string]$path){
 
 # ---------- salvar, pos-processar XML, exportar ----------
 function Save-GmsDeck([string]$path,[double]$morphDur=1.2){
-  if(Test-Path $path){ Remove-Item $path -Force }
-  $script:pres.SaveAs($path,24)
+  # salva num temporario e troca: funciona tambem quando o deck foi aberto de $path (Open-GmsDeckForAppend)
+  $tmp=$path+'.tmp.pptx'
+  if(Test-Path $tmp){ Remove-Item $tmp -Force }
+  $script:pres.SaveAs($tmp,24)
   $script:pres.Close(); $script:pres=$null
+  if(Test-Path $path){ Remove-Item $path -Force }
+  Move-Item $tmp $path
   $z=[IO.Compression.ZipFile]::Open($path,'Update')
   $utf8=New-Object Text.UTF8Encoding($false)
   $rd={ param($e) $r=New-Object IO.StreamReader($e.Open(),$utf8); $t=$r.ReadToEnd(); $r.Close(); $t }
@@ -201,8 +205,11 @@ function Save-GmsDeck([string]$path,[double]$morphDur=1.2){
         if($v -notmatch '</a:prstGeom><a:noFill/>' -and $v -match '</a:prstGeom>'){ $v=$v -replace '</a:prstGeom>','</a:prstGeom><a:noFill/>' }
         $v=$v -replace '<a:fillRef idx="\d+">','<a:fillRef idx="0">' }
       $v },'Singleline')
+    # limpa qualquer transicao ja gravada (idempotente: o PowerPoint regrava o Morph no AlternateContent ao reabrir)
+    $x=[regex]::Replace($x,'<mc:AlternateContent[^>]*>(?:(?!</mc:AlternateContent>).)*?</mc:AlternateContent>',{ param($m) if($m.Value -match '<p:transition'){ '' } else { $m.Value } },'Singleline')
+    $x=$x -replace '<p:transition[^>]*/>',''
+    $x=[regex]::Replace($x,'<p:transition[^>]*>.*?</p:transition>','','Singleline')
     if($num -ge 2){
-      $x=$x -replace '<p:transition[^>]*/>',''
       $x=$x -replace '</p:clrMapOvr>',('</p:clrMapOvr>'+$tr)
     }
     & $wr $nm $x
@@ -219,9 +226,17 @@ function Save-GmsDeck([string]$path,[double]$morphDur=1.2){
 function Open-GmsDeck([string]$path){
   if(-not $script:app){ $script:ownApp=(@(Get-Process POWERPNT -ErrorAction SilentlyContinue).Count -eq 0); $script:app=New-Object -ComObject PowerPoint.Application }
   $script:pres=$script:app.Presentations.Open($path,0,0,0); $script:pres }
-function Export-GmsSlides([string]$dir,[int]$w=1920,[int]$h=1080){
+# Abre um deck ja existente para acrescentar slides (cap2 em diante): New-GmsSlide continua da contagem atual.
+# Se o arquivo ja estiver aberto no PowerPoint do usuario, para com erro (nao fecha nada que nao e nosso).
+function Open-GmsDeckForAppend([string]$path){
+  if(-not $script:app){ $script:ownApp=(@(Get-Process POWERPNT -ErrorAction SilentlyContinue).Count -eq 0); $script:app=New-Object -ComObject PowerPoint.Application }
+  foreach($p in $script:app.Presentations){ if($p.FullName -ieq $path){ throw "O arquivo ja esta aberto no PowerPoint: feche $path e rode de novo." } }
+  $script:pres=$script:app.Presentations.Open($path,0,0,0)
+  $script:slideN=$script:pres.Slides.Count
+  $script:pres }
+function Export-GmsSlides([string]$dir,[int]$w=1920,[int]$h=1080,[int[]]$only){
   New-Item -ItemType Directory -Force $dir | Out-Null
-  foreach($s in $script:pres.Slides){ $s.Export((Join-Path $dir ('slide_{0:D2}.png' -f $s.SlideIndex)),'PNG',$w,$h) } }
+  foreach($s in $script:pres.Slides){ if($only -and ($only -notcontains $s.SlideIndex)){ continue }; $s.Export((Join-Path $dir ('slide_{0:D2}.png' -f $s.SlideIndex)),'PNG',$w,$h) } }
 function Export-GmsVideo([string]$mp4,[int]$secPerSlide=3,[int]$vres=720,[int]$timeoutSec=300){
   New-Item -ItemType Directory -Force (Split-Path $mp4) | Out-Null
   if(Test-Path $mp4){ Remove-Item $mp4 -Force }

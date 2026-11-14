@@ -3,9 +3,10 @@
 O deck é gerado por script, com o PowerPoint dirigido pelo COM do Windows (PowerShell 5.1). Nada é editado à mão: mudou o slide, muda o script e roda de novo.
 
 - `gms_lib.ps1`: funções reutilizáveis (novo deck, carretel com progresso, fio, texto, notas, salvar com os ajustes de XML, exportar).
-- `cap1.ps1`: os 10 slides do capítulo 1. `-SemVideo` pula o vídeo de revisão.
+- `cap1.ps1`: os 10 slides do capítulo 1 (gera o deck do zero). `-SemVideo` pula o vídeo de revisão.
+- `cap2.ps1`: os slides 11 a 14 (capítulo 2, quadros 7 a 10). Rode DEPOIS do cap1: não regera o cap1, abre `GMS_Defesa.pptx`, apaga o que houver além do slide 10 (pode rodar de novo à vontade), acrescenta os 4 slides e salva. O arquivo não pode estar aberto no PowerPoint (o script avisa e para; nunca fecha o PowerPoint do usuário).
 - As notas do apresentador saem de `../roteiro.md` na hora da montagem.
-- Saídas: `../GMS_Defesa.pptx`, `../previa/capN/slide_NN.png` (1920×1080) e `../previa/capN/capN.mp4` (vídeo de revisão das transições, 3 s por slide; não entra no deck).
+- Saídas: `../GMS_Defesa.pptx`, `../previa/capN/slide_NN.png` (1920×1080; no cap2 só os slides novos, com a numeração do deck inteiro: `slide_11` a `slide_14`), `../previa/capN/capN.pdf` (o deck inteiro até o capítulo) e `../previa/capN/capN.mp4` (vídeo de revisão das transições, 3 s por slide; não entra no deck; o `cap2.mp4` começa no slide 10, último do cap1, para mostrar a transição 10→11).
 
 ## Regras aprendidas no capítulo 1 (valem para todos os capítulos)
 
@@ -17,6 +18,21 @@ O deck é gerado por script, com o PowerPoint dirigido pelo COM do Windows (Powe
 6. **Ponta redonda e sem preenchimento vão no XML.** O COM não grava `cap="rnd"` nem `<a:noFill/>` em arco; `Save-GmsDeck` faz isso para todo `!!arco*` e `!!fio*`.
 7. **Animação de entrada só em objeto sem `!!`.** Entrada em objeto que participa do Morph briga com a transição.
 8. **Os PNGs não mostram defeito de transição.** O quadro parado sai certo mesmo com mancha no meio do Morph. Confira sempre o vídeo de revisão.
+
+## Continuar um deck existente (cap2 em diante)
+
+- `Open-GmsDeckForAppend $pptx` abre o deck sem janela e ajusta `$script:slideN` para a contagem atual; `New-GmsSlide` segue dali. `Export-GmsSlides $dir 1920 1080 @(11,12,13,14)` exporta só alguns slides.
+- `Save-GmsDeck` agora salva num temporário e troca o arquivo (funciona com o deck aberto do próprio caminho) e é idempotente: ao reabrir, o PowerPoint regrava o Morph dentro de `mc:AlternateContent`; a função apaga toda transição antiga (AlternateContent, `p:transition` vazia ou não) antes de inserir a sua. Conferido: slides 2 a 14 com uma transição Morph cada, slide 1 sem.
+- Elo entre capítulos: o último slide do capítulo anterior tem objetos `!!`; o primeiro do seguinte recria os MESMOS nomes (no cap2, `!!e1` a `!!e8`, círculo de 36 px, forma 5 com ajuste 0,5) em outras posições, e o Morph faz o caminho. Objeto do slide anterior que não existe no seguinte some em fade.
+- Fio que nasce de um anel: arcos (`!!arcoTurno1..3`, mesma caixa em todos os slides, só o ângulo muda; no slide do fio os três recolhem a um toco de 1 grau em 179–180°, escondido sob uma bolinha) e linha-semente `!!fioL1` de 2 px escondida sob o arco do turno 2, que no slide seguinte estica até virar o fio. Nenhuma forma livre.
+- Nomes `!!arco*` e `!!fio*` ganham ponta redonda e noFill no XML; use esse prefixo para todo arco/linha que participa de Morph. `!!passagem` (retângulo) vira, no quadro 10, a tela do tablet: mesmo tipo de forma, só muda a caixa.
+- Rodapé muito longo invade a área do carretel (x até 1695): no máximo ~58 caracteres de citação.
+
+## Como medir as transições do vídeo (mapa de tempo resolvido)
+
+Cada slide dura 4,2 a 4,4 s no mp4: 3 s parado, e a transição para o seguinte começa em ≈3,0 s (slide 10 do deck como primeiro quadro) e depois a cada ≈4,3 s (cap2: 3,0 / 7,4 / 11,6 / 16,0 s; 20 s no total). O slide 10 do vídeo mostra por volta de 0,8–2,6 s as animações de clique dele (fade das frases), que o vídeo dispara sozinho. Para não depender de tempo: suba um servidor local só de leitura (`python -m http.server 8766` em `previa/`; encerre depois), abra `http://127.0.0.1:8766/cap2/cap2.mp4` no Browser pane, faça `fetch` do vídeo como blob, passe `currentTime` de 0,2 em 0,2 s e some, num canvas 192×108, os pixels ciano e a diferença entre quadros. A transição aparece como pico de diferença e o ciano deve ficar entre os valores de antes e depois (a contagem inclui texto ciano que entra e sai). Para ver um quadro, ponha o `<video>` em tela cheia (`position:fixed`) e tire um screenshot.
+
+Medição do cap2: 10→11 ciano 0→269 monótono; 11→12 e 12→13 caem no meio (os arcos recolhem e o texto ciano sai) e voltam abaixo do valor final; 13→14 177→528 sem pico acima do final. Nenhuma mancha; a transição 10→11 (pontos em fila viram o anel) sem defeito.
 
 ## Onde o deck roda e como ver fora do PowerPoint
 
