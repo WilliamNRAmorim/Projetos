@@ -18,6 +18,22 @@ O deck é gerado por script, com o PowerPoint dirigido pelo COM do Windows (Powe
 7. **Animação de entrada só em objeto sem `!!`.** Entrada em objeto que participa do Morph briga com a transição.
 8. **Os PNGs não mostram defeito de transição.** O quadro parado sai certo mesmo com mancha no meio do Morph. Confira sempre o vídeo de revisão.
 
+## Onde o deck roda e como ver fora do PowerPoint
+
+A defesa roda no **PowerPoint** (decisão do William em 13/11). O Google Slides não serve nem para conferir: ele não tem a fonte Bahnschrift nem a letra manuscrita da ficha, troca por letras mais largas e o texto invade o que está ao lado; e não tem Morph, então o carretel não fecha e os slides não se ligam. Para ver em outro aparelho, cada capítulo exporta também um PDF em `../previa/capN/capN.pdf`, além dos PNGs e do vídeo de revisão.
+
+## Distribuição dos objetos no slide
+
+Slide de 1920×1080 px. Regras para todos os capítulos:
+
+1. Nada a menos de 96 px da borda, fora o carretel do canto e o que sai do slide de propósito (ficha em zoom, caixa de arco).
+2. Pelo menos 32 px entre objetos que não se tocam de propósito. O fio pode passar por trás de cartões e estações.
+3. O carretel do canto ocupa de x 1735 a 1865 e de y 920 a 1050: nenhum texto entra nessa área nem a menos de 40 px dela.
+4. O conteúdo fica equilibrado na altura: não deixe metade do slide vazia com tudo espremido na outra metade.
+5. Um objeto não repete a informação de outro no mesmo slide (ex.: cartão "SAP" e rótulo "SAP").
+
+Pontos apertados do capítulo 1 a corrigir na próxima rodada: o cartão "mesa / supervisão" dos slides 7 e 8 está a 20 px da borda direita; no slide 8 o rótulo "1 a 2 dias" está colado na ficha e na ficha pequena, os cartões XLS e SAP repetem os rótulos de baixo e todo o conteúdo está na metade inferior.
+
 ## Como conferir uma transição sem assistir
 
 Abra o `capN.mp4` num navegador e, pelo console, desenhe quadros do vídeo num canvas pequeno no meio de cada transição (um slide a cada 4,2 s: 3 s parado e 1,2 s de Morph). Conte os pixels da cor do fio antes, no meio e depois. Se o meio tiver muito mais pixels que os dois extremos, há mancha. No capítulo 1 a mancha dava cerca de 10 vezes o valor de repouso; corrigido, o meio fica entre os dois extremos.
