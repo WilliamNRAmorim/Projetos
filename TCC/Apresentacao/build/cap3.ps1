@@ -127,7 +127,8 @@ try {
       if($it.d){ $null=Add-Txt $s "!!d$n" $it.d ($x-16) (710+56*$script:ASC) 56 @{font=$script:F_MONO;color=$INDL} }
       if(($x-16) -ge 1920 -or ($x-16+$w) -le 96){ $off+="!!mk$n","!!t$n"; if($it.d){ $off+="!!d$n" } } }
     $offTL[$ix]='^('+(($off+'!!faixa3','!!barraDev','!!barraPar','!!fioFut','!!labPar') -join '|')+')$'
-    Add-Moldura $s 'A construção' $IND '{{Nove meses}} até a ficha sair.' '13 / 28' 'Figura 5 e seção 4.1'
+    $fg= if($T.id -eq '13c'){ 'Depois, {{consolidação e expansão}}.' } else { '{{Nove meses}} até a ficha sair.' }
+    Add-Moldura $s 'A construção' $IND $fg '13 / 28' 'Figura 5 e seção 4.1'
     $null=Add-ReelCap $s 1800 985 62 3 (Frac); Set-Notes $s $rot[$T.id] }
 
   # ---- 23 (14): "2 x 7": os dois primeiros trechos viram as duas barras ----

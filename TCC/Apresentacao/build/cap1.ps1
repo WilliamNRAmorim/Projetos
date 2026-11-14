@@ -129,8 +129,8 @@ try {
   # ---- 2 (capa) ----
   $s=New-GmsSlide
   $null=Add-Reel $s 500 540 280 $FRAC['2']
-  $null=Add-Box $s 'placa_logo' 1 1484 96 340 190 '#FFFFFF' $null
-  $lg=$s.Shapes.AddPicture((Join-Path $root 'assets\unisal_logo.png'),0,-1,1504/2,116/2,300/2,150/2); $lg.Name='logo_unisal'
+  $null=Add-Box $s 'placa_logo' 1 1597 96 227 127 '#FFFFFF' $null
+  $lg=$s.Shapes.AddPicture((Join-Path $root 'assets\unisal_logo.png'),0,-1,1610.5/2,109.5/2,200/2,100/2); $lg.Name='logo_unisal'
   $null=Add-Txt $s 'titulo_tcc' 'Digitalização de Processos em Manufatura Multinacional: Implementação de um Sistema de Execução de Manufatura via Ecossistema Low-Code' 880 380 64 @{font=$script:F_COND;bold=$true;wrap=944}
   $null=Add-Txt $s 'autor' 'William Nathan Ribeiro de Amorim' 880 722 56 @{wrap=944}
   $null=Add-Txt $s 'curso' 'Engenharia da Computação · UNISAL' 880 794 56 @{color=$script:T2;wrap=944}
