@@ -57,18 +57,21 @@ try {
   Add-Moldura $s 'O método' $CY 'Fui ver o trabalho {{onde ele acontece}}.' '7 / 28' 'seção 3.1 (IMAI, 2012; WOMACK; JONES, 1996)'
   $null=Add-ReelCap $s 1800 985 62 2 $FR[0]; Set-Notes $s $rot['7']
 
-  # ---- 12 (quadro 8): o mesmo anel, tres trechos ----
+  # ---- 12 (quadro 8): o mesmo anel, tres trechos (anel na coluna esquerda; tres cartoes na direita) ----
+  $CX=400                           # anel deslocado para a esquerda, alinhado a margem de 96 px (no slide 13 volta a 1000)
   $s=New-GmsSlide
   Add-Seed $s
   Add-Anel $s $false
   Add-Beads $s 'anel'
   $null=Add-Txt $s '!!centro' '24 h' $CX 612 96 @{font=$script:F_COND;bold=$true;align='m'}
-  $null=Add-Rotulo2 $s 'trecho_manha' 'manhã' 'na estação' 1340 330 $CY_L
-  $null=Add-Rotulo2 $s 'trecho_tarde' 'tarde' 'desenvolvendo' 1340 530 $CY
-  $null=Add-Rotulo2 $s 'trecho_noite' 'turno seguinte' 'versão nova' 1340 730 '#22A5C4'
+  $cardY=@(260,485,710); $cardTxt=@(@('manhã','na estação',$CY_L),@('tarde','desenvolvendo',$CY),@('turno seguinte','versão nova','#22A5C4'))
+  for($i=0;$i -lt 3;$i++){
+    $null=Add-Box $s "cartao_trecho$($i+1)" 1 800 $cardY[$i] 880 190 $script:SF $script:LN 3
+    $null=Add-Rotulo2 $s "trecho_$(@('manha','tarde','noite')[$i])" $cardTxt[$i][0] $cardTxt[$i][1] 840 ($cardY[$i]+22) $cardTxt[$i][2] }
   $p=Pol 60; Add-Ponta $s $p.x $p.y
   Add-Moldura $s 'O método' $CY 'Um {{ciclo}} por dia.' '8 / 28' 'seção 3.2 (DI RUSCIO et al., 2022)'
   $null=Add-ReelCap $s 1800 985 62 2 $FR[1]; Set-Notes $s $rot['8']
+  $CX=1000
 
   # ---- 13 (quadro 9): o anel vira fio e bate no muro ----
   $s=New-GmsSlide
@@ -87,7 +90,7 @@ try {
   # ---- 14 (quadro 10): a passagem vira a tela do tablet ----
   $s=New-GmsSlide
   $null=Add-FioLine $s '!!fioL1' 96 580 520 580 $CY 6
-  $tb=Add-Box $s 'tablet' 5 520 290 880 580 $script:SF $script:T2 4 0.06
+  $tb=Add-Box $s '!!tablet' 5 520 290 880 580 $script:SF $script:T2 4 0.06
   $pa=Add-Box $s '!!passagem' 1 548 318 824 524 '#0B1A22' $CY 4
   $bt=Add-Box $s 'botao' 1 685 520 340 120 $CY $null 2
   $r=$bt.TextFrame.TextRange; $r.Text='APONTAR'; $r.Font.Name=$script:F_COND; $r.Font.Bold=-1; $r.Font.Size=36; $r.Font.Color.RGB=(Get-Rgb $script:BG); $r.ParagraphFormat.Alignment=2; $bt.TextFrame.VerticalAnchor=3
@@ -107,7 +110,7 @@ try {
   $null=Open-GmsDeck $pptx
   Export-GmsSlides $prev 1920 1080 @(11,12,13,14)
   "PNGs (slides 11 a 14, numeracao do deck): $prev"
-  $nviol=Test-GmsLayout -Slides 11,12,13,14 -Families @('^(muro|!!passagem)','^(tablet|!!passagem|botao|cota|luva)')
+  $nviol=Test-GmsLayout -Slides 11,12,13,14 -Families @('^(muro|!!passagem)','^(!!tablet|!!passagem|botao|cota|luva)','^(cartao_trecho|trecho_)')
   "violacoes de layout: $nviol"
   "pdf: $(Export-GmsPdf (Join-Path $prev 'cap2.pdf'))"
   if(-not $SemVideo){
