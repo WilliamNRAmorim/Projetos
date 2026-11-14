@@ -34,12 +34,9 @@ $PT=@(
   @{n=5; side='L'; row=2; ang=157.5; t='Engenharia';   a='Delineamento nas telas';  b='Ciclo e paradas no BI'})
 $ROWTOP=@(260,492,724)
 $TXL=96; $TXR=1210; $NXL=760; $NXR=1160; $DN=36; $DD=16
-$DISC=@(@(22.5,'!!barraDev'),@(67.5,'!!barraPar'),@(112.5,'!!card3'))   # os tres cartoes do 24 viram discos sob o anel
 function Ring-Pt([double]$ang,[double]$r){ @(($CX+$r*[Math]::Cos($ang*[Math]::PI/180)),($CY+$r*[Math]::Sin($ang*[Math]::PI/180))) }
 
 function Add-Quadro16($s,[int]$lit,[bool]$dashed){   # lit = quantas pontas acesas (0..5, ordem 1..5)
-  # discos escondidos sob o anel (12 px, menores que o traco)
-  foreach($d in $DISC){ $p=Ring-Pt $d[0] $RN; $null=Add-Box $s $d[1] 1 ($p[0]-6) ($p[1]-6) 12 12 $VIO $null 1 }
   # fios: nascem de um toco de 2 px sob o anel e esticam ate o no
   foreach($q in $PT){
     $nx= if($q.side -eq 'L'){$NXL}else{$NXR}; $ny=$ROWTOP[$q.row]+36
@@ -62,8 +59,9 @@ function Add-Quadro16($s,[int]$lit,[bool]$dashed){   # lit = quantas pontas aces
     if($on){
       $it=Add-Txt $s "it$($q.n)" "$($q.a)`r$($q.b)" $tx ($bt+76+56*$script:ASC) 56 @{color=(Mix-Hex $script:TX 0.78)}
       $r=$it.TextFrame.TextRange.ParagraphFormat; $r.LineRuleWithin=-1; $r.SpaceWithin=0.9 }
-    if($on){ $null=Add-Box $s "!!no$($q.n)" 5 ($nx-$DN/2) ($ny-$DN/2) $DN $DN $VIO $null 1 0.5 }
-    else   { $null=Add-Box $s "!!no$($q.n)" 5 ($nx-$DD/2) ($ny-$DD/2) $DD $DD (Mix-Hex $script:T2 0.45) $null 1 0.5 } }
+    # no (!!nd): circulo de 18 pt, preenchimento violeta (apagado: 8 pt cinza); o 31 cria os cartoes com outro nome (!!no)
+    if($on){ $null=Add-Box $s "!!nd$($q.n)" 5 ($nx-$DN/2) ($ny-$DN/2) $DN $DN $VIO $null 1 0.5 }
+    else   { $null=Add-Box $s "!!nd$($q.n)" 5 ($nx-$DD/2) ($ny-$DD/2) $DD $DD (Mix-Hex $script:T2 0.45) $null 1 0.5 } }
   if($dashed){
     $NT=@(@(1060,850),@(1290,850),@(1520,850))
     for($i=0;$i -lt 3;$i++){
@@ -102,7 +100,10 @@ try {
   foreach($c in $ACESOS){ $p=Card-Pos $c[2] $c[3]; $null=Add-Box $s "!!no$($c[0])" 5 $p[0] $p[1] $CW $CH2 $script:SF $VIO 4 0.04 }
   foreach($c in $TRACE){ $p=Card-Pos $c[2] $c[3]; $b=Add-Box $s "!!nt$($c[0])" 5 $p[0] $p[1] $CW $CH2 $null (Mix-Hex $VIO 0.6) 4 0.04; $b.Line.DashStyle=4 }
   foreach($c in $ACESOS){ $p=Card-Pos $c[2] $c[3]; $null=Add-Pic $s ("img_"+$c[1].Replace('.png','')) (Join-Path $telas $c[1]) $p[0] $p[1] $CW $CH2 }
-  foreach($c in $TRACE){ $p=Card-Pos $c[2] $c[3]; $null=Add-Pic $s ("img_"+$c[1].Replace('.png','')) (Join-Path $telas $c[1]) $p[0] $p[1] $CW $CH2 }
+  $TRT=@('OEE por hora',('Simulador de demanda × pessoas' -replace ' × ',([string][char]0xA0+'×'+[char]0xA0)),'Genealogia entre lotes')
+  foreach($c in $TRACE){ $p=Card-Pos $c[2] $c[3]   # titulo em texto do PowerPoint, centrado na moldura tracejada
+    $t=Add-Txt $s "tt$($c[0])" $TRT[$c[0]-1] ($p[0]+24) ($p[1]+$CH2/2) 40 @{font=$script:F_COND;bold=$true;color=(Mix-Hex $VIOL 0.6);align='m';wrap=($CW-48)}
+    $t.Left=($p[0]+$CW/2)/2-$t.Width/2; $t.Top=($p[1]+$CH2/2)/2-$t.Height/2 }
   Add-Moldura $s 'A expansão' $VIO 'O que o dado {{já responde}} e o que falta.' '17 / 28' 'seção 4.3 e Quadro 4'
   $null=Add-ReelCap $s 1800 985 62 4 (Frac); Set-Notes $s $rot['17']
 
@@ -144,13 +145,21 @@ try {
 
   foreach($sl in $script:pres.Slides){ $sl.SlideShowTransition.AdvanceOnClick=-1; $sl.SlideShowTransition.AdvanceOnTime=0 }
   Save-GmsDeck $pptx 1.2
+  # pulso do 32: repeatCount numerico vira 'indefinite' (ate o fim do slide); senao o CreateVideo estende o slide a 72 s
+  $z=[IO.Compression.ZipFile]::Open($pptx,'Update'); $utf8=New-Object Text.UTF8Encoding($false)
+  foreach($en in @($z.Entries | Where-Object { $_.FullName -match '^ppt/slides/slide\d+\.xml$' })){
+    $r=New-Object IO.StreamReader($en.Open(),$utf8); $x=$r.ReadToEnd(); $r.Close()
+    if($x -match 'repeatCount="\d+"'){
+      $n=$en.FullName; $x=[regex]::Replace($x,'repeatCount="\d+"','repeatCount="indefinite"'); $en.Delete()
+      $ne=$z.CreateEntry($n); $w=New-Object IO.StreamWriter($ne.Open(),$utf8); $w.Write($x); $w.Close(); "pulso: repeatCount=indefinite em $n" } }
+  $z.Dispose()
   "salvo: $pptx"
 
   $null=Open-GmsDeck $pptx
   $idx=25..35
   Export-GmsSlides $prev 1920 1080 $idx
   "PNGs (slides 25 a 35, numeracao do deck): $prev"
-  $famL=@('^(!!no|!!nt|img_)','^(pulso_|!!no1)','^(!!pt1|it1)$','^(!!pt2|it2)$','^(!!pt3|it3)$','^(!!pt4|it4)$','^(!!pt5|it5)$','^(nucleo|!!barra|!!card)')
+  $famL=@('^(!!no|!!nt|img_|tt\d)','^(pulso_|!!no1)','^(!!pt1|it1)$','^(!!pt2|it2)$','^(!!pt3|it3)$','^(!!pt4|it4)$','^(!!pt5|it5)$','^(nucleo|!!barra|!!card)')
   $nviol=Test-GmsLayout -Slides $idx -ExceptAll @('^fioT') -Families $famL
   "violacoes de layout: $nviol"
   "pdf: $(Export-GmsPdf (Join-Path $prev 'cap4.pdf'))"
