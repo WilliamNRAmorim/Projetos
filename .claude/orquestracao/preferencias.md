@@ -71,3 +71,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-14 | Defesa do TCC: correção da linha acima. Na sessão do capítulo 4 ele respondeu "Sim, encolher": a placa branca do logo da capa vai a cerca de dois terços
 2026-11-14 | Defesa do TCC, capítulo 4: aceitou disparar o produtor-de-artes (P4, ≈ US$ 8 a 12 estimados), encolher a placa do logo da capa e manter simulador, OEE por hora, IA local e assistente Uiu como "em construção"
 2026-11-14 | Defesa do TCC: aprovou o capítulo 4 como está, com as passagens 24>25 e 30>31 em fade e os nomes dos cartões tracejados em texto de 20 pt (aceitou a correção que o chefe decidiu sem perguntar). Mandou fazer o capítulo 5
+2026-11-14 | Defesa do TCC: aprovou o capítulo 5 como está e iniciou ele mesmo, pelo cartão, a sessão dos capítulos 6 a 8 juntos (aceitou a recomendada de fazer os três num bloco só, com um executor por capítulo)
