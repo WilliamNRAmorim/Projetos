@@ -196,3 +196,35 @@ O apontamento aparece na fila da etapa. É o painel da Célula, no instante em q
 Na tela: plano B, passo 3 · achar uma OP. Fora da conta de tempo.
 
 Consulto uma OP: estado e histórico. Era uma manhã de conferência; aqui é uma busca. Daqui sigo para os resultados.
+
+## Capítulo 5 · Os resultados (14:30 a 17:20)
+
+### 19 · 0:40 · acumulado 15:10
+Na tela: a ficha da abertura à esquerda, o tablet à direita e três linhas entre os dois: tempo, visibilidade e conexão, cada uma com o antes e o depois.
+
+Lembram dos três planos do começo: tempo, visibilidade e conexão? Agora com evidência. **No tempo,** o apontamento que levava de um a dois dias para chegar à supervisão fica na lista no instante do registro e, no painel de TV, em até dois minutos, que é o ciclo de recarga da tela. **Na visibilidade,** antes nenhuma etapa tinha a fila à vista; hoje todas têm, cada ordem com a sua idade. **Na conexão,** conferir uma OP fechada custava uma manhã; hoje a conferência com o SAP sai todo dia, de terça a sábado, e as divergências que restam viram item de tratativa com responsável.
+
+### 20 · 0:30 · acumulado 15:40
+Na tela: "O que o dossiê do Kaizen estima": 36×, 87,5% e 97%, com a faixa fixa "estimativas da equipe, sem cronometragem".
+
+O dossiê corporativo do Kaizen traz três números: a resposta a reclamação 36 vezes mais rápida, o escopo de contenção 87,5% menor e 97% menos horas de consolidação de relatórios. **Leio os três com reserva.** São estimativas da equipe, sem cronometragem; o dossiê não descreve o método, e o escopo de contenção não tem linha de base detalhada. Por isso eu os cito, mas não os tomo como medida.
+
+### 21a · 0:15 · acumulado 15:55
+Na tela: "8,3×" sozinho e, abaixo, "O volume da célula era contado 8,3 vezes."
+
+Aquilo é estimativa. **Isto o sistema mediu.** Ao medir o volume na origem, ele mostrou que o indicador contava 8,3 vezes a saída real: o mesmo metro era somado em cada etapa.
+
+### 21b · 0:20 · acumulado 16:15
+Na tela: o 8,3× encolhe para a base e entra a barra: "74% da 'parada' da Montagem era tempo excedido". É o próximo clique.
+
+E não foi o único. Dos minutos de "parada" da Montagem, 74% eram tempo excedido, e a regra proíbe somar os dois com a parada real. O painel passou a mostrar os dois em cartões separados. **Ao medir na origem, o sistema auditou os próprios indicadores.** O TCC I não previa isso.
+
+### 22 · 0:35 · acumulado 16:50
+Na tela: duas barras: SAP, 96,4%; sensor, até 6%. Rodapé: Resumo; seção 4.4 e Tabela 2.
+
+**Conferi contra fontes que eu não controlo.** A primeira é o SAP: numa análise retrospectiva de um mês, 96,4% das OPs do GMS também estavam lá. É cobertura, não garantia de que o SAP esteja certo. A segunda é o sensor da única máquina que tem um, durante quinze dias. Nos turnos fechados, hora a hora, o apontamento erra cerca de nove minutos, para mais ou para menos. Como o viés é próximo de zero, no total dos turnos fechados o tempo parado fica a até 6% do medido. **O sensor auditou o apontamento, não o substituiu.**
+
+### 23 · 0:30 · acumulado 17:20
+Na tela: o anel de onze arcos do MESA-11: seis acesos, um pulsando, dois meio acesos e dois apagados.
+
+O modelo da MESA International lista onze funções de um sistema de execução. Seis estão implementadas, uma em expansão, duas parciais e duas fora do escopo. **Nenhuma função mudou de situação desde a qualificação. Mudou a prova.** A análise de desempenho segue em expansão enquanto o OEE usar velocidade cadastrada e a acurácia estiver conferida em uma só máquina. Falta dizer, com franqueza, o que isso não prova.
