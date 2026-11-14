@@ -62,6 +62,8 @@ A ordem é a da logo, no sentido horário a partir do ponto vermelho. O vermelho
 
 **Tamanhos.** 16:9. Número-herói com 200 pt ou mais, título com 60 pt ou mais, nenhum texto abaixo de 28 pt. No máximo 12 palavras por slide, fora rótulos.
 
+**Moldura fixa.** Como no pitch do TCC I (nota 10), todo slide de conteúdo tem a mesma moldura: rótulo do capítulo no alto à esquerda, frase-guia logo abaixo com as palavras-chave na cor do capítulo, conteúdo numa grade de 12 colunas alinhado à esquerda, e rodapé com o contador "n / 28" e a citação da afirmação. Ficam sem moldura a abertura, a capa e o slide final. As medidas estão em `build/LEIA-ME.md`.
+
 **Movimento.** Só Morph, de 1 a 1,5 s. Os objetos que viajam têm o mesmo nome em todos os slides (`!!fio`, `!!ponto`, `!!arco1` a `!!arco8`, `!!ficha`, `!!tablet`). Nenhum vídeo embutido. Se um objeto se move, é porque o dado se moveu.
 
 ## 5. O que mudou
@@ -211,7 +213,7 @@ Sugestão de sessão: as pranchas e o capítulo 1 saem daqui. Depois, sessão no
 2. ~~Os 8 arcos são as 8 etapas?~~ Resolvido pelo código do filme: 8 arcos, 8 etapas, e o ponto vermelho é onde a mangueira começa.
 3. **Números que entram.** Todos relativos e todos do TCC: 1 a 2 dias, até 2 min, 36×, 87,5%, 97%, 8,3×, 74%, 96,4%, até 6%, e o placar 6/1/2/2 do MESA-11. Mais os do método: 2 semanas, 3 turnos, 12 processos, 2 × 7 meses. Ficam de fora: fichas por mês, lançamentos, fontes, R$, kg de papel, contagens de OP.
 4. **A frase da mangueira** (slide 27) é minha, não está no TCC. Fica?
-5. **Capa:** seu nome, curso e instituição, sem orientador. E a sigla GMS só no último slide. Certo?
+5. **Capa:** seu nome e "Engenharia da Computação · UNISAL", como na capa do pitch do TCC I. Sem orientador nem coorientador (decisão de 13/11; no TCC I eles apareciam) e com a sigla GMS só no último slide. Falta você dizer se quer o logo da UNISAL na capa, como no TCC I.
 6. **Para o dia:** vai no seu notebook? A sala escurece? E qual é o modelo do tablet (para o `demo_tablet.md`)?
 7. **"Zeramos" × "quase nada".** O slide 27 usa a sua frase. O texto do TCC fecha com "reduziu-se a quase nada". Sugestão: a frase fica no slide e a fala diz "a quase nada", para a banca não cobrar o zero.
 8. **6% × 9 minutos (slide 22).** O "até 6%" só aparece no resumo do TCC. O corpo (§4.4) diz "próximo do medido", e a Tabela 2 dá erro médio de cerca de 9 minutos por hora, com viés quase zero. Os dois batem, mas a banca pode perguntar de onde sai o 6%. Você tem essa conta à mão? Se não tiver, o slide fica só com os 9 minutos e o viés.

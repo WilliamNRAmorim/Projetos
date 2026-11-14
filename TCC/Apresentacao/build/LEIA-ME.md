@@ -32,7 +32,20 @@ Slide de 1920×1080 px. Regras para todos os capítulos:
 4. O conteúdo fica equilibrado na altura: não deixe metade do slide vazia com tudo espremido na outra metade.
 5. Um objeto não repete a informação de outro no mesmo slide (ex.: cartão "SAP" e rótulo "SAP").
 
-Pontos apertados do capítulo 1 a corrigir na próxima rodada: o cartão "mesa / supervisão" dos slides 7 e 8 está a 20 px da borda direita; no slide 8 o rótulo "1 a 2 dias" está colado na ficha e na ficha pequena, os cartões XLS e SAP repetem os rótulos de baixo e todo o conteúdo está na metade inferior.
+### Moldura fixa (o que o pitch do TCC I fazia bem)
+
+O pitch da qualificação, que tirou nota 10, tinha a mesma moldura em todo slide: título no alto à esquerda, uma frase-guia logo abaixo com as palavras-chave em cor, conteúdo em fileiras de caixas iguais alinhadas pela mesma margem, citação ao lado da afirmação e contador de página. A defesa mantém o visual escuro e o Morph, e adota essa disciplina:
+
+1. **Rótulo do capítulo** no alto à esquerda (x 96, y 64): Bahnschrift SemiBold Condensed 28 pt, maiúsculas, na cor do capítulo (O PROBLEMA, O MÉTODO, A CONSTRUÇÃO, A EXPANSÃO, OS RESULTADOS, AS LIMITAÇÕES, FOREST CITY E O FUTURO, A TESE). Nome `!!rotulo`, para ficar parado dentro do capítulo.
+2. **Frase-guia** logo abaixo (x 96, y 120), alinhada à esquerda, 44 a 54 pt, largura máxima de 1500 px, com as palavras-chave na cor do capítulo. No slide de número-herói, o número entra no lugar da frase-guia, centralizado.
+3. **Área de conteúdo** de y 260 a y 900, numa grade de 12 colunas entre x 96 e x 1824 (coluna de 122 px, vão de 24 px). Toda caixa começa e termina em borda de coluna. Fileiras de caixas têm a mesma largura, a mesma altura e o mesmo vão.
+4. **Rodapé** à esquerda (x 96, y 1000), Consolas 20 pt, cinza: o contador "n / 28" (o número do slide no storyboard; passos de Morph repetem o número) e, depois de um ponto médio, a citação da afirmação do slide, como no TCC (ex.: "5 / 28 · Jesus et al. (2025); Wu, Xu e Zheng (2024)"). É a única exceção ao mínimo de 28 pt.
+5. **Alinhamento à esquerda** por padrão. Centralizado só no número-herói, na tese e no fechamento.
+6. **Sem moldura:** os cinco passos da abertura (1a a 1e), a capa e o slide final. Neles vale só a margem.
+
+O pitch original fica fora do repositório, porque tem nomes que não podem ir a público: `C:\Users\willi\Downloads\GMS_Qualificacao_Pitch_v3.pptx`. Abra só para consulta, em modo leitura, e não copie para cá.
+
+Pontos apertados do capítulo 1 a corrigir na próxima rodada, junto com a entrada da moldura nos slides 3 a 6 do storyboard: o cartão "mesa / supervisão" dos slides 7 e 8 está a 20 px da borda direita; no slide 8 o rótulo "1 a 2 dias" está colado na ficha e na ficha pequena, os cartões XLS e SAP repetem os rótulos de baixo e todo o conteúdo está na metade inferior.
 
 ## Como conferir uma transição sem assistir
 
