@@ -68,3 +68,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-13 | Defesa do TCC: mandou o pitch do TCC I (nota 10) como referência de distribuição: moldura igual em todo slide, título no alto à esquerda, frase-guia, caixas alinhadas, citação e contador de página. Capa: Engenharia da Computação · UNISAL. Mandou iniciar os capítulos 2 e 3
 2026-11-13: defesa do TCC: quer o logo da UNISAL na capa (sim), sobre placa branca; capa só com autor e 'Engenharia da Computação · UNISAL'.
 2026-11-14 | Defesa do TCC: aprovou os capítulos 2 e 3 como estão. Com isso aceitou a recomendada de manter a mangueira como imagens por camada (o 3D ao vivo não entra por automação). Não respondeu sobre reduzir a placa do logo da capa: fica como está até ele dizer
+2026-11-14 | Defesa do TCC: correção da linha acima. Na sessão do capítulo 4 ele respondeu "Sim, encolher": a placa branca do logo da capa vai a cerca de dois terços
