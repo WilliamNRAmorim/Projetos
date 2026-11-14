@@ -129,3 +129,70 @@ Desses nove meses, dois foram de desenvolvimento e sete de implantação. [Dois 
 Na tela: três cartões: norma escrita, diário de decisões, código versionado. "Low-code com disciplina de software."
 
 Por isso a construção tem uma disciplina própria: **low-code com disciplina de software.** Três cartões. A norma escrita, com princípios, padrões e conceitos catalogados. O diário de decisões, só de acréscimo. E o código das telas, em pasta versionada. O diário guarda também o que deu errado: decisões revertidas e até um alarme falso, registrado de propósito, para lembrar que o sinal de sucesso de uma ferramenta não prova que o dado chegou.
+
+## Capítulo 4 · A expansão e o ao vivo (9:35 a 14:30)
+
+### 16a · 0:11 · acumulado 9:46
+Na tela: o carretel vem para o centro e vira o núcleo. As cinco pontas ainda apagadas.
+
+Até aqui, uma célula. Agora, **o que nasceu nela e onde chegou.** O carretel vai para o centro, e a partir dele o sistema alcança cinco áreas. Vou acendendo uma a uma.
+
+### 16b · 0:11 · acumulado 9:57
+Na tela: acende a ponta Manufatura: 8 etapas apontadas na estação, Hora-Hora, painéis de TV da Célula e da Montagem.
+
+Manufatura, de onde tudo partiu: as oito etapas apontadas na estação, o Hora-Hora, que compara o realizado com a meta por janela de tempo, e os painéis de TV da Célula e da Montagem. O papel saiu em maio de 2026.
+
+### 16c · 0:11 · acumulado 10:08
+Na tela: acende a ponta Qualidade: inspeção e refugo tipificado, medida conferida contra a especificação, carta X̄-R da trançagem (em paralelo ao papel).
+
+Qualidade. A inspeção e o refugo são tipificados. A medida que o operador registra é conferida contra a faixa especificada na hora, e **a tela avisa, sem bloquear.** E a carta de controle X̄-R da trançagem ganhou tela própria, que corre em paralelo ao papel.
+
+### 16d · 0:11 · acumulado 10:19
+Na tela: acende a ponta Planejamento: OP escolhida no plano sincronizado, exceção aprovada pela supervisão.
+
+Planejamento. A OP deixou de ser digitada: depois que as fichas mostraram números de OP inventados, ela passou a ser escolhida numa lista sincronizada com o plano. Fora do plano, só com **pedido de exceção aprovado pela supervisão.**
+
+### 16e · 0:11 · acumulado 10:30
+Na tela: acende a ponta Logística: packing list por pallet com código de barras, conferência diária com o SAP.
+
+Logística. O packing list é registrado por pallet no próprio sistema, com código de barras. E a conferência diária com o SAP, de terça a sábado, sem nova digitação: **o SAP é a referência quando os registros divergem.**
+
+### 16f · 0:10 · acumulado 10:40
+Na tela: acende a ponta Engenharia. Surgem nós tracejados, sem nome.
+
+Engenharia. Os cadastros de delineamento são lidos pelas telas, e o ciclo, o gargalo e as paradas aparecem no BI. Estes nós tracejados, sem nome, são o que **ainda não existe.** Eu volto a eles no fim.
+
+### 17 · 0:30 · acumulado 11:10
+Na tela: o mosaico de oito cartões de relatório. Acesos: fila por etapa, paradas, Hora-Hora, Montagem e Extrusora. Tracejados: OEE por hora, simulador de demanda × pessoas, genealogia entre lotes. Dado fictício.
+
+Este é o relatório, com dado ilustrativo. Acesos, os cinco que **já existem**: a fila de cada etapa, as paradas, o Hora-Hora, a Montagem e a Extrusora. Tracejados, o que **ainda não foi entregue**: OEE por hora, um simulador de demanda contra pessoas e a genealogia entre lotes.
+
+### 18 · 3:20 · acumulado 14:30
+Na tela: "Agora, ao vivo." Os três passos e "No tablet, na mão." O tablet fica na mão, não vai ao projetor.
+
+**Frase de entrada:** Agora, ao vivo. Vou pegar o tablet, e vocês acompanham pelo que eu descrever. São três coisas.
+
+**Passo 1 · apontar uma etapa (cerca de 1:10).** Abro a tela de uma etapa. Escolho a OP na lista, que vem do plano. Digito a metragem e aponto. Reparem no que a tela faz se eu errar: avisa, mas deixa seguir. Metragem em branco ou zero, não: aí o dado não existe.
+
+**Passo 2 · ver o painel reagir (cerca de 1:10).** Olho o painel da Célula. O apontamento que acabei de fazer já está na fila da etapa. Na lista ele aparece no instante do registro, e no painel de TV em até dois minutos, que é o ciclo de recarga da tela.
+
+**Passo 3 · achar uma OP (cerca de 0:50).** Abro a consulta e procuro uma OP. Era isso que, no papel, custava uma manhã. Aqui: digito, e ela aparece com o estado e o histórico.
+
+**Frase de saída:** Foi isso. O dado não mudou: mudou o custo de chegar até ele. Vamos ver o que isso produziu.
+
+[Se a rede cair: um clique no ponto discreto do slide leva aos três slides de reserva. Narre as mesmas três ações; o último volta ao fluxo.]
+
+### 18B1 · 0:50 · acumulado 14:30
+Na tela: plano B, passo 1 · apontar uma etapa, em tela recriada. Fora da conta de tempo.
+
+Sem o tablet, vejo aqui a mesma tela, com dado ilustrativo. Escolho a OP na lista, informo a metragem e aponto. Se a medida divergir do cadastro, a tela avisa e deixa seguir.
+
+### 18B2 · 0:50 · acumulado 14:30
+Na tela: plano B, passo 2 · o painel reage. Fora da conta de tempo.
+
+O apontamento aparece na fila da etapa. É o painel da Célula, no instante em que o registro entra, e em até dois minutos na TV.
+
+### 18B3 · 0:50 · acumulado 14:30
+Na tela: plano B, passo 3 · achar uma OP. Fora da conta de tempo.
+
+Consulto uma OP: estado e histórico. Era uma manhã de conferência; aqui é uma busca. Daqui sigo para os resultados.
