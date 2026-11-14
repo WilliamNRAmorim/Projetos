@@ -45,7 +45,14 @@ O pitch da qualificação, que tirou nota 10, tinha a mesma moldura em todo slid
 
 O pitch original fica fora do repositório, porque tem nomes que não podem ir a público: `C:\Users\willi\Downloads\GMS_Qualificacao_Pitch_v3.pptx`. Abra só para consulta, em modo leitura, e não copie para cá.
 
-Pontos apertados do capítulo 1 a corrigir na próxima rodada, junto com a entrada da moldura nos slides 3 a 6 do storyboard: o cartão "mesa / supervisão" dos slides 7 e 8 está a 20 px da borda direita; no slide 8 o rótulo "1 a 2 dias" está colado na ficha e na ficha pequena, os cartões XLS e SAP repetem os rótulos de baixo e todo o conteúdo está na metade inferior.
+Funções da lib para isso (`gms_lib.ps1`):
+- `Add-Moldura $s $rotulo $corCap $fraseGuia $contador $citacao`: cria `!!rotulo`, `!!frase` (trechos `{{assim}}` na cor do capítulo; `''` para número-herói) e `!!rodape`. Tamanhos em pt reais. Se a frase cabe numa linha, a caixa encolhe ao texto.
+- `Get-Grade $col $span`: devolve `x`, `w`, `x2`, `y0`, `y1` da grade de 12 colunas.
+- `Add-ReelCap $s $cx $cy $r $cap $frac`: carretel do capítulo `$cap` (1 a 8). Cada capítulo acende o seu segmento de 37° (passo de 45°); os dos capítulos anteriores ficam cheios na cor deles (`!!arcoLuz` = cap. 1 azul, `!!arcoLuz2` = cap. 2 ciano, `!!arcoLuz3` = cap. 3 índigo...). Mesmos nomes e mesmas caixas em todos os slides; só muda `$frac`. Nos capítulos 2 em diante, troque o `Reel-Small` por `Add-ReelCap $s 1800 985 62 N $frac` em todos os slides do capítulo. `cap 1` é idêntico a `Add-Reel`.
+- `Export-GmsPdf $caminho`: PDF do deck aberto.
+- `Test-GmsLayout [-Slides] [-Except @{indice=@(regex)}] [-ExceptAll] [-Families]`: confere margem de 96 px, vão de 32 px e a área do carretel (+40 px); imprime a tabela e devolve a contagem. Ignora `!!arco*`, `!!ponto*`, `!!fio*`, `!!ponta*`; `!!rotulo` e `!!rodape` ficam fora da regra de margem vertical (são da moldura) e o par `!!rotulo`/`!!frase` pode se tocar. `-Families` lista regex de objetos que se cobrem de propósito (ficha e seus números, placa e logo). Os scripts de capítulo rodam o teste antes de fechar.
+
+A capa leva o logo da instituição (`assets/unisal_logo.png`) sobre placa branca no alto à direita, só nela.
 
 ## Como conferir uma transição sem assistir
 

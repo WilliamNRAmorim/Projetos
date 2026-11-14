@@ -39,7 +39,7 @@ function To-Dot($sh,[double]$cx,[double]$cy,[double]$dpx,$hex){
   $sh.Adjustments.Item(1)=0.5
   $sh.Left=($cx-$dpx/2)/2; $sh.Top=($cy-$dpx/2)/2; $sh.Width=$dpx/2; $sh.Height=$dpx/2 }
 function Add-Mesa($s){
-  $m=Add-Box $s '!!mesa' 1 1560 620 340 180 $script:SF $script:LN 3
+  $m=Add-Box $s '!!mesa' 1 1484 610 340 180 $script:SF $script:LN 3
   $tf=$m.TextFrame; $tf.TextRange.Text="mesa`rsupervisão"; $tf.WordWrap=0; $m.TextFrame2.MarginLeft=0; $m.TextFrame2.MarginRight=0
   $tf.TextRange.ParagraphFormat.Alignment=2; $tf.VerticalAnchor=3
   $p1=$tf.TextRange.Paragraphs(1); $p1.Font.Name=$script:F_COND; $p1.Font.Bold=-1; $p1.Font.Size=28; $p1.Font.Color.RGB=(Get-Rgb $script:TX)
@@ -49,6 +49,13 @@ function Add-Card($s,$name,$text,$x,$y,$w,$h){
   $m=Add-Box $s $name 1 $x $y $w $h $script:SF $script:LN 3
   $r=$m.TextFrame.TextRange; $r.Text=$text; $r.Font.Name=$script:F_COND; $r.Font.Bold=-1; $r.Font.Size=28; $r.Font.Color.RGB=(Get-Rgb $script:TX); $r.ParagraphFormat.Alignment=2
   $m.TextFrame.VerticalAnchor=3; $m }
+function Add-Parada($s,$name,$t1,$t2,$x,$y,$w,$h){
+  $m=Add-Box $s $name 1 $x $y $w $h $script:SF $script:LN 3
+  $m.TextFrame2.MarginLeft=0; $m.TextFrame2.MarginRight=0; $m.TextFrame.WordWrap=0
+  $tf=$m.TextFrame; $tf.TextRange.Text="$t1`r$t2"; $tf.TextRange.ParagraphFormat.Alignment=2; $tf.VerticalAnchor=3
+  $p1=$tf.TextRange.Paragraphs(1); $p1.Font.Name=$script:F_COND; $p1.Font.Bold=-1; $p1.Font.Size=28; $p1.Font.Color.RGB=(Get-Rgb $script:TX)
+  $p2=$tf.TextRange.Paragraphs(2); $p2.Font.Name=$script:F_COND; $p2.Font.Bold=0; $p2.Font.Size=28; $p2.Font.Color.RGB=(Get-Rgb $script:T2)
+  $m }
 function Add-Estacao($s,$i,$x,$y){
   $m=Add-Box $s "!!e$i" 5 ($x-70) ($y-70) 140 140 $script:SF $script:LN 3 0
   $r=$m.TextFrame.TextRange; $r.Text="$i"; $r.Font.Name=$script:F_MONO; $r.Font.Bold=0; $r.Font.Size=28; $r.Font.Color.RGB=(Get-Rgb $script:T2); $r.ParagraphFormat.Alignment=2
@@ -72,19 +79,19 @@ function Fio-34($s,[bool]$ext){
   $null=Add-FioLine $s '!!fioL4' 1420 $W 1600 $W $B }
 function Fio-5($s){
   $B=$script:CH[0]
-  $null=Add-FioLine $s '!!fioL1' 120 420 1400 420 $B 5
-  $null=Add-FioArc $s '!!fioA1' 1400 560 220 140 270 90 $B 5
-  $null=Add-FioLine $s '!!fioL2' 1400 700 120 700 $B 5 }
+  $null=Add-FioLine $s '!!fioL1' 96 420 1500 420 $B 5
+  $null=Add-FioArc $s '!!fioA1' 1500 560 220 140 270 90 $B 5
+  $null=Add-FioLine $s '!!fioL2' 1500 700 96 700 $B 5 }
 function Notes($s,$id){ Set-Notes $s $rot[$id] }
 
 $null=New-GmsDeck
 try {
   # ---- 1a ----
   $s=New-GmsSlide
-  $null=Add-Ficha $s 660 70 600
-  Add-Campos $s 660 70 600 1
-  Add-FichaNumeros $s 660 70 600 $script:INK $false
-  Add-Marcas $s 660 70 600
+  $null=Add-Ficha $s 660 100 600
+  Add-Campos $s 660 100 600 1
+  Add-FichaNumeros $s 660 100 600 $script:INK $false
+  Add-Marcas $s 660 100 600
   $null=Reel-Small $s '1a'; Notes $s '1a'
 
   # ---- 1b ----
@@ -122,63 +129,61 @@ try {
   # ---- 2 (capa) ----
   $s=New-GmsSlide
   $null=Add-Reel $s 500 540 280 $FRAC['2']
-  $null=Add-Txt $s 'titulo_tcc' 'Digitalização de Processos em Manufatura Multinacional: Implementação de um Sistema de Execução de Manufatura via Ecossistema Low-Code' 900 150 72 @{font=$script:F_COND;bold=$true;wrap=940}
-  $null=Add-Txt $s 'autor' 'William Nathan Ribeiro de Amorim' 900 590 56 @{wrap=940}
-  $null=Add-Txt $s 'curso' '[Curso] · [Instituição]' 900 664 56 @{color=$script:T2;wrap=940}
-  $null=Add-Txt $s 'sistema' 'Guaratinguetá Manufacturing System' 900 840 64 @{font=$script:F_SEMI;color=$BLUE;wrap=940}
+  $null=Add-Box $s 'placa_logo' 1 1484 96 340 190 '#FFFFFF' $null
+  $lg=$s.Shapes.AddPicture((Join-Path $root 'assets\unisal_logo.png'),0,-1,1504/2,116/2,300/2,150/2); $lg.Name='logo_unisal'
+  $null=Add-Txt $s 'titulo_tcc' 'Digitalização de Processos em Manufatura Multinacional: Implementação de um Sistema de Execução de Manufatura via Ecossistema Low-Code' 880 380 64 @{font=$script:F_COND;bold=$true;wrap=944}
+  $null=Add-Txt $s 'autor' 'William Nathan Ribeiro de Amorim' 880 722 56 @{wrap=944}
+  $null=Add-Txt $s 'curso' 'Engenharia da Computação · UNISAL' 880 794 56 @{color=$script:T2;wrap=944}
+  $null=Add-Txt $s 'sistema' 'Guaratinguetá Manufacturing System' 880 897 56 @{font=$script:F_SEMI;color=$BLUE;wrap=760}
   Notes $s '2'
 
   # ---- 3 ----
   $s=New-GmsSlide
   Fio-34 $s $true
-  $null=Add-Ficha $s 130 590 180
+  $null=Add-Ficha $s 96 590 180
   $null=Add-Mesa $s
-  $null=Add-Txt $s '!!numero' '1 a 2 dias' 960 520 300 @{font=$script:F_COND;bold=$true;align='m'}
+  $null=Add-Txt $s '!!numero' '1 a 2 dias' 960 520 260 @{font=$script:F_COND;bold=$true;align='m'}
+  Add-Moldura $s 'O problema' $BLUE '' '3 / 28' 'seção 1'
   $null=Reel-Small $s '3'; Notes $s '3'
 
   # ---- 4 ----
   $s=New-GmsSlide
   Fio-34 $s $false
-  $null=Add-Ficha $s 130 590 180
+  $null=Add-Ficha $s 96 590 180
   $null=Add-Mesa $s
-  $null=Add-Txt $s '!!numero' '1 a 2 dias' 330 660 56 @{font=$script:F_COND;bold=$true;color=$BLUE}
-  $f2=Add-Ficha $s 510 450 100 1 'ficha2'
-  $c1=Add-Card $s 'parada_xls' 'XLS' 890 500 140 130
-  $c2=Add-Card $s 'parada_sap' 'SAP' 1290 500 140 130
-  $rows=@(@('Ficha','8 etapas',560),@('Excel','turno seguinte',960),@('SAP','lançamento',1360))
-  $lab=@{}
-  foreach($r in $rows){
-    $a=Add-Txt $s "rot_$($r[0])" $r[0] $r[2] 920 56 @{font=$script:F_COND;bold=$true;align='m'}
-    $b=Add-Txt $s "sub_$($r[0])" $r[1] $r[2] 985 56 @{color=$script:T2;align='m'}
-    $lab[$r[0]]=@($a,$b) }
+  $null=Add-Txt $s '!!numero' '1 a 2 dias' 340 650 56 @{font=$script:F_COND;bold=$true;color=$BLUE}
+  $c1=Add-Parada $s 'parada_ficha' 'Ficha' '8 etapas' 376 360 368 160
+  $c2=Add-Parada $s 'parada_xls' 'Excel' 'turno seguinte' 776 360 368 160
+  $c3=Add-Parada $s 'parada_sap' 'SAP' 'lançamento' 1176 360 368 160
+  Add-Moldura $s 'O problema' $BLUE 'O dado passava por {{três paradas}}' '4 / 28' 'seção 1, Figura 1'
   $null=Reel-Small $s '4'; Notes $s '4'
-  Add-ClickFade $s @($f2,$lab['Ficha'][0],$lab['Ficha'][1])
-  Add-ClickFade $s @($c1,$lab['Excel'][0],$lab['Excel'][1])
-  Add-ClickFade $s @($c2,$lab['SAP'][0],$lab['SAP'][1])
+  Add-ClickFade $s @($c1)
+  Add-ClickFade $s @($c2)
+  Add-ClickFade $s @($c3)
 
   # ---- 5 ----
   $s=New-GmsSlide
-  $xs=380,720,1060,1400
+  $xs=480,820,1160,1500
   Fio-5 $s
   $i=0; foreach($x in $xs){ $i++; $null=Add-Estacao $s $i $x 420 }
-  $i=4; foreach($x in @(1400,1060,720,380)){ $i++; $null=Add-Estacao $s $i $x 700 }
-  $null=Add-Txt $s '!!titulo' 'Cegueira operacional' 120 180 120 @{font=$script:F_COND;bold=$true}
-  $st=Add-Box $s 'carimbo' 1 1450 114 300 100 $null $script:SE 6
+  $i=4; foreach($x in @(1500,1160,820,480)){ $i++; $null=Add-Estacao $s $i $x 700 }
+  Add-Moldura $s 'O problema' $BLUE '{{Cegueira operacional}}' '5 / 28' '(JESUS et al., 2025; WU; XU; ZHENG, 2024)'
+  $st=Add-Box $s 'carimbo' 1 1500 130 300 100 $null $script:SE 6
   $st.Rotation=-9
   $r=$st.TextFrame.TextRange; $r.Text='ONTEM'; $r.Font.Name=$script:F_COND; $r.Font.Bold=-1; $r.Font.Size=32; $r.Font.Color.RGB=(Get-Rgb $script:SE); $r.ParagraphFormat.Alignment=2
   $st.TextFrame.VerticalAnchor=3; $st.TextFrame2.TextRange.Font.Spacing=3
-  $null=Add-Txt $s 'linha_oee' 'OEE: impossível. Achar uma OP fechada: uma manhã.' 120 1000 56 @{color=$script:T2}
+  $null=Add-Txt $s 'linha_oee' 'OEE: impossível. Achar uma OP fechada: uma manhã.' 96 860 56 @{color=$script:T2}
   $null=Reel-Small $s '5'; Notes $s '5'
 
   # ---- 6 ----
   $s=New-GmsSlide
   $dc=Mix-Hex $BLUE 0.35
   for($i=0;$i -lt 8;$i++){
-    $m=Add-Box $s "!!e$($i+1)" 5 (400+$i*160-18) (540-18) 36 36 $dc $null 2 0.5
+    $m=Add-Box $s "!!e$($i+1)" 5 (114+$i*241.7-18) (420-18) 36 36 $dc $null 2 0.5
     $m.TextFrame.TextRange.Text='' }
-  $null=Add-Txt $s '!!titulo' 'O dado já existia.' 960 340 120 @{font=$script:F_COND;bold=$true;align='m'}
-  $t2=Add-Txt $s 'frase_custo' 'O custo era chegar até ele.' 960 720 64 @{align='m'}
-  $t3=Add-Txt $s 'tres_palavras' 'tempo · visibilidade · conexão' 960 880 64 @{font=$script:F_SEMI;color=$BLUE;align='m'}
+  Add-Moldura $s 'O problema' $BLUE 'O dado já existia.' '6 / 28' 'seção 2.3 (WU; XU; ZHENG, 2024)'
+  $t2=Add-Txt $s 'frase_custo' 'O custo era chegar até ele.' 96 600 72 @{}
+  $t3=Add-Txt $s 'tres_palavras' 'tempo · visibilidade · conexão' 96 730 72 @{font=$script:F_SEMI;color=$BLUE}
   $null=Reel-Small $s '6'; Notes $s '6'
   Add-ClickFade $s @($t2)
   Add-ClickFade $s @($t3)
@@ -192,6 +197,9 @@ try {
   $null=Open-GmsDeck $pptx
   Export-GmsSlides $prev
   "PNGs: $prev"
+  $nviol=Test-GmsLayout -Except @{ 2=@('^!!(ficha|n\d|campo|marca)') } -Families @('^(!!ficha|!!n\d|!!campo|!!marca)','^(autor|curso)$','^(placa_logo|logo_unisal)$')
+  "violacoes de layout: $nviol"
+  "pdf: $(Export-GmsPdf (Join-Path $prev 'cap1.pdf'))"
   if(-not $SemVideo){
     $ok=Export-GmsVideo (Join-Path $prev 'cap1.mp4') 3 720 300
     "video: $ok"

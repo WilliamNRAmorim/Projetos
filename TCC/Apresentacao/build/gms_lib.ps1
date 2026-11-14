@@ -233,3 +233,100 @@ function Export-GmsVideo([string]$mp4,[int]$secPerSlide=3,[int]$vres=720,[int]$t
     if($st -eq 4){ return $false }
     if(((Get-Date)-$t0).TotalSeconds -gt $timeoutSec){ return $false }
     Start-Sleep -Seconds 2 } }
+
+
+# =====================================================================
+# Moldura fixa, grade, carretel por capitulo, PDF e checagem de layout
+# =====================================================================
+$script:F_SEMICOND='Bahnschrift SemiBold Condensed'
+$script:CAPNOME=@('O PROBLEMA','O MÉTODO','A CONSTRUÇÃO','A EXPANSÃO','OS RESULTADOS','AS LIMITAÇÕES','FOREST CITY E O FUTURO','A TESE')
+
+# Grade de 12 colunas entre x 96 e x 1824 (coluna 122 px, vao 24 px), area de conteudo y 260..900.
+# col: 1..12 (coluna inicial), span: quantas colunas ocupa. Devolve x, w, x2 (px) e y0, y1 da area.
+function Get-Grade([int]$col=1,[int]$span=1){
+  $x=96+($col-1)*146; $w=$span*122+($span-1)*24
+  @{x=$x; w=$w; x2=$x+$w; y0=260; y1=900} }
+
+# Moldura fixa (LEIA-ME, "Moldura fixa"). Tamanhos em pt reais do PowerPoint (a funcao converte para a convencao px da lib).
+#  rotulo: texto do capitulo (vira MAIUSCULAS), !!rotulo em x96,y64, Bahnschrift SemiBold Condensed 28 pt, cor do capitulo.
+#  fraseGuia: x96,y120, 44 pt, largura max 1500 px; trechos {{assim}} saem na cor do capitulo. '' = sem frase (numero-heroi).
+#  contador: '5 / 28'; citacao opcional: rodape !!rodape em x96,y1000, Consolas 20 pt, cinza.
+function Add-Moldura($s,[string]$rotulo,[string]$corCap,[string]$fraseGuia,[string]$contador,[string]$citacao=''){
+  $null=Add-Txt $s '!!rotulo' $rotulo.ToUpper() 96 (64+56*$script:ASC) 56 @{font=$script:F_SEMICOND;color=$corCap}
+  if($fraseGuia){
+    $plain=''; $runs=@()
+    foreach($p in [regex]::Split($fraseGuia,'(\{\{.*?\}\})')){
+      if($p -match '^\{\{(.*)\}\}$'){ $runs+=,@(($plain.Length+1),$Matches[1].Length); $plain+=$Matches[1] } else { $plain+=$p } }
+    $tb=Add-Txt $s '!!frase' $plain 96 (120+88*$script:ASC) 88 @{font=$script:F_COND;bold=$true;wrap=1500}
+    if($tb.TextFrame.TextRange.Lines().Count -eq 1){ $tb.TextFrame2.WordWrap=0; $tb.TextFrame2.AutoSize=1 }   # uma linha: a caixa encolhe ao texto
+    foreach($r in $runs){ $tb.TextFrame.TextRange.Characters($r[0],$r[1]).Font.Color.RGB=(Get-Rgb $corCap) } }
+  $rod= if($citacao){ "$contador · $citacao" } else { $contador }
+  $null=Add-Txt $s '!!rodape' $rod 96 (1000+40*$script:ASC) 40 @{font=$script:F_MONO;color=$script:T2}
+}
+
+# Carretel por capitulo. cap 1..8, frac 0..1 = progresso do arco do capitulo.
+# Cada capitulo acende o seu segmento (37 graus, passo de 45): os segmentos dos capitulos anteriores ficam cheios
+# na cor deles (!!arcoLuz = cap 1, azul; !!arcoLuz2 = cap 2, ciano; !!arcoLuz3 = cap 3, indigo ...) e o do capitulo
+# atual cresce com frac. Mesmos nomes de objeto em todos os slides (!!arco1..8, !!arcoLuz*, !!ponto), mesmas caixas:
+# so o angulo final do segmento atual muda de slide para slide (regra 4). cap=1 e identico a Add-Reel.
+# Uso no capitulo N: troque Reel-Small por  Add-ReelCap $s 1800 985 62 N $frac  em TODOS os slides do capitulo
+# (no primeiro slide do capitulo frac=0 deixa o toco de 1 grau; no ultimo, frac proximo de 1).
+function Add-ReelCap($s,[double]$cx,[double]$cy,[double]$r,[int]$cap,[double]$frac){
+  $rp=$r/2; $lw=$r*18/82
+  for($k=0;$k -lt 8;$k++){
+    $a0=(-86+45*$k+360)%360; $a1=(-86+45*$k+37+360)%360
+    $sh=$s.Shapes.AddShape(25,$cx/2,$cy/2-$rp,$rp,$rp); $sh.Name="!!arco$($k+1)"
+    $sh.Adjustments.Item(1)=$a0; $sh.Adjustments.Item(2)=$a1
+    $sh.Fill.Visible=0; Set-Line $sh $script:LN ($lw*0.6); $sh.Shadow.Visible=0 }
+  for($j=1;$j -le $cap;$j++){
+    $f= if($j -lt $cap){ 1.0 } else { [Math]::Max($frac,0.004) }
+    $nm= if($j -eq 1){ '!!arcoLuz' } else { "!!arcoLuz$j" }
+    $b=274+45*($j-1)
+    $sh=$s.Shapes.AddShape(25,$cx/2,$cy/2-$rp,$rp,$rp); $sh.Name=$nm
+    $sh.Adjustments.Item(1)=($b%360); $sh.Adjustments.Item(2)=(($b+37*$f)%360)
+    $sh.Fill.Visible=0; Set-Line $sh $script:CH[$j-1] $lw; $sh.Shadow.Visible=0 }
+  $ang=-86+45*($cap-1)+ $(if($frac -gt 0){37*$frac}else{-4})
+  $px=$cx+$r*[Math]::Cos($ang*[Math]::PI/180); $py=$cy+$r*[Math]::Sin($ang*[Math]::PI/180)
+  $d=$r*11.2/82*2
+  $null=Add-Box $s '!!ponto' 9 ($px-$d/2) ($py-$d/2) $d $d $script:RED $null
+  @{x=$px;y=$py}
+}
+
+# PDF do deck aberto (para ver fora do PowerPoint). Padrao: ../previa/cap1/cap1.pdf ao lado do que for passado.
+function Export-GmsPdf([string]$pdf){
+  New-Item -ItemType Directory -Force (Split-Path $pdf) | Out-Null
+  if(Test-Path $pdf){ Remove-Item $pdf -Force }
+  try{ $script:pres.ExportAsFixedFormat($pdf,2) }catch{ $script:pres.SaveCopyAs($pdf,32) }
+  Test-Path $pdf }
+
+# Checagem automatica de layout (pt do PowerPoint x2 = px). Retorna a contagem de violacoes e imprime a tabela.
+#  1) nada a menos de 96 px da borda;  2) vao minimo de 32 px entre objetos;  3) nada em x1695..1905, y880..1090 (carretel +40).
+# Ignorados sempre: !!arco*, !!ponto*, !!fio*, !!ponta*. Margem: !!rotulo (y 64) e !!rodape (y 1000) sao da moldura.
+# Parametros: -Slides indices a testar; -Except @{indice=@('regex',...)} objetos fora de todos os testes naquele slide;
+# -ExceptAll regex para todos os slides; -Families regex: objetos que casam com o mesmo regex podem se cobrir (ficha e seus numeros).
+function Test-GmsLayout([int[]]$Slides,[hashtable]$Except=@{},[string[]]$ExceptAll=@(),[string[]]$Families=@()){
+  $skip='^!!(arco|ponto|fio|ponta)'
+  $rows=@(); $nv=0
+  foreach($sl in $script:pres.Slides){
+    $i=$sl.SlideIndex; if($Slides -and ($Slides -notcontains $i)){ continue }
+    $ex=@($ExceptAll)+@($Except[$i]); $items=@()
+    foreach($sh in $sl.Shapes){
+      $n=$sh.Name
+      if($n -match $skip){ continue }
+      $hit=$false; foreach($e in $ex){ if($e -and $n -match $e){ $hit=$true } }; if($hit){ continue }
+      $w=$sh.Width*2; $h=$sh.Height*2; $cx=($sh.Left+$sh.Width/2)*2; $cy=($sh.Top+$sh.Height/2)*2
+      $t=[Math]::Abs($sh.Rotation)*[Math]::PI/180; $bw=[Math]::Abs($w*[Math]::Cos($t))+[Math]::Abs($h*[Math]::Sin($t)); $bh=[Math]::Abs($w*[Math]::Sin($t))+[Math]::Abs($h*[Math]::Cos($t))
+      $items+=,@{n=$n;x1=$cx-$bw/2;y1=$cy-$bh/2;x2=$cx+$bw/2;y2=$cy+$bh/2} }
+    foreach($o in $items){
+      $m=@(); if($o.n -notmatch '^!!(rotulo|rodape)$'){ if($o.x1 -lt 95.5){$m+="esq $([int]$o.x1)"}; if($o.y1 -lt 95.5){$m+="topo $([int]$o.y1)"}; if($o.x2 -gt 1824.5){$m+="dir $([int]$o.x2)"}; if($o.y2 -gt 984.5){$m+="base $([int]$o.y2)"} }
+      else { if($o.x1 -lt 95.5){$m+="esq $([int]$o.x1)"}; if($o.x2 -gt 1824.5){$m+="dir $([int]$o.x2)"} }
+      foreach($d in $m){ $rows+=[pscustomobject]@{Slide=$i;Regra='margem 96';Objeto=$o.n;Detalhe=$d}; $nv++ }
+      if($o.x2 -gt 1695 -and $o.x1 -lt 1905 -and $o.y2 -gt 880 -and $o.y1 -lt 1090){ $rows+=[pscustomobject]@{Slide=$i;Regra='area do carretel';Objeto=$o.n;Detalhe="x$([int]$o.x1)-$([int]$o.x2) y$([int]$o.y1)-$([int]$o.y2)"}; $nv++ } }
+    for($a=0;$a -lt $items.Count;$a++){ for($b=$a+1;$b -lt $items.Count;$b++){
+      $p=$items[$a]; $q=$items[$b]
+      if(($p.n -eq '!!rotulo' -and $q.n -eq '!!frase') -or ($p.n -eq '!!frase' -and $q.n -eq '!!rotulo')){ continue }
+      $fam=$false; foreach($f in $Families){ if($p.n -match $f -and $q.n -match $f){ $fam=$true } }; if($fam){ continue }
+      $gx=[Math]::Max($q.x1-$p.x2,$p.x1-$q.x2); $gy=[Math]::Max($q.y1-$p.y2,$p.y1-$q.y2)
+      if($gx -lt 31.5 -and $gy -lt 31.5){ $rows+=[pscustomobject]@{Slide=$i;Regra='vao 32';Objeto="$($p.n) x $($q.n)";Detalhe="vao x$([int]$gx) y$([int]$gy)"}; $nv++ } } } }
+  if($rows.Count){ ($rows | Format-Table -AutoSize | Out-String -Width 200) | Write-Host } else { Write-Host 'Test-GmsLayout: nenhuma violacao.' }
+  return [int]$nv }
