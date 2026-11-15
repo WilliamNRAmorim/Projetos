@@ -220,11 +220,52 @@ Na tela: o 8,3× encolhe para a base e entra a barra: "74% da 'parada' da Montag
 E não foi o único. Dos minutos de "parada" da Montagem, 74% eram tempo excedido, e a regra proíbe somar os dois com a parada real. O painel passou a mostrar os dois em cartões separados. **Ao medir na origem, o sistema auditou os próprios indicadores.** O TCC I não previa isso.
 
 ### 22 · 0:35 · acumulado 16:50
-Na tela: duas barras: SAP, 96,4%; sensor, até 6%. Rodapé: Resumo; seção 4.4 e Tabela 2.
+Na tela: a barra do SAP, 96,4%, e, abaixo, o erro de cerca de 9 minutos por hora contra o sensor, sem tendência (viés próximo de zero). Rodapé: seção 4.4 e Tabela 2.
 
-**Conferi contra fontes que eu não controlo.** A primeira é o SAP: numa análise retrospectiva de um mês, 96,4% das OPs do GMS também estavam lá. É cobertura, não garantia de que o SAP esteja certo. A segunda é o sensor da única máquina que tem um, durante quinze dias. Nos turnos fechados, hora a hora, o apontamento erra cerca de nove minutos, para mais ou para menos. Como o viés é próximo de zero, no total dos turnos fechados o tempo parado fica a até 6% do medido. **O sensor auditou o apontamento, não o substituiu.**
+**Conferi contra fontes que eu não controlo.** A primeira é o SAP: numa análise retrospectiva de um mês, 96,4% das OPs do GMS também estavam lá. É cobertura, não garantia de que o SAP esteja certo. A segunda é o sensor da única máquina que tem um, durante quinze dias. Nos turnos fechados, hora a hora, o apontamento, digitado ou calculado, erra cerca de nove minutos, para mais ou para menos, sem tendência para um lado: o viés é próximo de zero. **O sensor auditou o apontamento, não o substituiu.**
 
 ### 23 · 0:30 · acumulado 17:20
 Na tela: o anel de onze arcos do MESA-11: seis acesos, um pulsando, dois meio acesos e dois apagados.
 
 O modelo da MESA International lista onze funções de um sistema de execução. Seis estão implementadas, uma em expansão, duas parciais e duas fora do escopo. **Nenhuma função mudou de situação desde a qualificação. Mudou a prova.** A análise de desempenho segue em expansão enquanto o OEE usar velocidade cadastrada e a acurácia estiver conferida em uma só máquina. Falta dizer, com franqueza, o que isso não prova.
+
+## Capítulo 6 · As limitações (17:20 a 18:05)
+
+### 24 · 0:45 · acumulado 18:05
+Na tela: o anel do MESA-11 recua, apagado, e dele saem quatro marcadores vermelhos: caso único; eu desenvolvi e avaliei; pilha proprietária; acurácia numa máquina, por quinze dias.
+
+**É um estudo de caso único**, numa célula de uma planta. Fui eu que desenvolvi, implantei e avaliei o sistema, e esse papel duplo favorece leituras benignas; por isso apoiei a avaliação em fontes que não controlo, o SAP e o sensor, o que reduz o viés, mas não o elimina. O GMS depende de uma pilha proprietária, risco conhecido do low-code: o Hora-Hora passou dos limites do SharePoint, e isso motivou o pedido de migração para o Dataverse. E **a acurácia foi medida em uma só máquina, por quinze dias**. O terceiro turno registra menos que os outros dois.
+
+## Capítulo 7 · Forest City e o futuro (18:05 a 19:25)
+
+### 25a · 0:12 · acumulado 18:17
+Na tela: um globo de pontos, com as Américas à vista, e o ponto vermelho em Guaratinguetá.
+
+Tudo o que mostrei nasceu aqui, em Guaratinguetá. **Este ponto vermelho é onde o fio começa.**
+
+### 25b · 0:18 · acumulado 18:35
+Na tela: o fio sobe em arco e pousa em Forest City, Carolina do Norte.
+
+A próxima etapa é Forest City, na Carolina do Norte. Ainda **sem data nem escopo fechados**. O que este trabalho faz é derivar, da experiência daqui, os requisitos que a planta de lá terá de cumprir. A arquitetura não depende do país.
+
+### 25c · 0:20 · acumulado 18:55
+Na tela: seis etiquetas (data, decimal, fuso, idioma, turnos, ERP) e a frase "O que deu defeito aqui virou requisito lá."
+
+**Internacionalizar não é traduzir rótulo.** O que deu defeito aqui virou requisito lá. A data: dia e mês invertidos. O decimal: 0,254 lido como 254. O fuso e a grade de turnos, que ficam nas fórmulas. O idioma. E a conferência com o ERP, que passa a usar a extração da própria planta.
+
+### 26 · 0:30 · acumulado 19:25
+Na tela: a rede do capítulo 4 volta, agora com os nós tracejados nomeados. Em traço mais forte, o que já está em construção: OEE por hora e simulador.
+
+Voltando à rede: os nós tracejados agora têm nome. **Isto é o que fica por fazer.** Sensores nas máquinas, para medir o que o operador não aponta. O Dataverse, para o volume crescer. Genealogia entre lotes, programação detalhada, modo offline, IA da plataforma e integração direta com o ERP. Em traço mais forte, o que já está em construção: o OEE por hora e o simulador de demanda contra pessoas.
+
+## Capítulo 8 · A tese (19:25 a 20:00)
+
+### 27 · 0:25 · acumulado 19:50
+Na tela: a mangueira atravessa a tela. "Não criamos o dado." Um clique para a segunda frase: "Zeramos o custo de acessá-lo."
+
+A mangueira não cria pressão: leva a força até onde o trabalho acontece. O GMS não cria o dado: leva o dado até quem decide. **Não criamos o dado: ele já existia.** O que mudou foi o custo de chegar até ele, que se reduziu a quase nada.
+
+### 28 · 0:10 · acumulado 20:00
+Na tela: o arco verde fecha, o carretel vai ao centro e assina GMS pela primeira vez. "Obrigado."
+
+**Obrigado.** Fico à disposição da banca.

@@ -138,7 +138,7 @@ A ordem é a da logo, no sentido horário a partir do ponto vermelho. O vermelho
 | 19 · 0:40 | Antes × depois: a ficha à esquerda, o tablet à direita e três linhas entre os dois. Tempo: 1 a 2 dias → no instante do registro, na TV em até 2 min. Visibilidade: nenhuma etapa com fila à vista → todas. Conexão: uma manhã para conferir uma OP → conferência diária com o SAP | O arco violeta fecha. O tablet vai para a direita e a ficha da abertura volta à esquerda | Os três planos do slide 6, agora com evidência | §4.5, §4.6 |
 | 20 · 0:30 | "O que o dossiê do Kaizen estima": 36× (resposta a reclamação), 87,5% (escopo de contenção), 97% (horas de consolidação). Faixa fixa: "estimativas da equipe, sem cronometragem" | As três linhas viram os três números | Leio com reserva e digo por quê | §4.5, Quadro 6 |
 | 21a · 0:15 e 21b · 0:20 | 21a: "8,3×" sozinho e "O volume da célula era contado 8,3 vezes." 21b: o 8,3× encolhe para a base e entra a barra "74% da 'parada' da Montagem era tempo excedido" (um passo de Morph, não clique: a barra é objeto do Morph para o quadro 22) | 21a: o "36×" vira "8,3×" e os outros dois saem. 21b: o "8,3×" desce e encolhe | "Aquilo é estimativa. Isto o sistema mediu." Ao medir na origem, ele auditou os próprios indicadores | §4.3, §4.6 |
-| 22 · 0:35 | Duas barras. SAP (análise retrospectiva de um mês): 96,4% das OPs do GMS também estão lá. Sensor (uma máquina, quinze dias): tempo parado dos turnos fechados a até 6% do medido | A barra de 74% vira a de 96,4% e nasce a segunda | Conferi contra fontes que eu não controlo. Hora a hora, o apontamento erra cerca de 9 minutos, para mais ou para menos. Como os erros se compensam, no total dos turnos fechados o tempo parado fica a até 6% do medido. O sensor auditou o apontamento, não o substituiu | 96,4% e 6%: Resumo. 9 min por hora e viés: §4.4, Tabela 2 |
+| 22 · 0:35 | Uma barra e um número. SAP (análise retrospectiva de um mês): 96,4% das OPs do GMS também estão lá. Sensor (uma máquina, quinze dias): erro de cerca de 9 minutos por hora, para mais ou para menos, com viés próximo de zero. A barra do "até 6%" saiu (14/11): o número só existe no Resumo do TCC | A barra de 74% vira a de 96,4% e nasce o bloco do sensor, sem barra | Conferi contra fontes que eu não controlo. Hora a hora, o apontamento, digitado ou calculado, erra cerca de 9 minutos, para mais ou para menos, sem tendência: o viés é próximo de zero. O sensor auditou o apontamento, não o substituiu | 96,4%, 9 min por hora e viés: §4.4, Tabela 2 |
 | 23 · 0:30 | Anel de 11 arcos: 6 acesos (implementadas), 1 pulsando (em expansão), 2 meio acesos (parciais), 2 apagados (fora do escopo) | As duas barras se curvam e viram arcos do anel | Nenhuma função mudou de situação desde a qualificação. Mudou a prova | §4.7, Quadro 7 |
 
 ### Capítulo 6 · As limitações (17:20 a 18:05) · arco vermelho
@@ -174,7 +174,7 @@ Base da estimativa: o reel de 30 s de outubro levou cerca de 45 min e US$ 9 a 13
 | P0 | Pranchas: os 44 quadros em rascunho, na ordem, com o elo de cada um, e 4 quadros-chave no visual final | produtor-de-artes | ~40 min | US$ 8 a 14 |
 | P1 | Ficha verde recriada em camadas: o fundo e os números soltos, para o Morph da abertura | produtor-de-artes | ~30 min | US$ 5 a 8 |
 | P2 | Mangueira: modelo .glb gerado por código (autoria própria) e 4 imagens paradas de reserva | produtor-de-artes | ~60 min | US$ 10 a 15 |
-| P3 | Globo de pontos, uma imagem | produtor-de-artes | ~15 min | US$ 3 a 4 |
+| P3 | Globo de pontos (feito com formas do PowerPoint, sem imagem: decisão de 14/11) | executor | ~15 min | sem custo de arte |
 | P4 | Telas recriadas com dado fictício: painel da Célula, tela de etapa, consulta de OP, página de paradas, e os 3 quadros do plano B | produtor-de-artes | ~45 min | US$ 8 a 12 |
 | P5 | Ilustrações: luva e botão, logo convertida em forma | produtor-de-artes | ~20 min | US$ 4 a 6 |
 | Deck | Montagem do .pptx em 6 blocos, com Morph, notas e tempos; export de PNG por bloco | executor | 6 × 25 a 35 min | US$ 24 a 36 |
@@ -186,7 +186,7 @@ Base da estimativa: o reel de 30 s de outubro levou cerca de 45 min e US$ 9 a 13
 ## 8. Técnica e riscos
 
 - **Nada novo para instalar.** O PowerPoint é dirigido pelo COM do Windows, direto do PowerShell. As imagens e o .glb saem do motor que já existe em `Conteudo_Bit/Producao`.
-- **Um download para autorizar:** a fonte Open Sans (Google Fonts, licença aberta), só para converter o "GMS" da logo em forma. Ela não está instalada nesta máquina.
+- **Nenhum download.** A fonte Open Sans (Google Fonts) não foi baixada (decisão de 14/11): o "GMS" do slide final entra como texto em Bahnschrift.
 - **O arco que cresce:** forma de arco do PowerPoint, com o ângulo final mudando de um slide para o outro; o Morph interpola. A ponta redonda é marcada no XML. É o primeiro teste do bloco 1.
 - **Número que vira ponto (slide 1):** o Morph entre formas diferentes funciona com o nome forçado (`!!`), mas o desenho do meio do caminho pode ficar feio. Se ficar, os números encolhem até virar ponto, em vez de se deformar.
 - **3D no PowerPoint:** teto de ~150 mil triângulos, trança como textura. Se ficar lento, entram as 4 imagens paradas da P2.
@@ -209,14 +209,14 @@ Sugestão de sessão: as pranchas e o capítulo 1 saem daqui. Depois, sessão no
 
 ## 10. O que ainda preciso que você confirme
 
-1. **Estado das pontas tracejadas.** Pelo diário, marquei como "em construção": simulador de demanda × pessoas, OEE por hora no BI, IA local, assistente Uiu. Se algum já está em uso, me diga e ele acende.
+1. ~~Estado das pontas tracejadas.~~ Resolvido em 14/11: OEE por hora e simulador de demanda × pessoas são "em construção" (traço mais forte no quadro 26); IA local e assistente Uiu são futuro e não aparecem por nome (o quadro 26 usa "IA da plataforma", do TCC §5).
 2. ~~Os 8 arcos são as 8 etapas?~~ Resolvido pelo código do filme: 8 arcos, 8 etapas, e o ponto vermelho é onde a mangueira começa.
-3. **Números que entram.** Todos relativos e todos do TCC: 1 a 2 dias, até 2 min, 36×, 87,5%, 97%, 8,3×, 74%, 96,4%, até 6%, e o placar 6/1/2/2 do MESA-11. Mais os do método: 2 semanas, 3 turnos, 12 processos, 2 × 7 meses. Ficam de fora: fichas por mês, lançamentos, fontes, R$, kg de papel, contagens de OP.
-4. **A frase da mangueira** (slide 27) é minha, não está no TCC. Fica?
+3. **Números que entram.** Todos relativos e todos do TCC: 1 a 2 dias, até 2 min, 36×, 87,5%, 97%, 8,3×, 74%, 96,4%, ~9 min por hora, e o placar 6/1/2/2 do MESA-11. Mais os do método: 2 semanas, 3 turnos, 12 processos, 2 × 7 meses. Ficam de fora: fichas por mês, lançamentos, fontes, R$, kg de papel, contagens de OP.
+4. ~~A frase da mangueira~~ (slide 27). Resolvido em 14/11: fica, só na fala.
 5. **Capa:** seu nome e "Engenharia da Computação · UNISAL", como na capa do pitch do TCC I. Sem orientador nem coorientador (decisão de 13/11; no TCC I eles apareciam) e com a sigla GMS só no último slide. **Logo da UNISAL na capa: sim** (decisão de 13/11), no alto à direita, sobre placa branca.
 6. **Para o dia:** vai no seu notebook? A sala escurece? E qual é o modelo do tablet (para o `demo_tablet.md`)?
-7. **"Zeramos" × "quase nada".** O slide 27 usa a sua frase. O texto do TCC fecha com "reduziu-se a quase nada". Sugestão: a frase fica no slide e a fala diz "a quase nada", para a banca não cobrar o zero.
-8. **6% × 9 minutos (slide 22).** O "até 6%" só aparece no resumo do TCC. O corpo (§4.4) diz "próximo do medido", e a Tabela 2 dá erro médio de cerca de 9 minutos por hora, com viés quase zero. Os dois batem, mas a banca pode perguntar de onde sai o 6%. Você tem essa conta à mão? Se não tiver, o slide fica só com os 9 minutos e o viés.
+7. ~~"Zeramos" × "quase nada".~~ Resolvido em 14/11: o slide 27 mostra "Zeramos o custo de acessá-lo." e a fala diz "a quase nada".
+8. ~~6% × 9 minutos (slide 22).~~ Resolvido em 14/11: sem a conta à mão, a barra do "até 6%" saiu; o slide 22 fica com 96,4% e os cerca de 9 minutos por hora com viés próximo de zero.
 
 ## 11. Revisões
 

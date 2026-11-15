@@ -92,12 +92,12 @@ try {
   Add-Moldura $s 'Os resultados' $AMB 'O que o dossiê do Kaizen {{estima}}.' '20 / 28' 'seção 4.5 e Quadro 6'
   $null=Add-ReelCap $s 1800 985 62 5 (Frac); Set-Notes $s $rot['20']
 
-  # ---- 38 (21a): o 36x vira o 8,3x (numero-heroi, sem frase-guia); os outros dois saem ----
+  # ---- 38 (21a): o 36x vira o 8,3x (com a frase-guia do 39); os outros dois saem ----
   $s=New-GmsSlide
-  $h=Txt2 $s '!!num1' '8,3×' 960 247 400 @{font=$script:F_COND;bold=$true;color=$AMB;align='m'}
+  $h=Txt2 $s '!!num1' '8,3×' 960 285 400 @{font=$script:F_COND;bold=$true;color=$AMB;align='m'}
   $hb=($h.Top+$h.Height)*2
   $null=Txt2 $s '!!sub83' 'O volume da célula era contado 8,3 vezes.' 960 ($hb+40) 56 @{color=$script:TX;align='m'}
-  Add-Moldura $s 'Os resultados' $AMB '' '21 / 28' 'seções 4.3 e 4.6'
+  Add-Moldura $s 'Os resultados' $AMB 'Isto o sistema {{mediu}}.' '21 / 28' 'seções 4.3 e 4.6'
   $null=Add-ReelCap $s 1800 985 62 5 (Frac); Set-Notes $s $rot['21a']
 
   # ---- 39 (21b): o 8,3x encolhe para a base; entra a barra de 74% (vira a de 96,4% no 40) ----
@@ -109,13 +109,16 @@ try {
   Add-Moldura $s 'Os resultados' $AMB 'Isto o sistema {{mediu}}.' '21 / 28' 'seções 4.3 e 4.6'
   $null=Add-ReelCap $s 1800 985 62 5 (Frac); Set-Notes $s $rot['21b']
 
-  # ---- 40 (22): a barra de 74% vira a de 96,4% e nasce a segunda; tocos do anel de 11 arcos por baixo ----
+  # ---- 40 (22): a barra de 74% vira a de 96,4% e nasce o bloco sem barra (~9 min do sensor); tocos do anel de 11 arcos por baixo ----
   $s=New-GmsSlide
   Add-Anel11 $s $false
   Add-BarraBloco $s 1 272 '96,4%' "das OPs do GMS também estão no SAP`ranálise retrospectiva de um mês" 0.964 $true
-  Add-BarraBloco $s 2 556 'até 6%' "de diferença no tempo parado dos turnos fechados`rsensor de uma máquina, quinze dias" 0.06 $true
-  $null=Txt2 $s 'nota9' 'hora a hora, cerca de 9 min de erro' 96 812 56 @{color=$script:T2}
-  Add-Moldura $s 'Os resultados' $AMB 'Conferi contra fontes que {{não controlo}}.' '22 / 28' 'Resumo; seção 4.4 e Tabela 2'
+  # bloco 2 sem barra (nasce por fade, sem !!): o resultado do sensor
+  $null=Txt2 $s 'pct2' '≈ 9 min' 96 556 120 @{font=$script:F_COND;bold=$true;color=$AMB}
+  $d=Txt2 $s 'desc2' 'de erro por hora, para mais ou para menos' 470 568 56 @{color=$script:TX}
+  $d.Top=(556+(144-$d.Height*2)/2)/2
+  $null=Txt2 $s 'fonte2' ('sensor de uma máquina, quinze dias '+[char]0x00B7+' viés próximo de zero') 96 780 56 @{color=$script:T2}
+  Add-Moldura $s 'Os resultados' $AMB 'Conferi contra fontes que {{não controlo}}.' '22 / 28' 'seção 4.4 e Tabela 2'
   $null=Add-ReelCap $s 1800 985 62 5 (Frac); Set-Notes $s $rot['22']
 
   # ---- 41 (23): as barras somem e os arcos do anel crescem: MESA-11 (6 acesas, 1 pulsando, 2 meio acesas, 2 apagadas) ----
