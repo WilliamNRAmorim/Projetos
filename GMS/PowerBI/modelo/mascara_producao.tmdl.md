@@ -220,17 +220,31 @@ createOrReplace
 		toColumn: dProdutoSAP.Produto
 ```
 
-## 2) Passo 2: coluna `Mês e Ano` na `dCalendario`
+## 2) Passo 2: colunas `Mês e Ano` e `Mês com SAP` na `dCalendario`
+O mês de ontem aparece como "Mês atual" na segmentação; a segmentação abre nele (seleção salva) e a lista mostra só os meses de `Mês com SAP`.
 ```
 createOrReplace
 
 	ref table dCalendario
 
-		/// Mês e ano para a segmentação da página Produção x meta (SAP); ordena pelo AnoMês.
+		/// Mês e ano da segmentação da página Produção x meta (SAP): o mês de ontem vira "Mês atual"; ordena pelo AnoMês.
 		column 'Mês e Ano' =
-				FORMAT ( [Date], "mmm/yyyy", "pt-BR" )
+				VAR __Ref = TODAY () - 1
+				RETURN
+				IF ( YEAR ( [Date] ) * 100 + MONTH ( [Date] ) = YEAR ( __Ref ) * 100 + MONTH ( __Ref ), "Mês atual", FORMAT ( [Date], "mmm/yyyy", "pt-BR" ) )
 			dataType: string
 			sortByColumn: AnoMês
+			summarizeBy: none
+
+		/// Verdadeiro nos meses entre o primeiro mês com produção do SAP e o mês de ontem (filtra a segmentação de mês).
+		column 'Mês com SAP' =
+				VAR __Ref = TODAY () - 1
+				VAR __Ini = MIN ( fProducaoSAP[Data] )
+				VAR __AM = YEAR ( [Date] ) * 100 + MONTH ( [Date] )
+				RETURN
+				__AM >= YEAR ( __Ini ) * 100 + MONTH ( __Ini ) && __AM <= YEAR ( __Ref ) * 100 + MONTH ( __Ref )
+			dataType: boolean
+			isHidden
 			summarizeBy: none
 ```
 
