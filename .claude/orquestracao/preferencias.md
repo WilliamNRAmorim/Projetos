@@ -78,3 +78,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-16 | Máscara no GMS_Painel oficial: aceitou a recomendada de meta numa lista SharePoint nova (GMS_MetaMensal) em vez de ler o Excel da Máscara, e a emenda da B.3.5 para export do SAP
 2026-11-16 | Máscara SAP: aceitou atualizar a meta da Mangueira na lista para 7000 (igualar à planilha)
 2026-11-16 | Máscara de produção: planilha será descontinuada; meta só na lista GMS_MetaMensal (decisão do William)
+2026-11-15 | Defesa do TCC, bloco final: não informou o modelo do tablet (campo do demo_tablet.md fica para ele preencher); aceitou as recomendadas de deixar os títulos do mosaico (slide 31) como estão e de fazer o vídeo de emergência com 20 min, no tempo de fala de cada slide
