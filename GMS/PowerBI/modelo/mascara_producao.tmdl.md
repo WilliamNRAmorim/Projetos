@@ -505,3 +505,105 @@ createOrReplace
 		toColumn: dProdutoSAP.Produto
 
 ```
+
+
+## 7) Passo 5 (16/11/2026, aplicado): meta pelo planejado diário
+Lista SharePoint GMS_PlanoDiario (Id aa76f7b7-8a87-4b79-a128-7a10e6571297; colunas Title = Produto, Data só data, Planejado número; dia sem item = sem plano). Produto com plano no mês: meta acumulada = soma do planejado até o corte; dias restantes = dias com plano depois do corte; ritmo = (planejado do mês − produzido) / dias restantes. Produto sem plano continua com a GMS_MetaMensal. Conferido em 16/11 contra a tabela Evolução Produção do William: 76.834 / −3.565,97 / 11 dias / 7.979,3 m/dia / 161.040; dias abaixo do plano 03, 04, 06, 10, 11.
+```
+createOrReplace
+
+	table dPlanoDiario
+
+		/// Planejado por dia e produto, da lista SharePoint GMS_PlanoDiario (o planejamento manda por e-mail; dia sem item = sem plano). MEL-273.
+		column Produto
+			dataType: string
+			isHidden
+			summarizeBy: none
+			sourceColumn: Produto
+
+		column Data
+			dataType: dateTime
+			isHidden
+			formatString: dd/mm/yyyy
+			summarizeBy: none
+			sourceColumn: Data
+
+		column Planejado
+			dataType: double
+			isHidden
+			formatString: #,0
+			summarizeBy: none
+			sourceColumn: Planejado
+
+		partition dPlanoDiario = m
+			mode: import
+			source =
+				let
+				Origem = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation = "2.0", ViewMode = "All"]),
+				Lista = Origem{[Title = "GMS_PlanoDiario"]}[Items],
+				Colunas = Table.SelectColumns(Lista, {"Title", "Data", "Planejado"}),
+				Tipos = Table.TransformColumns(Colunas, {{"Data", each Date.From(_), type date}, {"Title", each Text.Proper(Text.Trim(_)), type text}, {"Planejado", each Number.From(_), type number}}),
+				SoLinhas = Table.SelectRows(Tipos, each [Data] <> null and [Title] <> null and [Title] <> "" and [Planejado] <> null),
+				Agrupado = Table.Group(SoLinhas, {"Title", "Data"}, {{"Planejado", each List.Sum([Planejado]), type number}}),
+				Final = Table.RenameColumns(Agrupado, {{"Title", "Produto"}})
+				in
+				Final
+
+	relationship dPlanoDiario_dProdutoSAP
+		fromColumn: dPlanoDiario.Produto
+		toColumn: dProdutoSAP.Produto
+
+	ref table Medidas
+
+		measure 'SAP Tem Plano Diário' =
+				-- Verdadeiro quando o produto do contexto tem planejado diário no mês da página (lista GMS_PlanoDiario). Aí a meta é o planejado de cada dia; senão, meta fixa da GMS_MetaMensal. · MEL-273
+				VAR __Ini = [_SAP Mês]
+				RETURN
+				NOT ISEMPTY ( CALCULATETABLE ( dPlanoDiario, dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= EOMONTH ( __Ini, 0 ) ) )
+			displayFolder: Máscara SAP
+			isHidden
+
+		measure 'SAP Planejado do Mês' =
+				-- Soma do planejado diário do mês da página (lista GMS_PlanoDiario). · MEL-273
+				VAR __Ini = [_SAP Mês]
+				RETURN
+				CALCULATE ( SUM ( dPlanoDiario[Planejado] ), dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= EOMONTH ( __Ini, 0 ) )
+			formatString: #,0
+			displayFolder: Máscara SAP
+
+		measure 'SAP Meta Acumulada' =
+				-- Com planejado diário: soma do planejado do 1º dia do mês até o corte. Sem: meta diária x dias contabilizados. · MEL-273
+				VAR __Ini = [_SAP Mês]
+				VAR __Corte = [SAP Data de Corte]
+				RETURN
+				IF (
+				[SAP Tem Plano Diário],
+				IF ( NOT ISBLANK ( __Corte ), CALCULATE ( SUM ( dPlanoDiario[Planejado] ), dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= __Corte ) + 0 ),
+				[SAP Meta Diária] * [SAP Dias Contabilizados]
+				)
+			formatString: #,0
+			displayFolder: Máscara SAP
+
+		measure 'SAP Dias Restantes' =
+				-- Com planejado diário: dias depois do corte que ainda têm plano no mês. Sem: dias úteis menos dias contabilizados. · MEL-273
+				VAR __Ini = [_SAP Mês]
+				VAR __Corte = [SAP Data de Corte]
+				RETURN
+				IF (
+				[SAP Tem Plano Diário],
+				CALCULATE ( DISTINCTCOUNT ( dPlanoDiario[Data] ), dPlanoDiario[Data] > __Corte, dPlanoDiario[Data] <= EOMONTH ( __Ini, 0 ), dPlanoDiario[Planejado] > 0 ) + 0,
+				[SAP Dias Úteis] - [SAP Dias Contabilizados]
+				)
+			formatString: 0
+			displayFolder: Máscara SAP
+
+		measure 'SAP Ritmo para Fechar' =
+				-- Quanto por dia falta produzir nos dias que faltam para fechar o mês (planejado do mês ou meta diária x dias úteis); vazio se não há dias restantes ou o mês já fechou. · MEL-273
+				VAR __Rest = [SAP Dias Restantes]
+				VAR __Alvo = IF ( [SAP Tem Plano Diário], [SAP Planejado do Mês], [SAP Meta Diária] * [SAP Dias Úteis] )
+				RETURN
+				IF ( __Rest > 0 && NOT [_SAP Mês Encerrado], DIVIDE ( __Alvo - [SAP Produzido], __Rest ) )
+			formatString: #,0.0
+			displayFolder: Máscara SAP
+
+```
