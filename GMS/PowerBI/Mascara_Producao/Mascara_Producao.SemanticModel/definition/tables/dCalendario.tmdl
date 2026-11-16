@@ -1,0 +1,27 @@
+/// Calendário dos anos presentes na fProducao (marcada como tabela de data).
+table dCalendario
+	dataCategory: Time
+	lineageTag: efd7121a-0137-4fa1-8159-1e427103ec9b
+
+	column Date
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		isHidden
+		isKey
+		lineageTag: e0a2a929-7e46-4cc6-9b53-69b17337ddfe
+		summarizeBy: none
+		sourceColumn: [Date]
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition dCalendario = calculated
+		mode: import
+		source =
+				CALENDAR (
+				    DATE ( YEAR ( MIN ( fProducao[Data] ) ), 1, 1 ),
+				    DATE ( YEAR ( MAX ( fProducao[Data] ) ), 12, 31 )
+				)
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,330 @@
+table Medidas
+	lineageTag: 23dc6e1a-6ad8-4169-b180-594e4ec4b93e
+
+	measure 'Hoje (BR)' = ```
+			-- Hoje no Brasil (UTC-3), só a data. Única medida que consulta o relógio; âncora do corte. · MEL-273
+			VAR __Agora = UTCNOW () - 3 / 24
+			RETURN
+			    DATE ( YEAR ( __Agora ), MONTH ( __Agora ), DAY ( __Agora ) )
+			```
+		formatString: dd/mm/yyyy
+		lineageTag: 748fb82c-e2f3-421d-ba06-eeae802e49ff
+
+	measure 'Data de Corte' = ```
+			-- Maior data da fProducao (todos os produtos) anterior a hoje: o dia fechado mais recente. · MEL-273
+			VAR __Hoje = [Hoje (BR)]
+			RETURN
+			    CALCULATE ( MAX ( fProducao[Data] ), REMOVEFILTERS (), fProducao[Data] < __Hoje )
+			```
+		formatString: dd/mm/yyyy
+		lineageTag: 7924c387-d768-4ba8-bc13-eb59b814fa51
+
+	measure 'Dias Contabilizados' = ```
+			-- Datas distintas da fProducao (todos os produtos) no mês do corte, até o corte. Automático (a planilha digita). · MEL-273
+			VAR __Corte = [Data de Corte]
+			VAR __Ini = DATE ( YEAR ( __Corte ), MONTH ( __Corte ), 1 )
+			RETURN
+			    IF (
+			        ISBLANK ( __Corte ),
+			        BLANK (),
+			        CALCULATE ( DISTINCTCOUNT ( fProducao[Data] ), REMOVEFILTERS (), fProducao[Data] >= __Ini, fProducao[Data] <= __Corte )
+			    )
+			```
+		formatString: 0
+		lineageTag: 7d748835-dad6-4040-a495-590c7d513a4a
+
+	measure 'Dias Úteis' = ```
+			-- Dias úteis do mês (aba Resumo BI; igual para os três produtos). · MEL-273
+			MAX ( dProduto[Dias úteis] )
+			```
+		formatString: 0
+		lineageTag: 80a9fd6b-525f-4e57-b158-e463d9bf24c8
+
+	measure 'Meta Diária' = ```
+			-- Meta diária do produto selecionado (BLANK se mais de um produto no contexto). · MEL-273
+			IF ( HASONEVALUE ( dProduto[Produto] ), MAX ( dProduto[Meta diária] ), BLANK () )
+			```
+		formatString: #,0
+		lineageTag: 258718ac-ecd6-49dc-a42a-19959873e246
+
+	measure 'Produzido' = ```
+			-- Soma da quantidade do produto no mês do corte, até o corte (todos param em ontem). · MEL-273
+			VAR __Corte = [Data de Corte]
+			VAR __Ini = DATE ( YEAR ( __Corte ), MONTH ( __Corte ), 1 )
+			RETURN
+			    IF (
+			        ISBLANK ( __Corte ),
+			        BLANK (),
+			        CALCULATE ( SUM ( fProducao[Quantidade] ), REMOVEFILTERS ( dCalendario ), fProducao[Data] >= __Ini, fProducao[Data] <= __Corte )
+			    )
+			```
+		formatString: #,0.0
+		lineageTag: 48aaafcc-d8fa-4f37-8b29-45935513ca2a
+
+	measure 'Meta Acumulada' = ```
+			-- Meta diária x dias contabilizados. · MEL-273
+			[Meta Diária] * [Dias Contabilizados]
+			```
+		formatString: #,0
+		lineageTag: d18a9582-d8e6-4b16-a12e-eeed64fd5dfa
+
+	measure 'Saldo' = ```
+			-- Produzido menos meta acumulada (negativo = atrasado). · MEL-273
+			VAR __Meta = [Meta Acumulada]
+			RETURN
+			    IF ( ISBLANK ( __Meta ), BLANK (), [Produzido] - __Meta )
+			```
+		formatString: +#,0.0;-#,0.0;0.0
+		lineageTag: b90053a9-ca6a-402d-b814-df32e08fa814
+
+	measure '% da Meta' = ```
+			-- Produzido sobre meta acumulada. · MEL-273
+			DIVIDE ( [Produzido], [Meta Acumulada] )
+			```
+		formatString: 0.0%
+		lineageTag: beb46afe-87b3-4411-8437-4de057acee65
+
+	measure 'Dias Restantes' = ```
+			-- Dias úteis menos dias contabilizados. · MEL-273
+			[Dias Úteis] - [Dias Contabilizados]
+			```
+		formatString: 0
+		lineageTag: 047e6442-f925-4681-aae1-5a82bbab984e
+
+	measure 'Ritmo para Fechar' = ```
+			-- Quanto por dia falta produzir nos dias restantes para fechar a meta do mês (BLANK se não há dias). · MEL-273
+			DIVIDE ( [Meta Diária] * [Dias Úteis] - [Produzido], [Dias Restantes] )
+			```
+		formatString: #,0.0
+		lineageTag: 24edac37-09ca-476b-afdd-4c3445cf4ff2
+
+	measure 'Feliz' = ```
+			-- Carinha feliz quando o saldo é zero ou positivo. · MEL-273
+			[Saldo] >= 0
+			```
+		lineageTag: c4c48500-aa6a-4b4b-9f17-41bdd21a2d79
+
+	measure 'SVG Título' = ```
+			-- Faixa de título da página: pergunta + recorte (data de corte da MB51 e dias úteis). Sem filtro de produto.
+			-- Mockup Mascara_Producao_mockup.html · MEL-273
+			VAR __cVerm = "%23E2000F"
+			VAR __cOk = "%233C3C3B"
+			VAR __cSu = "%238A8A88"
+			VAR __cLi = "%23D9D9D9"
+			VAR __Corte = [Data de Corte]
+			VAR __Mes = FORMAT ( __Corte, "mmmm", "pt-BR" )
+			VAR __Corpo =
+			    "<rect x='0' y='0' width='1248' height='56' rx='8' fill='%23fff'/>"
+			        & "<rect x='0' y='0' width='8' height='56' rx='4' fill='" & __cVerm & "'/>"
+			        & "<text x='26' y='35' font-size='20' font-weight='600' fill='" & __cOk & "'>Estamos no ritmo para fechar a meta de " & __Mes & "?</text>"
+			        & "<text x='1228' y='33' font-size='13' text-anchor='end' fill='" & __cSu & "'>MB51 até " & FORMAT ( __Corte, "dd/mm/yyyy", "pt-BR" )
+			        & " · " & [Dias Contabilizados] & " de " & [Dias Úteis] & " dias úteis</text>"
+			RETURN
+			    IF (
+			        ISBLANK ( __Corte ),
+			        BLANK (),
+			        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1248' height='56' viewBox='0 0 1248 56' font-family='Segoe UI, sans-serif'>"
+			            & __Corpo & "</svg>"
+			    )
+			```
+		lineageTag: b1f26940-c8be-462e-a88c-922488915600
+		dataCategory: ImageUrl
+
+	measure 'SVG Cartão' = ```
+			-- Cartão do produto no contexto: carinha, % da meta acumulada, produzido, meta até ontem, saldo, ritmo para fechar e
+			-- linha do acumulado real x meta por dia contabilizado. Corte = maior data < hoje (BR). Mockup Mascara_Producao_mockup.html · MEL-273
+			VAR __cVerm = "%23E2000F"
+			VAR __cOk = "%233C3C3B"
+			VAR __cSu = "%238A8A88"
+			VAR __cLi = "%23D9D9D9"
+			VAR __Corte = [Data de Corte]
+			VAR __Ini = DATE ( YEAR ( __Corte ), MONTH ( __Corte ), 1 )
+			VAR __Prod = SELECTEDVALUE ( dProduto[Produto] )
+			VAR __Un = SELECTEDVALUE ( dProduto[Unidade] )
+			VAR __Casas = SELECTEDVALUE ( dProduto[Casas] )
+			VAR __Meta = [Meta Diária]
+			VAR __Uteis = [Dias Úteis]
+			VAR __Fmt = IF ( __Casas = 1, "#,##0.0", "#,##0" )
+			VAR __Dias =
+			    CALCULATETABLE (
+			        VALUES ( fProducao[Data] ),
+			        REMOVEFILTERS (),
+			        fProducao[Data] >= __Ini,
+			        fProducao[Data] <= __Corte
+			    )
+			VAR __D0 = ADDCOLUMNS ( __Dias, "@v", CALCULATE ( SUM ( fProducao[Quantidade] ) ) + 0 )
+			VAR __D1 =
+			    ADDCOLUMNS (
+			        __D0,
+			        "@i", VAR __dt = fProducao[Data] RETURN COUNTROWS ( FILTER ( __D0, fProducao[Data] < __dt ) )
+			    )
+			VAR __D =
+			    ADDCOLUMNS (
+			        __D1,
+			        "@a", VAR __dt = fProducao[Data] RETURN SUMX ( FILTER ( __D1, fProducao[Data] <= __dt ), [@v] )
+			    )
+			VAR __n = COUNTROWS ( __D )
+			VAR __Prd = SUMX ( __D, [@v] )
+			VAR __MetaAc = __Meta * __n
+			VAR __Saldo = __Prd - __MetaAc
+			VAR __Pct = DIVIDE ( __Prd, __MetaAc )
+			VAR __Feliz = __Saldo >= 0
+			VAR __cor = IF ( __Feliz, __cOk, __cVerm )
+			VAR __Rest = __Uteis - __n
+			VAR __Ritmo = DIVIDE ( __Meta * __Uteis - __Prd, __Rest )
+			VAR __cRitmo = IF ( __Ritmo > __Meta, __cVerm, __cOk )
+			VAR __Mx = MAX ( __MetaAc, __Prd ) * 1.15
+			VAR __Real =
+			    "M16,286 "
+			        & CONCATENATEX (
+			            __D,
+			            FORMAT ( 16 + ( [@i] + 1 ) * 348 / __n, "0.0", "en-US" ) & ","
+			                & FORMAT ( 286 - DIVIDE ( [@a], __Mx ) * 96, "0.0", "en-US" ),
+			            " ",
+			            fProducao[Data], ASC
+			        )
+			VAR __MetaLn = "M16,286 364," & FORMAT ( 286 - DIVIDE ( __MetaAc, __Mx ) * 96, "0.0", "en-US" )
+			VAR __yUlt = FORMAT ( 286 - DIVIDE ( __Prd, __Mx ) * 96, "0.0", "en-US" )
+			VAR __Frase =
+			    IF (
+			        ISBLANK ( __Ritmo ),
+			        "<text x='16' y='182' font-size='12' fill='" & __cOk & "'>Sem dias restantes no mês</text>",
+			        "<text x='16' y='182' font-size='12' fill='" & __cOk & "'>Para fechar o mês: <tspan font-weight='700' fill='" & __cRitmo & "'>"
+			            & FORMAT ( __Ritmo, __Fmt, "pt-BR" ) & " " & __Un & "/dia</tspan> nos " & __Rest & " dias que faltam <tspan fill='" & __cSu & "'>(meta "
+			            & FORMAT ( __Meta, "#,##0", "pt-BR" ) & ")</tspan></text>"
+			    )
+			VAR __Corpo =
+			    "<rect x='0' y='0' width='400' height='300' rx='8' fill='%23fff'/>"
+			        & "<rect x='0' y='0' width='400' height='6' rx='3' fill='" & __cor & "'/>"
+			        & "<circle cx='52' cy='62' r='34' fill='" & __cor & "'/>"
+			        & "<circle cx='40.1' cy='53.5' r='3.74' fill='%23fff'/><circle cx='63.9' cy='53.5' r='3.74' fill='%23fff'/>"
+			        & "<path d='" & IF ( __Feliz, "M36.7,68.8 Q52,84.1 67.3,68.8", "M36.7,79 Q52,65.4 67.3,79" )
+			        & "' stroke='%23fff' stroke-width='4.08' fill='none' stroke-linecap='round'/>"
+			        & "<text x='100' y='44' font-size='16' font-weight='600' fill='" & __cOk & "'>" & __Prod & "</text>"
+			        & "<text x='100' y='86' font-size='40' font-weight='700' fill='" & __cor & "'>" & FORMAT ( __Pct * 100, "#,##0.0", "pt-BR" ) & "%25</text>"
+			        & "<text x='246' y='86' font-size='12' fill='" & __cSu & "'>da meta acumulada</text>"
+			        & "<text x='16' y='130' font-size='12' fill='" & __cSu & "'>Produzido</text>"
+			        & "<text x='16' y='150' font-size='17' font-weight='600' fill='" & __cOk & "'>" & FORMAT ( __Prd, __Fmt, "pt-BR" ) & " " & __Un & "</text>"
+			        & "<text x='140' y='130' font-size='12' fill='" & __cSu & "'>Meta até ontem</text>"
+			        & "<text x='140' y='150' font-size='17' font-weight='600' fill='" & __cOk & "'>" & FORMAT ( __MetaAc, "#,##0", "pt-BR" ) & " " & __Un & "</text>"
+			        & "<text x='270' y='130' font-size='12' fill='" & __cSu & "'>" & IF ( __Feliz, "Adiantado", "Atrasado" ) & "</text>"
+			        & "<text x='270' y='150' font-size='17' font-weight='700' fill='" & __cor & "'>" & IF ( __Feliz, "+", "−" ) & FORMAT ( ABS ( __Saldo ), __Fmt, "pt-BR" ) & " " & __Un & "</text>"
+			        & "<rect x='16' y='162' width='368' height='0.8' fill='" & __cLi & "'/>"
+			        & __Frase
+			        & "<path d='" & __MetaLn & "' stroke='" & __cSu & "' stroke-width='1.5' stroke-dasharray='5 4' fill='none'/>"
+			        & "<path d='" & __Real & "' stroke='" & __cor & "' stroke-width='2.5' fill='none'/>"
+			        & "<circle cx='364' cy='" & __yUlt & "' r='3.5' fill='" & __cor & "'/>"
+			        & "<text x='16' y='202' font-size='10' fill='" & __cSu & "'>Acumulado do mês</text>"
+			        & "<text x='120' y='202' font-size='10' fill='" & __cSu & "'>― real   - - meta</text>"
+			RETURN
+			    IF (
+			        ISBLANK ( __Corte ) || ISBLANK ( __Prod ) || ISBLANK ( __Meta ) || __n = 0,
+			        BLANK (),
+			        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300' font-family='Segoe UI, sans-serif'>"
+			            & __Corpo & "</svg>"
+			    )
+			```
+		lineageTag: 8021a2c3-0593-4a6f-adf9-2439b449edac
+		dataCategory: ImageUrl
+
+	measure 'SVG Barras' = ```
+			-- Barras por dia contabilizado (vermelha < meta diária, cinza escuro >= meta), rótulo em cima, dd/mm embaixo e linha
+			-- tracejada da meta. Mesmo recorte do cartão. Mockup Mascara_Producao_mockup.html · MEL-273
+			VAR __cVerm = "%23E2000F"
+			VAR __cOk = "%233C3C3B"
+			VAR __cSu = "%238A8A88"
+			VAR __cLi = "%23D9D9D9"
+			VAR __Corte = [Data de Corte]
+			VAR __Ini = DATE ( YEAR ( __Corte ), MONTH ( __Corte ), 1 )
+			VAR __Prod = SELECTEDVALUE ( dProduto[Produto] )
+			VAR __Un = SELECTEDVALUE ( dProduto[Unidade] )
+			VAR __Casas = SELECTEDVALUE ( dProduto[Casas] )
+			VAR __Meta = [Meta Diária]
+			VAR __Uteis = [Dias Úteis]
+			VAR __Fmt = IF ( __Casas = 1, "#,##0.0", "#,##0" )
+			VAR __Dias =
+			    CALCULATETABLE (
+			        VALUES ( fProducao[Data] ),
+			        REMOVEFILTERS (),
+			        fProducao[Data] >= __Ini,
+			        fProducao[Data] <= __Corte
+			    )
+			VAR __D0 = ADDCOLUMNS ( __Dias, "@v", CALCULATE ( SUM ( fProducao[Quantidade] ) ) + 0 )
+			VAR __D1 =
+			    ADDCOLUMNS (
+			        __D0,
+			        "@i", VAR __dt = fProducao[Data] RETURN COUNTROWS ( FILTER ( __D0, fProducao[Data] < __dt ) )
+			    )
+			VAR __D =
+			    ADDCOLUMNS (
+			        __D1,
+			        "@a", VAR __dt = fProducao[Data] RETURN SUMX ( FILTER ( __D1, fProducao[Data] <= __dt ), [@v] )
+			    )
+			VAR __n = COUNTROWS ( __D )
+			VAR __Prd = SUMX ( __D, [@v] )
+			VAR __MetaAc = __Meta * __n
+			VAR __Mx = MAX ( __Meta, MAXX ( __D, [@v] ) ) * 1.12
+			VAR __Bw = DIVIDE ( 364, __n )
+			VAR __yMeta = 212 - DIVIDE ( __Meta, __Mx ) * 164
+			VAR __Titulo =
+			    SWITCH (
+			        __Prod,
+			        "Mangueira", "Quanto de mangueira saiu por dia?",
+			        "Montagem", "Quanto a Montagem saiu por dia?",
+			        "Quanto de fitting saiu por dia?"
+			    )
+			VAR __Barras =
+			    CONCATENATEX (
+			        __D,
+			        VAR __x = 18 + [@i] * __Bw
+			        VAR __yv = 212 - DIVIDE ( MAX ( 0, [@v] ), __Mx ) * 164
+			        VAR __c = IF ( [@v] < __Meta, __cVerm, __cOk )
+			        RETURN
+			            "<rect x='" & FORMAT ( __x + __Bw * 0.15, "0.0", "en-US" ) & "' y='" & FORMAT ( __yv, "0.0", "en-US" )
+			                & "' width='" & FORMAT ( __Bw * 0.7, "0.0", "en-US" ) & "' height='" & FORMAT ( 212 - __yv, "0.0", "en-US" )
+			                & "' rx='2' fill='" & __c & "'/>"
+			                & "<text x='" & FORMAT ( __x + __Bw / 2, "0.0", "en-US" ) & "' y='" & FORMAT ( __yv - 4, "0.0", "en-US" )
+			                & "' font-size='9' text-anchor='middle' fill='" & __c & "'>" & FORMAT ( [@v], "#,##0", "pt-BR" ) & "</text>"
+			                & "<text x='" & FORMAT ( __x + __Bw / 2, "0.0", "en-US" ) & "' y='226' font-size='9' text-anchor='middle' fill='" & __cSu & "'>"
+			                & FORMAT ( fProducao[Data], "dd/mm", "pt-BR" ) & "</text>",
+			        "",
+			        fProducao[Data], ASC
+			    )
+			VAR __Corpo =
+			    "<rect x='0' y='0' width='400' height='300' rx='8' fill='%23fff'/><g transform='translate(0,25)'>"
+			        & "<text x='14' y='22' font-size='13' font-weight='600' fill='" & __cOk & "'>" & __Titulo & "</text>"
+			        & "<text x='14' y='38' font-size='10' fill='" & __cSu & "'>" & IF ( __Un = "m", "metros", "peças" ) & " · vermelho = abaixo da meta diária</text>"
+			        & __Barras
+			        & "<line x1='18' x2='380' y1='" & FORMAT ( __yMeta, "0.0", "en-US" ) & "' y2='" & FORMAT ( __yMeta, "0.0", "en-US" )
+			        & "' stroke='" & __cSu & "' stroke-width='1.5' stroke-dasharray='5 4'/>"
+			        & "<text x='380' y='44' font-size='9' text-anchor='end' fill='" & __cSu & "'>- - meta " & FORMAT ( __Meta, "#,##0", "pt-BR" ) & "</text>"
+			        & "<line x1='18' x2='380' y1='212' y2='212' stroke='" & __cLi & "'/></g>"
+			RETURN
+			    IF (
+			        ISBLANK ( __Corte ) || ISBLANK ( __Prod ) || ISBLANK ( __Meta ) || __n = 0,
+			        BLANK (),
+			        "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300' font-family='Segoe UI, sans-serif'>"
+			            & __Corpo & "</svg>"
+			    )
+			```
+		lineageTag: 9a3308e7-0f2a-4e9b-a0eb-1fabc4ee1e06
+		dataCategory: ImageUrl
+
+	column Coluna
+		dataType: string
+		isHidden
+		lineageTag: fefbccae-77d9-4eee-b55d-bc00a2d97ac4
+		summarizeBy: none
+		sourceColumn: Coluna
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Medidas = m
+		mode: import
+		source =
+				let
+				    Fonte = #table(type table [Coluna = text], {})
+				in
+				    Fonte
+
+	annotation PBI_ResultType = Table

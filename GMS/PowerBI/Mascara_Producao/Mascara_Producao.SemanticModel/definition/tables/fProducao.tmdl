@@ -1,0 +1,53 @@
+/// Produção diária por produto (aba MB51 da Máscara de produção, tabela mb51_coois, sem KG). Fonte: MB51 + COOIS.
+table fProducao
+	lineageTag: 62d6554a-7578-45f2-b62c-4d75b99655d1
+
+	column Data
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		isHidden
+		lineageTag: d7b2f8db-fb8b-478c-a22d-53a1cf261f18
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Produto
+		dataType: string
+		isHidden
+		lineageTag: 6c5c8118-94c9-43b6-8a70-811edfc08248
+		summarizeBy: none
+		sourceColumn: Produto
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantidade
+		dataType: double
+		formatString: #,0.00
+		isHidden
+		lineageTag: c7e1176c-b3e6-43b6-91be-6c07be5deaf7
+		summarizeBy: none
+		sourceColumn: Quantidade
+
+		annotation SummarizationSetBy = Automatic
+
+	partition fProducao = m
+		mode: import
+		source =
+				let
+				    Origem = Excel.Workbook(Web.Contents(pUrlMascara), null, true),
+				    Tabela = Origem{[Item = "mb51_coois", Kind = "Table"]}[Data],
+				    Colunas = Table.SelectColumns(Tabela, {"MRP controller", "Posting Date", "Qty in unit of entry", "Unit of Entry"}),
+				    Tipos = Table.TransformColumnTypes(Colunas, {{"MRP controller", type text}, {"Posting Date", type date}, {"Qty in unit of entry", type number}, {"Unit of Entry", type text}}, "pt-BR"),
+				    SemKg = Table.SelectRows(Tipos, each [Unit of Entry] <> "KG"),
+				    ComProduto = Table.AddColumn(SemKg, "Produto", each if [MRP controller] = "AIH" then "Mangueira" else if [MRP controller] = "Z35" or [MRP controller] = "AWE" then "Montagem" else if [MRP controller] = "AO0" then "Fittings" else null, type text),
+				    SoProduto = Table.SelectRows(ComProduto, each [Produto] <> null and [Posting Date] <> null),
+				    Agrupado = Table.Group(SoProduto, {"Posting Date", "Produto"}, {{"Quantidade", each List.Sum([Qty in unit of entry]), type nullable number}}),
+				    Renomeado = Table.RenameColumns(Agrupado, {{"Posting Date", "Data"}}),
+				    Final = Table.ReorderColumns(Renomeado, {"Data", "Produto", "Quantidade"})
+				in
+				    Final
+
+	annotation PBI_ResultType = Table

@@ -1,0 +1,84 @@
+/// Meta diária e dias úteis por produto (aba Resumo BI da Máscara de produção).
+table dProduto
+	lineageTag: c6baf0ff-e68c-4423-85dd-433b50b39570
+
+	column Produto
+		dataType: string
+		lineageTag: 19325c1a-8de2-4f4f-8ed5-63d3fa6676a4
+		summarizeBy: none
+		sourceColumn: Produto
+		sortByColumn: Ordem
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Meta diária'
+		dataType: double
+		formatString: #,0
+		isHidden
+		lineageTag: 58fa8f5e-49a4-440a-83c6-b8d508280ea4
+		summarizeBy: none
+		sourceColumn: Meta diária
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Dias úteis'
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 69bec3db-ac95-4e6f-a962-51fc88dc5fcd
+		summarizeBy: sum
+		sourceColumn: Dias úteis
+
+		annotation SummarizationSetBy = Automatic
+
+	column Unidade
+		dataType: string
+		isHidden
+		lineageTag: f1db9cfd-1adb-445f-b2cd-6f2ec38a0536
+		summarizeBy: none
+		sourceColumn: Unidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column Casas
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 6a4a7db9-437e-4872-965f-a22cc9b7c27c
+		summarizeBy: sum
+		sourceColumn: Casas
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordem
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: bc9047eb-c559-474a-9902-84e1fe5dbb94
+		summarizeBy: sum
+		sourceColumn: Ordem
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dProduto = m
+		mode: import
+		source =
+				let
+				    Origem = Excel.Workbook(Web.Contents(pUrlMascara), null, true),
+				    Aba = Origem{[Item = "Resumo BI", Kind = "Sheet"]}[Data],
+				    Cabecalho = Table.PromoteHeaders(Aba, [PromoteAllScalars = true]),
+				    Colunas = Table.SelectColumns(Cabecalho, {"PRODUTO", "TIPO", "VALOR"}),
+				    Tipos = Table.TransformColumnTypes(Colunas, {{"PRODUTO", type text}, {"TIPO", type text}, {"VALOR", type number}}, "pt-BR"),
+				    Filtro = Table.SelectRows(Tipos, each [TIPO] = "Meta diária" or [TIPO] = "Dias úteis"),
+				    Normalizado = Table.TransformColumns(Filtro, {{"PRODUTO", each if _ = null then null else if Text.Upper(Text.Trim(_)) = "MANGUEIRA" then "Mangueira" else if Text.Upper(Text.Trim(_)) = "MONTAGEM" then "Montagem" else if Text.Upper(Text.Trim(_)) = "FITTINGS" then "Fittings" else null, type text}}),
+				    SoProduto = Table.SelectRows(Normalizado, each [PRODUTO] <> null),
+				    Pivotado = Table.Pivot(SoProduto, {"Meta diária", "Dias úteis"}, "TIPO", "VALOR", List.Sum),
+				    Renomeado = Table.RenameColumns(Pivotado, {{"PRODUTO", "Produto"}}),
+				    ComUnidade = Table.AddColumn(Renomeado, "Unidade", each if [Produto] = "Mangueira" then "m" else "pç", type text),
+				    ComCasas = Table.AddColumn(ComUnidade, "Casas", each if [Produto] = "Mangueira" then 1 else 0, Int64.Type),
+				    ComOrdem = Table.AddColumn(ComCasas, "Ordem", each if [Produto] = "Mangueira" then 1 else if [Produto] = "Montagem" then 2 else if [Produto] = "Fittings" then 3 else 99, Int64.Type),
+				    Final = Table.TransformColumnTypes(ComOrdem, {{"Produto", type text}, {"Meta diária", type number}, {"Dias úteis", Int64.Type}})
+				in
+				    Final
+
+	annotation PBI_ResultType = Table
