@@ -195,7 +195,7 @@ createOrReplace
 			source =
 				let
 				// Lista nova GMS_MetaMensal (nomes internos: Title = Produto, Mes = dia 1 do mês, MetaDiaria, DiasUteis). Grão: 1 linha por Produto x Mês.
-				// Navega pelo Title da lista porque ainda não há Id; depois de criada, pode trocar por [Id = "..."] (mais estável).
+				// Navega pelo Title da lista porque ainda não há Id; lista criada em 16/11/2026, Id a51e5bf5-4f06-473d-9a6a-2b1d0c4e9f9b (pode trocar a navegação por [Id = "a51e5bf5-4f06-473d-9a6a-2b1d0c4e9f9b"]).
 				Origem = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation = "2.0", ViewMode = "All"]),
 				Lista = Origem{[Title = "GMS_MetaMensal"]}[Items],
 				Colunas = Table.SelectColumns(Lista, {"Title", "Mes", "MetaDiaria", "DiasUteis"}),
