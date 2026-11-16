@@ -222,3 +222,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-16 | Rótulos das barras da página SAP em mês cheio, MEL-273 | chefe (Opus 5.5) sozinho | ajuste de uma medida, sem subagente | custo não medido
 2026-11-16 | Fonte maior nos rótulos das barras da página SAP, MEL-273 | chefe (Opus 5.5) sozinho | ajuste pequeno de uma medida | custo não medido
 2026-11-16 | Validação da carinha BI x Máscara e meta da Mangueira 7000 na lista, MEL-273 | chefe (Opus 5.5) sozinho pelo navegador do app | leitura e edição de 1 item com sim | custo não medido
+2026-11-16 | Validação da página SAP mês a mês contra a Máscara; achado: meses anteriores a menor por OP fora da COOIS, MEL-273 | chefe (Opus 5.5) sozinho (Python local + DAX no serviço) | análise de dados com contexto já carregado | custo não medido
