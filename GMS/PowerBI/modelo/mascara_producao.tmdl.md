@@ -394,3 +394,114 @@ ORDER BY dProdutoSAP[Produto]
 ## 5) Onde mexer depois
 - Meta ou dias úteis do mês: **só na lista `GMS_MetaMensal`** (1 linha por produto e mês), sem republicar o relatório; vale no próximo refresh.
 - Trocar `[Title = "GMS_MetaMensal"]` por `[Id = "..."]` na `dMetaMensal` quando a lista existir (mais estável contra renomeação).
+
+
+## 6) Passo 4 (16/11/2026, aplicado): produto em cadeia, sem depender só da COOIS
+A COOIS exportada só traz OPs atuais; OP encerrada sumia do mês (set: 1.018 m de Mangueira). Cadeia, só para linha com OP: 1) MRP da OP na COOIS; 2) MRP mais comum do material na COOIS; 3) regra (GRT4+M = Mangueira; KAN+PC = Montagem; GRT4/ASSY+PC = Fittings pela descrição, senão Montagem). Acurácia da regra nas linhas com MRP conhecido: 99,8%. Coluna oculta 'Origem do produto' para auditoria. Próximo passo: export SE16N MARC planta H204 (material x MRP controller) como material_mrp.xlsx na pasta Relatórios, entrando como passo 2 (exige login da credencial nova no serviço).
+```
+createOrReplace
+
+	table fProducaoSAP
+
+		/// Produção diária por produto, material, tipo de movimento e unidade (MB51 do SAP, sem KG). Produto em cadeia: COOIS pela OP; material já visto na COOIS; regra de depósito/unidade/descrição. Só linha com OP (MEL-273).
+		column Data
+			dataType: dateTime
+			isHidden
+			formatString: dd/mm/yyyy
+			summarizeBy: none
+			sourceColumn: Data
+
+		column Produto
+			dataType: string
+			isHidden
+			summarizeBy: none
+			sourceColumn: Produto
+
+		column 'Origem do produto'
+			dataType: string
+			isHidden
+			summarizeBy: none
+			sourceColumn: Origem do produto
+
+		column Material
+			dataType: string
+			isHidden
+			summarizeBy: none
+			sourceColumn: Material
+
+		column 'Tipo de movimento'
+			dataType: int64
+			isHidden
+			formatString: 0
+			summarizeBy: none
+			sourceColumn: Tipo de movimento
+
+		column Unidade
+			dataType: string
+			isHidden
+			summarizeBy: none
+			sourceColumn: Unidade
+
+		column Quantidade
+			dataType: double
+			isHidden
+			formatString: #,0.00
+			summarizeBy: none
+			sourceColumn: Quantidade
+
+		partition fProducaoSAP = m
+			mode: import
+			source =
+				let
+				// MEL-273 v2: o produto não depende só da COOIS (ela só traz OPs atuais; OP encerrada sumia do mês). Só linha com OP (compra sem OP fica fora, como na Máscara). Ordem: 1) MRP da OP na COOIS; 2) MRP mais comum do material na COOIS; 3) regra. Passo do cadastro SAP (material_mrp.xlsx) entra quando o arquivo existir.
+				// OP que está na COOIS com MRP fora do mapa (ex.: Z37) continua fora, como na Máscara. Regra: GRT4+M+OP = Mangueira; KAN+PC+OP = Montagem; GRT4/ASSY+PC+OP = Fittings se a descrição começa por conexão/fitting, senão Montagem.
+				Pasta = "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta/Shared%20Documents/Manufatura/Production%20planning/2_Production_Planning/Relat%C3%B3rios/",
+				Mapa = [AIH = "Mangueira", Z35 = "Montagem", AWE = "Montagem", AO0 = "Fittings"],
+				Fit = {"HOSE FTG", "HOSE NIPPLE", "HOSE INSERT", "CON ", "CONEXAO", "FTNG", "FTG", "NIPLE", "NIPPLE", "TUBO", "TUBE"},
+				OrigemCoois = Excel.Workbook(Web.Contents(Pasta & "coois.xlsx"), null, true),
+				CabCoois = Table.PromoteHeaders(OrigemCoois{0}[Data], [PromoteAllScalars = true]),
+				TiposCoois = Table.TransformColumnTypes(Table.SelectColumns(CabCoois, {"Order", "Material", "MRP controller"}), {{"Order", Int64.Type}, {"Material", type text}, {"MRP controller", type text}}),
+				CooisOP = Table.Distinct(Table.SelectRows(Table.SelectColumns(TiposCoois, {"Order", "MRP controller"}), each [Order] <> null), {"Order"}),
+				CooisMat = Table.Group(Table.SelectRows(TiposCoois, each [Material] <> null and [MRP controller] <> null and Text.Trim([MRP controller]) <> ""), {"Material"}, {{"MRP material", each List.Mode([MRP controller]), type text}}),
+				OrigemMb51 = Excel.Workbook(Web.Contents(Pasta & "mb51.xlsx"), null, true),
+				CabMb51 = Table.PromoteHeaders(OrigemMb51{0}[Data], [PromoteAllScalars = true]),
+				Renomeado = Table.RenameColumns(CabMb51, {{"Storage Location", "Storage location"}, {"Movement Type", "Movement type"}}, MissingField.Ignore),
+				SemTotais = Table.RemoveLastN(Renomeado, 3),
+				Colunas = Table.SelectColumns(SemTotais, {"Material", "Material Description", "Order", "Storage location", "Movement type", "Posting Date", "Qty in unit of entry", "Unit of Entry"}),
+				Tipos = Table.TransformColumnTypes(Colunas, {{"Material", type text}, {"Material Description", type text}, {"Order", Int64.Type}, {"Storage location", type text}, {"Movement type", Int64.Type}, {"Posting Date", type date}, {"Qty in unit of entry", type number}, {"Unit of Entry", type text}}),
+				SoMaterial = Table.SelectRows(Tipos, each [Material] <> null and Text.Trim([Material]) <> "" and not Text.StartsWith(Text.Upper(Text.Trim([Material])), "FM") and [Unit of Entry] <> "KG" and [Posting Date] <> null),
+				ComChave = Table.TransformColumns(SoMaterial, {{"Material", Text.Trim, type text}}),
+				J1 = Table.ExpandTableColumn(Table.NestedJoin(ComChave, {"Order"}, CooisOP, {"Order"}, "C", JoinKind.LeftOuter), "C", {"Order", "MRP controller"}, {"OP na COOIS", "MRP OP"}),
+				J3 = Table.ExpandTableColumn(Table.NestedJoin(J1, {"Material"}, CooisMat, {"Material"}, "M", JoinKind.LeftOuter), "M", {"MRP material"}, {"MRP material"}),
+				Classif = Table.AddColumn(J3, "Classif", each
+				let
+				Desc = Text.Upper(Text.Trim([Material Description] ?? "")),
+				Dep = Text.Trim([Storage location] ?? ""),
+				Un = [Unit of Entry],
+				TemOP = [Order] <> null,
+				Regra = if not TemOP then null else if Dep = "GRT4" and Un = "M" then "Mangueira" else if Dep = "KAN" and Un = "PC" then "Montagem" else if (Dep = "GRT4" or Dep = "ASSY") and Un = "PC" then (if List.AnyTrue(List.Transform(Fit, (f) => Text.StartsWith(Desc, f))) then "Fittings" else "Montagem") else null,
+				Res =
+				if not TemOP then [P = null, O = "Sem OP"]
+				else if [OP na COOIS] <> null then [P = Record.FieldOrDefault(Mapa, Text.Trim([MRP OP] ?? ""), null), O = "COOIS"]
+				else if [MRP material] <> null then [P = Record.FieldOrDefault(Mapa, Text.Trim([MRP material]), null), O = "Material na COOIS"]
+				else [P = Regra, O = "Regra"]
+				in
+				Res),
+				Expandido = Table.ExpandRecordColumn(Classif, "Classif", {"P", "O"}, {"Produto", "Origem do produto"}),
+				SoProduto = Table.SelectRows(Expandido, each [Produto] <> null),
+				Agrupado = Table.Group(SoProduto, {"Posting Date", "Produto", "Origem do produto", "Material", "Movement type", "Unit of Entry"}, {{"Quantidade", each List.Sum([Qty in unit of entry]), type nullable number}}),
+				Nomes = Table.RenameColumns(Agrupado, {{"Posting Date", "Data"}, {"Movement type", "Tipo de movimento"}, {"Unit of Entry", "Unidade"}}),
+				Final = Table.TransformColumnTypes(Table.ReorderColumns(Nomes, {"Data", "Produto", "Origem do produto", "Material", "Tipo de movimento", "Unidade", "Quantidade"}), {{"Produto", type text}, {"Origem do produto", type text}})
+				in
+				Final
+
+
+	relationship fProducaoSAP_dCalendario
+		fromColumn: fProducaoSAP.Data
+		toColumn: dCalendario.Date
+
+	relationship fProducaoSAP_dProdutoSAP
+		fromColumn: fProducaoSAP.Produto
+		toColumn: dProdutoSAP.Produto
+
+```

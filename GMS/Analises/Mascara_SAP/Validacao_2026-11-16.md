@@ -39,3 +39,19 @@ Consequência: o mês atual também vai encolher depois que as OPs dele forem en
 - Aba "Cálculo de horas (HOSE)": tabela dinâmica de horas por construção e por dia (metros convertidos em horas).
 - Aba "ANALISE MEDIA": hoje mostra #SPILL! (quebrada).
 - Abas de apoio: Plano (oculta), Conferencia (oculta), Cadastro Mangueiras, Detalhes1/Detail1 (detalhe de tabela dinâmica), COOIS, MB51, Resumo BI.
+
+## 5. Correção aplicada (16/11, aprovada pelo William: "aprovo se ficou igual à planilha")
+Regra em cadeia na fProducaoSAP (ver PowerBI/modelo/mascara_producao.tmdl.md, passo 4). Refresh 10:49.
+- Aceite, novembro dia a dia: Mangueira, Montagem e Fittings iguais à planilha de 03 a 13/11 e iguais ao BI de antes; nada de novembro veio de fora da COOIS.
+- Meses anteriores (SAP com a regra × metros de extração registrados no GMS):
+
+| Mês | Mangueira SAP | GMS extração | Dif. | Montagem | Fittings |
+|---|---|---|---|---|---|
+| jun | 163.681,8 | 162.972,4 | +0,4% | 49.959 | — |
+| jul | 36.050,2 | 31.444,0 | +14,6% | 20.193 | — |
+| ago | 147.343,7 | 152.198,2 | −3,2% | 63.083 | — |
+| set | 154.188,4 | 151.739,3 | +1,6% | 50.458 | — |
+| out | 169.872,4 | 166.130,3 | +2,3% | 49.250 | 11.618 |
+| nov | 73.268,0 | 73.290,8 | 0,0% | 25.540 | 10.451 |
+
+- Pendente: export material × MRP do SAP (passo 2 da cadeia) para não depender da regra por descrição.
