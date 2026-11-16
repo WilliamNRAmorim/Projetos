@@ -76,3 +76,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-15 | Defesa do TCC: aprovou os capítulos 6 a 8 como estão e iniciou ele mesmo, pelo cartão, a sessão do bloco final (apoio, acertos e verificação). Não respondeu à proposta de compactar a sessão principal
 2026-11-16 | Máscara de produção no BI: aceitou a recomendada de relatório à parte do GMS_Painel (fonte = a planilha no SharePoint, sem Excel novo no modelo do GMS)
 2026-11-16 | Máscara no GMS_Painel oficial: aceitou a recomendada de meta numa lista SharePoint nova (GMS_MetaMensal) em vez de ler o Excel da Máscara, e a emenda da B.3.5 para export do SAP
+2026-11-16 | Máscara SAP: aceitou atualizar a meta da Mangueira na lista para 7000 (igualar à planilha)
