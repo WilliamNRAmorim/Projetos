@@ -515,13 +515,13 @@
         {
           "name": "VG Pior Máquina",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula])), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = TOPN(1, FILTER(t, NOT ISBLANK([@ad])), [@ad], ASC) RETURN IF(COUNTROWS(pior) = 0, \"Sem dados no período\", \"Mais longe da meta: \" & MAXX(pior, fHoraCheia[Célula]) & \", com \" & FORMAT(MAXX(pior, [@ad]), \"0%\") & \" da meta\")",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula]) && fHoraCheia[Célula] <> \"\"), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = TOPN(1, FILTER(t, NOT ISBLANK([@ad])), [@ad], ASC) RETURN IF(COUNTROWS(pior) = 0, \"Sem dados no período\", \"Mais longe da meta: \" & MAXX(pior, fHoraCheia[Célula]) & \", com \" & FORMAT(MAXX(pior, [@ad]), \"0%\") & \" da meta\")",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "VG Cor Máquina",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula])), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = MINX(FILTER(t, NOT ISBLANK([@ad])), [@ad]) VAR atual = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta])) RETURN IF(NOT ISBLANK(atual) && atual = pior, \"#C0392B\", \"#2C6FBF\")",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Célula]), NOT ISBLANK(fHoraCheia[Célula]) && fHoraCheia[Célula] <> \"\"), \"@ad\", DIVIDE(CALCULATE(SUM(fHoraCheia[Real])), CALCULATE(SUM(fHoraCheia[Meta])))) VAR pior = MINX(FILTER(t, NOT ISBLANK([@ad])), [@ad]) VAR atual = DIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta])) RETURN IF(NOT ISBLANK(atual) && atual = pior, \"#C0392B\", \"#2C6FBF\")",
           "displayFolder": "Painel (relatório)"
         },
         {
