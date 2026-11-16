@@ -140,6 +140,13 @@ try {
   }catch{ Write-Host "animacao de pulso nao aplicada: $($_.Exception.Message)" }
   Add-Moldura $s 'Os resultados' $AMB 'Nenhuma função mudou. {{Mudou a prova.}}' '23 / 28' 'seção 4.7, Quadro 7 (MESA INTERNATIONAL, 1997)'
   $null=Add-ReelCap $s 1800 985 62 5 (Frac); Set-Notes $s $rot['23']
+  # toco de 1 grau do arco vermelho do cap. 6 (!!arcoLuz6): mesma caixa e mesmos nomes do 42, so o angulo final cresce la (139 -> 176 graus).
+  # Fica sob o !!ponto (que volta para a frente) para o arco vermelho do 42 crescer do toco em vez de entrar por fade.
+  $rp6=62/2; $lw6=62*18/82
+  $stb=$s.Shapes.AddShape(25,1800/2,985/2-$rp6,$rp6,$rp6); $stb.Name='!!arcoLuz6'
+  $stb.Adjustments.Item(1)=139; $stb.Adjustments.Item(2)=140
+  $stb.Fill.Visible=0; Set-Line $stb $script:CH[5] $lw6; $stb.Shadow.Visible=0
+  $s.Shapes.Item('!!ponto').ZOrder(0)
 
   foreach($sl in $script:pres.Slides){ $sl.SlideShowTransition.AdvanceOnClick=-1; $sl.SlideShowTransition.AdvanceOnTime=0 }
   Save-GmsDeck $pptx 1.2
