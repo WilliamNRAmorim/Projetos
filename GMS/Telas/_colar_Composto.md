@@ -91,15 +91,16 @@ If(varCompostoPermitida,
 App.ActiveScreen.Name <> "scr_Composto"
 ```
 
-## 3b. App → OnError (esconde só a faixa vermelha do Composto)
+## 3b. App → OnError (esconde só as faixas vermelhas combinadas)
 
-Erro que vem do `Flow_Composto` não mostra faixa: vai só para o log (Monitor). Qualquer outro erro do app continua aparecendo em vermelho, como hoje.
+Ficam silenciosos (vão só para o Monitor): erro do `Flow_Composto` e o erro `[DM_TUBE_EXTRUSION] Expression "PARTNUMBER eq null"` (LookUp com o campo de mangueira vazio nos 11 campos da tela de extrusão do tubo: TXT_Matriz3, TextInput1_63..72). Qualquer outro erro do app continua aparecendo em vermelho.
 
 ```
 If(
-    "Flow_Composto" in FirstError.Message,
+    "Flow_Composto" in FirstError.Message
+        || ("DM_TUBE_EXTRUSION" in FirstError.Message && "PARTNUMBER eq null" in FirstError.Message),
     Trace(
-        "Composto: falha ao validar acesso",
+        "Erro silenciado: " & FirstError.Source,
         TraceSeverity.Warning,
         {Mensagem: FirstError.Message, Origem: FirstError.Source}
     ),

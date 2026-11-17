@@ -1,7 +1,8 @@
 If(
-    "Flow_Composto" in FirstError.Message,
+    "Flow_Composto" in FirstError.Message
+        || ("DM_TUBE_EXTRUSION" in FirstError.Message && "PARTNUMBER eq null" in FirstError.Message),
     Trace(
-        "Composto: falha ao validar acesso",
+        "Erro silenciado: " & FirstError.Source,
         TraceSeverity.Warning,
         {Mensagem: FirstError.Message, Origem: FirstError.Source}
     ),
