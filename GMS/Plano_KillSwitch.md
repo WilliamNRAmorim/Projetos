@@ -1,7 +1,8 @@
 # Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Composto"
 
-Status: **plano fechado, aguardando aprovação final para implementar** — nada foi implementado no Power
-Apps/Power Automate ainda. Todas as 5 pendências originais foram resolvidas (seção 4).
+Status: **REPROVADO pelo revisor (Opus, esforço alto, 17/11/2026) — não implementar ainda.** A ideia geral
+está certa, mas tem 3 problemas graves (ver seção 7) que podem travar a fábrica ou simplesmente não
+bloquear nada. Nada foi implementado no Power Apps/Power Automate.
 
 Nomenclatura (a pedido do William, 17/11/2026): todo o mecanismo — lista, Flow e variáveis — usa o
 codinome **Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
@@ -152,6 +153,44 @@ de bloqueio + 1 `Timer`.
 
 Confirmado do texto original: só mudar `Ativo = Sim` ou `DataBloqueio` para o futuro na lista
 `Composto`. Sem republicar app nem Flow.
+
+## 7. Revisão (Opus, esforço alto, 17/11/2026) — REPROVADO
+
+Pontos confirmados OK: Timer sem `Patch` (só `Set`/`Flow.Run()`), sem `UpdateContext`, sem `Coalesce(x,0)`
+em exibição, data 06/01/2027 conforme `GMS/CLAUDE.md`.
+
+**Graves:**
+1. Sem `IfError` no `OnStart`/Timer — Flow fora do ar deixa `varCompostoPermitida` em branco/erro: o app
+   não carrega as coleções e não mostra o bloqueio (abre em branco), ou bloqueia todo mundo à toa numa
+   queda de Wi-Fi.
+2. O bloqueio do `OnStart` não funciona como escrito: `GMS/Telas/StartScreen.txt` manda quem tem acesso
+   restrito direto para ~12 telas de produção (`scr_tubo_1`, `scr_Bandagem_1`, `scr_Montagem_HoraHora`
+   etc.), sem passar pelo menu — o operador cai na tela de produção com as coleções vazias, mesmo
+   bloqueado.
+3. O plano não diz em qual tela o `Timer` fica. Sem uma tela/componente que toda sessão visita, ele pode
+   nunca rodar.
+
+**Médios:**
+4. `utcNow()` vs `DataBloqueio` sem fuso corta no meio do 2º ou 3º turno em Brasília — falta decidir a
+   hora exata do corte.
+5. Lista `Composto` no mesmo site onde operadores gravam — sem quebrar herança de permissão, qualquer
+   operador pode desligar o mecanismo.
+6. `Navigate` do Timer no meio de um apontamento perde o que estava sendo digitado; `BackEnabled = true`
+   deixa o botão voltar do Android escapar da tela de bloqueio.
+7. Reativar (`Ativo = Sim`) só funciona depois de reabrir o app — não estava escrito no plano.
+
+**Baixos:** Flow precisa de `First()`/Top 1 e tratar lista vazia; `permitido` como Sim/Não; `Notify` não
+aceita cor (ajustar a mensagem); contradição entre §3.3 ("1 tela + 1 Timer") e §5 ("N telas"); falta
+sincronizar `Telas/` e rodar `gms_qa_yaml.py`; decidir `NORMA` vs `DECISÃO` no diário.
+
+**Decisões do William antes de reescrever o plano:**
+1. Se o Flow falhar, libera ou bloqueia?
+2. Corte às 00h00, no meio do 3º turno, ou 05h20 (fim do 3º turno)?
+3. Aceita tocar nas ~12 telas do `StartScreen` em vez de "1 tela + 1 Timer"?
+4. Intervalo do Timer e aceita perder o que o operador estava digitando?
+5. Quem pode editar a lista `Composto`?
+6. Reativar exige reabrir o app — ok?
+7. Diário: `NORMA` ou `DECISÃO`?
 
 ## Fora de escopo deste plano
 
