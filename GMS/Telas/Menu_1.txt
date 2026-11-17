@@ -16,8 +16,7 @@ Screens:
             )
         );
         If(
-            !varCompostoPermitida,
-            Navigate(scr_Composto),
+            varCompostoPermitida,
             UpdateContext({ctxHoje: Today()});
             Set(
                 varAreaUsuario,
@@ -38,6 +37,15 @@ Screens:
             Set(varSomenteGestao, varAreaUsuario = "Gestao")
         )
     Children:
+      - tmr_Composto_Menu_1_Gate:
+          Control: Timer@2.1.0
+          Properties:
+            Duration: =100
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: =Navigate(scr_Composto)
+            Start: =!IsBlank(varCompostoPermitida) && !varCompostoPermitida
+            Visible: =false
       - tmr_Composto_Menu_1:
           Control: Timer@2.1.0
           Properties:

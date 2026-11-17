@@ -3,6 +3,8 @@
 Gerado de `GMS/Telas/*.txt` (commit 40a0d342). Ordem: 1) tela scr_Composto, 2) OnStart, 3) BackEnabled, 4) as 23 telas, 5) App Checker, 6) Publicar.
 
 > **Cuidado antes de substituir (OnStart e OnVisible):** o texto aqui vem dos arquivos locais. Se no Studio a fórmula original tiver algo que não está aqui (ex.: mangueira nova no OnStart), **não perca**: cole o bloco `IfError(...)` no começo e coloque a fórmula original do Studio como último argumento do `If(` (no OnStart, dentro de `If(varCompostoPermitida, ...)`; nas telas, depois de `Navigate(scr_Composto),`). Na dúvida, me mande a fórmula que está no Studio.
+>
+> **Menu_1 é a tela inicial:** o Studio não deixa `Navigate` no OnVisible dela ("Navigate cannot be used here..."). Por isso o OnVisible do Menu_1 não navega: quem desvia para `scr_Composto` é o timer `tmr_Composto_Menu_1_Gate` (100 ms, dispara quando `varCompostoPermitida` vira false). Se outra tela der o mesmo erro, me avise: o conserto é o mesmo.
 
 ## 1. Tela nova scr_Composto
 
@@ -111,8 +113,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({ctxHoje: Today()});
     Set(
         varAreaUsuario,
@@ -134,9 +135,18 @@ If(
 )
 ```
 
-Timer (Ctrl+V na tela):
+Timers (Ctrl+V na tela, os dois juntos):
 
 ```yaml
+- tmr_Composto_Menu_1_Gate:
+    Control: Timer@2.1.0
+    Properties:
+      Duration: =100
+      Fill: =fx_CorInfo
+      Font: =fx_FonteFamilia
+      OnTimerEnd: =Navigate(scr_Composto)
+      Start: =!IsBlank(varCompostoPermitida) && !varCompostoPermitida
+      Visible: =false
 - tmr_Composto_Menu_1:
     Control: Timer@2.1.0
     Properties:
