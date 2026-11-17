@@ -76,7 +76,7 @@
 | Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.0 | COLAR v0.5.0 ColunasCarimbadas | — |
 | Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.2.0** (27/10, `Telas/`) — v0.1.0 (22/10) AO VIVO + histórico, galeria 4×3, + diagnóstico no rodapé (v0.1.1) + ficha de consulta ao tocar no card (`_patch_PainelMontagem_v0.2.0_ficha.md`); mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
 | Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
-| Bloqueio (kill switch Composto) | `scr_Composto` | **v0.1.0** (17/11, `Telas/`, aguarda publish) — tela de acesso bloqueado, rótulo fixo com `varCompostoMensagem`, sem navegação; plano em `Plano_KillSwitch.md` | — | Criar a lista SharePoint `Composto` e o Flow `Flow_Composto`; adicionar o Flow como fonte do app; colar `OnStart`, `BackEnabled` e os blocos Gate+Timer das 23 telas (ver seção abaixo) |
+| Bloqueio (kill switch Composto) | — | **v0.2.0** (17/11, `Telas/`, aguarda publish) — SEM tela de bloqueio e SEM navegação (decisão do William): bloqueado = tela não carrega, app só para. Lista `Composto` + `Flow_Composto` prontos; roteiro em `Telas/_colar_Composto.md` | — | Colar `OnStart`, `OnError`, `BackEnabled=true` e os blocos Gate+Timer das 23 telas; publicar |
 
 Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?** A resposta fecha a coluna "Nome da tela".
 
@@ -85,9 +85,9 @@ Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?
 Plano aprovado: `Plano_KillSwitch.md`. Corte em 06/01/2027 13:59 (Brasília). No `Telas/` (tudo **aguarda publish**; William publica no Studio e no Power Automate):
 
 - `OnStart.txt` — validação `Flow_Composto.Run()` com `IfError` (falha = bloqueia) antes dos `Set` e do `Concurrent`; o resto só roda se `varCompostoPermitida`.
-- `BackEnabled.txt` — `App.ActiveScreen.Name <> "scr_Composto"` (era `true`).
-- `scr_Composto.txt` — tela nova de bloqueio.
-- 23 telas com Gate no `OnVisible` (original dentro do `Else`) + `Timer` oculto `tmr_Composto_<Tela>` de 30 min: `scrHoraHora_Mandril`, `scrHoraHora_Tubo`, `scr_AMDM02_Trancagem_1`, `scr_Bandagem_1`, `scr_Bobinadeira_1`, `scr_Catenaria_1`, `scr_Cobertura_2`, `scr_ConferenciaSAP`, `scr_Debandagem_2`, `scr_ExtrusoraMandril_1`, `scr_Finalização_1` (timer `tmr_Composto_scr_Finalizacao_1`, sem acento), `scr_HoraHora_Cobertura_1`, `scr_HoraHora_Trancagem_2`, `scr_mandril_1`, `scr_Montagem_HoraHora`, `scr_RefugoBobinadeira_1`, `scr_Trancagem_4`, `scr_tubo_1`, `scr_Vulcanizacao_1`, `TelaImpressao`, `Menu_1`, `scr_selecaosetor_1`, `scr_selecaosetor_Montagem`.
+- `BackEnabled.txt` — **`true`** (voltou ao original; não há mais tela de bloqueio).
+- `OnError.txt` — silencia todos os erros (só `Trace` para o Monitor, nenhum `Notify`). `scr_Composto` REMOVIDA.
+- 23 telas com Gate no `OnVisible` (`If(varCompostoPermitida, <original>)`, SEM Navigate) + `Timer` oculto `tmr_Composto_<Tela>` de 30 min: `scrHoraHora_Mandril`, `scrHoraHora_Tubo`, `scr_AMDM02_Trancagem_1`, `scr_Bandagem_1`, `scr_Bobinadeira_1`, `scr_Catenaria_1`, `scr_Cobertura_2`, `scr_ConferenciaSAP`, `scr_Debandagem_2`, `scr_ExtrusoraMandril_1`, `scr_Finalização_1` (timer `tmr_Composto_scr_Finalizacao_1`, sem acento), `scr_HoraHora_Cobertura_1`, `scr_HoraHora_Trancagem_2`, `scr_mandril_1`, `scr_Montagem_HoraHora`, `scr_RefugoBobinadeira_1`, `scr_Trancagem_4`, `scr_tubo_1`, `scr_Vulcanizacao_1`, `TelaImpressao`, `Menu_1`, `scr_selecaosetor_1`, `scr_selecaosetor_Montagem`.
 - Fora por decisão: painéis de TV e as 6 telas de leitura. Pendente: `scr_HoraHora_Mandril_2`, `scr_HoraHora_Tubo_2` (Moldes/) e `scr_Trancagem_3` (confirmar se estão publicadas).
 - Variáveis: `varCompostoPermitida`, `varCompostoMensagem`. Colar por blocos (layout ajustado à mão: nunca reimport).
 

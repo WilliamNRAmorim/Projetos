@@ -2,16 +2,13 @@
 
 Gerado de `GMS/Telas/*.txt` (commit 40a0d342). Ordem: 1) tela scr_Composto, 2) OnStart, 3) BackEnabled, 4) as 23 telas, 5) App Checker, 6) Publicar.
 
-> **Cuidado antes de substituir (OnStart e OnVisible):** o texto aqui vem dos arquivos locais. Se no Studio a fórmula original tiver algo que não está aqui (ex.: mangueira nova no OnStart), **não perca**: cole o bloco `IfError(...)` no começo e coloque a fórmula original do Studio como último argumento do `If(` (no OnStart, dentro de `If(varCompostoPermitida, ...)`; nas telas, depois de `Navigate(scr_Composto),`). Na dúvida, me mande a fórmula que está no Studio.
+> **Cuidado antes de substituir (OnStart e OnVisible):** o texto aqui vem dos arquivos locais. Se no Studio a fórmula original tiver algo que não está aqui (ex.: mangueira nova no OnStart), **não perca**: cole o bloco `IfError(...)` no começo e coloque a fórmula original do Studio como último argumento do `If(` (no OnStart, dentro de `If(varCompostoPermitida, ...)`; nas telas, dentro de `If(varCompostoPermitida, ...)`). Na dúvida, me mande a fórmula que está no Studio.
 >
 > **Menu_1 é a tela inicial:** o Studio não deixa `Navigate` no OnVisible dela ("Navigate cannot be used here..."). Por isso o OnVisible do Menu_1 não navega: quem desvia para `scr_Composto` é o timer `tmr_Composto_Menu_1_Gate` (100 ms, dispara quando `varCompostoPermitida` vira false). Se outra tela der o mesmo erro, me avise: o conserto é o mesmo.
 
-## 1. Tela de bloqueio scr_Composto (EM BRANCO)
+## 1. Tela de bloqueio — NÃO é mais necessária
 
-Decisão do William: no corte, sem mensagem nenhuma. A `scr_Composto` é só uma tela vazia — o operador cai nela e o app não faz mais nada.
-
-- Se a tela ainda não existe: crie uma tela nova em branco, renomeie para `scr_Composto`, **Fill** = `fx_CorFundo`. Não ponha nenhum controle.
-- Se você já colou o rótulo `lbl_MensagemComposto` antes: **apague esse rótulo** na árvore. A tela fica só com o fundo.
+Com a decisão de "só parar de carregar", nada navega para `scr_Composto`. Se você criou essa tela no Studio, **pode apagá-la**. Não precisa criar nada aqui.
 
 ## 2. App → OnStart
 
@@ -74,7 +71,7 @@ If(varCompostoPermitida,
 ## 3. App → BackEnabled
 
 ```
-App.ActiveScreen.Name <> "scr_Composto"
+true
 ```
 
 ## 3b. App → OnError (sem faixa vermelha nenhuma)
@@ -140,15 +137,6 @@ If(
 Timers (Ctrl+V na tela, os dois juntos):
 
 ```yaml
-- tmr_Composto_Menu_1_Gate:
-    Control: Timer@2.1.0
-    Properties:
-      Duration: =100
-      Fill: =fx_CorInfo
-      Font: =fx_FonteFamilia
-      OnTimerEnd: =Navigate(scr_Composto)
-      Start: =!IsBlank(varCompostoPermitida) && !varCompostoPermitida
-      Visible: =false
 - tmr_Composto_Menu_1:
     Control: Timer@2.1.0
     Properties:
@@ -165,8 +153,7 @@ Timers (Ctrl+V na tela, os dois juntos):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -189,8 +176,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({ctxAgora: Now()});
     Select(btn_RecarregarMenu_1)
 )
@@ -215,8 +201,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -239,8 +224,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     Select(btn_RecarregarSelM)
 )
 ```
@@ -264,8 +248,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -288,8 +271,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({varDadosSalvos1: Blank()}); 
     Set(varProcessando1, false);
     UpdateContext({
@@ -325,8 +307,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -349,8 +330,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({varDadosSalvos1: Blank()}); 
     Set(varProcessando1, false);
     UpdateContext({
@@ -386,8 +366,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -410,8 +389,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgoraAM: Now(),
         ctxDataAM: fx_DataRefEm(Now()),
@@ -469,8 +447,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -493,8 +470,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalSetupBand: false,
@@ -529,8 +505,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -553,8 +528,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalDelinBob: false,
@@ -592,8 +566,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -616,8 +589,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     Set(varProcessando, false);
     UpdateContext({ctxAgora: Now()});
     UpdateContext({
@@ -648,8 +620,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -672,8 +643,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalIniciarCob: false,
@@ -710,8 +680,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -734,8 +703,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({ctxAgoraConf: Now(), ctxFiltroConf: "Todas"});
     Select(btn_CarregarConf)
 )
@@ -760,8 +728,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -784,8 +751,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalSetupDeband: false,
@@ -819,8 +785,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -843,8 +808,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxProcExt: false,
@@ -902,8 +866,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -926,8 +889,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
                 ctxAgora: Now(),
                 ctxSincExt: Now(),
@@ -981,8 +943,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1005,8 +966,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgoraHHC: Now(),
         ctxAlteradoHHC: false,
@@ -1051,8 +1011,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1075,8 +1034,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgoraHHT: Now(),
         ctxAlteradoHHT: false,
@@ -1117,8 +1075,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1141,8 +1098,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalSetupMand: false,
@@ -1193,8 +1149,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1217,8 +1172,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     Set(varAgora, Now());
     Set(varDataTela, fx_DataRefEm(varAgora));
     Set(varTurnoTela, fx_TurnoLabelEm(varAgora));
@@ -1293,8 +1247,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1317,8 +1270,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({ctxAgora: Now()});
     UpdateContext({
         ctxIniBob: fx_JanelaInicioEm(ctxAgora),
@@ -1359,8 +1311,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1383,8 +1334,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalDelinTr3: false,
@@ -1451,8 +1401,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1475,8 +1424,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalIniciarTubo: false,
@@ -1526,8 +1474,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1550,8 +1497,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     UpdateContext({
         ctxAgora: Now(),
         ctxModalSetupVulca: false,
@@ -1582,8 +1528,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
@@ -1606,8 +1551,7 @@ If(
     )
 );
 If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
+    varCompostoPermitida,
     If(
         varPackingManual,
         Reset(inp_OPManualImp);
@@ -1637,8 +1581,7 @@ Timer (Ctrl+V na tela):
             ),
             Set(varCompostoPermitida, false);
             Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
-        );
-        If(!varCompostoPermitida, Navigate(scr_Composto))
+        )
       Repeat: =true
       Visible: =false
 ```
