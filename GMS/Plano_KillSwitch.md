@@ -1,8 +1,8 @@
 # Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Composto"
 
-Status: **plano revisado após 3 reprovações — rodada 3 de decisões do William respondida (17/11/2026).
-Aguardando quarto passe do revisor antes de implementar.** Nada foi implementado no Power
-Apps/Power Automate ainda.
+Status: **APROVADO pelo revisor no quarto passe (Opus, esforço alto, 17/11/2026), com ressalvas de forma
+(sem problema grave) e 1 decisão final do William já respondida (rodada 4).** Pronto para ir ao
+`executor`. Nada foi implementado no Power Apps/Power Automate ainda.
 
 Nomenclatura (a pedido do William): todo o mecanismo — lista, Flow e variáveis — usa o codinome
 **Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
@@ -34,6 +34,12 @@ Nomenclatura (a pedido do William): todo o mecanismo — lista, Flow e variávei
 15. **Telas de `Moldes/` (`scr_HoraHora_Mandril_2`, `scr_HoraHora_Tubo_2`) e `scr_Trancagem_3`**: William
     vai checar no Studio quais estão publicadas de fato — fica como pendência do `executor` confirmar
     antes de aplicar (ver seção 6).
+
+**Rodada 4 (17/11/2026, após aprovação com ressalvas):**
+16. **6 telas de leitura** (`scr_SelecaoGestao_1`, `scr_ConsultaOP_1`, `scr_FichaImpressao`,
+    `scr_FichaTecnica_1`, `scr_HistoricoTurno_Tubo`, `scr_HistoricoTurno_Mandril`) — **ficam de fora**
+    do bloqueio, igual aos painéis de TV (recomendação do revisor: não escrevem no SharePoint, e quem
+    reabrir o app depois do corte é sempre barrado).
 
 ## Objetivo
 
@@ -76,7 +82,8 @@ Flow embutida (decisão 10) — operadores não precisam de acesso à lista.
 
 ### 3.1 `App.OnStart` — com tratamento de falha
 
-A validação entra **antes** do bloco de `Concurrent(...)` que já existe em `Telas/OnStart.txt`:
+A validação entra **antes** dos três `Set` iniciais (`varMapa`, `varAcessoRestrito`, `varCelulaMontagem`)
+e do bloco `Concurrent(...)` que já existem em `Telas/OnStart.txt`:
 
 ```powerfx
 IfError(
@@ -128,21 +135,10 @@ operador escolher a tela — 23 no total).
 arquivo em `Telas/`) estão publicadas; se sim, entram na lista acima antes de implementar.
 
 **Decisão 13: painéis de TV (`scr_PainelCelula_1`, `scr_PainelMontagem_1`, `scr_Monitor_Mandril`) ficam
-de fora.**
-
-Em cada tela da lista, o `OnVisible` existente ganha, como primeira instrução:
-
-```powerfx
-// OnVisible da tela:
-If(
-    !varCompostoPermitida,
-    Navigate(scr_Composto),
-    // <OnVisible original da tela, sem mudança>
-)
-```
-
-Sintaxe com `Else` explícito (achado do 3º passe: sem o `Else`, `Navigate` não interrompe a fórmula e o
-`OnVisible` original roda mesmo bloqueado).
+de fora. Decisão 16: as 6 telas de leitura (`scr_SelecaoGestao_1`, `scr_ConsultaOP_1`,
+`scr_FichaImpressao`, `scr_FichaTecnica_1`, `scr_HistoricoTurno_Tubo`, `scr_HistoricoTurno_Mandril`)
+também ficam de fora**, pelo mesmo motivo: não escrevem no SharePoint, e reabrir o app depois do corte
+já barra o acesso.
 
 Cada tela também ganha um `Timer` oculto, com **nome único** `tmr_Composto_<NomeDaTela>` (prefixo `tmr_`
 do Mestre + sufixo por tela — 23 nomes distintos, evita conflito de nome de controle no app):
@@ -170,11 +166,14 @@ telas.
 Controle adicionado por **patch no YAML da tela** (colar o bloco do Timer), nunca reimportando a tela
 inteira (`GMS_Mestre.md`, padrão de versão de controle).
 
-**Primeira visita antes do `OnStart` terminar:** se o app não usa OnStart bloqueante,
-`varCompostoPermitida` pode estar `Blank()` quando o `OnVisible` da primeira tela roda —
-`!Blank()` avalia `true` e liberaria por engano (achado do 3º passe). Correção no gate de cada tela:
+**Gate completo (única versão — uma só melhor solução, sem variante opcional):** se o app não usa OnStart
+bloqueante, `varCompostoPermitida` pode estar `Blank()` quando o `OnVisible` da primeira tela roda.
+`!Blank()` avalia `true`, então o gate simples já *bloquearia* todo mundo na primeira visita (não libera
+por engano — correção do texto do 3º passe, que estava invertido). Para não depender de o OnStart ser
+bloqueante, o gate sempre valida antes de decidir quando a variável ainda não existe:
 
 ```powerfx
+// OnVisible da tela — versão única, usada em todas as telas da lista:
 If(
     IsBlank(varCompostoPermitida),
     // ainda não validou nesta sessão — valida agora, síncrono, antes de decidir
@@ -191,12 +190,14 @@ If(
 If(
     !varCompostoPermitida,
     Navigate(scr_Composto),
-    // <OnVisible original da tela, sem mudança>
+    // <OnVisible original da tela, sem mudança — em scr_selecaosetor_Montagem isso inclui
+    // Select(btn_RecarregarSelM), que deve ficar dentro deste Else>
 )
 ```
 
-(O `executor` confirma no Studio se o `OnStart` bloqueante já resolve isso sozinho — se sim, esse trecho
-extra pode ser dispensado; o plano cobre os dois casos.)
+Essa é a única versão do gate — sem alternativa "simples" em paralelo, para respeitar a norma de "uma
+única melhor solução" do `GMS/CLAUDE.md`. Isso também elimina a pendência "confirmar se o OnStart é
+bloqueante" da seção 6 — o gate funciona nos dois casos.
 
 ### 3.3 Tela de bloqueio `scr_Composto`
 
@@ -232,23 +233,26 @@ operadores disso ao reativar.
 
 - Mudança em muitos arquivos (lista nova + Flow novo + `OnStart` + 23 telas + `App.BackEnabled` + tela
   nova) → **plano aprovado antes de implementar**.
-- Mudança de arquitetura → passa pelo `revisor` antes de implementar. **Este plano já foi reprovado três
-  vezes; precisa de um quarto passe confirmando a versão atual antes de ir ao `executor`.**
-- Nesta sessão o agente `revisor` não apareceu disponível pelo nome (bug de listagem); as revisões foram
-  feitas por `general-purpose` com modelo Opus e esforço alto, seguindo ao pé da letra o papel de
-  `.claude/agents/revisor.md`. Investigar a causa, se possível usar o `revisor` de fato no próximo passe.
+- Mudança de arquitetura → passa pelo `revisor` antes de implementar. **Aprovado no 4º passe
+  (17/11/2026), depois de 3 reprovações. Pronto para o `executor`.**
+- Nesta sessão o agente `revisor` não apareceu disponível pelo nome (bug de listagem); as 4 revisões
+  foram feitas por `general-purpose` com modelo Opus e esforço alto, seguindo ao pé da letra o papel de
+  `.claude/agents/revisor.md`. Investigar a causa antes de usar o `revisor` de fato numa próxima revisão
+  (ex.: validação do resultado implementado).
 - Diário: linha `DECISÃO` (decisão 8), mais `ENTREGUE`/`PUBLICADO` conforme o ciclo de implementação.
 
 ## 6. Pendências do `executor` antes de aplicar (não são decisões do William, são checagens técnicas)
 
 1. Confirmar se `scr_HoraHora_Mandril_2`, `scr_HoraHora_Tubo_2` (`Moldes/`) e `scr_Trancagem_3` estão
    publicadas (decisão 15) — se sim, aplicar o mesmo bloco de gate+Timer nelas.
-2. Confirmar no Studio se o app usa OnStart bloqueante (afeta se o trecho extra de `IsBlank` em 3.2 é
-   necessário).
-3. Rodar o Flow uma vez e confirmar que `DataBloqueio` chega em UTC como esperado (seção 2).
-4. Testar `App.BackEnabled` num tablet Android de fato.
-5. Sincronizar `Telas/` no mesmo ciclo (norma de 01/10/2026) e rodar `gms_qa_yaml.py` em cada `.txt`
-   tocado. **William publica** no Studio/Power Automate — não cola YAML diretamente.
+2. Rodar o Flow uma vez e confirmar que `DataBloqueio` chega em UTC como esperado (seção 2).
+3. Testar `App.BackEnabled` num tablet Android de fato, e testar o `Navigate` dentro do `OnVisible` nas
+   23 telas (inclusive `scr_selecaosetor_Montagem`, onde `Select(btn_RecarregarSelM)` precisa ficar no
+   `Else` do gate).
+4. Sincronizar `Telas/` no mesmo ciclo (norma de 01/10/2026): `Telas/OnStart.txt`, `Telas/BackEnabled.txt`
+   (hoje `true`), o novo `Telas/scr_Composto.txt`, os `.txt` das 23 telas tocadas e `GMS_Indice.md`.
+   Rodar `gms_qa_yaml.py` em cada `.txt` tocado. **William publica** no Studio/Power Automate — não cola
+   YAML diretamente.
 
 ## Fora de escopo deste plano
 
