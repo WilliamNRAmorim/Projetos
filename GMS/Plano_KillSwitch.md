@@ -1,15 +1,15 @@
-# Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Manufatura"
+# Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Composto"
 
 Status: **plano fechado, aguardando aprovação final para implementar** — nada foi implementado no Power
 Apps/Power Automate ainda. Todas as 5 pendências originais foram resolvidas (seção 4).
 
 Nomenclatura (a pedido do William, 17/11/2026): todo o mecanismo — lista, Flow e variáveis — usa o
-codinome **Manufatura** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
+codinome **Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
 
 ## Nota sobre a data
 
 William confirmou no chat (17/11/2026): **06/01/2027 é a data real da chave de validação** — depois dela
-o GMS para de ser usado porque a operação migra para outro sistema. `DataBloqueio` na lista `Manufatura`
+o GMS para de ser usado porque a operação migra para outro sistema. `DataBloqueio` na lista `Composto`
 deve ser preenchida com **06/01/2027**.
 
 ## Objetivo
@@ -17,7 +17,7 @@ deve ser preenchida com **06/01/2027**.
 Mecanismo de desligamento remoto do app GMS (Power Apps), controlado por uma lista do SharePoint, sem
 precisar republicar o app nem o Flow para ativar/desativar.
 
-## 1. Lista SharePoint `Manufatura`
+## 1. Lista SharePoint `Composto`
 
 | Campo | Tipo | Observação |
 |---|---|---|
@@ -29,10 +29,10 @@ Um único item na lista (ou `First()` sobre ela). Lista nova, criada no mesmo si
 listas do GMS (confirmado pelo William, 17/11/2026) — mesmo local de `ficha_producao`, `MapeamentoSetor`
 etc.
 
-## 2. Flow `Flow_Manufatura` (Power Automate)
+## 2. Flow `Flow_Composto` (Power Automate)
 
 - Gatilho: **Power Apps (V2)**.
-- Ação: `Obter itens` (ou `Obter item`) em `Manufatura`.
+- Ação: `Obter itens` (ou `Obter item`) em `Composto`.
 - Lógica (Condição / Switch):
   ```
   Se Ativo = Não  -> permitido = false
@@ -59,13 +59,13 @@ já usado no OnStart atual (`varMapa`, `varAcessoRestrito`):
 
 ```powerfx
 With(
-    {resManufatura: Flow_Manufatura.Run()},
-    Set(varManufaturaPermitida, resManufatura.permitido);
-    Set(varManufaturaMensagem, resManufatura.mensagem)
+    {resComposto: Flow_Composto.Run()},
+    Set(varCompostoPermitida, resComposto.permitido);
+    Set(varCompostoMensagem, resComposto.mensagem)
 );
 
 If(
-    varManufaturaPermitida,
+    varCompostoPermitida,
     (
         Set(varMapa, LookUp(MapeamentoSetor, EmailComputador = User().Email));
         Set(varAcessoRestrito, Coalesce(varMapa.AcessoRestrito, false));
@@ -83,22 +83,22 @@ If(
 )
 ```
 
-### 3.2 Tela de bloqueio `scr_Manufatura`
+### 3.2 Tela de bloqueio `scr_Composto`
 
-Tela nova (`scr_Manufatura`, nasce do template padrão, B §6) ou um container sobre a tela atual:
+Tela nova (`scr_Composto`, nasce do template padrão, B §6) ou um container sobre a tela atual:
 
 ```powerfx
-Visible = !varManufaturaPermitida
+Visible = !varCompostoPermitida
 ```
 
 Padrão do GMS para mensagem de erro (`GMS_Mestre.md` §3.7): `Notify(texto, NotificationType.Error)` com a
 cor `fx_CorErro`. A tela/mensagem de bloqueio segue o mesmo padrão visual:
 
 ```powerfx
-Notify(Coalesce(varManufaturaMensagem, "Acesso bloqueado."), NotificationType.Error)
+Notify(Coalesce(varCompostoMensagem, "Acesso bloqueado."), NotificationType.Error)
 ```
 
-`varManufaturaMensagem` vem direto do campo `Mensagem` da lista (seção 1) — **William escreve o texto
+`varCompostoMensagem` vem direto do campo `Mensagem` da lista (seção 1) — **William escreve o texto
 ali, na lista, não no código**. Trocar a mensagem depois é só editar aquele item, sem tocar em
 Power Fx/Flow.
 
@@ -108,7 +108,7 @@ Levantamento em `Telas/*.txt`: **22 telas atuais** (`scr_*`) têm `Patch`/`Submi
 Mandril, Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Catenária,
 Extrusora/Bobinadeira, Montagem, Hora-Hora de cada etapa, Conferência SAP, Impressão, Refugo Bobinadeira.
 
-Envolver `If(varManufaturaPermitida, Patch(...))` em cada Patch dessas 22 telas violaria a norma de
+Envolver `If(varCompostoPermitida, Patch(...))` em cada Patch dessas 22 telas violaria a norma de
 "patch cirúrgico, nunca rewrite" (volume grande de mudança simultânea em telas de produção, risco alto).
 
 **Solução escolhida:** um `Timer` oculto numa tela sempre visível (ou num componente global), revalidando
@@ -117,10 +117,10 @@ periodicamente sem tocar em `Patch`:
 ```powerfx
 // OnTimerEnd do Timer global (ex.: a cada 30–60 min, Duration configurável)
 With(
-    {resManufatura: Flow_Manufatura.Run()},
-    Set(varManufaturaPermitida, resManufatura.permitido);
-    Set(varManufaturaMensagem, resManufatura.mensagem);
-    If(!varManufaturaPermitida, Navigate(scr_Manufatura))
+    {resComposto: Flow_Composto.Run()},
+    Set(varCompostoPermitida, resComposto.permitido);
+    Set(varCompostoMensagem, resComposto.mensagem);
+    If(!varCompostoPermitida, Navigate(scr_Composto))
 )
 ```
 
@@ -135,7 +135,7 @@ de bloqueio + 1 `Timer`.
 3. ~~Quais telas têm ação crítica~~ — resolvido (seção 3.3): 22 telas levantadas.
 4. ~~Mensagem de bloqueio~~ — resolvido (seção 3.2): campo `Mensagem` da lista, William digita.
 5. ~~`DataBloqueio`~~ — resolvido: 06/01/2027 (confirmado pelo William).
-6. ~~Nome do mecanismo~~ — resolvido: codinome "Manufatura" em lista, Flow e variáveis.
+6. ~~Nome do mecanismo~~ — resolvido: codinome "Composto" em lista, Flow e variáveis.
 
 ## 5. Processo (regra do repositório)
 
@@ -151,7 +151,7 @@ de bloqueio + 1 `Timer`.
 ## 6. "Botão mágico" de reativar
 
 Confirmado do texto original: só mudar `Ativo = Sim` ou `DataBloqueio` para o futuro na lista
-`Manufatura`. Sem republicar app nem Flow.
+`Composto`. Sem republicar app nem Flow.
 
 ## Fora de escopo deste plano
 
