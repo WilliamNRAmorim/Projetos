@@ -1,46 +1,60 @@
 # Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Composto"
 
-Status: **REPROVADO pelo revisor (Opus, esforço alto, 17/11/2026) — não implementar ainda.** A ideia geral
-está certa, mas tem 3 problemas graves (ver seção 7) que podem travar a fábrica ou simplesmente não
-bloquear nada. Nada foi implementado no Power Apps/Power Automate.
+Status: **plano revisado após reprovação do revisor (Opus, esforço alto, 17/11/2026) — todas as 8
+decisões pendentes foram respondidas pelo William (17/11/2026). Aguardando novo passe do revisor antes
+de implementar.** Nada foi implementado no Power Apps/Power Automate ainda.
 
-Nomenclatura (a pedido do William, 17/11/2026): todo o mecanismo — lista, Flow e variáveis — usa o
-codinome **Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
+Nomenclatura (a pedido do William): todo o mecanismo — lista, Flow e variáveis — usa o codinome
+**Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
 
-## Nota sobre a data
+## Decisões do William (17/11/2026) — todas resolvidas
 
-William confirmou no chat (17/11/2026): **06/01/2027 é a data real da chave de validação** — depois dela
-o GMS para de ser usado porque a operação migra para outro sistema. `DataBloqueio` na lista `Composto`
-deve ser preenchida com **06/01/2027**.
+1. **Se o Flow falhar:** bloqueia (seguro). Erro de rede/Flow = tratado como `permitido = false`.
+2. **Corte:** `06/01/2027 13:59` horário de Brasília.
+3. **Escopo de telas:** sim, ajustar as ~12 telas de destino do `StartScreen.txt`.
+4. **Timer:** 30 minutos.
+5. **Perder digitação ao bloquear no meio do uso:** aceito, sem proteção de `varProcessando`.
+6. **Permissão da lista:** só o William edita (quebra herança do site).
+7. **Reativar exige reabrir o app:** aceito (opção recomendada).
+8. **Diário:** linha `DECISÃO`, não `NORMA`.
 
 ## Objetivo
 
 Mecanismo de desligamento remoto do app GMS (Power Apps), controlado por uma lista do SharePoint, sem
-precisar republicar o app nem o Flow para ativar/desativar.
+precisar republicar o app nem o Flow para ativar/desativar. Corte definitivo em **06/01/2027 às 13:59**
+(horário de Brasília) — depois dessa data a operação migra para outro sistema.
 
 ## 1. Lista SharePoint `Composto`
 
 | Campo | Tipo | Observação |
 |---|---|---|
 | `Ativo` | Sim/Não (Yes/No) | Chave principal: Não = bloqueia na hora |
-| `DataBloqueio` | Data | A partir dessa data, bloqueia mesmo com `Ativo = Sim`. Valor: **06/01/2027** |
+| `DataBloqueio` | Data e hora | **06/01/2027 13:59**, horário de Brasília (ver seção 2 sobre fuso) |
 | `Mensagem` | Texto | **William digita aqui manualmente** o texto de bloqueio. Sem código, sem Flow, sem Studio — só editar o item da lista |
 
 Um único item na lista (ou `First()` sobre ela). Lista nova, criada no mesmo site SharePoint das outras
-listas do GMS (confirmado pelo William, 17/11/2026) — mesmo local de `ficha_producao`, `MapeamentoSetor`
-etc.
+listas do GMS — mas com **herança de permissão quebrada**: leitura para todo mundo (o Flow precisa ler
+como o usuário corrente ou via conexão dedicada), **edição só para o William**. Sem isso, qualquer
+operador pode desligar o mecanismo.
 
 ## 2. Flow `Flow_Composto` (Power Automate)
 
 - Gatilho: **Power Apps (V2)**.
-- Ação: `Obter itens` (ou `Obter item`) em `Composto`.
-- Lógica (Condição / Switch):
+- Ação: `Obter itens` em `Composto`, com `Top Count = 1` (ou `Obter item` pelo ID fixo) — **nunca** assumir
+  que a lista tem exatamente 1 item sem checar lista vazia.
+- Lógica (Condição):
   ```
-  Se Ativo = Não  -> permitido = false
-  Senão se Hoje >= DataBloqueio -> permitido = false
+  agoraBR = convertFromUtc(utcNow(), 'E. South America Standard Time')
+  item = first(outputs('Obter_itens')?['body/value'])
+
+  Se item é nulo -> permitido = false  (lista vazia = fail-safe bloqueia)
+  Senão se item.Ativo = false -> permitido = false
+  Senão se agoraBR >= item.DataBloqueio -> permitido = false
   Senão -> permitido = true
   ```
-  Usar a expressão de data do Flow (`utcNow()` vs. a data do item), não comparação de texto.
+  `DataBloqueio` é comparado como horário local de Brasília (`item.DataBloqueio` já gravado como
+  06/01/2027 13:59 nesse fuso), contra `agoraBR` convertido de UTC. Não comparar `utcNow()` direto com
+  `DataBloqueio` sem converter — isso cortaria 3h antes/depois do horário certo.
 - Resposta ao Power Apps (`Responder a um PowerApp ou fluxo`):
   ```json
   {
@@ -48,21 +62,27 @@ etc.
     "mensagem": "texto opcional"
   }
   ```
+  `permitido` como campo **Sim/Não** (boolean), não texto.
 
 ## 3. Power Fx — onde entra no app
 
-### 3.1 `App.OnStart`
+### 3.1 `App.OnStart` — com tratamento de falha
 
 Hoje o `OnStart` (`Telas/OnStart.txt`) faz `Concurrent(...)` carregando coleções (`colTrancadeiras`,
 `colMangueiras`, `Turno`, `colDM_*`) e depois `ClearCollect(colMangEscTubo, ...)`. A validação entra
-**antes** desse bloco, para decidir se o app deve nem carregar o resto. Variáveis seguem o padrão `var`
-já usado no OnStart atual (`varMapa`, `varAcessoRestrito`):
+**antes** desse bloco, com `IfError` — **fail-safe: erro = bloqueia** (decisão 1):
 
 ```powerfx
-With(
-    {resComposto: Flow_Composto.Run()},
-    Set(varCompostoPermitida, resComposto.permitido);
-    Set(varCompostoMensagem, resComposto.mensagem)
+IfError(
+    With(
+        {resComposto: Flow_Composto.Run()},
+        Set(varCompostoPermitida, resComposto.permitido);
+        Set(varCompostoMensagem, resComposto.mensagem)
+    ),
+    (
+        Set(varCompostoPermitida, false);
+        Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+    )
 );
 
 If(
@@ -84,113 +104,102 @@ If(
 )
 ```
 
-### 3.2 Tela de bloqueio `scr_Composto`
+Se `varCompostoPermitida = false`, as coleções de produção não carregam — combinado com o gate do
+`StartScreen` (seção 3.2), ninguém chega a uma tela de produção com dado incompleto.
 
-Tela nova (`scr_Composto`, nasce do template padrão, B §6) ou um container sobre a tela atual:
+### 3.2 Gate no `StartScreen.txt` — resolve o furo apontado pelo revisor
+
+`GMS/Telas/StartScreen.txt` hoje manda quem tem `AcessoRestrito` direto para ~12 telas de produção
+(`scr_tubo_1`, `scr_Bandagem_1`, `scr_Montagem_HoraHora` etc.), sem passar pelo menu — por isso o
+bloqueio original não funcionava: o roteamento ignorava `varCompostoPermitida`.
+
+**Correção:** envolver a lógica de roteamento existente do `StartScreen` com uma checagem única no topo
+(1 arquivo, não 12):
 
 ```powerfx
-Visible = !varCompostoPermitida
+If(
+    !varCompostoPermitida,
+    Navigate(scr_Composto),
+    // roteamento original do StartScreen, inalterado
+    If(varAcessoRestrito, Navigate(<tela da célula de varMapa>), Navigate(Menu_1))
+)
 ```
 
-Padrão do GMS para mensagem de erro (`GMS_Mestre.md` §3.7): `Notify(texto, NotificationType.Error)` com a
-cor `fx_CorErro`. A tela/mensagem de bloqueio segue o mesmo padrão visual:
+Isso garante que **nenhuma** rota (restrita ou não) escapa do bloqueio, resolvendo o problema 2 da
+revisão com uma única mudança no `StartScreen`, não em 12 arquivos.
+
+### 3.3 Tela de bloqueio `scr_Composto`
+
+Tela nova (`scr_Composto`, nasce do template padrão, B §6), destino de `Navigate` tanto do `StartScreen`
+quanto do Timer (seção 3.4). Mostra `varCompostoMensagem` num rótulo fixo (não `Notify`, que é
+passageiro e já teria sumido se o operador não estiver olhando no momento certo):
 
 ```powerfx
-Notify(Coalesce(varCompostoMensagem, "Acesso bloqueado."), NotificationType.Error)
+lbl_MensagemComposto.Text = Coalesce(varCompostoMensagem, "Acesso bloqueado.")
 ```
 
 `varCompostoMensagem` vem direto do campo `Mensagem` da lista (seção 1) — **William escreve o texto
 ali, na lista, não no código**. Trocar a mensagem depois é só editar aquele item, sem tocar em
 Power Fx/Flow.
 
-### 3.3 Proteção contra sessão aberta por semanas — decidido: Timer, não guarda por tela
+### 3.4 Timer de revalidação (sessão aberta por semanas) — 30 min, nas 12 telas de destino
 
-Levantamento em `Telas/*.txt`: **22 telas atuais** (`scr_*`) têm `Patch`/`SubmitForm` de produção —
-Mandril, Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Catenária,
-Extrusora/Bobinadeira, Montagem, Hora-Hora de cada etapa, Conferência SAP, Impressão, Refugo Bobinadeira.
-
-Envolver `If(varCompostoPermitida, Patch(...))` em cada Patch dessas 22 telas violaria a norma de
-"patch cirúrgico, nunca rewrite" (volume grande de mudança simultânea em telas de produção, risco alto).
-
-**Solução escolhida:** um `Timer` oculto numa tela sempre visível (ou num componente global), revalidando
-periodicamente sem tocar em `Patch`:
+O app não tem um componente/header compartilhado entre as ~12 telas de produção (`rct_Header*` nas
+telas são retângulos de estilo, não `Component`), então o `Timer` não pode morar num único lugar central
+além do `StartScreen` — e o `StartScreen` só aparece na abertura, não durante o turno. **Decisão do
+William: ajustar as 12 telas** (decisão 3), então o Timer entra em cada uma delas, idêntico:
 
 ```powerfx
-// OnTimerEnd do Timer global (ex.: a cada 30–60 min, Duration configurável)
-With(
-    {resComposto: Flow_Composto.Run()},
-    Set(varCompostoPermitida, resComposto.permitido);
-    Set(varCompostoMensagem, resComposto.mensagem);
-    If(!varCompostoPermitida, Navigate(scr_Composto))
-)
+// Timer.Duration = 1800000 (30 min); Timer.AutoStart = true; Timer.Repeat = true
+// OnTimerEnd:
+IfError(
+    With(
+        {resComposto: Flow_Composto.Run()},
+        Set(varCompostoPermitida, resComposto.permitido);
+        Set(varCompostoMensagem, resComposto.mensagem)
+    ),
+    (
+        Set(varCompostoPermitida, false);
+        Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+    )
+);
+If(!varCompostoPermitida, Navigate(scr_Composto))
 ```
 
-Isso é permitido pela norma (só proíbe `Patch` dentro de `Timer`, não `Set`/chamada de Flow). Cobre o caso
-de alguém deixar o app aberto por semanas, sem tocar nas 22 telas de produção — só `App.OnStart` + 1 tela
-de bloqueio + 1 `Timer`.
+Sem `Patch` dentro do `Timer` (conforme norma) — só `Set`/chamada de Flow. Decisão 5 aceita: se o Timer
+disparar no meio de um apontamento, o que estava sendo digitado se perde (sem checagem de
+`varProcessando`). Decisão 1 aplicada aqui também: erro no Flow = bloqueia.
 
-## 4. Pendências para fechar o plano
+**Nota de implementação:** os 22 `Patch`/`SubmitForm` levantados antes (todas as telas de produção)
+continuam **sem guarda individual** — só as ~12 telas de destino do `StartScreen` recebem o Timer; as
+demais telas (Hora-Hora, Conferência SAP etc.) são alcançadas a partir dessas 12 e ficam cobertas pelo
+mesmo ciclo de 30 min.
 
-1. ~~Local da lista~~ — resolvido: mesmo site SharePoint das listas atuais do GMS.
-2. ~~Revalidação~~ — resolvido (seção 3.3): `Timer` global, sem tocar nas 22 telas de produção.
-3. ~~Quais telas têm ação crítica~~ — resolvido (seção 3.3): 22 telas levantadas.
-4. ~~Mensagem de bloqueio~~ — resolvido (seção 3.2): campo `Mensagem` da lista, William digita.
-5. ~~`DataBloqueio`~~ — resolvido: 06/01/2027 (confirmado pelo William).
-6. ~~Nome do mecanismo~~ — resolvido: codinome "Composto" em lista, Flow e variáveis.
+## 4. Reativação
+
+Confirmado (decisão 7): mudar `Ativo = Sim` ou `DataBloqueio` para o futuro na lista `Composto`
+**exige fechar e reabrir o app** em cada tablet/computador — o `OnStart` só recarrega as coleções de
+produção na abertura. O Timer, por si, não refaz esse carregamento ao voltar para `permitido = true`
+(ele só navega para fora de `scr_Composto`; quem já estava numa tela de produção quando o Flow caiu
+precisa reabrir mesmo assim, por segurança). Avisar os operadores disso ao reativar.
 
 ## 5. Processo (regra do repositório)
 
-- Isso é mudança em mais de um "arquivo" (lista nova + Flow novo + `OnStart` + N telas) → **plano aprovado
-  antes de implementar** (este documento).
-- É mudança de **arquitetura** do app (controla se o app inteiro roda) → depois de aprovado o escopo,
-  recomendo passar pelo `revisor` (Opus) antes de aplicar, não pelo `revisor-leve`, porque:
-  - toca lógica que pode travar o app inteiro em produção (risco alto se mal implementado).
-- Implementação (depois do plano aprovado + revisor): `executor` monta o YAML das telas/Flow afetados;
-  **William publica** no Studio/Power Automate — não cola YAML diretamente, conforme regra do GMS.
-- Diário: ao fechar, linhas `NORMA` (confirmando o mecanismo) e `ENTREGUE`/`PUBLICADO` conforme o ciclo.
-
-## 6. "Botão mágico" de reativar
-
-Confirmado do texto original: só mudar `Ativo = Sim` ou `DataBloqueio` para o futuro na lista
-`Composto`. Sem republicar app nem Flow.
-
-## 7. Revisão (Opus, esforço alto, 17/11/2026) — REPROVADO
-
-Pontos confirmados OK: Timer sem `Patch` (só `Set`/`Flow.Run()`), sem `UpdateContext`, sem `Coalesce(x,0)`
-em exibição, data 06/01/2027 conforme `GMS/CLAUDE.md`.
-
-**Graves:**
-1. Sem `IfError` no `OnStart`/Timer — Flow fora do ar deixa `varCompostoPermitida` em branco/erro: o app
-   não carrega as coleções e não mostra o bloqueio (abre em branco), ou bloqueia todo mundo à toa numa
-   queda de Wi-Fi.
-2. O bloqueio do `OnStart` não funciona como escrito: `GMS/Telas/StartScreen.txt` manda quem tem acesso
-   restrito direto para ~12 telas de produção (`scr_tubo_1`, `scr_Bandagem_1`, `scr_Montagem_HoraHora`
-   etc.), sem passar pelo menu — o operador cai na tela de produção com as coleções vazias, mesmo
-   bloqueado.
-3. O plano não diz em qual tela o `Timer` fica. Sem uma tela/componente que toda sessão visita, ele pode
-   nunca rodar.
-
-**Médios:**
-4. `utcNow()` vs `DataBloqueio` sem fuso corta no meio do 2º ou 3º turno em Brasília — falta decidir a
-   hora exata do corte.
-5. Lista `Composto` no mesmo site onde operadores gravam — sem quebrar herança de permissão, qualquer
-   operador pode desligar o mecanismo.
-6. `Navigate` do Timer no meio de um apontamento perde o que estava sendo digitado; `BackEnabled = true`
-   deixa o botão voltar do Android escapar da tela de bloqueio.
-7. Reativar (`Ativo = Sim`) só funciona depois de reabrir o app — não estava escrito no plano.
-
-**Baixos:** Flow precisa de `First()`/Top 1 e tratar lista vazia; `permitido` como Sim/Não; `Notify` não
-aceita cor (ajustar a mensagem); contradição entre §3.3 ("1 tela + 1 Timer") e §5 ("N telas"); falta
-sincronizar `Telas/` e rodar `gms_qa_yaml.py`; decidir `NORMA` vs `DECISÃO` no diário.
-
-**Decisões do William antes de reescrever o plano:**
-1. Se o Flow falhar, libera ou bloqueia?
-2. Corte às 00h00, no meio do 3º turno, ou 05h20 (fim do 3º turno)?
-3. Aceita tocar nas ~12 telas do `StartScreen` em vez de "1 tela + 1 Timer"?
-4. Intervalo do Timer e aceita perder o que o operador estava digitando?
-5. Quem pode editar a lista `Composto`?
-6. Reativar exige reabrir o app — ok?
-7. Diário: `NORMA` ou `DECISÃO`?
+- Mudança em mais de um arquivo (lista nova + Flow novo + `OnStart` + `StartScreen` + 12 telas + tela
+  nova) → **plano aprovado antes de implementar**.
+- Mudança de arquitetura → passa pelo `revisor` (ou equivalente, ver nota abaixo) antes de implementar.
+  **Este plano já foi reprovado uma vez; precisa de novo passe do revisor confirmando as correções antes
+  de ir ao `executor`.**
+- Nesta sessão o agente `revisor` não apareceu disponível pelo nome (bug de listagem); a revisão foi
+  feita por `general-purpose` com modelo Opus e esforço alto, seguindo ao pé da letra o papel de
+  `.claude/agents/revisor.md`. Investigar a causa antes do próximo passe, se possível usar o `revisor`
+  de fato.
+- Implementação (depois do novo aprovado): `executor` monta o YAML das telas/Flow afetados — `OnStart`,
+  `StartScreen`, `scr_Composto` (nova) e as ~12 telas de destino; sincronizar `Telas/` no mesmo ciclo
+  (norma de 01/10/2026) e rodar `gms_qa_yaml.py` em cada `.txt` tocado. **William publica** no
+  Studio/Power Automate — não cola YAML diretamente, conforme regra do GMS.
+- Diário: linha `DECISÃO` (não `NORMA`, decisão 8) registrando o mecanismo, mais `ENTREGUE`/`PUBLICADO`
+  conforme o ciclo de implementação.
 
 ## Fora de escopo deste plano
 
