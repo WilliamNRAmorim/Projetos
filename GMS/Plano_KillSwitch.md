@@ -1,8 +1,9 @@
 # Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Composto"
 
-Status: **plano revisado após reprovação do revisor (Opus, esforço alto, 17/11/2026) — todas as 8
-decisões pendentes foram respondidas pelo William (17/11/2026). Aguardando novo passe do revisor antes
-de implementar.** Nada foi implementado no Power Apps/Power Automate ainda.
+Status: **REPROVADO no segundo passe do revisor (Opus, esforço alto, 17/11/2026) — não implementar ainda.**
+As 8 decisões do primeiro passe foram incorporadas, mas o segundo passe achou que o gate do `StartScreen`
+continua sem funcionar (por outro motivo) e mais problemas novos (seção 8). Nada implementado no Power
+Apps/Power Automate ainda. 4 novas decisões do William pendentes.
 
 Nomenclatura (a pedido do William): todo o mecanismo — lista, Flow e variáveis — usa o codinome
 **Composto** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
@@ -200,6 +201,50 @@ precisa reabrir mesmo assim, por segurança). Avisar os operadores disso ao reat
   Studio/Power Automate — não cola YAML diretamente, conforme regra do GMS.
 - Diário: linha `DECISÃO` (não `NORMA`, decisão 8) registrando o mecanismo, mais `ENTREGUE`/`PUBLICADO`
   conforme o ciclo de implementação.
+
+## 8. Segundo passe do revisor (Opus, esforço alto, 17/11/2026) — REPROVADO
+
+Resolvido desde o primeiro passe: `IfError` no OnStart/Timer; Timer sem `Patch`; mensagem em rótulo fixo
+(não `Notify`); permissão de edição só do William; perda de digitação e reabrir para reativar, ambos
+aceitos; diário `DECISÃO`; data e regra do `CLAUDE.md` respeitadas.
+
+**Graves:**
+1. **O gate da seção 3.2 não funciona**: `App.StartScreen` é uma propriedade que só *retorna* qual tela
+   abrir (`With`/`LookUp`/`Switch`) — não aceita `Navigate()`, e variáveis do `OnStart` podem não estar
+   disponíveis ali ainda. O roteamento real tem 13 ramos via `registroMapeamento.TelaSetor`, não é o
+   `If(varAcessoRestrito, ...)` simplificado que o plano descreveu. **Correção:** o gate vai no `OnVisible`
+   de cada uma das ~12 telas de destino **+ `Menu_1`** (13 telas), como primeira instrução, envolvendo o
+   `OnVisible` que já existe: `If(!varCompostoPermitida, Navigate(scr_Composto), <OnVisible atual>)`.
+   Isso é junção com o que já existe, não substituição — mas é 13 arquivos tocados, não 1.
+2. **Fuso do Flow invertido**: o SharePoint guarda `DataBloqueio` em UTC. Comparar
+   `convertFromUtc(utcNow(), ...)` (hora local, sem fuso) com um valor UTC corta 3h errado. **Correção:**
+   comparar direto em UTC — `greaterOrEquals(ticks(utcNow()), ticks(item?['DataBloqueio']))` — sem
+   `convertFromUtc`. Isso só bate certo com 13:59 de Brasília se o **site SharePoint estiver configurado
+   no fuso de Brasília (UTC-03:00)** — precisa confirmar.
+3. **Cobertura real do Timer é menor do que a seção 3.4 afirmava**: Timer de tela só conta enquanto
+   aquela tela está visível e reinicia a cada troca de tela. Quem fica em Hora-Hora, Conferência SAP ou
+   alterna de tela antes de 30 min nunca revalida; `Menu_1` nem está nas 12. A frase "as demais telas
+   ficam cobertas pelo mesmo ciclo" (seção 3.4 original) está incorreta e foi removida.
+
+**Médios novos:**
+4. `Telas/BackEnabled.txt = true` deixa escapar de `scr_Composto` pelo botão voltar do Android —
+   precisa trocar `App.BackEnabled` (propriedade do **app inteiro**, não da tela) para
+   `App.ActiveScreen <> scr_Composto`.
+5. `item.Ativo = false` deixa passar `Ativo` vazio (nulo ≠ false, libera por engano) — corrigir para
+   `not(equals(item?['Ativo'], true))`.
+6. Conexão do Flow indefinida: se for a conexão de cada usuário, quem não tiver acesso de leitura à
+   lista fica bloqueado para sempre (fail-safe trata isso como bloqueio) — decisão de qual conexão usar.
+7. Verificar no Studio se o app usa OnStart bloqueante; se não, a 1ª tela pode rodar com
+   `varCompostoPermitida` ainda em branco.
+8. (Baixo) `StartScreen.txt` referencia `scr_Trancagem_3`, mas `Telas/` só tem `scr_Trancagem_4.txt` —
+   confirmar qual está publicada.
+
+**Novas decisões do William antes de implementar:**
+1. Gate/Timer em todas as ~22 telas com `Patch` + `Menu_1`, ou só nas 12 + `Menu_1` (aceitando o furo do
+   item 3)?
+2. Conexão do Flow: a do William (embutida) ou a de cada operador?
+3. Confirma que o site SharePoint está no fuso de Brasília (UTC-03:00)?
+4. Autoriza trocar `App.BackEnabled` (propriedade do app inteiro) para bloquear o botão voltar?
 
 ## Fora de escopo deste plano
 
