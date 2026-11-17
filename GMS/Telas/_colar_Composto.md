@@ -91,6 +91,22 @@ If(varCompostoPermitida,
 App.ActiveScreen.Name <> "scr_Composto"
 ```
 
+## 3b. App → OnError (esconde só a faixa vermelha do Composto)
+
+Erro que vem do `Flow_Composto` não mostra faixa: vai só para o log (Monitor). Qualquer outro erro do app continua aparecendo em vermelho, como hoje.
+
+```
+If(
+    "Flow_Composto" in FirstError.Message,
+    Trace(
+        "Composto: falha ao validar acesso",
+        TraceSeverity.Warning,
+        {Mensagem: FirstError.Message, Origem: FirstError.Source}
+    ),
+    Notify(FirstError.Message, NotificationType.Error)
+)
+```
+
 ## 4. As 23 telas
 
 Em cada tela: (a) selecione a tela, propriedade **OnVisible**, apague tudo e cole a fórmula; (b) clique na tela e Ctrl+V com o bloco do timer (ele fica invisível).
