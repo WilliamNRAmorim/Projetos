@@ -1,35 +1,38 @@
-# Plano: Kill Switch do GMS (validação externa via SharePoint)
+# Plano: Kill Switch do GMS (validação externa via SharePoint) — codinome "Manufatura"
 
 Status: **plano fechado, aguardando aprovação final para implementar** — nada foi implementado no Power
 Apps/Power Automate ainda. Todas as 5 pendências originais foram resolvidas (seção 4).
 
+Nomenclatura (a pedido do William, 17/11/2026): todo o mecanismo — lista, Flow e variáveis — usa o
+codinome **Manufatura** em vez de nomes como "ConfiguracaoApp"/"Validacao"/"Permissao".
+
 ## Nota sobre a data
 
 William confirmou no chat (17/11/2026): **06/01/2027 é a data real da chave de validação** — depois dela
-o GMS para de ser usado porque a operação migra para outro sistema. `DataBloqueio` na lista
-`ConfiguracaoApp` deve ser preenchida com **06/01/2027**.
+o GMS para de ser usado porque a operação migra para outro sistema. `DataBloqueio` na lista `Manufatura`
+deve ser preenchida com **06/01/2027**.
 
 ## Objetivo
 
 Mecanismo de desligamento remoto do app GMS (Power Apps), controlado por uma lista do SharePoint, sem
 precisar republicar o app nem o Flow para ativar/desativar.
 
-## 1. Lista SharePoint `ConfiguracaoApp`
+## 1. Lista SharePoint `Manufatura`
 
 | Campo | Tipo | Observação |
 |---|---|---|
 | `Ativo` | Sim/Não (Yes/No) | Chave principal: Não = bloqueia na hora |
-| `DataBloqueio` | Data | A partir dessa data, bloqueia mesmo com `Ativo = Sim`. Sem valor cravado — William define |
+| `DataBloqueio` | Data | A partir dessa data, bloqueia mesmo com `Ativo = Sim`. Valor: **06/01/2027** |
 | `Mensagem` | Texto | **William digita aqui manualmente** o texto de bloqueio. Sem código, sem Flow, sem Studio — só editar o item da lista |
 
 Um único item na lista (ou `First()` sobre ela). Lista nova, criada no mesmo site SharePoint das outras
 listas do GMS (confirmado pelo William, 17/11/2026) — mesmo local de `ficha_producao`, `MapeamentoSetor`
 etc.
 
-## 2. Flow `Flow_Validacao` (Power Automate)
+## 2. Flow `Flow_Manufatura` (Power Automate)
 
 - Gatilho: **Power Apps (V2)**.
-- Ação: `Obter itens` (ou `Obter item`) em `ConfiguracaoApp`.
+- Ação: `Obter itens` (ou `Obter item`) em `Manufatura`.
 - Lógica (Condição / Switch):
   ```
   Se Ativo = Não  -> permitido = false
@@ -51,14 +54,18 @@ etc.
 
 Hoje o `OnStart` (`Telas/OnStart.txt`) faz `Concurrent(...)` carregando coleções (`colTrancadeiras`,
 `colMangueiras`, `Turno`, `colDM_*`) e depois `ClearCollect(colMangEscTubo, ...)`. A validação entra
-**antes** desse bloco, para decidir se o app deve nem carregar o resto:
+**antes** desse bloco, para decidir se o app deve nem carregar o resto. Variáveis seguem o padrão `var`
+já usado no OnStart atual (`varMapa`, `varAcessoRestrito`):
 
 ```powerfx
-Set(gblPermissao, Flow_Validacao.Run().permitido);
-Set(gblMensagemBloqueio, Flow_Validacao.Run().mensagem);
+With(
+    {resManufatura: Flow_Manufatura.Run()},
+    Set(varManufaturaPermitida, resManufatura.permitido);
+    Set(varManufaturaMensagem, resManufatura.mensagem)
+);
 
 If(
-    gblPermissao,
+    varManufaturaPermitida,
     (
         Set(varMapa, LookUp(MapeamentoSetor, EmailComputador = User().Email));
         Set(varAcessoRestrito, Coalesce(varMapa.AcessoRestrito, false));
@@ -76,27 +83,24 @@ If(
 )
 ```
 
-Nota: chamar `Flow_Validacao.Run()` duas vezes gasta uma chamada extra; melhor capturar o resultado uma
-vez com `With({res: Flow_Validacao.Run()}, Set(gblPermissao, res.permitido); Set(gblMensagemBloqueio,
-res.mensagem))`. Isso é só um ponto de gravação — ajusto antes de aplicar, se aprovado.
+### 3.2 Tela de bloqueio `scr_Manufatura`
 
-### 3.2 Tela de bloqueio
-
-Tela nova (`scr_Bloqueado`, nasce do template padrão, B §6) ou um container sobre a tela atual:
+Tela nova (`scr_Manufatura`, nasce do template padrão, B §6) ou um container sobre a tela atual:
 
 ```powerfx
-Visible = !gblPermissao
+Visible = !varManufaturaPermitida
 ```
 
 Padrão do GMS para mensagem de erro (`GMS_Mestre.md` §3.7): `Notify(texto, NotificationType.Error)` com a
 cor `fx_CorErro`. A tela/mensagem de bloqueio segue o mesmo padrão visual:
 
 ```powerfx
-Notify(Coalesce(gblMensagemBloqueio, "Acesso bloqueado."), NotificationType.Error)
+Notify(Coalesce(varManufaturaMensagem, "Acesso bloqueado."), NotificationType.Error)
 ```
 
-`gblMensagemBloqueio` vem direto do campo `Mensagem` da lista (seção 1) — **William escreve o texto ali,
-na lista, não no código**. Trocar a mensagem depois é só editar aquele item, sem tocar em Power Fx/Flow.
+`varManufaturaMensagem` vem direto do campo `Mensagem` da lista (seção 1) — **William escreve o texto
+ali, na lista, não no código**. Trocar a mensagem depois é só editar aquele item, sem tocar em
+Power Fx/Flow.
 
 ### 3.3 Proteção contra sessão aberta por semanas — decidido: Timer, não guarda por tela
 
@@ -104,8 +108,8 @@ Levantamento em `Telas/*.txt`: **22 telas atuais** (`scr_*`) têm `Patch`/`Submi
 Mandril, Tubo, Trançagem, Cobertura, Bandagem, Vulcanização, Debandagem, Catenária,
 Extrusora/Bobinadeira, Montagem, Hora-Hora de cada etapa, Conferência SAP, Impressão, Refugo Bobinadeira.
 
-Envolver `If(gblPermissao, Patch(...))` em cada Patch dessas 22 telas violaria a norma de "patch
-cirúrgico, nunca rewrite" (volume grande de mudança simultânea em telas de produção, risco alto).
+Envolver `If(varManufaturaPermitida, Patch(...))` em cada Patch dessas 22 telas violaria a norma de
+"patch cirúrgico, nunca rewrite" (volume grande de mudança simultânea em telas de produção, risco alto).
 
 **Solução escolhida:** um `Timer` oculto numa tela sempre visível (ou num componente global), revalidando
 periodicamente sem tocar em `Patch`:
@@ -113,10 +117,10 @@ periodicamente sem tocar em `Patch`:
 ```powerfx
 // OnTimerEnd do Timer global (ex.: a cada 30–60 min, Duration configurável)
 With(
-    {res: Flow_Validacao.Run()},
-    Set(gblPermissao, res.permitido);
-    Set(gblMensagemBloqueio, res.mensagem);
-    If(!gblPermissao, Navigate(scr_Bloqueado))
+    {resManufatura: Flow_Manufatura.Run()},
+    Set(varManufaturaPermitida, resManufatura.permitido);
+    Set(varManufaturaMensagem, resManufatura.mensagem);
+    If(!varManufaturaPermitida, Navigate(scr_Manufatura))
 )
 ```
 
@@ -131,6 +135,7 @@ de bloqueio + 1 `Timer`.
 3. ~~Quais telas têm ação crítica~~ — resolvido (seção 3.3): 22 telas levantadas.
 4. ~~Mensagem de bloqueio~~ — resolvido (seção 3.2): campo `Mensagem` da lista, William digita.
 5. ~~`DataBloqueio`~~ — resolvido: 06/01/2027 (confirmado pelo William).
+6. ~~Nome do mecanismo~~ — resolvido: codinome "Manufatura" em lista, Flow e variáveis.
 
 ## 5. Processo (regra do repositório)
 
@@ -146,7 +151,7 @@ de bloqueio + 1 `Timer`.
 ## 6. "Botão mágico" de reativar
 
 Confirmado do texto original: só mudar `Ativo = Sim` ou `DataBloqueio` para o futuro na lista
-`ConfiguracaoApp`. Sem republicar app nem Flow.
+`Manufatura`. Sem republicar app nem Flow.
 
 ## Fora de escopo deste plano
 
