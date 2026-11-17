@@ -4,25 +4,61 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({ctxAgora: Now()});
-        UpdateContext({
-            ctxIniBob: fx_JanelaInicioEm(ctxAgora),
-            ctxFimBob: fx_JanelaFimEm(ctxAgora)
-        });
-        Set(varProcessando, false);
-        ClearCollect(
-            colRefugoBob,
-            Sort(
-                Filter(
-                    Refugo_Bobinadeira,
-                    DataHoraRefugo >= ctxIniBob,
-                    DataHoraRefugo < ctxFimBob
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
                 ),
-                DataHoraRefugo,
-                SortOrder.Descending
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({ctxAgora: Now()});
+            UpdateContext({
+                ctxIniBob: fx_JanelaInicioEm(ctxAgora),
+                ctxFimBob: fx_JanelaFimEm(ctxAgora)
+            });
+            Set(varProcessando, false);
+            ClearCollect(
+                colRefugoBob,
+                Sort(
+                    Filter(
+                        Refugo_Bobinadeira,
+                        DataHoraRefugo >= ctxIniBob,
+                        DataHoraRefugo < ctxFimBob
+                    ),
+                    DataHoraRefugo,
+                    SortOrder.Descending
+                )
             )
         )
     Children:
+      - tmr_Composto_scr_RefugoBobinadeira_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioBob:
           Control: Timer@2.1.0
           Properties:

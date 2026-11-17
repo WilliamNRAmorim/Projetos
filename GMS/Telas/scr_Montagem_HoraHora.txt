@@ -4,59 +4,95 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =Set(varAgora, Now());
-        Set(varDataTela, fx_DataRefEm(varAgora));
-        Set(varTurnoTela, fx_TurnoLabelEm(varAgora));
-        Set(varCelulaMontagem,
-            Coalesce(varCelulaMontagem, LookUp(MapeamentoSetor, EmailComputador = User().Email).Celula)
-        );
-        Set(varProcM, false);
-        Set(varPNAtivo, Blank());
-        Set(varPopupFinalizar_M, false);
-        UpdateContext({ctxPopExcesso: false});
-        Set(varFalhaM, false);
-        IfError(
-            Concurrent(
-                Refresh(Producao_Montagem),
-                Refresh(Paradas_Montagem)
-            ),
-            Set(varFalhaM, true)
-        );
-        ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
-        Collect(colOPsAbertas,
-            ForAll(
-                Filter(Producao_Montagem,
-                    Celula = varCelulaMontagem && Status = "EmAndamento"
-                ) As r,
-                {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
             )
         );
-        ClearCollect(colParadasM,
-            Filter(Paradas_Montagem,
-                Celula = varCelulaMontagem &&
-                Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
-            )
-        );
-        ClearCollect(colDescM,
-            ForAll(
-                Distinct(
-                    Filter(colParadasM,
-                        Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
-                    ),
-                    OPVinculada
-                ) As d,
-                {
-                    Chave: d.Value,
-                    MinDesc: Sum(
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            Set(varAgora, Now());
+            Set(varDataTela, fx_DataRefEm(varAgora));
+            Set(varTurnoTela, fx_TurnoLabelEm(varAgora));
+            Set(varCelulaMontagem,
+                Coalesce(varCelulaMontagem, LookUp(MapeamentoSetor, EmailComputador = User().Email).Celula)
+            );
+            Set(varProcM, false);
+            Set(varPNAtivo, Blank());
+            Set(varPopupFinalizar_M, false);
+            UpdateContext({ctxPopExcesso: false});
+            Set(varFalhaM, false);
+            IfError(
+                Concurrent(
+                    Refresh(Producao_Montagem),
+                    Refresh(Paradas_Montagem)
+                ),
+                Set(varFalhaM, true)
+            );
+            ClearCollect(colOPsAbertas, Table({Value: "— Sem OP —"}));
+            Collect(colOPsAbertas,
+                ForAll(
+                    Filter(Producao_Montagem,
+                        Celula = varCelulaMontagem && Status = "EmAndamento"
+                    ) As r,
+                    {Value: r.PN & " (OT " & Text(r.OT, "[$-en-US]0") & ")"}
+                )
+            );
+            ClearCollect(colParadasM,
+                Filter(Paradas_Montagem,
+                    Celula = varCelulaMontagem &&
+                    Data >= DateAdd(varDataTela, -2, TimeUnit.Days)
+                )
+            );
+            ClearCollect(colDescM,
+                ForAll(
+                    Distinct(
                         Filter(colParadasM,
-                            OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
+                            Motivo <> fx_MotivoTempoExcedido && !IsBlank(OPVinculada)
                         ),
-                        TempoParadoMin
-                    )
-                }
+                        OPVinculada
+                    ) As d,
+                    {
+                        Chave: d.Value,
+                        MinDesc: Sum(
+                            Filter(colParadasM,
+                                OPVinculada = d.Value && Motivo <> fx_MotivoTempoExcedido
+                            ),
+                            TempoParadoMin
+                        )
+                    }
+                )
             )
         )
     Children:
+      - tmr_Composto_scr_Montagem_HoraHora:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioMont:
           Control: Timer@2.1.0
           Properties:

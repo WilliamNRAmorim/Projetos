@@ -4,15 +4,51 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =Set(varProcessando, false);
-        UpdateContext({ctxAgora: Now()});
-        UpdateContext({
-            ctxLimpar_cat: false,
-            ctxExcluirCat: 0,
-            locCorte_cat: DateAdd(ctxAgora, -24, TimeUnit.Hours)
-        });
-        ResetForm(frm_catenaria)
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            Set(varProcessando, false);
+            UpdateContext({ctxAgora: Now()});
+            UpdateContext({
+                ctxLimpar_cat: false,
+                ctxExcluirCat: 0,
+                locCorte_cat: DateAdd(ctxAgora, -24, TimeUnit.Hours)
+            });
+            ResetForm(frm_catenaria)
+        )
     Children:
+      - tmr_Composto_scr_Catenaria_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - rct_header_cat:
           Control: Rectangle@2.3.0
           Properties:

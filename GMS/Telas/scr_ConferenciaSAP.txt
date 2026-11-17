@@ -4,9 +4,45 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({ctxAgoraConf: Now(), ctxFiltroConf: "Todas"});
-        Select(btn_CarregarConf)
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({ctxAgoraConf: Now(), ctxFiltroConf: "Todas"});
+            Select(btn_CarregarConf)
+        )
     Children:
+      - tmr_Composto_scr_ConferenciaSAP:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - btn_CarregarConf:
           Control: Classic/Button@2.2.0
           Properties:

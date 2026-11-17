@@ -4,13 +4,49 @@ Screens:
       Fill: =RGBA(255, 255, 255, 1)
       OnVisible: |-
         =If(
-            varPackingManual,
-            Reset(inp_OPManualImp);
-            Reset(inp_PNManualImp);
-            Reset(cmb_OperadorManualImp);
-            Reset(cmb_MotivoManualImp)
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            If(
+                varPackingManual,
+                Reset(inp_OPManualImp);
+                Reset(inp_PNManualImp);
+                Reset(cmb_OperadorManualImp);
+                Reset(cmb_MotivoManualImp)
+            )
         )
     Children:
+      - tmr_Composto_TelaImpressao:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - rct_fundo_impressao_1:
           Control: Rectangle@2.3.0
           Properties:

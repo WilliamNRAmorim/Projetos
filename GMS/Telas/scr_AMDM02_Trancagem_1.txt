@@ -4,42 +4,78 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgoraAM: Now(),
-            ctxDataAM: fx_DataRefEm(Now()),
-            ctxAbaAM: 1,
-            ctxAlteradoAM: false,
-            ctxCarregandoAM: false,
-            ctxIdFolhaAM: 0,
-            ctxMaqAM: Coalesce(
-                LookUp(Filter(fx_LayoutBalizas, tranc), Trançadeira = varMaqAM).Trançadeira,
-                First(Filter(fx_LayoutBalizas, tranc)).Trançadeira
-            ),
-            ctxRespAM: "",
-            ctxPNAM: "",
-            ctxBRDAM: "",
-            ctxFiosSobAM: "",
-            ctxNPicksAM: "",
-            ctxObsAM: "",
-            ctxPickLieNovoAM: "",
-            ctxPickLseNovoAM: "",
-            ctxTrAM: 1,
-            ctxTem2AM: false,
-            ctxRegAM: Blank(),
-            ctxRPkDigAM: false,
-            ctxRPkLieAM: "",
-            ctxRPkLseAM: "",
-            ctxFotoZoomAM: false,
-            ctxZoomAM: 1,
-            ctxPanXAM: 0,
-            ctxPanYAM: 0,
-            ctxPenAM: false
-        });
-        ClearCollect(colODTrAM, ForAll(Sequence(5) As _o0, {Ord: _o0.Value, T: ""}));
-        Set(varProcessando, false);
-        Reset(cmb_MaqTrAM);
-        Select(btn_CarregarAM)
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgoraAM: Now(),
+                ctxDataAM: fx_DataRefEm(Now()),
+                ctxAbaAM: 1,
+                ctxAlteradoAM: false,
+                ctxCarregandoAM: false,
+                ctxIdFolhaAM: 0,
+                ctxMaqAM: Coalesce(
+                    LookUp(Filter(fx_LayoutBalizas, tranc), Trançadeira = varMaqAM).Trançadeira,
+                    First(Filter(fx_LayoutBalizas, tranc)).Trançadeira
+                ),
+                ctxRespAM: "",
+                ctxPNAM: "",
+                ctxBRDAM: "",
+                ctxFiosSobAM: "",
+                ctxNPicksAM: "",
+                ctxObsAM: "",
+                ctxPickLieNovoAM: "",
+                ctxPickLseNovoAM: "",
+                ctxTrAM: 1,
+                ctxTem2AM: false,
+                ctxRegAM: Blank(),
+                ctxRPkDigAM: false,
+                ctxRPkLieAM: "",
+                ctxRPkLseAM: "",
+                ctxFotoZoomAM: false,
+                ctxZoomAM: 1,
+                ctxPanXAM: 0,
+                ctxPanYAM: 0,
+                ctxPenAM: false
+            });
+            ClearCollect(colODTrAM, ForAll(Sequence(5) As _o0, {Ord: _o0.Value, T: ""}));
+            Set(varProcessando, false);
+            Reset(cmb_MaqTrAM);
+            Select(btn_CarregarAM)
+        )
     Children:
+      - tmr_Composto_scr_AMDM02_Trancagem_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - rct_HeaderAM:
           Control: Rectangle@2.3.0
           Properties:

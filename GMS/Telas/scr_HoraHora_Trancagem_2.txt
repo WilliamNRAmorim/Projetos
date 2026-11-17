@@ -4,25 +4,61 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgoraHHT: Now(),
-            ctxAlteradoHHT: false,
-            ctxModalPendHHT: false,
-            ctxModalReplicaHHT: false,
-            ctxSobrescreverHHT: false,
-            ctxOrdOrigemHHT: 0,
-            ctxCelulaCarregadaHHT: "",
-            ctxCarregandoHHT: false,
-            ctxIniCargaHHT: Now(),
-            ctxTurnoCarregadoHHT: 0,
-            ctxDataCarregadaHHT: fx_DataRefEm(Now())
-        });
-        Set(varProcessando, false);
-        Set(varTurnoHHT, fx_TurnoLabelEm(Now()));
-        Reset(cmb_TurnoHHT);
-        Reset(cmb_CelulaHHT);
-        Select(btn_CarregarHHT)
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgoraHHT: Now(),
+                ctxAlteradoHHT: false,
+                ctxModalPendHHT: false,
+                ctxModalReplicaHHT: false,
+                ctxSobrescreverHHT: false,
+                ctxOrdOrigemHHT: 0,
+                ctxCelulaCarregadaHHT: "",
+                ctxCarregandoHHT: false,
+                ctxIniCargaHHT: Now(),
+                ctxTurnoCarregadoHHT: 0,
+                ctxDataCarregadaHHT: fx_DataRefEm(Now())
+            });
+            Set(varProcessando, false);
+            Set(varTurnoHHT, fx_TurnoLabelEm(Now()));
+            Reset(cmb_TurnoHHT);
+            Reset(cmb_CelulaHHT);
+            Select(btn_CarregarHHT)
+        )
     Children:
+      - tmr_Composto_scr_HoraHora_Trancagem_2:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - rct_HeaderHHT:
           Control: Rectangle@2.3.0
           Properties:

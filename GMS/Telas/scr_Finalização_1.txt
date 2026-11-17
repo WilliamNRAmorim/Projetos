@@ -4,38 +4,74 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-                    ctxAgora: Now(),
-                    ctxSincExt: Now(),
-                    ctxIniDiaExt: fx_JanelaInicioEm(Now()),
-                    ctxFimDiaExt: fx_JanelaFimEm(Now()),
-                    ctxModalFinalizarExt: false,
-                    ctxModalEditarExt: false,
-                    ctxModalExcluirExt: false,
-                    ctxModalDelinExt: false,
-                    ctxTipoExcluirExt: "",
-                    ctxEditandoLanceExt: Blank(),
-                    ctxLanceExcluirExt: Blank(),
-                    ctxRefugoExcluirExt: Blank(),
-                    ctxCabineExt: LookUp(fx_CabinesTeste, Posto = varPostoAtivo)
-                });
-                Set(varProcessando, false);
-                Concurrent(
-                    ClearCollect(colColabExt, Colaboradores),
-                    ClearCollect(colDefeitosExt, Choices(RegistrosInspeção.CodigoDefeito)),
-                    If(IsEmpty(colSpecExt), ClearCollect(colSpecExt, DM_TESTE_INSP)),
-                    IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                    IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
-                    IfError(ClearCollect(
-                        colInspDiaExt,
-                        Filter(
-                            RegistrosInspeção,
-                            Created >= ctxIniDiaExt,
-                            Created < ctxFimDiaExt
-                        )
-                    ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
-                )
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                        ctxAgora: Now(),
+                        ctxSincExt: Now(),
+                        ctxIniDiaExt: fx_JanelaInicioEm(Now()),
+                        ctxFimDiaExt: fx_JanelaFimEm(Now()),
+                        ctxModalFinalizarExt: false,
+                        ctxModalEditarExt: false,
+                        ctxModalExcluirExt: false,
+                        ctxModalDelinExt: false,
+                        ctxTipoExcluirExt: "",
+                        ctxEditandoLanceExt: Blank(),
+                        ctxLanceExcluirExt: Blank(),
+                        ctxRefugoExcluirExt: Blank(),
+                        ctxCabineExt: LookUp(fx_CabinesTeste, Posto = varPostoAtivo)
+                    });
+                    Set(varProcessando, false);
+                    Concurrent(
+                        ClearCollect(colColabExt, Colaboradores),
+                        ClearCollect(colDefeitosExt, Choices(RegistrosInspeção.CodigoDefeito)),
+                        If(IsEmpty(colSpecExt), ClearCollect(colSpecExt, DM_TESTE_INSP)),
+                        IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                        IfError(ClearCollect(colRefugoExt, Filter(TiposErros, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os reprovados desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
+                        IfError(ClearCollect(
+                            colInspDiaExt,
+                            Filter(
+                                RegistrosInspeção,
+                                Created >= ctxIniDiaExt,
+                                Created < ctxFimDiaExt
+                            )
+                        ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
+                    )
+        )
     Children:
+      - tmr_Composto_scr_Finalizacao_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioExt:
           Control: Timer@2.1.0
           Properties:

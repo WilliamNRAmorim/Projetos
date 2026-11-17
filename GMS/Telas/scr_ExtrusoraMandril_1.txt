@@ -4,42 +4,78 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgora: Now(),
-            ctxProcExt: false,
-            ctxModalDelinExt: false,
-            ctxModoInicioExt: false,
-            ctxModalIniExt: false,
-            ctxModalRefExt: false,
-            ctxModalGestaoExt: false,
-            ctxModalCancExt: false,
-            ctxCarrSelExt: ""
-        });
-        ClearCollect(colBitolasExt, fx_PNMandril);
-        If(
-            IsEmpty(colMaquinasMandril),
-            ClearCollect(
-                colMaquinasMandril,
-                { Posto: "TERMOFUSAO",  Rotulo: "Solda Quente" },
-                { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
-            )
-        );
-        If(
-            IsEmpty(colDM_MANDREL),
+        =If(
+            IsBlank(varCompostoPermitida),
             IfError(
-                ClearCollect(colDM_MANDREL, DM_MANDREL),
-                Notify("Não consegui ler o set-up (DM_MANDREL). Toque em atualizar.", NotificationType.Error, 8000)
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
             )
         );
-        UpdateContext({
-            ctxBitolaExt: If(
-                IsBlank(ctxBitolaExt.PartNumber),
-                First(colBitolasExt),
-                ctxBitolaExt
-            )
-        });
-        Select(btn_CarregarExt)
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgora: Now(),
+                ctxProcExt: false,
+                ctxModalDelinExt: false,
+                ctxModoInicioExt: false,
+                ctxModalIniExt: false,
+                ctxModalRefExt: false,
+                ctxModalGestaoExt: false,
+                ctxModalCancExt: false,
+                ctxCarrSelExt: ""
+            });
+            ClearCollect(colBitolasExt, fx_PNMandril);
+            If(
+                IsEmpty(colMaquinasMandril),
+                ClearCollect(
+                    colMaquinasMandril,
+                    { Posto: "TERMOFUSAO",  Rotulo: "Solda Quente" },
+                    { Posto: "VIBRACIONAL", Rotulo: "Solda Vibracional" }
+                )
+            );
+            If(
+                IsEmpty(colDM_MANDREL),
+                IfError(
+                    ClearCollect(colDM_MANDREL, DM_MANDREL),
+                    Notify("Não consegui ler o set-up (DM_MANDREL). Toque em atualizar.", NotificationType.Error, 8000)
+                )
+            );
+            UpdateContext({
+                ctxBitolaExt: If(
+                    IsBlank(ctxBitolaExt.PartNumber),
+                    First(colBitolasExt),
+                    ctxBitolaExt
+                )
+            });
+            Select(btn_CarregarExt)
+        )
     Children:
+      - tmr_Composto_scr_ExtrusoraMandril_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioExt_1:
           Control: Timer@2.1.0
           Properties:

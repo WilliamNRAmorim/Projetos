@@ -5,20 +5,56 @@ Screens:
         =
       LoadingSpinnerColor: =RGBA(56, 96, 178, 1)
       OnVisible: |-
-        =UpdateContext({varDadosSalvos1: Blank()}); 
-        Set(varProcessando1, false);
-        UpdateContext({
-            varDataProducao1: If(Hour(Now()) < 6, Today() - 1, Today()),
-            varTurnoAtual1: 
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
         If(
-            Hour(Now()) >= 5 && Hour(Now()) < 14, 
-                "1º Turno",
-            Hour(Now()) >= 14 || Hour(Now()) < 5,
-                "2º Turno"
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({varDadosSalvos1: Blank()}); 
+            Set(varProcessando1, false);
+            UpdateContext({
+                varDataProducao1: If(Hour(Now()) < 6, Today() - 1, Today()),
+                varTurnoAtual1: 
+            If(
+                Hour(Now()) >= 5 && Hour(Now()) < 14, 
+                    "1º Turno",
+                Hour(Now()) >= 14 || Hour(Now()) < 5,
+                    "2º Turno"
+            )
+            });
+            Clear(colProducao1)
         )
-        });
-        Clear(colProducao1);
     Children:
+      - tmr_Composto_scrHoraHora_Mandril:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - Icon5_1:
           Control: Classic/Icon@2.5.0
           Properties:

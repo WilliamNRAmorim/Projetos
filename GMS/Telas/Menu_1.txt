@@ -3,25 +3,61 @@ Screens:
     Properties:
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({ctxHoje: Today()});
-        Set(
-            varAreaUsuario,
+        =If(
+            IsBlank(varCompostoPermitida),
             IfError(
-                Coalesce(
-                    LookUp(
-                        MapeamentoSetor,
-                        Lower(EmailComputador) = Lower(User().Email)
-                    ).Area,
-                    "Gestao"
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
                 ),
-                Notify("Não consegui confirmar seu setor. Só o Painel de Gestão foi liberado — confira a rede e reabra o menu.", NotificationType.Error, 10000);
-                "Gestao"
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
             )
         );
-        Set(varSomenteMontagem, varAreaUsuario = "Montagem");
-        Set(varAmbasAreas, varAreaUsuario = "Ambos");
-        Set(varSomenteGestao, varAreaUsuario = "Gestao")
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({ctxHoje: Today()});
+            Set(
+                varAreaUsuario,
+                IfError(
+                    Coalesce(
+                        LookUp(
+                            MapeamentoSetor,
+                            Lower(EmailComputador) = Lower(User().Email)
+                        ).Area,
+                        "Gestao"
+                    ),
+                    Notify("Não consegui confirmar seu setor. Só o Painel de Gestão foi liberado — confira a rede e reabra o menu.", NotificationType.Error, 10000);
+                    "Gestao"
+                )
+            );
+            Set(varSomenteMontagem, varAreaUsuario = "Montagem");
+            Set(varAmbasAreas, varAreaUsuario = "Ambos");
+            Set(varSomenteGestao, varAreaUsuario = "Gestao")
+        )
     Children:
+      - tmr_Composto_Menu_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - Image6:
           Control: Image@2.2.3
           Properties:

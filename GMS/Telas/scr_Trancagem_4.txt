@@ -4,51 +4,87 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgora: Now(),
-            ctxModalDelinTr3: false,
-            ctxModalIniciarTr3: false,
-            ctxModalEnviarTr3: false,
-            ctxModalEditarTr3: false,
-            ctxModalPedidoTr3: false,
-            ctxModalSugFioTr3: false,
-            ctxDelinModoInicioTr3: false,
-            ctxUsouTudoTr3: true,
-            ctxTodasBobinasTr3: false,
-            ctxBobinaSelTr3: 0,
-            ctxLiSugTr3: "",
-            ctxFioSugTr3: "",
-            ctxModalCancTr3: false
-        });
-        Set(varProcessando, false);
-        ClearCollect(colTrancFiltroTr3, {Filtro: "Todas"});
-        Collect(
-            colTrancFiltroTr3,
-            ForAll(fx_CelulasTrancagem As _c, {Filtro: Text(_c.Celula)})
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
         );
-        Concurrent(
-            ClearCollect(
-                colColabTr3,
-                Sort(
-                    Filter(
-                        ForAll(
-                            Colaboradores As _c2,
-                            { Nome: Trim(Text(_c2.Nome)) }
-                        ) As _n,
-                        !IsBlank(_n.Nome)
-                    ),
-                    Nome,
-                    SortOrder.Ascending
-                )
-            ),
-            If(IsEmpty(colSpecTr3), ClearCollect(colSpecTr3, DM_TRANÇAGEM)),
-            If(IsEmpty(colEngrTr3), ClearCollect(colEngrTr3, DM_ENGRENAGENS)),
-            If(IsEmpty(colFiosTr3), ClearCollect(colFiosTr3, DM_FIOS)),
-            If(IsEmpty(colWireTr3), ClearCollect(colWireTr3, DM_WIREWINDING))
-        );
-        Select(btn_RecarregarTr3_1);
-        Reset(cmb_FiltroTr3_1)
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgora: Now(),
+                ctxModalDelinTr3: false,
+                ctxModalIniciarTr3: false,
+                ctxModalEnviarTr3: false,
+                ctxModalEditarTr3: false,
+                ctxModalPedidoTr3: false,
+                ctxModalSugFioTr3: false,
+                ctxDelinModoInicioTr3: false,
+                ctxUsouTudoTr3: true,
+                ctxTodasBobinasTr3: false,
+                ctxBobinaSelTr3: 0,
+                ctxLiSugTr3: "",
+                ctxFioSugTr3: "",
+                ctxModalCancTr3: false
+            });
+            Set(varProcessando, false);
+            ClearCollect(colTrancFiltroTr3, {Filtro: "Todas"});
+            Collect(
+                colTrancFiltroTr3,
+                ForAll(fx_CelulasTrancagem As _c, {Filtro: Text(_c.Celula)})
+            );
+            Concurrent(
+                ClearCollect(
+                    colColabTr3,
+                    Sort(
+                        Filter(
+                            ForAll(
+                                Colaboradores As _c2,
+                                { Nome: Trim(Text(_c2.Nome)) }
+                            ) As _n,
+                            !IsBlank(_n.Nome)
+                        ),
+                        Nome,
+                        SortOrder.Ascending
+                    )
+                ),
+                If(IsEmpty(colSpecTr3), ClearCollect(colSpecTr3, DM_TRANÇAGEM)),
+                If(IsEmpty(colEngrTr3), ClearCollect(colEngrTr3, DM_ENGRENAGENS)),
+                If(IsEmpty(colFiosTr3), ClearCollect(colFiosTr3, DM_FIOS)),
+                If(IsEmpty(colWireTr3), ClearCollect(colWireTr3, DM_WIREWINDING))
+            );
+            Select(btn_RecarregarTr3_1);
+            Reset(cmb_FiltroTr3_1)
+        )
     Children:
+      - tmr_Composto_scr_Trancagem_4:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioTr3_1:
           Control: Timer@2.1.0
           Properties:

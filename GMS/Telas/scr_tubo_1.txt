@@ -4,34 +4,70 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgora: Now(),
-            ctxModalIniciarTubo: false,
-            ctxModalEnviarTubo: false,
-            ctxModalEditarTubo: false,
-            ctxModalDelinTubo: false,
-            ctxDelinModoInicio: false,
-            ctxUsouTudoTubo: true,
-            ctxModalOutraMangTubo: false,
-            ctxModalExcecaoTubo: false,
-            ctxModalCancTubo: false
-        });
-        Set(varProcessando, false);
-        ClearCollect(colMangEscTubo, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
-        If(
-            IsEmpty(colSpecTubo),
+        =If(
+            IsBlank(varCompostoPermitida),
             IfError(
-                ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION);
-                true,
-                Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Toque em atualizar.", NotificationType.Error, 8000);
-                false
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
             )
         );
-        Set(varMangueiraEscolhidaTubo, Blank());
-        Set(varTrPlanoTubo, Blank());
-        Set(varQtdPlanoTubo, Blank());
-        Select(ico_RefreshTubo_1)
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgora: Now(),
+                ctxModalIniciarTubo: false,
+                ctxModalEnviarTubo: false,
+                ctxModalEditarTubo: false,
+                ctxModalDelinTubo: false,
+                ctxDelinModoInicio: false,
+                ctxUsouTudoTubo: true,
+                ctxModalOutraMangTubo: false,
+                ctxModalExcecaoTubo: false,
+                ctxModalCancTubo: false
+            });
+            Set(varProcessando, false);
+            ClearCollect(colMangEscTubo, colMangueiras, {NomeMangueira: fx_MangueiraOutra});
+            If(
+                IsEmpty(colSpecTubo),
+                IfError(
+                    ClearCollect(colSpecTubo, DM_TUBE_EXTRUSION);
+                    true,
+                    Notify("Não consegui ler o delineamento (DM_TUBE_EXTRUSION). Toque em atualizar.", NotificationType.Error, 8000);
+                    false
+                )
+            );
+            Set(varMangueiraEscolhidaTubo, Blank());
+            Set(varTrPlanoTubo, Blank());
+            Set(varQtdPlanoTubo, Blank());
+            Select(ico_RefreshTubo_1)
+        )
     Children:
+      - tmr_Composto_scr_tubo_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioTubo_1:
           Control: Timer@2.1.0
           Properties:

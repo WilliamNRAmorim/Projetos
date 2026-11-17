@@ -4,29 +4,65 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgoraHHC: Now(),
-            ctxAlteradoHHC: false,
-            ctxModalReplicaHHC: false,
-            ctxSobrescreverHHC: false,
-            ctxOrdOrigemHHC: 0,
-            ctxCarregadoHHC: false,
-            ctxFecharHHC: false,
-            ctxTurnoCarregadoHHC: 0,
-            ctxDataCarregadaHHC: fx_DataRefEm(Now())
-        });
-        Set(varProcessando, false);
-        Set(varTurnoHHC, fx_TurnoLabelEm(Now()));
-        Reset(cmb_TurnoHHC);
-        If(
-            IsEmpty(colSpecCob),
+        =If(
+            IsBlank(varCompostoPermitida),
             IfError(
-                ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA),
-                Notify("Não consegui carregar a velocidade das mangueiras. Sem ela a meta fica em branco — confira a rede e reabra a tela.", NotificationType.Error, 10000)
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
             )
         );
-        Select(btn_CarregarHHC)
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgoraHHC: Now(),
+                ctxAlteradoHHC: false,
+                ctxModalReplicaHHC: false,
+                ctxSobrescreverHHC: false,
+                ctxOrdOrigemHHC: 0,
+                ctxCarregadoHHC: false,
+                ctxFecharHHC: false,
+                ctxTurnoCarregadoHHC: 0,
+                ctxDataCarregadaHHC: fx_DataRefEm(Now())
+            });
+            Set(varProcessando, false);
+            Set(varTurnoHHC, fx_TurnoLabelEm(Now()));
+            Reset(cmb_TurnoHHC);
+            If(
+                IsEmpty(colSpecCob),
+                IfError(
+                    ClearCollect(colSpecCob, DM_EXTRUSAO_COBERTURA),
+                    Notify("Não consegui carregar a velocidade das mangueiras. Sem ela a meta fica em branco — confira a rede e reabra a tela.", NotificationType.Error, 10000)
+                )
+            );
+            Select(btn_CarregarHHC)
+        )
     Children:
+      - tmr_Composto_scr_HoraHora_Cobertura_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - rct_HeaderHHC:
           Control: Rectangle@2.3.0
           Properties:

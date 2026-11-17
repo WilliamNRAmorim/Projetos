@@ -4,19 +4,55 @@ Screens:
       Fill: =fx_CorFundo
       LoadingSpinnerColor: =fx_CorInfo
       OnVisible: |-
-        =UpdateContext({
-            ctxAgora: Now(),
-            ctxModalSetupBand: false,
-            ctxModalEnviarBand: false,
-            ctxModalEditarBand: false
-        });
-        Set(varProcessando, false);
-        Concurrent(
-            ClearCollect(colDM_BANDAGEM, DM_BANDAGEM),
-            ClearCollect(colDM_LAYLINE, DM_LAYLINE),
-            ClearCollect(colImagensFitas, 'Imagens Fitas')
+        =If(
+            IsBlank(varCompostoPermitida),
+            IfError(
+                With(
+                    {resComposto: Flow_Composto.Run()},
+                    Set(varCompostoPermitida, resComposto.permitido);
+                    Set(varCompostoMensagem, resComposto.mensagem)
+                ),
+                Set(varCompostoPermitida, false);
+                Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+            )
+        );
+        If(
+            !varCompostoPermitida,
+            Navigate(scr_Composto),
+            UpdateContext({
+                ctxAgora: Now(),
+                ctxModalSetupBand: false,
+                ctxModalEnviarBand: false,
+                ctxModalEditarBand: false
+            });
+            Set(varProcessando, false);
+            Concurrent(
+                ClearCollect(colDM_BANDAGEM, DM_BANDAGEM),
+                ClearCollect(colDM_LAYLINE, DM_LAYLINE),
+                ClearCollect(colImagensFitas, 'Imagens Fitas')
+            )
         )
     Children:
+      - tmr_Composto_scr_Bandagem_1:
+          Control: Timer@2.1.0
+          Properties:
+            AutoStart: =true
+            Duration: =1800000
+            Fill: =fx_CorInfo
+            Font: =fx_FonteFamilia
+            OnTimerEnd: |-
+              =IfError(
+                  With(
+                      {resComposto: Flow_Composto.Run()},
+                      Set(varCompostoPermitida, resComposto.permitido);
+                      Set(varCompostoMensagem, resComposto.mensagem)
+                  ),
+                  Set(varCompostoPermitida, false);
+                  Set(varCompostoMensagem, "Falha ao validar acesso. Tente novamente.")
+              );
+              If(!varCompostoPermitida, Navigate(scr_Composto))
+            Repeat: =true
+            Visible: =false
       - tmr_RelogioBand:
           Control: Timer@2.1.0
           Properties:
