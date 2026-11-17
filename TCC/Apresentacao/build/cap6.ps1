@@ -12,7 +12,7 @@ $rot=Get-Roteiro (Join-Path $root 'roteiro.md')
 
 $AMB=$script:CH[4]; $PAR=Mix-Hex $AMB 0.55
 $OFF=Mix-Hex $script:T2 0.6          # igual ao do cap5 (funcao fora do escopo / anel apagado)
-$RED=$script:CH[5]                    # vermelho #EF4444 (capitulo 6)
+$CRV=$script:CH[5]                    # vermelho #EF4444 do capitulo 6 (nao chame de $RED: colide com $script:RED da lib, #E2231A, o ponto do carretel)
 $LAST=41
 
 
@@ -41,11 +41,11 @@ try {
   $RH=136; $PIT=168
   for($i=0;$i -lt 4;$i++){
     $top=260+$PIT*$i; $n=$i+1
-    $null=Add-Box $s "!!marc$n" 5 $g4.x $top 14 $RH $RED $null 1 0.5
+    $null=Add-Box $s "!!marc$n" 5 $g4.x $top 14 $RH $CRV $null 1 0.5
     $xt=$g4.x+14+32
     $null=Txt2 $s "tit$n" $TX4[$i][0] $xt $top 64 @{font=$script:F_COND;bold=$true;color=$script:TX}
     $null=Txt2 $s "sub$n" $TX4[$i][1] $xt ($top+$RH-60) 56 @{color=$script:T2} }
-  Add-Moldura $s 'As limitações' $RED 'O que isto {{não prova}}.' '24 / 28' 'seção 4.10'
+  Add-Moldura $s 'As limitações' $CRV 'O que isto {{não prova}}.' '24 / 28' 'seção 4.10'
   $null=Add-ReelCap $s 1800 985 62 6 1; Set-Notes $s $rot['24']
 
   foreach($sl in $script:pres.Slides){ $sl.SlideShowTransition.AdvanceOnClick=-1; $sl.SlideShowTransition.AdvanceOnTime=0 }

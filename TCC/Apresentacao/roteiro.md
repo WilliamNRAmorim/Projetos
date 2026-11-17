@@ -4,6 +4,62 @@ A fala completa de cada slide, com o tempo previsto e o acumulado. É o mesmo te
 
 Como ler: cada bloco é um clique. O que está entre colchetes você troca na hora. Não precisa decorar: a frase em negrito é a que não pode faltar.
 
+**Mapa quadro → slide do arquivo**
+
+Para achar o slide no PowerPoint. Os slides 33 a 35 (quadros 18B1 a 18B3) são o plano B e ficam ocultos: não contam no tempo. Os slides 49 a 71 são de apoio, todos ocultos, e não têm quadro neste roteiro.
+
+| Quadro | Slide | Tempo |
+|---|---|---|
+| 1a | 1 | 0:08 |
+| 1b | 2 | 0:08 |
+| 1c | 3 | 0:08 |
+| 1d | 4 | 0:08 |
+| 1e | 5 | 0:08 |
+| 2 | 6 | 0:20 |
+| 3 | 7 | 0:35 |
+| 4 | 8 | 0:40 |
+| 5 | 9 | 0:35 |
+| 6 | 10 | 0:40 |
+| 7 | 11 | 0:40 |
+| 8 | 12 | 0:35 |
+| 9 | 13 | 0:40 |
+| 10 | 14 | 0:35 |
+| 11a | 15 | 0:14 |
+| 11b | 16 | 0:14 |
+| 11c | 17 | 0:14 |
+| 11d | 18 | 0:13 |
+| 12 | 19 | 0:30 |
+| 13a | 20 | 0:20 |
+| 13b | 21 | 0:20 |
+| 13c | 22 | 0:20 |
+| 14 | 23 | 0:40 |
+| 15 | 24 | 0:30 |
+| 16a | 25 | 0:11 |
+| 16b | 26 | 0:11 |
+| 16c | 27 | 0:11 |
+| 16d | 28 | 0:11 |
+| 16e | 29 | 0:11 |
+| 16f | 30 | 0:10 |
+| 17 | 31 | 0:30 |
+| 18 | 32 | 3:20 |
+| 18B1 | 33 | 0 (oculto) |
+| 18B2 | 34 | 0 (oculto) |
+| 18B3 | 35 | 0 (oculto) |
+| 19 | 36 | 0:40 |
+| 20 | 37 | 0:30 |
+| 21a | 38 | 0:15 |
+| 21b | 39 | 0:20 |
+| 22 | 40 | 0:35 |
+| 23 | 41 | 0:30 |
+| 24 | 42 | 0:45 |
+| 25a | 43 | 0:12 |
+| 25b | 44 | 0:18 |
+| 25c | 45 | 0:20 |
+| 26 | 46 | 0:30 |
+| 27 | 47 | 0:25 |
+| 28 | 48 | 0:10 |
+
+
 ## Capítulo 1 · O problema (0:00 a 3:30)
 
 ### 1a · 0:08 · acumulado 0:08
