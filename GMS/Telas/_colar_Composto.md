@@ -6,26 +6,12 @@ Gerado de `GMS/Telas/*.txt` (commit 40a0d342). Ordem: 1) tela scr_Composto, 2) O
 >
 > **Menu_1 é a tela inicial:** o Studio não deixa `Navigate` no OnVisible dela ("Navigate cannot be used here..."). Por isso o OnVisible do Menu_1 não navega: quem desvia para `scr_Composto` é o timer `tmr_Composto_Menu_1_Gate` (100 ms, dispara quando `varCompostoPermitida` vira false). Se outra tela der o mesmo erro, me avise: o conserto é o mesmo.
 
-## 1. Tela nova scr_Composto
+## 1. Tela de bloqueio scr_Composto (EM BRANCO)
 
-Nova tela em branco, renomeie para `scr_Composto`, propriedade **Fill** = `fx_CorFundo`. Depois clique na tela, Ctrl+V com o bloco abaixo (rótulo da mensagem):
+Decisão do William: no corte, sem mensagem nenhuma. A `scr_Composto` é só uma tela vazia — o operador cai nela e o app não faz mais nada.
 
-```yaml
-- lbl_MensagemComposto:
-    Control: Label@2.5.1
-    Properties:
-      Align: =Align.Center
-      Color: =fx_CorTexto
-      Font: =fx_FonteFamilia
-      FontWeight: =FontWeight.Bold
-      Height: =200
-      Size: =fx_FonteTitulo
-      Text: =Coalesce(varCompostoMensagem, "Acesso bloqueado.")
-      VerticalAlign: =VerticalAlign.Middle
-      Width: =900
-      X: =233
-      Y: =284
-```
+- Se a tela ainda não existe: crie uma tela nova em branco, renomeie para `scr_Composto`, **Fill** = `fx_CorFundo`. Não ponha nenhum controle.
+- Se você já colou o rótulo `lbl_MensagemComposto` antes: **apague esse rótulo** na árvore. A tela fica só com o fundo.
 
 ## 2. App → OnStart
 
