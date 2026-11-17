@@ -1,10 +1,9 @@
-If(
-    "Flow_Composto" in FirstError.Message
-        || ("DM_TUBE_EXTRUSION" in FirstError.Message && "PARTNUMBER eq null" in FirstError.Message),
-    Trace(
-        "Erro silenciado: " & FirstError.Source,
-        TraceSeverity.Warning,
-        {Mensagem: FirstError.Message, Origem: FirstError.Source}
-    ),
-    Notify(FirstError.Message, NotificationType.Error)
+Trace(
+    "Erro silenciado: " & FirstError.Source,
+    TraceSeverity.Warning,
+    {
+        Mensagem: FirstError.Message,
+        Origem: FirstError.Source,
+        Tela: App.ActiveScreen.Name
+    }
 )

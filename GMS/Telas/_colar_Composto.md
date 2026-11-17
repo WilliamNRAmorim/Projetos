@@ -91,20 +91,19 @@ If(varCompostoPermitida,
 App.ActiveScreen.Name <> "scr_Composto"
 ```
 
-## 3b. App → OnError (esconde só as faixas vermelhas combinadas)
+## 3b. App → OnError (sem faixa vermelha nenhuma)
 
-Ficam silenciosos (vão só para o Monitor): erro do `Flow_Composto` e o erro `[DM_TUBE_EXTRUSION] Expression "PARTNUMBER eq null"` (LookUp com o campo de mangueira vazio nos 11 campos da tela de extrusão do tubo: TXT_Matriz3, TextInput1_63..72). Qualquer outro erro do app continua aparecendo em vermelho.
+A pedido do William: **qualquer** erro do app (inclusive a falha do Flow_Composto) não mostra mais a faixa vermelha. Todo erro vai só para o log (Monitor), com a tela e a origem. O bloqueio do kill switch continua igual (falha ao validar bloqueia).
 
 ```
-If(
-    "Flow_Composto" in FirstError.Message
-        || ("DM_TUBE_EXTRUSION" in FirstError.Message && "PARTNUMBER eq null" in FirstError.Message),
-    Trace(
-        "Erro silenciado: " & FirstError.Source,
-        TraceSeverity.Warning,
-        {Mensagem: FirstError.Message, Origem: FirstError.Source}
-    ),
-    Notify(FirstError.Message, NotificationType.Error)
+Trace(
+    "Erro silenciado: " & FirstError.Source,
+    TraceSeverity.Warning,
+    {
+        Mensagem: FirstError.Message,
+        Origem: FirstError.Source,
+        Tela: App.ActiveScreen.Name
+    }
 )
 ```
 
