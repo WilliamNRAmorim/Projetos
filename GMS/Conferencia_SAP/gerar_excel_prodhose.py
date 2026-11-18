@@ -186,10 +186,18 @@ tabela(ws, "SemExplicacao", ["Grupo", "Material", "Saldo ProdHose (m)", "Sem exp
 
 ws = nova(wb, "Transição 06-14-10", "Pista · OPs da transição sem pallet no GMS", "Não estão no BD Packing List (ele para em 06/10 09:00) nem nos PDFs da biblioteca PackLists (06-08/10). De 08 a 15/10 o Imprimir Ficha imprimia, mas a gravação em Packing_Pallets falhava (E_ACCESSDENIED): o packlist saiu no papel e não ficou registro. Só os materiais com saldo na ProdHose interessam.", COR["trans"])
 trans_f = [r for r in trans if r[5] > 0]
-tabela(ws, "Transicao", ["Material", "OP", "Lances", "Metros", "Data", "Saldo ProdHose do material (m)"], trans_f,
-       [14, 12, 8, 10, 14, 14], num=(3, 5), estilo="TableStyleLight1")
+grp = defaultdict(list)
+for r in trans_f:
+    grp[r[0]].append(r)
+sem_por_mat = {r[1]: r[3] for r in sem}
+trans_m = []
+for mat, rs in sorted(grp.items(), key=lambda kv: -ph.get(kv[0], 0)):
+    trans_m.append([mat, round(ph.get(mat, 0), 1), round(sem_por_mat.get(mat, 0), 1), len(rs), round(sum(x[3] for x in rs), 1),
+                    "; ".join(f"OP {x[1]} {x[3]:g} m ({x[4]})" for x in sorted(rs, key=lambda x: -x[3]))])
+tabela(ws, "Transicao", ["Material", "Saldo ProdHose (m)", "Sem explicação (m)", "OPs", "Metros sem registro de pallet", "OPs (metros e data)"], trans_m,
+       [14, 12, 12, 6, 14, 110], num=(1, 2, 4), estilo="TableStyleLight1")
 
 wb.active = 0
 wb.save(SAIDA)
 print("imprimir", len(imprimir), round(sum(r[4] for r in imprimir), 1), "| baixar", round(sum(r[2] for r in baixar), 1),
-      "| lancar", round(sum(r[4] for r in lancar), 1), "| sem", len(sem), round(sum(r[3] for r in sem), 1), "| trans", len(trans_f))
+      "| lancar", round(sum(r[4] for r in lancar), 1), "| sem", len(sem), round(sum(r[3] for r in sem), 1), "| trans", len(trans_m))
