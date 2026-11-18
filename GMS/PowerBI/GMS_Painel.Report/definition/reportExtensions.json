@@ -222,14 +222,14 @@
         {
           "name": "HH Parado (min)",
           "dataType": "Double",
-          "expression": "CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\"))",
+          "expression": "CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}))",
           "formatString": "#,0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "HH Principal Parada",
           "dataType": "Text",
-          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"MinParado\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraCheia[Motivo Padrão]))",
+          "expression": "VAR t = ADDCOLUMNS(FILTER(VALUES(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), \"MinParado\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(t, [MinParado] > 0), [MinParado], DESC) RETURN IF(COUNTROWS(topo) = 0, \"Sem parada\", MAXX(topo, fHoraCheia[Motivo Padrão]))",
           "displayFolder": "Painel (relatório)"
         },
         {
@@ -394,48 +394,48 @@
         {
           "name": "PA Tempo Parado (h)",
           "dataType": "Double",
-          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), 60)",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})), 60)",
           "formatString": "#,0.0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA Tempo Parado %",
           "dataType": "Double",
-          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0)))",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), 0)))",
           "formatString": "0.0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA Δ Tempo Parado vs mês ant.",
           "dataType": "Double",
-          "expression": "VAR d = CALCULATE(MAX(fHoraCheia[Data BI])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
+          "expression": "VAR d = CALCULATE(MAX(fHoraCheia[Data BI])) VAR ini = DATE(YEAR(d), MONTH(d), 1) VAR a = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], ini, d)) VAR b = CALCULATE(DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})), (CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), 0))), REMOVEFILTERS(dCalendario), DATESBETWEEN(dCalendario[Date], EDATE(ini, -1), EDATE(d, -1))) RETURN IF(NOT ISBLANK(d) && NOT ISBLANK(a) && NOT ISBLANK(b), a - b)",
           "formatString": "+0.0%;-0.0%;0.0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA Motivo Nº1",
           "dataType": "Text",
-          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(tabela, NOT ISBLANK([@min])), [@min], DESC) VAR nome = CONCATENATEX(topo, fHoraCheia[Motivo Padrão]) VAR pos = FIND(\" - \", nome, 1, 0) RETURN IF(pos > 0, MID(nome, pos + 3, 200), nome)",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR topo = TOPN(1, FILTER(tabela, NOT ISBLANK([@min])), [@min], DESC) VAR nome = CONCATENATEX(topo, fHoraCheia[Motivo Padrão]) VAR pos = FIND(\" - \", nome, 1, 0) RETURN IF(pos > 0, MID(nome, pos + 3, 200), nome)",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA Horas Perdidas Motivo Nº1",
           "dataType": "Double",
-          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) RETURN DIVIDE(MAXX(tabela, [@min]), 60)",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) RETURN DIVIDE(MAXX(tabela, [@min]), 60)",
           "formatString": "#,0.0",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA % Acumulado Paradas",
           "dataType": "Double",
-          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && fHoraCheia[Motivo Padrão] <> \"Almoço\"), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR total = SUMX(tabela, [@min]) VAR atual = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR acumulado = SUMX(FILTER(tabela, [@min] >= atual), [@min]) RETURN IF(NOT ISBLANK(atual), DIVIDE(acumulado, total))",
+          "expression": "VAR tabela = ADDCOLUMNS(FILTER(ALLSELECTED(fHoraCheia[Motivo Padrão]), NOT ISBLANK(fHoraCheia[Motivo Padrão]) && NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), \"@min\", CALCULATE(SUM(fHoraCheia[Parado]))) VAR total = SUMX(tabela, [@min]) VAR atual = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})) VAR acumulado = SUMX(FILTER(tabela, [@min] >= atual), [@min]) RETURN IF(NOT ISBLANK(atual), DIVIDE(acumulado, total))",
           "formatString": "0%",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "PA Tempo Parado por Tipo (h)",
           "dataType": "Double",
-          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\"), KEEPFILTERS(TREATAS(VALUES(dMotivoParada[Motivo]), fHoraCheia[Motivo Padrão]))), 60)",
+          "expression": "DIVIDE(CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), KEEPFILTERS(TREATAS(VALUES(dMotivoParada[Motivo]), fHoraCheia[Motivo Padrão]))), 60)",
           "formatString": "#,0.0",
           "displayFolder": "Painel (relatório)"
         },
@@ -466,13 +466,13 @@
         {
           "name": "VG Parado Status",
           "dataType": "Text",
-          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"Sem dados no período\", IF(p <= 0.05, \"▼ Dentro · \", IF(p <= 0.1, \"▲ Atenção · \", \"▲ Acima · \")) & FORMAT(p, \"0.0%\") & \" (limite 5%)\")",
+          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"Sem dados no período\", IF(p <= 0.05, \"▼ Dentro · \", IF(p <= 0.1, \"▲ Atenção · \", \"▲ Acima · \")) & FORMAT(p, \"0.0%\") & \" (limite 5%)\")",
           "displayFolder": "Painel (relatório)"
         },
         {
           "name": "VG Parado Cor",
           "dataType": "Text",
-          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(fHoraCheia[Motivo Padrão] <> \"Almoço\")) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] = \"Almoço\"), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p <= 0.05, \"#16A34A\", IF(p <= 0.1, \"#E67E22\", \"#C0392B\")))",
+          "expression": "VAR par = CALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"})) VAR base = CALCULATE(SUM(fHoraCheia[Minutos]), REMOVEFILTERS(fHoraCheia[Motivo]), REMOVEFILTERS(fHoraCheia[Motivo Padrão])) - COALESCE(CALCULATE(SUM(fHoraCheia[Parado]), REMOVEFILTERS(fHoraCheia[Motivo]), fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\"}), 0) VAR p = DIVIDE(par, base) RETURN IF(ISBLANK(p), \"#9CA3AF\", IF(p <= 0.05, \"#16A34A\", IF(p <= 0.1, \"#E67E22\", \"#C0392B\")))",
           "displayFolder": "Painel (relatório)"
         },
         {
