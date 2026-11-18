@@ -262,3 +262,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-18 | Divergências da conferência GMS x SAP: diagnóstico da lista aberta contra o MB51 do dia | chefe (Opus 5.5) sozinho, leitura pela API do SharePoint | leitura e conta, sem regra nova nem gravação no GMS | não medido (uso.ps1 sem dado do dia)
 2026-11-18 | Limpar a lista Conferencia_SAP (262 itens resolvidos e falsos para a lixeira) e prévia do lote 3 | chefe (Opus 5.5) sozinho pela API do SharePoint | operação direta, backup antes | não medido
 2026-11-18 | Lote 3 da conferência SAP: 11 lances no GMS e field_46 de 9 fichas | chefe (Opus 5.5) sozinho pela API do SharePoint | gravação mecânica de prévia aprovada | não medido
+2026-11-18 | Refugo de fio: coluna 'Lançado no SAP (kg)' no histórico de correções, casada pelas abas semanais da Scrap_arame_2026 | chefe (Opus 5.5) sozinho, Python local | 2 planilhas e 1 casamento, não valia subagente | não medido
