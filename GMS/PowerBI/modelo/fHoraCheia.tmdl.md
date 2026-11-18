@@ -16,7 +16,7 @@ Cada linha da `fHoraHora` é uma janela (`Hora` = "hh:mm - hh:mm"). O início sa
 
 > **11/11/2026, 2ª regra da refeição (William):** turno com Almoço lançado perde os 45 min na janela lançada; turno sem Almoço lançado (Célula × Data BI × Turno BI) perde os 45 min na hora padrão: 1º 11:00-12:00 (HoraOrdem 6), 2º 19:00-20:00 (14), 3º 02:00-03:00 (21).
 
-> **18/11/2026, Manutenção Preventiva (William):** a janela com `Motivo Padrão` = "Manutenção Preventiva" perde de meta os minutos parados lançados (`Par0`), antes do rateio; janela inteira em preventiva fica com meta 0, o real fica inteiro. Se a janela também for de refeição, os dois descontos somam (mínimo 0). A Preventiva sai de Parado, Principal parada e dos gráficos de motivo, como o Almoço. "Manutenção Preventiva (Fora do Prazo)" continua como parada. Só a coluna `Meta` mudou neste script. PENDENTE DE APLICAR no modelo vivo.
+> **18/11/2026, Manutenção Preventiva (William):** a janela com `Motivo Padrão` = "Manutenção Preventiva" perde de meta os minutos parados lançados (`Par0`), antes do rateio; janela inteira em preventiva fica com meta 0, o real fica inteiro. Se a janela também for de refeição, os dois descontos somam (mínimo 0). A Preventiva sai de Parado, Principal parada e dos gráficos de motivo, como o Almoço. "Manutenção Preventiva (Fora do Prazo)" continua como parada. Só a coluna `Meta` mudou neste script. Aplicado no modelo vivo em 18/11 (TMDL view, refresh das 14h17); conferência: 557 fatias de Preventiva, meta 17.986 m contra 91.851 m da Meta Cheia, 24.056 de 30.491 min parados.
 
 ## 1) Script TMDL (cole inteiro)
 ```
