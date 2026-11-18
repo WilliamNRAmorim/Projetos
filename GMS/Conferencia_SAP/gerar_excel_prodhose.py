@@ -158,7 +158,7 @@ ws["A11"] = "Como ler"; ws["A11"].font = Font(bold=True, size=12)
 notas = ["SAP × GMS bate: 378 de 384 OPs com lance desde 15/10 fecham no metro.",
          "O resto da ProdHose (cerca de 2.700 m) são pallets impressos de 16 a 18/11 ainda não transferidos: saem sozinhos.",
          "O MB51 só tem entradas (101/102). A saída da PROD-GR-HOSE só aparece no EWM; por isso o bloco 4 precisa do export do EWM.",
-         "Aba 'Transição 06-14-10': OPs cujo packlist foi feito no sistema antigo (apagado em 08/10). Só serve de pista para o bloco 4."]
+         "Aba 'Transição 06-14-10': OPs com packlist impresso no papel mas sem registro (falha de permissão em Packing_Pallets de 08 a 15/10; o BD antigo para em 06/10). Só serve de pista para o bloco 4."]
 for i, n in enumerate(notas, 12):
     ws.cell(i, 1, "• " + n).alignment = Alignment(wrap_text=False)
 
@@ -184,7 +184,7 @@ ws = nova(wb, "4 Sem explicação", "4 · Saldo da ProdHose que o GMS não expli
 tabela(ws, "SemExplicacao", ["Grupo", "Material", "Saldo ProdHose (m)", "Sem explicação (m)", "Pista: transição 06-14/10 (m)", "Último 101 no SAP", "Leitura"], sem,
        [9, 14, 12, 13, 14, 34, 70], num=(2, 3, 4), total=(3,), estilo="TableStyleMedium5")
 
-ws = nova(wb, "Transição 06-14-10", "Pista · OPs da transição sem pallet no GMS", "O packlist dessas OPs foi feito no BD Packing List (apagado em 08/10). Só os materiais com saldo na ProdHose interessam.", COR["trans"])
+ws = nova(wb, "Transição 06-14-10", "Pista · OPs da transição sem pallet no GMS", "Não estão no BD Packing List (ele para em 06/10 09:00) nem nos PDFs da biblioteca PackLists (06-08/10). De 08 a 15/10 o Imprimir Ficha imprimia, mas a gravação em Packing_Pallets falhava (E_ACCESSDENIED): o packlist saiu no papel e não ficou registro. Só os materiais com saldo na ProdHose interessam.", COR["trans"])
 trans_f = [r for r in trans if r[5] > 0]
 tabela(ws, "Transicao", ["Material", "OP", "Lances", "Metros", "Data", "Saldo ProdHose do material (m)"], trans_f,
        [14, 12, 8, 10, 14, 14], num=(3, 5), estilo="TableStyleLight1")
