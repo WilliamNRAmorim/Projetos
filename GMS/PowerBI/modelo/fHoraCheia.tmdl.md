@@ -16,6 +16,8 @@ Cada linha da `fHoraHora` é uma janela (`Hora` = "hh:mm - hh:mm"). O início sa
 
 > **11/11/2026, 2ª regra da refeição (William):** turno com Almoço lançado perde os 45 min na janela lançada; turno sem Almoço lançado (Célula × Data BI × Turno BI) perde os 45 min na hora padrão: 1º 11:00-12:00 (HoraOrdem 6), 2º 19:00-20:00 (14), 3º 02:00-03:00 (21).
 
+> **18/11/2026, Reunião e Amostra (William):** entram na mesma regra da Manutenção Preventiva (meta cai pelos minutos parados; saem de Parado, Principal parada e gráficos de motivo).
+
 > **18/11/2026, Manutenção Preventiva (William):** a janela com `Motivo Padrão` = "Manutenção Preventiva" perde de meta os minutos parados lançados (`Par0`), antes do rateio; janela inteira em preventiva fica com meta 0, o real fica inteiro. Se a janela também for de refeição, os dois descontos somam (mínimo 0). A Preventiva sai de Parado, Principal parada e dos gráficos de motivo, como o Almoço. "Manutenção Preventiva (Fora do Prazo)" continua como parada. Só a coluna `Meta` mudou neste script. Aplicado no modelo vivo em 18/11 (TMDL view, refresh das 14h17); conferência: 557 fatias de Preventiva, meta 17.986 m contra 91.851 m da Meta Cheia, 24.056 de 30.491 min parados.
 
 ## 1) Script TMDL (cole inteiro)
@@ -186,7 +188,7 @@ createOrReplace
 				"Hora", FORMAT ( MOD ( 5 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00 - " & FORMAT ( MOD ( 6 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00",
 				"HoraOrdem", MOD ( [Value], 24 ),
 				"Minutos", [Mn] * [Fr],
-				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Mn] > 0, MAX ( 0, [Mn] - IF ( [Refeicao], 45, 0 ) - IF ( [Motivo Padrão] = "Manutenção Preventiva", COALESCE ( [Par0], 0 ), 0 ) ) / [Mn], 1 ) * [Fr],
+				"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Mn] > 0, MAX ( 0, [Mn] - IF ( [Refeicao], 45, 0 ) - IF ( [Motivo Padrão] IN { "Manutenção Preventiva", "Reunião", "Amostra" }, COALESCE ( [Par0], 0 ), 0 ) ) / [Mn], 1 ) * [Fr],
 				"Real", COALESCE ( [Real0], 0 ) * [Fr],
 				"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ),
 				"Motivo", [Motivo],

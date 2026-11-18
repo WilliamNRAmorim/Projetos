@@ -82,3 +82,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-17 | Horas montagem: quer o tempo real da montagem em minutos (nao em horas) e sem coluna extra de origem da OT
 2026-11-18 | Currículo: aceitou layout de uma coluna, linha de cargo-alvo e azul-escuro no lugar do vermelho; recusou incluir números do TCC por ora
 2026-11-18 | BI Manutenção Preventiva: aceitou as recomendadas (meta cai pelos minutos parados, não pela janela inteira; Fora do Prazo continua parada) e aprovou o plano de 4 passos
+2026-11-18 | BI motivos fora da perda: dos 8 motivos azuis/cinza do Factbird escolheu só Reunião e Amostra (não todos), depois de ver os minutos de cada um
