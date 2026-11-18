@@ -48,7 +48,7 @@ linhas.sort(key=lambda x: -x["ph"])
 
 tot = {k: sum(x[k] for x in linhas) for k in ("ph", "fluxo", "corr", "ref", "sem")}
 sem_antigo = sum(x["sem"] for x in linhas if x["cls"] == "antigo")
-sem_parado = sum(x["sem"] for x in linhas if x["cls"] == "parado")
+sem_parado = sum(x["sem"] for x in linhas if x["cls"] != "antigo")
 
 # SAP x GMS por OP
 ops_tot = sum(r["ops"] for r in D)
