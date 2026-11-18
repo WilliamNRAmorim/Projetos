@@ -80,3 +80,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-16 | Máscara de produção: planilha será descontinuada; meta só na lista GMS_MetaMensal (decisão do William)
 2026-11-15 | Defesa do TCC, bloco final: não informou o modelo do tablet (campo do demo_tablet.md fica para ele preencher); aceitou as recomendadas de deixar os títulos do mosaico (slide 31) como estão e de fazer o vídeo de emergência com 20 min, no tempo de fala de cada slide
 2026-11-17 | Horas montagem: quer o tempo real da montagem em minutos (nao em horas) e sem coluna extra de origem da OT
+2026-11-18 | Currículo: aceitou layout de uma coluna, linha de cargo-alvo e azul-escuro no lugar do vermelho; recusou incluir números do TCC por ora
