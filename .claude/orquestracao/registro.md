@@ -274,3 +274,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Correção da Hora-Hora de 18/11: 4 duplicatas para a lixeira e 15 janelas ND/NT | chefe (Opus 5.5) sozinho, REST do SharePoint | lote pequeno com regra pronta | não medido
 2026-11-19 | Conferência SAP: trava de MB51 incompleto (script v1.2.1 + roteiro do fluxo no LEIA-ME) contra alertas falsos | chefe (Opus 5.5) sozinho; revisor-leve não disponível na sessão, revisão feita pelo chefe | contexto já carregado, mudança pequena sem regra de negócio | não medido
 2026-11-19 | Levantamento das pendências do app GMS depois do .msapp do kill switch (só leitura) | chefe (Opus 5.5) sozinho | leitura do diário e de Telas/, não valia subagente | não medido
+2026-11-19 | Conferência SAP: script v1.2.1 gravado no OneDrive e laço de espera do MB51 montado e salvo no fluxo | chefe (Opus 5.5) sozinho no navegador | ação de navegador não se delega | não medido

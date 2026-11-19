@@ -120,7 +120,7 @@ const FUSO_H = -3;         // Brasilia, sem horario de verao
 const USR_REFUGO = ["U452021", "U445131"];   // usuarios SAP que lancam o lote de refugo (101 na propria OP)
 const MB51_RAZAO_MIN = 0.8;   // v1.2.1: SAP do dia < 80% do GMS do dia = MB51 pela metade (normal: 99,8% no mesmo dia)
 const MB51_GMS_MIN_M = 300;   // v1.2.1: dia com menos que isso no GMS nao dispara a trava
-const REF_OP_DIAS = 7;    // refugo do GMS x doc de refugo do SAP em outra OP: ate 7 dias (lote + atraso; medido 12/11: 6 dias)
+const REF_OP_DIAS = 7;     // refugo do GMS x doc de refugo do SAP em outra OP: ate 7 dias (lote + atraso; medido 12/11: 6 dias)
 let packingSemDia = false;
 let abertosForaAlcance = 0;   // v1.2.0: pendencias abertas que comecaram antes do piso (nao reconferidas)
 let pisoAlcance = "";
