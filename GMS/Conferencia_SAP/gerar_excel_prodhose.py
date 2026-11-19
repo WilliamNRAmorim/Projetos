@@ -90,9 +90,14 @@ for op, g in por_op.items():
     if op in ("30575954", "30649293"):
         continue
     if corr or g["d0"] >= "2026-10-15":
-        motivo = "Lances criados na conferência (SAP tinha, GMS não)" if corr else "Lances aprovados que nunca foram para pallet"
-        imprimir.append([op, FICHA.get(op, "ver no GMS"), g["mat"], len(g["ids"]), round(g["m"], 1), ids_txt(g["ids"]), dia, motivo,
-                         "Cabine: imprimir o packlist da ficha" if corr else "Cabine: confirmar o físico e imprimir o packlist"])
+        hoje = E.get("hoje", "9999")
+        if corr:
+            motivo, acao = "Lances criados na conferência (SAP tinha, GMS não)", "Cabine: imprimir o packlist da ficha"
+        elif g["d0"][:10] >= hoje:
+            motivo, acao = "Produção de hoje, ainda sem pallet", "Normal: deve ir para pallet no fim da OP"
+        else:
+            motivo, acao = "Lances aprovados que nunca foram para pallet", "Cabine: confirmar o físico e imprimir o packlist"
+        imprimir.append([op, FICHA.get(op, "ver no GMS"), g["mat"], len(g["ids"]), round(g["m"], 1), ids_txt(g["ids"]), dia, motivo, acao])
     else:
         trans.append([g["mat"], op, len(g["ids"]), round(g["m"], 1), dia, round(ph.get(g["mat"], 0), 1)])
 imprimir.sort(key=lambda r: -r[4])
@@ -134,7 +139,9 @@ for r in sorted(T, key=lambda r: -r["ph"]):
                 "Sem produção no GMS desde 15/10: estoque velho" if antigo else "Tudo que o GMS apontou desde 15/10 está em pallet: pallet não transferido no EWM ou estoque de antes"])
 
 # ---------- Resumo
-ws = nova(wb, "Resumo", "Divergências SAP × GMS × ProdHose", "18/11/2026 · saldo da PROD-GR-HOSE: 8.579 m · MB51 de 18/11 08:06 · GMS ao vivo", ESCURO)
+CFG = json.load(open(sys.argv[4], encoding="utf-8")) if len(sys.argv) > 4 else {}
+ws = nova(wb, "Resumo", "Divergências SAP × GMS × ProdHose",
+          CFG.get("sub", "18/11/2026 · saldo da PROD-GR-HOSE: 8.579 m · MB51 de 18/11 08:06 · GMS ao vivo"), ESCURO)
 blocos = [
     ("1 · Imprimir packlist", COR["imprimir"], sum(r[4] for r in imprimir), f"{len(imprimir)} OPs", "Cabine", "Imprimir no GMS o packlist das fichas da aba 1"),
     ("2 · Baixar refugo da ProdHose", COR["refugo"], sum(r[2] for r in baixar), f"{len(docs)} docs SAP", "Logística / EWM", "Mover da PROD-GR-HOSE para o refugo"),
@@ -155,8 +162,8 @@ for i, (b, cor, m, q, quem, acao) in enumerate(blocos, 6):
 for j, w in enumerate([32, 12, 14, 22, 56], 1):
     ws.column_dimensions[get_column_letter(j)].width = w
 ws["A11"] = "Como ler"; ws["A11"].font = Font(bold=True, size=12)
-notas = ["SAP × GMS bate: 378 de 384 OPs com lance desde 15/10 fecham no metro.",
-         "O resto da ProdHose (cerca de 2.700 m) são pallets impressos de 16 a 18/11 ainda não transferidos: saem sozinhos.",
+notas = CFG.get("notas_extra", []) + [CFG.get("nota_sap", "SAP × GMS bate: 378 de 384 OPs com lance desde 15/10 fecham no metro."),
+         CFG.get("nota_fluxo", "O resto da ProdHose (cerca de 2.700 m) são pallets impressos de 16 a 18/11 ainda não transferidos: saem sozinhos."),
          "O MB51 só tem entradas (101/102). A saída da PROD-GR-HOSE só aparece no EWM; por isso o bloco 4 precisa do export do EWM.",
          "Aba 'Transição 06-14-10': OPs com packlist impresso no papel mas sem registro (falha de permissão em Packing_Pallets de 08 a 15/10; o BD antigo para em 06/10). Só serve de pista para o bloco 4."]
 for i, n in enumerate(notas, 12):
