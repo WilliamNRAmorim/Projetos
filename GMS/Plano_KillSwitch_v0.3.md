@@ -1,6 +1,6 @@
 # Plano: kill switch Composto v0.3.0, trava em todo lugar (MEL-274)
 
-Status: AGUARDANDO APROVAÇÃO DO WILLIAM (19/11/2026)
+Status: APROVADO pelo William em 19/11/2026 (Splash travada). Entregue: Downloads/GMS_KillSwitch_v0.3.0.msapp
 Anterior: `Plano_KillSwitch.md` (v0.2.x, trava só no OnVisible)
 
 ## 1. Por que mudar
