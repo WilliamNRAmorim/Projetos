@@ -281,3 +281,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Plano do kill switch v0.3.0 (trava em todo lugar) | chefe (Opus 5.5) sozinho; mapeamento por script no export real | contexto todo já carregado, planejador teria que refazer o mapa | não medido
 2026-11-19 | Kill switch v0.3.0: trava em 874 pontos do app (script sobre o export real) | executor (Sonnet) escreveu o script e gerou o .msapp; chefe (Opus 5.5) revisou e corrigiu o ';' final; revisor indisponível na sessão | mudança mecânica grande, por script com relatório | não medido
 2026-11-19 | Conferência SAP: teste manual do fluxo v1.2.1 e conferência da lista | chefe (Opus 5.5) sozinho no navegador | ação de navegador, curta | não medido
+2026-11-19 | Conferir as pendências da Conferencia_SAP contra o saldo da PROD-GR-HOSE colado pelo William | chefe (Opus 5.5) sozinho, leitura pela API do SharePoint | conta pequena, nada gravado | não medido
