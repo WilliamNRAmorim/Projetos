@@ -4,10 +4,10 @@
 
 ```
 Ter–Sáb 08:00 ─► fluxo GMS_Conferencia_Diaria
-                 ├─ espera o mb51.xlsx ser atualizado hoje (até 4 h)
+                 ├─ espera o mb51.xlsx ser atualizado hoje e ficar 30 min parado (até 4 h)
                  ├─ Office Script GMS_LerPacking        @ BD Packing List.xlsx  (só leitura)
                  ├─ SharePoint: RegistrosInspeção, TiposErros, ficha_producao, pendências abertas
-                 ├─ Office Script GMS_ConferenciaDiaria @ mb51.xlsx            (só leitura)
+                 ├─ Office Script GMS_ConferenciaDiaria @ mb51.xlsx            (só leitura; MB51 pela metade = tenta de novo a cada 30 min)
                  ├─ cria/atualiza itens na lista Conferencia_SAP
                  └─ e-mail HTML pra você
 GMS ─► scr_ConferenciaSAP lê Conferencia_SAP, grava Tratativa / Responsável / Justificado
@@ -105,6 +105,8 @@ Terça confere segunda (e o sábado anterior junto), ..., sábado confere sexta.
     - Sim → *Definir variável* `varMB51Hoje` = `true`
     - Não → *Atraso* 30 minutos
 
+  **v1.2.1 (19/11):** a *Condição* passa a ser **e** (as duas linhas): a de cima e mais `addMinutes(body('MB51_Meta')?['LastModified'],30)` **é menor ou igual a** `utcNow()`. Ou seja, o arquivo é de hoje **e** está parado há 30 min. No *Não*, troque o *Atraso* para 15 minutos e o limite do *Fazer até* para Contagem 16. Motivo: o supervisor salva o mb51.xlsx em duas etapas (uma versão menor perto das 08:00 e a completa até ~3 h depois); em 17, 18 e 19/11 o fluxo leu a menor e abriu 45+ pendências falsas de "SAP não lançou".
+
   Se o MB51 não chegar em 4 h, o fluxo segue assim mesmo e o e-mail sai com faixa vermelha avisando que o MB51 não tem lançamento no dia. Nesse caso não confie no restante do e-mail.
 
 **3.3 Packing.** Excel Online (Business) *Executar script* (`Ler_Packing`): Local = SharePoint OperationsGuaratingueta · Biblioteca = Documentos · Arquivo = `BD Packing List.xlsx` (pasta `Manufatura operação / 1 - Mangueira / 16_REGISTROS_DE_PRODUÇÃO / CABINES DE TESTE`) · Script = `GMS_LerPacking` · janelaDias = `30`.
@@ -140,6 +142,14 @@ Depois *Selecionar* (`Insp_JSON`): De = `value` do Insp_Itens. Mapear chave → 
 | janelaDias | `30` |
 
 Para reconferir um dia específico, preencha `dataRef` com `2026-10-01`.
+
+**3.8b Repetir se o MB51 vier pela metade (v1.2.1, 19/11).** O script agora tem uma trava: se o SAP do dia tiver menos de 80% do que o GMS aprovou no dia (dia com 300 m ou mais no GMS), ele **não confere**, devolve `itens` vazio (a lista não muda) e `mb51Incompleto` = `true`, com o e-mail em faixa vermelha. Para o fluxo tentar de novo sozinho:
+- Antes do `Conferir`, *Inicializar variável* `varTentaMB51` (Booleano) = `true`.
+- Ponha o `Conferir` dentro de um *Fazer até* `varTentaMB51` **é igual a** `false` · Contagem 8 · Tempo limite `PT4H`. Dentro, depois do `Conferir`:
+  - *Condição*: `outputs('Conferir')?['body/result/mb51Incompleto']` **é igual a** `true`
+    - Sim → *Atraso* 30 minutos
+    - Não → *Definir variável* `varTentaMB51` = `false`
+- O 3.9 e o 3.10 ficam **fora** do laço, depois dele (usam a última execução do `Conferir`). Se em 4 h o MB51 continuar pela metade, sai o e-mail vermelho e a lista fica como estava: aí é falta real no SAP, confira a MIGO.
 
 **3.9 Gravar na lista.** *Aplicar a cada* sobre **itens** (conteúdo dinâmico do `Conferir`). Dentro, uma *Condição*: `idLista` **é maior que** `0`.
 - **Sim** → SharePoint *Atualizar item*: lista Conferencia_SAP · Id = `idLista` · Title = `chave` · OP = `op` · PN = `pn` · Categoria = `categoria` · Prioridade = `prioridade` · Status = `status` · DataRef = `dataRef` · GMS_m = `gmsM` · Refugo_m = `refugoGmsM` · SAP_m = `sapM` · Packing_m = `packingM` · Dif_m = `difM` · ProvavelOP = `provavelOP` · Detalhe = `detalhe` · Acao = `acao` · QuemResolve = `quemResolve` · Cabine = `cabine`.

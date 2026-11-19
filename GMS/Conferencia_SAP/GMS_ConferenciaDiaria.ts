@@ -1,5 +1,9 @@
 /**
- * GMS_ConferenciaDiaria  v1.2.0  (12/11/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.2.1  (19/11/2026)  MEL-196  C29
+ * v1.2.1: trava de MB51 incompleto. O fluxo das 08:00 pegava o mb51.xlsx no meio da atualizacao do supervisor
+ *   (17, 18 e 19/11: 45 pendencias falsas "SAP nao lancou"). Se o SAP do dia (101-102, sem o lote de refugo) tiver
+ *   menos de MB51_RAZAO_MIN do que o GMS aprovou no dia (com o GMS acima de MB51_GMS_MIN_M), o script nao confere:
+ *   devolve itens vazio (a lista nao muda) e o e-mail sai com faixa vermelha pedindo para rodar o fluxo de novo.
  * v1.2.0: (1) a OP e conferida com TODO o historico carregado (lances e refugo nao sao mais cortados pela janela; a janela
  *   so limita a leitura do MB51). Guarda de alcance: OP que comecou antes do piso (dia mais antigo que as tres fontes
  *   cobrem) nao e reconferida, nem para abrir nem para fechar. O inicio da OP vem do Created da ficha (fichaJson traz Created).
@@ -66,6 +70,7 @@ interface Resultado {
   html: string;
   dataRef: string;
   mb51Atualizado: boolean;
+  mb51Incompleto: boolean;  // v1.2.1: true = conferencia nao feita (itens vazio)
   opsConferidas: number;
   naoConformes: number;
   resolvidos: number;
@@ -113,7 +118,9 @@ const PACK_JANELA_DIAS = 6;
 const PACK_GMS_DESDE = "2026-10-06";   // 1o dia com packing registrado no GMS; antes disso o BD (apagado) era a fonte
 const FUSO_H = -3;         // Brasilia, sem horario de verao
 const USR_REFUGO = ["U452021", "U445131"];   // usuarios SAP que lancam o lote de refugo (101 na propria OP)
-const REF_OP_DIAS = 7;     // refugo do GMS x doc de refugo do SAP em outra OP: ate 7 dias (lote + atraso; medido 12/11: 6 dias)
+const MB51_RAZAO_MIN = 0.8;   // v1.2.1: SAP do dia < 80% do GMS do dia = MB51 pela metade (normal: 99,8% no mesmo dia)
+const MB51_GMS_MIN_M = 300;   // v1.2.1: dia com menos que isso no GMS nao dispara a trava
+const REF_OP_DIAS = 7;    // refugo do GMS x doc de refugo do SAP em outra OP: ate 7 dias (lote + atraso; medido 12/11: 6 dias)
 let packingSemDia = false;
 let abertosForaAlcance = 0;   // v1.2.0: pendencias abertas que comecaram antes do piso (nao reconferidas)
 let pisoAlcance = "";
@@ -276,6 +283,14 @@ function conferir(
     const t = instanteLocal(p.ts);
     return { id: Number(p.id), sl: Number(p.sl), pn: normPN(p.pn), q: num(p.q), t: t, dia: diaDe(t), casou: "", opCasada: "", difQ: 0 };
   }).filter(s => s.id > 0 && s.q > 0 && s.dia >= inicio && s.dia <= d);
+
+  // v1.2.1 trava: MB51 pela metade (lido no meio da atualizacao) nao gera pendencia nem mexe na lista
+  const gmsDia = soma(lances.filter(l => l.dia === d).map(l => l.q));
+  const sapDia = soma(sap.filter(s => s.dia === d && !ehUsrRefugo(s.user)).map(s => s.q));
+  // sabado/domingo fora: o lance de sabado pode entrar no SAP so na segunda (diaCobranca)
+  if (diaSemana(d) !== 0 && diaSemana(d) !== 6 && gmsDia >= MB51_GMS_MIN_M && sapDia < MB51_RAZAO_MIN * gmsDia) {
+    return mb51Incompleto(d, gmsDia, sapDia);
+  }
 
   const pnPorOP = new Map<string, string>();
   for (const f of fichaIn) { const o = textoOP(pega(f.op, f.OP)); const pn = txt(pega(f.pn, f.Mangueira)); if (o && pn) { pnPorOP.set(o, normPN(pn)); } }
@@ -602,6 +617,7 @@ function conferir(
     html: "",
     dataRef: d,
     mb51Atualizado: mb51Ok,
+    mb51Incompleto: false,
     opsConferidas: conferidas,
     naoConformes: ncOP,
     resolvidos: resolvidos,
@@ -611,6 +627,23 @@ function conferir(
   };
   res.html = montarHtml(res, sap, d);
   return res;
+}
+
+/** v1.2.1: resultado de MB51 incompleto: nada para gravar, e-mail so com o aviso. */
+function mb51Incompleto(d: string, gmsDia: number, sapDia: number): Resultado {
+  const pct = gmsDia > 0 ? Math.round(100 * sapDia / gmsDia) : 0;
+  const html = "<div style=\"font-family:Segoe UI,Arial,sans-serif;color:#0F172A;background:#F5F7FA;padding:12px;\">" +
+    "<div style=\"background:#1E293B;color:#FFFFFF;padding:12px 14px;border-left:6px solid #E2231A;font-size:18px;font-weight:bold;\">Conferência GMS × SAP × Packing · " +
+    nomeDia(d) + ", " + dm(d) + "/" + d.substring(0, 4) + "</div>" +
+    "<p style=\"background:#FEE2E2;color:#C0392B;padding:8px 10px;font-weight:bold;\">MB51 incompleto: em " + dm(d) + " o GMS aprovou " + fmt(gmsDia) +
+    " m e o mb51.xlsx só tem " + fmt(sapDia) + " m lançados (" + pct + "%). O arquivo foi lido no meio da atualização. A conferência NÃO foi feita e a lista Conferencia_SAP não mudou.</p>" +
+    "<p style=\"font-size:12px;\">O que fazer: quando o supervisor terminar de atualizar o mb51.xlsx, rode o fluxo GMS_Conferencia_Diaria de novo (Executar). " +
+    "Se depois disso o aviso continuar, o SAP realmente não lançou boa parte do dia: confira a MIGO.</p></div>";
+  return {
+    assunto: "Conferência GMS × SAP × Packing " + dm(d) + " — MB51 INCOMPLETO (" + pct + "% do GMS), conferência não feita",
+    html: html, dataRef: d, mb51Atualizado: false, mb51Incompleto: true, opsConferidas: 0, naoConformes: 0, resolvidos: 0,
+    metrosEmJogo: 0, refugoAguardandoM: 0, itens: []
+  };
 }
 
 function analisarOP(op: string, ls: Lance[], rs: Refugo[], ss: DocSap[], pn: string, tol: number): AnaliseOP {
