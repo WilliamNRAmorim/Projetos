@@ -278,3 +278,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Conferência do kill switch Composto: app, Flow_Composto e lista (só leitura) | chefe (Opus 5.5) sozinho, pac e navegador do app | leitura direta, não valia subagente | não medido
 2026-11-19 | Teste do kill switch no player (bloqueio confirmado) | chefe (Opus 5.5) sozinho, navegador do app | teste direto, não valia subagente | não medido
 2026-11-19 | Kill switch: achado bloqueio parcial (timer de recarga fora do gate) | chefe (Opus 5.5) sozinho, navegador do app + leitura do .msapp | diagnóstico direto | não medido
+2026-11-19 | Plano do kill switch v0.3.0 (trava em todo lugar) | chefe (Opus 5.5) sozinho; mapeamento por script no export real | contexto todo já carregado, planejador teria que refazer o mapa | não medido
