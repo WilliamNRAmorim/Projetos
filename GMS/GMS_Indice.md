@@ -67,7 +67,7 @@
 | Vulcanização | `scr_Vulcanizacao_2` / `_1` | — | — | v0.2.0 (17/08). Trava de 5 carretéis (set/26) |
 | Debandagem | `scr_Debandagem_2` | — | — | **v0.4.0** (28/08) |
 | Extração/Teste | `scr_ExtracaoTeste_2` | v0.3.0 | — | **v0.4.0** COLAR (28/08) + cabines L1/L2 |
-| Finalização | `scr_Finalizacao_1` | v0.4.0 | — | — |
+| Finalização | `scr_Finalizacao_1` | v0.4.4 (19/11, aguardando publish: pallets + Lances_Excluidos) | — | — |
 | Bobinadeira | `scr_Bobinadeira_2` | v0.3.0 | — | — |
 | Refugo Bobinadeira | `scr_RefugoBobinadeira_1` | v0.3.0 | — | — |
 | Consulta OP | `scr_ConsultaOP_2` | v0.3.0 | — | — |

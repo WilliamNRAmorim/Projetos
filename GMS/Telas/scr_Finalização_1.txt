@@ -1102,7 +1102,18 @@ Screens:
                   Icon: ="Delete"
                   IconColor: =fx_CorErro
                   OnSelect: |-
-                    =UpdateContext({
+                    =IfError(
+                        ClearCollect(
+                            colPalletExcExt,
+                            Filter(
+                                Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID),
+                                !IsBlank(Find(";" & Text(ThisItem.ID, "[$-en-US]0") & ";", ";" & LanceIDs & ";"))
+                            )
+                        ); true,
+                        Clear(colPalletExcExt);
+                        Notify("Não consegui conferir os pallets desta OP. Confira com a supervisão se o lance já foi impresso antes de excluir.", NotificationType.Warning, 8000)
+                    );
+                    UpdateContext({
                         ctxLanceExcluirExt: ThisItem,
                         ctxTipoExcluirExt: "LANCE",
                         ctxModalExcluirExt: true
@@ -1239,7 +1250,8 @@ Screens:
                   Icon: ="Delete"
                   IconColor: =fx_CorErro
                   OnSelect: |-
-                    =UpdateContext({
+                    =Clear(colPalletExcExt);
+                    UpdateContext({
                         ctxRefugoExcluirExt: ThisItem,
                         ctxTipoExcluirExt: "REFUGO",
                         ctxModalExcluirExt: true
@@ -1491,82 +1503,94 @@ Screens:
             Height: =62
             HoverFill: =fx_CorInfoSuave
             OnSelect: |-
-              =If(
-                  CountRows(colLancesExt) > 26,
-                  Notify("Esta OP tem mais de 26 lances. A ficha impressa mostra os 26 primeiros; o total impresso continua sendo o total real.", NotificationType.Warning, 10000)
+              =IfError(
+                  ClearCollect(colPalletImpExt, Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID)); true,
+                  Clear(colPalletImpExt);
+                  Notify("Não consegui ler os pallets já impressos desta OP. Confira os lances antes de imprimir.", NotificationType.Warning, 6000)
               );
-              Set(varFichaIDImp, gal_FilaExt.Selected.ID);
-              Set(varFalhaRegManual, false);
-              Set(varPackingManual, false);
-              Set(varPalletTxt, "");
               If(
-                  CountRows(colLancesExt) > 0
-                  && CountRows(colLancesExt) <= 26
-                  && (
-                      IsBlank(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).ID)
-                      || LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).QtdLances <> CountRows(colLancesExt)
-                      || LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID).TotalM <> Sum(colLancesExt, Quantidade)
+                  !IsEmpty(colPalletImpExt)
+                  && !IsEmpty(
+                      Filter(
+                          colLancesExt As _l,
+                          IsEmpty(Filter(colPalletImpExt, !IsBlank(Find(";" & Text(_l.ID, "[$-en-US]0") & ";", ";" & LanceIDs & ";"))))
+                      )
                   ),
-                  Set(varProcessando, true);
-                  IfError(
-                      Patch(
-                          Packing_Pallets,
-                          Coalesce(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID), Defaults(Packing_Pallets)),
-                          {
-                              Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
-                              FichaID: gal_FilaExt.Selected.ID,
-                              Pallet: 1,
-                              LanceIDs: Concat(colLancesExt, Text(ID, "[$-en-US]0"), ";"),
-                              QtdLances: CountRows(colLancesExt),
-                              TotalM: Sum(colLancesExt, Quantidade),
-                              Turno: fx_TurnoEm(Now()),
-                              DataHoraImp: Now()
-                          }
-                      );
-                      true,
-                      Notify("A impressão segue. O registro do pallet será feito ao finalizar. (" & FirstError.Message & ")", NotificationType.Warning, 8000);
-                      true
+                  Notify("Esta OP já tem pallet impresso. Os lances novos vão num pallet separado: confira os lances marcados e imprima.", NotificationType.Warning, 8000);
+                  Select(btn_DividirPalletExt),
+                  If(
+                      CountRows(colLancesExt) > 26,
+                      Notify("Esta OP tem mais de 26 lances. A ficha impressa mostra os 26 primeiros; o total impresso continua sendo o total real.", NotificationType.Warning, 10000)
                   );
-                  Set(varProcessando, false)
-              );
-              Set(varImpQtd, CountRows(colLancesExt));
-              Set(varImpTotal, Sum(colLancesExt, Quantidade));
-              Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
-              Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
-              Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colLancesExt, Quantidade), 0)));
-              Set(
-                  varHTMLLances,
-                  "<table style='border-collapse:collapse;width:100%'>"
-                  & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
-                  & Concat(
-                      ForAll(
-                          Sequence(13) As _i,
-                          {
-                              linha:
-                                  "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
-                                  & Text(_i.Value, "[$-en-US]0")
-                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
-                                  & If(
-                                      CountRows(colLancesExt) >= _i.Value,
-                                      fx_QtdBR(Index(colLancesExt, _i.Value).Quantidade),
-                                      "0,00"
-                                  )
-                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
-                                  & Text(_i.Value + 13, "[$-en-US]0")
-                                  & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
-                                  & If(
-                                      CountRows(colLancesExt) >= _i.Value + 13,
-                                      fx_QtdBR(Index(colLancesExt, _i.Value + 13).Quantidade),
-                                      "0,00"
-                                  )
-                                  & "</td></tr>"
-                          }
-                      ),
-                      linha
-                  )
-                  & "</table>"
-              );
-              Navigate(TelaImpressao, ScreenTransition.None)
+                  Set(varFichaIDImp, gal_FilaExt.Selected.ID);
+                  Set(varFalhaRegManual, false);
+                  Set(varPackingManual, false);
+                  Set(varPalletTxt, "");
+                  If(
+                      CountRows(colLancesExt) > 0
+                      && CountRows(colLancesExt) <= 26
+                      && IsEmpty(colPalletImpExt),
+                      Set(varProcessando, true);
+                      IfError(
+                          Patch(
+                              Packing_Pallets,
+                              Defaults(Packing_Pallets),
+                              {
+                                  Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
+                                  FichaID: gal_FilaExt.Selected.ID,
+                                  Pallet: 1,
+                                  LanceIDs: Concat(colLancesExt, Text(ID, "[$-en-US]0"), ";"),
+                                  QtdLances: CountRows(colLancesExt),
+                                  TotalM: Sum(colLancesExt, Quantidade),
+                                  Turno: fx_TurnoEm(Now()),
+                                  DataHoraImp: Now()
+                              }
+                          );
+                          true,
+                          Notify("A impressão segue. O registro do pallet será feito ao finalizar. (" & FirstError.Message & ")", NotificationType.Warning, 8000);
+                          true
+                      );
+                      Set(varProcessando, false)
+                  );
+                  Set(varImpQtd, CountRows(colLancesExt));
+                  Set(varImpTotal, Sum(colLancesExt, Quantidade));
+                  Set(VarMangueiraOP, gal_FilaExt.Selected.OP);
+                  Set(varMangueiraImp, gal_FilaExt.Selected.Mangueira);
+                  Set(varTotalImp, fx_QtdBR(Coalesce(Sum(colLancesExt, Quantidade), 0)));
+                  Set(
+                      varHTMLLances,
+                      "<table style='border-collapse:collapse;width:100%'>"
+                      & "<tr style='background:#d0d0d0'><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:27%'>QTY (m)</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px;width:8%'>N°</th><th style='border:1px solid #000;padding:10px 12px;font-size:20px'>QTY (m)</th></tr>"
+                      & Concat(
+                          ForAll(
+                              Sequence(13) As _i,
+                              {
+                                  linha:
+                                      "<tr><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                      & Text(_i.Value, "[$-en-US]0")
+                                      & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                      & If(
+                                          CountRows(colLancesExt) >= _i.Value,
+                                          fx_QtdBR(Index(colLancesExt, _i.Value).Quantidade),
+                                          "0,00"
+                                      )
+                                      & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                      & Text(_i.Value + 13, "[$-en-US]0")
+                                      & "</td><td style='border:1px solid #000;padding:10px 12px;font-size:20px'>"
+                                      & If(
+                                          CountRows(colLancesExt) >= _i.Value + 13,
+                                          fx_QtdBR(Index(colLancesExt, _i.Value + 13).Quantidade),
+                                          "0,00"
+                                      )
+                                      & "</td></tr>"
+                              }
+                          ),
+                          linha
+                      )
+                      & "</table>"
+                  );
+                  Navigate(TelaImpressao, ScreenTransition.None)
+              )
             PressedFill: =fx_CorInfoSuave
             RadiusBottomLeft: =fx_Raio
             RadiusBottomRight: =fx_Raio
@@ -1812,7 +1836,7 @@ Screens:
             PaddingRight: =0
             PaddingTop: =0
             Size: =fx_FonteSecao
-            Text: ="Versão 0.4.3"
+            Text: ="Versão 0.4.4"
             Width: =183
             X: =1168
             Y: =710
@@ -2506,14 +2530,11 @@ Screens:
                             With(
                                 { _carretel: _r.'Carretel Entrada' },
                                 If(
-                                    With(
-                                        { _pk: Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID) },
-                                        IsEmpty(_pk) || Sum(_pk, QtdLances) <> CountRows(colLancesExt) || Abs(Sum(_pk, TotalM) - _total) > 0.005
-                                    ),
+                                    IsEmpty(Filter(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID)),
                                     IfError(
                                         Patch(
                                             Packing_Pallets,
-                                            Coalesce(LookUp(Packing_Pallets, FichaID = gal_FilaExt.Selected.ID), Defaults(Packing_Pallets)),
+                                            Defaults(Packing_Pallets),
                                             {
                                                 Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
                                                 FichaID: gal_FilaExt.Selected.ID,
@@ -2688,7 +2709,11 @@ Screens:
                   Text: |-
                     =If(
                         ctxTipoExcluirExt = "LANCE",
-                        "Lance de " & ctxLanceExcluirExt.Quantidade & " m sai do total aprovado da OP. A exclusão é definitiva.",
+                        If(
+                            IsEmpty(colPalletExcExt),
+                            "Lance de " & ctxLanceExcluirExt.Quantidade & " m sai do total aprovado da OP. A exclusão é definitiva.",
+                            "Lance no pallet " & Text(First(colPalletExcExt).Pallet, "[$-en-US]0") & " (já impresso, talvez já no SAP). Reimprima o pallet e peça estorno de " & ctxLanceExcluirExt.Quantidade & " m no SAP."
+                        ),
                         "Reprovado de " & ctxRefugoExcluirExt.Quantidade & " m (" & ctxRefugoExcluirExt.CodigoErro & ") sai do refugo da OP. A exclusão é definitiva."
                     )
                   Width: =456
@@ -2705,7 +2730,8 @@ Screens:
                   Height: =fx_AlturaAcaoS
                   HoverFill: =fx_CorFundo
                   OnSelect: |-
-                    =UpdateContext({
+                    =Clear(colPalletExcExt);
+                    UpdateContext({
                         ctxModalExcluirExt: false,
                         ctxTipoExcluirExt: "",
                         ctxLanceExcluirExt: Blank(),
@@ -2742,6 +2768,44 @@ Screens:
                         If(
                             !IsEmpty(Errors(RegistrosInspeção)),
                             Notify("Falha ao excluir o lance: " & First(Errors(RegistrosInspeção)).Message, NotificationType.Error, 10000),
+                            IfError(
+                                Patch(
+                                    Lances_Excluidos,
+                                    Defaults(Lances_Excluidos),
+                                    {
+                                        Title: Text(gal_FilaExt.Selected.OP, "[$-en-US]0"),
+                                        LanceID: ctxLanceExcluirExt.ID,
+                                        Metros: ctxLanceExcluirExt.Quantidade,
+                                        Pallet: Coalesce(First(colPalletExcExt).Pallet, 0),
+                                        PalletID: First(colPalletExcExt).ID,
+                                        Cabine: ctxCabineExt.Posto,
+                                        Operador: cmb_OperadorExt.Selected.Nome,
+                                        DataHoraLance: ctxLanceExcluirExt.DataHoraInspecao
+                                    }
+                                ); true,
+                                Notify("Lance excluído, mas o registro da exclusão não foi gravado: " & FirstError.Message, NotificationType.Warning, 8000); true
+                            );
+                            If(
+                                !IsEmpty(colPalletExcExt),
+                                With(
+                                    {
+                                        _pal: First(colPalletExcExt),
+                                        _idTxt: Text(ctxLanceExcluirExt.ID, "[$-en-US]0")
+                                    },
+                                    IfError(
+                                        Patch(
+                                            Packing_Pallets,
+                                            LookUp(Packing_Pallets, ID = _pal.ID),
+                                            {
+                                                LanceIDs: Concat(Filter(Split(_pal.LanceIDs, ";"), Value <> _idTxt), Value, ";"),
+                                                QtdLances: _pal.QtdLances - 1,
+                                                TotalM: Round(_pal.TotalM - ctxLanceExcluirExt.Quantidade, 2)
+                                            }
+                                        ); true,
+                                        Notify("O lance foi excluído, mas o pallet " & Text(_pal.Pallet, "[$-en-US]0") & " não foi atualizado: " & FirstError.Message & ". Avise a supervisão.", NotificationType.Warning, 12000); true
+                                    )
+                                )
+                            );
                             Concurrent(
                                 IfError(ClearCollect(colLancesExt, Filter(RegistrosInspeção, OP_ID = gal_FilaExt.Selected.OP)); true, Notify("Não consegui ler os lances desta OP. Toque em atualizar antes de continuar.", NotificationType.Error, 8000)),
                                 IfError(ClearCollect(
@@ -2753,7 +2817,11 @@ Screens:
                                     )
                                 ); true, Notify("Não consegui ler o total do dia. Toque em atualizar.", NotificationType.Error, 8000))
                             );
-                            Notify("Lance excluído.", NotificationType.Success, 3000)
+                            If(
+                                IsEmpty(colPalletExcExt),
+                                Notify("Lance excluído.", NotificationType.Success, 3000),
+                                Notify("Lance excluído. Reimprima o pallet " & Text(First(colPalletExcExt).Pallet, "[$-en-US]0") & " e peça o estorno de " & ctxLanceExcluirExt.Quantidade & " m no SAP.", NotificationType.Warning, 15000)
+                            )
                         ),
                         Remove(TiposErros, ctxRefugoExcluirExt);
                         If(
