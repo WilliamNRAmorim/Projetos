@@ -283,3 +283,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Conferência SAP: teste manual do fluxo v1.2.1 e conferência da lista | chefe (Opus 5.5) sozinho no navegador | ação de navegador, curta | não medido
 2026-11-19 | Conferir as pendências da Conferencia_SAP contra o saldo da PROD-GR-HOSE colado pelo William | chefe (Opus 5.5) sozinho, leitura pela API do SharePoint | conta pequena, nada gravado | não medido
 2026-11-19 | Investigar a pendência 364 da Conferencia_SAP (SAP com 431,9 m a mais que o GMS) | chefe (Opus 5.5) sozinho, leitura pela API do SharePoint e da tela de Finalização | investigação curta, 1 pergunta só | não medido
+2026-11-19 | Ver os lances apagados sem explicação e planejar a correção do Imprimir da Finalização | chefe (Opus 5.5) sozinho: API do SharePoint, ExcelRest no mb51.xlsx e leitura da tela | o contexto já estava aqui; um planejador teria que reler tudo | não medido
