@@ -277,3 +277,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Conferência SAP: script v1.2.1 gravado no OneDrive e laço de espera do MB51 montado e salvo no fluxo | chefe (Opus 5.5) sozinho no navegador | ação de navegador não se delega | não medido
 2026-11-19 | Conferência do kill switch Composto: app, Flow_Composto e lista (só leitura) | chefe (Opus 5.5) sozinho, pac e navegador do app | leitura direta, não valia subagente | não medido
 2026-11-19 | Teste do kill switch no player (bloqueio confirmado) | chefe (Opus 5.5) sozinho, navegador do app | teste direto, não valia subagente | não medido
+2026-11-19 | Kill switch: achado bloqueio parcial (timer de recarga fora do gate) | chefe (Opus 5.5) sozinho, navegador do app + leitura do .msapp | diagnóstico direto | não medido
