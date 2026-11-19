@@ -1,5 +1,10 @@
 /**
- * GMS_ConferenciaDiaria  v1.2.1  (19/11/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.3.0  (19/11/2026)  MEL-196  C29
+ * v1.3.0: indicador PROD-GR-HOSE. Producao boa que o SAP lancou (101-102, sem o lote de refugo) e que nao esta em
+ *   nenhum pallet/romaneio fica parada na PROD-GR-HOSE (caso OP 30842762: pallet 1 de 431,9 m sobrescrito). Por OP do
+ *   escopo, Finalizada e iniciada desde PACK_GMS_DESDE: semPallet = SAP bom - packing. Acima da tolerancia entra no KPI
+ *   "Entra na PROD-GR-HOSE sem pallet" (meta 0), no assunto e no detalhe da OP; se a OP nao tiver outra pendencia vira
+ *   "SAP lançou e não tem pallet". O e-mail tambem mostra o refugo lancado no SAP no dia (sai da PROD-GR-HOSE so com a baixa).
  * v1.2.1: trava de MB51 incompleto. O fluxo das 08:00 pegava o mb51.xlsx no meio da atualizacao do supervisor
  *   (17, 18 e 19/11: 45 pendencias falsas "SAP nao lancou"). Se o SAP do dia (101-102, sem o lote de refugo) tiver
  *   menos de MB51_RAZAO_MIN do que o GMS aprovou no dia (com o GMS acima de MB51_GMS_MIN_M), o script nao confere:
@@ -76,6 +81,9 @@ interface Resultado {
   resolvidos: number;
   metrosEmJogo: number;
   refugoAguardandoM: number;
+  prodHoseSemPalletM: number;   // v1.3.0: SAP bom sem pallet nas OPs do escopo (meta 0)
+  prodHoseOPs: number;
+  refugoSapDiaM: number;        // v1.3.0: refugo lancado no SAP no dia (lote de refugo)
   itens: ItemConferencia[];
 }
 
@@ -147,7 +155,8 @@ const CAT: { [k: string]: Categoria } = {
   PP_OP: { nome: "Pallet com lance de outra OP", prio: 14, acao: "Conferir qual OP é a certa: lance do pallet pertence a outra OP no GMS", quem: "Supervisão / Cabine" },
   PP_DUP: { nome: "Lance em mais de um pallet", prio: 15, acao: "Corrigir os pallets: cada lance só pode sair em um pallet", quem: "Supervisão / Cabine" },
   PP_TOTAL: { nome: "Total do pallet diferente da soma dos lances", prio: 16, acao: "Reimprimir o pallet ou corrigir TotalM/QtdLances em Packing_Pallets", quem: "Supervisão / Cabine" },
-  PM_PEND: { nome: "Packing manual pendente com OP que já existe", prio: 17, acao: "Regularizar: ligar o packing manual à OP e marcar como Regularizado", quem: "Logística / Cabine" }
+  PM_PEND: { nome: "Packing manual pendente com OP que já existe", prio: 17, acao: "Regularizar: ligar o packing manual à OP e marcar como Regularizado", quem: "Logística / Cabine" },
+  PH_SEM_PALLET: { nome: "SAP lançou e não tem pallet (fica na PROD-GR-HOSE)", prio: 13, acao: "Achar o pallet físico: imprimir o pallet pelo GMS (Dividir pallet) e transferir, ou estornar no SAP o que não existe", quem: "Cabine / Logística / SAP" }
 };
 
 // ───────────────────────── main (Power Automate) ─────────────────────────
@@ -417,11 +426,25 @@ function conferir(
   // prazo do refugo vencendo hoje: o lote de lancamento do SAP desse refugo e D
   for (const r of refugos) { if (prazoRefugo(r.dia) === d) { escopo.add(r.op); } }
   for (const k of chavesMap(abertos)) { if (!k.startsWith("PL ") && !k.startsWith("PP ") && !k.startsWith("PM ")) { escopo.add(k); } }
+  // v1.3.0 PROD-GR-HOSE: SAP bom (sem o lote de refugo) - packing (pallets + manual com OP), so OP Finalizada desde PACK_GMS_DESDE.
+  // Toda OP no alcance com sobra entra no escopo (nao so a do dia): o acumulado aparece e fica aberto ate sair da PROD-GR-HOSE.
+  const manualPorOP = new Map<string, number>();
+  for (const m of manualIn) { const o = textoOP(pega(m.op, m.Title)); if (o) { manualPorOP.set(o, (manualPorOP.get(o) || 0) + num(pega(m.total, m.TotalM))); } }
+  const semPalletDe = (op: string): { semPallet: number; sapBom: number; pack: number } => {
+    const proc = procPorOP.get(op) || "";
+    if ((proc !== "" && !ehFinalizada(proc)) || (inicioOP.get(op) || "") < PACK_GMS_DESDE) { return { semPallet: 0, sapBom: 0, pack: 0 }; }
+    const sapBom = soma((sapOP.get(op) || []).filter(s => !ehUsrRefugo(s.user)).map(s => s.q));
+    const pack = arred((packingPorOP.get(op) || 0) + (manualPorOP.get(op) || 0));
+    return { semPallet: arred(sapBom - pack), sapBom: sapBom, pack: pack };
+  };
+  for (const op of chavesMap(sapOP)) { if (noAlcance(op) && semPalletDe(op).semPallet > tol) { escopo.add(op); } }
 
   const itens: ItemConferencia[] = [];
   let conferidas = 0;
   let metros = 0;
   let refAguardando = 0;
+  let phM = 0;
+  let phOPs = 0;
   const diaMinPack = somaDias(d, -PACK_JANELA_DIAS);
 
   for (const op of chavesSet(escopo)) {
@@ -452,6 +475,14 @@ function conferir(
         catFinal = CAT.SEM_PACK;
         detalhe = "Lances sem packing: " + listar(semPack.map(l => fmt(l.q) + " m (" + dm(l.dia) + " " + hm(l.t) + ", Id " + l.id + ")"), 6);
       }
+    }
+    // v1.3.0 PROD-GR-HOSE: o que o SAP lancou de producao boa e nao saiu em pallet fica parado no deposito
+    const ph = semPalletDe(op);
+    if (ph.semPallet > tol) {
+      phM += ph.semPallet;
+      phOPs++;
+      const txtPH = "Na PROD-GR-HOSE sem pallet: " + fmt(ph.semPallet) + " m (SAP bom " + fmt(ph.sapBom) + " m × pallet " + fmt(ph.pack) + " m)";
+      if (!catFinal) { catFinal = CAT.PH_SEM_PALLET; detalhe = txtPH; } else { detalhe = txtPH + " | " + detalhe; }
     }
     if (catFinal) {
       if (catFinal.prio <= 10) { metros += Math.abs(a.dif - a.refGraca); }
@@ -613,6 +644,7 @@ function conferir(
   const ncOP = abertosHoje.filter(i => i.prioridade <= 10).length;
   const res: Resultado = {
     assunto: "Conferência GMS × SAP × Packing " + dm(d) + " — " + (abertosHoje.length ? abertosHoje.length + " pendência(s)" : "tudo conforme") +
+      (phM > tol ? " — " + fmt(arred(phM)) + " m SEM PALLET NA PROD-GR-HOSE" : "") +
       (mb51Ok ? "" : " — MB51 SEM LANÇAMENTO NO DIA"),
     html: "",
     dataRef: d,
@@ -623,6 +655,9 @@ function conferir(
     resolvidos: resolvidos,
     metrosEmJogo: arred(metros),
     refugoAguardandoM: arred(refAguardando),
+    prodHoseSemPalletM: arred(phM),
+    prodHoseOPs: phOPs,
+    refugoSapDiaM: soma(sap.filter(s => s.dia === d && ehUsrRefugo(s.user)).map(s => s.q)),
     itens: itens
   };
   res.html = montarHtml(res, sap, d);
@@ -642,7 +677,7 @@ function mb51Incompleto(d: string, gmsDia: number, sapDia: number): Resultado {
   return {
     assunto: "Conferência GMS × SAP × Packing " + dm(d) + " — MB51 INCOMPLETO (" + pct + "% do GMS), conferência não feita",
     html: html, dataRef: d, mb51Atualizado: false, mb51Incompleto: true, opsConferidas: 0, naoConformes: 0, resolvidos: 0,
-    metrosEmJogo: 0, refugoAguardandoM: 0, itens: []
+    metrosEmJogo: 0, refugoAguardandoM: 0, prodHoseSemPalletM: 0, prodHoseOPs: 0, refugoSapDiaM: 0, itens: []
   };
 }
 
@@ -871,7 +906,15 @@ function montarHtml(r: Resultado, sap: DocSap[], d: string): string {
     kpi("Conformes", conformes + " (" + pct + "%)", C.ok) +
     kpi("Não conformes (GMS × SAP)", String(r.naoConformes), r.naoConformes ? C.erro : C.ok) +
     kpi("Metros em jogo", fmt(r.metrosEmJogo) + " m", r.metrosEmJogo ? C.alerta : C.ok) +
-    kpi("Resolvidas hoje", String(r.resolvidos), C.info) + "</tr></table>";
+    kpi("Resolvidas hoje", String(r.resolvidos), C.info) +
+    kpi("Entra na PROD-GR-HOSE sem pallet (meta 0)", fmt(r.prodHoseSemPalletM) + " m" + (r.prodHoseOPs ? " · " + r.prodHoseOPs + " OP" : ""), r.prodHoseSemPalletM ? C.erro : C.ok) + "</tr></table>";
+  if (r.prodHoseSemPalletM) {
+    h += "<p style=\"background:" + C.erroSuave + ";color:" + C.erro + ";padding:8px 10px;font-weight:bold;\">" + fmt(r.prodHoseSemPalletM) + " m que o SAP lançou como produção boa não estão em nenhum pallet do GMS" +
+      " e vão ficar parados na PROD-GR-HOSE. As OPs estão na lista abaixo com \"Na PROD-GR-HOSE sem pallet\" no detalhe.</p>";
+  }
+  if (r.refugoSapDiaM) {
+    h += "<p style=\"font-size:12px;color:" + C.alerta + ";\">Refugo lançado no SAP em " + dm(d) + ": " + fmt(r.refugoSapDiaM) + " m. Ele entra na PROD-GR-HOSE e só sai com a baixa do refugo.</p>";
+  }
   if (packingSemDia) {
     h += "<p style=\"background:" + C.erroSuave + ";color:" + C.erro + ";padding:8px 10px;font-weight:bold;\">O Packing List não tem nenhum romaneio em " + dm(d) +
       ", mas o GMS tem lances aprovados no dia. O arquivo foi salvo? Todo lance do dia aparece como \"sem packing\".</p>";

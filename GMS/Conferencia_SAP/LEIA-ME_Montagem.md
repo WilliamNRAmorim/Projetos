@@ -29,6 +29,7 @@ Conectores: SharePoint, Excel Online (Business) e Outlook. Todos padrão, nenhum
 | Refugo → Packing | Não vai para o Packing. É só GMS × SAP | William, 02/10 |
 | Refugo somado no SAP | Um doc do SAP pode somar vários refugos do GMS (ex.: 5,4 = 4,5 + 0,9) e o motor casa por subconjunto | caso OP 30364966 |
 | Estorno 102 | Anula o 101 de mesma metragem | Lição MB51 31/08 |
+| PROD-GR-HOSE (v1.3.0) | Por OP Finalizada desde 06/10: SAP bom (101−102 sem o lote de refugo) − pallets do GMS (Packing_Pallets) − packing manual com a OP. Sobra acima de 0,5 m fica parada na PROD-GR-HOSE: entra no KPI "Entra na PROD-GR-HOSE sem pallet" (meta 0), no assunto e no detalhe; sem outra pendência, abre "SAP lançou e não tem pallet". Vale para o acumulado, não só o dia | William, 19/11 (caso OP 30842762) |
 | Packing sem OP | O romaneio só tem PN. O motor casa por PN + metragem exata + horário e, se não achar, tenta metragem ±1 m ("no GMS está 82,3 m") | 94% dos slices casam exato |
 
 **Categorias** (uma por OP, na ordem do seu `Plano_Tratativa_MB51.xlsx`): OP digitada errada no GMS · SAP lançou, GMS não tem a OP · GMS apontou, SAP não lançou a OP · Lance apontado na OP errada (troca entre duas OPs do mesmo PN) · Metragem digitada diferente · SAP lançou lance que o GMS não tem · GMS apontou lance que o SAP não tem · Refugo a mais no SAP · Refugo faltando no SAP · Outra divergência · Packing sem lance no GMS · Romaneio duplicado · ID de romaneio repetido · Lance aprovado sem packing.
