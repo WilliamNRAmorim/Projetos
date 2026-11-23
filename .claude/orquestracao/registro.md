@@ -288,3 +288,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Publicar o script da conferência v1.3.0 no OneDrive | chefe (Opus 5.5) sozinho no navegador | ação curta com o sim do William | não medido
 2026-11-23 | Conferir a 1ª rodada do indicador PROD-GR-HOSE contra o saldo colado e corrigir o corte (v1.3.1) | chefe (Opus 5.5) sozinho: API do SharePoint, script e guia do SAP pela tela | correção pequena num arquivo, feita por quem já tinha o contexto | não medido
 2026-11-23 | Publicar a conferência v1.3.1 no OneDrive | chefe (Opus 5.5) sozinho no navegador | ação curta com o sim do William | não medido
+2026-11-23 | Ver se entrou algo novo na PROD-GR-HOSE desde 19/11 (GMS × pallets × saldo colado) | chefe (Opus 5.5) sozinho, leitura pela API | consulta curta, nada gravado | não medido
