@@ -33,6 +33,8 @@ Só BI. Leva o plano mensal de mangueira do planejamento (planilha `Novembro-10.
 | `HP Atraso` | +#,0;-#,0;0 | (ritmo − %) × plano; positivo = atrasado (igual à planilha). |
 | `HP Plano Diário` | #,0 | Plano / dias úteis. |
 | `HP Para Fechar por dia` | #,0.0 | (plano − produzido) / (úteis − contab.); vazio se mês fechado ou sem dias restantes. |
+| `HP Devia até Corte` | #,0 | Ritmo esperado × plano (página de detalhe). |
+| `HP Produzido no Dia` | #,0 | Produzido do SAP no dia do contexto, para a grade dia a dia (página de detalhe). |
 | `_HP Dias Úteis`, `_HP Dias Restantes` | 0 | Ocultas: dias úteis da Mangueira (GMS_MetaMensal) e dias que faltam. |
 
 ## 1) Passo 1: tabela `dPlanoMangueira` (cole inteiro, depois Apply e atualize a tabela)
@@ -333,6 +335,22 @@ createOrReplace
 						RETURN
 						IF ( __Rest > 0 && NOT [_SAP Mês Encerrado], DIVIDE ( __Alvo - [HP Produzido no Plano], __Rest ) )
 			formatString: #,0.0
+			displayFolder: Plano Mangueira
+
+		measure 'HP Devia até Corte' =
+						-- Metros que deviam estar feitos até o corte no contexto (ritmo esperado × plano). No total = Meta até dd/mm da Produção x meta. · Plano mangueira x SAP
+						[HP % Ritmo Esperado] * [HP Plano do Mês]
+			formatString: #,0
+			displayFolder: Plano Mangueira
+
+		measure 'HP Produzido no Dia' =
+						-- Metros de mangueira do SAP no dia do contexto (dCalendario), de mangueiras com linha no plano do mês ou fora do plano, até o corte. Para a grade dia a dia da página de detalhe. · Plano mangueira x SAP
+						VAR __Ini = [_SAP Mês]
+						VAR __Corte = [SAP Data de Corte]
+						VAR __Chaves = CALCULATETABLE ( VALUES ( dClasseMangueira[Chave] ), dClasseMangueira[Mês] = __Ini )
+						RETURN
+						IF ( NOT ISBLANK ( __Corte ), CALCULATE ( SUM ( fProducaoSAP[Quantidade] ), fProducaoSAP[Produto] = "Mangueira", fProducaoSAP[Unidade] = "M", fProducaoSAP[Data] >= __Ini, fProducaoSAP[Data] <= __Corte, TREATAS ( __Chaves, fProducaoSAP[Material] ) ) )
+			formatString: #,0
 			displayFolder: Plano Mangueira
 
 		measure 'HP Atraso' =

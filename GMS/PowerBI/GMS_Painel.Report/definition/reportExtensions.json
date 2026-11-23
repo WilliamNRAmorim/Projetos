@@ -937,6 +937,48 @@
               }
             ]
           }
+        },
+        {
+          "name": "HP · Cor Atraso",
+          "dataType": "Text",
+          "expression": "-- Cor da fonte do atraso e do % na tabela da página de detalhe: vermelho Danfoss quando atrás do planejado até o corte. · Plano mangueira x SAP\nIF ( [HP Atraso] > 0, \"#E2000F\", \"#3C3C3B\" )",
+          "displayFolder": "Plano Mangueira (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "HP Atraso"
+              }
+            ]
+          }
+        },
+        {
+          "name": "HP · Fundo Dia",
+          "dataType": "Text",
+          "expression": "-- Fundo da célula da grade dia a dia: cinza mais escuro quanto mais metros no dia. Vazio sem produção. · Plano mangueira x SAP\nVAR __v = [HP Produzido no Dia]\nRETURN\nSWITCH ( TRUE (), NOT ( __v > 0 ), BLANK (), __v < 250, \"#E9E9EA\", __v < 500, \"#CFCFD0\", __v < 1000, \"#A9A9A8\", __v < 1500, \"#6F6F6E\", \"#3C3C3B\" )",
+          "displayFolder": "Plano Mangueira (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "HP Produzido no Dia"
+              }
+            ]
+          }
+        },
+        {
+          "name": "HP · Fonte Dia",
+          "dataType": "Text",
+          "expression": "-- Cor do número na grade dia a dia: branco nas células escuras, cinza escuro nas claras. · Plano mangueira x SAP\nIF ( [HP Produzido no Dia] > 1000, \"#FFFFFF\", \"#3C3C3B\" )",
+          "displayFolder": "Plano Mangueira (relatório)",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "HP Produzido no Dia"
+              }
+            ]
+          }
         }
       ]
     }
