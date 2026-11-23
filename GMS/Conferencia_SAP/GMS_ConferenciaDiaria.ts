@@ -1,5 +1,8 @@
 /**
- * GMS_ConferenciaDiaria  v1.3.0  (19/11/2026)  MEL-196  C29
+ * GMS_ConferenciaDiaria  v1.3.1  (23/11/2026)  MEL-196  C29
+ * v1.3.1: o indicador PROD-GR-HOSE so vale para OP iniciada a partir de PH_DESDE (16/10). A 1a rodada (21/11) acusou 18.870 m
+ *   contra 5.016 m reais no deposito: 37 OPs de 06-15/10 tiveram o packlist no BD antigo (apagado em 08/10) e nunca entraram
+ *   em Packing_Pallets, mas os pallets foram transferidos. Desde 16/10 todo lance tem pallet no GMS.
  * v1.3.0: indicador PROD-GR-HOSE. Producao boa que o SAP lancou (101-102, sem o lote de refugo) e que nao esta em
  *   nenhum pallet/romaneio fica parada na PROD-GR-HOSE (caso OP 30842762: pallet 1 de 431,9 m sobrescrito). Por OP do
  *   escopo, Finalizada e iniciada desde PACK_GMS_DESDE: semPallet = SAP bom - packing. Acima da tolerancia entra no KPI
@@ -124,6 +127,7 @@ const PACK_ANTES_H = 96;   // janela de CASAMENTO (acha packing atrasado); a COB
 const PACK_DEPOIS_H = 2;   // relogio do packing pode estar ate 2 h atras do GMS
 const PACK_JANELA_DIAS = 6;
 const PACK_GMS_DESDE = "2026-10-06";   // 1o dia com packing registrado no GMS; antes disso o BD (apagado) era a fonte
+const PH_DESDE = "2026-10-16";         // v1.3.1: indicador PROD-GR-HOSE so para OP iniciada daqui em diante (transicao 06-15/10 sem pallet no GMS)
 const FUSO_H = -3;         // Brasilia, sem horario de verao
 const USR_REFUGO = ["U452021", "U445131"];   // usuarios SAP que lancam o lote de refugo (101 na propria OP)
 const MB51_RAZAO_MIN = 0.8;   // v1.2.1: SAP do dia < 80% do GMS do dia = MB51 pela metade (normal: 99,8% no mesmo dia)
@@ -432,7 +436,7 @@ function conferir(
   for (const m of manualIn) { const o = textoOP(pega(m.op, m.Title)); if (o) { manualPorOP.set(o, (manualPorOP.get(o) || 0) + num(pega(m.total, m.TotalM))); } }
   const semPalletDe = (op: string): { semPallet: number; sapBom: number; pack: number } => {
     const proc = procPorOP.get(op) || "";
-    if ((proc !== "" && !ehFinalizada(proc)) || (inicioOP.get(op) || "") < PACK_GMS_DESDE) { return { semPallet: 0, sapBom: 0, pack: 0 }; }
+    if ((proc !== "" && !ehFinalizada(proc)) || (inicioOP.get(op) || "") < PH_DESDE) { return { semPallet: 0, sapBom: 0, pack: 0 }; }
     const sapBom = soma((sapOP.get(op) || []).filter(s => !ehUsrRefugo(s.user)).map(s => s.q));
     const pack = arred((packingPorOP.get(op) || 0) + (manualPorOP.get(op) || 0));
     return { semPallet: arred(sapBom - pack), sapBom: sapBom, pack: pack };
