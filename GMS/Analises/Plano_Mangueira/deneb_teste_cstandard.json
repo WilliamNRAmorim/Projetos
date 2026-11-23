@@ -1,0 +1,47 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": { "name": "dataset" },
+  "params": [ { "name": "__select__", "select": { "type": "point" } } ],
+  "transform": [
+    { "filter": "datum['HP Plano do Mês'] > 0" },
+    { "calculate": "datum['HP % do Plano'] < datum['HP % Ritmo Esperado'] ? 'atrás' : 'em dia'", "as": "situacao" }
+  ],
+  "height": { "step": 26 },
+  "encoding": {
+    "y": { "field": "C.Standard", "type": "nominal", "sort": { "field": "HP Plano do Mês", "order": "descending" }, "title": null,
+           "axis": { "labelFont": "Segoe UI", "labelFontSize": 11, "labelColor": "#3C3C3B", "domain": false, "ticks": false } }
+  },
+  "layer": [
+    {
+      "mark": { "type": "bar", "cornerRadius": 2, "height": 12, "color": "#EDEDED" },
+      "encoding": { "x": { "datum": 1, "type": "quantitative", "scale": { "domain": [0, 1] }, "axis": null } }
+    },
+    {
+      "mark": { "type": "bar", "cornerRadius": 2, "height": 12, "cursor": "pointer" },
+      "encoding": {
+        "x": { "field": "HP % do Plano", "type": "quantitative", "scale": { "domain": [0, 1], "clamp": true }, "axis": null },
+        "color": { "field": "situacao", "type": "nominal", "scale": { "domain": ["atrás", "em dia"], "range": ["#E2000F", "#3C3C3B"] }, "legend": null },
+        "opacity": { "condition": { "test": "datum.__selected__ == 'off'", "value": 0.25 }, "value": 1 },
+        "tooltip": [
+          { "field": "C.Standard", "title": "C.Standard" },
+          { "field": "HP Plano do Mês", "title": "Plano (m)", "format": ",.0f" },
+          { "field": "HP % do Plano", "title": "% do plano", "format": ".1%" },
+          { "field": "HP % Ritmo Esperado", "title": "Ritmo esperado", "format": ".1%" }
+        ]
+      }
+    },
+    {
+      "mark": { "type": "tick", "color": "#3C3C3B", "thickness": 2, "size": 18 },
+      "encoding": { "x": { "field": "HP % Ritmo Esperado", "type": "quantitative" } }
+    },
+    {
+      "mark": { "type": "text", "align": "left", "dx": 6, "font": "Segoe UI", "fontSize": 11, "fontWeight": "bold" },
+      "encoding": {
+        "x": { "datum": 1, "type": "quantitative" },
+        "text": { "field": "HP % do Plano", "format": ".1%" },
+        "color": { "field": "situacao", "type": "nominal", "scale": { "domain": ["atrás", "em dia"], "range": ["#E2000F", "#3C3C3B"] }, "legend": null }
+      }
+    }
+  ],
+  "config": { "view": { "stroke": null }, "padding": { "right": 50 } }
+}
