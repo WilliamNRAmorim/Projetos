@@ -1,0 +1,223 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a0436a85f344a1281d65",
+  "position": {
+    "x": 216,
+    "y": 280,
+    "z": 30001,
+    "height": 276,
+    "width": 516,
+    "tabOrder": 30001
+  },
+  "visual": {
+    "visualType": "deneb7E15AEF80B9E4D4F8E12924291ECE89A",
+    "query": {
+      "queryState": {
+        "dataset": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP % Ritmo Esperado"
+                }
+              },
+              "queryRef": "Medidas.HP % Ritmo Esperado",
+              "nativeQueryRef": "HP % Ritmo Esperado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP Plano do Mês"
+                }
+              },
+              "queryRef": "Medidas.HP Plano do Mês",
+              "nativeQueryRef": "HP Plano do Mês"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dClasseMangueira"
+                    }
+                  },
+                  "Property": "C.Standard"
+                }
+              },
+              "queryRef": "dClasseMangueira.C.Standard",
+              "nativeQueryRef": "C.Standard"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP % do Plano"
+                }
+              },
+              "queryRef": "Medidas.HP % do Plano",
+              "nativeQueryRef": "HP % do Plano"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "HP % Ritmo Esperado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "vega": [
+        {
+          "properties": {
+            "provider": {
+              "expr": {
+                "Literal": {
+                  "Value": "'vegaLite'"
+                }
+              }
+            },
+            "jsonSpec": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",\n  \"title\": { \"text\": \"Quanto de cada C.Standard saiu?\", \"subtitle\": \"% do plano do mês · traço = ritmo esperado · vermelho = atrás do ritmo · clique para filtrar a página\", \"anchor\": \"start\", \"font\": \"Segoe UI\", \"fontSize\": 13, \"fontWeight\": 600, \"color\": \"#3C3C3B\", \"subtitleFont\": \"Segoe UI\", \"subtitleFontSize\": 10, \"subtitleColor\": \"#8A8A88\", \"offset\": 10 },\n  \"data\": { \"name\": \"dataset\" },\n  \"transform\": [\n    { \"filter\": \"datum[''HP Plano do Mês''] > 0\" },\n    { \"calculate\": \"datum[''HP % do Plano''] < datum[''HP % Ritmo Esperado''] ? ''atrás'' : ''em dia''\", \"as\": \"situacao\" },\n    { \"calculate\": \"datum[''C_Standard''] + ''   '' + format(datum[''HP Plano do Mês''] / 1000, ''.1f'') + ''k''\", \"as\": \"rotulo\" },\n    { \"joinaggregate\": [ { \"op\": \"max\", \"field\": \"HP Plano do Mês\", \"as\": \"pmax\" } ] },\n    { \"calculate\": \"datum.pmax - datum[''HP Plano do Mês'']\", \"as\": \"chave\" }\n  ],\n  \"width\": \"container\",\n  \"height\": { \"step\": 24 },\n  \"encoding\": {\n    \"y\": { \"field\": \"rotulo\", \"type\": \"nominal\", \"sort\": { \"field\": \"chave\", \"op\": \"min\", \"order\": \"ascending\" }, \"title\": null,\n           \"axis\": { \"labelFont\": \"Segoe UI\", \"labelFontSize\": 11, \"labelColor\": \"#3C3C3B\", \"domain\": false, \"ticks\": false, \"labelPadding\": 8, \"labelLimit\": 220 } }\n  },\n  \"layer\": [\n    {\n      \"mark\": { \"type\": \"bar\", \"cornerRadius\": 2, \"height\": 11, \"color\": \"#EDEDED\" },\n      \"encoding\": { \"x\": { \"datum\": 1, \"type\": \"quantitative\", \"scale\": { \"domain\": [0, 1] }, \"axis\": null } }\n    },\n    {\n      \"params\": [ { \"name\": \"__select__\", \"select\": { \"type\": \"point\" } } ],\n      \"mark\": { \"type\": \"bar\", \"cornerRadius\": 2, \"height\": 11, \"cursor\": \"pointer\" },\n      \"encoding\": {\n        \"x\": { \"field\": \"HP % do Plano\", \"type\": \"quantitative\", \"scale\": { \"domain\": [0, 1], \"clamp\": true }, \"axis\": null },\n        \"color\": { \"field\": \"situacao\", \"type\": \"nominal\", \"scale\": { \"domain\": [\"atrás\", \"em dia\"], \"range\": [\"#E2000F\", \"#3C3C3B\"] }, \"legend\": null },\n        \"opacity\": { \"condition\": { \"test\": \"datum.__selected__ == ''off''\", \"value\": 0.25 }, \"value\": 1 },\n        \"tooltip\": [\n          { \"field\": \"C_Standard\", \"title\": \"C.Standard\" },\n          { \"field\": \"HP Plano do Mês\", \"title\": \"Plano (m)\", \"format\": \",.0f\" },\n          { \"field\": \"HP % do Plano\", \"title\": \"% do plano\", \"format\": \".1%\" },\n          { \"field\": \"HP % Ritmo Esperado\", \"title\": \"Ritmo esperado\", \"format\": \".1%\" }\n        ]\n      }\n    },\n    {\n      \"mark\": { \"type\": \"tick\", \"color\": \"#3C3C3B\", \"thickness\": 2, \"size\": 17 },\n      \"encoding\": { \"x\": { \"field\": \"HP % Ritmo Esperado\", \"type\": \"quantitative\" } }\n    },\n    {\n      \"mark\": { \"type\": \"text\", \"align\": \"left\", \"dx\": 6, \"font\": \"Segoe UI\", \"fontSize\": 11, \"fontWeight\": \"bold\" },\n      \"encoding\": {\n        \"x\": { \"datum\": 1, \"type\": \"quantitative\" },\n        \"text\": { \"field\": \"HP % do Plano\", \"format\": \".1%\" },\n        \"color\": { \"field\": \"situacao\", \"type\": \"nominal\", \"scale\": { \"domain\": [\"atrás\", \"em dia\"], \"range\": [\"#E2000F\", \"#3C3C3B\"] }, \"legend\": null }\n      }\n    }\n  ],\n  \"config\": { \"view\": { \"stroke\": null }, \"padding\": { \"left\": 6, \"right\": 48, \"top\": 4, \"bottom\": 4 } }\n}'"
+                }
+              }
+            },
+            "jsonConfig": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{}'"
+                }
+              }
+            },
+            "enableTooltips": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableContextMenu": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableContextMenuSelector": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableHighlight": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "enableSelection": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "selectionMaxDataPoints": {
+              "expr": {
+                "Literal": {
+                  "Value": "50D"
+                }
+              }
+            },
+            "selectionMode": {
+              "expr": {
+                "Literal": {
+                  "Value": "'simple'"
+                }
+              }
+            },
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'6.4.3'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "stateManagement": [
+        {
+          "properties": {
+            "denebMetaVersion": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2'"
+                }
+              }
+            },
+            "viewportHeight": {
+              "expr": {
+                "Literal": {
+                  "Value": "250D"
+                }
+              }
+            },
+            "viewportWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "482D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "developer": [
+        {
+          "properties": {
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2.0.1.0'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}
