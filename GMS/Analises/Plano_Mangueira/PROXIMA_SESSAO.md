@@ -1,12 +1,9 @@
-# Plano de mangueira x SAP: próxima sessão (deixado em 23/11/2026)
+# Plano de mangueira x SAP: estado em 23/11/2026
 
-Plano aprovado pelo William em 19/11. Tudo pronto no disco e commitado; nada aplicado no modelo nem publicado.
+Modelo vivo **aplicado e conferido** (TMDL view 10:04–10:14, refresh 10:09). Falta só o William reabrir o `GMS_Painel.pbip` no Desktop, conferir a página e publicar.
 
-## Falta, nesta ordem
-1. **Revisor (Opus)**: revisar `GMS/PowerBI/modelo/plano_mangueira.tmdl.md` (tabelas dPlanoMangueira, dClasseMangueira, medidas HP) e as 5 medidas `HP · SVG ...` do `GMS/PowerBI/GMS_Painel.Report/definition/reportExtensions.json` (página `pg_plano_mangueira`). Regra: Plano = soma do Volume do mês; Produzido = fProducaoSAP Mangueira por Material até o corte da Máscara SAP; ritmo = dias contabilizados ÷ dias úteis (GMS_MetaMensal); Atraso = (ritmo − %) × plano, positivo = atrasado; Para fechar = (plano − produzido) ÷ (úteis − contabilizados), vazio com mês fechado; produção sem plano = "Fora do plano". Olhar caixa do código (`ec215-06L`), nomes que conflitam (`Atraso`, `Dias Restantes`), totais, divisão por zero no SVG. Na sessão de 19–23/11 o agente `revisor` não carregou.
-2. **Gravar novembro na lista `GMS_PlanoMangueira`** (Id 34631d40-3ad8-4226-82d6-8d5f8fd1ce0a, site OperationsGuaratingueta, colunas Title, Mes, CStandard, Tipo, Arame, Volume). O William deu o "sim" em 23/11 para gravar os 45 itens de `nov_2026_lista.csv` (162.016 m, Mes = 2026-11-01T03:00:00Z), mas o login do navegador embutido expirou e **nada foi gravado**. Conferir `ItemCount = 0` antes (não duplicar) e reler depois (45 itens, soma 162.016).
-3. William cola os 3 passos do `plano_mangueira.tmdl.md` no TMDL view (depois do `mascara_producao.tmdl.md`), atualiza, roda a verificação da seção 4, reabre `GMS_Painel.pbip`, confere com `prototipo.html` e publica.
-
-## Pontos para o William
-- Dias úteis de novembro: 22 na GMS_MetaMensal x 23 na planilha. Se for 23, corrigir a lista (muda também a Máscara SAP).
-- Conferência (`conferir.py --hoje 2026-11-18`): 85.746 m x 85.671 m da planilha salva (2 linhas da MB51 mudaram depois: GH781-6 e 2556-12).
+- Lista `GMS_PlanoMangueira` com novembro: 45 itens, 162.016 m (gravado em 23/11 com o sim do William).
+- Conferência no DAX query view (corte 20/11): plano 162.016; produzido no plano 96.576,8 = SAP Mangueira 96.576,8 (0 fora do plano); 59,6% do plano; ritmo 68,2% (15 de 22 dias com planejado na GMS_PlanoDiario); atraso 13.889 m; para fechar 9.348 m/dia (plano 7.364/dia); 0 medidas em erro.
+- Correção feita ao aplicar: a Mangueira não tem mais linha na GMS_MetaMensal (usa a GMS_PlanoDiario). Dias úteis, dias restantes e ritmo passaram a contar os dias com planejado > 0, como a Máscara SAP.
+- Revisão: feita pelo chefe a pedido do William (o agente revisor não carregou na sessão).
+- Todo mês: o planejamento cola o bloco de mangueiras da planilha na lista (1 linha por mangueira e mês) e o refresh leva para a página.
