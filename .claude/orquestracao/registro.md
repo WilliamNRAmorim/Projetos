@@ -287,3 +287,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-19 | Corrigir a Finalização (pallet sobrescrito), consertar a OP 30842762 e criar o indicador diário da PROD-GR-HOSE | executor (Sonnet) na tela; chefe (Opus 5.5) no motor, nos dados e na revisão | tela grande e independente foi ao executor; revisor e revisor-leve não carregaram na sessão | não medido
 2026-11-19 | Publicar o script da conferência v1.3.0 no OneDrive | chefe (Opus 5.5) sozinho no navegador | ação curta com o sim do William | não medido
 2026-11-23 | Conferir a 1ª rodada do indicador PROD-GR-HOSE contra o saldo colado e corrigir o corte (v1.3.1) | chefe (Opus 5.5) sozinho: API do SharePoint, script e guia do SAP pela tela | correção pequena num arquivo, feita por quem já tinha o contexto | não medido
+2026-11-23 | Publicar a conferência v1.3.1 no OneDrive | chefe (Opus 5.5) sozinho no navegador | ação curta com o sim do William | não medido
