@@ -197,22 +197,17 @@ Screens:
             Fill: =Color.Transparent
             Height: =643
             Items: |-
-              =If(
-                  IsBlank(cmb_FiltroTr3_1.Selected.Filtro) || cmb_FiltroTr3_1.Selected.Filtro = "Todas",
-                  Sort(
-                      Filter(Filter(ficha_producao, processo = "Trançadeira"), Coalesce(status_processo, "") <> "Cancelado"),
-                      OP,
-                      SortOrder.Ascending
-                  ),
+              =With(
+                  { _f: Trim(Text(cmb_FiltroTr3_1.Selected.Filtro)) },
                   Sort(
                       Filter(
-                          Filter(
-                              ficha_producao,
-                              processo = "Trançadeira",
-                              (Trançadeira = cmb_FiltroTr3_1.Selected.Filtro && IsBlank(Cimento_Maquina)) ||
-                              Cimento_Maquina = cmb_FiltroTr3_1.Selected.Filtro
-                          ),
-                          Coalesce(status_processo, "") <> "Cancelado"
+                          Filter(ficha_producao, processo = "Trançadeira") As _o,
+                          Coalesce(_o.status_processo, "") <> "Cancelado" &&
+                          (
+                              IsBlank(_f) || _f = "Todas" ||
+                              (Trim(Text(_o.Trançadeira)) = _f && IsBlank(_o.Cimento_Maquina)) ||
+                              Trim(Text(_o.Cimento_Maquina)) = _f
+                          )
                       ),
                       OP,
                       SortOrder.Ascending

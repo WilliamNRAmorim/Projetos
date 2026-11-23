@@ -290,3 +290,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-23 | Publicar a conferência v1.3.1 no OneDrive | chefe (Opus 5.5) sozinho no navegador | ação curta com o sim do William | não medido
 2026-11-23 | Ver se entrou algo novo na PROD-GR-HOSE desde 19/11 (GMS × pallets × saldo colado) | chefe (Opus 5.5) sozinho, leitura pela API | consulta curta, nada gravado | não medido
 2026-11-23 | Excel de tratativa da PROD-GR-HOSE e correções no GMS (10 pallets registrados, 1 pallet corrigido) | chefe (Opus 5.5) sozinho: API do SharePoint, openpyxl e Excel para recalcular | dados já levantados na sessão; subagente teria que reler tudo | não medido
+2026-11-23 | Filtro por trançadeira na fila da Trançagem escondia OP existente (Items da gal_FilaTr3) | chefe (Opus 5.5) sozinho | patch de uma fórmula, causa vista na hora | não medido
