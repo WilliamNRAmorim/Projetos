@@ -15,7 +15,7 @@ Só BI. Leva o plano mensal de mangueira do planejamento (planilha `Novembro-10.
 - **Tabelas e relacionamentos.** `dPlanoMangueira` (M, oculta) é o espelho da lista com chave `Chave` = código em maiúsculas. `dClasseMangueira` (DAX calculada) é a dimensão no grão mangueira x mês: linhas do plano mais as linhas `SAP sem plano`. **Sem relacionamento**: o produzido é buscado com `TREATAS ( chaves da dClasseMangueira filtrada, fProducaoSAP[Material] )`. Motivo: a classe depende do mês, então não existe relacionamento simples `Material` → classe sem tornar a chave composta (mês é parte da chave) nem bidirecional; com `TREATAS` o filtro de C.Standard/Tipo/Arame/Mangueira passa só pelas chaves do mês escolhido, e a segmentação de mês (que filtra `dCalendario`) é desligada com `REMOVEFILTERS ( dCalendario )`, como a `SAP Produzido`. Nenhum relacionamento novo, nenhum bidirecional.
 - **Caixa do código.** Join e `Table.Group` em M são sensíveis à caixa (`ec215-06L` no plano, `EC215-06L` no SAP). A `Chave` é `UPPER ( TRIM ( ) )` dos dois lados; o `TREATAS` entre texto no DAX não diferencia caixa. Verificação 3 abaixo prova com `ec215-06L`.
 - **Fora do plano na conta.** `HP Produzido` (total) = no plano + fora do plano e bate com o SAP. `HP % do Plano`, `HP Atraso` e `HP Para Fechar por dia` usam só `HP Produzido no Plano` (mesma base da planilha: MTD 85.671 m = 52,9%); o fora do plano aparece só como nota pequena no cartão Produzido. Mangueira com Volume 0 mas com linha no plano conta como no plano (a planilha também soma o produzido dela no grupo).
-- **Ritmo esperado** (decisão do William em 23/11: igual à Produção x meta) = planejado acumulado da GMS_PlanoDiario até o corte ÷ planejado do mês (nov, corte 20/11: 100.118 ÷ 161.040 = 62,2%), aplicado ao plano por mangueira; sem plano diário no mês, cai na conta por dias. Histórico: (correção de 23/11, ao aplicar: a Mangueira saiu da GMS_MetaMensal e usa a GMS_PlanoDiario) = (dias úteis − dias restantes) / dias úteis, com dias úteis = dias com planejado > 0 na GMS_PlanoDiario e restantes = esses dias depois do corte (mesma base da Máscara SAP); sem plano diário no mês, cai na GMS_MetaMensal e em dias contabilizados do SAP. Versão anterior: dias contabilizados / dias úteis, limitado a 100%; em mês encerrado vale 100% (acréscimo meu, na linha do `_SAP Mês Encerrado`: sem ele um mês passado com menos dias de movimento que dias úteis pareceria adiantado/atrasado sem sentido). **Dias úteis**: o modelo usa a `GMS_MetaMensal` (novembro = 22); a planilha digita 23. Por isso o atraso do modelo difere do da planilha (conferir.py mostra as duas contas). A planilha também digita os dias contabilizados (13); o modelo conta as datas com movimento no SAP.
+- **Ritmo esperado** (2ª decisão do William em 23/11: atraso igual ao da Produção x meta) = planejado acumulado da GMS_PlanoDiario até o corte ÷ plano total da lista (no total, ritmo × plano = Meta até dd/mm da Produção x meta); Para fechar e Plano Diário escalam o plano pelo planejado do mês ÷ plano total. Antes (1ª decisão) = planejado acumulado da GMS_PlanoDiario até o corte ÷ planejado do mês (nov, corte 20/11: 100.118 ÷ 161.040 = 62,2%), aplicado ao plano por mangueira; sem plano diário no mês, cai na conta por dias. Histórico: (correção de 23/11, ao aplicar: a Mangueira saiu da GMS_MetaMensal e usa a GMS_PlanoDiario) = (dias úteis − dias restantes) / dias úteis, com dias úteis = dias com planejado > 0 na GMS_PlanoDiario e restantes = esses dias depois do corte (mesma base da Máscara SAP); sem plano diário no mês, cai na GMS_MetaMensal e em dias contabilizados do SAP. Versão anterior: dias contabilizados / dias úteis, limitado a 100%; em mês encerrado vale 100% (acréscimo meu, na linha do `_SAP Mês Encerrado`: sem ele um mês passado com menos dias de movimento que dias úteis pareceria adiantado/atrasado sem sentido). **Dias úteis**: o modelo usa a `GMS_MetaMensal` (novembro = 22); a planilha digita 23. Por isso o atraso do modelo difere do da planilha (conferir.py mostra as duas contas). A planilha também digita os dias contabilizados (13); o modelo conta as datas com movimento no SAP.
 - **Atraso** = (ritmo − %) × plano, positivo = atrasado. **Para fechar por dia** = (plano − produzido) / (úteis − contab.); é igual a plano/úteis + atraso/(restantes) (a planilha usa a meta planejada digitada em K38, por isso 7.953 lá). Negativo = plano já atingido (o SVG mostra "Plano atingido").
 - **Nomes** com prefixo `HP ` (pasta `Plano Mangueira`); auxiliares ocultas `_HP `. `Atraso` e `Dias Restantes` já existem em `ficha_producao`, então os nomes sem prefixo não servem. HSTD, OTIF e Decks ficam fora.
 - **Duplicidade na lista.** O M soma o `Volume` e mantém a primeira classificação se a mesma mangueira repetir no mês; classe vazia vira `Sem cadastro`.
@@ -280,17 +280,59 @@ createOrReplace
 			formatString: 0.0%
 			displayFolder: Plano Mangueira
 
-		measure 'HP % Ritmo Esperado' =
-						-- Fração do plano que devia estar feita até o corte, igual à Produção x meta: planejado acumulado da GMS_PlanoDiario até o corte ÷ planejado do mês (decisão do William, 23/11). Sem plano diário no mês: (dias úteis − restantes) ÷ dias úteis. Mês fechado = 100%. · Plano mangueira x SAP
+		measure '_HP Planejado Mês' =
+						-- Planejado do mês da Mangueira na GMS_PlanoDiario (o mesmo da Produção x meta). · Plano mangueira x SAP
+						VAR __Ini = [_SAP Mês]
+						RETURN
+						CALCULATE ( SUM ( dPlanoDiario[Planejado] ), REMOVEFILTERS ( dCalendario ), dProdutoSAP[Produto] = "Mangueira", dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= EOMONTH ( __Ini, 0 ) )
+			formatString: #,0
+			displayFolder: Plano Mangueira
+			isHidden
+
+		measure '_HP Planejado até Corte' =
+						-- Planejado acumulado da Mangueira na GMS_PlanoDiario até o corte (a "Meta até dd/mm" da Produção x meta). · Plano mangueira x SAP
 						VAR __Ini = [_SAP Mês]
 						VAR __Corte = [SAP Data de Corte]
-						VAR __Mes = CALCULATE ( SUM ( dPlanoDiario[Planejado] ), REMOVEFILTERS ( dCalendario ), dProdutoSAP[Produto] = "Mangueira", dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= EOMONTH ( __Ini, 0 ) )
-						VAR __Ate = CALCULATE ( SUM ( dPlanoDiario[Planejado] ), REMOVEFILTERS ( dCalendario ), dProdutoSAP[Produto] = "Mangueira", dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= __Corte )
+						RETURN
+						IF ( NOT ISBLANK ( __Corte ), CALCULATE ( SUM ( dPlanoDiario[Planejado] ), REMOVEFILTERS ( dCalendario ), dProdutoSAP[Produto] = "Mangueira", dPlanoDiario[Data] >= __Ini, dPlanoDiario[Data] <= __Corte ) + 0 )
+			formatString: #,0
+			displayFolder: Plano Mangueira
+			isHidden
+
+		measure '_HP Plano Total' =
+						-- Plano do mês da lista GMS_PlanoMangueira somado em todas as mangueiras (ignora C.Standard, tipo, arame e mangueira do contexto). · Plano mangueira x SAP
+						CALCULATE ( [HP Plano do Mês], REMOVEFILTERS ( dClasseMangueira ) )
+			formatString: #,0
+			displayFolder: Plano Mangueira
+			isHidden
+
+		measure 'HP % Ritmo Esperado' =
+						-- Fração do plano que devia estar feita no corte, igual à Produção x meta: planejado acumulado da GMS_PlanoDiario ÷ plano total da lista. No total, ritmo × plano = a "Meta até dd/mm" da Produção x meta, e o atraso fica igual nas duas páginas (decisão do William, 23/11). Sem plano diário no mês: (dias úteis − restantes) ÷ dias úteis. · Plano mangueira x SAP
+						VAR __Mes = [_HP Planejado Mês]
 						VAR __Uteis = [_HP Dias Úteis]
 						VAR __Rest = [_HP Dias Restantes]
 						RETURN
-						IF ( ISBLANK ( __Corte ), BLANK (), IF ( [_SAP Mês Encerrado], 1, IF ( __Mes > 0, MAX ( 0, MIN ( 1, DIVIDE ( __Ate + 0, __Mes ) ) ), IF ( __Uteis > 0 && NOT ISBLANK ( __Rest ), MAX ( 0, MIN ( 1, DIVIDE ( __Uteis - __Rest, __Uteis ) ) ) ) ) ) )
+						IF ( ISBLANK ( [SAP Data de Corte] ), BLANK (), IF ( __Mes > 0, MAX ( 0, MIN ( 1, DIVIDE ( [_HP Planejado até Corte], [_HP Plano Total] ) ) ), IF ( [_SAP Mês Encerrado], 1, IF ( __Uteis > 0 && NOT ISBLANK ( __Rest ), MAX ( 0, MIN ( 1, DIVIDE ( __Uteis - __Rest, __Uteis ) ) ) ) ) ) )
 			formatString: 0.0%
+			displayFolder: Plano Mangueira
+
+		measure 'HP Plano Diário' =
+						-- Planejado por dia nos dias que faltam, no contexto: plano × (planejado do mês − planejado até o corte) ÷ plano total ÷ dias restantes. No total é o "(planejado X)" da Produção x meta. Sem plano diário: plano ÷ dias úteis. · Plano mangueira x SAP
+						VAR __Mes = [_HP Planejado Mês]
+						VAR __Rest = [_HP Dias Restantes]
+						RETURN
+						IF ( __Mes > 0, IF ( __Rest > 0, DIVIDE ( [HP Plano do Mês] * DIVIDE ( __Mes - [_HP Planejado até Corte], [_HP Plano Total] ), __Rest ) ), DIVIDE ( [HP Plano do Mês], [_HP Dias Úteis] ) )
+			formatString: #,0
+			displayFolder: Plano Mangueira
+
+		measure 'HP Para Fechar por dia' =
+						-- Quanto por dia falta produzir nos dias que faltam, igual à Produção x meta: (plano × planejado do mês ÷ plano total − produzido) ÷ dias restantes. Vazio sem dias restantes ou com o mês fechado. Negativo = plano já atingido. · Plano mangueira x SAP
+						VAR __Mes = [_HP Planejado Mês]
+						VAR __Rest = [_HP Dias Restantes]
+						VAR __Alvo = IF ( __Mes > 0, [HP Plano do Mês] * DIVIDE ( __Mes, [_HP Plano Total] ), [HP Plano do Mês] )
+						RETURN
+						IF ( __Rest > 0 && NOT [_SAP Mês Encerrado], DIVIDE ( __Alvo - [HP Produzido no Plano], __Rest ) )
+			formatString: #,0.0
 			displayFolder: Plano Mangueira
 
 		measure 'HP Atraso' =
@@ -302,19 +344,6 @@ createOrReplace
 			formatString: +#,0;-#,0;0
 			displayFolder: Plano Mangueira
 
-		measure 'HP Plano Diário' =
-					-- Plano do mês dividido pelos dias úteis da Mangueira. · Plano mangueira x SAP
-					DIVIDE ( [HP Plano do Mês], [_HP Dias Úteis] )
-			formatString: #,0
-			displayFolder: Plano Mangueira
-
-		measure 'HP Para Fechar por dia' =
-					-- (plano - produzido no plano) / (dias úteis - dias contabilizados); vazio se não há dias restantes ou o mês já fechou (mesma lógica de [_SAP Mês Encerrado]). Negativo = plano já atingido. · Plano mangueira x SAP
-					VAR __Rest = [_HP Dias Restantes]
-					RETURN
-					IF ( __Rest > 0 && NOT [_SAP Mês Encerrado], DIVIDE ( [HP Plano do Mês] - [HP Produzido no Plano], __Rest ) )
-			formatString: #,0.0
-			displayFolder: Plano Mangueira
 ```
 
 ## 4) Verificação depois do refresh (DAX query view)
