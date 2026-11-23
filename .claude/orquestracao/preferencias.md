@@ -86,3 +86,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-23 | Plano de mangueira no BI: aceitou as recomendadas (lista SharePoint GMS_PlanoMangueira com classificação por mangueira, dias úteis da GMS_MetaMensal, grupo Fora do plano, sem Decks/HSTD/OTIF); preferiu abrir sessão nova para o revisor a deixar o chefe revisar
 2026-11-23 | Plano de mangueira: mandou o chefe revisar e aplicar sozinho (sem revisor); quis publicar ele mesmo o relatório
 2026-11-23 | Plano de mangueira: aceitou a recomendada de seguir o plano diário (GMS_PlanoDiario) no ritmo, igual à Produção x meta
+2026-11-23 | Plano de mangueira: entre a conta da planilha Novembro-10 (dias iguais) e a da Produção x meta (plano diário), confirmou a da Produção x meta
