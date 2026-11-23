@@ -34,6 +34,7 @@ Só BI. Leva o plano mensal de mangueira do planejamento (planilha `Novembro-10.
 | `HP Plano Diário` | #,0 | Plano / dias úteis. |
 | `HP Para Fechar por dia` | #,0.0 | (plano − produzido) / (úteis − contab.); vazio se mês fechado ou sem dias restantes. |
 | `HP Devia até Corte` | #,0 | Ritmo esperado × plano (página de detalhe). |
+| `HP Diferença` | #,0 | Plano do mês − produzido (quanto falta; coluna da tabela do detalhe). |
 | `HP Produzido no Dia` | #,0 | Produzido do SAP no dia do contexto, para a grade dia a dia (página de detalhe). |
 | `_HP Dias Úteis`, `_HP Dias Restantes` | 0 | Ocultas: dias úteis da Mangueira (GMS_MetaMensal) e dias que faltam. |
 
@@ -351,6 +352,12 @@ createOrReplace
 						RETURN
 						IF ( NOT ISBLANK ( __Corte ), CALCULATE ( SUM ( fProducaoSAP[Quantidade] ), fProducaoSAP[Produto] = "Mangueira", fProducaoSAP[Unidade] = "M", fProducaoSAP[Data] >= __Ini, fProducaoSAP[Data] <= __Corte, TREATAS ( __Chaves, fProducaoSAP[Material] ) ) )
 			formatString: #,0
+			displayFolder: Plano Mangueira
+
+		measure 'HP Diferença' =
+						-- Plano do mês menos produzido: quanto falta para fechar o plano da mangueira (negativo = já passou do plano). Pedido do William, 23/11. · Plano mangueira x SAP
+						[HP Plano do Mês] - [HP Produzido]
+			formatString: #,0;-#,0;0
 			displayFolder: Plano Mangueira
 
 		measure 'HP Atraso' =

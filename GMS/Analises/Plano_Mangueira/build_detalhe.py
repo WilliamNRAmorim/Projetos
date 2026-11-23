@@ -4,7 +4,7 @@
 Copia de pg_plano_mangueira o que é moldura (faixa, logo, menu, rodapé 'atualizado', segmentação de mês)
 sem mexer em posição/formatação, e cria: título, subtítulo, botão Voltar, 4 filtros suspensos,
 tabela por mangueira e matriz dia a dia. Acrescenta o botão 'Ver detalhe' na pg_plano_mangueira e as
-3 medidas de cor no reportExtensions.json. Rodar de novo recria só o que é desta página (idempotente).
+3 medidas de cor no reportExtensions.json. Só cria a página se ela não existir: depois que o William ajusta no Desktop, edite o visual.json direto (--forcar recria do zero e APAGA os ajustes dele).
 Uso: python -I -X utf8 build_detalhe.py
 """
 import json, os, re, shutil, copy
@@ -133,9 +133,9 @@ def tabela():
         proj_med("HP Plano do Mês", "Plano (m)"),
         proj_med("HP Devia até Corte", "Devia até o corte (m)"),
         proj_med("HP Produzido", "Produzido (m)"),
-        proj_med("HP Atraso", "Atraso (m)"),
+        proj_med("HP Diferença", "Diferença (m)"),
         proj_med("HP % do Plano", "% do plano")]}},
-        "sortDefinition": {"sort": [{"field": med("HP Atraso"), "direction": "Descending"}]}}
+        "sortDefinition": {"sort": [{"field": med("HP Diferença"), "direction": "Ascending"}]}}
     cor = lambda m, fonte: {"properties": {"fontColor": {"solid": {"color": {"expr": ext(fonte)}}}},
                             "selector": {"data": [{"dataViewWildcard": {"matchingOption": 1}}], "metadata": f"Medidas.{m}"}}
     v["objects"] = {
@@ -144,11 +144,11 @@ def tabela():
         "values": [{"properties": {"fontSize": lit("9D"), "fontColorPrimary": {"solid": {"color": lit("'#3C3C3B'")}},
                                    "backColorPrimary": {"solid": {"color": lit("'#FFFFFF'")}},
                                    "backColorSecondary": {"solid": {"color": lit("'#F7F7F7'")}}}},
-                   cor("HP Atraso", "HP · Cor Atraso"), cor("HP % do Plano", "HP · Cor Atraso")],
+                   cor("HP Diferença", "HP · Cor Atraso"), cor("HP % do Plano", "HP · Cor Atraso")],
         "total": [{"properties": {"fontSize": lit("9D"), "bold": lit("true"), "fontColor": {"solid": {"color": lit("'#1F1F1E'")}}}}],
         "grid": [{"properties": {"gridHorizontal": lit("true"), "gridHorizontalColor": {"solid": {"color": lit("'#EDEDED'")}},
                                  "gridVertical": lit("false"), "outlineColor": {"solid": {"color": lit("'#D9D9D9'")}}}}]}
-    v["visualContainerObjects"] = caixa_branca("Tabela por mangueira: plano do mês, quanto devia ter saído até o corte, produzido no SAP, atraso em metros e percentual do plano. Ordenada pelo maior atraso; clique no título da coluna para ordenar.",
+    v["visualContainerObjects"] = caixa_branca("Tabela por mangueira: plano do mês, quanto devia ter saído até o corte, produzido no SAP, diferença em metros (produzido − devia; negativo = atrás) e percentual do plano. Ordenada da mais atrasada para a mais adiantada; clique no título da coluna para ordenar.",
                                                "Por mangueira · vermelho = atrás do planejado até o corte")
     v["drillFilterOtherVisuals"] = True
     return d
@@ -183,13 +183,13 @@ def medidas_cor():
     nl = "\r\n" if "\r\n" in raw else "\n"
     d = json.loads(raw)
     novas = {
-        "HP · Cor Atraso": "-- Cor da fonte do atraso e do % na tabela da página de detalhe: vermelho Danfoss quando atrás do planejado até o corte. · Plano mangueira x SAP\nIF ( [HP Atraso] > 0, \"#E2000F\", \"#3C3C3B\" )",
+        "HP · Cor Atraso": "-- Cor da fonte do atraso e do % na tabela da página de detalhe: vermelho Danfoss quando atrás do planejado até o corte. · Plano mangueira x SAP\nIF ( [HP Diferença] < 0, \"#E2000F\", \"#3C3C3B\" )",
         "HP · Fundo Dia": "-- Fundo da célula da grade dia a dia: cinza mais escuro quanto mais metros no dia. Vazio sem produção. · Plano mangueira x SAP\nVAR __v = [HP Produzido no Dia]\nRETURN\nSWITCH ( TRUE (), NOT ( __v > 0 ), BLANK (), __v < 250, \"#E9E9EA\", __v < 500, \"#CFCFD0\", __v < 1000, \"#A9A9A8\", __v < 1500, \"#6F6F6E\", \"#3C3C3B\" )",
         "HP · Fonte Dia": "-- Cor do número na grade dia a dia: branco nas células escuras, cinza escuro nas claras. · Plano mangueira x SAP\nIF ( [HP Produzido no Dia] > 1000, \"#FFFFFF\", \"#3C3C3B\" )",
     }
     ent = d["entities"][0]
     ent["measures"] = [m for m in ent["measures"] if m["name"] not in novas]
-    refs = {"HP · Cor Atraso": "HP Atraso", "HP · Fundo Dia": "HP Produzido no Dia", "HP · Fonte Dia": "HP Produzido no Dia"}
+    refs = {"HP · Cor Atraso": "HP Diferença", "HP · Fundo Dia": "HP Produzido no Dia", "HP · Fonte Dia": "HP Produzido no Dia"}
     for n, e in novas.items():
         ent["measures"].append({"name": n, "dataType": "Text", "expression": e, "displayFolder": "Plano Mangueira (relatório)",
                                 "references": {"measures": [{"entity": "Medidas", "name": refs[n]}]}})
@@ -198,6 +198,9 @@ def medidas_cor():
 
 
 def main():
+    import sys
+    if os.path.isdir(NOVA) and "--forcar" not in sys.argv:
+        sys.exit("A página já existe e pode ter ajustes do William feitos no Desktop. Edite o visual.json direto; só use --forcar para recriar do zero.")
     if os.path.isdir(NOVA):
         shutil.rmtree(NOVA)
     os.makedirs(os.path.join(NOVA, "visuals"))
