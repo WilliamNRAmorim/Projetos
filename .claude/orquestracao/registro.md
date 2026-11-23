@@ -296,3 +296,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-23 | Detalhe por mangueira (tabela + grade dia a dia, filtros suspensos, página por botão) no GMS_Painel; medidas aplicadas e conferidas | chefe (Opus 5.5) sozinho | contexto já carregado na sessão | não medido
 2026-11-23 | Uiu: diagnóstico geral (conversa de 16/11, dados do dia 13/11, agente no Dataverse, DLP) e plano do patch v4 | chefe (Opus 5.5) sozinho, só leitura, navegador embutido e pac | diagnóstico encadeado, cada passo dependia do anterior | não medido
 2026-11-23 | Uiu v4, passo 1: especificação, gabarito de 40 perguntas e script | chefe (Opus 5.5) escreve e calcula; executor em Opus como revisor, 2 passes (~155k tokens) | regra de contagem e parada exige revisor, que não carregou na sessão | não medido
+2026-11-23 | Uiu v4, passo 2: tela da conexão Power BI e consultas de teste (esperando o clique do William) | chefe (Opus 5.5) sozinho | poucos passos | não medido
