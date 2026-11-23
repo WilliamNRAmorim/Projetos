@@ -1,3 +1,5 @@
+> **23/11/2026: patch geral v4 em andamento.** Plano em PLANO_PATCH_GERAL_2026-11-23.md (aprovado). Passo 1 feito: patch_v4/ (especificacao, gabarito e script). Proximo: passo 2, portao do Power BI. O rascunho esta em GPT-6 Luna Quick response (escolha do William em 23/11). A caixa abaixo e de 11/11; a regra de refugo as 08:20Z e o desconto da ficha cancelada inteira estao ERRADOS.
+
 # Uiu: onde parou (11/11/2026, tarde)
 
 > **Estado vigente em 11/11.** Tudo abaixo desta caixa é histórico.
