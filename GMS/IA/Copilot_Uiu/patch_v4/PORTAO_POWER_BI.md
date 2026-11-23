@@ -36,4 +36,14 @@ CALCULATETABLE (
 `HH Aderência`, `HH Meta Útil (m)`, `HH Real (m)`, `HH Parado (min)` e `VG Cabine (m)` são medidas **do relatório** (`GMS_Painel.Report/definition/reportExtensions.json`), não do modelo. A consulta DAX não as enxerga. A ferramenta leva essas fórmulas dentro da consulta (`DEFINE MEASURE`, como acima), copiadas do arquivo do relatório. Se o relatório mudar, a cópia precisa mudar junto.
 
 ## Resultado
-Pendente: conexão do William.
+**Aprovado em 23/11/2026, 14:42.** Conexão Power BI Connected no DPS - Non Prod, fluxo ativado sem bloqueio de DLP e 3 consultas com status 200 em cerca de 1 s.
+
+| Consulta | Resultado | Esperado |
+|---|---|---|
+| SAP 13/11 | Mangueira 7.915,86 · Montagem 2.220 · Fittings 265 | igual |
+| Aderência por trançadeira, 13/11 | TH01 94,3% · TH06 89,3% · Spiral 85,0% · TH02 65,0% · TO04 51,9% · TH07 50,4% · TH03 49,2% · TM01 43,2% · TM04 0% | não havia |
+| OEE2 de 09 a 13/11 | OEE2 55,5% · TCU 27,9% (só dias úteis; a referência de 19,8% é de 04/09 a 06/11) | não havia |
+
+- Pela hora cheia do BI, o Real de 13/11 soma 8.450 m; a Hora-Hora soma 8.566 m. É o aviso da especificação: por dia os dois não batem. A soma de 116 m de diferença não foi conciliada linha a linha.
+- **Técnica:** `operationId` ExecuteDatasetQuery; o texto da consulta vai em `specification/query`. Resposta em `body/firstTableRows`.
+- **Criado no ambiente:** conexão Power BI, referência de conexão `cra6eb_teste_uiu_powerbi` e fluxo "TESTE Uiu portão Power BI (temporário)" (`a25ae3fd-64e7-f111-84e9-7ced8dc5f589`), **desligado**. Apagar o fluxo e a referência pede o "sim" do William; a conexão fica para a ferramenta.

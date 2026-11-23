@@ -88,3 +88,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-23 | Plano de mangueira: aceitou a recomendada de seguir o plano diário (GMS_PlanoDiario) no ritmo, igual à Produção x meta
 2026-11-23 | Plano de mangueira: entre a conta da planilha Novembro-10 (dias iguais) e a da Produção x meta (plano diário), confirmou a da Produção x meta
 2026-11-23 | Uiu patch geral v4: aprovou o plano (gabarito e especificação; conexão, fluxos, rascunho e publicação seguem com sim próprio)
+2026-11-23 | Uiu patch geral v4: deu o sim para criar a conexão Power BI e o fluxo temporário de teste

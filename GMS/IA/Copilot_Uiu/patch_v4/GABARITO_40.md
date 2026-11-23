@@ -41,8 +41,8 @@ Os dados mudam (lance lançado depois, correção): **rodar `gabarito.js` no dia
 | 27 | Produção SAP de mangueira dia 13/11? | 7.915,86 m ✔ |
 | 28 | Montagem e Fittings no SAP dia 13? | 2.220 e 265 ✔ |
 | 29 | SAP de 14/11, mangueira? | 7.962,8 m ✔ |
-| 30 | Aderência da Trançagem dia 13? | BI (portão) |
-| 31 | OEE2 de 09 a 13/11? | BI (portão); famílias separadas |
+| 30 | Aderência por trançadeira dia 13? | TH01 94,3% · TH06 89,3% · Spiral 85,0% · TH02 65,0% · TO04 51,9% · TH07 50,4% · TH03 49,2% · TM01 43,2% · TM04 0% (modelo, 23/11) |
+| 31 | OEE2 de 09 a 13/11? | 55,5% (TCU 27,9%); se abrir as perdas, famílias separadas |
 | 32 | Por que o SAP do dia 13 difere da cabine? | O total é parecido (7.915,86 × 7.985,1), mas **por mangueira não é** (GMS no corte produtivo): SAP − GMS = EC118-08L +567,15 · FC839B-04 +778,80 · EC118-04L −798,40 · GH781-4 −651,21. Data de lançamento diferente da data de inspeção é hipótese |
 
 ## C. Réplica e conversa
