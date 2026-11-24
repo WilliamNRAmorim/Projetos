@@ -1,0 +1,2272 @@
+{
+ "properties": {
+  "connectionReferences": {
+   "shared_sharepointonline": {
+    "runtimeSource": "embedded",
+    "connection": {
+     "connectionReferenceLogicalName": "cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016"
+    },
+    "api": {
+     "name": "shared_sharepointonline"
+    }
+   }
+  },
+  "definition": {
+   "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+    "$connections": {
+     "defaultValue": {},
+     "type": "Object"
+    },
+    "$authentication": {
+     "defaultValue": {},
+     "type": "SecureObject"
+    }
+   },
+   "triggers": {
+    "Recorrencia": {
+     "type": "Recurrence",
+     "recurrence": {
+      "frequency": "Month",
+      "interval": 12
+     }
+    }
+   },
+   "actions": {
+    "Ini_Uri": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Uri",
+        "type": "string",
+        "value": ""
+       }
+      ]
+     },
+     "runAfter": {}
+    },
+    "Ini_Linhas": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Linhas",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Uri": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Brutas": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Brutas",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Linhas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Boas_v": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Boas_v",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Brutas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Grupos": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Grupos",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Boas_v": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Avisos": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Avisos",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Grupos": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Paginas": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Paginas",
+        "type": "integer",
+        "value": 0
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Avisos": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Completo": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Completo",
+        "type": "boolean",
+        "value": true
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Paginas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Canc": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Canc",
+        "type": "string",
+        "value": ""
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Completo": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Saida": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Saida",
+        "type": "string",
+        "value": ""
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Canc": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Ini_Resultados": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Resultados",
+        "type": "array",
+        "value": []
+       }
+      ]
+     },
+     "runAfter": {
+      "Ini_Saida": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Fontes": {
+     "type": "Compose",
+     "inputs": {
+      "insp": {
+       "data": "DataHoraInspecao",
+       "tipo": "inst",
+       "v": "Quantidade_Inspe_x00e7__x00e3_o",
+       "conta": "nao",
+       "maquina": "Tran_x00e7_adeira",
+       "mangueira": "Mangueira",
+       "etapa": "_nada",
+       "etapaFixa": "Extração",
+       "codigo": "_nada",
+       "cabine": "cabine_teste",
+       "op": "OP_ID",
+       "turno": "*hora",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "insp",
+       "lista": "RegistrosInspeção",
+       "sel": "ID,OP_ID,Quantidade_Inspe_x00e7__x00e3_o,DataHoraInspecao,Mangueira,Tran_x00e7_adeira,cabine_teste"
+      },
+      "ref": {
+       "data": "DataHoraRefugo",
+       "tipo": "dia",
+       "v": "OData__x0043_",
+       "conta": "nao",
+       "maquina": "Tran_x00e7_adeira",
+       "mangueira": "_nada",
+       "etapa": "_nada",
+       "etapaFixa": "",
+       "codigo": "A",
+       "cabine": "cabine_teste",
+       "op": "OP_ID",
+       "turno": "TurnoErro",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "ref",
+       "lista": "TiposErros",
+       "sel": "ID,Created,A,OData__x0043_,OP_ID,DataHoraRefugo,Tran_x00e7_adeira,TurnoErro,cabine_teste"
+      },
+      "ev": {
+       "data": "data_ref",
+       "tipo": "dia",
+       "v": "metros",
+       "conta": "nao",
+       "maquina": "_nada",
+       "mangueira": "_nada",
+       "etapa": "etapa",
+       "etapaFixa": "",
+       "codigo": "tipo",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "turno",
+       "orig": "origem_ID",
+       "janela": "_nada",
+       "extra": "origem eq 'ficha_producao' and (tipo eq 'Fim' or tipo eq 'Parcial' or tipo eq 'Início')",
+       "nome": "ev",
+       "lista": "Eventos_Producao",
+       "sel": "ID,etapa,tipo,turno,metros,origem_ID,data_ref"
+      },
+      "hh7": {
+       "data": "field_0",
+       "tipo": "dia",
+       "v": "field_7",
+       "conta": "nao",
+       "maquina": "field_2",
+       "mangueira": "field_4",
+       "etapa": "_nada",
+       "etapaFixa": "Trançagem",
+       "codigo": "field_12",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "TurnoH",
+       "orig": "_nada",
+       "janela": "field_3",
+       "extra": "",
+       "nome": "hh7",
+       "lista": "Hora-Hora",
+       "sel": "ID,field_0,field_2,field_3,field_4,field_5,field_7,field_11,field_12,TurnoH"
+      },
+      "hh5": {
+       "data": "field_0",
+       "tipo": "dia",
+       "v": "field_5",
+       "conta": "nao",
+       "maquina": "field_2",
+       "mangueira": "field_4",
+       "etapa": "_nada",
+       "etapaFixa": "Trançagem",
+       "codigo": "field_12",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "TurnoH",
+       "orig": "_nada",
+       "janela": "field_3",
+       "extra": "",
+       "nome": "hh5",
+       "lista": "Hora-Hora",
+       "sel": "ID,field_0,field_2,field_3,field_4,field_5,field_7,field_11,field_12,TurnoH"
+      },
+      "hh11": {
+       "data": "field_0",
+       "tipo": "dia",
+       "v": "field_11",
+       "conta": "nao",
+       "maquina": "field_2",
+       "mangueira": "field_4",
+       "etapa": "_nada",
+       "etapaFixa": "Trançagem",
+       "codigo": "field_12",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "TurnoH",
+       "orig": "_nada",
+       "janela": "field_3",
+       "extra": "",
+       "nome": "hh11",
+       "lista": "Hora-Hora",
+       "sel": "ID,field_0,field_2,field_3,field_4,field_5,field_7,field_11,field_12,TurnoH"
+      },
+      "mp": {
+       "data": "field_1",
+       "tipo": "dia",
+       "v": "field_9",
+       "conta": "nao",
+       "maquina": "field_3",
+       "mangueira": "_nada",
+       "etapa": "_nada",
+       "etapaFixa": "",
+       "codigo": "field_13",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "field_2",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "mp",
+       "lista": "Producao_Montagem",
+       "sel": "ID,field_1,field_2,field_3,field_9,field_13"
+      },
+      "mpar": {
+       "data": "field_1",
+       "tipo": "dia",
+       "v": "field_6",
+       "conta": "nao",
+       "maquina": "field_3",
+       "mangueira": "_nada",
+       "etapa": "_nada",
+       "etapaFixa": "",
+       "codigo": "field_5",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "field_2",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "mpar",
+       "lista": "Paradas_Montagem",
+       "sel": "ID,field_1,field_2,field_3,field_5,field_6"
+      },
+      "bob": {
+       "data": "field_2",
+       "tipo": "inst",
+       "v": "field_6",
+       "conta": "nao",
+       "maquina": "Maquina",
+       "mangueira": "_nada",
+       "etapa": "_nada",
+       "etapaFixa": "",
+       "codigo": "Motivos",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "_nada",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "bob",
+       "lista": "Refugo_Bobinadeira",
+       "sel": "ID,field_2,field_4,field_6,Maquina,Motivos"
+      },
+      "man": {
+       "data": "field_7",
+       "tipo": "inst",
+       "v": "field_5",
+       "conta": "nao",
+       "maquina": "_nada",
+       "mangueira": "_nada",
+       "etapa": "_nada",
+       "etapaFixa": "",
+       "codigo": "field_4",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "_nada",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "man",
+       "lista": "RefugoExtrusora_estrutura",
+       "sel": "ID,field_4,field_5,field_7"
+      },
+      "wip": {
+       "data": "_nada",
+       "tipo": "foto",
+       "v": "_nada",
+       "conta": "sim",
+       "maquina": "Tran_x00e7_adeira",
+       "mangueira": "Mangueira",
+       "etapa": "field_10",
+       "etapaFixa": "",
+       "codigo": "_nada",
+       "cabine": "_nada",
+       "op": "OP",
+       "turno": "_nada",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "field_11 eq 'Em processo'",
+       "nome": "wip",
+       "lista": "ficha_producao",
+       "sel": "ID,OP,Mangueira,Tran_x00e7_adeira,field_10"
+      }
+     },
+     "runAfter": {
+      "Ini_Resultados": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Indicadores": {
+     "type": "Compose",
+     "inputs": {
+      "inspecao_boa": {
+       "fontes": [
+        "insp"
+       ],
+       "un": "m",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "turno",
+        "mangueira",
+        "maquina",
+        "cabine",
+        "op"
+       ],
+       "fixas": [],
+       "aviso": "Lance lançado depois muda dia já respondido."
+      },
+      "refugo": {
+       "fontes": [
+        "ref"
+       ],
+       "un": "m",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "codigo",
+        "maquina",
+        "cabine",
+        "op",
+        "turno"
+       ],
+       "fixas": [],
+       "aviso": "Refugo é pelo dia do registro (civil), a coluna não guarda a hora. Máquina = trançadeira de origem da OP, não prova de causa. Repetidos não são excluídos."
+      },
+      "perc_refugo": {
+       "fontes": [
+        "insp",
+        "ref"
+       ],
+       "un": "%",
+       "modo": "perc",
+       "dims": [
+        "maquina",
+        "cabine",
+        "op"
+       ],
+       "fixas": [],
+       "aviso": "Cabine, dia civil nas duas pontas. Não é o % Refugo Cabine do BI, que usa a ficha."
+      },
+      "producao_etapa": {
+       "fontes": [
+        "ev",
+        "hh7",
+        "insp"
+       ],
+       "un": "m",
+       "modo": "semtotal",
+       "dims": [
+        "dia",
+        "turno",
+        "etapa"
+       ],
+       "fixas": [
+        "etapa"
+       ],
+       "aviso": "Etapas nunca se somam. Trançagem = Hora-Hora; Vulcanização = Início; Extração = inspeção. Cancelamento na Trançagem não é descontável (a Hora-Hora não tem ficha)."
+      },
+      "trancagem_real": {
+       "fontes": [
+        "hh7"
+       ],
+       "un": "m",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "turno",
+        "maquina",
+        "mangueira"
+       ],
+       "fixas": [],
+       "aviso": "Duas passadas: a lista guarda a metade. O BI corta o dia às 05:00 (hora cheia); por dia pode diferir."
+      },
+      "trancagem_meta_gravada": {
+       "fontes": [
+        "hh5"
+       ],
+       "un": "m",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "turno",
+        "maquina"
+       ],
+       "fixas": [],
+       "aviso": "Não é a meta do painel. Meta e aderência oficiais: Perguntar ao BI."
+      },
+      "deficit_hora_hora": {
+       "fontes": [
+        "hh11"
+       ],
+       "un": "min",
+       "modo": "semtotal",
+       "dims": [
+        "dia",
+        "turno",
+        "maquina",
+        "codigo"
+       ],
+       "fixas": [
+        "bloco"
+       ],
+       "aviso": "Déficit contra a meta, não cronômetro. Os blocos nunca se somam. Parada oficial: Perguntar ao BI."
+      },
+      "montagem_pecas": {
+       "fontes": [
+        "mp"
+       ],
+       "un": "pç",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "turno",
+        "maquina",
+        "codigo"
+       ],
+       "fixas": [],
+       "aviso": ""
+      },
+      "montagem_paradas": {
+       "fontes": [
+        "mpar"
+       ],
+       "un": "min",
+       "modo": "semtotal",
+       "dims": [
+        "dia",
+        "turno",
+        "maquina",
+        "codigo"
+       ],
+       "fixas": [
+        "bloco"
+       ],
+       "aviso": "Parada real, TE e RF nunca se somam. O desconto da OT com RF é do BI."
+      },
+      "refugo_fio": {
+       "fontes": [
+        "bob"
+       ],
+       "un": "unidade a confirmar",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "maquina",
+        "codigo"
+       ],
+       "fixas": [],
+       "aviso": "Não soma com metros."
+      },
+      "refugo_mandril": {
+       "fontes": [
+        "man"
+       ],
+       "un": "kg",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "codigo"
+       ],
+       "fixas": [],
+       "aviso": "Em kg: nunca percentual sobre metros."
+      },
+      "ops_em_processo": {
+       "fontes": [
+        "wip"
+       ],
+       "un": "fichas",
+       "modo": "normal",
+       "dims": [
+        "etapa",
+        "maquina",
+        "mangueira",
+        "op"
+       ],
+       "fixas": [],
+       "aviso": "Foto de agora. Diga \"na etapa\", nunca \"parada\"."
+      }
+     },
+     "runAfter": {
+      "Fontes": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Indicador_vazio": {
+     "type": "Compose",
+     "inputs": {
+      "fontes": [],
+      "dims": [],
+      "fixas": [],
+      "un": "",
+      "modo": "",
+      "aviso": ""
+     },
+     "runAfter": {
+      "Indicadores": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Celulas": {
+     "type": "Compose",
+     "inputs": [
+      "TH01",
+      "TH02",
+      "TH03",
+      "TH04",
+      "TH05",
+      "TH06",
+      "TH07",
+      "TO04",
+      "TM01",
+      "TM04",
+      "SPIRAL"
+     ],
+     "runAfter": {
+      "Indicador_vazio": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Programada": {
+     "type": "Compose",
+     "inputs": [
+      "Inventário",
+      "Manutenção Preventiva",
+      "Manutenção Preventiva (Fora do Prazo)",
+      "Manut. Prod. Total (MPT)",
+      "Almoço",
+      "Reunião",
+      "Reunião/Treinamento",
+      "Amostra",
+      "TESTE ENGENHARIA",
+      "Execução Check List Lean",
+      "Set-up"
+     ],
+     "runAfter": {
+      "Celulas": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Cadastro": {
+     "type": "Compose",
+     "inputs": [
+      "Falta de Demanda",
+      "Inventário",
+      "Manutenção Preventiva",
+      "Manutenção Preventiva (Fora do Prazo)",
+      "Manut. Prod. Total (MPT)",
+      "Almoço",
+      "Reunião",
+      "Reunião/Treinamento",
+      "Amostra",
+      "TESTE ENGENHARIA",
+      "Execução Check List Lean",
+      "Alimentação de fio",
+      "Emenda de Fita",
+      "Troca de Carretel",
+      "Troca de Lenon",
+      "Troca de boneca",
+      "Bobinagem de Arame Espiral",
+      "Puxada do Insulation",
+      "Registro de Peck",
+      "Registro de Pick",
+      "Set-up",
+      "Troca de Ferramental (fieira/matriz)",
+      "Troca de composto",
+      "Manutenção Corretiva",
+      "Ajuste da Máquina",
+      "Problemas com composto",
+      "Problemas de qualidade",
+      "Resto de fio",
+      "Falta de programação",
+      "Análise/Problema no tubo",
+      "Quebra de fio",
+      "Falta de Carretel",
+      "Falta de Lenon",
+      "Falta de Mandril",
+      "Falta de Mandril Soldado",
+      "Falta de Mangueira",
+      "Falta de Mangueira Trançada",
+      "Falta de composto",
+      "Falta de desmoldante",
+      "Falta de fio - Bobinadeira",
+      "Falta de insulation",
+      "Falta de tubo",
+      "Falta de operador",
+      "Motivo Não Declarado",
+      "Sem apontamento",
+      "Falta de energia / ar",
+      "Divergência do Tempo Padrão"
+     ],
+     "runAfter": {
+      "Programada": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Cada_caso": {
+     "type": "Foreach",
+     "foreach": [
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "turno",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "turno",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "cabine",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "09/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "01/10/2026",
+       "ate": "31/10/2026",
+       "corte": "civil",
+       "agrupar": "mangueira",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "15/11/2026",
+       "ate": "15/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "refugo",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "codigo",
+       "onde": "-"
+      },
+      {
+       "indicador": "perc_refugo",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "perc_refugo",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "maquina",
+       "onde": "-"
+      },
+      {
+       "indicador": "refugo",
+       "de": "01/10/2026",
+       "ate": "31/10/2026",
+       "corte": "civil",
+       "agrupar": "codigo",
+       "onde": "-"
+      },
+      {
+       "indicador": "refugo",
+       "de": "01/10/2026",
+       "ate": "31/10/2026",
+       "corte": "civil",
+       "agrupar": "maquina",
+       "onde": "-"
+      },
+      {
+       "indicador": "producao_etapa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "producao_etapa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "turno",
+       "onde": "etapa=Cobertura"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "maquina",
+       "onde": "-"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "turno",
+       "onde": "-"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "maquina=TH-05"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "09/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "maquina",
+       "onde": "-"
+      },
+      {
+       "indicador": "deficit_hora_hora",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "codigo",
+       "onde": "-"
+      },
+      {
+       "indicador": "montagem_pecas",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "maquina",
+       "onde": "-"
+      },
+      {
+       "indicador": "montagem_paradas",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "-",
+       "ate": "-",
+       "corte": "-",
+       "agrupar": "mangueira",
+       "onde": "op=30803591"
+      },
+      {
+       "indicador": "refugo",
+       "de": "-",
+       "ate": "-",
+       "corte": "-",
+       "agrupar": "codigo",
+       "onde": "op=30803591"
+      },
+      {
+       "indicador": "ops_em_processo",
+       "de": "-",
+       "ate": "-",
+       "corte": "-",
+       "agrupar": "etapa",
+       "onde": "-"
+      },
+      {
+       "indicador": "refugo_fio",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "codigo",
+       "onde": "-"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "01/10/2026",
+       "ate": "31/10/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "turno=3º Turno"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "deficit_hora_hora",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "maquina",
+       "onde": "codigo=21 - Refeição"
+      },
+      {
+       "indicador": "producao_etapa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "etapa=Vulcanizacao"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "maquina=TH99"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "maquina"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "dia,turno,cabine",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "noturno",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "inspecao_boa",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "cabine=CABINE_L1;maquina=TH06;op=1"
+      },
+      {
+       "indicador": "trancagem_real",
+       "de": "01/10/2026",
+       "ate": "31/10/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "mangueira=GH781-8"
+      },
+      {
+       "indicador": "oee",
+       "de": "13/11/2026",
+       "ate": "13/11/2026",
+       "corte": "produtivo",
+       "agrupar": "-",
+       "onde": "-"
+      },
+      {
+       "indicador": "refugo",
+       "de": "13/11/2026",
+       "ate": "12/11/2026",
+       "corte": "civil",
+       "agrupar": "-",
+       "onde": "-"
+      }
+     ],
+     "runtimeConfiguration": {
+      "concurrency": {
+       "repetitions": 1
+      }
+     },
+     "actions": {
+      "Entrada": {
+       "type": "Compose",
+       "inputs": "@items('Cada_caso')",
+       "runAfter": {}
+      },
+      "Consulta": {
+       "type": "Scope",
+       "actions": {
+        "Zera_linhas": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Linhas",
+          "value": []
+         },
+         "runAfter": {}
+        },
+        "Zera_grupos": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Grupos",
+          "value": []
+         },
+         "runAfter": {
+          "Zera_linhas": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Zera_avisos": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Avisos",
+          "value": []
+         },
+         "runAfter": {
+          "Zera_grupos": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Zera_saida": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Saida",
+          "value": ""
+         },
+         "runAfter": {
+          "Zera_avisos": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Zera_completo": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Completo",
+          "value": true
+         },
+         "runAfter": {
+          "Zera_saida": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Zera_canc": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Canc",
+          "value": "<r><c><k>-</k><id>0</id></c></r>"
+         },
+         "runAfter": {
+          "Zera_completo": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Param": {
+         "type": "Compose",
+         "inputs": {
+          "ind": "@{toLower(trim(coalesce(outputs('Entrada')?['indicador'],'-')))}",
+          "ini": "@{if(equals(length(trim(coalesce(outputs('Entrada')?['de'],'-'))),10),concat(split(concat(trim(coalesce(outputs('Entrada')?['de'],'-')),'/-/-'),'/')[2],'-',split(concat(trim(coalesce(outputs('Entrada')?['de'],'-')),'/-/-'),'/')[1],'-',split(concat(trim(coalesce(outputs('Entrada')?['de'],'-')),'/-/-'),'/')[0]),'-')}",
+          "fim": "@{if(equals(length(trim(coalesce(outputs('Entrada')?['ate'],'-'))),10),concat(split(concat(trim(coalesce(outputs('Entrada')?['ate'],'-')),'/-/-'),'/')[2],'-',split(concat(trim(coalesce(outputs('Entrada')?['ate'],'-')),'/-/-'),'/')[1],'-',split(concat(trim(coalesce(outputs('Entrada')?['ate'],'-')),'/-/-'),'/')[0]),'-')}",
+          "g1": "@{if(or(equals(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),'-'),empty(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))))),'',trim(first(split(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),','))))}",
+          "g2": "@{trim(coalesce(first(skip(split(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),','),1)),''))}",
+          "d1": "@{toLower(trim(first(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))))}",
+          "v1": "@{if(equals(toLower(trim(first(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')))),'maquina'),toUpper(replace(replace(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),'-',''),'.','')),if(equals(toLower(trim(first(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')))),'turno'),take(concat(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),' '),1),if(and(equals(toLower(trim(first(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')))),'codigo'),equals(toLower(if(isInt(trim(first(split(concat(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),' - '),' - ')))),trim(join(skip(split(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),' - '),1),' - ')),trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))))),'refeição'),equals(toLower(trim(coalesce(outputs('Entrada')?['indicador'],'-'))),'deficit_hora_hora')),'Almoço',if(isInt(trim(first(split(concat(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),' - '),' - ')))),trim(join(skip(split(trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'='))),' - '),1),' - ')),trim(last(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')))))))}",
+          "d2": "@{toLower(trim(first(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))))}",
+          "v2": "@{if(equals(toLower(trim(first(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')))),'maquina'),toUpper(replace(replace(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),'-',''),'.','')),if(equals(toLower(trim(first(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')))),'turno'),take(concat(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),' '),1),if(and(equals(toLower(trim(first(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')))),'codigo'),equals(toLower(if(isInt(trim(first(split(concat(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),' - '),' - ')))),trim(join(skip(split(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),' - '),1),' - ')),trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))))),'refeição'),equals(toLower(trim(coalesce(outputs('Entrada')?['indicador'],'-'))),'deficit_hora_hora')),'Almoço',if(isInt(trim(first(split(concat(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),' - '),' - ')))),trim(join(skip(split(trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'='))),' - '),1),' - ')),trim(last(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')))))))}",
+          "civil": "@{equals(toLower(trim(coalesce(outputs('Entrada')?['corte'],'-'))),'civil')}"
+         },
+         "runAfter": {
+          "Zera_canc": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Indic": {
+         "type": "Compose",
+         "inputs": "@coalesce(outputs('Indicadores')?[outputs('Param')?['ind']],outputs('Indicador_vazio'))",
+         "runAfter": {
+          "Param": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Valido": {
+         "type": "If",
+         "expression": "@and(not(empty(outputs('Indic')?['fontes'])),or(and(not(equals(outputs('Param')?['ini'],'-')),not(equals(outputs('Param')?['fim'],'-')),lessOrEquals(outputs('Param')?['ini'],outputs('Param')?['fim'])),or(equals(outputs('Param')?['ind'],'ops_em_processo'),and(equals(outputs('Param')?['ini'],'-'),equals(outputs('Param')?['fim'],'-'),isInt(if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],''))),contains(createArray('inspecao_boa','refugo','perc_refugo'),outputs('Param')?['ind'])))),or(empty(outputs('Param')?['g1']),equals(outputs('Param')?['g1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g1'])) , or(empty(outputs('Param')?['g2']),equals(outputs('Param')?['g2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g2'])) , or(empty(outputs('Param')?['d1']),equals(outputs('Param')?['d1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d1'])) , or(empty(outputs('Param')?['d2']),equals(outputs('Param')?['d2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d2'])),and(lessOrEquals(length(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),2),or(equals(trim(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'))),'-'),equals(length(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')),2)),or(equals(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-')),'-'),empty(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'))),equals(length(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')),2))),lessOrEquals(length(split(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),',')),2),contains(createArray('civil','produtivo','-',''),toLower(trim(coalesce(outputs('Entrada')?['corte'],'-')))))",
+         "actions": {
+          "Corte": {
+           "type": "Compose",
+           "inputs": "@{if(contains(createArray('perc_refugo','refugo'),outputs('Param')?['ind']),'civil',if(and(equals(outputs('Param')?['civil'],'True'),not(or(equals(outputs('Param')?['g1'],'turno'),equals(outputs('Param')?['g2'],'turno'),equals(outputs('Param')?['d1'],'turno'),equals(outputs('Param')?['d2'],'turno'))),contains(createArray('inspecao_boa','refugo_fio','refugo_mandril'),outputs('Param')?['ind'])),'civil','produtivo'))}",
+           "runAfter": {}
+          },
+          "Cada_fonte": {
+           "type": "Foreach",
+           "foreach": "@outputs('Indic')?['fontes']",
+           "runtimeConfiguration": {
+            "concurrency": {
+             "repetitions": 1
+            }
+           },
+           "actions": {
+            "Fonte": {
+             "type": "Compose",
+             "inputs": "@outputs('Fontes')?[items('Cada_fonte')]",
+             "runAfter": {}
+            },
+            "Partes": {
+             "type": "Query",
+             "inputs": {
+              "from": "@createArray(if(and(isInt(if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],''))),not(equals(outputs('Fonte')?['op'],'_nada'))),concat(outputs('Fonte')?['op'],' eq ',if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],''))),''),if(or(equals(outputs('Fonte')?['tipo'],'foto'),equals(outputs('Param')?['ini'],'-')),'',concat(outputs('Fonte')?['data'],' ge datetime''',outputs('Param')?['ini'],'T',if(equals(outputs('Fonte')?['tipo'],'inst'),if(equals(outputs('Corte'),'civil'),'03:00','08:20'),'00:00'),':00Z'' and ',outputs('Fonte')?['data'],' lt datetime''',formatDateTime(addDays(coalesce(if(equals(outputs('Param')?['fim'],'-'),null,outputs('Param')?['fim']),'2026-01-01'),1),'yyyy-MM-dd'),'T',if(equals(outputs('Fonte')?['tipo'],'inst'),if(equals(outputs('Corte'),'civil'),'03:00','08:20'),'00:00'),':00Z''')),outputs('Fonte')?['extra'])",
+              "where": "@not(empty(item()))"
+             },
+             "runAfter": {
+              "Fonte": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Uri_ini": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Uri",
+              "value": "@{concat('_api/web/lists/getbytitle(''',encodeUriComponent(outputs('Fonte')?['lista']),''')/items?$select=',outputs('Fonte')?['sel'],'&$filter=',encodeUriComponent(join(body('Partes'),' and ')),'&$orderby=ID&$top=5000')}"
+             },
+             "runAfter": {
+              "Partes": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Zera_brutas": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Brutas",
+              "value": []
+             },
+             "runAfter": {
+              "Uri_ini": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Zera_pag": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Paginas",
+              "value": 0
+             },
+             "runAfter": {
+              "Zera_brutas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Paginar": {
+             "type": "Until",
+             "expression": "@or(equals(variables('Uri'),''),greaterOrEquals(variables('Paginas'),10))",
+             "limit": {
+              "count": 12,
+              "timeout": "PT80S"
+             },
+             "actions": {
+              "Ler": {
+               "type": "OpenApiConnection",
+               "inputs": {
+                "host": {
+                 "connectionName": "shared_sharepointonline",
+                 "operationId": "HttpRequest",
+                 "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                 "dataset": "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta",
+                 "parameters/method": "GET",
+                 "parameters/uri": "@variables('Uri')",
+                 "parameters/headers": {
+                  "Accept": "application/json;odata=nometadata"
+                 }
+                },
+                "authentication": "@parameters('$authentication')"
+               },
+               "runAfter": {}
+              },
+              "Juntar": {
+               "type": "Compose",
+               "inputs": "@union(variables('Brutas'),body('Ler')?['value'])",
+               "runAfter": {
+                "Ler": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Guardar": {
+               "type": "SetVariable",
+               "inputs": {
+                "name": "Brutas",
+                "value": "@outputs('Juntar')"
+               },
+               "runAfter": {
+                "Juntar": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Contar": {
+               "type": "IncrementVariable",
+               "inputs": {
+                "name": "Paginas",
+                "value": 1
+               },
+               "runAfter": {
+                "Guardar": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Proxima": {
+               "type": "SetVariable",
+               "inputs": {
+                "name": "Uri",
+                "value": "@{if(empty(body('Ler')?['odata.nextLink']),'',replace(body('Ler')?['odata.nextLink'],'https://danfoss.sharepoint.com/sites/OperationsGuaratingueta/',''))}"
+               },
+               "runAfter": {
+                "Contar": [
+                 "Succeeded"
+                ]
+               }
+              }
+             },
+             "runAfter": {
+              "Zera_pag": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Completo_val": {
+             "type": "Compose",
+             "inputs": "@and(variables('Completo'),equals(variables('Uri'),''))",
+             "runAfter": {
+              "Paginar": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Completo_set": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Completo",
+              "value": "@outputs('Completo_val')"
+             },
+             "runAfter": {
+              "Completo_val": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Se_ev": {
+             "type": "If",
+             "expression": {
+              "equals": [
+               "@outputs('Fonte')?['nome']",
+               "ev"
+              ]
+             },
+             "actions": {
+              "Ler_canc": {
+               "type": "OpenApiConnection",
+               "inputs": {
+                "host": {
+                 "connectionName": "shared_sharepointonline",
+                 "operationId": "HttpRequest",
+                 "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                 "dataset": "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta",
+                 "parameters/method": "GET",
+                 "parameters/uri": "_api/web/lists/getbytitle('Eventos_Producao')/items?$select=ID,origem,origem_ID,etapa&$filter=tipo%20eq%20%27Cancelado%27&$orderby=ID&$top=5000",
+                 "parameters/headers": {
+                  "Accept": "application/json;odata=nometadata"
+                 }
+                },
+                "authentication": "@parameters('$authentication')"
+               },
+               "runAfter": {}
+              },
+              "So_ficha": {
+               "type": "Query",
+               "inputs": {
+                "from": "@body('Ler_canc')?['value']",
+                "where": "@equals(item()?['origem'],'ficha_producao')"
+               },
+               "runAfter": {
+                "Ler_canc": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Linhas_canc": {
+               "type": "Select",
+               "inputs": {
+                "from": "@body('So_ficha')",
+                "select": "@{concat('<c><k>',first(split(string(item()?['origem_ID']),'.')),'|',item()?['etapa'],'</k><id>',string(item()?['ID']),'</id></c>')}"
+               },
+               "runAfter": {
+                "So_ficha": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Canc_set": {
+               "type": "SetVariable",
+               "inputs": {
+                "name": "Canc",
+                "value": "@{concat('<r>',join(body('Linhas_canc'),''),'</r>')}"
+               },
+               "runAfter": {
+                "Linhas_canc": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Ler_sem_evento": {
+               "type": "OpenApiConnection",
+               "inputs": {
+                "host": {
+                 "connectionName": "shared_sharepointonline",
+                 "operationId": "HttpRequest",
+                 "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+                },
+                "parameters": {
+                 "dataset": "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta",
+                 "parameters/method": "GET",
+                 "parameters/uri": "_api/web/lists/getbytitle('ficha_producao')/items?$select=ID&$filter=field_11%20eq%20%27Cancelado%27&$orderby=ID&$top=5000",
+                 "parameters/headers": {
+                  "Accept": "application/json;odata=nometadata"
+                 }
+                },
+                "authentication": "@parameters('$authentication')"
+               },
+               "runAfter": {
+                "Canc_set": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Ids_fichas_canc": {
+               "type": "Select",
+               "inputs": {
+                "from": "@coalesce(body('Ler_sem_evento')?['value'],json('[]'))",
+                "select": "@{string(item()?['ID'])}"
+               },
+               "runAfter": {
+                "Ler_sem_evento": [
+                 "Succeeded",
+                 "Failed",
+                 "TimedOut"
+                ]
+               }
+              },
+              "Aviso_f": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "Não consegui conferir fichas com situação Cancelado."
+               },
+               "runAfter": {
+                "Ler_sem_evento": [
+                 "Failed",
+                 "TimedOut"
+                ]
+               }
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Completo_set": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Norm": {
+             "type": "Select",
+             "inputs": {
+              "from": "@variables('Brutas')",
+              "select": {
+               "i": "@{concat(outputs('Fonte')?['nome'],':',string(item()?['ID']))}",
+               "id": "@int(item()?['ID'])",
+               "dia": "@{if(equals(outputs('Fonte')?['tipo'],'foto'),'',formatDateTime(addMinutes(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T03:00:00Z'),if(and(equals(outputs('Fonte')?['tipo'],'inst'),equals(outputs('Corte'),'produtivo')),-500,-180)),'dd/MM/yyyy'))}",
+               "turno": "@{if(equals(outputs('Fonte')?['turno'],'*hora'),if(less(add(mul(int(formatDateTime(addMinutes(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T08:20:00Z'),-500),'HH')),60),int(formatDateTime(addMinutes(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T08:20:00Z'),-500),'mm'))),517),'1',if(less(add(mul(int(formatDateTime(addMinutes(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T08:20:00Z'),-500),'HH')),60),int(formatDateTime(addMinutes(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T08:20:00Z'),-500),'mm'))),1020),'2','3')),take(concat(trim(string(coalesce(item()?[outputs('Fonte')?['turno']],''))),' '),1))}",
+               "maquina": "@{toUpper(replace(replace(trim(string(coalesce(item()?[outputs('Fonte')?['maquina']],''))),'-',''),'.',''))}",
+               "mangueira": "@{trim(string(coalesce(item()?[outputs('Fonte')?['mangueira']],'')))}",
+               "etapa": "@{if(empty(outputs('Fonte')?['etapaFixa']),trim(string(coalesce(item()?[outputs('Fonte')?['etapa']],''))),outputs('Fonte')?['etapaFixa'])}",
+               "codigo": "@{if(isInt(trim(first(split(concat(trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))),' - '),' - ')))),trim(join(skip(split(trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))),' - '),1),' - ')),trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))))}",
+               "cabine": "@{trim(string(coalesce(item()?[outputs('Fonte')?['cabine']],'')))}",
+               "op": "@{first(split(string(coalesce(item()?[outputs('Fonte')?['op']],'')),'.'))}",
+               "orig": "@{first(split(string(coalesce(item()?[outputs('Fonte')?['orig']],'')),'.'))}",
+               "dk": "@{concat(string(coalesce(item()?[outputs('Fonte')?['data']],'')),'|',toUpper(replace(replace(trim(string(coalesce(item()?[outputs('Fonte')?['maquina']],''))),'-',''),'.','')),'|',trim(string(coalesce(item()?[outputs('Fonte')?['turno']],''))),'|',trim(string(coalesce(item()?[outputs('Fonte')?['janela']],''))))}",
+               "v": "@if(equals(outputs('Fonte')?['conta'],'sim'),1,float(coalesce(item()?[outputs('Fonte')?['v']],0)))",
+               "r": "@if(equals(outputs('Fonte')?['nome'],'ref'),float(coalesce(item()?[outputs('Fonte')?['v']],0)),0)",
+               "dd": "@div(sub(ticks(coalesce(item()?['Created'],'2026-01-01T00:00:00Z')),ticks(coalesce(item()?[outputs('Fonte')?['data']],'2026-01-01T00:00:00Z'))),864000000000)"
+              }
+             },
+             "runAfter": {
+              "Se_ev": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Norm2": {
+             "type": "Select",
+             "inputs": {
+              "from": "@body('Norm')",
+              "select": {
+               "i": "@item()?['i']",
+               "id": "@item()?['id']",
+               "dia": "@item()?['dia']",
+               "turno": "@item()?['turno']",
+               "maquina": "@item()?['maquina']",
+               "mangueira": "@item()?['mangueira']",
+               "etapa": "@item()?['etapa']",
+               "codigo": "@{if(equals(outputs('Fonte')?['nome'],'hh11'),if(equals(item()?['codigo'],'Refeição'),'Almoço',if(equals(item()?['codigo'],'Problema no tubo'),'Análise/Problema no tubo',item()?['codigo'])),item()?['codigo'])}",
+               "cabine": "@item()?['cabine']",
+               "op": "@item()?['op']",
+               "orig": "@item()?['orig']",
+               "dk": "@item()?['dk']",
+               "v": "@item()?['v']",
+               "r": "@item()?['r']",
+               "dd": "@item()?['dd']",
+               "bloco": "@{if(equals(outputs('Param')?['ind'],'deficit_hora_hora'),if(empty(item()?['codigo']),'sem motivo',if(contains(outputs('Programada'),if(equals(item()?['codigo'],'Refeição'),'Almoço',if(equals(item()?['codigo'],'Problema no tubo'),'Análise/Problema no tubo',item()?['codigo']))),'pausa programada',if(equals(if(equals(item()?['codigo'],'Refeição'),'Almoço',if(equals(item()?['codigo'],'Problema no tubo'),'Análise/Problema no tubo',item()?['codigo'])),'Divergência do Tempo Padrão'),'velocidade reduzida',if(contains(outputs('Cadastro'),if(equals(item()?['codigo'],'Refeição'),'Almoço',if(equals(item()?['codigo'],'Problema no tubo'),'Análise/Problema no tubo',item()?['codigo']))),'demais motivos','motivo fora do cadastro')))),if(equals(outputs('Param')?['ind'],'montagem_paradas'),if(equals(item()?['codigo'],'TE - Tempo Excedido'),'TE (tempo excedido)',if(startsWith(toUpper(trim(item()?['codigo'])),'RF'),'RF (refeição)','parada real')),''))}"
+              }
+             },
+             "runAfter": {
+              "Norm": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Base": {
+             "type": "Query",
+             "inputs": {
+              "from": "@body('Norm2')",
+              "where": "@and(not(and(equals(outputs('Fonte')?['nome'],'ev'),or(equals(item()?['etapa'],'Trançagem'),equals(item()?['etapa'],'Extração'),and(equals(item()?['etapa'],'Vulcanização'),not(equals(item()?['codigo'],'Início'))),and(not(equals(item()?['etapa'],'Vulcanização')),equals(item()?['codigo'],'Início'))))),not(and(startsWith(outputs('Fonte')?['nome'],'hh'),not(contains(outputs('Celulas'),item()?['maquina'])))))"
+             },
+             "runAfter": {
+              "Norm2": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Boas_set": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Boas_v",
+              "value": "@body('Base')"
+             },
+             "runAfter": {
+              "Base": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Chaves_hh": {
+             "type": "Select",
+             "inputs": {
+              "from": "@body('Base')",
+              "select": "@{item()?['dk']}"
+             },
+             "runAfter": {
+              "Boas_set": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Se_dup": {
+             "type": "If",
+             "expression": {
+              "and": [
+               {
+                "equals": [
+                 "@startsWith(outputs('Fonte')?['nome'],'hh')",
+                 true
+                ]
+               },
+               {
+                "greater": [
+                 "@length(body('Base'))",
+                 "@length(union(body('Chaves_hh'),body('Chaves_hh')))"
+                ]
+               }
+              ]
+             },
+             "actions": {
+              "Pares_dup": {
+               "type": "Select",
+               "inputs": {
+                "from": "@body('Base')",
+                "select": {
+                 "k": "@item()?['dk']",
+                 "id": "@item()?['id']"
+                }
+               },
+               "runAfter": {}
+              },
+              "Ultimas": {
+               "type": "Compose",
+               "inputs": "@xpath(xml(json(concat('{\"r\":{\"i\":',string(body('Pares_dup')),'}}'))),'/r/i[not(k=following-sibling::i/k)]/id/text()')",
+               "runAfter": {
+                "Pares_dup": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "So_ultimas": {
+               "type": "Query",
+               "inputs": {
+                "from": "@body('Base')",
+                "where": "@contains(outputs('Ultimas'),string(item()?['id']))"
+               },
+               "runAfter": {
+                "Ultimas": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Ultimas_set": {
+               "type": "SetVariable",
+               "inputs": {
+                "name": "Boas_v",
+                "value": "@body('So_ultimas')"
+               },
+               "runAfter": {
+                "So_ultimas": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Aviso_d": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "@{concat(string(sub(length(body('Base')),length(body('So_ultimas')))),' janela(s) repetida(s) na Hora-Hora: vale a última')}"
+               },
+               "runAfter": {
+                "Ultimas_set": [
+                 "Succeeded"
+                ]
+               }
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Chaves_hh": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Filtrar": {
+             "type": "Query",
+             "inputs": {
+              "from": "@variables('Boas_v')",
+              "where": "@and(or(equals(outputs('Param')?['d1'],'-'),empty(outputs('Param')?['d1']),equals(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(string(coalesce(item()?[outputs('Param')?['d1']],''))),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(outputs('Param')?['v1']),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u')),startsWith(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(string(coalesce(item()?[outputs('Param')?['d1']],''))),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),concat(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(outputs('Param')?['v1']),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),' '))),or(equals(outputs('Param')?['d2'],'-'),empty(outputs('Param')?['d2']),equals(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(string(coalesce(item()?[outputs('Param')?['d2']],''))),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(outputs('Param')?['v2']),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u')),startsWith(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(string(coalesce(item()?[outputs('Param')?['d2']],''))),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),concat(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(replace(toLower(outputs('Param')?['v2']),'ç','c'),'ã','a'),'á','a'),'â','a'),'à','a'),'é','e'),'ê','e'),'í','i'),'ó','o'),'ô','o'),'õ','o'),'ú','u'),' '))))"
+             },
+             "runAfter": {
+              "Se_dup": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Vals": {
+             "type": "Select",
+             "inputs": {
+              "from": "@body('Base')",
+              "select": "@{string(coalesce(item()?[outputs('Param')?['d1']],''))}"
+             },
+             "runAfter": {
+              "Filtrar": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Se_vazio": {
+             "type": "If",
+             "expression": "@and(empty(body('Filtrar')),not(empty(body('Base'))),not(equals(outputs('Param')?['d1'],'-')))",
+             "actions": {
+              "Aviso_v": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "@{concat('Nenhuma linha com esse filtro em ',outputs('Fonte')?['lista'],'. Valores que existem no período: ',join(take(union(body('Vals'),body('Vals')),25),', '))}"
+               },
+               "runAfter": {}
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Vals": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Trocadas": {
+             "type": "Query",
+             "inputs": {
+              "from": "@body('Filtrar')",
+              "where": "@and(equals(outputs('Fonte')?['nome'],'ref'),and(not(equals(outputs('Param')?['ini'],'-')),or(greater(item()?['dd'],60),less(item()?['dd'],-60))))"
+             },
+             "runAfter": {
+              "Se_vazio": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Canceladas": {
+             "type": "Query",
+             "inputs": {
+              "from": "@body('Filtrar')",
+              "where": "@and(equals(outputs('Fonte')?['nome'],'ev'),less(float(item()?['id']),float(xpath(xml(variables('Canc')),concat('sum(/r/c[k=\"',item()?['orig'],'|',item()?['etapa'],'\"][last()]/id)')))))"
+             },
+             "runAfter": {
+              "Trocadas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Boas": {
+             "type": "Query",
+             "inputs": {
+              "from": "@body('Filtrar')",
+              "where": "@not(or(and(equals(outputs('Fonte')?['nome'],'ref'),and(not(equals(outputs('Param')?['ini'],'-')),or(greater(item()?['dd'],60),less(item()?['dd'],-60)))),and(equals(outputs('Fonte')?['nome'],'ev'),less(float(item()?['id']),float(xpath(xml(variables('Canc')),concat('sum(/r/c[k=\"',item()?['orig'],'|',item()?['etapa'],'\"][last()]/id)')))))))"
+             },
+             "runAfter": {
+              "Canceladas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Aviso_trocadas": {
+             "type": "If",
+             "expression": {
+              "greater": [
+               "@length(body('Trocadas'))",
+               0
+              ]
+             },
+             "actions": {
+              "Aviso_t": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "@{concat(string(length(body('Trocadas'))),' linha(s) de refugo com dia e mês trocados ficaram fora (',formatNumber(xpath(xml(json(concat('{\"r\":{\"i\":', string(union(body('Trocadas'), json('[{\"i\":\"zero\",\"v\":0,\"r\":0}]'))), '}}'))), 'sum(/r/i/v)'),'0.00','en-US'),' m); saem do mês errado, mas não voltam ao certo')}"
+               },
+               "runAfter": {}
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Boas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Chave_rep": {
+             "type": "Select",
+             "inputs": {
+              "from": "@body('Boas')",
+              "select": "@{concat(item()?['dia'],'|',item()?['op'],'|',item()?['codigo'],'|',string(item()?['v']))}"
+             },
+             "runAfter": {
+              "Aviso_trocadas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Se_rep": {
+             "type": "If",
+             "expression": "@and(equals(outputs('Fonte')?['nome'],'ref'),greater(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep')))))",
+             "actions": {
+              "Aviso_r": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "@{concat(string(sub(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep'))))),' linha(s) de refugo iguais a outra (dia, OP, código e metros); não foram excluídas')}"
+               },
+               "runAfter": {}
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Chave_rep": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Aviso_canceladas": {
+             "type": "If",
+             "expression": {
+              "greater": [
+               "@length(body('Canceladas'))",
+               0
+              ]
+             },
+             "actions": {
+              "Fichas_c": {
+               "type": "Select",
+               "inputs": {
+                "from": "@body('Canceladas')",
+                "select": "@{concat('ficha ',item()?['orig'],' ',item()?['etapa'],' ',item()?['codigo'],' ',string(item()?['v']),' m')}"
+               },
+               "runAfter": {}
+              },
+              "Aviso_c": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Avisos",
+                "value": "@{concat('Descontado por cancelamento: ',join(body('Fichas_c'),'; '))}"
+               },
+               "runAfter": {
+                "Fichas_c": [
+                 "Succeeded"
+                ]
+               }
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Se_rep": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Aviso_sem_evento": {
+             "type": "If",
+             "expression": {
+              "equals": [
+               "@outputs('Fonte')?['nome']",
+               "ev"
+              ]
+             },
+             "actions": {
+              "Suspeitas": {
+               "type": "Query",
+               "inputs": {
+                "from": "@body('Boas')",
+                "where": "@and(contains(coalesce(body('Ids_fichas_canc'),json('[]')),item()?['orig']),greater(item()?['v'],0))"
+               },
+               "runAfter": {}
+              },
+              "Susp_txt": {
+               "type": "Select",
+               "inputs": {
+                "from": "@body('Suspeitas')",
+                "select": "@{concat('ficha ',item()?['orig'],' ',item()?['etapa'],' ',string(item()?['v']),' m')}"
+               },
+               "runAfter": {
+                "Suspeitas": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Se_susp": {
+               "type": "If",
+               "expression": {
+                "greater": [
+                 "@length(body('Suspeitas'))",
+                 0
+                ]
+               },
+               "actions": {
+                "Aviso_s": {
+                 "type": "AppendToArrayVariable",
+                 "inputs": {
+                  "name": "Avisos",
+                  "value": "@{concat('Ficha com situação Cancelado sem desconto (segue somada): ',join(body('Susp_txt'),'; '))}"
+                 },
+                 "runAfter": {}
+                }
+               },
+               "else": {
+                "actions": {}
+               },
+               "runAfter": {
+                "Susp_txt": [
+                 "Succeeded"
+                ]
+               }
+              }
+             },
+             "else": {
+              "actions": {}
+             },
+             "runAfter": {
+              "Aviso_canceladas": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Acumular": {
+             "type": "Compose",
+             "inputs": "@union(variables('Linhas'),body('Boas'))",
+             "runAfter": {
+              "Aviso_sem_evento": [
+               "Succeeded"
+              ]
+             }
+            },
+            "Acumular_set": {
+             "type": "SetVariable",
+             "inputs": {
+              "name": "Linhas",
+              "value": "@outputs('Acumular')"
+             },
+             "runAfter": {
+              "Acumular": [
+               "Succeeded"
+              ]
+             }
+            }
+           },
+           "runAfter": {
+            "Corte": [
+             "Succeeded"
+            ]
+           }
+          },
+          "G_bruto": {
+           "type": "Compose",
+           "inputs": "@union(outputs('Indic')?['fixas'],createArray(outputs('Param')?['g1'],outputs('Param')?['g2']))",
+           "runAfter": {
+            "Cada_fonte": [
+             "Succeeded"
+            ]
+           }
+          },
+          "G": {
+           "type": "Query",
+           "inputs": {
+            "from": "@outputs('G_bruto')",
+            "where": "@and(not(empty(item())),not(equals(item(),'-')))"
+           },
+           "runAfter": {
+            "G_bruto": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Pares": {
+           "type": "Select",
+           "inputs": {
+            "from": "@variables('Linhas')",
+            "select": {
+             "k": "@{if(empty(body('G')),'total',concat(if(empty(string(coalesce(item()?[coalesce(first(body('G')),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(body('G')),'_nada')])),if(empty(first(skip(body('G'),1))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),1)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),1)),'_nada')])))),if(empty(first(skip(body('G'),2))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),2)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),2)),'_nada')]))))))}",
+             "v": "@item()?['v']",
+             "r": "@item()?['r']",
+             "i": "@item()?['i']"
+            }
+           },
+           "runAfter": {
+            "G": [
+             "Succeeded"
+            ]
+           }
+          },
+          "So_chaves": {
+           "type": "Select",
+           "inputs": {
+            "from": "@body('Pares')",
+            "select": "@item()?['k']"
+           },
+           "runAfter": {
+            "Pares": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Distintas": {
+           "type": "Compose",
+           "inputs": "@union(body('So_chaves'),body('So_chaves'))",
+           "runAfter": {
+            "So_chaves": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Se_grupos": {
+           "type": "If",
+           "expression": {
+            "lessOrEquals": [
+             "@length(outputs('Distintas'))",
+             300
+            ]
+           },
+           "actions": {
+            "Cada_grupo": {
+             "type": "Foreach",
+             "foreach": "@outputs('Distintas')",
+             "runtimeConfiguration": {
+              "concurrency": {
+               "repetitions": 20
+              }
+             },
+             "actions": {
+              "Do_grupo": {
+               "type": "Query",
+               "inputs": {
+                "from": "@body('Pares')",
+                "where": "@equals(item()?['k'],items('Cada_grupo'))"
+               },
+               "runAfter": {}
+              },
+              "Somas": {
+               "type": "Compose",
+               "inputs": {
+                "v": "@xpath(xml(json(concat('{\"r\":{\"i\":',string(body('Do_grupo')),'}}'))),'sum(/r/i/v)')",
+                "r": "@xpath(xml(json(concat('{\"r\":{\"i\":',string(body('Do_grupo')),'}}'))),'sum(/r/i/r)')"
+               },
+               "runAfter": {
+                "Do_grupo": [
+                 "Succeeded"
+                ]
+               }
+              },
+              "Guarda_grupo": {
+               "type": "AppendToArrayVariable",
+               "inputs": {
+                "name": "Grupos",
+                "value": {
+                 "chave": "@items('Cada_grupo')",
+                 "soma": "@float(formatNumber(outputs('Somas')?['v'],'0.00','en-US'))",
+                 "refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Somas')?['r'],'0.00','en-US')),null)",
+                 "perc": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(float(outputs('Somas')?['v']),0)),float(formatNumber(div(mul(float(outputs('Somas')?['r']),float('100.0')),if(greater(float(outputs('Somas')?['v']),0),float(outputs('Somas')?['v']),float('1.0'))),'0.00','en-US')),null)",
+                 "linhas": "@length(body('Do_grupo'))"
+                }
+               },
+               "runAfter": {
+                "Somas": [
+                 "Succeeded"
+                ]
+               }
+              }
+             },
+             "runAfter": {}
+            }
+           },
+           "else": {
+            "actions": {
+             "Aviso_300": {
+              "type": "AppendToArrayVariable",
+              "inputs": {
+               "name": "Avisos",
+               "value": "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 300): filtre mais; grupos não listados')}"
+              },
+              "runAfter": {}
+             }
+            }
+           },
+           "runAfter": {
+            "Distintas": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Total": {
+           "type": "Compose",
+           "inputs": {
+            "v": "@xpath(xml(json(concat('{\"r\":{\"i\":', string(union(body('Pares'), json('[{\"i\":\"zero\",\"v\":0,\"r\":0}]'))), '}}'))), 'sum(/r/i/v)')",
+            "r": "@xpath(xml(json(concat('{\"r\":{\"i\":', string(union(body('Pares'), json('[{\"i\":\"zero\",\"v\":0,\"r\":0}]'))), '}}'))), 'sum(/r/i/r)')"
+           },
+           "runAfter": {
+            "Se_grupos": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Aviso_turno_antigo": {
+           "type": "If",
+           "expression": "@and(or(equals(outputs('Param')?['g1'],'turno'),equals(outputs('Param')?['g2'],'turno'),equals(outputs('Param')?['d1'],'turno'),equals(outputs('Param')?['d2'],'turno')),not(equals(outputs('Param')?['ind'],'inspecao_boa')),not(equals(outputs('Param')?['ini'],'-')),lessOrEquals(outputs('Param')?['ini'],'2026-10-29'),greaterOrEquals(outputs('Param')?['fim'],'2026-10-05'))",
+           "actions": {
+            "Aviso_ta": {
+             "type": "AppendToArrayVariable",
+             "inputs": {
+              "name": "Avisos",
+              "value": "O período toca 05/10 a 29/10/2026: turno gravado pode ter a fronteira antiga (22:41)."
+             },
+             "runAfter": {}
+            }
+           },
+           "else": {
+            "actions": {}
+           },
+           "runAfter": {
+            "Total": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Aviso_corte": {
+           "type": "If",
+           "expression": "@and(contains(createArray('civil','produtivo'),toLower(trim(coalesce(outputs('Entrada')?['corte'],'-')))),not(equals(toLower(trim(coalesce(outputs('Entrada')?['corte'],'-'))),outputs('Corte'))),not(contains(createArray('montagem_pecas','montagem_paradas','ops_em_processo'),outputs('Param')?['ind'])))",
+           "actions": {
+            "Aviso_co": {
+             "type": "AppendToArrayVariable",
+             "inputs": {
+              "name": "Avisos",
+              "value": "@{concat('Pedido em dia ',toLower(trim(coalesce(outputs('Entrada')?['corte'],'-'))),', aplicado o dia ',outputs('Corte'),': é o único que o dado (ou o turno) permite aqui.')}"
+             },
+             "runAfter": {}
+            }
+           },
+           "else": {
+            "actions": {}
+           },
+           "runAfter": {
+            "Aviso_turno_antigo": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Aviso_ref_turno": {
+           "type": "If",
+           "expression": "@and(or(equals(outputs('Param')?['g1'],'turno'),equals(outputs('Param')?['g2'],'turno'),equals(outputs('Param')?['d1'],'turno'),equals(outputs('Param')?['d2'],'turno')),equals(outputs('Param')?['ind'],'refugo'))",
+           "actions": {
+            "Aviso_rt": {
+             "type": "AppendToArrayVariable",
+             "inputs": {
+              "name": "Avisos",
+              "value": "Refugo por turno em dia civil mistura dois 3ºs turnos."
+             },
+             "runAfter": {}
+            }
+           },
+           "else": {
+            "actions": {}
+           },
+           "runAfter": {
+            "Aviso_corte": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Periodo": {
+           "type": "Compose",
+           "inputs": "@{if(equals(outputs('Param')?['ind'],'ops_em_processo'),'agora',if(equals(outputs('Param')?['ini'],'-'),'todo o histórico da OP',if(contains(createArray('montagem_pecas','montagem_paradas'),outputs('Param')?['ind']),concat(outputs('Entrada')?['de'],' a ',outputs('Entrada')?['ate'],' (dia gravado pela tela)'),if(or(contains(createArray('refugo'),outputs('Param')?['ind']),equals(outputs('Corte'),'civil')),concat(outputs('Entrada')?['de'],' 00:00 a ',outputs('Entrada')?['ate'],' 23:59 (dia civil, Brasília)'),concat(outputs('Entrada')?['de'],' 05:20 a ',formatDateTime(addDays(outputs('Param')?['fim'],1),'dd/MM/yyyy'),' 05:20 (dia produtivo, Brasília)')))))}",
+           "runAfter": {
+            "Aviso_ref_turno": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Fontes_txt": {
+           "type": "Select",
+           "inputs": {
+            "from": "@outputs('Indic')?['fontes']",
+            "select": "@{outputs('Fontes')?[item()]?['lista']}"
+           },
+           "runAfter": {
+            "Periodo": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Resultado": {
+           "type": "Compose",
+           "inputs": {
+            "indicador": "@outputs('Param')?['ind']",
+            "unidade": "@outputs('Indic')?['un']",
+            "periodo": "@outputs('Periodo')",
+            "corte": "@outputs('Corte')",
+            "fonte": "@{join(body('Fontes_txt'),', ')}",
+            "situacao": "@if(empty(variables('Linhas')),'0 registros (não diga que produziu zero)','ok')",
+            "valor": "@if(or(empty(variables('Linhas')),equals(outputs('Indic')?['modo'],'semtotal'),equals(outputs('Indic')?['modo'],'perc')),null,float(formatNumber(outputs('Total')?['v'],'0.00','en-US')))",
+            "perc_total": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(float(outputs('Total')?['v']),0)),float(formatNumber(div(mul(float(outputs('Total')?['r']),float('100.0')),if(greater(float(outputs('Total')?['v']),0),float(outputs('Total')?['v']),float('1.0'))),'0.00','en-US')),null)",
+            "refugo_total": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Total')?['r'],'0.00','en-US')),null)",
+            "boa_mais_refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Total')?['v'],'0.00','en-US')),null)",
+            "linhas": "@length(variables('Linhas'))",
+            "completo": "@variables('Completo')",
+            "agrupado_por": "@{join(body('G'),', ')}",
+            "grupos": "@reverse(sort(variables('Grupos'),'soma'))",
+            "avisos": "@union(variables('Avisos'),createArray(outputs('Indic')?['aviso']))",
+            "consultado_em": "@{convertTimeZone(utcNow(),'UTC','E. South America Standard Time','dd/MM/yyyy HH:mm')}"
+           },
+           "runAfter": {
+            "Fontes_txt": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Saida_ok": {
+           "type": "SetVariable",
+           "inputs": {
+            "name": "Saida",
+            "value": "@{string(outputs('Resultado'))}"
+           },
+           "runAfter": {
+            "Resultado": [
+             "Succeeded"
+            ]
+           }
+          }
+         },
+         "else": {
+          "actions": {
+           "Saida_erro": {
+            "type": "SetVariable",
+            "inputs": {
+             "name": "Saida",
+             "value": "@{concat('{\"erro\":\"entrada inválida\",\"regras\":\"indicador: inspecao_boa, refugo, perc_refugo, producao_etapa, trancagem_real, trancagem_meta_gravada, deficit_hora_hora, montagem_pecas, montagem_paradas, refugo_fio, refugo_mandril, ops_em_processo. Datas DD/MM/AAAA com de <= ate (ou - nos dois quando onde tem op=número em inspecao_boa, refugo ou perc_refugo). Dimensões deste indicador: ',join(coalesce(outputs('Indic')?['dims'],json('[]')),' / '),'. corte: civil ou produtivo. agrupar: até 2. onde: até 2, dimensao=valor;dimensao=valor\"}')}"
+            },
+            "runAfter": {}
+           }
+          }
+         },
+         "runAfter": {
+          "Indic": [
+           "Succeeded"
+          ]
+         }
+        }
+       },
+       "runAfter": {
+        "Entrada": [
+         "Succeeded"
+        ]
+       }
+      },
+      "Anota": {
+       "type": "AppendToArrayVariable",
+       "inputs": {
+        "name": "Resultados",
+        "value": {
+         "caso": "@items('Cada_caso')",
+         "saida": "@{if(empty(variables('Saida')),'{\"erro\":\"a consulta falhou. Confira datas DD/MM/AAAA, o indicador e o filtro, ou reduza o período\"}',variables('Saida'))}"
+        }
+       },
+       "runAfter": {
+        "Consulta": [
+         "Succeeded",
+         "Failed",
+         "TimedOut",
+         "Skipped"
+        ]
+       }
+      }
+     },
+     "runAfter": {
+      "Cadastro": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Resumo": {
+     "type": "Compose",
+     "inputs": "@variables('Resultados')",
+     "runAfter": {
+      "Cada_caso": [
+       "Succeeded",
+       "Failed"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "schemaVersion": "1.0.0.0"
+}

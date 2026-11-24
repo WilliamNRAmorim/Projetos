@@ -1,0 +1,197 @@
+{
+ "properties": {
+  "connectionReferences": {
+   "shared_powerbi": {
+    "runtimeSource": "embedded",
+    "connection": {
+     "connectionReferenceLogicalName": "cra6eb_teste_uiu_powerbi"
+    },
+    "api": {
+     "name": "shared_powerbi"
+    }
+   }
+  },
+  "definition": {
+   "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+    "$connections": {
+     "defaultValue": {},
+     "type": "Object"
+    },
+    "$authentication": {
+     "defaultValue": {},
+     "type": "SecureObject"
+    }
+   },
+   "triggers": {
+    "manual": {
+     "type": "Request",
+     "kind": "Skills",
+     "inputs": {
+      "schema": {
+       "type": "object",
+       "properties": {
+        "text": {
+         "title": "dax",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Consulta DAX começando por EVALUATE (ou DEFINE). Use TOPN para listas. Já disponíveis: [HH Meta Útil (m)], [HH Real (m)], [HH Aderência], [HH Parado (min)], [VG Cabine (m)]",
+         "x-ms-content-hint": "TEXT"
+        }
+       },
+       "required": [
+        "text"
+       ]
+      }
+     }
+    }
+   },
+   "actions": {
+    "Ini_Saida": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Saida",
+        "type": "string",
+        "value": ""
+       }
+      ]
+     },
+     "runAfter": {}
+    },
+    "Medidas": {
+     "type": "Compose",
+     "inputs": "DEFINE\nMEASURE Medidas[HH Meta Útil (m)] =\nSUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440)\n\nMEASURE Medidas[HH Real (m)] =\nSUM(fHoraCheia[Real])\n\nMEASURE Medidas[HH Aderência] =\nDIVIDE(SUM(fHoraCheia[Real]), SUM(fHoraCheia[Meta]) * IF(ISFILTERED(fHoraCheia[Hora]), 1, 1295 / 1440))\n\nMEASURE Medidas[HH Parado (min)] =\nCALCULATE(SUM(fHoraCheia[Parado]), KEEPFILTERS(NOT fHoraCheia[Motivo Padrão] IN {\"Almoço\", \"Manutenção Preventiva\", \"Reunião\", \"Amostra\"}))\n\nMEASURE Medidas[VG Cabine (m)] =\n-- Metragem na cabine pelos lances inspecionados (RegistrosInspeção), não pela ficha finalizada. Dia com virada às 05:20, turno pela hora da inspeção (1º 05:20, 2º 13:57, 3º 22:20), máquina pela Trançadeira. · MEL-273\nVAR __Datas = VALUES ( dCalendario[Date] )\nVAR __FT = ISFILTERED ( dTurno[Turno] )\nVAR __Turnos = VALUES ( dTurno[Ordem] )\nVAR __SelM = FILTER ( FILTERS ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) )\nVAR __FM = COUNTROWS ( __SelM ) < COUNTROWS ( FILTER ( ALL ( fHoraCheia[Célula] ), NOT ISBLANK ( fHoraCheia[Célula] ) ) )\nVAR __Maqs = SELECTCOLUMNS ( __SelM, \"@M\", UPPER ( fHoraCheia[Célula] ) )\nVAR __L =\n    FILTER (\n        ADDCOLUMNS (\n            SELECTCOLUMNS (\n                FILTER ( ALL ( 'RegistrosInspeção' ), NOT ISBLANK ( 'RegistrosInspeção'[DataHoraInspecao] ) ),\n                \"@DH\", 'RegistrosInspeção'[DataHoraInspecao],\n                \"@Q\", 'RegistrosInspeção'[Quantidade],\n                \"@M\", UPPER ( SUBSTITUTE ( SUBSTITUTE ( 'RegistrosInspeção'[Trançadeira], \"-\", \"\" ), \".\", \"\" ) )\n            ),\n            \"@Dia\", VAR __f = [@DH] - 320 / 1440 RETURN DATE ( YEAR ( __f ), MONTH ( __f ), DAY ( __f ) ),\n            \"@T\", VAR __m = HOUR ( [@DH] ) * 60 + MINUTE ( [@DH] ) RETURN IF ( __m >= 320 && __m < 837, 1, IF ( __m >= 837 && __m < 1340, 2, 3 ) )\n        ),\n        [@Dia] IN __Datas\n            && ( NOT __FT || [@T] IN __Turnos )\n            && ( NOT __FM || [@M] IN __Maqs )\n    )\nRETURN\n    SUMX ( __L, [@Q] )\n",
+     "runAfter": {
+      "Ini_Saida": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Consulta": {
+     "type": "Scope",
+     "runAfter": {
+      "Medidas": [
+       "Succeeded"
+      ]
+     },
+     "actions": {
+      "Valido": {
+       "type": "If",
+       "expression": "@or(startsWith(toUpper(trim(coalesce(triggerBody()?['text'],''))),'EVALUATE'),startsWith(toUpper(trim(coalesce(triggerBody()?['text'],''))),'DEFINE'))",
+       "actions": {
+        "Dax": {
+         "type": "Compose",
+         "inputs": "@{concat(outputs('Medidas'),decodeUriComponent('%0A'),if(startsWith(toUpper(trim(coalesce(triggerBody()?['text'],''))),'DEFINE'),substring(trim(coalesce(triggerBody()?['text'],'')),6),trim(coalesce(triggerBody()?['text'],''))))}",
+         "runAfter": {}
+        },
+        "Consultar": {
+         "type": "OpenApiConnection",
+         "inputs": {
+          "host": {
+           "connectionName": "shared_powerbi",
+           "operationId": "ExecuteDatasetQuery",
+           "apiId": "/providers/Microsoft.PowerApps/apis/shared_powerbi"
+          },
+          "parameters": {
+           "groupid": "629ca442-8019-47e0-83e4-0d48b2d30974",
+           "datasetid": "b48699da-af0b-4f0e-9b2e-f89cc657dbc1",
+           "specification/query": "@outputs('Dax')"
+          },
+          "authentication": "@parameters('$authentication')"
+         },
+         "runAfter": {
+          "Dax": [
+           "Succeeded"
+          ]
+         }
+        },
+        "Saida_ok": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Saida",
+          "value": "@{concat('{\"fonte\":\"modelo (GMS) do Power BI, última atualização do modelo\",\"linhas\":',string(length(coalesce(body('Consultar')?['firstTableRows'],json('[]')))),',\"dados\":',if(greater(length(string(body('Consultar')?['firstTableRows'])),24000),'\"resposta grande demais: use TOPN ou SUMMARIZECOLUMNS\"',string(coalesce(body('Consultar')?['firstTableRows'],json('[]')))),'}')}"
+         },
+         "runAfter": {
+          "Consultar": [
+           "Succeeded"
+          ]
+         }
+        }
+       },
+       "else": {
+        "actions": {
+         "Saida_inv": {
+          "type": "SetVariable",
+          "inputs": {
+           "name": "Saida",
+           "value": "{\"erro\":\"a consulta precisa começar por EVALUATE ou DEFINE\"}"
+          },
+          "runAfter": {}
+         }
+        }
+       },
+       "runAfter": {}
+      },
+      "Erro_dax": {
+       "type": "If",
+       "expression": "@empty(variables('Saida'))",
+       "actions": {
+        "Saida_dax": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Saida",
+          "value": "@{concat('{\"erro\":\"DAX recusado\",\"detalhe\":',string(coalesce(body('Consultar'),outputs('Consultar'))),'}')}"
+         },
+         "runAfter": {}
+        }
+       },
+       "else": {
+        "actions": {}
+       },
+       "runAfter": {
+        "Valido": [
+         "Failed",
+         "TimedOut"
+        ]
+       }
+      }
+     }
+    },
+    "Responder": {
+     "type": "Response",
+     "kind": "Skills",
+     "inputs": {
+      "statusCode": 200,
+      "body": {
+       "resultado": "@{if(empty(variables('Saida')),'{\"erro\":\"a consulta falhou. Confira datas DD/MM/AAAA, o indicador e o filtro, ou reduza o período\"}',variables('Saida'))}"
+      },
+      "schema": {
+       "type": "object",
+       "properties": {
+        "resultado": {
+         "title": "resultado",
+         "type": "string",
+         "x-ms-content-hint": "TEXT",
+         "x-ms-dynamically-added": true
+        }
+       },
+       "additionalProperties": {}
+      }
+     },
+     "runAfter": {
+      "Consulta": [
+       "Succeeded",
+       "Failed",
+       "TimedOut",
+       "Skipped"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "schemaVersion": "1.0.0.0"
+}

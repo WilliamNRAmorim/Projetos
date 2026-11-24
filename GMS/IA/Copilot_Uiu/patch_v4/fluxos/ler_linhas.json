@@ -1,0 +1,218 @@
+{
+ "properties": {
+  "connectionReferences": {
+   "shared_sharepointonline": {
+    "runtimeSource": "embedded",
+    "connection": {
+     "connectionReferenceLogicalName": "cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016"
+    },
+    "api": {
+     "name": "shared_sharepointonline"
+    }
+   }
+  },
+  "definition": {
+   "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+   "contentVersion": "1.0.0.0",
+   "parameters": {
+    "$connections": {
+     "defaultValue": {},
+     "type": "Object"
+    },
+    "$authentication": {
+     "defaultValue": {},
+     "type": "SecureObject"
+    }
+   },
+   "triggers": {
+    "manual": {
+     "type": "Request",
+     "kind": "Skills",
+     "inputs": {
+      "schema": {
+       "type": "object",
+       "properties": {
+        "text": {
+         "title": "lista",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Nome exato da lista: Conferencia_SAP, ControleExtrusora_estrutura, Controle_Catenaria, Eventos_Producao, FifoBobinadeira, Historico_Carretel, Hora-Hora, Packing_Pallets, Paradas_Montagem, Plano_OPs, Producao_Montagem, RefugoExtrusora_estrutura, Refugo_Bobinadeira, RegistrosInspeção, TiposErros, ficha_producao, lista_carreteis",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_1": {
+         "title": "colunas",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Colunas internas separadas por vírgula (ex.: ID,OP,field_10)",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_2": {
+         "title": "filtro",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Filtro OData com nomes internos; primeiro critério em coluna indexada. Datas em UTC. Para total use Consultar GMS",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_3": {
+         "title": "ordem",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "Coluna e direção (ex.: ID desc)",
+         "x-ms-content-hint": "TEXT"
+        },
+        "text_4": {
+         "title": "top",
+         "type": "string",
+         "x-ms-dynamically-added": true,
+         "description": "1 a 50",
+         "x-ms-content-hint": "TEXT"
+        }
+       },
+       "required": [
+        "text",
+        "text_1",
+        "text_2",
+        "text_3",
+        "text_4"
+       ]
+      }
+     }
+    }
+   },
+   "actions": {
+    "Ini_Saida": {
+     "type": "InitializeVariable",
+     "inputs": {
+      "variables": [
+       {
+        "name": "Saida",
+        "type": "string",
+        "value": ""
+       }
+      ]
+     },
+     "runAfter": {}
+    },
+    "Listas": {
+     "type": "Compose",
+     "inputs": [
+      "Conferencia_SAP",
+      "ControleExtrusora_estrutura",
+      "Controle_Catenaria",
+      "Eventos_Producao",
+      "FifoBobinadeira",
+      "Historico_Carretel",
+      "Hora-Hora",
+      "Packing_Pallets",
+      "Paradas_Montagem",
+      "Plano_OPs",
+      "Producao_Montagem",
+      "RefugoExtrusora_estrutura",
+      "Refugo_Bobinadeira",
+      "RegistrosInspeção",
+      "TiposErros",
+      "ficha_producao",
+      "lista_carreteis"
+     ],
+     "runAfter": {
+      "Ini_Saida": [
+       "Succeeded"
+      ]
+     }
+    },
+    "Consulta": {
+     "type": "Scope",
+     "runAfter": {
+      "Listas": [
+       "Succeeded"
+      ]
+     },
+     "actions": {
+      "Valido": {
+       "type": "If",
+       "expression": "@and(contains(outputs('Listas'),trim(coalesce(triggerBody()?['text'],''))),not(empty(trim(coalesce(triggerBody()?['text_1'],'')))),not(empty(trim(coalesce(triggerBody()?['text_2'],'')))),not(equals(trim(coalesce(triggerBody()?['text_2'],'')),'-')))",
+       "actions": {
+        "Ler": {
+         "type": "OpenApiConnection",
+         "inputs": {
+          "host": {
+           "connectionName": "shared_sharepointonline",
+           "operationId": "HttpRequest",
+           "apiId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
+          },
+          "parameters": {
+           "dataset": "https://danfoss.sharepoint.com/sites/OperationsGuaratingueta",
+           "parameters/method": "GET",
+           "parameters/uri": "@{concat('_api/web/lists/getbytitle(''',encodeUriComponent(trim(coalesce(triggerBody()?['text'],''))),''')/items?$select=',encodeUriComponent(trim(coalesce(triggerBody()?['text_1'],''))),'&$filter=',encodeUriComponent(trim(coalesce(triggerBody()?['text_2'],''))),'&$orderby=',encodeUriComponent(trim(coalesce(triggerBody()?['text_3'],''))),'&$top=',if(isInt(trim(coalesce(triggerBody()?['text_4'],''))),string(min(50,max(1,int(trim(coalesce(triggerBody()?['text_4'],'')))))),'20'))}",
+           "parameters/headers": {
+            "Accept": "application/json;odata=nometadata"
+           }
+          },
+          "authentication": "@parameters('$authentication')"
+         },
+         "runAfter": {}
+        },
+        "Saida_ok": {
+         "type": "SetVariable",
+         "inputs": {
+          "name": "Saida",
+          "value": "@{concat('{\"linhas_lidas\":',string(length(body('Ler')?['value'])),',\"tem_mais\":',if(empty(body('Ler')?['odata.nextLink']),'false','true'),',\"aviso\":\"amostra para detalhe, nunca some; horários em UTC\",\"linhas\":',if(greater(length(string(body('Ler')?['value'])),24000),'\"resposta grande demais: peça menos colunas ou linhas\"',string(body('Ler')?['value'])),'}')}"
+         },
+         "runAfter": {
+          "Ler": [
+           "Succeeded"
+          ]
+         }
+        }
+       },
+       "else": {
+        "actions": {
+         "Saida_inv": {
+          "type": "SetVariable",
+          "inputs": {
+           "name": "Saida",
+           "value": "{\"erro\":\"lista fora da permitida, ou colunas/filtro vazios\"}"
+          },
+          "runAfter": {}
+         }
+        }
+       },
+       "runAfter": {}
+      }
+     }
+    },
+    "Responder": {
+     "type": "Response",
+     "kind": "Skills",
+     "inputs": {
+      "statusCode": 200,
+      "body": {
+       "resultado": "@{if(empty(variables('Saida')),'{\"erro\":\"a consulta falhou. Confira datas DD/MM/AAAA, o indicador e o filtro, ou reduza o período\"}',variables('Saida'))}"
+      },
+      "schema": {
+       "type": "object",
+       "properties": {
+        "resultado": {
+         "title": "resultado",
+         "type": "string",
+         "x-ms-content-hint": "TEXT",
+         "x-ms-dynamically-added": true
+        }
+       },
+       "additionalProperties": {}
+      }
+     },
+     "runAfter": {
+      "Consulta": [
+       "Succeeded",
+       "Failed",
+       "TimedOut",
+       "Skipped"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "schemaVersion": "1.0.0.0"
+}
