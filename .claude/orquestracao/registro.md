@@ -305,3 +305,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-24 | Plano aprovado do indicador pelo saldo da PROD-GR-HOSE: etapa 1, teste da regra | chefe (Opus 5.5) sozinho: ExcelRest, API do SharePoint e Python | regra reprovada no teste, parou antes de montar | não medido
 2026-11-24 | Fase 1 do teste de pallet parado na PROD-GR-HOSE: script local | chefe (Opus 5.5) sozinho | contexto já na sessão; revisor não carrega | não medido
 2026-11-24 | Excel de controle da PROD-GR-HOSE com histórico e baixa automática | chefe (Opus 5.5) sozinho: openpyxl e Excel | dados e contexto já na sessão | não medido
+2026-11-24 | Horas montagem 16 a 19-11.xlsx (OneDrive): Excel novo com o tempo real em minutos por PN + data, 17 linhas, 16 preenchidas (12107930 sem apontamento) | chefe (Opus 5.5) sozinho, leitura REST no navegador embutido | tarefa de um arquivo | custo nao medido
