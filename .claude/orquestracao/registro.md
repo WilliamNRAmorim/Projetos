@@ -303,3 +303,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-24 | Ler o export da PROD-GR-HOSE de 24/11 e comparar com 23/11 e com a conferência | chefe (Opus 5.5) sozinho | leitura curta; achou erro próprio de 23/11 | não medido
 2026-11-24 | Ver o que entrou de novo na PROD-GR-HOSE pelo MB51 | chefe (Opus 5.5) sozinho, leitura pela ExcelRest | leitura longa, nada gravado no SharePoint | não medido
 2026-11-24 | Plano aprovado do indicador pelo saldo da PROD-GR-HOSE: etapa 1, teste da regra | chefe (Opus 5.5) sozinho: ExcelRest, API do SharePoint e Python | regra reprovada no teste, parou antes de montar | não medido
+2026-11-24 | Fase 1 do teste de pallet parado na PROD-GR-HOSE: script local | chefe (Opus 5.5) sozinho | contexto já na sessão; revisor não carrega | não medido
