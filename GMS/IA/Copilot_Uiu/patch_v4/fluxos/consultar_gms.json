@@ -36,7 +36,7 @@
          "title": "indicador",
          "type": "string",
          "x-ms-dynamically-added": true,
-         "description": "Um destes: inspecao_boa, refugo, perc_refugo, producao_etapa, trancagem_real, trancagem_meta_gravada, deficit_hora_hora, montagem_pecas, montagem_paradas, refugo_fio, refugo_mandril, ops_em_processo",
+         "description": "Um destes: inspecao_boa, refugo, perc_refugo, producao_etapa, trancagem_real, trancagem_meta_gravada, deficit_hora_hora, montagem_pecas, montagem_paradas, refugo_fio, refugo_mandril, ops_em_processo, op, canceladas",
          "x-ms-content-hint": "TEXT"
         },
         "text_1": {
@@ -476,6 +476,46 @@
        "nome": "wip",
        "lista": "ficha_producao",
        "sel": "ID,OP,Mangueira,Tran_x00e7_adeira,field_10"
+      },
+      "fic": {
+       "data": "_nada",
+       "tipo": "foto",
+       "v": "_nada",
+       "conta": "sim",
+       "maquina": "Tran_x00e7_adeira",
+       "mangueira": "Mangueira",
+       "etapa": "field_10",
+       "etapaFixa": "",
+       "codigo": "field_11",
+       "cabine": "_nada",
+       "op": "OP",
+       "turno": "_nada",
+       "orig": "_nada",
+       "janela": "_nada",
+       "extra": "",
+       "nome": "fic",
+       "lista": "ficha_producao",
+       "sel": "ID,OP,Mangueira,Tran_x00e7_adeira,field_10,field_11"
+      },
+      "can": {
+       "data": "data_ref",
+       "tipo": "dia",
+       "v": "_nada",
+       "conta": "sim",
+       "maquina": "_nada",
+       "mangueira": "_nada",
+       "etapa": "etapa",
+       "etapaFixa": "",
+       "codigo": "tipo",
+       "cabine": "_nada",
+       "op": "_nada",
+       "turno": "turno",
+       "orig": "origem_ID",
+       "janela": "_nada",
+       "extra": "origem eq 'ficha_producao' and tipo eq 'Cancelado'",
+       "nome": "can",
+       "lista": "Eventos_Producao",
+       "sel": "ID,etapa,tipo,turno,origem_ID,data_ref"
       }
      },
      "runAfter": {
@@ -567,7 +607,7 @@
         "mangueira"
        ],
        "fixas": [],
-       "aviso": "Duas passadas: a lista guarda a metade. O BI corta o dia às 05:00 (hora cheia); por dia pode diferir."
+       "aviso": "Nas mangueiras de duas passadas (TH01 e TO04) o valor já é mangueira pronta. O BI corta o dia às 05:00 (hora cheia); por dia pode diferir."
       },
       "trancagem_meta_gravada": {
        "fontes": [
@@ -673,6 +713,38 @@
        ],
        "fixas": [],
        "aviso": "Foto de agora. Diga \"na etapa\", nunca \"parada\"."
+      },
+      "op": {
+       "fontes": [
+        "insp",
+        "ref",
+        "fic"
+       ],
+       "un": "por linha",
+       "modo": "semtotal",
+       "dims": [
+        "op"
+       ],
+       "fixas": [
+        "rot"
+       ],
+       "aviso": "Resumo da OP: fichas com etapa e situação atuais, metros bons e refugo de todo o histórico. A OP pode ter mais de uma ficha."
+      },
+      "canceladas": {
+       "fontes": [
+        "can"
+       ],
+       "un": "eventos",
+       "modo": "normal",
+       "dims": [
+        "dia",
+        "turno",
+        "etapa"
+       ],
+       "fixas": [
+        "rot"
+       ],
+       "aviso": "O número é o ID da ficha, não é a OP. Cancelado pode ter sido reaberto depois."
       }
      },
      "runAfter": {
@@ -914,7 +986,7 @@
       },
       "Valido": {
        "type": "If",
-       "expression": "@and(not(empty(outputs('Indic')?['fontes'])),or(and(not(equals(outputs('Param')?['ini'],'-')),not(equals(outputs('Param')?['fim'],'-')),lessOrEquals(outputs('Param')?['ini'],outputs('Param')?['fim'])),or(equals(outputs('Param')?['ind'],'ops_em_processo'),and(equals(outputs('Param')?['ini'],'-'),equals(outputs('Param')?['fim'],'-'),isInt(if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],''))),contains(createArray('inspecao_boa','refugo','perc_refugo'),outputs('Param')?['ind'])))),or(empty(outputs('Param')?['g1']),equals(outputs('Param')?['g1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g1'])) , or(empty(outputs('Param')?['g2']),equals(outputs('Param')?['g2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g2'])) , or(empty(outputs('Param')?['d1']),equals(outputs('Param')?['d1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d1'])) , or(empty(outputs('Param')?['d2']),equals(outputs('Param')?['d2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d2'])),and(lessOrEquals(length(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),2),or(equals(trim(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'))),'-'),equals(length(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')),2)),or(equals(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-')),'-'),empty(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'))),equals(length(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')),2))),lessOrEquals(length(split(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),',')),2),contains(createArray('civil','produtivo','-',''),toLower(trim(coalesce(outputs('Entrada')?['corte'],'-')))))",
+       "expression": "@and(not(empty(outputs('Indic')?['fontes'])),or(and(not(equals(outputs('Param')?['ini'],'-')),not(equals(outputs('Param')?['fim'],'-')),lessOrEquals(outputs('Param')?['ini'],outputs('Param')?['fim'])),or(equals(outputs('Param')?['ind'],'ops_em_processo'),and(equals(outputs('Param')?['ini'],'-'),equals(outputs('Param')?['fim'],'-'),isInt(if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],''))),contains(createArray('inspecao_boa','refugo','perc_refugo','op'),outputs('Param')?['ind'])))),or(not(equals(outputs('Param')?['ind'],'op')),isInt(if(equals(outputs('Param')?['d1'],'op'),outputs('Param')?['v1'],if(equals(outputs('Param')?['d2'],'op'),outputs('Param')?['v2'],'')))),or(empty(outputs('Param')?['g1']),equals(outputs('Param')?['g1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g1'])) , or(empty(outputs('Param')?['g2']),equals(outputs('Param')?['g2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['g2'])) , or(empty(outputs('Param')?['d1']),equals(outputs('Param')?['d1'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d1'])) , or(empty(outputs('Param')?['d2']),equals(outputs('Param')?['d2'],'-'),contains(outputs('Indic')?['dims'],outputs('Param')?['d2'])),and(lessOrEquals(length(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),2),or(equals(trim(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'))),'-'),equals(length(split(first(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';')),'=')),2)),or(equals(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-')),'-'),empty(trim(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'))),equals(length(split(coalesce(first(skip(split(trim(coalesce(outputs('Entrada')?['onde'],'-')),';'),1)),'-'),'=')),2))),lessOrEquals(length(split(toLower(trim(coalesce(outputs('Entrada')?['agrupar'],'-'))),',')),2),contains(createArray('civil','produtivo','-',''),toLower(trim(coalesce(outputs('Entrada')?['corte'],'-')))))",
        "actions": {
         "Corte": {
          "type": "Compose",
@@ -1007,7 +1079,10 @@
                 "Accept": "application/json;odata=nometadata"
                }
               },
-              "authentication": "@parameters('$authentication')"
+              "authentication": "@parameters('$authentication')",
+              "retryPolicy": {
+               "type": "none"
+              }
              },
              "runAfter": {}
             },
@@ -1109,7 +1184,10 @@
                 "Accept": "application/json;odata=nometadata"
                }
               },
-              "authentication": "@parameters('$authentication')"
+              "authentication": "@parameters('$authentication')",
+              "retryPolicy": {
+               "type": "none"
+              }
              },
              "runAfter": {}
             },
@@ -1165,7 +1243,10 @@
                 "Accept": "application/json;odata=nometadata"
                }
               },
-              "authentication": "@parameters('$authentication')"
+              "authentication": "@parameters('$authentication')",
+              "retryPolicy": {
+               "type": "none"
+              }
              },
              "runAfter": {
               "Canc_set": [
@@ -1223,6 +1304,7 @@
              "mangueira": "@{trim(string(coalesce(item()?[outputs('Fonte')?['mangueira']],'')))}",
              "etapa": "@{if(empty(outputs('Fonte')?['etapaFixa']),trim(string(coalesce(item()?[outputs('Fonte')?['etapa']],''))),outputs('Fonte')?['etapaFixa'])}",
              "codigo": "@{if(isInt(trim(first(split(concat(trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))),' - '),' - ')))),trim(join(skip(split(trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))),' - '),1),' - ')),trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],''))))}",
+             "rot": "@{if(equals(outputs('Fonte')?['nome'],'insp'),'inspeção boa (m)',if(equals(outputs('Fonte')?['nome'],'ref'),'refugo (m)',if(equals(outputs('Fonte')?['nome'],'fic'),concat('ficha ',string(item()?['ID']),' | ',trim(string(coalesce(item()?[outputs('Fonte')?['mangueira']],''))),' | ',toUpper(replace(replace(trim(string(coalesce(item()?[outputs('Fonte')?['maquina']],''))),'-',''),'.','')),' | etapa ',trim(string(coalesce(item()?[outputs('Fonte')?['etapa']],''))),' | situação ',trim(string(coalesce(item()?[outputs('Fonte')?['codigo']],'')))),if(equals(outputs('Fonte')?['nome'],'can'),concat('ficha ',first(split(string(coalesce(item()?[outputs('Fonte')?['orig']],'')),'.')),' (ID da ficha, não é OP)'),''))))}",
              "cabine": "@{trim(string(coalesce(item()?[outputs('Fonte')?['cabine']],'')))}",
              "op": "@{first(split(string(coalesce(item()?[outputs('Fonte')?['op']],'')),'.'))}",
              "orig": "@{first(split(string(coalesce(item()?[outputs('Fonte')?['orig']],'')),'.'))}",
@@ -1251,6 +1333,7 @@
              "mangueira": "@item()?['mangueira']",
              "etapa": "@item()?['etapa']",
              "codigo": "@{if(equals(outputs('Fonte')?['nome'],'hh11'),if(equals(item()?['codigo'],'Refeição'),'Almoço',if(equals(item()?['codigo'],'Problema no tubo'),'Análise/Problema no tubo',item()?['codigo'])),item()?['codigo'])}",
+             "rot": "@item()?['rot']",
              "cabine": "@item()?['cabine']",
              "op": "@item()?['op']",
              "orig": "@item()?['orig']",
@@ -1790,7 +1873,7 @@
          "inputs": {
           "from": "@variables('Linhas')",
           "select": {
-           "k": "@{if(empty(body('G')),'total',concat(if(empty(string(coalesce(item()?[coalesce(first(body('G')),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(body('G')),'_nada')])),if(empty(first(skip(body('G'),1))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),1)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),1)),'_nada')])))),if(empty(first(skip(body('G'),2))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),2)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),2)),'_nada')]))))))}",
+           "k": "@{replace(if(empty(body('G')),'total',concat(if(empty(string(coalesce(item()?[coalesce(first(body('G')),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(body('G')),'_nada')])),if(empty(first(skip(body('G'),1))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),1)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),1)),'_nada')])))),if(empty(first(skip(body('G'),2))),'',concat(' | ',if(empty(string(coalesce(item()?[coalesce(first(skip(body('G'),2)),'_nada')],''))),'(vazio)',string(item()?[coalesce(first(skip(body('G'),2)),'_nada')])))))),'\"','')}",
            "v": "@item()?['v']",
            "r": "@item()?['r']",
            "i": "@item()?['i']"
@@ -1828,59 +1911,71 @@
          "expression": {
           "lessOrEquals": [
            "@length(outputs('Distintas'))",
-           300
+           1000
           ]
          },
          "actions": {
-          "Cada_grupo": {
-           "type": "Foreach",
-           "foreach": "@outputs('Distintas')",
-           "runtimeConfiguration": {
-            "concurrency": {
-             "repetitions": 20
+          "Xml_txt": {
+           "type": "Compose",
+           "inputs": "@{string(xml(json(concat('{\"r\":{\"i\":',string(union(body('Pares'),json('[{\"i\":\"zero\",\"v\":0,\"r\":0}]'))),'}}'))))}",
+           "runAfter": {}
+          },
+          "Grupos_sel": {
+           "type": "Select",
+           "inputs": {
+            "from": "@outputs('Distintas')",
+            "select": {
+             "chave": "@item()",
+             "soma": "@float(formatNumber(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/v)')),'0.00','en-US'))",
+             "refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/r)')),'0.00','en-US')),null)",
+             "perc": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(sub(float(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/v)'))),float(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/r)')))),0)),float(formatNumber(div(mul(float(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/r)'))),float('100.0')),if(greater(float(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/v)'))),0),float(xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/v)'))),float('1.0'))),'0.00','en-US')),null)",
+             "linhas": "@int(formatNumber(xpath(xml(outputs('Xml_txt')),concat('count(/r/i[k=\"',item(),'\"])')),'0','en-US'))"
             }
+           },
+           "runAfter": {
+            "Xml_txt": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Grupos_set": {
+           "type": "SetVariable",
+           "inputs": {
+            "name": "Grupos",
+            "value": "@body('Grupos_sel')"
+           },
+           "runAfter": {
+            "Grupos_sel": [
+             "Succeeded"
+            ]
+           }
+          },
+          "Se_100": {
+           "type": "If",
+           "expression": {
+            "greater": [
+             "@length(outputs('Distintas'))",
+             100
+            ]
            },
            "actions": {
-            "Do_grupo": {
-             "type": "Query",
-             "inputs": {
-              "from": "@body('Pares')",
-              "where": "@equals(item()?['k'],items('Cada_grupo'))"
-             },
-             "runAfter": {}
-            },
-            "Somas": {
-             "type": "Compose",
-             "inputs": {
-              "v": "@xpath(xml(json(concat('{\"r\":{\"i\":',string(body('Do_grupo')),'}}'))),'sum(/r/i/v)')",
-              "r": "@xpath(xml(json(concat('{\"r\":{\"i\":',string(body('Do_grupo')),'}}'))),'sum(/r/i/r)')"
-             },
-             "runAfter": {
-              "Do_grupo": [
-               "Succeeded"
-              ]
-             }
-            },
-            "Guarda_grupo": {
+            "Aviso_100": {
              "type": "AppendToArrayVariable",
              "inputs": {
-              "name": "Grupos",
-              "value": {
-               "chave": "@items('Cada_grupo')",
-               "soma": "@float(formatNumber(outputs('Somas')?['v'],'0.00','en-US'))",
-               "refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Somas')?['r'],'0.00','en-US')),null)",
-               "perc": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(sub(float(outputs('Somas')?['v']),float(outputs('Somas')?['r'])),0)),float(formatNumber(div(mul(float(outputs('Somas')?['r']),float('100.0')),if(greater(float(outputs('Somas')?['v']),0),float(outputs('Somas')?['v']),float('1.0'))),'0.00','en-US')),null)",
-               "linhas": "@length(body('Do_grupo'))"
-              }
+              "name": "Avisos",
+              "value": "@{concat('Mostrando os 100 maiores de ',string(length(outputs('Distintas'))),' grupos; o total é de todos')}"
              },
-             "runAfter": {
-              "Somas": [
-               "Succeeded"
-              ]
-             }
+             "runAfter": {}
             }
            },
-           "runAfter": {}
+           "else": {
+            "actions": {}
+           },
+           "runAfter": {
+            "Grupos_set": [
+             "Succeeded"
+            ]
+           }
           }
          },
          "else": {
@@ -1889,7 +1984,7 @@
             "type": "AppendToArrayVariable",
             "inputs": {
              "name": "Avisos",
-             "value": "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 300): filtre mais; grupos não listados')}"
+             "value": "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 1000): filtre mais; grupos não listados')}"
             },
             "runAfter": {}
            }
@@ -2038,7 +2133,7 @@
           "linhas": "@length(variables('Linhas'))",
           "completo": "@variables('Completo')",
           "agrupado_por": "@{join(body('G'),', ')}",
-          "grupos": "@reverse(sort(variables('Grupos'),'soma'))",
+          "grupos": "@take(reverse(sort(variables('Grupos'),'soma')),100)",
           "avisos": "@union(variables('Avisos'),createArray(outputs('Indic')?['aviso']))",
           "consultado_em": "@{convertTimeZone(utcNow(),'UTC','E. South America Standard Time','dd/MM/yyyy HH:mm')}"
          },
@@ -2067,7 +2162,7 @@
           "type": "SetVariable",
           "inputs": {
            "name": "Saida",
-           "value": "@{concat('{\"erro\":\"entrada inválida\",\"regras\":\"indicador: inspecao_boa, refugo, perc_refugo, producao_etapa, trancagem_real, trancagem_meta_gravada, deficit_hora_hora, montagem_pecas, montagem_paradas, refugo_fio, refugo_mandril, ops_em_processo. Datas DD/MM/AAAA com de <= ate (ou - nos dois quando onde tem op=número em inspecao_boa, refugo ou perc_refugo). Dimensões deste indicador: ',join(coalesce(outputs('Indic')?['dims'],json('[]')),' / '),'. corte: civil ou produtivo. agrupar: até 2. onde: até 2, dimensao=valor;dimensao=valor\"}')}"
+           "value": "@{concat('{\"erro\":\"entrada inválida\",\"regras\":\"indicador: inspecao_boa, refugo, perc_refugo, producao_etapa, trancagem_real, trancagem_meta_gravada, deficit_hora_hora, montagem_pecas, montagem_paradas, refugo_fio, refugo_mandril, ops_em_processo, op, canceladas. Datas DD/MM/AAAA com de <= ate (ou - nos dois quando onde tem op=número em op, inspecao_boa, refugo ou perc_refugo). Produção de trançadeira: trancagem_real com maquina=. Parada da Montagem: montagem_paradas. Dimensões deste indicador: ',join(coalesce(outputs('Indic')?['dims'],json('[]')),' / '),'. corte: civil ou produtivo. agrupar: até 2. onde: até 2, dimensao=valor;dimensao=valor\"}')}"
           },
           "runAfter": {}
          }

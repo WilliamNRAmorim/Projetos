@@ -37,6 +37,10 @@ FONTES = {
     'man': dict(lista='RefugoExtrusora_estrutura', sel='ID,field_4,field_5,field_7', data='field_7', tipo='inst', v='field_5', codigo='field_4'),
     'wip': dict(lista='ficha_producao', sel=f'ID,OP,Mangueira,{TRANC},field_10', tipo='foto', conta='sim', etapa='field_10', maquina=TRANC, mangueira='Mangueira', op='OP',
                 extra="field_11 eq 'Em processo'"),
+    'fic': dict(lista='ficha_producao', sel=f'ID,OP,Mangueira,{TRANC},field_10,field_11', tipo='foto', conta='sim', etapa='field_10', codigo='field_11', maquina=TRANC,
+                mangueira='Mangueira', op='OP'),
+    'can': dict(lista='Eventos_Producao', sel='ID,etapa,tipo,turno,origem_ID,data_ref', data='data_ref', conta='sim', etapa='etapa', turno='turno', codigo='tipo', orig='origem_ID',
+                extra="origem eq 'ficha_producao' and tipo eq 'Cancelado'"),
 }
 FONTES = {k: {**BASE, 'nome': k, **v} for k, v in FONTES.items()}
 
@@ -52,7 +56,7 @@ INDICADORES = {
     'perc_refugo': ind(['insp', 'ref'], '%', 'perc', ['maquina', 'cabine', 'op'], avisos='Cabine, dia civil nas duas pontas. Não é o % Refugo Cabine do BI, que usa a ficha.'),
     'producao_etapa': ind(['ev', 'hh7', 'insp'], 'm', 'semtotal', ['dia', 'turno', 'etapa'], ['etapa'],
                           'Etapas nunca se somam. Trançagem = Hora-Hora; Vulcanização = Início; Extração = inspeção. Cancelamento na Trançagem não é descontável (a Hora-Hora não tem ficha).'),
-    'trancagem_real': ind(['hh7'], 'm', 'normal', ['dia', 'turno', 'maquina', 'mangueira'], avisos='Duas passadas: a lista guarda a metade. O BI corta o dia às 05:00 (hora cheia); por dia pode diferir.'),
+    'trancagem_real': ind(['hh7'], 'm', 'normal', ['dia', 'turno', 'maquina', 'mangueira'], avisos='Nas mangueiras de duas passadas (TH01 e TO04) o valor já é mangueira pronta. O BI corta o dia às 05:00 (hora cheia); por dia pode diferir.'),
     'trancagem_meta_gravada': ind(['hh5'], 'm', 'normal', ['dia', 'turno', 'maquina'], avisos='Não é a meta do painel. Meta e aderência oficiais: Perguntar ao BI.'),
     'deficit_hora_hora': ind(['hh11'], 'min', 'semtotal', ['dia', 'turno', 'maquina', 'codigo'], ['bloco'],
                              'Déficit contra a meta, não cronômetro. Os blocos nunca se somam. Parada oficial: Perguntar ao BI.'),
@@ -62,8 +66,10 @@ INDICADORES = {
     'refugo_fio': ind(['bob'], 'unidade a confirmar', 'normal', ['dia', 'maquina', 'codigo'], avisos='Não soma com metros.'),
     'refugo_mandril': ind(['man'], 'kg', 'normal', ['dia', 'codigo'], avisos='Em kg: nunca percentual sobre metros.'),
     'ops_em_processo': ind(['wip'], 'fichas', 'normal', ['etapa', 'maquina', 'mangueira', 'op'], avisos='Foto de agora. Diga "na etapa", nunca "parada".'),
+    'op': ind(['insp', 'ref', 'fic'], 'por linha', 'semtotal', ['op'], ['rot'], 'Resumo da OP: fichas com etapa e situação atuais, metros bons e refugo de todo o histórico. A OP pode ter mais de uma ficha.'),
+    'canceladas': ind(['can'], 'eventos', 'normal', ['dia', 'turno', 'etapa'], ['rot'], 'O número é o ID da ficha, não é a OP. Cancelado pode ter sido reaberto depois.'),
 }
-COM_OP = ['inspecao_boa', 'refugo', 'perc_refugo']
+COM_OP = ['inspecao_boa', 'refugo', 'perc_refugo', 'op']
 CEL = ['TH01', 'TH02', 'TH03', 'TH04', 'TH05', 'TH06', 'TH07', 'TO04', 'TM01', 'TM04', 'SPIRAL']
 
 PROG, CAD = [], []
@@ -109,7 +115,7 @@ def http_get(uri):
     return {'type': 'OpenApiConnection', 'inputs': {
         'host': {'connectionName': 'shared_sharepointonline', 'operationId': 'HttpRequest', 'apiId': '/providers/Microsoft.PowerApps/apis/shared_sharepointonline'},
         'parameters': {'dataset': SITE, 'parameters/method': 'GET', 'parameters/uri': uri, 'parameters/headers': {'Accept': 'application/json;odata=nometadata'}},
-        'authentication': "@parameters('$authentication')"}, 'runAfter': {}}
+        'authentication': "@parameters('$authentication')", 'retryPolicy': {'type': 'none'}}, 'runAfter': {}}
 
 
 E = "outputs('Entrada')"
@@ -183,6 +189,9 @@ def pipeline():
         'maquina': f"@{{{maq}}}", 'mangueira': f"@{{{txt('mangueira')}}}",
         'etapa': f"@{{if(empty({F}?['etapaFixa']),{txt('etapa')},{F}?['etapaFixa'])}}",
         'codigo': f"@{{if(isInt(trim(first(split(concat({txt('codigo')},' - '),' - ')))),trim(join(skip(split({txt('codigo')},' - '),1),' - ')),{txt('codigo')})}}",
+        'rot': (f"@{{if(equals({F}?['nome'],'insp'),'inspeção boa (m)',if(equals({F}?['nome'],'ref'),'refugo (m)',if(equals({F}?['nome'],'fic'),"
+                f"concat('ficha ',string(item()?['ID']),' | ',{txt('mangueira')},' | ',{maq},' | etapa ',{txt('etapa')},' | situação ',{txt('codigo')}),"
+                f"if(equals({F}?['nome'],'can'),concat('ficha ',first(split(string(coalesce({col('orig')},'')),'.')),' (ID da ficha, não é OP)'),''))))}}"),
         'cabine': f"@{{{txt('cabine')}}}", 'op': f"@{{first(split(string(coalesce({col('op')},'')),'.'))}}",
         'orig': f"@{{first(split(string(coalesce({col('orig')},'')),'.'))}}",
         'dk': f"@{{concat(string(coalesce({col('data')},'')),'|',{maq},'|',{txt('turno')},'|',{txt('janela')})}}",
@@ -315,23 +324,28 @@ def pipeline():
         return f"xpath(xml(json(concat('{{\"r\":{{\"i\":',string({arr}),'}}}}'))),'sum(/r/i/{campo})')"
     modo = "outputs('Indic')?['modo']"
 
+    def xg(campo):
+        return f"xpath(xml(outputs('Xml_txt')),concat('sum(/r/i[k=\"',item(),'\"]/{campo})'))"
+
+    def num(e):
+        return f"float(formatNumber({e},'0.00','en-US'))"
+
     contas = seq({
         'Corte': compose(f"@{{{corte}}}"),
         'Cada_fonte': {'type': 'Foreach', 'foreach': "@outputs('Indic')?['fontes']", 'runtimeConfiguration': {'concurrency': {'repetitions': 1}}, 'actions': fonte, 'runAfter': {}},
         'G_bruto': compose(f"@union(outputs('Indic')?['fixas'],createArray({P}?['g1'],{P}?['g2']))"),
         'G': query("@outputs('G_bruto')", "@and(not(empty(item())),not(equals(item(),'-')))"),
-        'Pares': select("@variables('Linhas')", {'k': f"@{{{chave.replace(chr(39)+'G'+chr(39), chr(39)+'G'+chr(39))}}}", 'v': "@item()?['v']", 'r': "@item()?['r']", 'i': "@item()?['i']"}),
+        'Pares': select("@variables('Linhas')", {'k': f"@{{replace({chave},'\"','')}}", 'v': "@item()?['v']", 'r': "@item()?['r']", 'i': "@item()?['i']"}),
         'So_chaves': select("@body('Pares')", "@item()?['k']"),
         'Distintas': compose("@union(body('So_chaves'),body('So_chaves'))"),
-        'Se_grupos': {'type': 'If', 'expression': {'lessOrEquals': ["@length(outputs('Distintas'))", 300]}, 'actions': seq({
-            'Cada_grupo': {'type': 'Foreach', 'foreach': "@outputs('Distintas')", 'runtimeConfiguration': {'concurrency': {'repetitions': 20}}, 'actions': seq({
-                'Do_grupo': query("@body('Pares')", "@equals(item()?['k'],items('Cada_grupo'))"),
-                'Somas': compose({'v': f"@{xs(chr(98) + 'ody(' + chr(39) + 'Do_grupo' + chr(39) + ')', 'v')}", 'r': f"@{xs(chr(98) + 'ody(' + chr(39) + 'Do_grupo' + chr(39) + ')', 'r')}"}),
-                'Guarda_grupo': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Grupos', 'value': {
-                    'chave': "@items('Cada_grupo')", 'soma': "@float(formatNumber(outputs('Somas')?['v'],'0.00','en-US'))", 'refugo': f"@if(equals({modo},'perc'),float(formatNumber(outputs('Somas')?['r'],'0.00','en-US')),null)",
-                    'perc': perc.format(m=modo, s="outputs('Somas')?['v']", r="outputs('Somas')?['r']"), 'linhas': "@length(body('Do_grupo'))"}}, 'runAfter': {}},
-            }), 'runAfter': {}},
-        }), 'else': {'actions': {'Aviso_300': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 300): filtre mais; grupos não listados')}"}, 'runAfter': {}}}}, 'runAfter': {}},
+        'Se_grupos': {'type': 'If', 'expression': {'lessOrEquals': ["@length(outputs('Distintas'))", 1000]}, 'actions': seq({
+            'Xml_txt': compose("@{string(xml(json(concat('{\"r\":{\"i\":',string(union(body('Pares'),json('[{\"i\":\"zero\",\"v\":0,\"r\":0}]'))),'}}'))))}"),
+            'Grupos_sel': select("@outputs('Distintas')", {
+                'chave': "@item()", 'soma': f"@{num(xg('v'))}", 'refugo': f"@if(equals({modo},'perc'),{num(xg('r'))},null)",
+                'perc': perc.format(m=modo, s=xg('v'), r=xg('r')), 'linhas': "@int(formatNumber(xpath(xml(outputs('Xml_txt')),concat('count(/r/i[k=\"',item(),'\"])')),'0','en-US'))"}),
+            'Grupos_set': setvar('Grupos', "@body('Grupos_sel')"),
+            'Se_100': {'type': 'If', 'expression': {'greater': ["@length(outputs('Distintas'))", 100]}, 'actions': {'Aviso_100': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Mostrando os 100 maiores de ',string(length(outputs('Distintas'))),' grupos; o total é de todos')}"}, 'runAfter': {}}}, 'else': {'actions': {}}, 'runAfter': {}},
+        }), 'else': {'actions': {'Aviso_300': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 1000): filtre mais; grupos não listados')}"}, 'runAfter': {}}}}, 'runAfter': {}},
         'Total': compose({'v': '@' + soma_xml("body('Pares')", 'v'), 'r': '@' + soma_xml("body('Pares')", 'r')}),
         'Aviso_perc': {'type': 'If', 'expression': f"@and(equals({modo},'perc'),not(empty(variables('Linhas'))),lessOrEquals(sub(float(outputs('Total')?['v']),float(outputs('Total')?['r'])),0))", 'actions': {
             'Aviso_pc': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': 'Sem inspeção no recorte: o percentual não existe.'}, 'runAfter': {}}}, 'else': {'actions': {}}, 'runAfter': {}},
@@ -354,7 +368,7 @@ def pipeline():
             'refugo_total': f"@if(equals({modo},'perc'),float(formatNumber(outputs('Total')?['r'],'0.00','en-US')),null)",
             'boa_mais_refugo': f"@if(equals({modo},'perc'),float(formatNumber(outputs('Total')?['v'],'0.00','en-US')),null)",
             'linhas': "@length(variables('Linhas'))", 'completo': "@variables('Completo')",
-            'agrupado_por': "@{join(body('G'),', ')}", 'grupos': "@reverse(sort(variables('Grupos'),'soma'))",
+            'agrupado_por': "@{join(body('G'),', ')}", 'grupos': "@take(reverse(sort(variables('Grupos'),'soma')),100)",
             'avisos': "@union(variables('Avisos'),createArray(outputs('Indic')?['aviso']))", 'consultado_em': "@{convertTimeZone(utcNow(),'UTC','E. South America Standard Time','dd/MM/yyyy HH:mm')}"}),
         'Saida_ok': setvar('Saida', "@{string(outputs('Resultado'))}"),
     })
@@ -366,8 +380,8 @@ def pipeline():
         'Zera_saida': setvar('Saida', ''), 'Zera_completo': setvar('Completo', True), 'Zera_canc': setvar('Canc', '<r><c><k>-</k><id>0</id></c></r>'),
         'Param': compose(param),
         'Indic': compose(f"@coalesce(outputs('Indicadores')?[{P}?['ind']],outputs('Indicador_vazio'))"),
-        'Valido': {'type': 'If', 'expression': f"@and(not(empty(outputs('Indic')?['fontes'])),or({datas_ok},{sem_data_ok}),{dims_ok},{onde_ok},{agr_ok},{corte_ok})", 'actions': contas,
-                   'else': {'actions': {'Saida_erro': setvar('Saida', "@{concat('{\"erro\":\"entrada inválida\",\"regras\":\"indicador: " + ', '.join(INDICADORES) + ". Datas DD/MM/AAAA com de <= ate (ou - nos dois quando onde tem op=número em inspecao_boa, refugo ou perc_refugo). Dimensões deste indicador: ',join(coalesce(outputs('Indic')?['dims'],json('[]')),' / '),'. corte: civil ou produtivo. agrupar: até 2. onde: até 2, dimensao=valor;dimensao=valor\"}')}")}}, 'runAfter': {}},
+        'Valido': {'type': 'If', 'expression': f"@and(not(empty(outputs('Indic')?['fontes'])),or({datas_ok},{sem_data_ok}),or(not(equals({P}?['ind'],'op')),isInt({op_bruto})),{dims_ok},{onde_ok},{agr_ok},{corte_ok})", 'actions': contas,
+                   'else': {'actions': {'Saida_erro': setvar('Saida', "@{concat('{\"erro\":\"entrada inválida\",\"regras\":\"indicador: " + ', '.join(INDICADORES) + ". Datas DD/MM/AAAA com de <= ate (ou - nos dois quando onde tem op=número em op, inspecao_boa, refugo ou perc_refugo). Produção de trançadeira: trancagem_real com maquina=. Parada da Montagem: montagem_paradas. Dimensões deste indicador: ',join(coalesce(outputs('Indic')?['dims'],json('[]')),' / '),'. corte: civil ou produtivo. agrupar: até 2. onde: até 2, dimensao=valor;dimensao=valor\"}')}")}}, 'runAfter': {}},
     })
     return caso
 
