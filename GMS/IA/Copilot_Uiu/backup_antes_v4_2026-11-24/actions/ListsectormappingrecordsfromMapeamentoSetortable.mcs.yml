@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List sector mapping records from MapeamentoSetor table  "
+  description: This capability retrieves records from the 'MapeamentoSetor' SharePoint table at the specified site, allowing the user to apply an OData filter to refine the results.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: MapeamentoSetor
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List sector mapping records from MapeamentoSetor table  "
+modelDescription: This capability retrieves records from the 'MapeamentoSetor' SharePoint table at the specified site, allowing the user to apply an OData filter to refine the results.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List FifoBobinadeira records from SharePoint table  "
+  description: This capability lists records from the FifoBobinadeira table in the specified SharePoint site, allowing filtering.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: FifoBobinadeira
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List FifoBobinadeira records from SharePoint table  "
+modelDescription: This capability lists records from the FifoBobinadeira table in the specified SharePoint site, allowing filtering.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

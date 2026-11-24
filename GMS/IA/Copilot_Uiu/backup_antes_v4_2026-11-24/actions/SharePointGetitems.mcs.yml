@@ -1,0 +1,288 @@
+mcs.metadata:
+  componentName: SharePoint - Get items
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: 69ffd42a-1f85-452d-a4ee-cef4ec30b4fb
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+
+  - kind: ManualTaskInput
+    propertyName: "'$orderby'"
+    value: Ordem
+
+modelDisplayName: Ler conhecimento do GMS
+modelDescription: "Lê o conhecimento do GMS (norma, KPIs, lições, glossário, turnos, Hora-Hora, SAP x GMS, normas do diário, mapa das listas, manual de B.O.) da lista Uiu_Conhecimento. Use antes de responder sobre regra, turno, parada, meta, KPI, nome de coluna ou diagnóstico de problema. Filter Query: Arquivo eq 'NOME.md', com NOME.md um destes: 00_LEIA_PRIMEIRO.md, 01_Norma_do_App.md, 02_KPIs_do_BI.md, 03_Licoes.md, 04_Glossario.md, 05_Memoria_IA.md, 06_Roteiro_HoraHora.md, 07_Dados_SAP_x_GMS.md, 08_Normas_Diario.md, 09_Mapa_Listas.md, Manual_BO.md. Order By: Ordem. Leia a coluna Texto de todas as linhas devolvidas, na ordem."
+outputs:
+  - propertyName: value
+    name: value
+    description: List of Items
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.Default_Agent1_1h157E.shared_sharepointonline.df7b75d6bd884421bdc
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.Default_Agent1_1h157E.shared_sharepointonline.df7b75d6bd884421bdc
+    mode: Invoker
+
+  operationId: GetItems
+  dynamicOutputSchema:
+    kind: Record
+    properties:
+      value:
+        description: List of Items
+        order: 0
+        type:
+          kind: Table
+          properties:
+            "{ContentType}":
+              displayName: Content type
+              description: Name of the Content type of the item.
+              order: 21
+              type:
+                kind: Record
+                properties:
+                  Id:
+                    displayName: Id
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Name:
+                    displayName: Name
+                    order: 1
+                    type: String
+
+            "{FilenameWithExtension}":
+              displayName: File name with extension
+              description: For libraries, returns file name including extension. For lists, returns the title property.
+              order: 16
+              type: String
+
+            "{FullPath}":
+              displayName: Full Path
+              description: Full path of an item or a folder or a file
+              order: 18
+              type: String
+
+            "{HasAttachments}":
+              displayName: Has attachments
+              description: Indicates the presence of attachments in the item.
+              order: 22
+              type: Boolean
+
+            "{Identifier}":
+              displayName: Identifier
+              description: Value that can be used in file related actions for selecting a file.
+              order: 12
+              type: String
+
+            "{IsFolder}":
+              displayName: Is folder
+              description: True when the item is a folder, false otherwise.
+              order: 13
+              type: Boolean
+
+            "{Link}":
+              displayName: Link to item
+              description: Link that can be used to get to the file or list item. Only people with permissions to the item will be able to open the link.
+              order: 14
+              type: String
+
+            "{ModerationComment}":
+              displayName: Comments associated with the content approval of this list item
+              description: The comments associated with moderation of the list item.
+              order: 20
+              type: String
+
+            "{ModerationStatus}":
+              displayName: Content approval status
+              description: "The content approval status. It can be one of the following: Draft, Pending, Approved, or Rejected"
+              order: 19
+              type: String
+
+            "{Name}":
+              displayName: Name
+              description: File name of the item in document libraries, display name of the item in lists.
+              order: 15
+              type: String
+
+            "{Path}":
+              displayName: Folder path
+              description: Path to the folder the item is in, relative to the site address.
+              order: 17
+              type: String
+
+            "{TriggerWindowEndToken}":
+              displayName: Trigger Window End Token
+              description: A token expressing the time of the current flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 25
+              type: String
+
+            "{TriggerWindowStartToken}":
+              displayName: Trigger Window Start Token
+              description: A token expressing the time of the last flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 24
+              type: String
+
+            "{VersionNumber}":
+              displayName: Version number
+              description: The version number of the file or the list item.
+              order: 23
+              type: String
+
+            Arquivo:
+              displayName: Arquivo
+              order: 4
+              type: String
+
+            Author:
+              displayName: Created By
+              description: The user who created this item.
+              order: 10
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who created this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who created this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who created this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who created this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who created this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who created this item.
+                    order: 3
+                    type: String
+
+            ComplianceAssetId:
+              displayName: Compliance Asset Id
+              order: 3
+              type: String
+
+            Created:
+              displayName: Created
+              description: When this item was created.
+              order: 9
+              type: DateTime
+
+            Editor:
+              displayName: Modified By
+              description: The user who last changed this item.
+              order: 11
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who last changed this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who last changed this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who last changed this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who last changed this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who last changed this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who last changed this item.
+                    order: 3
+                    type: String
+
+            ID:
+              displayName: ID
+              description: List item id. Use this value for specifying the item to act on in other list related actions.
+              order: 0
+              type: Number
+
+            Modified:
+              displayName: Modified
+              description: When this item was last changed.
+              order: 8
+              type: DateTime
+
+            OData__ColorTag:
+              displayName: Color Tag
+              order: 2
+              type: String
+
+            Ordem:
+              displayName: Ordem
+              order: 6
+              type: Number
+
+            Secao:
+              displayName: Secao
+              order: 5
+              type: String
+
+            Texto:
+              displayName: Texto
+              order: 7
+              type: String
+
+            Title:
+              displayName: Title
+              isRequired: true
+              order: 1
+              type: String
+
+outputMode: All

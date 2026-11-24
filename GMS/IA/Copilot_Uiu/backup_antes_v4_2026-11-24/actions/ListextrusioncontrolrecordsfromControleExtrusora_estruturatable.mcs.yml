@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List extrusion control records from ControleExtrusora_estrutura table  "
+  description: This capability lists records from the ControleExtrusora_estrutura table in SharePoint at the specified site, allowing OData filter expressions to refine the results.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: ControleExtrusora_estrutura
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: List extrusion control records from ControleExtrusora_estrutura
+modelDescription: This capability lists records from the ControleExtrusora_estrutura table in SharePoint at the specified site, allowing OData filter expressions to refine the results.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

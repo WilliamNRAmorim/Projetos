@@ -1,0 +1,43 @@
+mcs.metadata:
+  componentName: SharePoint - Get items
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$top'"
+
+modelDisplayName: Get items
+modelDescription: "Lê (somente leitura) itens de uma lista SharePoint do GMS. Use em List Name o nome exato da lista: Eventos_Producao, Paradas_Montagem, Plano_OPs, Hora-Hora, ficha_producao e outras. Filtre sempre com OData usando os nomes internos de coluna descritos nas instruções."
+outputs:
+  - propertyName: value
+    name: value
+    description: List of Items
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.Default_Agent1_1h157E.shared_sharepointonline.df7b75d6bd884421bdc
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.Default_Agent1_1h157E.shared_sharepointonline.df7b75d6bd884421bdc
+    mode: Invoker
+
+  operationId: GetItems
+  dynamicOutputSchema:
+    kind: Record
+    properties:
+      value:
+        description: List of Items
+        order: 0
+        type:
+          kind: Table
+          properties:
+            dynamicProperties:
+              order: 0
+              type: Any
+
+outputMode: All

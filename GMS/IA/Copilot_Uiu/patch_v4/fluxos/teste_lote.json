@@ -2135,7 +2135,7 @@
                  "chave": "@items('Cada_grupo')",
                  "soma": "@float(formatNumber(outputs('Somas')?['v'],'0.00','en-US'))",
                  "refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Somas')?['r'],'0.00','en-US')),null)",
-                 "perc": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(float(outputs('Somas')?['v']),0)),float(formatNumber(div(mul(float(outputs('Somas')?['r']),float('100.0')),if(greater(float(outputs('Somas')?['v']),0),float(outputs('Somas')?['v']),float('1.0'))),'0.00','en-US')),null)",
+                 "perc": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(sub(float(outputs('Somas')?['v']),float(outputs('Somas')?['r'])),0)),float(formatNumber(div(mul(float(outputs('Somas')?['r']),float('100.0')),if(greater(float(outputs('Somas')?['v']),0),float(outputs('Somas')?['v']),float('1.0'))),'0.00','en-US')),null)",
                  "linhas": "@length(body('Do_grupo'))"
                 }
                },
@@ -2179,6 +2179,28 @@
             ]
            }
           },
+          "Aviso_perc": {
+           "type": "If",
+           "expression": "@and(equals(outputs('Indic')?['modo'],'perc'),not(empty(variables('Linhas'))),lessOrEquals(sub(float(outputs('Total')?['v']),float(outputs('Total')?['r'])),0))",
+           "actions": {
+            "Aviso_pc": {
+             "type": "AppendToArrayVariable",
+             "inputs": {
+              "name": "Avisos",
+              "value": "Sem inspeção no recorte: o percentual não existe."
+             },
+             "runAfter": {}
+            }
+           },
+           "else": {
+            "actions": {}
+           },
+           "runAfter": {
+            "Total": [
+             "Succeeded"
+            ]
+           }
+          },
           "Aviso_turno_antigo": {
            "type": "If",
            "expression": "@and(or(equals(outputs('Param')?['g1'],'turno'),equals(outputs('Param')?['g2'],'turno'),equals(outputs('Param')?['d1'],'turno'),equals(outputs('Param')?['d2'],'turno')),not(equals(outputs('Param')?['ind'],'inspecao_boa')),not(equals(outputs('Param')?['ini'],'-')),lessOrEquals(outputs('Param')?['ini'],'2026-10-29'),greaterOrEquals(outputs('Param')?['fim'],'2026-10-05'))",
@@ -2196,7 +2218,7 @@
             "actions": {}
            },
            "runAfter": {
-            "Total": [
+            "Aviso_perc": [
              "Succeeded"
             ]
            }
@@ -2276,7 +2298,7 @@
             "fonte": "@{join(body('Fontes_txt'),', ')}",
             "situacao": "@if(empty(variables('Linhas')),'0 registros (não diga que produziu zero)','ok')",
             "valor": "@if(or(empty(variables('Linhas')),equals(outputs('Indic')?['modo'],'semtotal'),equals(outputs('Indic')?['modo'],'perc')),null,float(formatNumber(outputs('Total')?['v'],'0.00','en-US')))",
-            "perc_total": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(float(outputs('Total')?['v']),0)),float(formatNumber(div(mul(float(outputs('Total')?['r']),float('100.0')),if(greater(float(outputs('Total')?['v']),0),float(outputs('Total')?['v']),float('1.0'))),'0.00','en-US')),null)",
+            "perc_total": "@if(and(equals(outputs('Indic')?['modo'],'perc'),greater(sub(float(outputs('Total')?['v']),float(outputs('Total')?['r'])),0)),float(formatNumber(div(mul(float(outputs('Total')?['r']),float('100.0')),if(greater(float(outputs('Total')?['v']),0),float(outputs('Total')?['v']),float('1.0'))),'0.00','en-US')),null)",
             "refugo_total": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Total')?['r'],'0.00','en-US')),null)",
             "boa_mais_refugo": "@if(equals(outputs('Indic')?['modo'],'perc'),float(formatNumber(outputs('Total')?['v'],'0.00','en-US')),null)",
             "linhas": "@length(variables('Linhas'))",

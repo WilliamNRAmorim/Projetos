@@ -1,0 +1,353 @@
+mcs.metadata:
+  componentName: "List production hour records from Hora-Hora SharePoint table  "
+  description: This capability retrieves records from the 'Hora-Hora' table in the specified SharePoint site, allowing optional filtering.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: Hora-Hora
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+  - kind: ManualTaskInput
+    propertyName: "'$top'"
+    value: 1000
+
+modelDisplayName: "List production hour records from Hora-Hora SharePoint table  "
+modelDescription: This capability retrieves records from the 'Hora-Hora' table in the specified SharePoint site, allowing optional filtering.
+outputs:
+  - propertyName: value
+    name: value
+    description: List of Items
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems
+  dynamicOutputSchema:
+    kind: Record
+    properties:
+      value:
+        description: List of Items
+        order: 0
+        type:
+          kind: Table
+          properties:
+            "{ContentType}":
+              displayName: Content type
+              description: Name of the Content type of the item.
+              order: 34
+              type:
+                kind: Record
+                properties:
+                  Id:
+                    displayName: Id
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Name:
+                    displayName: Name
+                    order: 1
+                    type: String
+
+            "{FilenameWithExtension}":
+              displayName: File name with extension
+              description: For libraries, returns file name including extension. For lists, returns the title property.
+              order: 29
+              type: String
+
+            "{FullPath}":
+              displayName: Full Path
+              description: Full path of an item or a folder or a file
+              order: 31
+              type: String
+
+            "{HasAttachments}":
+              displayName: Has attachments
+              description: Indicates the presence of attachments in the item.
+              order: 35
+              type: Boolean
+
+            "{Identifier}":
+              displayName: Identifier
+              description: Value that can be used in file related actions for selecting a file.
+              order: 25
+              type: String
+
+            "{IsFolder}":
+              displayName: Is folder
+              description: True when the item is a folder, false otherwise.
+              order: 26
+              type: Boolean
+
+            "{Link}":
+              displayName: Link to item
+              description: Link that can be used to get to the file or list item. Only people with permissions to the item will be able to open the link.
+              order: 27
+              type: String
+
+            "{ModerationComment}":
+              displayName: Comments associated with the content approval of this list item
+              description: The comments associated with moderation of the list item.
+              order: 33
+              type: String
+
+            "{ModerationStatus}":
+              displayName: Content approval status
+              description: "The content approval status. It can be one of the following: Draft, Pending, Approved, or Rejected"
+              order: 32
+              type: String
+
+            "{Name}":
+              displayName: Name
+              description: File name of the item in document libraries, display name of the item in lists.
+              order: 28
+              type: String
+
+            "{Path}":
+              displayName: Folder path
+              description: Path to the folder the item is in, relative to the site address.
+              order: 30
+              type: String
+
+            "{TriggerWindowEndToken}":
+              displayName: Trigger Window End Token
+              description: A token expressing the time of the current flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 38
+              type: String
+
+            "{TriggerWindowStartToken}":
+              displayName: Trigger Window Start Token
+              description: A token expressing the time of the last flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 37
+              type: String
+
+            "{VersionNumber}":
+              displayName: Version number
+              description: The version number of the file or the list item.
+              order: 36
+              type: String
+
+            Author:
+              displayName: Created By
+              description: The user who created this item.
+              order: 23
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who created this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who created this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who created this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who created this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who created this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who created this item.
+                    order: 3
+                    type: String
+
+            ComplianceAssetId:
+              displayName: Compliance Asset Id
+              order: 20
+              type: String
+
+            Created:
+              displayName: Created
+              description: When this item was created.
+              order: 22
+              type: DateTime
+
+            Editor:
+              displayName: Modified By
+              description: The user who last changed this item.
+              order: 24
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who last changed this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who last changed this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who last changed this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who last changed this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who last changed this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who last changed this item.
+                    order: 3
+                    type: String
+
+            field_0:
+              displayName: Data
+              order: 3
+              type: Date
+
+            field_11:
+              displayName: Tempo Parado (min)
+              order: 12
+              type: Number
+
+            field_12:
+              displayName: Motivo
+              order: 13
+              type: String
+
+            field_13:
+              displayName: Motivo 2
+              order: 14
+              type: String
+
+            field_14:
+              displayName: Comentário / Ação
+              order: 15
+              type: String
+
+            field_15:
+              displayName: Rendimento
+              order: 16
+              type: Number
+
+            field_2:
+              displayName: Célula
+              order: 4
+              type: String
+
+            field_3:
+              displayName: Hora
+              order: 5
+              type: String
+
+            field_4:
+              displayName: Mangueira
+              order: 6
+              type: String
+
+            field_5:
+              displayName: Meta Hora
+              order: 7
+              type: Number
+
+            field_6:
+              displayName: Meta Acum
+              order: 8
+              type: Number
+
+            field_7:
+              displayName: Real. Hora
+              order: 9
+              type: Number
+
+            field_8:
+              displayName: Real. Acum
+              order: 10
+              type: Number
+
+            field_9:
+              displayName: Diferença
+              order: 11
+              type: Number
+
+            ID:
+              displayName: ID
+              description: List item id. Use this value for specifying the item to act on in other list related actions.
+              order: 0
+              type: Number
+
+            Minutos:
+              displayName: Minutos
+              order: 18
+              type: Number
+
+            Modified:
+              displayName: Modified
+              description: When this item was last changed.
+              order: 21
+              type: DateTime
+
+            OData__ColorTag:
+              displayName: Color Tag
+              order: 19
+              type: String
+
+            Status:
+              displayName: Status
+              order: 17
+              type: String
+
+            Title:
+              displayName: Title
+              order: 1
+              type: String
+
+            TurnoH:
+              displayName: Turno
+              order: 2
+              type: String

@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List bobbin scrap records from Refugo_Bobinadeira table  "
+  description: This capability lists records from the Refugo_Bobinadeira table in SharePoint at the specified site, allowing optional filtering with an OData expression.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: Refugo_Bobinadeira
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List bobbin scrap records from Refugo_Bobinadeira table  "
+modelDescription: This capability lists records from the Refugo_Bobinadeira table in SharePoint at the specified site, allowing optional filtering with an OData expression.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

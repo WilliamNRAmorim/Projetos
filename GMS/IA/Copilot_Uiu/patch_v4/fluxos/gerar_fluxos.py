@@ -309,7 +309,7 @@ def pipeline():
         return f"if(empty(string(coalesce(item()?[coalesce({d},'{N}')],''))),'(vazio)',string(item()?[coalesce({d},'{N}')]))"
     chave = f"if(empty(outputs('G')),'total',concat({vd(dims[0])},if(empty({dims[1]}),'',concat(' | ',{vd(dims[1])})),if(empty({dims[2]}),'',concat(' | ',{vd(dims[2])}))))"
     vazio_xml = "xml('<r/>')"
-    perc = "@if(and(equals({m},'perc'),greater(float({s}),0)),float(formatNumber(div(mul(float({r}),float('100.0')),if(greater(float({s}),0),float({s}),float('1.0'))),'0.00','en-US')),null)"
+    perc = "@if(and(equals({m},'perc'),greater(sub(float({s}),float({r})),0)),float(formatNumber(div(mul(float({r}),float('100.0')),if(greater(float({s}),0),float({s}),float('1.0'))),'0.00','en-US')),null)"
 
     def xs(arr, campo):
         return f"xpath(xml(json(concat('{{\"r\":{{\"i\":',string({arr}),'}}}}'))),'sum(/r/i/{campo})')"
@@ -333,6 +333,8 @@ def pipeline():
             }), 'runAfter': {}},
         }), 'else': {'actions': {'Aviso_300': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Agrupamento com ',string(length(outputs('Distintas'))),' grupos (limite 300): filtre mais; grupos não listados')}"}, 'runAfter': {}}}}, 'runAfter': {}},
         'Total': compose({'v': '@' + soma_xml("body('Pares')", 'v'), 'r': '@' + soma_xml("body('Pares')", 'r')}),
+        'Aviso_perc': {'type': 'If', 'expression': f"@and(equals({modo},'perc'),not(empty(variables('Linhas'))),lessOrEquals(sub(float(outputs('Total')?['v']),float(outputs('Total')?['r'])),0))", 'actions': {
+            'Aviso_pc': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': 'Sem inspeção no recorte: o percentual não existe.'}, 'runAfter': {}}}, 'else': {'actions': {}}, 'runAfter': {}},
         'Aviso_turno_antigo': {'type': 'If', 'expression': f"@and({tem_turno},not(equals({P}?['ind'],'inspecao_boa')),not(equals({P}?['ini'],'-')),lessOrEquals({P}?['ini'],'2026-10-29'),greaterOrEquals({P}?['fim'],'2026-10-05'))", 'actions': {
             'Aviso_ta': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': 'O período toca 05/10 a 29/10/2026: turno gravado pode ter a fronteira antiga (22:41).'}, 'runAfter': {}}}, 'else': {'actions': {}}, 'runAfter': {}},
         'Aviso_corte': {'type': 'If', 'expression': f"@and(contains(createArray('civil','produtivo'),toLower(trim(coalesce({E}?['corte'],'-')))),not(equals(toLower(trim(coalesce({E}?['corte'],'-'))),outputs('Corte'))),not(contains(createArray('montagem_pecas','montagem_paradas','ops_em_processo'),{P}?['ind'])))", 'actions': {

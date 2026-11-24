@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List historical spool records from Historico_Carretel table  "
+  description: This capability retrieves records from the Historico_Carretel table in the specified SharePoint site, allowing optional filtering with OData expressions.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: Historico_Carretel
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List historical spool records from Historico_Carretel table  "
+modelDescription: This capability retrieves records from the Historico_Carretel table in the specified SharePoint site, allowing optional filtering with OData expressions.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

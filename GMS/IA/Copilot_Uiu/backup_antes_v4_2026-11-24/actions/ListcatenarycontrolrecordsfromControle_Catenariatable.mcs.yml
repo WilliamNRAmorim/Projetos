@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List catenary control records from Controle_Catenaria table  "
+  description: This capability lists records from the Controle_Catenaria table in the specified SharePoint site, allowing optional OData filtering to refine results.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: Controle_Catenaria
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List catenary control records from Controle_Catenaria table  "
+modelDescription: This capability lists records from the Controle_Catenaria table in the specified SharePoint site, allowing optional OData filtering to refine results.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List tube downtime records from Hora_Hora_Tubo table  "
+  description: This capability retrieves records from the Hora_Hora_Tubo table in the specified SharePoint site, allowing the user to apply an OData filter to refine the results.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: Hora_Hora_Tubo
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List tube downtime records from Hora_Hora_Tubo table  "
+modelDescription: This capability retrieves records from the Hora_Hora_Tubo table in the specified SharePoint site, allowing the user to apply an OData filter to refine the results.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

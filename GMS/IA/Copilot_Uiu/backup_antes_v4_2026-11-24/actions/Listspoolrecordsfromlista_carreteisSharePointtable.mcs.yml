@@ -1,0 +1,28 @@
+mcs.metadata:
+  componentName: "List spool records from lista_carreteis SharePoint table  "
+  description: This capability lists records from the 'lista_carreteis' SharePoint table, allowing filter by OData query.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: lista_carreteis
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+modelDisplayName: "List spool records from lista_carreteis SharePoint table  "
+modelDescription: This capability lists records from the 'lista_carreteis' SharePoint table, allowing filter by OData query.
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems

@@ -1,0 +1,916 @@
+mcs.metadata:
+  componentName: "List production records from ficha_producao SharePoint table  "
+  description: This capability lists production records from the 'ficha_producao' SharePoint table at the specified site, allowing filtering via OData expressions.
+kind: TaskDialog
+inputs:
+  - kind: ManualTaskInput
+    propertyName: dataset
+    value: https://danfoss.sharepoint.com/sites/OperationsGuaratingueta
+
+  - kind: ManualTaskInput
+    propertyName: table
+    value: ficha_producao
+
+  - kind: AutomaticTaskInput
+    propertyName: "'$filter'"
+    description: Enter an OData style filter expression to limit which rows are listed
+    shouldPromptUser: false
+
+  - kind: ManualTaskInput
+    propertyName: "'$top'"
+    value: =1000
+
+modelDisplayName: "List production records from ficha_producao SharePoint table  "
+modelDescription: This capability lists production records from the 'ficha_producao' SharePoint table at the specified site, allowing filtering via OData expressions.
+outputs:
+  - propertyName: value
+    name: value
+    description: List of Items
+
+action:
+  kind: InvokeConnectorTaskAction
+  connectionReference: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+  connectionProperties:
+    name: cra6eb_uiu_gms.connectionreference.SharePointCrb333ea9016
+    mode: Maker
+
+  operationId: GetItems
+  dynamicOutputSchema:
+    kind: Record
+    properties:
+      value:
+        description: List of Items
+        order: 0
+        type:
+          kind: Table
+          properties:
+            "{ContentType}":
+              displayName: Content type
+              description: Name of the Content type of the item.
+              order: 143
+              type:
+                kind: Record
+                properties:
+                  Id:
+                    displayName: Id
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Name:
+                    displayName: Name
+                    order: 1
+                    type: String
+
+            "{FilenameWithExtension}":
+              displayName: File name with extension
+              description: For libraries, returns file name including extension. For lists, returns the title property.
+              order: 138
+              type: String
+
+            "{FullPath}":
+              displayName: Full Path
+              description: Full path of an item or a folder or a file
+              order: 140
+              type: String
+
+            "{HasAttachments}":
+              displayName: Has attachments
+              description: Indicates the presence of attachments in the item.
+              order: 144
+              type: Boolean
+
+            "{Identifier}":
+              displayName: Identifier
+              description: Value that can be used in file related actions for selecting a file.
+              order: 134
+              type: String
+
+            "{IsFolder}":
+              displayName: Is folder
+              description: True when the item is a folder, false otherwise.
+              order: 135
+              type: Boolean
+
+            "{Link}":
+              displayName: Link to item
+              description: Link that can be used to get to the file or list item. Only people with permissions to the item will be able to open the link.
+              order: 136
+              type: String
+
+            "{ModerationComment}":
+              displayName: Comments associated with the content approval of this list item
+              description: The comments associated with moderation of the list item.
+              order: 142
+              type: String
+
+            "{ModerationStatus}":
+              displayName: Content approval status
+              description: "The content approval status. It can be one of the following: Draft, Pending, Approved, or Rejected"
+              order: 141
+              type: String
+
+            "{Name}":
+              displayName: Name
+              description: File name of the item in document libraries, display name of the item in lists.
+              order: 137
+              type: String
+
+            "{Path}":
+              displayName: Folder path
+              description: Path to the folder the item is in, relative to the site address.
+              order: 139
+              type: String
+
+            "{TriggerWindowEndToken}":
+              displayName: Trigger Window End Token
+              description: A token expressing the time of the current flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 147
+              type: String
+
+            "{TriggerWindowStartToken}":
+              displayName: Trigger Window Start Token
+              description: A token expressing the time of the last flow check. Use this if you want to check if one or more columns were modified since the last flow check.
+              order: 146
+              type: String
+
+            "{VersionNumber}":
+              displayName: Version number
+              description: The version number of the file or the list item.
+              order: 145
+              type: String
+
+            Author:
+              displayName: Created By
+              description: The user who created this item.
+              order: 132
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who created this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who created this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who created this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who created this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who created this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who created this item.
+                    order: 3
+                    type: String
+
+            Bitola:
+              displayName: Bitola
+              order: 5
+              type: Number
+
+            board_x0020_choice1:
+              displayName: board choice1
+              order: 130
+              type:
+                kind: Record
+                properties:
+                  Value:
+                    displayName: Value
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+            C_x00f3_d_Fita_Bandagem:
+              displayName: Cód_Fita_Bandagem
+              order: 49
+              type: String
+
+            C_x00f3_digo_Filme_UHMWPE:
+              displayName: Código_Filme_UHMWPE
+              order: 50
+              type: String
+
+            cabine_teste:
+              displayName: cabine_teste
+              order: 64
+              type: String
+
+            CarretelSaida:
+              displayName: Carretel Saida
+              order: 4
+              type: String
+
+            Cod_Tran_x00e7_agem:
+              displayName: Cod_Trançagem
+              order: 76
+              type: String
+
+            Cod_Tranc_1aTrama:
+              displayName: Cod_Tranc_1aTrama
+              order: 35
+              type: String
+
+            Cod_x002e_Cobertura:
+              displayName: Cod.Cobertura
+              order: 69
+              type: String
+
+            Cod_x002e_CompostoTubo:
+              displayName: Cod.CompostoTubo
+              order: 70
+              type: String
+
+            ComplianceAssetId:
+              displayName: Compliance Asset Id
+              order: 119
+              type: String
+
+            Created:
+              displayName: Created
+              description: When this item was created.
+              order: 71
+              type: DateTime
+
+            data_hora_inicio_mandril:
+              displayName: data_hora_inicio_mandril
+              order: 13
+              type: DateTime
+
+            DatadeValidadedoComposto:
+              displayName: Data de Validade do Composto Tubo
+              order: 73
+              type: Date
+
+            DatadeValidadedocompostocobertur:
+              displayName: Data de Validade  do composto cobertura
+              order: 72
+              type: Date
+
+            DataFinalizacao:
+              displayName: DataFinalizacao
+              order: 110
+              type: Date
+
+            de_para_carretel:
+              displayName: Carretel Entrada
+              order: 3
+              type: String
+
+            Desmoldante:
+              displayName: desmoldante_mandril
+              order: 16
+              type: String
+
+            Diam_Tranc_1aTrama:
+              displayName: Diam_Tranc_1aTrama
+              order: 37
+              type: Number
+
+            Diametro_Tran_x00e7_agem:
+              displayName: Diametro_Trançagem
+              order: 30
+              type: Number
+
+            Editor:
+              displayName: Modified By
+              description: The user who last changed this item.
+              order: 133
+              type:
+                kind: Record
+                properties:
+                  Claims:
+                    displayName: Claims
+                    description: Internal identifier for the user who last changed this item.
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+                  Department:
+                    displayName: Department
+                    description: Department name of the user who last changed this item.
+                    order: 4
+                    type: String
+
+                  DisplayName:
+                    displayName: DisplayName
+                    description: The name of the user who last changed this item.
+                    order: 1
+                    type: String
+
+                  Email:
+                    displayName: Email
+                    description: Email address of the user who last changed this item.
+                    order: 2
+                    type: String
+
+                  JobTitle:
+                    displayName: JobTitle
+                    description: Job title of the user who last changed this item.
+                    order: 5
+                    type: String
+
+                  Picture:
+                    displayName: Picture
+                    description: Link to a picture of the user who last changed this item.
+                    order: 3
+                    type: String
+
+            field_1:
+              displayName: ordem_producao
+              order: 120
+              type: Number
+
+            field_10:
+              displayName: processo
+              order: 2
+              type: String
+
+            field_11:
+              displayName: status_processo
+              order: 8
+              type: String
+
+            field_12:
+              displayName: lote
+              order: 122
+              type: String
+
+            field_13:
+              displayName: diametro_tubo
+              order: 23
+              type: Number
+
+            field_14:
+              displayName: quantidade_tubo
+              order: 25
+              type: Number
+
+            field_15:
+              displayName: defeito_tubo
+              order: 24
+              type: Number
+
+            field_16:
+              displayName: data_hora_inicio_tubo
+              order: 21
+              type: DateTime
+
+            field_17:
+              displayName: data_hora_final_tubo
+              order: 22
+              type: DateTime
+
+            field_18:
+              displayName: operador_tubo
+              order: 26
+              type: String
+
+            field_19:
+              displayName: data_hora_inicio_trancadeira
+              order: 29
+              type: DateTime
+
+            field_2:
+              displayName: cod_mangueira
+              order: 121
+              type: String
+
+            field_20:
+              displayName: data_hora_final_trancadeira
+              order: 28
+              type: DateTime
+
+            field_22:
+              displayName: quantidade_trancagem
+              order: 31
+              type: Number
+
+            field_23:
+              displayName: defeito_trancagem
+              order: 32
+              type: Number
+
+            field_24:
+              displayName: operador_trancagem
+              order: 33
+              type: String
+
+            field_25:
+              displayName: data_hora_inicio_cobertura
+              order: 39
+              type: DateTime
+
+            field_26:
+              displayName: data_hora_final_cobertura
+              order: 40
+              type: DateTime
+
+            field_27:
+              displayName: diametro_cobertura
+              order: 41
+              type: Number
+
+            field_28:
+              displayName: quantidade_cobertura
+              order: 43
+              type: Number
+
+            field_29:
+              displayName: defeito_cobertura
+              order: 42
+              type: Number
+
+            field_30:
+              displayName: operador_cobertura
+              order: 44
+              type: String
+
+            field_31:
+              displayName: data_hora_inicio_bandagem
+              order: 46
+              type: DateTime
+
+            field_32:
+              displayName: data_hora_final_bandagem
+              order: 47
+              type: DateTime
+
+            field_33:
+              displayName: quantidade_bandagem
+              order: 51
+              type: Number
+
+            field_34:
+              displayName: operador_bandagem
+              order: 48
+              type: String
+
+            field_35:
+              displayName: data_hora_inicio_vulcanizacao
+              order: 53
+              type: DateTime
+
+            field_36:
+              displayName: data_hora_final_vulcanizacao
+              order: 52
+              type: DateTime
+
+            field_37:
+              displayName: quantidade_vulcanizacao
+              order: 56
+              type: Number
+
+            field_38:
+              displayName: operador_vulcanizacao
+              order: 57
+              type: String
+
+            field_39:
+              displayName: data_hora_inicio_debandagem
+              order: 59
+              type: DateTime
+
+            field_4:
+              displayName: cod_mandril
+              order: 10
+              type: String
+
+            field_40:
+              displayName: data_hora_final_debandagem
+              order: 60
+              type: DateTime
+
+            field_41:
+              displayName: quantidade_debandagem
+              order: 61
+              type: Number
+
+            field_42:
+              displayName: operador_debandagem
+              order: 62
+              type: String
+
+            field_43:
+              displayName: data_hora_inicio_extracao
+              order: 65
+              type: DateTime
+
+            field_44:
+              displayName: data_hora_final_extracao
+              order: 66
+              type: DateTime
+
+            field_46:
+              displayName: quantidade_extracao
+              order: 67
+              type: Number
+
+            field_47:
+              displayName: operador_extracao
+              order: 68
+              type: String
+
+            field_5:
+              displayName: diametro_mandril
+              order: 17
+              type: Number
+
+            field_6:
+              displayName: quantidade_mandril
+              order: 19
+              type: Number
+
+            field_8:
+              displayName: operador_mandril
+              order: 18
+              type: String
+
+            field_9:
+              displayName: data_hora_final_mandril
+              order: 14
+              type: DateTime
+
+            ID:
+              displayName: ID
+              description: List item id. Use this value for specifying the item to act on in other list related actions.
+              order: 0
+              type: Number
+
+            InicioAguardando_bandagem0:
+              displayName: InicioAguardando_bandagem
+              order: 81
+              type: DateTime
+
+            InicioAguardando_Debandagem:
+              displayName: InicioAguardando_Debandagem
+              order: 83
+              type: DateTime
+
+            InicioAguardando_Extr_x002e__x00:
+              displayName: InicioAguardando_Extr./Teste
+              order: 84
+              type: DateTime
+
+            InicioAguardando_Mandril:
+              displayName: InicioAguardando_Trançadeira
+              order: 79
+              type: DateTime
+
+            InicioAguardando_Tubo:
+              displayName: InicioAguardando_Tubo
+              order: 80
+              type: DateTime
+
+            InicioAguardando_Vulcaniza_x00e7:
+              displayName: InicioAguardando_Vulcanização
+              order: 82
+              type: DateTime
+
+            InicioAguardandoCobertura:
+              displayName: InicioAguardandoCobertura
+              order: 93
+              type: DateTime
+
+            InicioEmProcesso_Bandagem:
+              displayName: InicioEmProcesso_Bandagem
+              order: 89
+              type: DateTime
+
+            InicioEmProcesso_Cobertura:
+              displayName: InicioEmProcesso_Cobertura
+              order: 88
+              type: DateTime
+
+            InicioEmProcesso_Debandagem:
+              displayName: InicioEmProcesso_Debandagem
+              order: 91
+              type: DateTime
+
+            InicioEmProcesso_Extr_x002e__x00:
+              displayName: InicioEmProcesso_Extr./Teste
+              order: 92
+              type: DateTime
+
+            InicioEmProcesso_Mandril:
+              displayName: InicioEmProcesso_Mandril
+              order: 85
+              type: DateTime
+
+            InicioEmProcesso_Tran_x00e7_agem:
+              displayName: InicioEmProcesso_Trançagem
+              order: 87
+              type: DateTime
+
+            InicioEmProcesso_Tubo:
+              displayName: InicioEmProcesso_Tubo
+              order: 86
+              type: DateTime
+
+            InicioEmProcesso_Vulcaniza_x00e7:
+              displayName: InicioEmProcesso_Vulcanização
+              order: 90
+              type: DateTime
+
+            InicioResfriamento_Vulcanizacao:
+              displayName: InicioResfriamento_Vulcanizacao
+              order: 55
+              type: DateTime
+
+            Lote_cobertura:
+              displayName: Lote_cobertura
+              order: 75
+              type: String
+
+            lote_mandril:
+              displayName: lote_mandril
+              order: 15
+              type: String
+
+            Lote_Tran_x00e7_agem:
+              displayName: Lote_Trançagem
+              order: 77
+              type: String
+
+            Lote_Tranc_1aTrama:
+              displayName: Lote_Tranc_1aTrama
+              order: 34
+              type: String
+
+            LoteCompostoTubo:
+              displayName: Lote Composto Tubo
+              order: 74
+              type: String
+
+            Mangueira:
+              displayName: Mangueira
+              order: 6
+              type: String
+
+            maquina_mandril:
+              displayName: maquina_mandril
+              order: 11
+              type: String
+
+            Modified:
+              displayName: Modified
+              description: When this item was last changed.
+              order: 97
+              type: DateTime
+
+            N_x00b0_Picks:
+              displayName: N°Picks
+              order: 78
+              type: String
+
+            Observa_x00e7__x00e3_o_Bandagem:
+              displayName: Observação_Bandagem
+              order: 115
+              type: String
+
+            Observa_x00e7__x00e3_o_Cobertura:
+              displayName: Observação_Cobertura
+              order: 114
+              type: String
+
+            Observa_x00e7__x00e3_o_Debandage:
+              displayName: Observação_Debandagem
+              order: 116
+              type: String
+
+            Observa_x00e7__x00e3_o_mandril:
+              displayName: Observação_mandril
+              order: 111
+              type: String
+
+            Observa_x00e7__x00e3_o_Tran_x00e:
+              displayName: Observação_Trançagem
+              order: 113
+              type: String
+
+            Observa_x00e7__x00e3_o_tubo:
+              displayName: Observação_tubo
+              order: 112
+              type: String
+
+            OData__ColorTag:
+              displayName: Color Tag
+              order: 118
+              type: String
+
+            OP:
+              displayName: OP
+              order: 7
+              type: Number
+
+            PackListCabine:
+              displayName: PackList Cabine
+              order: 117
+              type: String
+
+            Picks_Tranc_1aTrama:
+              displayName: Picks_Tranc_1aTrama
+              order: 36
+              type: Number
+
+            PostCureData:
+              displayName: PostCure Data
+              order: 125
+              type: String
+
+            PostcureHorariodetermino:
+              displayName: Postcure Horario de termino
+              order: 126
+              type: String
+
+            PostCureQtd:
+              displayName: PostCure Qtd
+              order: 124
+              type: String
+
+            Processo:
+              displayName: Processo
+              order: 123
+              type: String
+
+            Qtd_Turno1:
+              displayName: Qtd_Turno1
+              order: 94
+              type: Number
+
+            Qtd_Turno1_Bandagem:
+              displayName: Qtd_Turno1_Bandagem
+              order: 101
+              type: Number
+
+            Qtd_Turno1_Cobertura:
+              displayName: Qtd_Turno1_Cobertura
+              order: 98
+              type: Number
+
+            Qtd_Turno1_Debandagem:
+              displayName: Qtd_Turno1_Debandagem
+              order: 107
+              type: Number
+
+            Qtd_Turno1_Vulcanizacao:
+              displayName: Qtd_Turno1_Vulcanizacao
+              order: 104
+              type: Number
+
+            Qtd_Turno2:
+              displayName: Qtd_Turno2
+              order: 95
+              type: Number
+
+            Qtd_Turno2_Bandagem:
+              displayName: " Qtd_Turno2_Bandagem"
+              order: 102
+              type: Number
+
+            Qtd_Turno2_Cobertura:
+              displayName: Qtd_Turno2_Cobertura
+              order: 99
+              type: Number
+
+            Qtd_Turno2_Debandagem:
+              displayName: Qtd_Turno2_Debandagem
+              order: 108
+              type: Number
+
+            Qtd_Turno2_Vulcanizacao:
+              displayName: Qtd_Turno2_Vulcanizacao
+              order: 105
+              type: Number
+
+            Qtd_Turno3:
+              displayName: Qtd_Turno3
+              order: 96
+              type: Number
+
+            Qtd_Turno3_Bandagem:
+              displayName: " Qtd_Turno3_Bandagem"
+              order: 103
+              type: Number
+
+            Qtd_Turno3_Cobertura:
+              displayName: Qtd_Turno3_Cobertura
+              order: 100
+              type: Number
+
+            Qtd_Turno3_Debandagem:
+              displayName: Qtd_Turno3_Debandagem
+              order: 109
+              type: Number
+
+            Qtd_Turno3_Vulcanizacao:
+              displayName: Qtd_Turno3_Vulcanizacao
+              order: 106
+              type: Number
+
+            Qtd_x002e_Planejada:
+              displayName: Qtd. Planejada
+              order: 128
+              type: Number
+
+            QTran_x00e7_as_x003f_:
+              displayName: QTranças?
+              order: 131
+              type:
+                kind: Record
+                properties:
+                  Value:
+                    displayName: Value
+                    order: 0
+                    dynamicValuesConfig:
+                      capability: List
+
+                    type: String
+
+            RegistrodeDefeitos:
+              displayName: Registro Defeito
+              order: 127
+              type: String
+
+            Title:
+              displayName: Title
+              order: 1
+              type: String
+
+            Tran_x00e7_adeira:
+              displayName: Trançadeira
+              order: 9
+              type: String
+
+            Turno:
+              displayName: Turno
+              order: 129
+              type: String
+
+            Turno_Bandagem:
+              displayName: Turno_Bandagem
+              order: 45
+              type: String
+
+            Turno_Cobertura:
+              displayName: Turno_Cobertura
+              order: 38
+              type: String
+
+            Turno_Debandagem:
+              displayName: Turno_Debandagem
+              order: 58
+              type: String
+
+            Turno_Extr_x002f_Teste:
+              displayName: Turno_Extr/Teste
+              order: 63
+              type: Number
+
+            Turno_mandril:
+              displayName: Turno_mandril
+              order: 12
+              type: String
+
+            Turno_Tran_x00e7_agem:
+              displayName: Turno_Trançagem
+              order: 27
+              type: String
+
+            Turno_Tubo:
+              displayName: Turno_Tubo
+              order: 20
+              type: String
+
+            Turno_Vulcaniza_x00e7__x00e3_o:
+              displayName: Turno_Vulcanização
+              order: 54
+              type: String
