@@ -298,3 +298,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-23 | Uiu v4, passo 1: especificação, gabarito de 40 perguntas e script | chefe (Opus 5.5) escreve e calcula; executor em Opus como revisor, 2 passes (~155k tokens) | regra de contagem e parada exige revisor, que não carregou na sessão | não medido
 2026-11-23 | Uiu v4, passo 2: tela da conexão Power BI e consultas de teste (esperando o clique do William) | chefe (Opus 5.5) sozinho | poucos passos | não medido
 2026-11-23 | Uiu v4, passo 2: conexão Power BI e fluxo temporário de teste; portão aprovado | chefe (Opus 5.5) sozinho, navegador embutido e API do Dataverse | passos encadeados | não medido
+2026-11-24 | Uiu v4, passo 3: gerador, revisão e criação dos 3 fluxos, lote de 38 casos | chefe (Opus 5.5) escreve e testa; executor em Opus como revisor, 2 passes (116k e 136k tokens) | regra de contagem e parada; revisor não carregou | não medido

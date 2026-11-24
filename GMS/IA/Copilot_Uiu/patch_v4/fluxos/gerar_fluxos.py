@@ -133,7 +133,7 @@ def pipeline():
 
     def val(c):
         bruto = f"trim(last(split({c},'=')))"
-        semnum = f"if(isInt(trim(first(split(concat({bruto},' - '),' - ')))),trim(join(skip(split({bruto},' - '),1),' - ')),{bruto})"
+        semnum = f"if(and(equals({dim(c)},'codigo'),contains({bruto},' - '),isInt(trim(first(split(concat({bruto},' - '),' - '))))),trim(join(skip(split({bruto},' - '),1),' - ')),{bruto})"
         almoco = f"if(and(equals({dim(c)},'codigo'),equals(toLower({semnum}),'refeição'),equals(toLower(trim(coalesce({E}?['indicador'],'-'))),'deficit_hora_hora')),'Almoço',{semnum})"
         return f"if(equals({dim(c)},'maquina'),toUpper(replace(replace({bruto},'-',''),'.','')),if(equals({dim(c)},'turno'),take(concat({bruto},' '),1),{almoco}))"
 
@@ -256,33 +256,47 @@ def pipeline():
             'Ultimas_set': setvar('Boas_v', "@body('So_ultimas')"),
             'Aviso_d': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat(string(sub(length(body('Base')),length(body('So_ultimas')))),' janela(s) repetida(s) na Hora-Hora: vale a última')}"}, 'runAfter': {}},
         }), 'else': {'actions': {}}, 'runAfter': {}},
-        'Filtrar': query("@variables('Boas_v')", f"@and({cond('d1', 'v1')},{cond('d2', 'v2')})"),
-        'Vals': select("@body('Base')", f"@{{string(coalesce(item()?[{P}?['d1']],''))}}"),
-        'Se_vazio': {'type': 'If', 'expression': f"@and(empty(body('Filtrar')),not(empty(body('Base'))),not(equals({P}?['d1'],'-')))", 'actions': {
-            'Aviso_v': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Nenhuma linha com esse filtro em ',outputs('Fonte')?['lista'],'. Valores que existem no período: ',join(take(union(body('Vals'),body('Vals')),25),', '))}"}, 'runAfter': {}}},
-            'else': {'actions': {}}, 'runAfter': {}},
-        'Trocadas': query("@body('Filtrar')", f"@and(equals({nome},'ref'),{longe})"),
-        'Canceladas': query("@body('Filtrar')", f"@and(equals({nome},'ev'),{canc})"),
-        'Boas': query("@body('Filtrar')", f"@not(or(and(equals({nome},'ref'),{longe}),and(equals({nome},'ev'),{canc})))"),
-        'Aviso_trocadas': {'type': 'If', 'expression': {'greater': ["@length(body('Trocadas'))", 0]}, 'actions': {
-            'Aviso_t': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat(string(length(body('Trocadas'))),' linha(s) de refugo com dia e mês trocados ficaram fora (',formatNumber(" + soma_xml("body('Trocadas')", 'v') + ",'0.00','en-US'),' m); saem do mês errado, mas não voltam ao certo')}"}, 'runAfter': {}}},
-            'else': {'actions': {}}, 'runAfter': {}},
-        'Chave_rep': select("@body('Boas')", "@{concat(item()?['dia'],'|',item()?['op'],'|',item()?['codigo'],'|',string(item()?['v']))}"),
-        'Se_rep': {'type': 'If', 'expression': f"@and(equals({nome},'ref'),greater(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep')))))", 'actions': {
-            'Aviso_r': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat(string(sub(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep'))))),' linha(s) de refugo iguais a outra (dia, OP, código e metros); não foram excluídas')}"}, 'runAfter': {}}},
-            'else': {'actions': {}}, 'runAfter': {}},
-        'Aviso_canceladas': {'type': 'If', 'expression': {'greater': ["@length(body('Canceladas'))", 0]}, 'actions': seq({
-            'Fichas_c': select("@body('Canceladas')", "@{concat('ficha ',item()?['orig'],' ',item()?['etapa'],' ',item()?['codigo'],' ',string(item()?['v']),' m')}"),
-            'Aviso_c': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Descontado por cancelamento: ',join(body('Fichas_c'),'; '))}"}, 'runAfter': {}}}),
-            'else': {'actions': {}}, 'runAfter': {}},
-        'Aviso_sem_evento': {'type': 'If', 'expression': {'equals': [f'@{nome}', 'ev']}, 'actions': seq({
-            'Suspeitas': query("@body('Boas')", "@and(contains(coalesce(body('Ids_fichas_canc'),json('[]')),item()?['orig']),greater(item()?['v'],0))"),
+        # só quando há filtro em onde
+        'Se_filtro': {'type': 'If', 'expression': f"@not(and(equals({P}?['d1'],'-'),or(equals({P}?['d2'],'-'),empty({P}?['d2']))))", 'actions': seq({
+            'Antes': compose("@variables('Boas_v')"),
+            'Filtrar': query("@outputs('Antes')", f"@and({cond('d1', 'v1')},{cond('d2', 'v2')})"),
+            'Filtrar_set': setvar('Boas_v', "@body('Filtrar')"),
+            'Vals': select("@body('Base')", f"@{{string(coalesce(item()?[{P}?['d1']],''))}}"),
+            'Se_vazio': {'type': 'If', 'expression': f"@and(empty(body('Filtrar')),not(empty(body('Base'))),not(equals({P}?['ind'],'producao_etapa')))", 'actions': {
+                'Aviso_v': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Nenhuma linha com esse filtro em ',outputs('Fonte')?['lista'],'. Valores que existem no período: ',join(take(union(body('Vals'),body('Vals')),25),', '))}"}, 'runAfter': {}}},
+                'else': {'actions': {}}, 'runAfter': {}},
+        }), 'else': {'actions': {}}, 'runAfter': {}},
+        # só no refugo: datas trocadas e linhas repetidas
+        'Se_ref': {'type': 'If', 'expression': {'equals': [f'@{nome}', 'ref']}, 'actions': seq({
+            'Antes_ref': compose("@variables('Boas_v')"),
+            'Trocadas': query("@outputs('Antes_ref')", f"@{longe}"),
+            'Nao_trocadas': query("@outputs('Antes_ref')", f"@not({longe})"),
+            'Ref_set': setvar('Boas_v', "@body('Nao_trocadas')"),
+            'Aviso_trocadas': {'type': 'If', 'expression': {'greater': ["@length(body('Trocadas'))", 0]}, 'actions': {
+                'Aviso_t': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat(string(length(body('Trocadas'))),' linha(s) de refugo com dia e mês trocados ficaram fora (',formatNumber(" + soma_xml("body('Trocadas')", 'v') + ",'0.00','en-US'),' m); saem do mês errado, mas não voltam ao certo')}"}, 'runAfter': {}}},
+                'else': {'actions': {}}, 'runAfter': {}},
+            'Chave_rep': select("@body('Nao_trocadas')", "@{concat(item()?['dia'],'|',item()?['op'],'|',item()?['codigo'],'|',string(item()?['v']))}"),
+            'Se_rep': {'type': 'If', 'expression': "@greater(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep'))))", 'actions': {
+                'Aviso_r': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat(string(sub(length(body('Chave_rep')),length(union(body('Chave_rep'),body('Chave_rep'))))),' linha(s) de refugo iguais a outra (dia, OP, código e metros); não foram excluídas')}"}, 'runAfter': {}}},
+                'else': {'actions': {}}, 'runAfter': {}},
+        }), 'else': {'actions': {}}, 'runAfter': {}},
+        # só nos eventos: canceladas
+        'Se_ev2': {'type': 'If', 'expression': {'equals': [f'@{nome}', 'ev']}, 'actions': seq({
+            'Antes_ev': compose("@variables('Boas_v')"),
+            'Canceladas': query("@outputs('Antes_ev')", f"@{canc}"),
+            'Nao_canceladas': query("@outputs('Antes_ev')", f"@not({canc})"),
+            'Ev_set': setvar('Boas_v', "@body('Nao_canceladas')"),
+            'Aviso_canceladas': {'type': 'If', 'expression': {'greater': ["@length(body('Canceladas'))", 0]}, 'actions': seq({
+                'Fichas_c': select("@body('Canceladas')", "@{concat('ficha ',item()?['orig'],' ',item()?['etapa'],' ',item()?['codigo'],' ',string(item()?['v']),' m')}"),
+                'Aviso_c': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Descontado por cancelamento: ',join(body('Fichas_c'),'; '))}"}, 'runAfter': {}}}),
+                'else': {'actions': {}}, 'runAfter': {}},
+            'Suspeitas': query("@body('Nao_canceladas')", "@and(contains(coalesce(body('Ids_fichas_canc'),json('[]')),item()?['orig']),greater(item()?['v'],0))"),
             'Susp_txt': select("@body('Suspeitas')", "@{concat('ficha ',item()?['orig'],' ',item()?['etapa'],' ',string(item()?['v']),' m')}"),
             'Se_susp': {'type': 'If', 'expression': {'greater': ["@length(body('Suspeitas'))", 0]}, 'actions': {
                 'Aviso_s': {'type': 'AppendToArrayVariable', 'inputs': {'name': 'Avisos', 'value': "@{concat('Ficha com situação Cancelado sem desconto (segue somada): ',join(body('Susp_txt'),'; '))}"}, 'runAfter': {}}},
-                'else': {'actions': {}}, 'runAfter': {}}}),
-            'else': {'actions': {}}, 'runAfter': {}},
-        'Acumular': compose("@union(variables('Linhas'),body('Boas'))"),
+                'else': {'actions': {}}, 'runAfter': {}},
+        }), 'else': {'actions': {}}, 'runAfter': {}},
+        'Acumular': compose("@union(variables('Linhas'),variables('Boas_v'))"),
         'Acumular_set': setvar('Linhas', "@outputs('Acumular')"),
     })
     fonte['Se_ev']['actions']['Ids_fichas_canc']['runAfter'] = {'Ler_sem_evento': ['Succeeded', 'Failed', 'TimedOut']}
