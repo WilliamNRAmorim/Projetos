@@ -96,3 +96,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-25 | Fluxo de atualização do BI: preferiu esperar a execução real de 26/11 a reenviar ele mesmo a das 06:05 para testar
 - 2026-11-25: aceitou a recomendação de ajustar o plano diário proporcional ao PL no modelo (lugar único), em vez de mexer nas medidas.
 2026-11-25 | TCC: aceitou a recomendada de mover o Word antigo como molde em vez de apagar
+2026-11-25 | TCC: aceitou a recomendada de guardar os 5 arquivos únicos (anotados, versão entregue, normas) ao limpar Downloads
