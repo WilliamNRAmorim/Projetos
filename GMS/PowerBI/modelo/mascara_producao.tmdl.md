@@ -607,3 +607,22 @@ createOrReplace
 			displayFolder: Máscara SAP
 
 ```
+
+## 8) Passo 6 (25/11/2026, aplicado 12:4x, refresh da tabela 12:47): plano diário da Mangueira proporcional ao PL
+Decisão do William em 25/11 ("tem q ser tudo proporcional"; plano aprovado, revisão do chefe). Ao carregar, o planejado de cada dia da Mangueira é multiplicado por total da `GMS_PlanoMangueira` no mês ÷ total da `GMS_PlanoDiario` no mês. Sem PL no mês ou diferença acima de 30% (diário pela metade), não ajusta. Lista `GMS_PlanoDiario`, medidas e layout não mudam; a Produção x meta e o Plano de mangueira leem a mesma coluna. **Rollback:** trocar a partição `dPlanoDiario` pela do passo 5 (Final = RenameColumns de Agrupado) e atualizar a tabela.
+Conferido (corte 24/11): soma 158.966 (antes 161.040), 22 dias, 24/11 = 8.501,09, meta acumulada 115.830,78, atraso 7.850,98, para fechar 10.197,24, ritmo 72,9%; Montagem 45.306 e Fittings 14.400 sem mudança; 0 dias mudaram de "abaixo" para "bateu" (18 dias com real, 8 batidos).
+Linhas que entram na partição no lugar de `Final` (depois de `Agrupado = ...,`):
+```
+				PLItens = Table.SelectColumns(Origem{[Title = "GMS_PlanoMangueira"]}[Items], {"Mes", "Volume"}),
+				PLMes = Table.TransformColumns(PLItens, {{"Mes", each if _ = null then null else Date.StartOfMonth(Date.From(_)), type date}, {"Volume", each if _ = null then 0 else Number.From(_), type number}}),
+				PLTotal = Table.Group(PLMes, {"Mes"}, {{"PL", each List.Sum([Volume]), type number}}),
+				ComMes = Table.AddColumn(Agrupado, "Mes", each Date.StartOfMonth([Data]), type date),
+				DiarioTotal = Table.Group(ComMes, {"Title", "Mes"}, {{"Diario", each List.Sum([Planejado]), type number}}),
+				ComDiario = Table.ExpandTableColumn(Table.NestedJoin(ComMes, {"Title", "Mes"}, DiarioTotal, {"Title", "Mes"}, "D", JoinKind.LeftOuter), "D", {"Diario"}),
+				ComPL = Table.ExpandTableColumn(Table.NestedJoin(ComDiario, {"Mes"}, PLTotal, {"Mes"}, "P", JoinKind.LeftOuter), "P", {"PL"}),
+				ComFator = Table.AddColumn(ComPL, "Fator", each if [Title] = "Mangueira" and [PL] <> null and [PL] > 0 and [Diario] > 0 then [PL] / [Diario] else 1, type number),
+				Ajustado = Table.AddColumn(ComFator, "Ajuste", each if Number.Abs([Fator] - 1) <= 0.3 then [Planejado] * [Fator] else [Planejado], type number),
+				Final = Table.RenameColumns(Table.SelectColumns(Ajustado, {"Title", "Data", "Ajuste"}), {{"Title", "Produto"}, {"Ajuste", "Planejado"}})
+				in
+				Final
+```

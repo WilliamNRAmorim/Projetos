@@ -94,3 +94,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-24 | Uiu patch geral v4: deu o sim para rodar a bateria das 40 perguntas no painel de teste
 2026-11-25 | Fluxo de atualização do BI: aprovou a correção (espera de 20 min, checagem de export mais nova e nova tentativa) e deu o sim para o chefe alterar o fluxo
 2026-11-25 | Fluxo de atualização do BI: preferiu esperar a execução real de 26/11 a reenviar ele mesmo a das 06:05 para testar
+- 2026-11-25: aceitou a recomendação de ajustar o plano diário proporcional ao PL no modelo (lugar único), em vez de mexer nas medidas.
