@@ -315,3 +315,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-25 | Fluxo de atualização do BI: tentativa de reenviar a execução das 06:05 para testar; o navegador embutido não disparou | chefe (Opus 5.5) sozinho | com sim do William | não medido
 2026-11-25 | Plano de mangueira: comparação do PL_NOV_Trançadeira com a lista e gravação de 10 itens (158.966 m) | chefe (Opus 5.5) sozinho, navegador embutido | contexto já na sessão | não medido
 2026-11-25 | Plano de mangueira: refresh e conferência do BI online, script e desenho do fluxo do PL testados sem gravar | chefe (Opus 5.5) sozinho, navegador embutido | contexto já na sessão | não medido
+2026-11-25 | Plano de mangueira: Office Script e fluxo GMS_PlanoMangueira_Sync criados e ligados (falta teste com salvamento real) | chefe (Opus 5.5) sozinho, navegador embutido | com sim do William | não medido
