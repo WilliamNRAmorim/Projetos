@@ -316,3 +316,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-25 | Plano de mangueira: comparação do PL_NOV_Trançadeira com a lista e gravação de 10 itens (158.966 m) | chefe (Opus 5.5) sozinho, navegador embutido | contexto já na sessão | não medido
 2026-11-25 | Plano de mangueira: refresh e conferência do BI online, script e desenho do fluxo do PL testados sem gravar | chefe (Opus 5.5) sozinho, navegador embutido | contexto já na sessão | não medido
 2026-11-25 | Plano de mangueira: Office Script e fluxo GMS_PlanoMangueira_Sync criados e ligados (falta teste com salvamento real) | chefe (Opus 5.5) sozinho, navegador embutido | com sim do William | não medido
+2026-11-25 | Plano de mangueira: teste real do GMS_PlanoMangueira_Sync com salvamento do PL_NOV (0 mudanças) | chefe (Opus 5.5) sozinho, navegador embutido | conferência no histórico do fluxo | não medido

@@ -13,3 +13,4 @@ Mantém a lista `GMS_PlanoMangueira` igual à aba "Plano" do `PL_<MES>_Trançade
 7. **E-mail** só para o William (laço failed, timed out ou skipped) com o `erro` da trava e o nome do arquivo.
 
 O BI mostra no refresh seguinte do modelo. Testes (25/11): 16 mutações ok; 12 planos de 2026 (barrou PL_ABRIL, PL_Padrão, JAN e JUL da cópia); PL_NOV vivo x lista = 0 mudanças; PL_NOV x lista antiga = as mesmas 10 mudanças gravadas com o sim.
+Teste real (25/11 12:37): salvamento do PL_NOV disparou o fluxo; 1ª execução cancelada pela espera, 2ª com sucesso (ok, 158.966 = 158.966, 0 linhas). Sem teste real: gravação (POST/MERGE) e e-mail de trava.
