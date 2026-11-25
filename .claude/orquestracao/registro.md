@@ -313,3 +313,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-25 | Excel de tratativa da PROD-GR-HOSE no formato do v3 | chefe (Opus 5.5) sozinho: ExcelRest, API do SharePoint, openpyxl e Excel | contexto na sessão | não medido
 2026-11-25 | Fluxo 'GMS - Atualizar BI quando SAP exportar': espera de 20 min, checagem de export mais nova e nova tentativa, editado e salvo no designer | chefe (Opus 5.5) sozinho, navegador embutido | um fluxo só, plano aprovado no chat | não medido (uso.ps1 não encontrou uso do dia neste PC)
 2026-11-25 | Fluxo de atualização do BI: tentativa de reenviar a execução das 06:05 para testar; o navegador embutido não disparou | chefe (Opus 5.5) sozinho | com sim do William | não medido
+2026-11-25 | Plano de mangueira: comparação do PL_NOV_Trançadeira com a lista e gravação de 10 itens (158.966 m) | chefe (Opus 5.5) sozinho, navegador embutido | contexto já na sessão | não medido
