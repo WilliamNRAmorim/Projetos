@@ -11,7 +11,7 @@ import zipfile
 from pathlib import Path
 
 RAIZ_TCC = Path(__file__).resolve().parents[2]   # .../Projetos/TCC
-MOLDE = RAIZ_TCC / "TCC_GMS.docx"
+MOLDE = Path(__file__).resolve().parent / "molde_tcc1.docx"
 FIGURAS = RAIZ_TCC / "Fase2" / "figuras"
 MAX_W = 5760000   # 16 cm em EMU
 MAX_H = 7200000   # 20 cm em EMU
