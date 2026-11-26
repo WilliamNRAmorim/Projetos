@@ -1,0 +1,28 @@
+table dTurno
+
+	/// Dimensão de turno do BI (mesmo texto de fHoraCheia[Turno BI], Producao_Montagem[Turno BI] e Paradas_Montagem[Turno BI]).
+	column Turno
+		dataType: string
+		summarizeBy: none
+		sortByColumn: Ordem
+		sourceColumn: [Turno]
+
+	column Ordem
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [Ordem]
+
+	partition dTurno = calculated
+		mode: import
+		source =
+			DATATABLE (
+			"Turno", STRING,
+			"Ordem", INTEGER,
+			{
+			{ "1º Turno", 1 },
+			{ "2º Turno", 2 },
+			{ "3º Turno", 3 }
+			}
+			)

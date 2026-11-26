@@ -1,0 +1,223 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.14.0/schema.json",
+  "name": "a0436a85f344a1281d65",
+  "position": {
+    "x": 216,
+    "y": 280,
+    "z": 30001,
+    "height": 276,
+    "width": 516,
+    "tabOrder": 30001
+  },
+  "visual": {
+    "visualType": "deneb7E15AEF80B9E4D4F8E12924291ECE89A",
+    "query": {
+      "queryState": {
+        "dataset": {
+          "projections": [
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP % Ritmo Esperado"
+                }
+              },
+              "queryRef": "Medidas.HP % Ritmo Esperado",
+              "nativeQueryRef": "HP % Ritmo Esperado"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP Plano do Mês"
+                }
+              },
+              "queryRef": "Medidas.HP Plano do Mês",
+              "nativeQueryRef": "HP Plano do Mês"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "dClasseMangueira"
+                    }
+                  },
+                  "Property": "C.Standard"
+                }
+              },
+              "queryRef": "dClasseMangueira.C.Standard",
+              "nativeQueryRef": "C.Standard"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "Medidas"
+                    }
+                  },
+                  "Property": "HP % do Plano"
+                }
+              },
+              "queryRef": "Medidas.HP % do Plano",
+              "nativeQueryRef": "HP % do Plano"
+            }
+          ]
+        }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Measure": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "Medidas"
+                  }
+                },
+                "Property": "HP % Ritmo Esperado"
+              }
+            },
+            "direction": "Descending"
+          }
+        ],
+        "isDefaultSort": true
+      }
+    },
+    "objects": {
+      "vega": [
+        {
+          "properties": {
+            "provider": {
+              "expr": {
+                "Literal": {
+                  "Value": "'vegaLite'"
+                }
+              }
+            },
+            "jsonSpec": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{\n  \"$schema\": \"https://vega.github.io/schema/vega-lite/v5.json\",\n  \"title\": {\n    \"text\": \"Quanto de cada C.Standard saiu?\",\n    \"subtitle\": \"% do plano do mês · traço = ritmo esperado · vermelho = atrás do ritmo · clique na linha para filtrar\",\n    \"anchor\": \"start\",\n    \"font\": \"Segoe UI\",\n    \"fontSize\": 13,\n    \"fontWeight\": 600,\n    \"color\": \"#3C3C3B\",\n    \"subtitleFont\": \"Segoe UI\",\n    \"subtitleFontSize\": 10,\n    \"subtitleColor\": \"#8A8A88\",\n    \"offset\": 10\n  },\n  \"data\": {\n    \"name\": \"dataset\"\n  },\n  \"transform\": [\n    {\n      \"filter\": \"datum[''HP Plano do Mês''] > 0\"\n    },\n    {\n      \"calculate\": \"datum[''HP % do Plano''] < datum[''HP % Ritmo Esperado''] ? ''atrás'' : ''em dia''\",\n      \"as\": \"situacao\"\n    },\n    {\n      \"calculate\": \"replace(format(datum[''HP % do Plano''], ''.1%''), ''.'', '','')\",\n      \"as\": \"pct1\"\n    },\n    {\n      \"calculate\": \"format(datum[''HP % do Plano''], ''.0%'')\",\n      \"as\": \"pct0\"\n    },\n    {\n      \"calculate\": \"replace(format(datum[''HP % Ritmo Esperado''], ''.1%''), ''.'', '','')\",\n      \"as\": \"ritmo1\"\n    },\n    {\n      \"calculate\": \"replace(format(datum[''HP Plano do Mês''], '',.0f''), regexp('','', ''g''), ''.'')\",\n      \"as\": \"plano1\"\n    },\n    {\n      \"joinaggregate\": [\n        {\n          \"op\": \"max\",\n          \"field\": \"HP Plano do Mês\",\n          \"as\": \"pmax\"\n        }\n      ]\n    },\n    {\n      \"calculate\": \"datum.pmax - datum[''HP Plano do Mês'']\",\n      \"as\": \"chave\"\n    },\n    {\n      \"calculate\": \"datum[''C_Standard''] + ''   '' + replace(format(datum[''HP Plano do Mês''] / 1000, ''.1f''), ''.'', '','') + ''k''\",\n      \"as\": \"rotulo\"\n    }\n  ],\n  \"width\": \"container\",\n  \"height\": {\n    \"step\": 24\n  },\n  \"encoding\": {\n    \"y\": {\n      \"field\": \"rotulo\",\n      \"type\": \"nominal\",\n      \"sort\": {\n        \"field\": \"chave\",\n        \"op\": \"min\",\n        \"order\": \"ascending\"\n      },\n      \"title\": null,\n      \"axis\": {\n        \"labelFont\": \"Segoe UI\",\n        \"labelFontSize\": 11,\n        \"labelColor\": \"#3C3C3B\",\n        \"domain\": false,\n        \"ticks\": false,\n        \"labelPadding\": 8,\n        \"labelLimit\": 220\n      }\n    }\n  },\n  \"layer\": [\n    {\n      \"mark\": {\n        \"type\": \"bar\",\n        \"cornerRadius\": 2,\n        \"height\": 11,\n        \"color\": \"#EDEDED\"\n      },\n      \"encoding\": {\n        \"x\": {\n          \"datum\": 1,\n          \"type\": \"quantitative\",\n          \"scale\": {\n            \"domain\": [\n              0,\n              1\n            ]\n          },\n          \"axis\": null\n        }\n      }\n    },\n    {\n      \"mark\": {\n        \"type\": \"bar\",\n        \"cornerRadius\": 2,\n        \"height\": 11\n      },\n      \"encoding\": {\n        \"x\": {\n          \"field\": \"HP % do Plano\",\n          \"type\": \"quantitative\",\n          \"scale\": {\n            \"domain\": [\n              0,\n              1\n            ],\n            \"clamp\": true\n          },\n          \"axis\": null\n        },\n        \"color\": {\n          \"field\": \"situacao\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"atrás\",\n              \"em dia\"\n            ],\n            \"range\": [\n              \"#E2000F\",\n              \"#3C3C3B\"\n            ]\n          },\n          \"legend\": null\n        },\n        \"opacity\": {\n          \"condition\": {\n            \"test\": \"datum.__selected__ == ''off''\",\n            \"value\": 0.25\n          },\n          \"value\": 1\n        }\n      }\n    },\n    {\n      \"mark\": {\n        \"type\": \"tick\",\n        \"color\": \"#3C3C3B\",\n        \"thickness\": 2,\n        \"size\": 17\n      },\n      \"encoding\": {\n        \"x\": {\n          \"field\": \"HP % Ritmo Esperado\",\n          \"type\": \"quantitative\"\n        }\n      }\n    },\n    {\n      \"mark\": {\n        \"type\": \"text\",\n        \"align\": \"left\",\n        \"dx\": 6,\n        \"font\": \"Segoe UI\",\n        \"fontSize\": 11,\n        \"fontWeight\": \"bold\"\n      },\n      \"encoding\": {\n        \"x\": {\n          \"datum\": 1,\n          \"type\": \"quantitative\"\n        },\n        \"text\": {\n          \"field\": \"pct1\"\n        },\n        \"color\": {\n          \"field\": \"situacao\",\n          \"type\": \"nominal\",\n          \"scale\": {\n            \"domain\": [\n              \"atrás\",\n              \"em dia\"\n            ],\n            \"range\": [\n              \"#E2000F\",\n              \"#3C3C3B\"\n            ]\n          },\n          \"legend\": null\n        }\n      }\n    },\n    {\n      \"params\": [\n        {\n          \"name\": \"__select__\",\n          \"select\": {\n            \"type\": \"point\"\n          }\n        },\n        {\n          \"name\": \"passa\",\n          \"select\": {\n            \"type\": \"point\",\n            \"on\": \"pointerover\",\n            \"clear\": \"pointerout\"\n          }\n        }\n      ],\n      \"mark\": {\n        \"type\": \"rect\",\n        \"cursor\": \"pointer\",\n        \"cornerRadius\": 4\n      },\n      \"encoding\": {\n        \"x\": {\n          \"value\": -150\n        },\n        \"x2\": {\n          \"value\": {\n            \"expr\": \"width + 46\"\n          }\n        },\n        \"fill\": {\n          \"condition\": [\n            {\n              \"param\": \"passa\",\n              \"empty\": false,\n              \"value\": \"rgba(60,60,59,0.08)\"\n            },\n            {\n              \"test\": \"datum.__selected__ == ''on''\",\n              \"value\": \"rgba(60,60,59,0.05)\"\n            }\n          ],\n          \"value\": \"transparent\"\n        },\n        \"tooltip\": [\n          {\n            \"field\": \"C_Standard\",\n            \"title\": \"C.Standard\"\n          },\n          {\n            \"field\": \"plano1\",\n            \"title\": \"Plano (m)\"\n          },\n          {\n            \"field\": \"pct1\",\n            \"title\": \"% do plano\"\n          },\n          {\n            \"field\": \"ritmo1\",\n            \"title\": \"Ritmo esperado\"\n          }\n        ]\n      }\n    }\n  ],\n  \"config\": {\n    \"view\": {\n      \"stroke\": null\n    },\n    \"padding\": {\n      \"left\": 6,\n      \"right\": 6,\n      \"top\": 4,\n      \"bottom\": 4\n    }\n  }\n}'"
+                }
+              }
+            },
+            "jsonConfig": {
+              "expr": {
+                "Literal": {
+                  "Value": "'{}'"
+                }
+              }
+            },
+            "enableTooltips": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableContextMenu": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableContextMenuSelector": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "enableHighlight": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "enableSelection": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "selectionMaxDataPoints": {
+              "expr": {
+                "Literal": {
+                  "Value": "50D"
+                }
+              }
+            },
+            "selectionMode": {
+              "expr": {
+                "Literal": {
+                  "Value": "'simple'"
+                }
+              }
+            },
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'6.4.3'"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "stateManagement": [
+        {
+          "properties": {
+            "denebMetaVersion": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2'"
+                }
+              }
+            },
+            "viewportHeight": {
+              "expr": {
+                "Literal": {
+                  "Value": "250D"
+                }
+              }
+            },
+            "viewportWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "482D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "developer": [
+        {
+          "properties": {
+            "version": {
+              "expr": {
+                "Literal": {
+                  "Value": "'2.0.1.0'"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,0 +1,611 @@
+table Producao_Montagem
+	lineageTag: 0b4c1af1-1947-4d8e-877c-3a5a685e3ef1
+
+	/// Meta DIARIA de montagem no contexto de celula/turno da dMetaMontagem. Para periodos maiores que 1 dia, multiplicar por dias uteis. Fonte: aba META Mangueira Montagem do CP.
+	measure 'Meta Montagem Dia' = SUM(dMetaMontagem[MetaDia])
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 72d7610b-69a8-42c6-95e0-4c9a719a531f
+
+	/// Producao de montagem (somente OPs Finalizado). Cruza com dMetaMontagem via TREATAS quando a matriz usa celula/turno da tabela de metas, dispensando relacionamento fisico.
+	measure 'Real Montagem' = CALCULATE(SUM(Producao_Montagem[QtdProduzida]), Producao_Montagem[status] = "Finalizado", TREATAS(VALUES(dMetaMontagem[Celula]), Producao_Montagem[Celula]), TREATAS(VALUES(dMetaMontagem[Turno]), Producao_Montagem[Turno]))
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 017d23fd-716d-4944-bfd8-ccccd53a6623
+
+	/// % de atingimento da montagem = Real / Meta diaria. Em branco quando nao ha meta no contexto.
+	measure '% Montagem' = DIVIDE([Real Montagem], [Meta Montagem Dia])
+		formatString: 0%
+		displayFolder: 10 CP Montagem
+		lineageTag: dc068543-e55c-4241-a8ab-91aec4aca851
+
+	/// % de montagem com seta de tendencia, mesmo padrao do CP Mangueira: para cima quando bateu a meta, para baixo abaixo.
+	measure '% Montagem c/ Seta' = VAR p = [% Montagem] RETURN IF(NOT ISBLANK(p), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)) & " " & FORMAT(p, "0%"))
+		displayFolder: 10 CP Montagem
+		lineageTag: 8e1eac0d-d64d-4f4b-bb06-d523ff8d2045
+
+	/// Minutos de parada da montagem. Cruza celula/turno com dMetaMontagem via TREATAS para uso na mesma matriz de metas.
+	measure 'Tempo Parado Montagem (min)' = CALCULATE(SUM(Paradas_Montagem[TempoParadoMin]), TREATAS(VALUES(dMetaMontagem[Celula]), Paradas_Montagem[Celula]), TREATAS(VALUES(dMetaMontagem[Turno]), Paradas_Montagem[Turno]))
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: eb242a75-f2df-4726-a77e-67a48c6b55d2
+
+	/// Quantidade de OPs de montagem finalizadas no contexto.
+	measure 'OPs Finalizadas Montagem' = CALCULATE(COUNTROWS(Producao_Montagem), Producao_Montagem[status] = "Finalizado")
+		formatString: #,##0
+		displayFolder: 10 CP Montagem
+		lineageTag: 302ed6b2-819a-4f61-8573-6125376f6588
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 0655d1aa-84aa-46d9-b641-6bd09be45ab4
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Turno
+		dataType: string
+		lineageTag: 869323a3-228b-4ed6-a4ff-df1dd62f8159
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Celula
+		dataType: string
+		lineageTag: 2ea793bd-5662-40f4-b253-0087e8e2a511
+		summarizeBy: none
+		sourceColumn: Celula
+
+		annotation SummarizationSetBy = Automatic
+
+	column PN
+		dataType: string
+		lineageTag: 174facbc-4ae0-46ad-85b3-1df1c6c5a693
+		summarizeBy: none
+		sourceColumn: PN
+
+		annotation SummarizationSetBy = Automatic
+
+	column OT
+		dataType: int64
+		formatString: 0
+		lineageTag: 6a8151e4-488c-409d-bf85-9ca9032dd543
+		summarizeBy: sum
+		sourceColumn: OT
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdOT
+		dataType: double
+		lineageTag: ff1d6b29-2dcc-4e15-8e33-e40e5b12d17e
+		summarizeBy: sum
+		sourceColumn: QtdOT
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column InicioEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: adba5efc-9ce3-4498-9008-4c393d7574b4
+		summarizeBy: none
+		sourceColumn: InicioEm
+
+		variation Variation
+			isDefault
+			relationship: 7564363c-12f3-4d88-be04-088775a09ccc
+			defaultHierarchy: LocalDateTable_46a4a0be-2e8f-47a2-a719-43dc07bbaed1.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column FimEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 5d6b742c-cc69-45e5-84ad-97346cf0328f
+		summarizeBy: none
+		sourceColumn: FimEm
+
+		variation Variation
+			isDefault
+			relationship: 2c74738e-288d-4f6f-9b0f-d25a653e4268
+			defaultHierarchy: LocalDateTable_5b2ae7f8-4e58-46e5-8e7e-2ca9431e5940.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdProduzida
+		dataType: double
+		lineageTag: 83c8fbd8-bed6-4861-b324-c02c5baae142
+		summarizeBy: sum
+		sourceColumn: QtdProduzida
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MetaHora
+		dataType: double
+		lineageTag: 19717b03-cbe4-4a7a-bac1-02825fc8b1fd
+		summarizeBy: sum
+		sourceColumn: MetaHora
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DuracaoMin
+		dataType: double
+		lineageTag: f2bfd67d-10c8-4139-86f4-312b36e9bb29
+		summarizeBy: sum
+		sourceColumn: DuracaoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DuracaoSeg
+		dataType: double
+		lineageTag: 78f320f8-a60a-4e7b-be96-a292f3ee3885
+		summarizeBy: sum
+		sourceColumn: DuracaoSeg
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Status
+		dataType: string
+		lineageTag: b882d321-cd01-4fed-981d-4f77684c9bf4
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Cracha
+		dataType: string
+		lineageTag: 7a28d10a-44b8-4ed1-afd8-c48e0b2796e6
+		summarizeBy: none
+		sourceColumn: Cracha
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuracaoRealMin
+		dataType: double
+		lineageTag: b92bf5c6-ff2f-4bab-b210-fd6a416e2ba8
+		summarizeBy: sum
+		sourceColumn: DuracaoRealMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DescontoMin
+		dataType: double
+		lineageTag: 79afba11-a0e9-422a-8d82-70561bf40a52
+		summarizeBy: sum
+		sourceColumn: DescontoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	/// Turno sem o espaço à esquerda que chega da fonte.
+	column 'Turno BI' =
+			TRIM ( Producao_Montagem[Turno] )
+		dataType: string
+		summarizeBy: none
+
+	partition Producao_Montagem = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Data" = nullable datetime, #"Turno" = nullable text, #"Celula" = nullable text, #"PN" = nullable text, #"OT" = Int64.Type, #"QtdOT" = nullable number, #"InicioEm" = nullable datetime, #"FimEm" = nullable datetime, #"QtdProduzida" = nullable number, #"MetaHora" = nullable number, #"DuracaoMin" = nullable number, #"DuracaoSeg" = nullable number, #"Status" = nullable text, #"Cracha" = nullable text, #"DuracaoRealMin" = nullable number, #"DescontoMin" = nullable number],
+				        {
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "HIGH", "FH-1002", 9000001, 48, #datetime(2026,8,3,14,12,0), #datetime(2026,8,3,16,44,0), 39, 18, 152, 9120, "Concluída", "C016", 152, 0},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "FF1", "FH-1001", 9000002, 54, #datetime(2026,8,3,14,38,0), #datetime(2026,8,3,15,45,0), 46, 50, 67, 4020, "Concluída", "C006", 67, 0},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "FF2", "FH-1017", 9000003, 100, #datetime(2026,8,3,6,2,0), #datetime(2026,8,3,7,30,0), 81, 62, 88, 5280, "Concluída", "C009", 88, 0},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "FF2", "FH-1002", 9000004, 75, #datetime(2026,8,3,14,19,0), #datetime(2026,8,3,15,26,0), 70, 62, 67, 4020, "Concluída", "C018", 62, 5},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "Bundle", "FH-1009", 9000005, 7, #datetime(2026,8,3,6,23,0), #datetime(2026,8,3,9,36,0), 6, 2, 193, 11580, "Concluída", "C015", 188, 5},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "Acessorios", "FH-1027", 9000006, 75, #datetime(2026,8,3,14,2,0), #datetime(2026,8,3,15,14,0), 66, 62, 72, 4320, "Concluída", "C023", 62, 10},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "Conexão", "FH-1019", 9000007, 575, #datetime(2026,8,3,6,12,0), #datetime(2026,8,3,9,18,0), 520, 187, 186, 11160, "Concluída", "C024", 181, 5},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "Conexão", "FH-1029", 9000008, 671, #datetime(2026,8,3,14,22,0), #datetime(2026,8,3,17,22,0), 483, 187, 180, 10800, "Concluída", "C015", 165, 15},
+				            {#datetime(2026,8,4,0,0,0), "1º Turno", "FF1", "FH-1019", 9000009, 77, #datetime(2026,8,4,6,23,0), #datetime(2026,8,4,7,51,0), 77, 50, 88, 5280, "Concluída", "C007", 83, 5},
+				            {#datetime(2026,8,4,0,0,0), "2º Turno", "FF2", "FH-1006", 9000010, 161, #datetime(2026,8,4,14,17,0), #datetime(2026,8,4,16,57,0), 166, 62, 160, 9600, "Concluída", "C012", 160, 0},
+				            {#datetime(2026,8,4,0,0,0), "1º Turno", "FF3", "FH-1016", 9000011, 59, #datetime(2026,8,4,6,5,0), #datetime(2026,8,4,8,2,0), 53, 31, 117, 7020, "Concluída", "C015", 117, 0},
+				            {#datetime(2026,8,4,0,0,0), "2º Turno", "Bundle", "FH-1006", 9000012, 3, #datetime(2026,8,4,14,5,0), #datetime(2026,8,4,15,56,0), 4, 2, 111, 6660, "Concluída", "C013", 111, 0},
+				            {#datetime(2026,8,4,0,0,0), "2º Turno", "Acessorios", "FH-1025", 9000013, 117, #datetime(2026,8,4,14,20,0), #datetime(2026,8,4,15,55,0), 103, 62, 95, 5700, "Concluída", "C002", 90, 5},
+				            {#datetime(2026,8,5,0,0,0), "1º Turno", "HIGH", "FH-1023", 9000014, 31, #datetime(2026,8,5,6,6,0), #datetime(2026,8,5,7,39,0), 21, 18, 93, 5580, "Concluída", "C012", 88, 5},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "FF2", "FH-1015", 9000015, 166, #datetime(2026,8,5,14,32,0), #datetime(2026,8,5,17,3,0), 142, 62, 151, 9060, "Concluída", "C015", 141, 10},
+				            {#datetime(2026,8,5,0,0,0), "1º Turno", "FF3", "FH-1010", 9000016, 103, #datetime(2026,8,5,6,6,0), #datetime(2026,8,5,8,53,0), 69, 31, 167, 10020, "Concluída", "C019", 162, 5},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "FF3", "FH-1001", 9000017, 117, #datetime(2026,8,5,14,33,0), #datetime(2026,8,5,17,57,0), 110, 31, 204, 12240, "Concluída", "C012", 189, 15},
+				            {#datetime(2026,8,5,0,0,0), "1º Turno", "Bundle", "FH-1022", 9000018, 6, #datetime(2026,8,5,6,6,0), #datetime(2026,8,5,8,39,0), 4, 2, 153, 9180, "Concluída", "C024", 138, 15},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "Bundle", "FH-1018", 9000019, 3, #datetime(2026,8,5,14,15,0), #datetime(2026,8,5,15,55,0), 2, 2, 100, 6000, "Concluída", "C002", 85, 15},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "Acessorios", "FH-1007", 9000020, 234, #datetime(2026,8,5,14,37,0), #datetime(2026,8,5,18,23,0), 219, 62, 226, 13560, "Concluída", "C003", 221, 5},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "Conexão", "FH-1023", 9000021, 352, #datetime(2026,8,5,14,31,0), #datetime(2026,8,5,16,22,0), 276, 187, 111, 6660, "Concluída", "C001", 96, 15},
+				            {#datetime(2026,8,6,0,0,0), "1º Turno", "FF1", "FH-1017", 9000022, 104, #datetime(2026,8,6,6,0,0), #datetime(2026,8,6,7,50,0), 82, 50, 110, 6600, "Concluída", "C016", 100, 10},
+				            {#datetime(2026,8,6,0,0,0), "2º Turno", "FF1", "FH-1024", 9000023, 165, #datetime(2026,8,6,14,3,0), #datetime(2026,8,6,17,29,0), 165, 50, 206, 12360, "Concluída", "C001", 206, 0},
+				            {#datetime(2026,8,6,0,0,0), "2º Turno", "FF3", "FH-1011", 9000024, 53, #datetime(2026,8,6,14,9,0), #datetime(2026,8,6,15,37,0), 33, 31, 88, 5280, "Concluída", "C010", 78, 10},
+				            {#datetime(2026,8,6,0,0,0), "2º Turno", "Acessorios", "FH-1028", 9000025, 282, #datetime(2026,8,6,14,20,0), #datetime(2026,8,6,18,19,0), 235, 62, 239, 14340, "Concluída", "C020", 234, 5},
+				            {#datetime(2026,8,6,0,0,0), "1º Turno", "Conexão", "FH-1027", 9000026, 530, #datetime(2026,8,6,6,34,0), #datetime(2026,8,6,9,17,0), 468, 187, 163, 9780, "Concluída", "C003", 163, 0},
+				            {#datetime(2026,8,6,0,0,0), "2º Turno", "Conexão", "FH-1027", 9000027, 215, #datetime(2026,8,6,14,21,0), #datetime(2026,8,6,15,37,0), 222, 187, 76, 4560, "Concluída", "C019", 76, 0},
+				            {#datetime(2026,8,7,0,0,0), "1º Turno", "FF2", "FH-1017", 9000028, 97, #datetime(2026,8,7,6,33,0), #datetime(2026,8,7,7,54,0), 90, 62, 81, 4860, "Concluída", "C020", 81, 0},
+				            {#datetime(2026,8,7,0,0,0), "2º Turno", "FF2", "FH-1002", 9000029, 76, #datetime(2026,8,7,14,10,0), #datetime(2026,8,7,15,32,0), 88, 62, 82, 4920, "Concluída", "C012", 77, 5},
+				            {#datetime(2026,8,7,0,0,0), "2º Turno", "FF3", "FH-1011", 9000030, 103, #datetime(2026,8,7,14,16,0), #datetime(2026,8,7,17,57,0), 127, 31, 221, 13260, "Concluída", "C017", 216, 5},
+				            {#datetime(2026,8,7,0,0,0), "1º Turno", "Acessorios", "FH-1021", 9000031, 93, #datetime(2026,8,7,6,0,0), #datetime(2026,8,7,7,35,0), 73, 62, 95, 5700, "Concluída", "C001", 85, 10},
+				            {#datetime(2026,8,7,0,0,0), "2º Turno", "Acessorios", "FH-1024", 9000032, 206, #datetime(2026,8,7,14,6,0), #datetime(2026,8,7,17,16,0), 168, 62, 190, 11400, "Concluída", "C022", 190, 0},
+				            {#datetime(2026,8,7,0,0,0), "1º Turno", "Conexão", "FH-1030", 9000033, 245, #datetime(2026,8,7,6,7,0), #datetime(2026,8,7,7,20,0), 178, 187, 73, 4380, "Concluída", "C006", 73, 0},
+				            {#datetime(2026,8,10,0,0,0), "2º Turno", "HIGH", "FH-1011", 9000034, 38, #datetime(2026,8,10,14,18,0), #datetime(2026,8,10,16,25,0), 32, 18, 127, 7620, "Concluída", "C016", 112, 15},
+				            {#datetime(2026,8,10,0,0,0), "1º Turno", "FF2", "FH-1018", 9000035, 231, #datetime(2026,8,10,6,3,0), #datetime(2026,8,10,9,28,0), 205, 62, 205, 12300, "Concluída", "C004", 195, 10},
+				            {#datetime(2026,8,10,0,0,0), "2º Turno", "FF3", "FH-1002", 9000036, 51, #datetime(2026,8,10,14,12,0), #datetime(2026,8,10,15,59,0), 47, 31, 107, 6420, "Concluída", "C009", 107, 0},
+				            {#datetime(2026,8,10,0,0,0), "1º Turno", "Bundle", "FH-1024", 9000037, 5, #datetime(2026,8,10,6,5,0), #datetime(2026,8,10,8,34,0), 3, 2, 149, 8940, "Concluída", "C016", 149, 0},
+				            {#datetime(2026,8,10,0,0,0), "2º Turno", "Bundle", "FH-1007", 9000038, 5, #datetime(2026,8,10,14,0,0), #datetime(2026,8,10,16,30,0), 4, 2, 150, 9000, "Concluída", "C018", 140, 10},
+				            {#datetime(2026,8,10,0,0,0), "2º Turno", "Acessorios", "FH-1025", 9000039, 76, #datetime(2026,8,10,14,7,0), #datetime(2026,8,10,15,18,0), 66, 62, 71, 4260, "Concluída", "C014", 56, 15},
+				            {#datetime(2026,8,11,0,0,0), "1º Turno", "HIGH", "FH-1024", 9000040, 28, #datetime(2026,8,11,6,3,0), #datetime(2026,8,11,7,38,0), 21, 18, 95, 5700, "Concluída", "C010", 85, 10},
+				            {#datetime(2026,8,11,0,0,0), "2º Turno", "FF1", "FH-1002", 9000041, 103, #datetime(2026,8,11,14,20,0), #datetime(2026,8,11,16,30,0), 120, 50, 130, 7800, "Concluída", "C004", 130, 0},
+				            {#datetime(2026,8,11,0,0,0), "1º Turno", "FF3", "FH-1025", 9000042, 76, #datetime(2026,8,11,6,40,0), #datetime(2026,8,11,8,44,0), 62, 31, 124, 7440, "Concluída", "C009", 124, 0},
+				            {#datetime(2026,8,11,0,0,0), "2º Turno", "FF3", "FH-1005", 9000043, 110, #datetime(2026,8,11,14,15,0), #datetime(2026,8,11,17,16,0), 78, 31, 181, 10860, "Concluída", "C004", 171, 10},
+				            {#datetime(2026,8,11,0,0,0), "1º Turno", "Acessorios", "FH-1010", 9000044, 133, #datetime(2026,8,11,6,22,0), #datetime(2026,8,11,8,37,0), 155, 62, 135, 8100, "Concluída", "C001", 135, 0},
+				            {#datetime(2026,8,12,0,0,0), "1º Turno", "FF1", "FH-1017", 9000045, 137, #datetime(2026,8,12,6,30,0), #datetime(2026,8,12,9,27,0), 164, 50, 177, 10620, "Concluída", "C018", 177, 0},
+				            {#datetime(2026,8,12,0,0,0), "2º Turno", "FF2", "FH-1012", 9000046, 123, #datetime(2026,8,12,14,38,0), #datetime(2026,8,12,16,45,0), 116, 62, 127, 7620, "Concluída", "C019", 127, 0},
+				            {#datetime(2026,8,12,0,0,0), "2º Turno", "FF3", "FH-1022", 9000047, 76, #datetime(2026,8,12,14,37,0), #datetime(2026,8,12,16,49,0), 62, 31, 132, 7920, "Concluída", "C014", 122, 10},
+				            {#datetime(2026,8,12,0,0,0), "1º Turno", "Acessorios", "FH-1026", 9000048, 225, #datetime(2026,8,12,6,11,0), #datetime(2026,8,12,9,31,0), 174, 62, 200, 12000, "Concluída", "C008", 195, 5},
+				            {#datetime(2026,8,12,0,0,0), "1º Turno", "Conexão", "FH-1019", 9000049, 434, #datetime(2026,8,12,6,33,0), #datetime(2026,8,12,8,33,0), 426, 187, 120, 7200, "Concluída", "C022", 120, 0},
+				            {#datetime(2026,8,12,0,0,0), "2º Turno", "Conexão", "FH-1023", 9000050, 846, #datetime(2026,8,12,14,35,0), #datetime(2026,8,12,18,22,0), 610, 187, 227, 13620, "Concluída", "C015", 227, 0},
+				            {#datetime(2026,8,13,0,0,0), "2º Turno", "HIGH", "FH-1016", 9000051, 52, #datetime(2026,8,13,14,0,0), #datetime(2026,8,13,16,34,0), 47, 18, 154, 9240, "Concluída", "C013", 149, 5},
+				            {#datetime(2026,8,13,0,0,0), "2º Turno", "FF2", "FH-1016", 9000052, 92, #datetime(2026,8,13,14,8,0), #datetime(2026,8,13,15,34,0), 69, 62, 86, 5160, "Concluída", "C009", 86, 0},
+				            {#datetime(2026,8,13,0,0,0), "1º Turno", "FF3", "FH-1025", 9000053, 86, #datetime(2026,8,13,6,36,0), #datetime(2026,8,13,9,38,0), 96, 31, 182, 10920, "Concluída", "C005", 172, 10},
+				            {#datetime(2026,8,13,0,0,0), "1º Turno", "Acessorios", "FH-1024", 9000054, 206, #datetime(2026,8,13,6,29,0), #datetime(2026,8,13,9,49,0), 171, 62, 200, 12000, "Concluída", "C009", 200, 0},
+				            {#datetime(2026,8,13,0,0,0), "2º Turno", "Acessorios", "FH-1016", 9000055, 56, #datetime(2026,8,13,14,16,0), #datetime(2026,8,13,15,3,0), 38, 62, 47, 2820, "Concluída", "C013", 37, 10},
+				            {#datetime(2026,8,14,0,0,0), "2º Turno", "HIGH", "FH-1030", 9000056, 41, #datetime(2026,8,14,14,38,0), #datetime(2026,8,14,16,45,0), 36, 18, 127, 7620, "Concluída", "C006", 112, 15},
+				            {#datetime(2026,8,14,0,0,0), "1º Turno", "FF1", "FH-1005", 9000057, 200, #datetime(2026,8,14,6,28,0), #datetime(2026,8,14,10,17,0), 162, 50, 229, 13740, "Concluída", "C005", 214, 15},
+				            {#datetime(2026,8,14,0,0,0), "2º Turno", "Conexão", "FH-1026", 9000058, 238, #datetime(2026,8,14,14,9,0), #datetime(2026,8,14,15,25,0), 210, 187, 76, 4560, "Concluída", "C010", 71, 5},
+				            {#datetime(2026,8,17,0,0,0), "2º Turno", "HIGH", "FH-1022", 9000059, 43, #datetime(2026,8,17,14,30,0), #datetime(2026,8,17,16,45,0), 35, 18, 135, 8100, "Concluída", "C013", 130, 5},
+				            {#datetime(2026,8,17,0,0,0), "1º Turno", "FF1", "FH-1005", 9000060, 107, #datetime(2026,8,17,6,5,0), #datetime(2026,8,17,8,18,0), 100, 50, 133, 7980, "Concluída", "C010", 133, 0},
+				            {#datetime(2026,8,17,0,0,0), "2º Turno", "FF1", "FH-1016", 9000061, 172, #datetime(2026,8,17,14,35,0), #datetime(2026,8,17,18,14,0), 142, 50, 219, 13140, "Concluída", "C009", 209, 10},
+				            {#datetime(2026,8,17,0,0,0), "1º Turno", "FF2", "FH-1003", 9000062, 159, #datetime(2026,8,17,6,21,0), #datetime(2026,8,17,8,33,0), 122, 62, 132, 7920, "Concluída", "C014", 132, 0},
+				            {#datetime(2026,8,17,0,0,0), "2º Turno", "FF2", "FH-1002", 9000063, 115, #datetime(2026,8,17,14,3,0), #datetime(2026,8,17,15,39,0), 99, 62, 96, 5760, "Concluída", "C005", 96, 0},
+				            {#datetime(2026,8,17,0,0,0), "1º Turno", "Bundle", "FH-1005", 9000064, 2, #datetime(2026,8,17,6,24,0), #datetime(2026,8,17,7,28,0), 1, 2, 64, 3840, "Concluída", "C018", 59, 5},
+				            {#datetime(2026,8,17,0,0,0), "2º Turno", "Bundle", "FH-1006", 9000065, 5, #datetime(2026,8,17,14,23,0), #datetime(2026,8,17,17,11,0), 5, 2, 168, 10080, "Concluída", "C018", 163, 5},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "HIGH", "FH-1027", 9000066, 37, #datetime(2026,8,18,6,26,0), #datetime(2026,8,18,8,16,0), 31, 18, 110, 6600, "Concluída", "C015", 100, 10},
+				            {#datetime(2026,8,18,0,0,0), "2º Turno", "HIGH", "FH-1003", 9000067, 46, #datetime(2026,8,18,14,36,0), #datetime(2026,8,18,17,2,0), 44, 18, 146, 8760, "Concluída", "C014", 136, 10},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "FF1", "FH-1011", 9000068, 46, #datetime(2026,8,18,6,10,0), #datetime(2026,8,18,7,0,0), 30, 50, 50, 3000, "Concluída", "C018", 35, 15},
+				            {#datetime(2026,8,18,0,0,0), "2º Turno", "FF3", "FH-1017", 9000069, 117, #datetime(2026,8,18,14,32,0), #datetime(2026,8,18,18,7,0), 81, 31, 215, 12900, "Concluída", "C016", 205, 10},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "Bundle", "FH-1022", 9000070, 4, #datetime(2026,8,18,6,15,0), #datetime(2026,8,18,8,23,0), 3, 2, 128, 7680, "Concluída", "C011", 118, 10},
+				            {#datetime(2026,8,18,0,0,0), "2º Turno", "Acessorios", "FH-1017", 9000071, 263, #datetime(2026,8,18,14,4,0), #datetime(2026,8,18,17,45,0), 200, 62, 221, 13260, "Concluída", "C020", 221, 0},
+				            {#datetime(2026,8,19,0,0,0), "2º Turno", "HIGH", "FH-1013", 9000072, 17, #datetime(2026,8,19,14,27,0), #datetime(2026,8,19,15,29,0), 13, 18, 62, 3720, "Concluída", "C004", 57, 5},
+				            {#datetime(2026,8,19,0,0,0), "1º Turno", "FF2", "FH-1028", 9000073, 234, #datetime(2026,8,19,6,39,0), #datetime(2026,8,19,10,32,0), 253, 62, 233, 13980, "Concluída", "C004", 218, 15},
+				            {#datetime(2026,8,19,0,0,0), "1º Turno", "FF3", "FH-1021", 9000074, 116, #datetime(2026,8,19,6,20,0), #datetime(2026,8,19,9,54,0), 94, 31, 214, 12840, "Concluída", "C021", 199, 15},
+				            {#datetime(2026,8,19,0,0,0), "2º Turno", "Bundle", "FH-1028", 9000075, 7, #datetime(2026,8,19,14,39,0), #datetime(2026,8,19,17,50,0), 5, 2, 191, 11460, "Concluída", "C010", 191, 0},
+				            {#datetime(2026,8,19,0,0,0), "1º Turno", "Acessorios", "FH-1007", 9000076, 117, #datetime(2026,8,19,6,18,0), #datetime(2026,8,19,8,22,0), 128, 62, 124, 7440, "Concluída", "C023", 119, 5},
+				            {#datetime(2026,8,19,0,0,0), "2º Turno", "Acessorios", "FH-1023", 9000077, 103, #datetime(2026,8,19,14,1,0), #datetime(2026,8,19,15,42,0), 97, 62, 101, 6060, "Concluída", "C004", 91, 10},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "HIGH", "FH-1022", 9000078, 67, #datetime(2026,8,20,14,3,0), #datetime(2026,8,20,17,11,0), 63, 18, 188, 11280, "Concluída", "C001", 188, 0},
+				            {#datetime(2026,8,20,0,0,0), "1º Turno", "FF1", "FH-1005", 9000079, 96, #datetime(2026,8,20,6,14,0), #datetime(2026,8,20,8,8,0), 91, 50, 114, 6840, "Concluída", "C011", 99, 15},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "FF3", "FH-1005", 9000080, 69, #datetime(2026,8,20,14,9,0), #datetime(2026,8,20,16,5,0), 52, 31, 116, 6960, "Concluída", "C024", 111, 5},
+				            {#datetime(2026,8,20,0,0,0), "1º Turno", "Bundle", "FH-1024", 9000081, 4, #datetime(2026,8,20,6,12,0), #datetime(2026,8,20,8,15,0), 4, 2, 123, 7380, "Concluída", "C004", 123, 0},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "Bundle", "FH-1028", 9000082, 6, #datetime(2026,8,20,14,38,0), #datetime(2026,8,20,17,37,0), 5, 2, 179, 10740, "Concluída", "C012", 174, 5},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "Acessorios", "FH-1006", 9000083, 117, #datetime(2026,8,20,14,9,0), #datetime(2026,8,20,16,2,0), 131, 62, 113, 6780, "Concluída", "C016", 113, 0},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "Conexão", "FH-1010", 9000084, 566, #datetime(2026,8,20,14,36,0), #datetime(2026,8,20,17,58,0), 610, 187, 202, 12120, "Concluída", "C017", 187, 15},
+				            {#datetime(2026,8,21,0,0,0), "2º Turno", "Bundle", "FH-1020", 9000085, 6, #datetime(2026,8,21,14,12,0), #datetime(2026,8,21,17,27,0), 5, 2, 195, 11700, "Concluída", "C021", 190, 5},
+				            {#datetime(2026,8,21,0,0,0), "2º Turno", "Acessorios", "FH-1029", 9000086, 226, #datetime(2026,8,21,14,35,0), #datetime(2026,8,21,17,48,0), 213, 62, 193, 11580, "Concluída", "C024", 193, 0},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "FF2", "FH-1015", 9000087, 147, #datetime(2026,8,24,6,16,0), #datetime(2026,8,24,8,23,0), 109, 62, 127, 7620, "Concluída", "C008", 122, 5},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "FF3", "FH-1008", 9000088, 27, #datetime(2026,8,24,6,13,0), #datetime(2026,8,24,7,7,0), 25, 31, 54, 3240, "Concluída", "C017", 49, 5},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "Bundle", "FH-1021", 9000089, 4, #datetime(2026,8,24,6,0,0), #datetime(2026,8,24,8,5,0), 4, 2, 125, 7500, "Concluída", "C018", 110, 15},
+				            {#datetime(2026,8,24,0,0,0), "2º Turno", "Bundle", "FH-1025", 9000090, 6, #datetime(2026,8,24,14,6,0), #datetime(2026,8,24,17,19,0), 7, 2, 193, 11580, "Concluída", "C004", 188, 5},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "Acessorios", "FH-1026", 9000091, 173, #datetime(2026,8,24,6,11,0), #datetime(2026,8,24,8,33,0), 113, 62, 142, 8520, "Concluída", "C024", 132, 10},
+				            {#datetime(2026,8,24,0,0,0), "2º Turno", "Conexão", "FH-1027", 9000092, 197, #datetime(2026,8,24,14,25,0), #datetime(2026,8,24,15,30,0), 204, 187, 65, 3900, "Concluída", "C002", 65, 0},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "HIGH", "FH-1028", 9000093, 22, #datetime(2026,8,25,14,23,0), #datetime(2026,8,25,15,41,0), 23, 18, 78, 4680, "Concluída", "C003", 73, 5},
+				            {#datetime(2026,8,25,0,0,0), "1º Turno", "FF1", "FH-1017", 9000094, 109, #datetime(2026,8,25,6,17,0), #datetime(2026,8,25,8,39,0), 100, 50, 142, 8520, "Concluída", "C024", 142, 0},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "FF1", "FH-1001", 9000095, 71, #datetime(2026,8,25,14,29,0), #datetime(2026,8,25,15,55,0), 72, 50, 86, 5160, "Concluída", "C010", 86, 0},
+				            {#datetime(2026,8,25,0,0,0), "1º Turno", "FF2", "FH-1023", 9000096, 174, #datetime(2026,8,25,6,28,0), #datetime(2026,8,25,9,3,0), 163, 62, 155, 9300, "Concluída", "C015", 150, 5},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "FF2", "FH-1011", 9000097, 193, #datetime(2026,8,25,14,30,0), #datetime(2026,8,25,17,44,0), 187, 62, 194, 11640, "Concluída", "C006", 194, 0},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "FF3", "FH-1014", 9000098, 88, #datetime(2026,8,25,14,40,0), #datetime(2026,8,25,17,20,0), 83, 31, 160, 9600, "Concluída", "C011", 145, 15},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "Acessorios", "FH-1020", 9000099, 170, #datetime(2026,8,25,14,27,0), #datetime(2026,8,25,16,50,0), 131, 62, 143, 8580, "Concluída", "C013", 143, 0},
+				            {#datetime(2026,8,26,0,0,0), "1º Turno", "HIGH", "FH-1028", 9000100, 29, #datetime(2026,8,26,6,2,0), #datetime(2026,8,26,7,40,0), 22, 18, 98, 5880, "Concluída", "C005", 83, 15},
+				            {#datetime(2026,8,26,0,0,0), "2º Turno", "HIGH", "FH-1024", 9000101, 56, #datetime(2026,8,26,14,3,0), #datetime(2026,8,26,17,2,0), 53, 18, 179, 10740, "Concluída", "C009", 179, 0},
+				            {#datetime(2026,8,26,0,0,0), "1º Turno", "FF1", "FH-1010", 9000102, 193, #datetime(2026,8,26,6,4,0), #datetime(2026,8,26,9,41,0), 132, 50, 217, 13020, "Concluída", "C014", 212, 5},
+				            {#datetime(2026,8,26,0,0,0), "2º Turno", "FF3", "FH-1024", 9000103, 39, #datetime(2026,8,26,14,27,0), #datetime(2026,8,26,15,49,0), 31, 31, 82, 4920, "Concluída", "C002", 77, 5},
+				            {#datetime(2026,8,26,0,0,0), "1º Turno", "Acessorios", "FH-1004", 9000104, 209, #datetime(2026,8,26,6,29,0), #datetime(2026,8,26,9,26,0), 140, 62, 177, 10620, "Concluída", "C008", 167, 10},
+				            {#datetime(2026,8,26,0,0,0), "2º Turno", "Acessorios", "FH-1001", 9000105, 57, #datetime(2026,8,26,14,8,0), #datetime(2026,8,26,15,6,0), 42, 62, 58, 3480, "Concluída", "C024", 53, 5},
+				            {#datetime(2026,8,26,0,0,0), "2º Turno", "Conexão", "FH-1014", 9000106, 415, #datetime(2026,8,26,14,10,0), #datetime(2026,8,26,16,24,0), 416, 187, 134, 8040, "Concluída", "C014", 134, 0},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "HIGH", "FH-1006", 9000107, 38, #datetime(2026,8,27,6,16,0), #datetime(2026,8,27,8,33,0), 33, 18, 137, 8220, "Concluída", "C022", 137, 0},
+				            {#datetime(2026,8,27,0,0,0), "2º Turno", "HIGH", "FH-1020", 9000108, 40, #datetime(2026,8,27,14,13,0), #datetime(2026,8,27,16,36,0), 36, 18, 143, 8580, "Concluída", "C014", 128, 15},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "FF3", "FH-1005", 9000109, 127, #datetime(2026,8,27,6,2,0), #datetime(2026,8,27,9,50,0), 132, 31, 228, 13680, "Concluída", "C008", 228, 0},
+				            {#datetime(2026,8,27,0,0,0), "2º Turno", "FF3", "FH-1024", 9000110, 99, #datetime(2026,8,27,14,32,0), #datetime(2026,8,27,17,17,0), 85, 31, 165, 9900, "Concluída", "C018", 155, 10},
+				            {#datetime(2026,8,27,0,0,0), "2º Turno", "Acessorios", "FH-1008", 9000111, 211, #datetime(2026,8,27,14,37,0), #datetime(2026,8,27,17,59,0), 197, 62, 202, 12120, "Concluída", "C012", 202, 0},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "Conexão", "FH-1006", 9000112, 497, #datetime(2026,8,27,6,9,0), #datetime(2026,8,27,8,38,0), 413, 187, 149, 8940, "Concluída", "C011", 139, 10},
+				            {#datetime(2026,8,28,0,0,0), "1º Turno", "FF2", "FH-1017", 9000113, 54, #datetime(2026,8,28,6,20,0), #datetime(2026,8,28,7,11,0), 43, 62, 51, 3060, "Concluída", "C003", 41, 10},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "FF3", "FH-1010", 9000114, 146, #datetime(2026,8,28,14,24,0), #datetime(2026,8,28,18,24,0), 130, 31, 240, 14400, "Concluída", "C021", 240, 0},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "Bundle", "FH-1018", 9000115, 6, #datetime(2026,8,28,14,23,0), #datetime(2026,8,28,17,42,0), 6, 2, 199, 11940, "Concluída", "C013", 194, 5},
+				            {#datetime(2026,8,28,0,0,0), "1º Turno", "Acessorios", "FH-1010", 9000116, 113, #datetime(2026,8,28,6,1,0), #datetime(2026,8,28,7,39,0), 92, 62, 98, 5880, "Concluída", "C021", 88, 10},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "Acessorios", "FH-1022", 9000117, 128, #datetime(2026,8,28,14,24,0), #datetime(2026,8,28,16,34,0), 121, 62, 130, 7800, "Concluída", "C020", 115, 15},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "HIGH", "FH-1015", 9000118, 55, #datetime(2026,8,31,6,6,0), #datetime(2026,8,31,8,48,0), 46, 18, 162, 9720, "Concluída", "C024", 147, 15},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "FF1", "FH-1003", 9000119, 168, #datetime(2026,8,31,6,0,0), #datetime(2026,8,31,9,1,0), 171, 50, 181, 10860, "Concluída", "C014", 181, 0},
+				            {#datetime(2026,8,31,0,0,0), "2º Turno", "FF1", "FH-1009", 9000120, 174, #datetime(2026,8,31,14,33,0), #datetime(2026,8,31,17,36,0), 141, 50, 183, 10980, "Concluída", "C024", 173, 10},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "Bundle", "FH-1007", 9000121, 6, #datetime(2026,8,31,6,12,0), #datetime(2026,8,31,9,14,0), 6, 2, 182, 10920, "Concluída", "C003", 167, 15},
+				            {#datetime(2026,8,31,0,0,0), "2º Turno", "Bundle", "FH-1020", 9000122, 4, #datetime(2026,8,31,14,22,0), #datetime(2026,8,31,16,29,0), 4, 2, 127, 7620, "Concluída", "C011", 127, 0},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "Acessorios", "FH-1017", 9000123, 227, #datetime(2026,8,31,6,12,0), #datetime(2026,8,31,9,29,0), 195, 62, 197, 11820, "Concluída", "C018", 192, 5},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "Conexão", "FH-1025", 9000124, 240, #datetime(2026,8,31,6,7,0), #datetime(2026,8,31,7,16,0), 189, 187, 69, 4140, "Concluída", "C002", 69, 0},
+				            {#datetime(2026,8,31,0,0,0), "2º Turno", "Conexão", "FH-1017", 9000125, 351, #datetime(2026,8,31,14,30,0), #datetime(2026,8,31,16,28,0), 366, 187, 118, 7080, "Concluída", "C006", 118, 0},
+				            {#datetime(2026,9,1,0,0,0), "1º Turno", "HIGH", "FH-1001", 9000126, 45, #datetime(2026,9,1,6,6,0), #datetime(2026,9,1,8,29,0), 36, 18, 143, 8580, "Concluída", "C006", 138, 5},
+				            {#datetime(2026,9,1,0,0,0), "1º Turno", "FF1", "FH-1004", 9000127, 82, #datetime(2026,9,1,6,22,0), #datetime(2026,9,1,7,57,0), 71, 50, 95, 5700, "Concluída", "C003", 80, 15},
+				            {#datetime(2026,9,1,0,0,0), "1º Turno", "Acessorios", "FH-1022", 9000128, 64, #datetime(2026,9,1,6,7,0), #datetime(2026,9,1,7,13,0), 60, 62, 66, 3960, "Concluída", "C001", 66, 0},
+				            {#datetime(2026,9,1,0,0,0), "1º Turno", "Conexão", "FH-1003", 9000129, 387, #datetime(2026,9,1,6,36,0), #datetime(2026,9,1,8,22,0), 344, 187, 106, 6360, "Concluída", "C010", 101, 5},
+				            {#datetime(2026,9,2,0,0,0), "2º Turno", "HIGH", "FH-1016", 9000130, 36, #datetime(2026,9,2,14,26,0), #datetime(2026,9,2,16,21,0), 35, 18, 115, 6900, "Concluída", "C013", 110, 5},
+				            {#datetime(2026,9,2,0,0,0), "1º Turno", "FF1", "FH-1030", 9000131, 43, #datetime(2026,9,2,6,19,0), #datetime(2026,9,2,7,4,0), 26, 50, 45, 2700, "Concluída", "C007", 35, 10},
+				            {#datetime(2026,9,2,0,0,0), "2º Turno", "FF1", "FH-1006", 9000132, 74, #datetime(2026,9,2,14,29,0), #datetime(2026,9,2,15,53,0), 68, 50, 84, 5040, "Concluída", "C020", 84, 0},
+				            {#datetime(2026,9,2,0,0,0), "1º Turno", "FF3", "FH-1011", 9000133, 29, #datetime(2026,9,2,6,2,0), #datetime(2026,9,2,7,4,0), 27, 31, 62, 3720, "Concluída", "C007", 62, 0},
+				            {#datetime(2026,9,2,0,0,0), "1º Turno", "Bundle", "FH-1017", 9000134, 6, #datetime(2026,9,2,6,24,0), #datetime(2026,9,2,9,35,0), 6, 2, 191, 11460, "Concluída", "C021", 181, 10},
+				            {#datetime(2026,9,2,0,0,0), "1º Turno", "Conexão", "FH-1013", 9000135, 633, #datetime(2026,9,2,6,11,0), #datetime(2026,9,2,9,43,0), 618, 187, 212, 12720, "Concluída", "C018", 212, 0},
+				            {#datetime(2026,9,3,0,0,0), "1º Turno", "HIGH", "FH-1008", 9000136, 44, #datetime(2026,9,3,6,31,0), #datetime(2026,9,3,8,34,0), 26, 18, 123, 7380, "Concluída", "C010", 108, 15},
+				            {#datetime(2026,9,3,0,0,0), "1º Turno", "FF2", "FH-1029", 9000137, 160, #datetime(2026,9,3,6,21,0), #datetime(2026,9,3,9,4,0), 183, 62, 163, 9780, "Concluída", "C012", 158, 5},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "FF2", "FH-1014", 9000138, 48, #datetime(2026,9,3,14,7,0), #datetime(2026,9,3,14,52,0), 37, 62, 45, 2700, "Concluída", "C005", 45, 0},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "FF3", "FH-1024", 9000139, 96, #datetime(2026,9,3,14,34,0), #datetime(2026,9,3,17,17,0), 66, 31, 163, 9780, "Concluída", "C007", 163, 0},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "Bundle", "FH-1015", 9000140, 9, #datetime(2026,9,3,14,28,0), #datetime(2026,9,3,18,25,0), 6, 2, 237, 14220, "Concluída", "C002", 222, 15},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "Conexão", "FH-1028", 9000141, 268, #datetime(2026,9,3,14,22,0), #datetime(2026,9,3,15,54,0), 254, 187, 92, 5520, "Concluída", "C008", 87, 5},
+				            {#datetime(2026,9,4,0,0,0), "2º Turno", "FF3", "FH-1020", 9000142, 41, #datetime(2026,9,4,14,40,0), #datetime(2026,9,4,15,55,0), 44, 31, 75, 4500, "Concluída", "C006", 75, 0},
+				            {#datetime(2026,9,4,0,0,0), "1º Turno", "Acessorios", "FH-1005", 9000143, 57, #datetime(2026,9,4,6,12,0), #datetime(2026,9,4,7,1,0), 51, 62, 49, 2940, "Concluída", "C012", 49, 0},
+				            {#datetime(2026,9,4,0,0,0), "2º Turno", "Acessorios", "FH-1003", 9000144, 75, #datetime(2026,9,4,14,26,0), #datetime(2026,9,4,15,40,0), 80, 62, 74, 4440, "Concluída", "C021", 74, 0},
+				            {#datetime(2026,9,4,0,0,0), "1º Turno", "Conexão", "FH-1018", 9000145, 312, #datetime(2026,9,4,6,28,0), #datetime(2026,9,4,7,56,0), 308, 187, 88, 5280, "Concluída", "C021", 88, 0},
+				            {#datetime(2026,9,7,0,0,0), "1º Turno", "HIGH", "FH-1010", 9000146, 29, #datetime(2026,9,7,6,28,0), #datetime(2026,9,7,7,50,0), 26, 18, 82, 4920, "Concluída", "C019", 82, 0},
+				            {#datetime(2026,9,7,0,0,0), "2º Turno", "HIGH", "FH-1007", 9000147, 63, #datetime(2026,9,7,14,14,0), #datetime(2026,9,7,17,58,0), 59, 18, 224, 13440, "Concluída", "C021", 224, 0},
+				            {#datetime(2026,9,7,0,0,0), "1º Turno", "FF1", "FH-1017", 9000148, 138, #datetime(2026,9,7,6,21,0), #datetime(2026,9,7,9,10,0), 141, 50, 169, 10140, "Concluída", "C001", 154, 15},
+				            {#datetime(2026,9,7,0,0,0), "1º Turno", "Bundle", "FH-1014", 9000149, 5, #datetime(2026,9,7,6,22,0), #datetime(2026,9,7,9,8,0), 4, 2, 166, 9960, "Concluída", "C010", 166, 0},
+				            {#datetime(2026,9,7,0,0,0), "1º Turno", "Acessorios", "FH-1002", 9000150, 236, #datetime(2026,9,7,6,36,0), #datetime(2026,9,7,9,52,0), 207, 62, 196, 11760, "Concluída", "C022", 196, 0},
+				            {#datetime(2026,9,8,0,0,0), "1º Turno", "HIGH", "FH-1010", 9000151, 59, #datetime(2026,9,8,6,18,0), #datetime(2026,9,8,9,40,0), 62, 18, 202, 12120, "Concluída", "C010", 187, 15},
+				            {#datetime(2026,9,8,0,0,0), "1º Turno", "FF1", "FH-1018", 9000152, 52, #datetime(2026,9,8,6,17,0), #datetime(2026,9,8,7,21,0), 38, 50, 64, 3840, "Concluída", "C024", 54, 10},
+				            {#datetime(2026,9,8,0,0,0), "2º Turno", "FF1", "FH-1028", 9000153, 150, #datetime(2026,9,8,14,23,0), #datetime(2026,9,8,17,6,0), 152, 50, 163, 9780, "Concluída", "C016", 163, 0},
+				            {#datetime(2026,9,8,0,0,0), "1º Turno", "FF3", "FH-1021", 9000154, 24, #datetime(2026,9,8,6,3,0), #datetime(2026,9,8,6,55,0), 21, 31, 52, 3120, "Concluída", "C001", 37, 15},
+				            {#datetime(2026,9,8,0,0,0), "2º Turno", "Bundle", "FH-1001", 9000155, 2, #datetime(2026,9,8,14,30,0), #datetime(2026,9,8,15,29,0), 1, 2, 59, 3540, "Concluída", "C008", 49, 10},
+				            {#datetime(2026,9,8,0,0,0), "2º Turno", "Acessorios", "FH-1008", 9000156, 120, #datetime(2026,9,8,14,38,0), #datetime(2026,9,8,16,37,0), 103, 62, 119, 7140, "Concluída", "C020", 119, 0},
+				            {#datetime(2026,9,9,0,0,0), "2º Turno", "HIGH", "FH-1023", 9000157, 75, #datetime(2026,9,9,14,24,0), #datetime(2026,9,9,18,21,0), 68, 18, 237, 14220, "Concluída", "C007", 227, 10},
+				            {#datetime(2026,9,9,0,0,0), "2º Turno", "FF1", "FH-1029", 9000158, 176, #datetime(2026,9,9,14,24,0), #datetime(2026,9,9,17,35,0), 132, 50, 191, 11460, "Concluída", "C007", 186, 5},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "FF2", "FH-1012", 9000159, 128, #datetime(2026,9,9,6,32,0), #datetime(2026,9,9,8,34,0), 121, 62, 122, 7320, "Concluída", "C020", 107, 15},
+				            {#datetime(2026,9,9,0,0,0), "2º Turno", "FF2", "FH-1023", 9000160, 142, #datetime(2026,9,9,14,20,0), #datetime(2026,9,9,16,45,0), 144, 62, 145, 8700, "Concluída", "C001", 130, 15},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "FF3", "FH-1001", 9000161, 43, #datetime(2026,9,9,6,32,0), #datetime(2026,9,9,7,59,0), 48, 31, 87, 5220, "Concluída", "C007", 87, 0},
+				            {#datetime(2026,9,9,0,0,0), "2º Turno", "FF3", "FH-1021", 9000162, 61, #datetime(2026,9,9,14,27,0), #datetime(2026,9,9,16,13,0), 50, 31, 106, 6360, "Concluída", "C007", 106, 0},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "Bundle", "FH-1015", 9000163, 6, #datetime(2026,9,9,6,18,0), #datetime(2026,9,9,8,59,0), 5, 2, 161, 9660, "Concluída", "C013", 146, 15},
+				            {#datetime(2026,9,9,0,0,0), "2º Turno", "Acessorios", "FH-1019", 9000164, 164, #datetime(2026,9,9,14,5,0), #datetime(2026,9,9,16,42,0), 121, 62, 157, 9420, "Concluída", "C016", 147, 10},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "Conexão", "FH-1030", 9000165, 489, #datetime(2026,9,9,6,19,0), #datetime(2026,9,9,8,44,0), 466, 187, 145, 8700, "Concluída", "C010", 140, 5},
+				            {#datetime(2026,9,10,0,0,0), "2º Turno", "HIGH", "FH-1008", 9000166, 43, #datetime(2026,9,10,14,32,0), #datetime(2026,9,10,16,47,0), 43, 18, 135, 8100, "Concluída", "C016", 130, 5},
+				            {#datetime(2026,9,10,0,0,0), "1º Turno", "FF3", "FH-1004", 9000167, 117, #datetime(2026,9,10,6,38,0), #datetime(2026,9,10,10,6,0), 98, 31, 208, 12480, "Concluída", "C010", 193, 15},
+				            {#datetime(2026,9,10,0,0,0), "1º Turno", "Bundle", "FH-1025", 9000168, 5, #datetime(2026,9,10,6,14,0), #datetime(2026,9,10,8,47,0), 3, 2, 153, 9180, "Concluída", "C001", 143, 10},
+				            {#datetime(2026,9,10,0,0,0), "2º Turno", "Bundle", "FH-1025", 9000169, 4, #datetime(2026,9,10,14,6,0), #datetime(2026,9,10,15,59,0), 3, 2, 113, 6780, "Concluída", "C003", 113, 0},
+				            {#datetime(2026,9,10,0,0,0), "1º Turno", "Conexão", "FH-1003", 9000170, 415, #datetime(2026,9,10,6,18,0), #datetime(2026,9,10,8,20,0), 416, 187, 122, 7320, "Concluída", "C014", 122, 0},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "HIGH", "FH-1016", 9000171, 39, #datetime(2026,9,11,14,3,0), #datetime(2026,9,11,16,0,0), 30, 18, 117, 7020, "Concluída", "C021", 117, 0},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "FF1", "FH-1004", 9000172, 91, #datetime(2026,9,11,14,33,0), #datetime(2026,9,11,16,5,0), 56, 50, 92, 5520, "Concluída", "C020", 87, 5},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "FF2", "FH-1025", 9000173, 81, #datetime(2026,9,11,6,40,0), #datetime(2026,9,11,7,50,0), 56, 62, 70, 4200, "Concluída", "C010", 65, 5},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "FF3", "FH-1028", 9000174, 22, #datetime(2026,9,11,6,4,0), #datetime(2026,9,11,6,51,0), 24, 31, 47, 2820, "Concluída", "C003", 47, 0},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "FF3", "FH-1008", 9000175, 91, #datetime(2026,9,11,14,16,0), #datetime(2026,9,11,17,16,0), 76, 31, 180, 10800, "Concluída", "C001", 165, 15},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "Bundle", "FH-1003", 9000176, 4, #datetime(2026,9,11,14,38,0), #datetime(2026,9,11,17,2,0), 3, 2, 144, 8640, "Concluída", "C014", 144, 0},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "Acessorios", "FH-1026", 9000177, 168, #datetime(2026,9,11,6,22,0), #datetime(2026,9,11,8,58,0), 177, 62, 156, 9360, "Concluída", "C012", 151, 5},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "Conexão", "FH-1005", 9000178, 345, #datetime(2026,9,11,6,31,0), #datetime(2026,9,11,8,9,0), 296, 187, 98, 5880, "Concluída", "C023", 98, 0},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "Conexão", "FH-1002", 9000179, 521, #datetime(2026,9,11,14,33,0), #datetime(2026,9,11,17,27,0), 597, 187, 174, 10440, "Concluída", "C013", 174, 0},
+				            {#datetime(2026,9,14,0,0,0), "1º Turno", "HIGH", "FH-1014", 9000180, 64, #datetime(2026,9,14,6,25,0), #datetime(2026,9,14,10,18,0), 64, 18, 233, 13980, "Concluída", "C020", 223, 10},
+				            {#datetime(2026,9,14,0,0,0), "2º Turno", "FF3", "FH-1008", 9000181, 53, #datetime(2026,9,14,14,36,0), #datetime(2026,9,14,16,19,0), 38, 31, 103, 6180, "Concluída", "C013", 88, 15},
+				            {#datetime(2026,9,14,0,0,0), "1º Turno", "Bundle", "FH-1003", 9000182, 4, #datetime(2026,9,14,6,29,0), #datetime(2026,9,14,9,2,0), 4, 2, 153, 9180, "Concluída", "C008", 153, 0},
+				            {#datetime(2026,9,14,0,0,0), "1º Turno", "Acessorios", "FH-1002", 9000183, 146, #datetime(2026,9,14,6,4,0), #datetime(2026,9,14,8,22,0), 104, 62, 138, 8280, "Concluída", "C008", 128, 10},
+				            {#datetime(2026,9,15,0,0,0), "2º Turno", "HIGH", "FH-1015", 9000184, 12, #datetime(2026,9,15,14,12,0), #datetime(2026,9,15,14,57,0), 8, 18, 45, 2700, "Concluída", "C024", 30, 15},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "FF2", "FH-1029", 9000185, 254, #datetime(2026,9,15,6,25,0), #datetime(2026,9,15,10,8,0), 210, 62, 223, 13380, "Concluída", "C024", 213, 10},
+				            {#datetime(2026,9,15,0,0,0), "2º Turno", "FF3", "FH-1029", 9000186, 69, #datetime(2026,9,15,14,36,0), #datetime(2026,9,15,16,45,0), 51, 31, 129, 7740, "Concluída", "C007", 114, 15},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "Bundle", "FH-1001", 9000187, 3, #datetime(2026,9,15,6,40,0), #datetime(2026,9,15,8,19,0), 2, 2, 99, 5940, "Concluída", "C016", 94, 5},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "Acessorios", "FH-1021", 9000188, 131, #datetime(2026,9,15,6,14,0), #datetime(2026,9,15,8,4,0), 107, 62, 110, 6600, "Concluída", "C015", 100, 10},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "Conexão", "FH-1021", 9000189, 224, #datetime(2026,9,15,6,35,0), #datetime(2026,9,15,7,50,0), 230, 187, 75, 4500, "Concluída", "C022", 65, 10},
+				            {#datetime(2026,9,15,0,0,0), "2º Turno", "Conexão", "FH-1017", 9000190, 256, #datetime(2026,9,15,14,13,0), #datetime(2026,9,15,15,38,0), 216, 187, 85, 5100, "Concluída", "C021", 70, 15},
+				            {#datetime(2026,9,16,0,0,0), "2º Turno", "HIGH", "FH-1001", 9000191, 42, #datetime(2026,9,16,14,2,0), #datetime(2026,9,16,16,14,0), 31, 18, 132, 7920, "Concluída", "C014", 132, 0},
+				            {#datetime(2026,9,16,0,0,0), "2º Turno", "FF1", "FH-1009", 9000192, 105, #datetime(2026,9,16,14,23,0), #datetime(2026,9,16,16,16,0), 84, 50, 113, 6780, "Concluída", "C014", 113, 0},
+				            {#datetime(2026,9,16,0,0,0), "2º Turno", "Acessorios", "FH-1023", 9000193, 102, #datetime(2026,9,16,14,11,0), #datetime(2026,9,16,15,38,0), 83, 62, 87, 5220, "Concluída", "C006", 77, 10},
+				            {#datetime(2026,9,16,0,0,0), "1º Turno", "Conexão", "FH-1019", 9000194, 388, #datetime(2026,9,16,6,21,0), #datetime(2026,9,16,8,25,0), 353, 187, 124, 7440, "Concluída", "C020", 109, 15},
+				            {#datetime(2026,9,16,0,0,0), "2º Turno", "Conexão", "FH-1008", 9000195, 203, #datetime(2026,9,16,14,34,0), #datetime(2026,9,16,15,40,0), 179, 187, 66, 3960, "Concluída", "C002", 51, 15},
+				            {#datetime(2026,9,17,0,0,0), "1º Turno", "FF2", "FH-1025", 9000196, 50, #datetime(2026,9,17,6,20,0), #datetime(2026,9,17,7,12,0), 45, 62, 52, 3120, "Concluída", "C014", 52, 0},
+				            {#datetime(2026,9,17,0,0,0), "2º Turno", "FF3", "FH-1005", 9000197, 87, #datetime(2026,9,17,14,31,0), #datetime(2026,9,17,17,2,0), 78, 31, 151, 9060, "Concluída", "C011", 151, 0},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "HIGH", "FH-1015", 9000198, 24, #datetime(2026,9,18,6,12,0), #datetime(2026,9,18,7,23,0), 17, 18, 71, 4260, "Concluída", "C019", 71, 0},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "HIGH", "FH-1020", 9000199, 37, #datetime(2026,9,18,14,10,0), #datetime(2026,9,18,16,17,0), 39, 18, 127, 7620, "Concluída", "C014", 122, 5},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "FF1", "FH-1022", 9000200, 79, #datetime(2026,9,18,6,20,0), #datetime(2026,9,18,7,58,0), 60, 50, 98, 5880, "Concluída", "C006", 88, 10},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "FF2", "FH-1020", 9000201, 76, #datetime(2026,9,18,14,38,0), #datetime(2026,9,18,15,52,0), 62, 62, 74, 4440, "Concluída", "C002", 59, 15},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "FF3", "FH-1029", 9000202, 44, #datetime(2026,9,18,14,6,0), #datetime(2026,9,18,15,26,0), 43, 31, 80, 4800, "Concluída", "C003", 75, 5},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "Bundle", "FH-1010", 9000203, 4, #datetime(2026,9,18,6,29,0), #datetime(2026,9,18,9,6,0), 4, 2, 157, 9420, "Concluída", "C020", 152, 5},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "Bundle", "FH-1028", 9000204, 6, #datetime(2026,9,18,14,38,0), #datetime(2026,9,18,17,27,0), 5, 2, 169, 10140, "Concluída", "C002", 169, 0},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "Acessorios", "FH-1006", 9000205, 246, #datetime(2026,9,18,6,12,0), #datetime(2026,9,18,9,55,0), 170, 62, 223, 13380, "Concluída", "C001", 208, 15},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "HIGH", "FH-1019", 9000206, 48, #datetime(2026,9,21,6,2,0), #datetime(2026,9,21,8,19,0), 44, 18, 137, 8220, "Concluída", "C013", 132, 5},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "FF1", "FH-1001", 9000207, 201, #datetime(2026,9,21,6,5,0), #datetime(2026,9,21,9,50,0), 157, 50, 225, 13500, "Concluída", "C022", 215, 10},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "FF2", "FH-1001", 9000208, 122, #datetime(2026,9,21,6,13,0), #datetime(2026,9,21,8,20,0), 101, 62, 127, 7620, "Concluída", "C010", 117, 10},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "Bundle", "FH-1010", 9000209, 2, #datetime(2026,9,21,6,36,0), #datetime(2026,9,21,7,57,0), 2, 2, 81, 4860, "Concluída", "C016", 71, 10},
+				            {#datetime(2026,9,21,0,0,0), "2º Turno", "Bundle", "FH-1023", 9000210, 1, #datetime(2026,9,21,14,3,0), #datetime(2026,9,21,14,57,0), 1, 2, 54, 3240, "Concluída", "C023", 39, 15},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "Acessorios", "FH-1024", 9000211, 64, #datetime(2026,9,21,6,15,0), #datetime(2026,9,21,7,8,0), 48, 62, 53, 3180, "Concluída", "C024", 43, 10},
+				            {#datetime(2026,9,21,0,0,0), "2º Turno", "Acessorios", "FH-1027", 9000212, 174, #datetime(2026,9,21,14,25,0), #datetime(2026,9,21,16,53,0), 116, 62, 148, 8880, "Concluída", "C023", 138, 10},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "Conexão", "FH-1018", 9000213, 614, #datetime(2026,9,21,6,13,0), #datetime(2026,9,21,9,0,0), 498, 187, 167, 10020, "Concluída", "C008", 157, 10},
+				            {#datetime(2026,9,22,0,0,0), "1º Turno", "HIGH", "FH-1022", 9000214, 51, #datetime(2026,9,22,6,24,0), #datetime(2026,9,22,8,57,0), 43, 18, 153, 9180, "Concluída", "C024", 153, 0},
+				            {#datetime(2026,9,22,0,0,0), "1º Turno", "FF1", "FH-1030", 9000215, 157, #datetime(2026,9,22,6,9,0), #datetime(2026,9,22,9,38,0), 126, 50, 209, 12540, "Concluída", "C003", 199, 10},
+				            {#datetime(2026,9,22,0,0,0), "1º Turno", "FF2", "FH-1029", 9000216, 251, #datetime(2026,9,22,6,40,0), #datetime(2026,9,22,10,39,0), 219, 62, 239, 14340, "Concluída", "C019", 239, 0},
+				            {#datetime(2026,9,22,0,0,0), "2º Turno", "FF3", "FH-1005", 9000217, 57, #datetime(2026,9,22,14,4,0), #datetime(2026,9,22,16,6,0), 63, 31, 122, 7320, "Concluída", "C021", 117, 5},
+				            {#datetime(2026,9,23,0,0,0), "1º Turno", "HIGH", "FH-1002", 9000218, 53, #datetime(2026,9,23,6,34,0), #datetime(2026,9,23,9,37,0), 54, 18, 183, 10980, "Concluída", "C004", 168, 15},
+				            {#datetime(2026,9,23,0,0,0), "2º Turno", "HIGH", "FH-1030", 9000219, 66, #datetime(2026,9,23,14,23,0), #datetime(2026,9,23,18,18,0), 57, 18, 235, 14100, "Concluída", "C008", 225, 10},
+				            {#datetime(2026,9,23,0,0,0), "1º Turno", "FF1", "FH-1003", 9000220, 144, #datetime(2026,9,23,6,24,0), #datetime(2026,9,23,9,32,0), 158, 50, 188, 11280, "Concluída", "C007", 188, 0},
+				            {#datetime(2026,9,23,0,0,0), "2º Turno", "FF1", "FH-1020", 9000221, 101, #datetime(2026,9,23,14,32,0), #datetime(2026,9,23,16,28,0), 87, 50, 116, 6960, "Concluída", "C015", 106, 10},
+				            {#datetime(2026,9,23,0,0,0), "1º Turno", "FF3", "FH-1002", 9000222, 128, #datetime(2026,9,23,6,17,0), #datetime(2026,9,23,9,49,0), 94, 31, 212, 12720, "Concluída", "C001", 197, 15},
+				            {#datetime(2026,9,23,0,0,0), "1º Turno", "Bundle", "FH-1014", 9000223, 7, #datetime(2026,9,23,6,5,0), #datetime(2026,9,23,9,51,0), 8, 2, 226, 13560, "Concluída", "C019", 226, 0},
+				            {#datetime(2026,9,23,0,0,0), "2º Turno", "Bundle", "FH-1009", 9000224, 5, #datetime(2026,9,23,14,15,0), #datetime(2026,9,23,16,52,0), 4, 2, 157, 9420, "Concluída", "C001", 142, 15},
+				            {#datetime(2026,9,23,0,0,0), "2º Turno", "Acessorios", "FH-1003", 9000225, 229, #datetime(2026,9,23,14,6,0), #datetime(2026,9,23,17,32,0), 210, 62, 206, 12360, "Concluída", "C021", 196, 10},
+				            {#datetime(2026,9,24,0,0,0), "2º Turno", "HIGH", "FH-1029", 9000226, 47, #datetime(2026,9,24,14,35,0), #datetime(2026,9,24,17,19,0), 50, 18, 164, 9840, "Concluída", "C009", 149, 15},
+				            {#datetime(2026,9,24,0,0,0), "2º Turno", "FF1", "FH-1025", 9000227, 118, #datetime(2026,9,24,14,38,0), #datetime(2026,9,24,16,37,0), 99, 50, 119, 7140, "Concluída", "C016", 109, 10},
+				            {#datetime(2026,9,24,0,0,0), "1º Turno", "FF3", "FH-1024", 9000228, 25, #datetime(2026,9,24,6,9,0), #datetime(2026,9,24,6,57,0), 25, 31, 48, 2880, "Concluída", "C021", 48, 0},
+				            {#datetime(2026,9,24,0,0,0), "1º Turno", "Bundle", "FH-1004", 9000229, 3, #datetime(2026,9,24,6,36,0), #datetime(2026,9,24,8,14,0), 3, 2, 98, 5880, "Concluída", "C010", 83, 15},
+				            {#datetime(2026,9,24,0,0,0), "2º Turno", "Bundle", "FH-1025", 9000230, 3, #datetime(2026,9,24,14,30,0), #datetime(2026,9,24,16,0,0), 2, 2, 90, 5400, "Concluída", "C004", 85, 5},
+				            {#datetime(2026,9,24,0,0,0), "1º Turno", "Acessorios", "FH-1026", 9000231, 155, #datetime(2026,9,24,6,9,0), #datetime(2026,9,24,8,23,0), 108, 62, 134, 8040, "Concluída", "C021", 119, 15},
+				            {#datetime(2026,9,24,0,0,0), "1º Turno", "Conexão", "FH-1020", 9000232, 650, #datetime(2026,9,24,6,16,0), #datetime(2026,9,24,9,11,0), 420, 187, 175, 10500, "Concluída", "C007", 175, 0},
+				            {#datetime(2026,9,25,0,0,0), "2º Turno", "FF1", "FH-1013", 9000233, 160, #datetime(2026,9,25,14,31,0), #datetime(2026,9,25,17,27,0), 154, 50, 176, 10560, "Concluída", "C021", 176, 0},
+				            {#datetime(2026,9,25,0,0,0), "2º Turno", "FF3", "FH-1004", 9000234, 40, #datetime(2026,9,25,14,27,0), #datetime(2026,9,25,15,37,0), 34, 31, 70, 4200, "Concluída", "C023", 70, 0},
+				            {#datetime(2026,9,25,0,0,0), "1º Turno", "Bundle", "FH-1016", 9000235, 6, #datetime(2026,9,25,6,33,0), #datetime(2026,9,25,10,19,0), 7, 2, 226, 13560, "Concluída", "C020", 226, 0},
+				            {#datetime(2026,9,25,0,0,0), "1º Turno", "Acessorios", "FH-1029", 9000236, 218, #datetime(2026,9,25,6,10,0), #datetime(2026,9,25,9,20,0), 174, 62, 190, 11400, "Concluída", "C021", 185, 5},
+				            {#datetime(2026,9,25,0,0,0), "2º Turno", "Conexão", "FH-1025", 9000237, 178, #datetime(2026,9,25,14,11,0), #datetime(2026,9,25,15,6,0), 142, 187, 55, 3300, "Concluída", "C016", 55, 0},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "HIGH", "FH-1005", 9000238, 58, #datetime(2026,9,28,6,36,0), #datetime(2026,9,28,9,51,0), 47, 18, 195, 11700, "Concluída", "C006", 180, 15},
+				            {#datetime(2026,9,28,0,0,0), "2º Turno", "HIGH", "FH-1014", 9000239, 47, #datetime(2026,9,28,14,23,0), #datetime(2026,9,28,16,42,0), 38, 18, 139, 8340, "Concluída", "C008", 124, 15},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "FF1", "FH-1030", 9000240, 129, #datetime(2026,9,28,6,23,0), #datetime(2026,9,28,8,53,0), 99, 50, 150, 9000, "Concluída", "C015", 150, 0},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "FF3", "FH-1009", 9000241, 33, #datetime(2026,9,28,6,25,0), #datetime(2026,9,28,7,22,0), 22, 31, 57, 3420, "Concluída", "C005", 57, 0},
+				            {#datetime(2026,9,28,0,0,0), "2º Turno", "FF3", "FH-1020", 9000242, 92, #datetime(2026,9,28,14,36,0), #datetime(2026,9,28,17,44,0), 89, 31, 188, 11280, "Concluída", "C011", 173, 15},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "Bundle", "FH-1027", 9000243, 4, #datetime(2026,9,28,6,22,0), #datetime(2026,9,28,8,39,0), 4, 2, 137, 8220, "Concluída", "C024", 122, 15},
+				            {#datetime(2026,9,28,0,0,0), "2º Turno", "Acessorios", "FH-1008", 9000244, 183, #datetime(2026,9,28,14,2,0), #datetime(2026,9,28,16,31,0), 162, 62, 149, 8940, "Concluída", "C019", 139, 10},
+				            {#datetime(2026,9,29,0,0,0), "2º Turno", "HIGH", "FH-1019", 9000245, 83, #datetime(2026,9,29,14,32,0), #datetime(2026,9,29,18,29,0), 52, 18, 237, 14220, "Concluída", "C002", 222, 15},
+				            {#datetime(2026,9,29,0,0,0), "1º Turno", "FF1", "FH-1010", 9000246, 129, #datetime(2026,9,29,6,40,0), #datetime(2026,9,29,9,27,0), 117, 50, 167, 10020, "Concluída", "C020", 157, 10},
+				            {#datetime(2026,9,29,0,0,0), "2º Turno", "FF1", "FH-1014", 9000247, 133, #datetime(2026,9,29,14,24,0), #datetime(2026,9,29,16,58,0), 91, 50, 154, 9240, "Concluída", "C013", 144, 10},
+				            {#datetime(2026,9,29,0,0,0), "1º Turno", "FF2", "FH-1022", 9000248, 224, #datetime(2026,9,29,6,2,0), #datetime(2026,9,29,9,11,0), 148, 62, 189, 11340, "Concluída", "C018", 184, 5},
+				            {#datetime(2026,9,29,0,0,0), "1º Turno", "FF3", "FH-1017", 9000249, 112, #datetime(2026,9,29,6,18,0), #datetime(2026,9,29,10,7,0), 120, 31, 229, 13740, "Concluída", "C016", 229, 0},
+				            {#datetime(2026,9,29,0,0,0), "1º Turno", "Bundle", "FH-1013", 9000250, 7, #datetime(2026,9,29,6,27,0), #datetime(2026,9,29,10,12,0), 6, 2, 225, 13500, "Concluída", "C018", 225, 0},
+				            {#datetime(2026,9,30,0,0,0), "1º Turno", "HIGH", "FH-1008", 9000251, 15, #datetime(2026,9,30,6,5,0), #datetime(2026,9,30,7,2,0), 17, 18, 57, 3420, "Concluída", "C017", 57, 0},
+				            {#datetime(2026,9,30,0,0,0), "1º Turno", "FF1", "FH-1028", 9000252, 138, #datetime(2026,9,30,6,16,0), #datetime(2026,9,30,9,11,0), 160, 50, 175, 10500, "Concluída", "C001", 170, 5},
+				            {#datetime(2026,9,30,0,0,0), "2º Turno", "FF3", "FH-1028", 9000253, 106, #datetime(2026,9,30,14,18,0), #datetime(2026,9,30,17,52,0), 94, 31, 214, 12840, "Concluída", "C017", 214, 0},
+				            {#datetime(2026,9,30,0,0,0), "2º Turno", "Bundle", "FH-1026", 9000254, 6, #datetime(2026,9,30,14,18,0), #datetime(2026,9,30,17,7,0), 6, 2, 169, 10140, "Concluída", "C008", 169, 0},
+				            {#datetime(2026,9,30,0,0,0), "2º Turno", "Conexão", "FH-1007", 9000255, 534, #datetime(2026,9,30,14,18,0), #datetime(2026,9,30,17,24,0), 531, 187, 186, 11160, "Concluída", "C008", 181, 5},
+				            {#datetime(2026,10,1,0,0,0), "2º Turno", "FF2", "FH-1010", 9000256, 145, #datetime(2026,10,1,14,34,0), #datetime(2026,10,1,17,0,0), 154, 62, 146, 8760, "Concluída", "C010", 146, 0},
+				            {#datetime(2026,10,1,0,0,0), "1º Turno", "Bundle", "FH-1010", 9000257, 4, #datetime(2026,10,1,6,10,0), #datetime(2026,10,1,8,40,0), 4, 2, 150, 9000, "Concluída", "C004", 150, 0},
+				            {#datetime(2026,10,1,0,0,0), "1º Turno", "Conexão", "FH-1011", 9000258, 168, #datetime(2026,10,1,6,14,0), #datetime(2026,10,1,7,13,0), 136, 187, 59, 3540, "Concluída", "C020", 44, 15},
+				            {#datetime(2026,10,2,0,0,0), "1º Turno", "FF1", "FH-1020", 9000259, 151, #datetime(2026,10,2,6,13,0), #datetime(2026,10,2,9,14,0), 143, 50, 181, 10860, "Concluída", "C013", 176, 5},
+				            {#datetime(2026,10,2,0,0,0), "2º Turno", "FF2", "FH-1005", 9000260, 128, #datetime(2026,10,2,14,18,0), #datetime(2026,10,2,16,20,0), 112, 62, 122, 7320, "Concluída", "C002", 122, 0},
+				            {#datetime(2026,10,2,0,0,0), "1º Turno", "FF3", "FH-1028", 9000261, 93, #datetime(2026,10,2,6,35,0), #datetime(2026,10,2,9,56,0), 108, 31, 201, 12060, "Concluída", "C024", 196, 5},
+				            {#datetime(2026,10,2,0,0,0), "2º Turno", "FF3", "FH-1008", 9000262, 129, #datetime(2026,10,2,14,12,0), #datetime(2026,10,2,17,44,0), 95, 31, 212, 12720, "Concluída", "C021", 207, 5},
+				            {#datetime(2026,10,2,0,0,0), "2º Turno", "Acessorios", "FH-1002", 9000263, 259, #datetime(2026,10,2,14,11,0), #datetime(2026,10,2,17,55,0), 254, 62, 224, 13440, "Concluída", "C024", 224, 0},
+				            {#datetime(2026,10,2,0,0,0), "1º Turno", "Conexão", "FH-1005", 9000264, 518, #datetime(2026,10,2,6,32,0), #datetime(2026,10,2,9,13,0), 418, 187, 161, 9660, "Concluída", "C016", 161, 0},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "HIGH", "FH-1020", 9000265, 48, #datetime(2026,10,5,6,3,0), #datetime(2026,10,5,8,36,0), 38, 18, 153, 9180, "Concluída", "C013", 148, 5},
+				            {#datetime(2026,10,5,0,0,0), "2º Turno", "FF1", "FH-1026", 9000266, 53, #datetime(2026,10,5,14,33,0), #datetime(2026,10,5,15,35,0), 50, 50, 62, 3720, "Concluída", "C020", 62, 0},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "FF2", "FH-1003", 9000267, 227, #datetime(2026,10,5,6,38,0), #datetime(2026,10,5,9,49,0), 153, 62, 191, 11460, "Concluída", "C018", 191, 0},
+				            {#datetime(2026,10,5,0,0,0), "2º Turno", "FF3", "FH-1016", 9000268, 76, #datetime(2026,10,5,14,11,0), #datetime(2026,10,5,16,35,0), 71, 31, 144, 8640, "Concluída", "C020", 134, 10},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "Bundle", "FH-1004", 9000269, 5, #datetime(2026,10,5,6,24,0), #datetime(2026,10,5,9,10,0), 4, 2, 166, 9960, "Concluída", "C014", 161, 5},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "Acessorios", "FH-1023", 9000270, 63, #datetime(2026,10,5,6,26,0), #datetime(2026,10,5,7,20,0), 38, 62, 54, 3240, "Concluída", "C020", 44, 10},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "Conexão", "FH-1017", 9000271, 273, #datetime(2026,10,5,6,12,0), #datetime(2026,10,5,7,48,0), 279, 187, 96, 5760, "Concluída", "C002", 96, 0},
+				            {#datetime(2026,10,6,0,0,0), "2º Turno", "HIGH", "FH-1017", 9000272, 17, #datetime(2026,10,6,14,3,0), #datetime(2026,10,6,14,57,0), 11, 18, 54, 3240, "Concluída", "C008", 39, 15},
+				            {#datetime(2026,10,6,0,0,0), "1º Turno", "FF2", "FH-1015", 9000273, 234, #datetime(2026,10,6,6,35,0), #datetime(2026,10,6,10,18,0), 235, 62, 223, 13380, "Concluída", "C020", 223, 0},
+				            {#datetime(2026,10,6,0,0,0), "1º Turno", "FF3", "FH-1016", 9000274, 33, #datetime(2026,10,6,6,33,0), #datetime(2026,10,6,7,41,0), 26, 31, 68, 4080, "Concluída", "C020", 53, 15},
+				            {#datetime(2026,10,6,0,0,0), "2º Turno", "Conexão", "FH-1013", 9000275, 428, #datetime(2026,10,6,14,30,0), #datetime(2026,10,6,16,25,0), 264, 187, 115, 6900, "Concluída", "C019", 110, 5},
+				            {#datetime(2026,10,7,0,0,0), "1º Turno", "FF3", "FH-1007", 9000276, 123, #datetime(2026,10,7,6,4,0), #datetime(2026,10,7,9,29,0), 83, 31, 205, 12300, "Concluída", "C020", 205, 0},
+				            {#datetime(2026,10,7,0,0,0), "2º Turno", "FF3", "FH-1023", 9000277, 89, #datetime(2026,10,7,14,0,0), #datetime(2026,10,7,17,7,0), 73, 31, 187, 11220, "Concluída", "C016", 187, 0},
+				            {#datetime(2026,10,7,0,0,0), "1º Turno", "Conexão", "FH-1030", 9000278, 156, #datetime(2026,10,7,6,9,0), #datetime(2026,10,7,6,55,0), 93, 187, 46, 2760, "Concluída", "C006", 36, 10},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "HIGH", "FH-1014", 9000279, 42, #datetime(2026,10,8,6,15,0), #datetime(2026,10,8,8,52,0), 34, 18, 157, 9420, "Concluída", "C013", 152, 5},
+				            {#datetime(2026,10,8,0,0,0), "2º Turno", "HIGH", "FH-1014", 9000280, 44, #datetime(2026,10,8,14,36,0), #datetime(2026,10,8,17,0,0), 43, 18, 144, 8640, "Concluída", "C002", 139, 5},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "FF1", "FH-1015", 9000281, 134, #datetime(2026,10,8,6,19,0), #datetime(2026,10,8,9,11,0), 110, 50, 172, 10320, "Concluída", "C003", 157, 15},
+				            {#datetime(2026,10,8,0,0,0), "2º Turno", "FF1", "FH-1018", 9000282, 132, #datetime(2026,10,8,14,19,0), #datetime(2026,10,8,17,0,0), 143, 50, 161, 9660, "Concluída", "C011", 161, 0},
+				            {#datetime(2026,10,8,0,0,0), "2º Turno", "Bundle", "FH-1010", 9000283, 7, #datetime(2026,10,8,14,37,0), #datetime(2026,10,8,18,24,0), 6, 2, 227, 13620, "Concluída", "C021", 222, 5},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "Acessorios", "FH-1025", 9000284, 63, #datetime(2026,10,8,6,40,0), #datetime(2026,10,8,7,35,0), 47, 62, 55, 3300, "Concluída", "C001", 50, 5},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "Conexão", "FH-1021", 9000285, 423, #datetime(2026,10,8,6,36,0), #datetime(2026,10,8,8,40,0), 320, 187, 124, 7440, "Concluída", "C009", 119, 5},
+				            {#datetime(2026,10,8,0,0,0), "2º Turno", "Conexão", "FH-1003", 9000286, 705, #datetime(2026,10,8,14,16,0), #datetime(2026,10,8,17,36,0), 478, 187, 200, 12000, "Concluída", "C020", 185, 15},
+				            {#datetime(2026,10,9,0,0,0), "1º Turno", "FF1", "FH-1024", 9000287, 143, #datetime(2026,10,9,6,11,0), #datetime(2026,10,9,8,50,0), 138, 50, 159, 9540, "Concluída", "C003", 159, 0},
+				            {#datetime(2026,10,9,0,0,0), "1º Turno", "FF2", "FH-1030", 9000288, 131, #datetime(2026,10,9,6,3,0), #datetime(2026,10,9,7,56,0), 94, 62, 113, 6780, "Concluída", "C009", 113, 0},
+				            {#datetime(2026,10,9,0,0,0), "2º Turno", "FF2", "FH-1028", 9000289, 266, #datetime(2026,10,9,14,39,0), #datetime(2026,10,9,18,19,0), 179, 62, 220, 13200, "Concluída", "C017", 220, 0},
+				            {#datetime(2026,10,9,0,0,0), "2º Turno", "FF3", "FH-1022", 9000290, 109, #datetime(2026,10,9,14,31,0), #datetime(2026,10,9,17,43,0), 110, 31, 192, 11520, "Concluída", "C023", 192, 0},
+				            {#datetime(2026,10,9,0,0,0), "1º Turno", "Conexão", "FH-1016", 9000291, 463, #datetime(2026,10,9,6,16,0), #datetime(2026,10,9,8,48,0), 509, 187, 152, 9120, "Concluída", "C023", 152, 0},
+				            {#datetime(2026,10,9,0,0,0), "2º Turno", "Conexão", "FH-1012", 9000292, 679, #datetime(2026,10,9,14,29,0), #datetime(2026,10,9,18,7,0), 598, 187, 218, 13080, "Concluída", "C016", 213, 5},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "HIGH", "FH-1021", 9000293, 37, #datetime(2026,10,12,14,14,0), #datetime(2026,10,12,16,1,0), 27, 18, 107, 6420, "Concluída", "C010", 107, 0},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "FF1", "FH-1007", 9000294, 177, #datetime(2026,10,12,14,0,0), #datetime(2026,10,12,17,8,0), 121, 50, 188, 11280, "Concluída", "C021", 188, 0},
+				            {#datetime(2026,10,12,0,0,0), "1º Turno", "FF3", "FH-1015", 9000295, 134, #datetime(2026,10,12,6,14,0), #datetime(2026,10,12,10,8,0), 132, 31, 234, 14040, "Concluída", "C005", 234, 0},
+				            {#datetime(2026,10,12,0,0,0), "1º Turno", "Acessorios", "FH-1020", 9000296, 68, #datetime(2026,10,12,6,30,0), #datetime(2026,10,12,7,28,0), 55, 62, 58, 3480, "Concluída", "C022", 48, 10},
+				            {#datetime(2026,10,12,0,0,0), "1º Turno", "Conexão", "FH-1007", 9000297, 295, #datetime(2026,10,12,6,32,0), #datetime(2026,10,12,8,3,0), 273, 187, 91, 5460, "Concluída", "C012", 86, 5},
+				            {#datetime(2026,10,13,0,0,0), "1º Turno", "HIGH", "FH-1023", 9000298, 82, #datetime(2026,10,13,6,7,0), #datetime(2026,10,13,9,59,0), 73, 18, 232, 13920, "Concluída", "C014", 217, 15},
+				            {#datetime(2026,10,13,0,0,0), "2º Turno", "HIGH", "FH-1002", 9000299, 65, #datetime(2026,10,13,14,9,0), #datetime(2026,10,13,17,34,0), 45, 18, 205, 12300, "Concluída", "C024", 195, 10},
+				            {#datetime(2026,10,13,0,0,0), "1º Turno", "FF1", "FH-1017", 9000300, 125, #datetime(2026,10,13,6,29,0), #datetime(2026,10,13,8,51,0), 102, 50, 142, 8520, "Concluída", "C008", 132, 10},
+				            {#datetime(2026,10,13,0,0,0), "2º Turno", "FF1", "FH-1023", 9000301, 71, #datetime(2026,10,13,14,17,0), #datetime(2026,10,13,15,29,0), 56, 50, 72, 4320, "Concluída", "C003", 72, 0},
+				            {#datetime(2026,10,13,0,0,0), "1º Turno", "FF2", "FH-1026", 9000302, 231, #datetime(2026,10,13,6,24,0), #datetime(2026,10,13,9,39,0), 207, 62, 195, 11700, "Concluída", "C004", 185, 10},
+				            {#datetime(2026,10,13,0,0,0), "2º Turno", "FF2", "FH-1030", 9000303, 100, #datetime(2026,10,13,14,15,0), #datetime(2026,10,13,15,53,0), 75, 62, 98, 5880, "Concluída", "C017", 93, 5},
+				            {#datetime(2026,10,13,0,0,0), "1º Turno", "FF3", "FH-1009", 9000304, 107, #datetime(2026,10,13,6,6,0), #datetime(2026,10,13,9,46,0), 94, 31, 220, 13200, "Concluída", "C005", 220, 0},
+				            {#datetime(2026,10,13,0,0,0), "2º Turno", "Conexão", "FH-1005", 9000305, 401, #datetime(2026,10,13,14,17,0), #datetime(2026,10,13,16,19,0), 357, 187, 122, 7320, "Concluída", "C018", 107, 15},
+				            {#datetime(2026,10,14,0,0,0), "1º Turno", "FF1", "FH-1003", 9000306, 174, #datetime(2026,10,14,6,25,0), #datetime(2026,10,14,10,0,0), 146, 50, 215, 12900, "Concluída", "C010", 200, 15},
+				            {#datetime(2026,10,14,0,0,0), "2º Turno", "FF1", "FH-1027", 9000307, 181, #datetime(2026,10,14,14,18,0), #datetime(2026,10,14,18,1,0), 193, 50, 223, 13380, "Concluída", "C017", 208, 15},
+				            {#datetime(2026,10,14,0,0,0), "1º Turno", "FF2", "FH-1021", 9000308, 80, #datetime(2026,10,14,6,33,0), #datetime(2026,10,14,7,41,0), 52, 62, 68, 4080, "Concluída", "C008", 58, 10},
+				            {#datetime(2026,10,14,0,0,0), "1º Turno", "Acessorios", "FH-1024", 9000309, 224, #datetime(2026,10,14,6,39,0), #datetime(2026,10,14,10,15,0), 166, 62, 216, 12960, "Concluída", "C016", 206, 10},
+				            {#datetime(2026,10,14,0,0,0), "2º Turno", "Acessorios", "FH-1014", 9000310, 75, #datetime(2026,10,14,14,2,0), #datetime(2026,10,14,15,5,0), 52, 62, 63, 3780, "Concluída", "C005", 63, 0},
+				            {#datetime(2026,10,15,0,0,0), "1º Turno", "HIGH", "FH-1030", 9000311, 17, #datetime(2026,10,15,6,23,0), #datetime(2026,10,15,7,21,0), 13, 18, 58, 3480, "Concluída", "C002", 58, 0},
+				            {#datetime(2026,10,15,0,0,0), "2º Turno", "FF2", "FH-1030", 9000312, 70, #datetime(2026,10,15,14,12,0), #datetime(2026,10,15,15,26,0), 58, 62, 74, 4440, "Concluída", "C021", 69, 5},
+				            {#datetime(2026,10,15,0,0,0), "1º Turno", "Bundle", "FH-1004", 9000313, 4, #datetime(2026,10,15,6,27,0), #datetime(2026,10,15,8,25,0), 3, 2, 118, 7080, "Concluída", "C002", 108, 10},
+				            {#datetime(2026,10,15,0,0,0), "1º Turno", "Acessorios", "FH-1030", 9000314, 135, #datetime(2026,10,15,6,28,0), #datetime(2026,10,15,8,20,0), 132, 62, 112, 6720, "Concluída", "C007", 112, 0},
+				            {#datetime(2026,10,15,0,0,0), "2º Turno", "Acessorios", "FH-1008", 9000315, 178, #datetime(2026,10,15,14,36,0), #datetime(2026,10,15,17,0,0), 134, 62, 144, 8640, "Concluída", "C008", 139, 5},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "HIGH", "FH-1021", 9000316, 17, #datetime(2026,10,16,6,25,0), #datetime(2026,10,16,7,23,0), 18, 18, 58, 3480, "Concluída", "C003", 58, 0},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "FF1", "FH-1013", 9000317, 156, #datetime(2026,10,16,6,10,0), #datetime(2026,10,16,9,33,0), 173, 50, 203, 12180, "Concluída", "C002", 188, 15},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "FF2", "FH-1004", 9000318, 214, #datetime(2026,10,16,6,30,0), #datetime(2026,10,16,9,51,0), 228, 62, 201, 12060, "Concluída", "C022", 201, 0},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "FF3", "FH-1003", 9000319, 119, #datetime(2026,10,16,6,27,0), #datetime(2026,10,16,9,46,0), 95, 31, 199, 11940, "Concluída", "C002", 184, 15},
+				            {#datetime(2026,10,16,0,0,0), "2º Turno", "FF3", "FH-1019", 9000320, 113, #datetime(2026,10,16,14,10,0), #datetime(2026,10,16,17,54,0), 105, 31, 224, 13440, "Concluída", "C022", 224, 0},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "Bundle", "FH-1010", 9000321, 2, #datetime(2026,10,16,6,38,0), #datetime(2026,10,16,8,8,0), 3, 2, 90, 5400, "Concluída", "C011", 90, 0},
+				            {#datetime(2026,10,19,0,0,0), "2º Turno", "FF1", "FH-1030", 9000322, 163, #datetime(2026,10,19,14,8,0), #datetime(2026,10,19,17,30,0), 124, 50, 202, 12120, "Concluída", "C013", 197, 5},
+				            {#datetime(2026,10,19,0,0,0), "2º Turno", "FF2", "FH-1014", 9000323, 127, #datetime(2026,10,19,14,30,0), #datetime(2026,10,19,16,31,0), 142, 62, 121, 7260, "Concluída", "C012", 121, 0},
+				            {#datetime(2026,10,19,0,0,0), "1º Turno", "FF3", "FH-1022", 9000324, 113, #datetime(2026,10,19,6,6,0), #datetime(2026,10,19,9,16,0), 104, 31, 190, 11400, "Concluída", "C001", 185, 5},
+				            {#datetime(2026,10,19,0,0,0), "1º Turno", "Acessorios", "FH-1003", 9000325, 211, #datetime(2026,10,19,6,14,0), #datetime(2026,10,19,9,13,0), 145, 62, 179, 10740, "Concluída", "C011", 179, 0},
+				            {#datetime(2026,10,20,0,0,0), "2º Turno", "FF1", "FH-1021", 9000326, 212, #datetime(2026,10,20,14,7,0), #datetime(2026,10,20,17,47,0), 205, 50, 220, 13200, "Concluída", "C021", 220, 0},
+				            {#datetime(2026,10,20,0,0,0), "1º Turno", "FF2", "FH-1029", 9000327, 265, #datetime(2026,10,20,6,25,0), #datetime(2026,10,20,10,5,0), 171, 62, 220, 13200, "Concluída", "C006", 220, 0},
+				            {#datetime(2026,10,20,0,0,0), "1º Turno", "Bundle", "FH-1015", 9000328, 2, #datetime(2026,10,20,6,25,0), #datetime(2026,10,20,7,37,0), 1, 2, 72, 4320, "Concluída", "C007", 67, 5},
+				            {#datetime(2026,10,20,0,0,0), "2º Turno", "Acessorios", "FH-1018", 9000329, 112, #datetime(2026,10,20,14,0,0), #datetime(2026,10,20,15,59,0), 134, 62, 119, 7140, "Concluída", "C022", 114, 5},
+				            {#datetime(2026,10,20,0,0,0), "1º Turno", "Conexão", "FH-1014", 9000330, 286, #datetime(2026,10,20,6,40,0), #datetime(2026,10,20,7,58,0), 159, 187, 78, 4680, "Concluída", "C011", 68, 10},
+				            {#datetime(2026,10,20,0,0,0), "2º Turno", "Conexão", "FH-1003", 9000331, 545, #datetime(2026,10,20,14,10,0), #datetime(2026,10,20,17,17,0), 550, 187, 187, 11220, "Concluída", "C001", 187, 0},
+				            {#datetime(2026,10,21,0,0,0), "1º Turno", "HIGH", "FH-1007", 9000332, 25, #datetime(2026,10,21,6,38,0), #datetime(2026,10,21,7,55,0), 20, 18, 77, 4620, "Concluída", "C024", 67, 10},
+				            {#datetime(2026,10,21,0,0,0), "2º Turno", "HIGH", "FH-1004", 9000333, 41, #datetime(2026,10,21,14,14,0), #datetime(2026,10,21,16,33,0), 32, 18, 139, 8340, "Concluída", "C001", 134, 5},
+				            {#datetime(2026,10,21,0,0,0), "1º Turno", "FF2", "FH-1004", 9000334, 84, #datetime(2026,10,21,6,17,0), #datetime(2026,10,21,7,33,0), 72, 62, 76, 4560, "Concluída", "C021", 66, 10},
+				            {#datetime(2026,10,21,0,0,0), "2º Turno", "FF2", "FH-1019", 9000335, 56, #datetime(2026,10,21,14,34,0), #datetime(2026,10,21,15,31,0), 48, 62, 57, 3420, "Concluída", "C019", 42, 15},
+				            {#datetime(2026,10,21,0,0,0), "1º Turno", "Bundle", "FH-1005", 9000336, 5, #datetime(2026,10,21,6,17,0), #datetime(2026,10,21,9,7,0), 5, 2, 170, 10200, "Concluída", "C016", 155, 15},
+				            {#datetime(2026,10,21,0,0,0), "2º Turno", "Acessorios", "FH-1007", 9000337, 129, #datetime(2026,10,21,14,26,0), #datetime(2026,10,21,16,43,0), 134, 62, 137, 8220, "Concluída", "C009", 127, 10},
+				            {#datetime(2026,10,22,0,0,0), "1º Turno", "FF1", "FH-1005", 9000338, 190, #datetime(2026,10,22,6,22,0), #datetime(2026,10,22,9,34,0), 118, 50, 192, 11520, "Concluída", "C005", 182, 10},
+				            {#datetime(2026,10,22,0,0,0), "1º Turno", "FF2", "FH-1018", 9000339, 210, #datetime(2026,10,22,6,40,0), #datetime(2026,10,22,10,11,0), 207, 62, 211, 12660, "Concluída", "C002", 201, 10},
+				            {#datetime(2026,10,22,0,0,0), "2º Turno", "FF2", "FH-1023", 9000340, 174, #datetime(2026,10,22,14,25,0), #datetime(2026,10,22,16,57,0), 124, 62, 152, 9120, "Concluída", "C007", 137, 15},
+				            {#datetime(2026,10,22,0,0,0), "1º Turno", "FF3", "FH-1005", 9000341, 92, #datetime(2026,10,22,6,3,0), #datetime(2026,10,22,9,7,0), 88, 31, 184, 11040, "Concluída", "C024", 169, 15},
+				            {#datetime(2026,10,22,0,0,0), "2º Turno", "Bundle", "FH-1005", 9000342, 7, #datetime(2026,10,22,14,22,0), #datetime(2026,10,22,17,58,0), 7, 2, 216, 12960, "Concluída", "C003", 216, 0},
+				            {#datetime(2026,10,22,0,0,0), "1º Turno", "Acessorios", "FH-1013", 9000343, 122, #datetime(2026,10,22,6,20,0), #datetime(2026,10,22,8,28,0), 96, 62, 128, 7680, "Concluída", "C005", 113, 15},
+				            {#datetime(2026,10,22,0,0,0), "1º Turno", "Conexão", "FH-1021", 9000344, 232, #datetime(2026,10,22,6,33,0), #datetime(2026,10,22,7,55,0), 221, 187, 82, 4920, "Concluída", "C002", 82, 0},
+				            {#datetime(2026,10,22,0,0,0), "2º Turno", "Conexão", "FH-1013", 9000345, 526, #datetime(2026,10,22,14,2,0), #datetime(2026,10,22,17,6,0), 656, 187, 184, 11040, "Concluída", "C012", 184, 0},
+				            {#datetime(2026,10,23,0,0,0), "1º Turno", "HIGH", "FH-1015", 9000346, 71, #datetime(2026,10,23,6,6,0), #datetime(2026,10,23,9,30,0), 63, 18, 204, 12240, "Concluída", "C006", 204, 0},
+				            {#datetime(2026,10,23,0,0,0), "2º Turno", "HIGH", "FH-1023", 9000347, 58, #datetime(2026,10,23,14,19,0), #datetime(2026,10,23,17,5,0), 43, 18, 166, 9960, "Concluída", "C023", 151, 15},
+				            {#datetime(2026,10,23,0,0,0), "2º Turno", "FF1", "FH-1013", 9000348, 89, #datetime(2026,10,23,14,36,0), #datetime(2026,10,23,16,25,0), 86, 50, 109, 6540, "Concluída", "C023", 99, 10},
+				            {#datetime(2026,10,23,0,0,0), "1º Turno", "FF3", "FH-1016", 9000349, 33, #datetime(2026,10,23,6,21,0), #datetime(2026,10,23,7,26,0), 25, 31, 65, 3900, "Concluída", "C002", 55, 10},
+				            {#datetime(2026,10,23,0,0,0), "2º Turno", "FF3", "FH-1029", 9000350, 73, #datetime(2026,10,23,14,5,0), #datetime(2026,10,23,16,33,0), 64, 31, 148, 8880, "Concluída", "C005", 148, 0},
+				            {#datetime(2026,10,23,0,0,0), "1º Turno", "Bundle", "FH-1014", 9000351, 4, #datetime(2026,10,23,6,22,0), #datetime(2026,10,23,8,40,0), 4, 2, 138, 8280, "Concluída", "C002", 123, 15},
+				            {#datetime(2026,10,23,0,0,0), "2º Turno", "Bundle", "FH-1007", 9000352, 2, #datetime(2026,10,23,14,17,0), #datetime(2026,10,23,15,23,0), 1, 2, 66, 3960, "Concluída", "C006", 56, 10},
+				            {#datetime(2026,10,23,0,0,0), "1º Turno", "Acessorios", "FH-1007", 9000353, 210, #datetime(2026,10,23,6,22,0), #datetime(2026,10,23,9,20,0), 202, 62, 178, 10680, "Concluída", "C012", 178, 0},
+				            {#datetime(2026,10,23,0,0,0), "2º Turno", "Conexão", "FH-1001", 9000354, 374, #datetime(2026,10,23,14,36,0), #datetime(2026,10,23,16,47,0), 311, 187, 131, 7860, "Concluída", "C009", 116, 15},
+				            {#datetime(2026,10,26,0,0,0), "1º Turno", "HIGH", "FH-1014", 9000355, 15, #datetime(2026,10,26,6,36,0), #datetime(2026,10,26,7,33,0), 16, 18, 57, 3420, "Concluída", "C013", 52, 5},
+				            {#datetime(2026,10,26,0,0,0), "2º Turno", "HIGH", "FH-1020", 9000356, 58, #datetime(2026,10,26,14,28,0), #datetime(2026,10,26,17,11,0), 38, 18, 163, 9780, "Concluída", "C024", 163, 0},
+				            {#datetime(2026,10,26,0,0,0), "2º Turno", "FF2", "FH-1014", 9000357, 241, #datetime(2026,10,26,14,21,0), #datetime(2026,10,26,17,50,0), 236, 62, 209, 12540, "Concluída", "C024", 209, 0},
+				            {#datetime(2026,10,26,0,0,0), "1º Turno", "FF3", "FH-1024", 9000358, 54, #datetime(2026,10,26,6,13,0), #datetime(2026,10,26,8,0,0), 59, 31, 107, 6420, "Concluída", "C010", 107, 0},
+				            {#datetime(2026,10,26,0,0,0), "1º Turno", "Bundle", "FH-1006", 9000359, 3, #datetime(2026,10,26,6,37,0), #datetime(2026,10,26,8,1,0), 1, 2, 84, 5040, "Concluída", "C009", 74, 10},
+				            {#datetime(2026,10,26,0,0,0), "2º Turno", "Bundle", "FH-1011", 9000360, 3, #datetime(2026,10,26,14,17,0), #datetime(2026,10,26,15,43,0), 3, 2, 86, 5160, "Concluída", "C006", 81, 5},
+				            {#datetime(2026,10,27,0,0,0), "2º Turno", "HIGH", "FH-1014", 9000361, 27, #datetime(2026,10,27,14,15,0), #datetime(2026,10,27,15,46,0), 27, 18, 91, 5460, "Concluída", "C007", 91, 0},
+				            {#datetime(2026,10,27,0,0,0), "1º Turno", "FF2", "FH-1014", 9000362, 87, #datetime(2026,10,27,6,7,0), #datetime(2026,10,27,7,27,0), 94, 62, 80, 4800, "Concluída", "C017", 80, 0},
+				            {#datetime(2026,10,27,0,0,0), "2º Turno", "FF2", "FH-1003", 9000363, 49, #datetime(2026,10,27,14,36,0), #datetime(2026,10,27,15,29,0), 49, 62, 53, 3180, "Concluída", "C018", 48, 5},
+				            {#datetime(2026,10,27,0,0,0), "1º Turno", "Bundle", "FH-1029", 9000364, 3, #datetime(2026,10,27,6,20,0), #datetime(2026,10,27,7,57,0), 3, 2, 97, 5820, "Concluída", "C019", 87, 10},
+				            {#datetime(2026,10,27,0,0,0), "1º Turno", "Acessorios", "FH-1014", 9000365, 86, #datetime(2026,10,27,6,35,0), #datetime(2026,10,27,8,1,0), 68, 62, 86, 5160, "Concluída", "C015", 86, 0},
+				            {#datetime(2026,10,27,0,0,0), "2º Turno", "Acessorios", "FH-1007", 9000366, 149, #datetime(2026,10,27,14,2,0), #datetime(2026,10,27,16,31,0), 150, 62, 149, 8940, "Concluída", "C009", 149, 0},
+				            {#datetime(2026,10,27,0,0,0), "1º Turno", "Conexão", "FH-1021", 9000367, 528, #datetime(2026,10,27,6,4,0), #datetime(2026,10,27,8,36,0), 370, 187, 152, 9120, "Concluída", "C001", 142, 10},
+				            {#datetime(2026,10,27,0,0,0), "2º Turno", "Conexão", "FH-1014", 9000368, 660, #datetime(2026,10,27,14,5,0), #datetime(2026,10,27,17,57,0), 735, 187, 232, 13920, "Concluída", "C001", 232, 0},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "HIGH", "FH-1024", 9000369, 25, #datetime(2026,10,28,14,2,0), #datetime(2026,10,28,15,14,0), 24, 18, 72, 4320, "Concluída", "C002", 72, 0},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "FF1", "FH-1019", 9000370, 112, #datetime(2026,10,28,6,31,0), #datetime(2026,10,28,8,36,0), 101, 50, 125, 7500, "Concluída", "C001", 110, 15},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "FF1", "FH-1008", 9000371, 141, #datetime(2026,10,28,14,3,0), #datetime(2026,10,28,17,0,0), 112, 50, 177, 10620, "Concluída", "C019", 162, 15},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "FF2", "FH-1027", 9000372, 163, #datetime(2026,10,28,6,26,0), #datetime(2026,10,28,8,39,0), 103, 62, 133, 7980, "Concluída", "C020", 123, 10},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "FF2", "FH-1020", 9000373, 59, #datetime(2026,10,28,14,0,0), #datetime(2026,10,28,14,54,0), 43, 62, 54, 3240, "Concluída", "C013", 49, 5},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "FF3", "FH-1020", 9000374, 86, #datetime(2026,10,28,6,35,0), #datetime(2026,10,28,9,21,0), 65, 31, 166, 9960, "Concluída", "C015", 166, 0},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "Bundle", "FH-1030", 9000375, 7, #datetime(2026,10,28,6,19,0), #datetime(2026,10,28,9,39,0), 5, 2, 200, 12000, "Concluída", "C015", 200, 0},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "Bundle", "FH-1017", 9000376, 4, #datetime(2026,10,28,14,0,0), #datetime(2026,10,28,16,8,0), 3, 2, 128, 7680, "Concluída", "C004", 113, 15},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "Acessorios", "FH-1024", 9000377, 231, #datetime(2026,10,28,6,20,0), #datetime(2026,10,28,10,15,0), 268, 62, 235, 14100, "Concluída", "C007", 235, 0},
+				            {#datetime(2026,10,28,0,0,0), "1º Turno", "Conexão", "FH-1015", 9000378, 725, #datetime(2026,10,28,6,33,0), #datetime(2026,10,28,10,4,0), 506, 187, 211, 12660, "Concluída", "C010", 211, 0},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "Conexão", "FH-1022", 9000379, 649, #datetime(2026,10,28,14,34,0), #datetime(2026,10,28,17,48,0), 566, 187, 194, 11640, "Concluída", "C007", 194, 0},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "HIGH", "FH-1016", 9000380, 41, #datetime(2026,10,29,14,16,0), #datetime(2026,10,29,16,11,0), 24, 18, 115, 6900, "Concluída", "C012", 105, 10},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "FF1", "FH-1028", 9000381, 98, #datetime(2026,10,29,14,12,0), #datetime(2026,10,29,15,51,0), 69, 50, 99, 5940, "Concluída", "C016", 84, 15},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "FF2", "FH-1029", 9000382, 148, #datetime(2026,10,29,14,14,0), #datetime(2026,10,29,16,32,0), 149, 62, 138, 8280, "Concluída", "C011", 133, 5},
+				            {#datetime(2026,10,29,0,0,0), "1º Turno", "Acessorios", "FH-1021", 9000383, 255, #datetime(2026,10,29,6,5,0), #datetime(2026,10,29,9,51,0), 218, 62, 226, 13560, "Concluída", "C018", 221, 5},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "Acessorios", "FH-1003", 9000384, 114, #datetime(2026,10,29,14,16,0), #datetime(2026,10,29,16,14,0), 102, 62, 118, 7080, "Concluída", "C004", 103, 15},
+				            {#datetime(2026,10,29,0,0,0), "1º Turno", "Conexão", "FH-1016", 9000385, 291, #datetime(2026,10,29,6,39,0), #datetime(2026,10,29,8,5,0), 248, 187, 86, 5160, "Concluída", "C018", 86, 0},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "Conexão", "FH-1018", 9000386, 671, #datetime(2026,10,29,14,19,0), #datetime(2026,10,29,17,19,0), 567, 187, 180, 10800, "Concluída", "C016", 180, 0},
+				            {#datetime(2026,10,30,0,0,0), "1º Turno", "HIGH", "FH-1005", 9000387, 34, #datetime(2026,10,30,6,20,0), #datetime(2026,10,30,7,58,0), 31, 18, 98, 5880, "Concluída", "C004", 93, 5},
+				            {#datetime(2026,10,30,0,0,0), "2º Turno", "HIGH", "FH-1030", 9000388, 32, #datetime(2026,10,30,14,23,0), #datetime(2026,10,30,16,18,0), 31, 18, 115, 6900, "Concluída", "C010", 110, 5},
+				            {#datetime(2026,10,30,0,0,0), "2º Turno", "FF1", "FH-1025", 9000389, 65, #datetime(2026,10,30,14,7,0), #datetime(2026,10,30,15,18,0), 51, 50, 71, 4260, "Concluída", "C021", 56, 15},
+				            {#datetime(2026,10,30,0,0,0), "1º Turno", "FF3", "FH-1022", 9000390, 55, #datetime(2026,10,30,6,16,0), #datetime(2026,10,30,8,9,0), 66, 31, 113, 6780, "Concluída", "C007", 113, 0},
+				            {#datetime(2026,10,30,0,0,0), "2º Turno", "FF3", "FH-1009", 9000391, 54, #datetime(2026,10,30,14,34,0), #datetime(2026,10,30,16,6,0), 32, 31, 92, 5520, "Concluída", "C003", 82, 10},
+				            {#datetime(2026,10,30,0,0,0), "1º Turno", "Bundle", "FH-1029", 9000392, 2, #datetime(2026,10,30,6,35,0), #datetime(2026,10,30,7,45,0), 1, 2, 70, 4200, "Concluída", "C015", 60, 10},
+				            {#datetime(2026,10,30,0,0,0), "2º Turno", "Bundle", "FH-1022", 9000393, 4, #datetime(2026,10,30,14,36,0), #datetime(2026,10,30,16,43,0), 3, 2, 127, 7620, "Concluída", "C022", 127, 0}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

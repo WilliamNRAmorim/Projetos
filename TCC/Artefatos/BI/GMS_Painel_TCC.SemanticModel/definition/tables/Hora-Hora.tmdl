@@ -1,0 +1,329 @@
+table Hora-Hora
+	lineageTag: 38f5963a-0e7f-41bd-9897-370d398a1e4a
+
+	/// Meta acumulada do Hora-Hora (soma de Meta Hora) no contexto filtrado (célula/turno/dia).
+	measure 'Meta HH' = SUM('Hora-Hora'[Meta Hora])
+		formatString: #,0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 27342815-d0a0-4113-9a6b-050850b7696f
+
+	/// Produção real do Hora-Hora (soma de Real. Hora) no contexto filtrado.
+	measure 'Real HH' = SUM('Hora-Hora'[Real.Hora])
+		displayFolder: 08 Eficiência Célula
+		lineageTag: e41960f6-c869-4d0d-b6cc-4ef4ebac4982
+
+	/// Eficiência = Real / Meta do Hora-Hora. Em branco quando não há meta no contexto (evita divisão por zero).
+	measure '% Eficiência HH' = DIVIDE([Real HH], [Meta HH])
+		formatString: 0%
+		displayFolder: 08 Eficiência Célula
+		lineageTag: a7a5854c-0ddc-4b01-a2d4-eb395fe1404f
+
+	/// Minutos de parada registrados no Hora-Hora no contexto filtrado.
+	measure 'Tempo Parado HH (min)' = SUM('Hora-Hora'[Tempo Parado (min)])
+		formatString: #,0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 7931bea6-c4e5-4072-945e-140f6d812fc0
+
+	/// Seta de tendência da eficiência: para cima quando Real >= Meta, para baixo quando abaixo. Mesmo padrão da Seta Etapa do CP Mangueira.
+	measure 'Seta Eficiência HH' = VAR p = [% Eficiência HH] RETURN IF(NOT ISBLANK(p), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 4f10f9b5-2751-4066-a183-079aa4248abe
+
+	/// % de eficiência com a seta na frente, para usar na matriz célula x dia (mesmo visual do Excel de eficiência).
+	measure '% Eficiência HH c/ Seta' = VAR p = [% Eficiência HH] RETURN IF(NOT ISBLANK(p), [Seta Eficiência HH] & " " & FORMAT(p, "0%"))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 4b18e4d9-88d1-4ff8-b8f2-9d8608b29d1a
+
+	/// Quantidade de células (trançadeiras) com eficiência abaixo de 100% no contexto filtrado. Para cartão de alerta da página Eficiência.
+	measure 'Células Abaixo da Meta' = COUNTROWS(FILTER(VALUES('Hora-Hora'[Célula]), NOT ISBLANK([% Eficiência HH]) && [% Eficiência HH] < 1))
+		formatString: 0
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 70903748-964c-4130-ae79-28fd9ff55cb9
+
+	/// Mangueira(s) da célula/turno/dia. Limitado a 3 itens distintos; acima disso mostra contagem, pois mais que isso indica falta de filtro de dia (uso indevido fora do kanban diário).
+	measure 'Mangueira do Turno' = VAR lista = FILTER(VALUES('Hora-Hora'[Mangueira]), NOT ISBLANK('Hora-Hora'[Mangueira]) && 'Hora-Hora'[Mangueira] <> BLANK()) VAR qtd = COUNTROWS(lista) RETURN IF(qtd <= 3, CONCATENATEX(lista, 'Hora-Hora'[Mangueira], " / "), qtd & " mangueiras (selecione 1 dia)")
+		displayFolder: 08 Eficiência Célula
+		lineageTag: 3a037fa4-58b1-4176-9719-22010ac3fbc7
+
+	/// Motivos distintos da célula/turno/dia, prefixo numérico removido. Limitado a 3 itens; acima mostra contagem, sinal de que falta filtro de dia.
+	measure 'Motivos do Turno' = VAR lista = FILTER(VALUES('Hora-Hora'[Motivo]), NOT ISBLANK('Hora-Hora'[Motivo]) && 'Hora-Hora'[Motivo] <> BLANK()) VAR qtd = COUNTROWS(lista) VAR textoLimpo = CONCATENATEX(lista, SUBSTITUTE('Hora-Hora'[Motivo], LEFT('Hora-Hora'[Motivo], SEARCH(" - ", 'Hora-Hora'[Motivo] & " - ", 1) + 2), ""), " / ") RETURN IF(qtd = 0, BLANK(), IF(qtd <= 3, textoLimpo, qtd & " motivos (selecione 1 dia)"))
+		displayFolder: 08 Eficiência Célula
+		lineageTag: feabcedc-20aa-4556-ba61-c39d56b1672c
+
+	column Turno
+		dataType: string
+		lineageTag: 2238e69e-0bbb-4580-a31c-f8ffa7ba8b25
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: ce0fe538-d940-40e8-a40e-c35d5a6fbf74
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Célula
+		dataType: string
+		lineageTag: 36489d9d-8b66-40c6-947c-79c2268bd37d
+		summarizeBy: none
+		sourceColumn: Célula
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Tempo Parado (min)'
+		dataType: double
+		lineageTag: de817f86-0ed6-4a58-8289-2e3b89b71798
+		summarizeBy: sum
+		sourceColumn: Tempo Parado (min)
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Motivo
+		dataType: string
+		lineageTag: 5dafdd41-e007-4971-b04a-05d0342156ca
+		summarizeBy: none
+		sourceColumn: Motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Motivo 2'
+		dataType: string
+		lineageTag: c271051f-bd2f-4c54-9f9d-7d6f3462d110
+		summarizeBy: none
+		sourceColumn: Motivo 2
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Comentário / Ação'
+		dataType: string
+		lineageTag: 9bfab07b-fb78-448b-b734-8d7b9685b7f8
+		summarizeBy: none
+		sourceColumn: Comentário / Ação
+
+		annotation SummarizationSetBy = Automatic
+
+	column Minutos
+		dataType: double
+		lineageTag: 75e20aff-9da0-4b5e-9f55-6d141da49992
+		summarizeBy: sum
+		sourceColumn: Minutos
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column 'Motivo Padrão' = VAR t = TRIM('Hora-Hora'[Motivo]) VAR p = IFERROR(SEARCH("-", t), 0) VAR pre = IF(p > 1, TRIM(LEFT(t, p - 1)), "") VAR limpo = IF(IFERROR(VALUE(pre), -1) >= 0, TRIM(MID(t, p + 1, 300)), t) RETURN IF(ISBLANK('Hora-Hora'[Motivo]), BLANK(), SWITCH(TRUE(), limpo = "Refeição", "Almoço", limpo = "Problema no tubo", "Análise/Problema no tubo", limpo))
+		dataType: string
+		lineageTag: eb411755-1a47-48e1-b85e-2bc77613426a
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Motivo 2 Padrão' = VAR t = TRIM('Hora-Hora'[Motivo 2]) VAR p = IFERROR(SEARCH("-", t), 0) VAR pre = IF(p > 1, TRIM(LEFT(t, p - 1)), "") VAR limpo = IF(IFERROR(VALUE(pre), -1) >= 0, TRIM(MID(t, p + 1, 300)), t) RETURN IF(ISBLANK('Hora-Hora'[Motivo 2]), BLANK(), SWITCH(TRUE(), limpo = "Refeição", "Almoço", limpo = "Problema no tubo", "Análise/Problema no tubo", limpo))
+		dataType: string
+		lineageTag: c50e6357-8be3-4109-8e0e-bc8b9fab2a2b
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Hora-Hora = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Turno" = nullable text, #"Data" = nullable datetime, #"Célula" = nullable text, #"Tempo Parado (min)" = nullable number, #"Motivo" = nullable text, #"Motivo 2" = nullable text, #"Comentário / Ação" = nullable text, #"Minutos" = nullable number],
+				        {
+				            {"1º Turno", #datetime(2026,9,21,0,0,0), "TR01", 15, "28 - FI - Falta de Embalagem / Termoencolhível", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,9,21,0,0,0), "TR01", 20, "27 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, null, 60},
+				            {"2º Turno", #datetime(2026,9,21,0,0,0), "TR01", 30, "23 - Resto de fio", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,9,21,0,0,0), "TR01", 30, "17 - Falta de energia / ar", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,9,21,0,0,0), "TR01", 30, "01 - FI - Falta de Embalagem / Termoencolhível", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,9,21,0,0,0), "TR03", 20, "08 - FI - Falta de Embalagem / Termoencolhível", null, null, 60},
+				            {"3º Turno", #datetime(2026,9,21,0,0,0), "TR04", 10, "19 - Análise/Problema no tubo", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,9,22,0,0,0), "TR01", 30, "03 - Falta de tubo", null, null, 40},
+				            {"2º Turno", #datetime(2026,9,22,0,0,0), "TR01", 45, "11 - Alimentação de fio", "03 - FI - Falta de Embalagem / Termoencolhível", null, 60},
+				            {"2º Turno", #datetime(2026,9,22,0,0,0), "TR01", 15, "22 - Falta de Lenon", "24 - Manutenção Corretiva", null, 60},
+				            {"3º Turno", #datetime(2026,9,22,0,0,0), "TR01", 15, "21 - Resto de fio", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,9,22,0,0,0), "TR02", 10, "21 - Ajuste da Máquina", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,9,22,0,0,0), "TR02", 15, "15 - Falta de Mandril", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,9,22,0,0,0), "TR03", 10, "25 - Falta de energia / ar", "29 - Troca de Carretel", "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,9,22,0,0,0), "TR04", 5, "09 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,9,23,0,0,0), "TR01", 30, "10 - Alimentação de fio", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,9,23,0,0,0), "TR03", 20, "28 - Falta de Carretel", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,9,23,0,0,0), "TR03", 10, "01 - Falta de Mandril Soldado", null, null, 60},
+				            {"3º Turno", #datetime(2026,9,23,0,0,0), "TR04", 20, "09 - FI - Falta de Embalagem / Termoencolhível", "15 - Falta de energia / ar", null, 60},
+				            {"1º Turno", #datetime(2026,9,24,0,0,0), "TR02", 15, "10 - Emenda de Fita", "05 - Resto de fio", null, 60},
+				            {"2º Turno", #datetime(2026,9,24,0,0,0), "TR03", 45, "25 - Falta de energia / ar", null, null, 60},
+				            {"1º Turno", #datetime(2026,9,24,0,0,0), "TR04", 45, "24 - Falta de Mandril", null, null, 60},
+				            {"3º Turno", #datetime(2026,9,24,0,0,0), "TR04", 20, "04 - Falta de operador", null, null, 60},
+				            {"2º Turno", #datetime(2026,9,25,0,0,0), "TR01", 10, "28 - Ajuste da Máquina", "04 - Ajuste da Máquina", null, 60},
+				            {"3º Turno", #datetime(2026,9,25,0,0,0), "TR01", 45, "07 - Falta de Lenon", null, null, 60},
+				            {"1º Turno", #datetime(2026,9,25,0,0,0), "TR03", 20, "12 - Falta de insulation", null, "Ajuste realizado", 40},
+				            {"2º Turno", #datetime(2026,9,25,0,0,0), "TR03", 5, "10 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, null, 60},
+				            {"2º Turno", #datetime(2026,9,25,0,0,0), "TR03", 15, "07 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,9,25,0,0,0), "TR03", 10, "08 - Manutenção Corretiva", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,9,28,0,0,0), "TR02", 10, "04 - Alimentação de fio", null, null, 60},
+				            {"3º Turno", #datetime(2026,9,28,0,0,0), "TR02", 30, "13 - Falta de tubo", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,9,28,0,0,0), "TR02", 10, "14 - Falta de Lenon", null, null, 60},
+				            {"3º Turno", #datetime(2026,9,28,0,0,0), "TR03", 10, "08 - Falta de energia / ar", "19 - VR - Velocidade Reduzida", "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,9,28,0,0,0), "TR04", 15, "03 - Quebra de fio", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,9,28,0,0,0), "TR04", 10, "25 - Falta de fio - Bobinadeira", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,9,29,0,0,0), "TR01", 45, "08 - VR - Velocidade Reduzida", null, "Ajuste realizado", 40},
+				            {"1º Turno", #datetime(2026,9,29,0,0,0), "TR01", 5, "08 - Divergência do Tempo Padrão", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,9,29,0,0,0), "TR01", 45, "14 - Falta de Carretel", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,9,29,0,0,0), "TR01", 5, "05 - Falta de Mandril", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,9,29,0,0,0), "TR01", 20, "02 - VR - Velocidade Reduzida", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,9,29,0,0,0), "TR02", 15, "28 - Falta de energia / ar", "26 - Falta de Mangueira", "Ajuste realizado", 40},
+				            {"2º Turno", #datetime(2026,9,29,0,0,0), "TR02", 30, "24 - FI - Falta de Embalagem / Termoencolhível", null, null, 60},
+				            {"2º Turno", #datetime(2026,9,29,0,0,0), "TR02", 10, "15 - Falta de fio - Bobinadeira", null, null, 60},
+				            {"2º Turno", #datetime(2026,9,29,0,0,0), "TR04", 45, "21 - Falta de Carretel", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,9,30,0,0,0), "TR01", 30, "22 - RT - Retrabalho", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,9,30,0,0,0), "TR04", 45, "14 - Análise/Problema no tubo", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,9,30,0,0,0), "TR04", 30, "27 - Troca de Carretel", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,9,30,0,0,0), "TR04", 30, "14 - RT - Retrabalho", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,1,0,0,0), "TR01", 15, "16 - Ajuste da Máquina", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,1,0,0,0), "TR01", 30, "12 - Falta de insulation", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,1,0,0,0), "TR04", 10, "10 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,2,0,0,0), "TR01", 15, "11 - Emenda de Fita", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,2,0,0,0), "TR01", 10, "18 - RT - Retrabalho", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,10,2,0,0,0), "TR01", 15, "21 - Falta de Demanda", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,2,0,0,0), "TR02", 45, "08 - Emenda de Fita", "30 - Resto de fio", "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,2,0,0,0), "TR03", 15, "29 - Resto de fio", "26 - Falta de Carretel", "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,10,2,0,0,0), "TR03", 15, "23 - Divergência do Tempo Padrão", "20 - Falta de Carretel", "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,2,0,0,0), "TR04", 45, "03 - Falta de energia / ar", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,2,0,0,0), "TR04", 45, "04 - Resto de fio", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,10,5,0,0,0), "TR01", 45, "10 - FI - Falta de Embalagem / Termoencolhível", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,5,0,0,0), "TR01", 30, "15 - Motivo Não Declarado", "20 - Quebra de fio", "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,5,0,0,0), "TR02", 5, "20 - FI - Falta de Embalagem / Termoencolhível", "27 - Falta de Lenon", null, 60},
+				            {"1º Turno", #datetime(2026,10,5,0,0,0), "TR03", 15, "03 - VR - Velocidade Reduzida", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,5,0,0,0), "TR03", 45, "30 - Quebra de fio", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,5,0,0,0), "TR04", 20, "24 - Falta de Mandril Soldado", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,5,0,0,0), "TR04", 5, "13 - Manutenção Corretiva", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,5,0,0,0), "TR04", 15, "07 - Troca de boneca", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,6,0,0,0), "TR02", 30, "06 - RT - Retrabalho", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,6,0,0,0), "TR02", 30, "11 - RT - Retrabalho", "13 - Ajuste da Máquina", "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,6,0,0,0), "TR02", 30, "28 - Ajuste da Máquina", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,6,0,0,0), "TR03", 30, "03 - AP - Alteracao de Planejamento", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,6,0,0,0), "TR03", 45, "19 - Troca de Lenon", "07 - Troca de boneca", "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,6,0,0,0), "TR04", 30, "04 - Manutenção Corretiva", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,7,0,0,0), "TR01", 20, "22 - RT - Retrabalho", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,7,0,0,0), "TR01", 15, "06 - Motivo Não Declarado", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,7,0,0,0), "TR01", 30, "20 - Falta de insulation", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,7,0,0,0), "TR01", 30, "29 - Falta de operador", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,7,0,0,0), "TR02", 15, "03 - Falta de operador", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,7,0,0,0), "TR02", 20, "23 - Troca de boneca", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,7,0,0,0), "TR02", 5, "17 - Sem apontamento", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,7,0,0,0), "TR02", 45, "03 - VR - Velocidade Reduzida", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,7,0,0,0), "TR03", 15, "29 - VR - Velocidade Reduzida", null, "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,7,0,0,0), "TR03", 30, "21 - Análise/Problema no tubo", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,10,7,0,0,0), "TR04", 20, "04 - Manutenção Corretiva", "29 - Alimentação de fio", null, 60},
+				            {"2º Turno", #datetime(2026,10,7,0,0,0), "TR04", 5, "07 - Troca de Carretel", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,7,0,0,0), "TR04", 5, "09 - FI - Falta de Embalagem / Termoencolhível", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,7,0,0,0), "TR04", 10, "14 - Emenda de Fita", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,8,0,0,0), "TR02", 10, "07 - Falta de Mangueira", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,8,0,0,0), "TR03", 45, "30 - Falta de Lenon", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,8,0,0,0), "TR03", 30, "15 - Falta de energia / ar", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,9,0,0,0), "TR02", 5, "05 - Falta de tubo", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,10,9,0,0,0), "TR02", 30, "05 - Alimentação de fio", "07 - Quebra de fio", null, 60},
+				            {"3º Turno", #datetime(2026,10,9,0,0,0), "TR02", 5, "24 - Falta de tubo", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,9,0,0,0), "TR03", 30, "09 - Falta de Mandril Soldado", "24 - Falta de Demanda", null, 60},
+				            {"3º Turno", #datetime(2026,10,9,0,0,0), "TR03", 5, "08 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,9,0,0,0), "TR04", 5, "08 - Falta de Mangueira", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,12,0,0,0), "TR01", 30, "18 - Falta de tubo", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,12,0,0,0), "TR02", 45, "28 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,12,0,0,0), "TR03", 20, "24 - Falta de Lenon", "30 - Alimentação de fio", "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,12,0,0,0), "TR04", 15, "25 - Troca de Lenon", null, null, 40},
+				            {"1º Turno", #datetime(2026,10,13,0,0,0), "TR01", 20, "17 - Sem apontamento", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,13,0,0,0), "TR01", 10, "10 - AP - Alteracao de Planejamento", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,13,0,0,0), "TR01", 15, "22 - Falta de Lenon", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,13,0,0,0), "TR02", 10, "20 - Falta de energia / ar", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,13,0,0,0), "TR02", 15, "19 - Quebra de fio", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,13,0,0,0), "TR02", 20, "16 - Falta de Carretel", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,13,0,0,0), "TR03", 45, "16 - IT - Aguardando Instrucao de Trabalho / liberacao Engenharia", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,13,0,0,0), "TR04", 30, "02 - Manutenção Corretiva", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,13,0,0,0), "TR04", 10, "14 - VR - Velocidade Reduzida", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,13,0,0,0), "TR04", 30, "12 - FI - Falta de Embalagem / Termoencolhível", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,14,0,0,0), "TR01", 15, "09 - Falta de insulation", null, "Acionado apoio", 40},
+				            {"2º Turno", #datetime(2026,10,14,0,0,0), "TR01", 5, "02 - Falta de Mandril", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,14,0,0,0), "TR02", 45, "23 - Troca de Carretel", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,14,0,0,0), "TR03", 5, "04 - Falta de Mandril", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,14,0,0,0), "TR03", 10, "28 - Sem apontamento", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,14,0,0,0), "TR04", 30, "12 - Sem apontamento", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,14,0,0,0), "TR04", 10, "27 - Alimentação de fio", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,15,0,0,0), "TR01", 45, "12 - Falta de Mangueira", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,15,0,0,0), "TR01", 20, "01 - FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", "10 - Falta de tubo", "Ajuste realizado", 60},
+				            {"3º Turno", #datetime(2026,10,15,0,0,0), "TR01", 15, "26 - Falta de energia / ar", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,10,15,0,0,0), "TR02", 45, "17 - Manutenção Corretiva", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,15,0,0,0), "TR03", 5, "15 - Ajuste da Máquina", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,15,0,0,0), "TR04", 45, "07 - Troca de boneca", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,16,0,0,0), "TR01", 5, "12 - Emenda de Fita", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,10,16,0,0,0), "TR01", 30, "27 - Falta de Lenon", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,16,0,0,0), "TR01", 45, "29 - Falta de Mangueira", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,16,0,0,0), "TR03", 10, "12 - Alimentação de fio", null, "Acionado apoio", 40},
+				            {"1º Turno", #datetime(2026,10,19,0,0,0), "TR02", 45, "07 - Falta de programação", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,19,0,0,0), "TR02", 30, "03 - Troca de Lenon", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,19,0,0,0), "TR03", 20, "16 - Manutenção Corretiva", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,10,19,0,0,0), "TR03", 20, "29 - Troca de Lenon", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,19,0,0,0), "TR04", 10, "28 - Troca de Carretel", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,20,0,0,0), "TR01", 10, "06 - Falta de energia / ar", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,20,0,0,0), "TR02", 30, "29 - Falta de Mangueira", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,20,0,0,0), "TR03", 5, "05 - Troca de Lenon", "09 - IT - Aguardando Instrucao de Trabalho / liberacao Engenharia", "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,21,0,0,0), "TR01", 15, "02 - Falta de Mandril Soldado", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,21,0,0,0), "TR02", 15, "15 - VR - Velocidade Reduzida", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,21,0,0,0), "TR03", 10, "23 - Falta de Mandril Soldado", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,21,0,0,0), "TR03", 45, "18 - Quebra de fio", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,22,0,0,0), "TR01", 20, "28 - Falta de programação", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,22,0,0,0), "TR02", 20, "04 - Falta de Mandril", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,22,0,0,0), "TR03", 10, "14 - Falta de Carretel", null, "Acionado apoio", 60},
+				            {"1º Turno", #datetime(2026,10,22,0,0,0), "TR03", 15, "04 - Quebra de fio", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,22,0,0,0), "TR03", 30, "27 - Falta de tubo", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,23,0,0,0), "TR01", 20, "18 - Falta de Mandril Soldado", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,23,0,0,0), "TR01", 5, "19 - Manutenção Corretiva", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,23,0,0,0), "TR02", 30, "21 - Falta de Mandril Soldado", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,23,0,0,0), "TR03", 15, "07 - RT - Retrabalho", null, "Ajuste realizado", 60},
+				            {"2º Turno", #datetime(2026,10,23,0,0,0), "TR04", 10, "29 - Análise/Problema no tubo", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,26,0,0,0), "TR01", 15, "19 - Análise/Problema no tubo", "09 - RT - Retrabalho", "Acionado apoio", 40},
+				            {"1º Turno", #datetime(2026,10,26,0,0,0), "TR01", 5, "20 - Falta de insulation", "22 - Divergência do Tempo Padrão", null, 60},
+				            {"2º Turno", #datetime(2026,10,26,0,0,0), "TR02", 20, "17 - Emenda de Fita", null, "Acionado apoio", 60},
+				            {"3º Turno", #datetime(2026,10,26,0,0,0), "TR03", 45, "30 - Falta de energia / ar", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,26,0,0,0), "TR04", 5, "26 - Falta de programação", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,26,0,0,0), "TR04", 45, "30 - FI - Falta de Embalagem / Termoencolhível", "16 - RT - Retrabalho", null, 60},
+				            {"2º Turno", #datetime(2026,10,27,0,0,0), "TR02", 30, "08 - IT - Aguardando Instrucao de Trabalho / liberacao Engenharia", "18 - Análise/Problema no tubo", "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,27,0,0,0), "TR02", 30, "02 - Troca de Lenon", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,27,0,0,0), "TR02", 30, "22 - Ajuste da Máquina", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,27,0,0,0), "TR03", 5, "20 - VR - Velocidade Reduzida", null, null, 60},
+				            {"1º Turno", #datetime(2026,10,28,0,0,0), "TR01", 5, "06 - RT - Retrabalho", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,28,0,0,0), "TR01", 30, "08 - Emenda de Fita", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,28,0,0,0), "TR02", 10, "07 - Troca de Carretel", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,28,0,0,0), "TR03", 30, "10 - Emenda de Fita", "05 - Emenda de Fita", "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,28,0,0,0), "TR04", 15, "21 - Análise/Problema no tubo", null, null, 60},
+				            {"3º Turno", #datetime(2026,10,28,0,0,0), "TR04", 20, "16 - Falta de insulation", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,29,0,0,0), "TR01", 45, "05 - Falta de Lenon", null, null, 40},
+				            {"2º Turno", #datetime(2026,10,29,0,0,0), "TR01", 30, "24 - Troca de boneca", "25 - Troca de Carretel", null, 60},
+				            {"3º Turno", #datetime(2026,10,29,0,0,0), "TR01", 10, "07 - RT - Retrabalho", null, "Acionado apoio", 60},
+				            {"2º Turno", #datetime(2026,10,29,0,0,0), "TR02", 15, "21 - Falta de energia / ar", null, "Aguardando material", 60},
+				            {"1º Turno", #datetime(2026,10,29,0,0,0), "TR03", 15, "01 - Motivo Não Declarado", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,29,0,0,0), "TR04", 10, "28 - Falta de Mandril Soldado", "22 - Resto de fio", null, 60},
+				            {"1º Turno", #datetime(2026,10,29,0,0,0), "TR04", 30, "13 - Troca de Lenon", null, "Aguardando material", 60},
+				            {"2º Turno", #datetime(2026,10,30,0,0,0), "TR02", 30, "07 - Manutenção Corretiva", null, "Aguardando material", 60},
+				            {"3º Turno", #datetime(2026,10,30,0,0,0), "TR03", 15, "28 - VR - Velocidade Reduzida", null, "Ajuste realizado", 60},
+				            {"1º Turno", #datetime(2026,10,30,0,0,0), "TR04", 10, "10 - Quebra de fio", null, null, 60},
+				            {"2º Turno", #datetime(2026,10,30,0,0,0), "TR04", 20, "30 - Troca de Lenon", null, "Acionado apoio", 60}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

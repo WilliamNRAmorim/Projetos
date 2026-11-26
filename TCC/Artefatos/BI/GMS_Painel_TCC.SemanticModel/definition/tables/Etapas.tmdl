@@ -1,0 +1,168 @@
+/// Fato desnormalizado de etapas concluidas por ficha. Base do CP Mangueira.
+table Etapas
+	lineageTag: a52434f5-ffef-4a3f-8714-fc369b375df3
+
+	/// Metragem realizada por etapa, atribuida ao dia/turno em que a etapa terminou. Vem do GMS.
+	measure 'Realizado Etapa' = SUM('Etapas'[Metragem])
+		formatString: #,0
+		displayFolder: 07 CP Mangueira
+		lineageTag: fce85704-98e1-4d58-b035-f2434f0b73a3
+
+	/// Meta diaria por etapa x turno (do META Mangueira Montagem). T1=T2; T3 sem meta. Soma os turnos no contexto.
+	measure 'Meta Etapa Dia' = SUMX(VALUES('Etapas'[Etapa]), VAR e = 'Etapas'[Etapa] VAR mt = SWITCH(e, "Trançadeira", 4350, "Extrusora 1", 3850, "Extrusora 2", 3850, "Extrusora Mandril", 1500, "Bandagem", 3850, "Debandagem", 3850, "Extração", 3850, 0) VAR nTurnos = COUNTROWS(FILTER(VALUES('Etapas'[Turno]), 'Etapas'[Turno] <> "Turno 3")) RETURN mt * nTurnos)
+		formatString: #,0
+		displayFolder: 07 CP Mangueira
+		lineageTag: e6c1eaa9-dec8-488d-9387-aa9c2818e7cb
+
+	/// Dias uteis decorridos no periodo filtrado (dCalendario), ate hoje. Conta seg-sex.
+	measure 'Dias Uteis Decorridos CP' = VAR maxData = MAX('dCalendario'[Date]) VAR ate = IF(maxData < TODAY(), maxData, TODAY()) RETURN COUNTROWS(FILTER(VALUES('dCalendario'[Date]), 'dCalendario'[Date] <= ate && WEEKDAY('dCalendario'[Date], 2) <= 5))
+		formatString: 0
+		displayFolder: 07 CP Mangueira
+		lineageTag: 9fc59150-3587-4cd6-9496-302389c6cb3b
+
+	/// Meta acumulada no mes ate hoje = meta diaria x dias uteis decorridos.
+	measure 'Meta Etapa MTD' = [Meta Etapa Dia] * [Dias Uteis Decorridos CP]
+		formatString: #,0
+		displayFolder: 07 CP Mangueira
+		lineageTag: ab4c3086-6380-4198-af32-e7fc6d121e39
+
+	/// % atingimento da etapa = realizado / meta acumulada ate hoje.
+	measure '% Atingimento Etapa' = DIVIDE([Realizado Etapa], [Meta Etapa MTD])
+		formatString: 0.0%
+		displayFolder: 07 CP Mangueira
+		lineageTag: d863863a-58cd-47b1-bb83-d1c66f3f5678
+
+	/// Seta indicadora do atingimento da etapa: triangulo para cima (no ritmo, >=100% da meta acumulada) ou para baixo (abaixo).
+	measure 'Seta Etapa' = VAR p = [% Atingimento Etapa] RETURN IF(ISBLANK(p), BLANK(), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)))
+		displayFolder: 07 CP Mangueira
+		lineageTag: 5704ad5b-69af-4571-a42b-625f642f1055
+
+	/// % atingimento da etapa com a seta na frente (igual ao Excel: seta + 101%). Use ESTA medida na matriz no lugar do % Atingimento Etapa para ter o visual do Excel.
+	measure '% Etapa c/ Seta' = VAR p = [% Atingimento Etapa] RETURN IF(ISBLANK(p), BLANK(), IF(p >= 1, UNICHAR(9650), UNICHAR(9660)) & " " & FORMAT(p, "0%"))
+		displayFolder: 07 CP Mangueira
+		lineageTag: 651dc083-3993-4d77-94ea-8bd5afda54f7
+
+	/// Planejado por etapa no periodo filtrado = meta diaria x dias uteis no contexto (1 dia se filtrar um dia; varios se filtrar o mes). Use no CP no lugar da Meta Etapa MTD quando quiser o planejado do periodo exato exibido.
+	measure 'Planejado Etapa' = VAR diasNoContexto = COUNTROWS(FILTER(VALUES('dCalendario'[Date]), WEEKDAY('dCalendario'[Date], 2) <= 5)) RETURN [Meta Etapa Dia] * diasNoContexto
+		formatString: #,0
+		displayFolder: 07 CP Mangueira
+		lineageTag: 6d201329-f934-4a37-a355-271f0172858f
+
+	/// % atingimento por etapa vs o planejado do periodo exibido (Realizado Etapa / Planejado Etapa). Diferente do %MTD: este compara com o plano do periodo filtrado, igual a coluna % do Excel.
+	measure '% Etapa' = DIVIDE([Realizado Etapa], [Planejado Etapa])
+		formatString: 0%
+		displayFolder: 07 CP Mangueira
+		lineageTag: 9d8463bd-5118-4957-8b25-6d0915c9032c
+
+	/// Indicador de tendencia para a coluna % do CP: seta para cima se realizado >= planejado, para baixo se abaixo. Igual as setinhas do Excel.
+	measure 'Tendencia Etapa' = VAR p = [% Etapa] RETURN IF(ISBLANK(p), BLANK(), IF(p >= 1, "🔼", "🔽"))
+		displayFolder: 07 CP Mangueira
+		lineageTag: 6462fff3-c7fe-4fbf-9e18-7549621adf38
+
+	column OP
+		lineageTag: aa4e489a-f627-49da-b50e-28074f96d124
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [OP]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mangueira
+		lineageTag: d1133480-7209-4bb0-b9e0-ab7dcdec991f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Mangueira]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Etapa
+		lineageTag: b2480ea5-a74a-411b-974e-34398b0c0943
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Etapa]
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrdemEtapa
+		lineageTag: b29c2252-8ac0-4491-8971-d090d39bc903
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [OrdemEtapa]
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHora
+		lineageTag: 98e87126-3905-4834-a35a-380d80c9ac90
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [DataHora]
+
+		variation Variation
+			isDefault
+			relationship: eb71b60f-5d53-452a-b6bc-db4ef88018d0
+			defaultHierarchy: LocalDateTable_4481b689-1851-4000-8f70-2cdb4b49d96b.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Metragem
+		lineageTag: 52e9ed31-aecc-451f-b80f-0d822966dbab
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Metragem]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Data = DATE(YEAR('Etapas'[DataHora]), MONTH('Etapas'[DataHora]), DAY('Etapas'[DataHora]))
+		lineageTag: 23348f5d-69a5-4920-b004-b9fff41851c8
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno = VAR tm = HOUR('Etapas'[DataHora])*60 + MINUTE('Etapas'[DataHora]) RETURN SWITCH(TRUE(), tm >= 320 && tm < 820, "Turno 1", tm >= 820 && tm < 1340, "Turno 2", "Turno 3")
+		lineageTag: ece933de-454b-4387-aeec-92fdd13f2830
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column AnoMes = YEAR('Etapas'[DataHora])*100 + MONTH('Etapas'[DataHora])
+		lineageTag: 6c9e4575-8970-4d96-ba84-775bd0700db5
+		summarizeBy: sum
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Etapas = calculated
+		mode: import
+		source =
+				VAR base = FILTER ( 'ficha_producao', NOT ISBLANK ( 'ficha_producao'[Metragem_Extracao] ) )
+				RETURN
+				UNION (
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_mandril] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Extrusora Mandril", "OrdemEtapa", 1,
+				        "DataHora", 'ficha_producao'[data_hora_final_mandril], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_tubo] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Extrusora 1", "OrdemEtapa", 2,
+				        "DataHora", 'ficha_producao'[data_hora_final_tubo], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_trancadeira] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Trançadeira", "OrdemEtapa", 3,
+				        "DataHora", 'ficha_producao'[data_hora_final_trancadeira], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_cobertura] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Extrusora 2", "OrdemEtapa", 4,
+				        "DataHora", 'ficha_producao'[data_hora_final_cobertura], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_bandagem] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Bandagem", "OrdemEtapa", 5,
+				        "DataHora", 'ficha_producao'[data_hora_final_bandagem], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_debandagem] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Debandagem", "OrdemEtapa", 6,
+				        "DataHora", 'ficha_producao'[data_hora_final_debandagem], "Metragem", 'ficha_producao'[Metragem_Extracao] ),
+				    SELECTCOLUMNS ( FILTER ( base, NOT ISBLANK ( 'ficha_producao'[data_hora_final_extracao] ) ),
+				        "OP", 'ficha_producao'[OP_Texto], "Mangueira", 'ficha_producao'[Mangueira_Limpa],
+				        "Etapa", "Extração", "OrdemEtapa", 7,
+				        "DataHora", 'ficha_producao'[data_hora_final_extracao], "Metragem", 'ficha_producao'[Metragem_Extracao] )
+				)
+

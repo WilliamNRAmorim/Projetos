@@ -1,0 +1,174 @@
+table fHoraCheia
+
+	/// Hora-Hora do BI por hora cheia: 1 linha por Célula x Data BI x hora cheia x janela de origem (fHoraHora). Dia produtivo 05:00 a 05:00.
+	column 'Célula'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Célula]
+
+	column Mangueira
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Mangueira]
+
+	column 'Data BI'
+		dataType: dateTime
+		formatString: dd/mm/yyyy
+		summarizeBy: none
+		sourceColumn: [Data BI]
+
+	column 'Turno BI'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Turno BI]
+
+	column Hora
+		dataType: string
+		summarizeBy: none
+		sortByColumn: HoraOrdem
+		sourceColumn: [Hora]
+
+	column HoraOrdem
+		dataType: int64
+		isHidden
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [HoraOrdem]
+
+	column Minutos
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: [Minutos]
+
+	column Meta
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: [Meta]
+
+	column Real
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: [Real]
+
+	column Parado
+		dataType: double
+		formatString: #,0.0
+		summarizeBy: none
+		sourceColumn: [Parado]
+
+	column Motivo
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Motivo]
+
+	column 'Motivo Padrão'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Motivo Padrão]
+
+	column 'Motivo 2'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Motivo 2]
+
+	column 'Motivo 2 Padrão'
+		dataType: string
+		summarizeBy: none
+		sourceColumn: [Motivo 2 Padrão]
+
+	column 'ID Origem'
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: [ID Origem]
+
+	column Fração
+		dataType: double
+		formatString: 0.000
+		summarizeBy: none
+		sourceColumn: [Fração]
+
+	partition fHoraCheia = calculated
+		mode: import
+		source =
+			VAR Linhas =
+			SELECTCOLUMNS (
+			fHoraHora,
+			"ID Origem", fHoraHora[ID],
+			"Célula", fHoraHora[Célula],
+			"Mangueira", fHoraHora[Mangueira],
+			"Data", fHoraHora[Data],
+			"Hora", fHoraHora[Hora],
+			"Min", fHoraHora[Minutos],
+			"MetaHora", fHoraHora[Meta Hora],
+			"Real0", fHoraHora[Real. Hora],
+			"Par0", fHoraHora[Tempo Parado (min)],
+			"Motivo", fHoraHora[Motivo],
+			"Motivo Padrão", fHoraHora[Motivo Padrão],
+			"Motivo 2", fHoraHora[Motivo 2],
+			"Motivo 2 Padrão", fHoraHora[Motivo 2 Padrão]
+			)
+			VAR Ini =
+			ADDCOLUMNS (
+			FILTER ( Linhas, LEN ( [Hora] ) = 13 ),
+			"I0", IFERROR ( VALUE ( LEFT ( [Hora], 2 ) ) * 60 + VALUE ( MID ( [Hora], 4, 2 ) ), -1 ),
+			"F0", IFERROR ( VALUE ( MID ( [Hora], 9, 2 ) ) * 60 + VALUE ( MID ( [Hora], 12, 2 ) ), -1 )
+			)
+			VAR Jan1 =
+			ADDCOLUMNS (
+			FILTER ( Ini, [I0] >= 0 && [F0] >= 0 ),
+			"Sini", IF ( [Hora] = "13:47 - 15:00", 837, IF ( [I0] < 320, [I0] + 1440, [I0] ) ) - 300
+			)
+			VAR Jan2 =
+			ADDCOLUMNS (
+			Jan1,
+			"Efim", IF ( [F0] - 300 <= [Sini], [F0] - 300 + 1440, [F0] - 300 )
+			)
+			VAR Fatias =
+			GENERATE (
+			FILTER ( Jan2, [Efim] - [Sini] > 0 && [Efim] - [Sini] <= 120 ),
+			GENERATESERIES ( INT ( [Sini] / 60 ), INT ( ( [Efim] - 1 ) / 60 ) )
+			)
+			VAR Calc =
+			ADDCOLUMNS (
+			Fatias,
+			"Fr", DIVIDE ( MIN ( [Efim], ( [Value] + 1 ) * 60 ) - MAX ( [Sini], [Value] * 60 ), [Efim] - [Sini] ),
+			"Mn", IF ( COALESCE ( [Min], 0 ) > 0, [Min], [Efim] - [Sini] )
+			)
+			VAR Calc2 =
+			ADDCOLUMNS (
+			Calc,
+			"DataBI", [Data] + INT ( [Value] / 24 ),
+			"HO", MOD ( [Value], 24 ),
+			"TurnoBI", IF ( MOD ( [Value], 24 ) < 9, "1º Turno", IF ( MOD ( [Value], 24 ) < 17, "2º Turno", "3º Turno" ) )
+			)
+			VAR ComAlmoco =
+			DISTINCT ( SELECTCOLUMNS ( FILTER ( Calc2, [Motivo Padrão] = "Almoço" ), "C", [Célula], "D", [DataBI], "T", [TurnoBI] ) )
+			VAR Calc3 =
+			ADDCOLUMNS (
+			Calc2,
+			"Refeicao", [Motivo Padrão] = "Almoço" || ( [HO] = SWITCH ( [TurnoBI], "1º Turno", 6, "2º Turno", 14, 21 ) && NOT ( ( [Célula], [DataBI], [TurnoBI] ) IN ComAlmoco ) )
+			)
+			RETURN
+			SELECTCOLUMNS (
+			Calc3,
+			"Célula", [Célula],
+			"Mangueira", [Mangueira],
+			"Data BI", [DataBI],
+			"Turno BI", [TurnoBI],
+			"Hora", FORMAT ( MOD ( 5 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00 - " & FORMAT ( MOD ( 6 + MOD ( [Value], 24 ), 24 ), "00" ) & ":00",
+			"HoraOrdem", MOD ( [Value], 24 ),
+			"Minutos", [Mn] * [Fr],
+			"Meta", COALESCE ( [MetaHora], 0 ) * IF ( [Mn] > 0, MAX ( 0, [Mn] - IF ( [Refeicao], 45, 0 ) - IF ( [Motivo Padrão] IN { "Manutenção Preventiva", "Reunião", "Amostra" }, COALESCE ( [Par0], 0 ), 0 ) ) / [Mn], 1 ) * [Fr],
+			"Real", COALESCE ( [Real0], 0 ) * [Fr],
+			"Parado", MIN ( COALESCE ( [Par0], 0 ) * [Fr], [Mn] * [Fr] ),
+			"Motivo", [Motivo],
+			"Motivo Padrão", [Motivo Padrão],
+			"Motivo 2", [Motivo 2],
+			"Motivo 2 Padrão", [Motivo 2 Padrão],
+			"ID Origem", [ID Origem],
+			"Fração", [Fr]
+			)

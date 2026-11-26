@@ -1,0 +1,178 @@
+table RefugoExtrusora_Mandril
+	lineageTag: 6b0f2c1e-3a54-4d7e-9f10-2d5c8a7e4b01
+
+	/// Refugo lançado na tela da Extrusora de Mandril (unidade: kg). Fonte: lista RefugoExtrusora_Mandril.
+	column Title
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Title
+	column Bitola
+		dataType: double
+		summarizeBy: none
+		sourceColumn: Bitola
+	column cod_mandril
+		dataType: string
+		summarizeBy: none
+		sourceColumn: cod_mandril
+	column CodigoErro
+		dataType: string
+		summarizeBy: none
+		sourceColumn: CodigoErro
+	column Quantidade
+		dataType: double
+		summarizeBy: sum
+		sourceColumn: Quantidade
+	column operador
+		dataType: string
+		summarizeBy: none
+		sourceColumn: operador
+	column DataHoraRefugo
+		dataType: dateTime
+		formatString: General Date
+		summarizeBy: none
+		sourceColumn: DataHoraRefugo
+	column Turno
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Turno
+	column Observacao
+		dataType: string
+		summarizeBy: none
+		sourceColumn: Observacao
+	column ID
+		dataType: int64
+		formatString: 0
+		summarizeBy: none
+		sourceColumn: ID
+
+	partition RefugoExtrusora_Mandril = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Title" = nullable text, #"Bitola" = nullable number, #"cod_mandril" = nullable text, #"CodigoErro" = nullable text, #"Quantidade" = nullable number, #"operador" = nullable text, #"DataHoraRefugo" = nullable datetime, #"Turno" = nullable text, #"Observacao" = nullable text, #"ID" = Int64.Type],
+				        {
+				            {"REF-MND-0001", 6, "MND-048", "6 - Outros", 0.9, "Operador 04", #datetime(2026,9,2,11,44,17), "Turno 1", null, 1},
+				            {"REF-MND-0002", 6, "MND-019", "5 - Contaminação", 9.1, "Operador 14", #datetime(2026,9,10,8,20,47), "Turno 1", null, 2},
+				            {"REF-MND-0003", 10, "MND-047", "2 - Set-Up", 0.7, "Operador 14", #datetime(2026,9,1,11,7,11), "Turno 1", null, 3},
+				            {"REF-MND-0004", 6, "MND-055", "4 - Diâmetro fora", 2.2, "Operador 16", #datetime(2026,9,18,10,32,24), "Turno 1", null, 4},
+				            {"REF-MND-0005", 12, "MND-041", "3 - Bolha", 4.3, "Operador 18", #datetime(2026,8,18,14,3,5), "Turno 2", null, 5},
+				            {"REF-MND-0006", 6, "MND-014", "2 - Set-Up", 12.4, "Operador 04", #datetime(2026,10,1,14,45,47), "Turno 2", null, 6},
+				            {"REF-MND-0007", 8, "MND-050", "1 - Defeito superficial", 11, "Operador 18", #datetime(2026,9,16,11,3,36), "Turno 1", null, 7},
+				            {"REF-MND-0008", 8, "MND-032", "6 - Outros", 10.3, "Operador 21", #datetime(2026,9,3,8,52,58), "Turno 1", null, 8},
+				            {"REF-MND-0009", 6, "MND-054", "5 - Contaminação", 6.1, "Operador 15", #datetime(2026,8,31,8,12,3), "Turno 1", null, 9},
+				            {"REF-MND-0010", 8, "MND-052", "3 - Bolha", 7.3, "Operador 18", #datetime(2026,9,17,15,59,55), "Turno 2", null, 10},
+				            {"REF-MND-0011", 8, "MND-025", "5 - Contaminação", 9.3, "Operador 11", #datetime(2026,9,28,23,24,39), "Turno 3", null, 11},
+				            {"REF-MND-0012", 8, "MND-026", "3 - Bolha", 12.6, "Operador 21", #datetime(2026,9,16,17,22,12), "Turno 2", null, 12},
+				            {"REF-MND-0013", 8, "MND-042", "6 - Outros", 11.7, "Operador 03", #datetime(2026,8,25,8,20,2), "Turno 1", null, 13},
+				            {"REF-MND-0014", 6, "MND-026", "2 - Set-Up", 3.3, "Operador 11", #datetime(2026,10,23,15,13,3), "Turno 2", null, 14},
+				            {"REF-MND-0015", 6, "MND-053", "2 - Set-Up", 10.3, "Operador 06", #datetime(2026,8,13,19,34,6), "Turno 2", null, 15},
+				            {"REF-MND-0016", 8, "MND-056", "3 - Bolha", 8.2, "Operador 24", #datetime(2026,9,2,18,5,50), "Turno 2", null, 16},
+				            {"REF-MND-0017", 8, "MND-017", "1 - Defeito superficial", 4.9, "Operador 23", #datetime(2026,9,14,16,26,50), "Turno 2", null, 17},
+				            {"REF-MND-0018", 8, "MND-048", "6 - Outros", 9.3, "Operador 01", #datetime(2026,9,29,19,10,39), "Turno 2", null, 18},
+				            {"REF-MND-0019", 6, "MND-014", "3 - Bolha", 13.3, "Operador 13", #datetime(2026,9,28,20,8,49), "Turno 2", null, 19},
+				            {"REF-MND-0020", 8, "MND-042", "6 - Outros", 4.8, "Operador 13", #datetime(2026,8,4,16,11,13), "Turno 2", null, 20},
+				            {"REF-MND-0021", 12, "MND-058", "5 - Contaminação", 4, "Operador 14", #datetime(2026,9,8,11,3,30), "Turno 1", null, 21},
+				            {"REF-MND-0022", 12, "MND-001", "6 - Outros", 7, "Operador 17", #datetime(2026,8,21,14,49,51), "Turno 2", null, 22},
+				            {"REF-MND-0023", 8, "MND-013", "6 - Outros", 13.8, "Operador 05", #datetime(2026,8,10,7,33,6), "Turno 1", null, 23},
+				            {"REF-MND-0024", 10, "MND-045", "4 - Diâmetro fora", 1, "Operador 13", #datetime(2026,9,10,16,17,9), "Turno 2", null, 24},
+				            {"REF-MND-0025", 10, "MND-017", "5 - Contaminação", 11.7, "Operador 22", #datetime(2026,10,20,7,5,1), "Turno 1", null, 25},
+				            {"REF-MND-0026", 10, "MND-041", "3 - Bolha", 0.9, "Operador 19", #datetime(2026,9,21,14,46,35), "Turno 2", null, 26},
+				            {"REF-MND-0027", 12, "MND-044", "6 - Outros", 9.2, "Operador 04", #datetime(2026,9,9,13,40,34), "Turno 2", null, 27},
+				            {"REF-MND-0028", 4, "MND-029", "1 - Defeito superficial", 14.5, "Operador 19", #datetime(2026,9,21,14,18,34), "Turno 2", null, 28},
+				            {"REF-MND-0029", 4, "MND-023", "4 - Diâmetro fora", 14.9, "Operador 18", #datetime(2026,10,7,21,0,21), "Turno 2", null, 29},
+				            {"REF-MND-0030", 8, "MND-001", "5 - Contaminação", 7, "Operador 12", #datetime(2026,8,5,11,8,11), "Turno 1", null, 30},
+				            {"REF-MND-0031", 4, "MND-014", "3 - Bolha", 4.8, "Operador 24", #datetime(2026,8,13,14,7,44), "Turno 2", null, 31},
+				            {"REF-MND-0032", 4, "MND-023", "3 - Bolha", 8.5, "Operador 07", #datetime(2026,8,5,16,44,21), "Turno 2", null, 32},
+				            {"REF-MND-0033", 6, "MND-045", "4 - Diâmetro fora", 1.8, "Operador 19", #datetime(2026,8,26,9,48,4), "Turno 1", null, 33},
+				            {"REF-MND-0034", 10, "MND-034", "5 - Contaminação", 6.6, "Operador 16", #datetime(2026,9,9,14,57,9), "Turno 2", null, 34},
+				            {"REF-MND-0035", 6, "MND-021", "6 - Outros", 14.4, "Operador 09", #datetime(2026,9,25,8,0,55), "Turno 1", null, 35},
+				            {"REF-MND-0036", 6, "MND-006", "3 - Bolha", 10.6, "Operador 11", #datetime(2026,9,9,22,2,0), "Turno 2", null, 36},
+				            {"REF-MND-0037", 6, "MND-037", "6 - Outros", 8.3, "Operador 23", #datetime(2026,8,24,21,11,33), "Turno 2", null, 37},
+				            {"REF-MND-0038", 4, "MND-047", "2 - Set-Up", 13.3, "Operador 17", #datetime(2026,9,18,17,51,51), "Turno 2", null, 38},
+				            {"REF-MND-0039", 8, "MND-027", "5 - Contaminação", 5.9, "Operador 12", #datetime(2026,9,23,13,10,46), "Turno 1", null, 39},
+				            {"REF-MND-0040", 4, "MND-020", "1 - Defeito superficial", 8, "Operador 07", #datetime(2026,9,30,23,25,24), "Turno 3", null, 40},
+				            {"REF-MND-0041", 8, "MND-004", "1 - Defeito superficial", 9.7, "Operador 17", #datetime(2026,9,10,7,35,20), "Turno 1", null, 41},
+				            {"REF-MND-0042", 8, "MND-048", "4 - Diâmetro fora", 8.4, "Operador 02", #datetime(2026,9,2,7,50,32), "Turno 1", null, 42},
+				            {"REF-MND-0043", 8, "MND-046", "3 - Bolha", 10.3, "Operador 18", #datetime(2026,8,28,10,50,27), "Turno 1", null, 43},
+				            {"REF-MND-0044", 6, "MND-016", "5 - Contaminação", 7.6, "Operador 16", #datetime(2026,10,1,20,30,31), "Turno 2", null, 44},
+				            {"REF-MND-0045", 10, "MND-008", "6 - Outros", 8.6, "Operador 22", #datetime(2026,8,7,22,54,20), "Turno 3", null, 45},
+				            {"REF-MND-0046", 6, "MND-043", "4 - Diâmetro fora", 8.1, "Operador 23", #datetime(2026,10,9,12,3,7), "Turno 1", null, 46},
+				            {"REF-MND-0047", 10, "MND-045", "3 - Bolha", 4.9, "Operador 24", #datetime(2026,8,25,8,46,24), "Turno 1", null, 47},
+				            {"REF-MND-0048", 8, "MND-022", "5 - Contaminação", 11.5, "Operador 18", #datetime(2026,8,14,22,57,26), "Turno 3", null, 48},
+				            {"REF-MND-0049", 10, "MND-018", "4 - Diâmetro fora", 0.8, "Operador 02", #datetime(2026,9,28,20,35,52), "Turno 2", null, 49},
+				            {"REF-MND-0050", 6, "MND-048", "2 - Set-Up", 6.7, "Operador 07", #datetime(2026,8,4,18,6,55), "Turno 2", null, 50},
+				            {"REF-MND-0051", 10, "MND-037", "2 - Set-Up", 5, "Operador 06", #datetime(2026,9,2,8,4,10), "Turno 1", null, 51},
+				            {"REF-MND-0052", 10, "MND-003", "1 - Defeito superficial", 4.5, "Operador 14", #datetime(2026,9,2,9,20,12), "Turno 1", null, 52},
+				            {"REF-MND-0053", 8, "MND-014", "5 - Contaminação", 13.4, "Operador 12", #datetime(2026,8,28,9,52,6), "Turno 1", null, 53},
+				            {"REF-MND-0054", 8, "MND-054", "3 - Bolha", 11, "Operador 03", #datetime(2026,8,25,21,52,48), "Turno 2", null, 54},
+				            {"REF-MND-0055", 10, "MND-043", "4 - Diâmetro fora", 5.9, "Operador 20", #datetime(2026,9,16,15,7,21), "Turno 2", null, 55},
+				            {"REF-MND-0056", 10, "MND-056", "6 - Outros", 12.2, "Operador 10", #datetime(2026,8,5,22,55,10), "Turno 3", null, 56},
+				            {"REF-MND-0057", 8, "MND-005", "2 - Set-Up", 5.1, "Operador 05", #datetime(2026,9,30,8,30,26), "Turno 1", null, 57},
+				            {"REF-MND-0058", 6, "MND-012", "4 - Diâmetro fora", 13.9, "Operador 16", #datetime(2026,8,12,18,43,2), "Turno 2", null, 58},
+				            {"REF-MND-0059", 4, "MND-006", "4 - Diâmetro fora", 7.9, "Operador 19", #datetime(2026,9,24,14,43,6), "Turno 2", null, 59},
+				            {"REF-MND-0060", 16, "MND-027", "3 - Bolha", 12.3, "Operador 23", #datetime(2026,8,12,10,17,29), "Turno 1", null, 60},
+				            {"REF-MND-0061", 8, "MND-021", "4 - Diâmetro fora", 0.5, "Operador 04", #datetime(2026,8,18,20,46,58), "Turno 2", null, 61},
+				            {"REF-MND-0062", 8, "MND-053", "1 - Defeito superficial", 11.9, "Operador 05", #datetime(2026,8,14,22,37,49), "Turno 3", null, 62},
+				            {"REF-MND-0063", 12, "MND-047", "1 - Defeito superficial", 1.3, "Operador 09", #datetime(2026,9,25,23,5,52), "Turno 3", null, 63},
+				            {"REF-MND-0064", 6, "MND-022", "2 - Set-Up", 9.9, "Operador 01", #datetime(2026,9,29,16,34,6), "Turno 2", null, 64},
+				            {"REF-MND-0065", 6, "MND-042", "3 - Bolha", 14.6, "Operador 20", #datetime(2026,9,24,14,43,23), "Turno 2", null, 65},
+				            {"REF-MND-0066", 8, "MND-044", "4 - Diâmetro fora", 14.2, "Operador 12", #datetime(2026,9,15,9,46,42), "Turno 1", null, 66},
+				            {"REF-MND-0067", 6, "MND-005", "4 - Diâmetro fora", 4.4, "Operador 02", #datetime(2026,10,15,18,23,24), "Turno 2", null, 67},
+				            {"REF-MND-0068", 8, "MND-050", "2 - Set-Up", 8.9, "Operador 09", #datetime(2026,8,6,7,27,17), "Turno 1", null, 68},
+				            {"REF-MND-0069", 8, "MND-048", "4 - Diâmetro fora", 2.9, "Operador 24", #datetime(2026,9,17,14,31,30), "Turno 2", null, 69},
+				            {"REF-MND-0070", 8, "MND-035", "4 - Diâmetro fora", 5.7, "Operador 23", #datetime(2026,8,21,23,29,43), "Turno 3", null, 70},
+				            {"REF-MND-0071", 6, "MND-027", "5 - Contaminação", 12.9, "Operador 04", #datetime(2026,9,28,9,35,46), "Turno 1", null, 71},
+				            {"REF-MND-0072", 8, "MND-034", "4 - Diâmetro fora", 12.8, "Operador 22", #datetime(2026,8,24,8,30,34), "Turno 1", null, 72},
+				            {"REF-MND-0073", 10, "MND-013", "6 - Outros", 11.4, "Operador 04", #datetime(2026,9,24,16,9,18), "Turno 2", null, 73},
+				            {"REF-MND-0074", 8, "MND-041", "3 - Bolha", 13.3, "Operador 12", #datetime(2026,8,21,16,28,11), "Turno 2", null, 74},
+				            {"REF-MND-0075", 10, "MND-017", "4 - Diâmetro fora", 9.9, "Operador 23", #datetime(2026,9,22,17,39,57), "Turno 2", null, 75},
+				            {"REF-MND-0076", 8, "MND-020", "4 - Diâmetro fora", 5.6, "Operador 17", #datetime(2026,8,25,18,24,15), "Turno 2", null, 76},
+				            {"REF-MND-0077", 12, "MND-015", "6 - Outros", 1.2, "Operador 16", #datetime(2026,9,9,7,17,22), "Turno 1", null, 77},
+				            {"REF-MND-0078", 10, "MND-023", "1 - Defeito superficial", 13, "Operador 09", #datetime(2026,10,23,7,26,20), "Turno 1", null, 78},
+				            {"REF-MND-0079", 8, "MND-015", "2 - Set-Up", 10.9, "Operador 04", #datetime(2026,8,31,22,22,11), "Turno 3", null, 79},
+				            {"REF-MND-0080", 10, "MND-005", "6 - Outros", 1.6, "Operador 24", #datetime(2026,8,10,16,57,14), "Turno 2", null, 80},
+				            {"REF-MND-0081", 4, "MND-032", "6 - Outros", 7.8, "Operador 17", #datetime(2026,8,6,11,38,40), "Turno 1", null, 81},
+				            {"REF-MND-0082", 4, "MND-009", "1 - Defeito superficial", 14.9, "Operador 13", #datetime(2026,9,15,12,45,36), "Turno 1", null, 82},
+				            {"REF-MND-0083", 6, "MND-004", "2 - Set-Up", 6.8, "Operador 09", #datetime(2026,8,5,14,4,51), "Turno 2", null, 83},
+				            {"REF-MND-0084", 8, "MND-012", "5 - Contaminação", 2.7, "Operador 12", #datetime(2026,8,3,14,13,49), "Turno 2", null, 84},
+				            {"REF-MND-0085", 12, "MND-012", "3 - Bolha", 5.4, "Operador 23", #datetime(2026,9,8,20,36,4), "Turno 2", null, 85},
+				            {"REF-MND-0086", 8, "MND-043", "5 - Contaminação", 7.9, "Operador 22", #datetime(2026,8,17,11,51,53), "Turno 1", null, 86},
+				            {"REF-MND-0087", 8, "MND-016", "6 - Outros", 12.5, "Operador 19", #datetime(2026,8,27,18,37,32), "Turno 2", null, 87},
+				            {"REF-MND-0088", 6, "MND-043", "6 - Outros", 0.8, "Operador 18", #datetime(2026,8,11,15,11,59), "Turno 2", null, 88},
+				            {"REF-MND-0089", 16, "MND-038", "3 - Bolha", 7.5, "Operador 07", #datetime(2026,9,25,9,35,45), "Turno 1", null, 89},
+				            {"REF-MND-0090", 6, "MND-049", "6 - Outros", 2.7, "Operador 11", #datetime(2026,10,22,9,5,56), "Turno 1", null, 90},
+				            {"REF-MND-0091", 4, "MND-012", "6 - Outros", 3.9, "Operador 12", #datetime(2026,9,11,20,44,27), "Turno 2", null, 91},
+				            {"REF-MND-0092", 4, "MND-002", "3 - Bolha", 2, "Operador 10", #datetime(2026,9,4,20,38,17), "Turno 2", null, 92},
+				            {"REF-MND-0093", 4, "MND-006", "1 - Defeito superficial", 2.3, "Operador 02", #datetime(2026,8,17,10,15,31), "Turno 1", null, 93},
+				            {"REF-MND-0094", 4, "MND-012", "3 - Bolha", 5.2, "Operador 22", #datetime(2026,10,1,11,3,0), "Turno 1", null, 94},
+				            {"REF-MND-0095", 6, "MND-037", "5 - Contaminação", 0.8, "Operador 08", #datetime(2026,10,26,19,40,40), "Turno 2", null, 95},
+				            {"REF-MND-0096", 6, "MND-021", "6 - Outros", 8.2, "Operador 14", #datetime(2026,9,3,15,23,1), "Turno 2", null, 96},
+				            {"REF-MND-0097", 12, "MND-016", "5 - Contaminação", 9.9, "Operador 05", #datetime(2026,8,7,9,26,51), "Turno 1", null, 97},
+				            {"REF-MND-0098", 10, "MND-040", "1 - Defeito superficial", 0.5, "Operador 16", #datetime(2026,9,28,9,44,57), "Turno 1", null, 98},
+				            {"REF-MND-0099", 8, "MND-059", "5 - Contaminação", 3.5, "Operador 12", #datetime(2026,8,3,18,26,24), "Turno 2", null, 99},
+				            {"REF-MND-0100", 8, "MND-050", "1 - Defeito superficial", 13.3, "Operador 15", #datetime(2026,9,9,16,36,26), "Turno 2", null, 100},
+				            {"REF-MND-0101", 6, "MND-017", "2 - Set-Up", 10, "Operador 18", #datetime(2026,9,18,11,2,28), "Turno 1", null, 101},
+				            {"REF-MND-0102", 6, "MND-029", "1 - Defeito superficial", 4.3, "Operador 13", #datetime(2026,8,31,17,32,22), "Turno 2", null, 102},
+				            {"REF-MND-0103", 16, "MND-053", "2 - Set-Up", 2.4, "Operador 14", #datetime(2026,8,4,15,6,4), "Turno 2", null, 103},
+				            {"REF-MND-0104", 10, "MND-003", "1 - Defeito superficial", 12.9, "Operador 16", #datetime(2026,9,28,22,12,43), "Turno 2", null, 104},
+				            {"REF-MND-0105", 16, "MND-050", "5 - Contaminação", 2.4, "Operador 01", #datetime(2026,10,2,8,24,42), "Turno 1", null, 105},
+				            {"REF-MND-0106", 8, "MND-006", "3 - Bolha", 12.6, "Operador 18", #datetime(2026,8,24,14,10,55), "Turno 2", null, 106},
+				            {"REF-MND-0107", 10, "MND-051", "1 - Defeito superficial", 13.4, "Operador 22", #datetime(2026,9,18,13,44,46), "Turno 2", null, 107},
+				            {"REF-MND-0108", 6, "MND-035", "6 - Outros", 14.6, "Operador 11", #datetime(2026,9,28,11,29,25), "Turno 1", null, 108},
+				            {"REF-MND-0109", 8, "MND-029", "1 - Defeito superficial", 13.5, "Operador 04", #datetime(2026,8,5,20,33,1), "Turno 2", null, 109},
+				            {"REF-MND-0110", 8, "MND-057", "6 - Outros", 1.8, "Operador 18", #datetime(2026,9,16,15,21,48), "Turno 2", null, 110},
+				            {"REF-MND-0111", 10, "MND-030", "4 - Diâmetro fora", 11.8, "Operador 24", #datetime(2026,8,4,18,16,53), "Turno 2", null, 111},
+				            {"REF-MND-0112", 6, "MND-029", "2 - Set-Up", 14, "Operador 08", #datetime(2026,10,13,18,20,34), "Turno 2", null, 112},
+				            {"REF-MND-0113", 8, "MND-058", "5 - Contaminação", 14.9, "Operador 16", #datetime(2026,9,18,10,0,55), "Turno 1", null, 113},
+				            {"REF-MND-0114", 16, "MND-014", "3 - Bolha", 2.9, "Operador 06", #datetime(2026,9,4,21,18,52), "Turno 2", null, 114},
+				            {"REF-MND-0115", 6, "MND-019", "4 - Diâmetro fora", 4.1, "Operador 16", #datetime(2026,8,20,12,55,35), "Turno 1", null, 115},
+				            {"REF-MND-0116", 10, "MND-011", "6 - Outros", 2.2, "Operador 13", #datetime(2026,9,28,23,24,10), "Turno 3", null, 116},
+				            {"REF-MND-0117", 6, "MND-059", "2 - Set-Up", 5.1, "Operador 23", #datetime(2026,9,30,21,10,14), "Turno 2", null, 117},
+				            {"REF-MND-0118", 12, "MND-042", "2 - Set-Up", 4.5, "Operador 05", #datetime(2026,8,21,9,37,48), "Turno 1", null, 118},
+				            {"REF-MND-0119", 8, "MND-052", "2 - Set-Up", 5, "Operador 13", #datetime(2026,9,30,11,25,35), "Turno 1", null, 119},
+				            {"REF-MND-0120", 6, "MND-027", "3 - Bolha", 2.5, "Operador 21", #datetime(2026,8,17,9,2,11), "Turno 1", null, 120}
+				        }
+				    )
+				in
+				    Source

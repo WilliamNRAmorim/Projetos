@@ -1,0 +1,594 @@
+table FifoBobinadeira
+	lineageTag: 136872e7-a77d-4863-a429-b4bddf1a38bd
+
+	/// Metragem bobinada (FifoBobinadeira). Join virtual de data via INT(DataHoraInicio).
+	measure 'Metragem Bobinada' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(FifoBobinadeira, INT(FifoBobinadeira[DataHoraInicio]) IN datas), FifoBobinadeira[Metragem]), SUM(FifoBobinadeira[Metragem]))
+		formatString: #,##0
+		displayFolder: 12 Bobinadeira
+		lineageTag: 3c88f1d0-dce8-4344-9f25-f3cf2e83cea9
+
+	/// Quantidade refugada na bobinadeira. QuantidadeRefugo e coluna TEXTO na fonte original: conversao via VALUE com IFERROR (linhas nao numericas contam 0). Corrigir o tipo da coluna na lista e o fix definitivo (auditar Patches antes). Join virtual de data via INT(DataHoraRefugo).
+	measure 'Refugo Bobinadeira' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN SUMX(FILTER(Refugo_Bobinadeira, NOT temCal || INT(Refugo_Bobinadeira[DataHoraRefugo]) IN datas), IFERROR(VALUE(Refugo_Bobinadeira[QuantidadeRefugo]), 0))
+		formatString: #,##0
+		displayFolder: 12 Bobinadeira
+		lineageTag: 60f5e919-37f3-4703-930e-9b922daf5f8a
+
+	column Title
+		dataType: string
+		lineageTag: 18270135-da63-4332-87b6-5eb9bc61e347
+		summarizeBy: none
+		sourceColumn: Title
+
+		annotation SummarizationSetBy = Automatic
+
+	column Linha
+		dataType: double
+		lineageTag: a589a8dc-3ef2-4b82-a0bc-eca4bbd23b66
+		summarizeBy: sum
+		sourceColumn: Linha
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Mangueira
+		dataType: string
+		lineageTag: c7c14ea7-e9cc-4c83-8972-fffa634cbaf3
+		summarizeBy: none
+		sourceColumn: Mangueira
+
+		annotation SummarizationSetBy = Automatic
+
+	column Trancadeira
+		dataType: string
+		lineageTag: 4d54c4fe-557a-4382-b90c-325f8c4045e5
+		summarizeBy: none
+		sourceColumn: Trancadeira
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantidade
+		dataType: string
+		lineageTag: 59fb71f0-eef0-4847-beed-89ee3c3a4da2
+		summarizeBy: none
+		sourceColumn: Quantidade
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: b9a56646-9f82-43ba-8c5c-a7f405b7c59a
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column CodProduto
+		dataType: string
+		lineageTag: 65c35f25-3af9-4b91-a370-604886a0d0b2
+		summarizeBy: none
+		sourceColumn: CodProduto
+
+		annotation SummarizationSetBy = Automatic
+
+	column QtdBobinas
+		dataType: double
+		lineageTag: 9fab4483-5401-4e9f-b604-9666df0ca1fd
+		summarizeBy: sum
+		sourceColumn: QtdBobinas
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Metragem
+		dataType: double
+		lineageTag: af2baa4a-354b-43d4-b647-130be732d406
+		summarizeBy: sum
+		sourceColumn: Metragem
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column NFios
+		dataType: double
+		lineageTag: 08333264-b871-4b02-bb0e-b6ebedfcd929
+		summarizeBy: sum
+		sourceColumn: NFios
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column RT
+		dataType: string
+		lineageTag: fe39691d-d7a8-43a7-83c1-b184b263cf3a
+		summarizeBy: none
+		sourceColumn: RT
+
+		annotation SummarizationSetBy = Automatic
+
+	column LI
+		dataType: string
+		lineageTag: ac1bcda4-0b22-4cc6-af51-c6c2cae0a030
+		summarizeBy: none
+		sourceColumn: LI
+
+		annotation SummarizationSetBy = Automatic
+
+	column Operador
+		dataType: string
+		lineageTag: 8814481d-30ff-4487-92d5-630afc225e70
+		summarizeBy: none
+		sourceColumn: Operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno
+		dataType: double
+		lineageTag: e1a4337b-22fa-4d8a-bec0-fae92e9b2340
+		summarizeBy: sum
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataHoraInicio
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 1eeed9db-9b12-42e5-9b94-e456e6353e98
+		summarizeBy: none
+		sourceColumn: DataHoraInicio
+
+		variation Variation
+			isDefault
+			relationship: f58c2301-28c1-47e4-be3d-7190cefa71bd
+			defaultHierarchy: LocalDateTable_48518691-51b5-49f2-93c5-88c4a0340eef.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraSalvo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: edcc16fd-0b6a-4059-80e2-46d6dd73f3a7
+		summarizeBy: none
+		sourceColumn: DataHoraSalvo
+
+		variation Variation
+			isDefault
+			relationship: d07f8538-654c-45e6-9de0-4010ac98addb
+			defaultHierarchy: LocalDateTable_f60ed9ef-ef1d-4225-bda7-60ede38f367f.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraFinal
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: ba753649-73f9-48ee-9d7f-6cb28bb6cad6
+		summarizeBy: none
+		sourceColumn: DataHoraFinal
+
+		variation Variation
+			isDefault
+			relationship: 730eb58d-29e1-4998-b804-7d3ded4ecbef
+			defaultHierarchy: LocalDateTable_1f127b39-40a7-4261-8ab1-be83a4a5443b.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Maquina de Bobinagem'
+		dataType: string
+		lineageTag: dc8ea449-3434-42b6-a2c5-d01cf63d92f7
+		summarizeBy: none
+		sourceColumn: Maquina de Bobinagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observação
+		dataType: string
+		lineageTag: e173d8b2-8f72-40f7-b935-524532dc4344
+		summarizeBy: none
+		sourceColumn: Observação
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Color Tag'
+		dataType: string
+		lineageTag: 860250ca-8921-4851-b9b5-0a1b1da9ca6a
+		summarizeBy: none
+		sourceColumn: Color Tag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Compliance Asset Id'
+		dataType: string
+		lineageTag: a971e86d-6a88-4a2d-99cb-d542318807f0
+		summarizeBy: none
+		sourceColumn: Compliance Asset Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 480d193c-586c-47ad-8621-e5d6b3917e1b
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Content Type'
+		dataType: string
+		lineageTag: 13d1ebb9-ce0f-488e-87e9-2f1fff5b51b9
+		summarizeBy: none
+		sourceColumn: Content Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 2e27b776-5931-4661-b2ed-95dcb2c6d2b2
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: bd84252e-cf68-41e2-802e-6c21d0d2ef47
+			defaultHierarchy: LocalDateTable_d0d2b04f-f3d8-4592-a89c-fcfd17319074.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 879a7c5e-7b54-4c6e-a9d9-a856b0e6500f
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: 861a1cdc-a18d-4470-9cec-2faabd5bd0b0
+			defaultHierarchy: LocalDateTable_380a0ed5-bed7-4a2b-890b-e7458871bd92.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: a3f6cf0c-5ae6-49b8-a686-a0cb9063c23f
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: 16934f3d-54d9-466c-9c8d-74269655c4ba
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: 65c8bcf1-e4dd-4987-82e1-9e39d1c90df1
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: f5f904f8-0581-46e4-bbe1-a7d1d9e28851
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: 0a852b16-1717-46bc-bcc2-8c2db687d0a7
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: be261eba-8d37-4023-8105-8df1ef1ad627
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item Child Count'
+		dataType: string
+		lineageTag: 37cd454b-44d8-4edd-8035-68645c8f0173
+		summarizeBy: none
+		sourceColumn: Item Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Folder Child Count'
+		dataType: string
+		lineageTag: 3b189f09-e139-46bc-b3de-06efd6edb8ca
+		summarizeBy: none
+		sourceColumn: Folder Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label setting'
+		dataType: string
+		lineageTag: d827e190-a7af-4c8f-bf0c-7c3bf10b034c
+		summarizeBy: none
+		sourceColumn: Label setting
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label'
+		dataType: string
+		lineageTag: 6c893939-9f4a-4241-865f-cf9985943eb8
+		summarizeBy: none
+		sourceColumn: Retention label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 4dbfcf3c-e7dc-4bb7-94ba-293dc9ec1772
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: 9b1e183d-8a6c-42e4-9954-eab3972f5328
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: b4ce3274-0472-4876-9768-893922970ae6
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Created By'
+		dataType: string
+		lineageTag: 208fc350-50e9-4f3e-a1aa-e024c799950a
+		summarizeBy: none
+		sourceColumn: App Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Modified By'
+		dataType: string
+		lineageTag: 3b94cfae-81e3-4ea0-b70c-447fcd95453b
+		summarizeBy: none
+		sourceColumn: App Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column OP_Consumo
+		dataType: string
+		lineageTag: a8afeb81-3841-410d-9dc0-fc1692fd160a
+		summarizeBy: none
+		sourceColumn: OP_Consumo
+
+		annotation SummarizationSetBy = Automatic
+
+	column FichaID_Consumo
+		dataType: double
+		lineageTag: 18e83b63-f304-4523-9fe6-98c518462b34
+		summarizeBy: sum
+		sourceColumn: FichaID_Consumo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column DataHoraConsumo
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: e69f545a-9ffb-4078-94ec-fd8e280e4669
+		summarizeBy: none
+		sourceColumn: DataHoraConsumo
+
+		variation Variation
+			isDefault
+			relationship: c6573119-3f72-4692-9c00-b9129e1f4147
+			defaultHierarchy: LocalDateTable_926f24c6-c8f8-4b0e-bffc-b064083ae6b0.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Carrinho
+		dataType: double
+		lineageTag: 5d333a8b-dc99-4165-9dd2-9ef8e481b3cd
+		summarizeBy: sum
+		sourceColumn: Carrinho
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column MotivoCancelamento
+		dataType: string
+		lineageTag: fbb11011-fbfa-4d37-9d3f-7999c2a0e9f6
+		summarizeBy: none
+		sourceColumn: MotivoCancelamento
+
+		annotation SummarizationSetBy = Automatic
+
+	column CanceladoPor
+		dataType: string
+		lineageTag: ff1ea156-c438-4873-b691-04d65db54348
+		summarizeBy: none
+		sourceColumn: CanceladoPor
+
+		annotation SummarizationSetBy = Automatic
+
+	column DataHoraCancelamento
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: fb530059-a0c7-4cc7-87b5-ac425ca85b4c
+		summarizeBy: none
+		sourceColumn: DataHoraCancelamento
+
+		variation Variation
+			isDefault
+			relationship: 5829d1fe-6c93-43a9-b122-37d34762c045
+			defaultHierarchy: LocalDateTable_b34e2cf7-7808-4cbe-986c-d9b22e460532.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	partition FifoBobinadeira = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Title" = nullable text, #"Linha" = nullable number, #"Mangueira" = nullable text, #"Trancadeira" = nullable text, #"Quantidade" = nullable text, #"Status" = nullable text, #"CodProduto" = nullable text, #"QtdBobinas" = nullable number, #"Metragem" = nullable number, #"NFios" = nullable number, #"RT" = nullable text, #"LI" = nullable text, #"Operador" = nullable text, #"Turno" = nullable number, #"DataHoraInicio" = nullable datetime, #"DataHoraSalvo" = nullable datetime, #"DataHoraFinal" = nullable datetime, #"Maquina de Bobinagem" = nullable text, #"Observação" = nullable text, #"Color Tag" = nullable text, #"Compliance Asset Id" = nullable text, #"ID" = Int64.Type, #"Content Type" = nullable text, #"Modified" = nullable datetime, #"Created" = nullable datetime, #"Created By" = nullable text, #"Modified By" = nullable text, #"Version" = nullable text, #"Attachments" = nullable text, #"Edit" = nullable text, #"Type" = nullable text, #"Item Child Count" = nullable text, #"Folder Child Count" = nullable text, #"Label setting" = nullable text, #"Retention label" = nullable text, #"Retention label Applied" = nullable text, #"Label applied by" = nullable text, #"Item is a Record" = nullable text, #"App Created By" = nullable text, #"App Modified By" = nullable text, #"OP_Consumo" = nullable text, #"FichaID_Consumo" = nullable number, #"DataHoraConsumo" = nullable datetime, #"Carrinho" = nullable number, #"MotivoCancelamento" = nullable text, #"CanceladoPor" = nullable text, #"DataHoraCancelamento" = nullable datetime],
+				        {
+				            {"FIFO-0001", 1, "GH250-06", "TR04", "6", "Consumido", "BOB-015", 12, 600, 24, "RT019", "LI009", "Operador 10", 1, #datetime(2026,10,26,10,42,52), #datetime(2026,10,26,12,11,52), #datetime(2026,10,26,12,11,52), "BOB04", null, null, null, 1, null, #datetime(2026,10,26,12,11,52), #datetime(2026,10,26,10,42,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100400", 300, #datetime(2026,10,26,22,56,17), 3, null, null, null},
+				            {"FIFO-0002", 1, "GH195-04", "TR07", "8", "Aguardando", "BOB-002", 4, 750, 24, "RT090", "LI024", "Operador 14", 1, #datetime(2026,9,25,12,20,35), #datetime(2026,9,25,13,10,35), #datetime(2026,9,25,13,10,35), "BOB02", null, null, null, 2, null, #datetime(2026,9,25,13,10,35), #datetime(2026,9,25,12,20,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0003", 2, "GH100-06", "TR07", "12", "Consumido", "BOB-044", 8, 750, 16, "RT071", "LI091", "Operador 16", 2, #datetime(2026,9,21,17,16,14), #datetime(2026,9,21,17,39,14), #datetime(2026,9,21,17,39,14), "BOB04", null, null, null, 3, null, #datetime(2026,9,21,17,39,14), #datetime(2026,9,21,17,16,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100274", 174, #datetime(2026,9,22,3,43,0), 2, null, null, null},
+				            {"FIFO-0004", 2, "GH195-06", "TR09", "6", "Consumido", "BOB-052", 12, 600, 32, "RT029", "LI011", "Operador 17", 1, #datetime(2026,8,28,10,52,45), #datetime(2026,8,28,12,10,45), #datetime(2026,8,28,12,10,45), "BOB01", null, null, null, 4, null, #datetime(2026,8,28,12,10,45), #datetime(2026,8,28,10,52,45), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100195", 95, #datetime(2026,8,29,6,44,55), 6, null, null, null},
+				            {"FIFO-0005", 3, "GH250-06", "TR04", "12", "Consumido", "BOB-055", 12, 600, 32, "RT056", "LI073", "Operador 22", 1, #datetime(2026,10,26,9,33,33), #datetime(2026,10,26,10,14,33), #datetime(2026,10,26,10,14,33), "BOB04", null, null, null, 5, null, #datetime(2026,10,26,10,14,33), #datetime(2026,10,26,9,33,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100400", 300, #datetime(2026,10,26,22,56,17), 6, null, null, null},
+				            {"FIFO-0006", 4, "GH250-12", "TR08", "8", "Consumido", "BOB-032", 6, 1500, 16, "RT074", "LI056", "Operador 11", 1, #datetime(2026,10,15,13,5,52), #datetime(2026,10,15,14,25,52), #datetime(2026,10,15,14,25,52), "BOB01", null, null, null, 6, null, #datetime(2026,10,15,14,25,52), #datetime(2026,10,15,13,5,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100364", 264, #datetime(2026,10,16,4,10,8), 3, null, null, null},
+				            {"FIFO-0007", 3, "GH195-04", "TR06", "6", "Consumido", "BOB-002", 8, 600, 32, "RT020", "LI025", "Operador 21", 1, #datetime(2026,9,23,5,44,40), #datetime(2026,9,23,6,9,40), #datetime(2026,9,23,6,9,40), "BOB03", null, null, null, 7, null, #datetime(2026,9,23,6,9,40), #datetime(2026,9,23,5,44,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100368", 268, #datetime(2026,9,23,23,36,39), 8, null, null, null},
+				            {"FIFO-0008", 2, "GH195-10", "TR05", "6", "Consumido", "BOB-052", 6, 1500, 24, "RT029", "LI097", "Operador 01", 1, #datetime(2026,8,25,12,5,20), #datetime(2026,8,25,13,14,20), #datetime(2026,8,25,13,14,20), "BOB01", null, null, null, 8, null, #datetime(2026,8,25,13,14,20), #datetime(2026,8,25,12,5,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100180", 80, #datetime(2026,8,26,9,40,35), 9, null, null, null},
+				            {"FIFO-0009", 3, "GH250-06", "TR10", "4", "Consumido", "BOB-057", 6, 300, 32, "RT044", "LI097", "Operador 04", 2, #datetime(2026,10,22,18,57,28), #datetime(2026,10,22,19,35,28), #datetime(2026,10,22,19,35,28), "BOB03", null, null, null, 9, null, #datetime(2026,10,22,19,35,28), #datetime(2026,10,22,18,57,28), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100391", 291, #datetime(2026,10,23,7,27,55), 4, null, null, null},
+				            {"FIFO-0010", 1, "GH300-16", "TR05", "4", "Consumido", "BOB-046", 6, 750, 16, "RT036", "LI095", "Operador 11", 1, #datetime(2026,8,4,7,46,30), #datetime(2026,8,4,9,12,30), #datetime(2026,8,4,9,12,30), "BOB01", null, null, null, 10, null, #datetime(2026,8,4,9,12,30), #datetime(2026,8,4,7,46,30), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100275", 175, #datetime(2026,8,5,11,16,25), 8, null, null, null},
+				            {"FIFO-0011", 3, "GH195-04", "TR04", "12", "Consumido", "BOB-036", 8, 600, 16, "RT001", "LI008", "Operador 15", 3, #datetime(2026,10,7,22,20,39), #datetime(2026,10,7,23,21,39), #datetime(2026,10,7,23,21,39), "BOB01", null, null, null, 11, null, #datetime(2026,10,7,23,21,39), #datetime(2026,10,7,22,20,39), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100113", 13, #datetime(2026,10,8,4,24,12), 12, null, null, null},
+				            {"FIFO-0012", 1, "GH250-08", "TR08", "6", "Consumido", "BOB-009", 6, 400, 16, "RT093", "LI087", "Operador 15", 1, #datetime(2026,9,17,12,39,47), #datetime(2026,9,17,14,7,47), #datetime(2026,9,17,14,7,47), "BOB03", null, null, null, 12, null, #datetime(2026,9,17,14,7,47), #datetime(2026,9,17,12,39,47), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100266", 166, #datetime(2026,9,18,7,47,51), 2, null, null, null},
+				            {"FIFO-0013", 4, "GH100-04", "TR04", "4", "Consumido", "BOB-016", 12, 1500, 24, "RT052", "LI072", "Operador 22", 1, #datetime(2026,8,13,10,56,57), #datetime(2026,8,13,11,24,57), #datetime(2026,8,13,11,24,57), "BOB04", null, null, null, 13, null, #datetime(2026,8,13,11,24,57), #datetime(2026,8,13,10,56,57), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100143", 43, #datetime(2026,8,14,7,26,3), 9, null, null, null},
+				            {"FIFO-0014", 3, "GH100-04", "TR04", "4", "Consumido", "BOB-015", 8, 1500, 24, "RT032", "LI095", "Operador 23", 1, #datetime(2026,8,13,10,1,58), #datetime(2026,8,13,11,7,58), #datetime(2026,8,13,11,7,58), "BOB02", null, null, null, 14, null, #datetime(2026,8,13,11,7,58), #datetime(2026,8,13,10,1,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100143", 43, #datetime(2026,8,14,7,26,3), 11, null, null, null},
+				            {"FIFO-0015", 1, "GH250-08", "TR10", "8", "Cancelado", "BOB-040", 6, 600, 16, "RT044", "LI043", "Operador 12", 1, #datetime(2026,10,14,13,11,18), #datetime(2026,10,14,13,52,18), #datetime(2026,10,14,13,52,18), "BOB03", null, null, null, 15, null, #datetime(2026,10,14,13,52,18), #datetime(2026,10,14,13,11,18), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Bobina danificada", "Operador 23", #datetime(2026,10,14,14,23,18)},
+				            {"FIFO-0016", 4, "GH100-06", "TR02", "6", "Consumido", "BOB-034", 4, 450, 20, "RT092", "LI020", "Operador 02", 2, #datetime(2026,9,2,14,18,19), #datetime(2026,9,2,15,30,19), #datetime(2026,9,2,15,30,19), "BOB04", null, null, null, 16, null, #datetime(2026,9,2,15,30,19), #datetime(2026,9,2,14,18,19), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100213", 113, #datetime(2026,9,3,2,57,58), 7, null, null, null},
+				            {"FIFO-0017", 4, "GH100-06", "TR01", "8", "Cancelado", "BOB-056", 8, 300, 20, "RT063", "LI044", "Operador 14", 2, #datetime(2026,8,6,14,8,4), #datetime(2026,8,6,15,36,4), #datetime(2026,8,6,15,36,4), "BOB02", null, null, null, 17, null, #datetime(2026,8,6,15,36,4), #datetime(2026,8,6,14,8,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Troca de programação", "Operador 22", #datetime(2026,8,6,16,18,4)},
+				            {"FIFO-0018", 2, "GH100-08", "TR04", "12", "Consumido", "BOB-024", 4, 750, 32, "RT072", "LI068", "Operador 02", 3, #datetime(2026,9,10,2,6,0), #datetime(2026,9,10,3,21,0), #datetime(2026,9,10,3,21,0), "BOB03", null, null, null, 18, null, #datetime(2026,9,10,3,21,0), #datetime(2026,9,10,2,6,0), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100200", 100, #datetime(2026,9,11,6,8,57), 4, null, null, null},
+				            {"FIFO-0019", 3, "GH100-10", "TR11", "4", "Consumido", "BOB-039", 12, 400, 16, "RT081", "LI064", "Operador 16", 1, #datetime(2026,10,20,7,38,20), #datetime(2026,10,20,8,2,20), #datetime(2026,10,20,8,2,20), "BOB04", null, null, null, 19, null, #datetime(2026,10,20,8,2,20), #datetime(2026,10,20,7,38,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100224", 124, #datetime(2026,10,20,22,44,58), 9, null, null, null},
+				            {"FIFO-0020", 3, "GH250-12", "TR09", "8", "Consumido", "BOB-036", 12, 500, 24, "RT061", "LI037", "Operador 11", 2, #datetime(2026,9,8,20,29,25), #datetime(2026,9,8,21,17,25), #datetime(2026,9,8,21,17,25), "BOB03", null, null, null, 20, null, #datetime(2026,9,8,21,17,25), #datetime(2026,9,8,20,29,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100232", 132, #datetime(2026,9,9,19,16,12), 7, null, null, null},
+				            {"FIFO-0021", 4, "GH100-06", "TR01", "8", "Cancelado", "BOB-040", 12, 450, 24, "RT041", "LI026", "Operador 05", 3, #datetime(2026,9,25,5,15,14), #datetime(2026,9,25,6,32,14), #datetime(2026,9,25,6,32,14), "BOB01", null, null, null, 21, null, #datetime(2026,9,25,6,32,14), #datetime(2026,9,25,5,15,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Troca de programação", "Operador 17", #datetime(2026,9,25,7,27,14)},
+				            {"FIFO-0022", 1, "GH100-06", "TR08", "12", "Consumido", "BOB-010", 12, 1000, 24, "RT075", "LI087", "Operador 24", 2, #datetime(2026,10,1,17,51,42), #datetime(2026,10,1,18,53,42), #datetime(2026,10,1,18,53,42), "BOB04", null, null, null, 22, null, #datetime(2026,10,1,18,53,42), #datetime(2026,10,1,17,51,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100314", 214, #datetime(2026,10,2,9,14,18), 10, null, null, null},
+				            {"FIFO-0023", 1, "GH195-10", "TR06", "4", "Consumido", "BOB-013", 8, 1000, 20, "RT051", "LI089", "Operador 23", 1, #datetime(2026,9,1,12,20,14), #datetime(2026,9,1,13,0,14), #datetime(2026,9,1,13,0,14), "BOB04", null, null, null, 23, null, #datetime(2026,9,1,13,0,14), #datetime(2026,9,1,12,20,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100206", 106, #datetime(2026,9,1,17,1,47), 2, null, null, null},
+				            {"FIFO-0024", 2, "GH195-10", "TR05", "8", "Cancelado", "BOB-006", 6, 1000, 20, "RT044", "LI079", "Operador 23", 2, #datetime(2026,8,7,19,15,54), #datetime(2026,8,7,20,38,54), #datetime(2026,8,7,20,38,54), "BOB03", null, null, null, 24, null, #datetime(2026,8,7,20,38,54), #datetime(2026,8,7,19,15,54), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Fio errado", "Operador 09", #datetime(2026,8,7,21,45,54)},
+				            {"FIFO-0025", 3, "GH100-06", "TR01", "6", "Consumido", "BOB-009", 4, 300, 16, "RT068", "LI033", "Operador 23", 3, #datetime(2026,10,24,0,17,51), #datetime(2026,10,24,1,28,51), #datetime(2026,10,24,1,28,51), "BOB01", null, null, null, 25, null, #datetime(2026,10,24,1,28,51), #datetime(2026,10,24,0,17,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100392", 292, #datetime(2026,10,24,18,25,4), 8, null, null, null},
+				            {"FIFO-0026", 4, "GH100-04", "TR06", "4", "Aguardando", "BOB-053", 4, 400, 20, "RT049", "LI083", "Operador 15", 1, #datetime(2026,8,17,9,9,1), #datetime(2026,8,17,9,56,1), #datetime(2026,8,17,9,56,1), "BOB04", null, null, null, 26, null, #datetime(2026,8,17,9,56,1), #datetime(2026,8,17,9,9,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0027", 2, "GH250-12", "TR09", "4", "Consumido", "BOB-007", 8, 300, 24, "RT006", "LI069", "Operador 03", 1, #datetime(2026,8,7,9,41,25), #datetime(2026,8,7,10,23,25), #datetime(2026,8,7,10,23,25), "BOB03", null, null, null, 27, null, #datetime(2026,8,7,10,23,25), #datetime(2026,8,7,9,41,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100202", 102, #datetime(2026,8,8,2,0,30), 1, null, null, null},
+				            {"FIFO-0028", 4, "GH195-04", "TR02", "12", "Consumido", "BOB-031", 8, 300, 32, "RT022", "LI099", "Operador 24", 3, #datetime(2026,9,24,22,24,15), #datetime(2026,9,24,23,27,15), #datetime(2026,9,24,23,27,15), "BOB04", null, null, null, 28, null, #datetime(2026,9,24,23,27,15), #datetime(2026,9,24,22,24,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100305", 205, #datetime(2026,9,25,21,24,9), 12, null, null, null},
+				            {"FIFO-0029", 4, "GH195-10", "TR01", "6", "Consumido", "BOB-052", 12, 1000, 20, "RT067", "LI054", "Operador 13", 1, #datetime(2026,8,25,7,44,2), #datetime(2026,8,25,8,8,2), #datetime(2026,8,25,8,8,2), "BOB02", null, null, null, 29, null, #datetime(2026,8,25,8,8,2), #datetime(2026,8,25,7,44,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100183", 83, #datetime(2026,8,25,21,11,31), 2, null, null, null},
+				            {"FIFO-0030", 3, "GH195-10", "TR05", "4", "Consumido", "BOB-025", 8, 450, 24, "RT053", "LI092", "Operador 18", 2, #datetime(2026,10,5,14,16,5), #datetime(2026,10,5,14,59,5), #datetime(2026,10,5,14,59,5), "BOB04", null, null, null, 30, null, #datetime(2026,10,5,14,59,5), #datetime(2026,10,5,14,16,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100325", 225, #datetime(2026,10,5,23,35,20), 10, null, null, null},
+				            {"FIFO-0031", 3, "GH195-10", "TR08", "8", "Consumido", "BOB-029", 12, 450, 20, "RT013", "LI076", "Operador 18", 2, #datetime(2026,8,7,21,44,36), #datetime(2026,8,7,22,15,36), #datetime(2026,8,7,22,15,36), "BOB02", null, null, null, 31, null, #datetime(2026,8,7,22,15,36), #datetime(2026,8,7,21,44,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100122", 22, #datetime(2026,8,8,18,5,34), 6, null, null, null},
+				            {"FIFO-0032", 4, "GH100-04", "TR06", "8", "Consumido", "BOB-059", 8, 400, 20, "RT003", "LI024", "Operador 21", 2, #datetime(2026,8,17,15,18,13), #datetime(2026,8,17,16,17,13), #datetime(2026,8,17,16,17,13), "BOB02", null, null, null, 32, null, #datetime(2026,8,17,16,17,13), #datetime(2026,8,17,15,18,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100155", 55, #datetime(2026,8,18,10,0,12), 10, null, null, null},
+				            {"FIFO-0033", 1, "GH100-04", "TR02", "6", "Consumido", "BOB-001", 12, 800, 20, "RT062", "LI065", "Operador 24", 1, #datetime(2026,10,7,10,33,8), #datetime(2026,10,7,11,31,8), #datetime(2026,10,7,11,31,8), "BOB03", null, null, null, 33, null, #datetime(2026,10,7,11,31,8), #datetime(2026,10,7,10,33,8), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100333", 233, #datetime(2026,10,7,18,39,12), 6, null, null, null},
+				            {"FIFO-0034", 3, "GH100-08", "TR11", "12", "Consumido", "BOB-033", 6, 750, 24, "RT062", "LI010", "Operador 11", 2, #datetime(2026,10,19,19,8,39), #datetime(2026,10,19,19,39,39), #datetime(2026,10,19,19,39,39), "BOB01", null, null, null, 34, null, #datetime(2026,10,19,19,39,39), #datetime(2026,10,19,19,8,39), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100373", 273, #datetime(2026,10,20,20,19,59), 9, null, null, null},
+				            {"FIFO-0035", 3, "GH100-06", "TR05", "8", "Consumido", "BOB-022", 12, 400, 32, "RT051", "LI021", "Operador 20", 1, #datetime(2026,10,22,6,34,2), #datetime(2026,10,22,7,8,2), #datetime(2026,10,22,7,8,2), "BOB03", null, null, null, 35, null, #datetime(2026,10,22,7,8,2), #datetime(2026,10,22,6,34,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100151", 51, #datetime(2026,10,23,1,57,31), 12, null, null, null},
+				            {"FIFO-0036", 2, "GH400-12", "TR06", "4", "Consumido", "BOB-040", 8, 800, 32, "RT027", "LI062", "Operador 08", 2, #datetime(2026,8,21,16,10,5), #datetime(2026,8,21,16,32,5), #datetime(2026,8,21,16,32,5), "BOB02", null, null, null, 36, null, #datetime(2026,8,21,16,32,5), #datetime(2026,8,21,16,10,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100172", 72, #datetime(2026,8,22,8,2,54), 11, null, null, null},
+				            {"FIFO-0037", 1, "GH100-04", "TR04", "6", "Consumido", "BOB-054", 8, 1500, 24, "RT073", "LI062", "Operador 21", 1, #datetime(2026,8,13,13,23,33), #datetime(2026,8,13,14,11,33), #datetime(2026,8,13,14,11,33), "BOB02", null, null, null, 37, null, #datetime(2026,8,13,14,11,33), #datetime(2026,8,13,13,23,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100143", 43, #datetime(2026,8,14,7,26,3), 7, null, null, null},
+				            {"FIFO-0038", 2, "GH195-06", "TR07", "8", "Consumido", "BOB-037", 12, 400, 32, "RT011", "LI030", "Operador 18", 2, #datetime(2026,10,21,21,34,54), #datetime(2026,10,21,22,22,54), #datetime(2026,10,21,22,22,54), "BOB02", null, null, null, 38, null, #datetime(2026,10,21,22,22,54), #datetime(2026,10,21,21,34,54), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100386", 286, #datetime(2026,10,22,14,12,39), 8, null, null, null},
+				            {"FIFO-0039", 1, "GH100-06", "TR06", "4", "Consumido", "BOB-033", 4, 750, 32, "RT038", "LI083", "Operador 05", 2, #datetime(2026,8,5,18,31,58), #datetime(2026,8,5,19,23,58), #datetime(2026,8,5,19,23,58), "BOB01", null, null, null, 39, null, #datetime(2026,8,5,19,23,58), #datetime(2026,8,5,18,31,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100112", 12, #datetime(2026,8,6,14,51,33), 8, null, null, null},
+				            {"FIFO-0040", 1, "GH195-04", "TR07", "6", "Consumido", "BOB-055", 6, 600, 32, "RT090", "LI079", "Operador 03", 1, #datetime(2026,9,17,7,4,34), #datetime(2026,9,17,8,28,34), #datetime(2026,9,17,8,28,34), "BOB04", null, null, null, 40, null, #datetime(2026,9,17,8,28,34), #datetime(2026,9,17,7,4,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100268", 168, #datetime(2026,9,18,11,12,37), 11, null, null, null},
+				            {"FIFO-0041", 2, "GH100-06", "TR06", "4", "Consumido", "BOB-030", 4, 400, 16, "RT034", "LI049", "Operador 15", 2, #datetime(2026,10,12,20,7,36), #datetime(2026,10,12,21,8,36), #datetime(2026,10,12,21,8,36), "BOB03", null, null, null, 41, null, #datetime(2026,10,12,21,8,36), #datetime(2026,10,12,20,7,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100349", 249, #datetime(2026,10,13,22,37,10), 7, null, null, null},
+				            {"FIFO-0042", 4, "GH100-04", "TR11", "4", "Consumido", "BOB-023", 6, 1500, 20, "RT065", "LI010", "Operador 22", 3, #datetime(2026,8,19,3,0,38), #datetime(2026,8,19,4,8,38), #datetime(2026,8,19,4,8,38), "BOB04", null, null, null, 42, null, #datetime(2026,8,19,4,8,38), #datetime(2026,8,19,3,0,38), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100159", 59, #datetime(2026,8,19,17,3,42), 6, null, null, null},
+				            {"FIFO-0043", 4, "GH100-06", "TR02", "4", "Aguardando", "BOB-025", 8, 500, 32, "RT079", "LI012", "Operador 08", 1, #datetime(2026,9,10,11,15,18), #datetime(2026,9,10,11,48,18), #datetime(2026,9,10,11,48,18), "BOB03", null, null, null, 43, null, #datetime(2026,9,10,11,48,18), #datetime(2026,9,10,11,15,18), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0044", 2, "GH100-06", "TR02", "4", "Cancelado", "BOB-032", 8, 300, 24, "RT019", "LI042", "Operador 16", 2, #datetime(2026,8,31,18,16,16), #datetime(2026,8,31,18,44,16), #datetime(2026,8,31,18,44,16), "BOB02", null, null, null, 44, null, #datetime(2026,8,31,18,44,16), #datetime(2026,8,31,18,16,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Bobina danificada", "Operador 15", #datetime(2026,8,31,19,6,16)},
+				            {"FIFO-0045", 4, "GH250-06", "TR10", "8", "Consumido", "BOB-058", 4, 300, 24, "RT076", "LI042", "Operador 14", 2, #datetime(2026,10,22,21,33,16), #datetime(2026,10,22,21,57,16), #datetime(2026,10,22,21,57,16), "BOB01", null, null, null, 45, null, #datetime(2026,10,22,21,57,16), #datetime(2026,10,22,21,33,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100391", 291, #datetime(2026,10,23,7,27,55), 2, null, null, null},
+				            {"FIFO-0046", 4, "GH100-08", "TR04", "8", "Consumido", "BOB-004", 6, 300, 32, "RT025", "LI096", "Operador 16", 1, #datetime(2026,8,27,11,9,19), #datetime(2026,8,27,12,11,19), #datetime(2026,8,27,12,11,19), "BOB02", null, null, null, 46, null, #datetime(2026,8,27,12,11,19), #datetime(2026,8,27,11,9,19), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100194", 94, #datetime(2026,8,28,7,23,31), 2, null, null, null},
+				            {"FIFO-0047", 4, "GH300-16", "TR11", "12", "Consumido", "BOB-021", 6, 300, 16, "RT039", "LI049", "Operador 21", 1, #datetime(2026,9,8,12,47,48), #datetime(2026,9,8,14,14,48), #datetime(2026,9,8,14,14,48), "BOB03", null, null, null, 47, null, #datetime(2026,9,8,14,14,48), #datetime(2026,9,8,12,47,48), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100242", 142, #datetime(2026,9,9,4,54,38), 6, null, null, null},
+				            {"FIFO-0048", 2, "GH195-08", "TR06", "8", "Consumido", "BOB-028", 8, 1000, 32, "RT009", "LI017", "Operador 15", 1, #datetime(2026,10,9,6,32,19), #datetime(2026,10,9,7,33,19), #datetime(2026,10,9,7,33,19), "BOB04", null, null, null, 48, null, #datetime(2026,10,9,7,33,19), #datetime(2026,10,9,6,32,19), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100342", 242, #datetime(2026,10,10,5,0,38), 8, null, null, null},
+				            {"FIFO-0049", 2, "GH195-06", "TR05", "6", "Consumido", "BOB-025", 6, 1000, 20, "RT037", "LI065", "Operador 02", 1, #datetime(2026,8,20,10,43,33), #datetime(2026,8,20,11,53,33), #datetime(2026,8,20,11,53,33), "BOB01", null, null, null, 49, null, #datetime(2026,8,20,11,53,33), #datetime(2026,8,20,10,43,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100169", 69, #datetime(2026,8,21,11,47,19), 10, null, null, null},
+				            {"FIFO-0050", 2, "GH100-04", "TR05", "4", "Consumido", "BOB-012", 4, 1500, 32, "RT069", "LI066", "Operador 18", 3, #datetime(2026,10,1,4,39,35), #datetime(2026,10,1,5,46,35), #datetime(2026,10,1,5,46,35), "BOB01", null, null, null, 50, null, #datetime(2026,10,1,5,46,35), #datetime(2026,10,1,4,39,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100311", 211, #datetime(2026,10,1,12,50,33), 8, null, null, null},
+				            {"FIFO-0051", 3, "GH100-08", "TR11", "8", "Consumido", "BOB-005", 4, 750, 20, "RT012", "LI078", "Operador 10", 3, #datetime(2026,10,19,23,4,14), #datetime(2026,10,19,23,27,14), #datetime(2026,10,19,23,27,14), "BOB02", null, null, null, 51, null, #datetime(2026,10,19,23,27,14), #datetime(2026,10,19,23,4,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100373", 273, #datetime(2026,10,20,20,19,59), 5, null, null, null},
+				            {"FIFO-0052", 3, "GH195-04", "TR09", "6", "Consumido", "BOB-003", 12, 600, 20, "RT016", "LI077", "Operador 15", 2, #datetime(2026,10,2,21,25,40), #datetime(2026,10,2,22,32,40), #datetime(2026,10,2,22,32,40), "BOB04", null, null, null, 52, null, #datetime(2026,10,2,22,32,40), #datetime(2026,10,2,21,25,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100321", 221, #datetime(2026,10,3,17,17,31), 6, null, null, null},
+				            {"FIFO-0053", 4, "GH100-06", "TR02", "8", "Consumido", "BOB-037", 12, 500, 16, "RT055", "LI096", "Operador 17", 2, #datetime(2026,9,10,14,9,41), #datetime(2026,9,10,14,55,41), #datetime(2026,9,10,14,55,41), "BOB02", null, null, null, 53, null, #datetime(2026,9,10,14,55,41), #datetime(2026,9,10,14,9,41), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100241", 141, #datetime(2026,9,11,8,24,53), 1, null, null, null},
+				            {"FIFO-0054", 2, "GH250-06", "TR08", "4", "Consumido", "BOB-045", 4, 300, 32, "RT080", "LI047", "Operador 06", 2, #datetime(2026,9,15,19,26,14), #datetime(2026,9,15,20,55,14), #datetime(2026,9,15,20,55,14), "BOB01", null, null, null, 54, null, #datetime(2026,9,15,20,55,14), #datetime(2026,9,15,19,26,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100258", 158, #datetime(2026,9,16,3,10,56), 4, null, null, null},
+				            {"FIFO-0055", 2, "GH100-06", "TR07", "8", "Consumido", "BOB-059", 8, 600, 32, "RT026", "LI072", "Operador 17", 1, #datetime(2026,10,1,10,1,30), #datetime(2026,10,1,10,42,30), #datetime(2026,10,1,10,42,30), "BOB03", null, null, null, 55, null, #datetime(2026,10,1,10,42,30), #datetime(2026,10,1,10,1,30), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100313", 213, #datetime(2026,10,2,1,39,29), 1, null, null, null},
+				            {"FIFO-0056", 3, "GH195-06", "TR04", "6", "Consumido", "BOB-037", 6, 800, 24, "RT065", "LI056", "Operador 05", 3, #datetime(2026,8,10,3,49,52), #datetime(2026,8,10,4,45,52), #datetime(2026,8,10,4,45,52), "BOB04", null, null, null, 56, null, #datetime(2026,8,10,4,45,52), #datetime(2026,8,10,3,49,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100130", 30, #datetime(2026,8,11,0,1,0), 8, null, null, null},
+				            {"FIFO-0057", 4, "GH195-06", "TR05", "12", "Consumido", "BOB-057", 6, 800, 20, "RT075", "LI037", "Operador 08", 2, #datetime(2026,10,1,18,16,36), #datetime(2026,10,1,19,2,36), #datetime(2026,10,1,19,2,36), "BOB01", null, null, null, 57, null, #datetime(2026,10,1,19,2,36), #datetime(2026,10,1,18,16,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100317", 217, #datetime(2026,10,2,6,17,24), 3, null, null, null},
+				            {"FIFO-0058", 1, "GH100-10", "TR01", "12", "Consumido", "BOB-056", 4, 800, 20, "RT035", "LI097", "Operador 18", 1, #datetime(2026,9,30,6,56,14), #datetime(2026,9,30,7,18,14), #datetime(2026,9,30,7,18,14), "BOB01", null, null, null, 58, null, #datetime(2026,9,30,7,18,14), #datetime(2026,9,30,6,56,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100350", 250, #datetime(2026,10,1,6,12,1), 9, null, null, null},
+				            {"FIFO-0059", 1, "GH195-04", "TR09", "8", "Consumido", "BOB-037", 4, 1000, 24, "RT096", "LI069", "Operador 01", 2, #datetime(2026,10,6,16,1,43), #datetime(2026,10,6,16,40,43), #datetime(2026,10,6,16,40,43), "BOB02", null, null, null, 59, null, #datetime(2026,10,6,16,40,43), #datetime(2026,10,6,16,1,43), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100330", 230, #datetime(2026,10,7,14,33,2), 11, null, null, null},
+				            {"FIFO-0060", 4, "GH100-06", "TR11", "12", "Consumido", "BOB-022", 4, 1200, 16, "RT052", "LI037", "Operador 01", 1, #datetime(2026,8,3,11,2,13), #datetime(2026,8,3,11,41,13), #datetime(2026,8,3,11,41,13), "BOB02", null, null, null, 60, null, #datetime(2026,8,3,11,41,13), #datetime(2026,8,3,11,2,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100103", 3, #datetime(2026,8,4,8,40,29), 5, null, null, null},
+				            {"FIFO-0061", 1, "GH100-08", "TR04", "4", "Aguardando", "BOB-039", 4, 300, 20, "RT050", "LI036", "Operador 21", 2, #datetime(2026,8,27,15,47,47), #datetime(2026,8,27,17,14,47), #datetime(2026,8,27,17,14,47), "BOB02", null, null, null, 61, null, #datetime(2026,8,27,17,14,47), #datetime(2026,8,27,15,47,47), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0062", 3, "GH100-08", "TR06", "8", "Consumido", "BOB-059", 12, 300, 24, "RT013", "LI039", "Operador 10", 1, #datetime(2026,8,27,11,19,56), #datetime(2026,8,27,12,37,56), #datetime(2026,8,27,12,37,56), "BOB02", null, null, null, 62, null, #datetime(2026,8,27,12,37,56), #datetime(2026,8,27,11,19,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100192", 92, #datetime(2026,8,28,10,33,58), 2, null, null, null},
+				            {"FIFO-0063", 3, "GH195-10", "TR04", "6", "Consumido", "BOB-006", 12, 400, 24, "RT078", "LI022", "Operador 20", 2, #datetime(2026,9,22,21,33,11), #datetime(2026,9,22,22,1,11), #datetime(2026,9,22,22,1,11), "BOB03", null, null, null, 63, null, #datetime(2026,9,22,22,1,11), #datetime(2026,9,22,21,33,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100281", 181, #datetime(2026,9,23,13,52,26), 12, null, null, null},
+				            {"FIFO-0064", 3, "GH195-08", "TR10", "12", "Consumido", "BOB-012", 12, 1200, 32, "RT088", "LI015", "Operador 14", 3, #datetime(2026,9,18,0,52,26), #datetime(2026,9,18,1,37,26), #datetime(2026,9,18,1,37,26), "BOB01", null, null, null, 64, null, #datetime(2026,9,18,1,37,26), #datetime(2026,9,18,0,52,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100265", 165, #datetime(2026,9,18,16,30,30), 4, null, null, null},
+				            {"FIFO-0065", 1, "GH100-10", "TR01", "6", "Consumido", "BOB-017", 4, 750, 24, "RT071", "LI038", "Operador 06", 2, #datetime(2026,8,4,16,51,3), #datetime(2026,8,4,18,8,3), #datetime(2026,8,4,18,8,3), "BOB01", null, null, null, 65, null, #datetime(2026,8,4,18,8,3), #datetime(2026,8,4,16,51,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100108", 8, #datetime(2026,8,5,12,49,21), 4, null, null, null},
+				            {"FIFO-0066", 3, "GH100-10", "TR01", "12", "Cancelado", "BOB-054", 8, 1500, 16, "RT083", "LI036", "Operador 04", 1, #datetime(2026,9,28,10,2,58), #datetime(2026,9,28,10,29,58), #datetime(2026,9,28,10,29,58), "BOB01", null, null, null, 66, null, #datetime(2026,9,28,10,29,58), #datetime(2026,9,28,10,2,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Bobina danificada", "Operador 19", #datetime(2026,9,28,11,13,58)},
+				            {"FIFO-0067", 2, "GH400-12", "TR11", "8", "Aguardando", "BOB-019", 4, 1000, 24, "RT017", "LI098", "Operador 02", 2, #datetime(2026,9,9,15,37,11), #datetime(2026,9,9,16,12,11), #datetime(2026,9,9,16,12,11), "BOB04", null, null, null, 67, null, #datetime(2026,9,9,16,12,11), #datetime(2026,9,9,15,37,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0068", 4, "GH195-08", "TR08", "4", "Consumido", "BOB-024", 6, 1500, 20, "RT002", "LI066", "Operador 06", 3, #datetime(2026,10,13,2,2,42), #datetime(2026,10,13,3,14,42), #datetime(2026,10,13,3,14,42), "BOB01", null, null, null, 68, null, #datetime(2026,10,13,3,14,42), #datetime(2026,10,13,2,2,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100351", 251, #datetime(2026,10,14,1,51,32), 3, null, null, null},
+				            {"FIFO-0069", 3, "GH100-08", "TR07", "4", "Consumido", "BOB-018", 4, 1000, 32, "RT017", "LI002", "Operador 05", 3, #datetime(2026,9,3,0,39,33), #datetime(2026,9,3,1,47,33), #datetime(2026,9,3,1,47,33), "BOB01", null, null, null, 69, null, #datetime(2026,9,3,1,47,33), #datetime(2026,9,3,0,39,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100190", 90, #datetime(2026,9,3,18,6,58), 7, null, null, null},
+				            {"FIFO-0070", 1, "GH100-04", "TR04", "6", "Consumido", "BOB-003", 4, 1500, 16, "RT044", "LI083", "Operador 13", 1, #datetime(2026,8,13,11,19,28), #datetime(2026,8,13,12,11,28), #datetime(2026,8,13,12,11,28), "BOB02", null, null, null, 70, null, #datetime(2026,8,13,12,11,28), #datetime(2026,8,13,11,19,28), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100143", 43, #datetime(2026,8,14,7,26,3), 2, null, null, null},
+				            {"FIFO-0071", 3, "GH100-04", "TR05", "12", "Consumido", "BOB-046", 8, 400, 20, "RT026", "LI012", "Operador 10", 2, #datetime(2026,10,8,13,52,31), #datetime(2026,10,8,15,9,31), #datetime(2026,10,8,15,9,31), "BOB04", null, null, null, 71, null, #datetime(2026,10,8,15,9,31), #datetime(2026,10,8,13,52,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100338", 238, #datetime(2026,10,9,9,2,33), 3, null, null, null},
+				            {"FIFO-0072", 1, "GH100-08", "TR05", "4", "Consumido", "BOB-047", 6, 400, 32, "RT049", "LI088", "Operador 12", 3, #datetime(2026,8,15,0,26,43), #datetime(2026,8,15,1,41,43), #datetime(2026,8,15,1,41,43), "BOB03", null, null, null, 72, null, #datetime(2026,8,15,1,41,43), #datetime(2026,8,15,0,26,43), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100149", 49, #datetime(2026,8,15,12,24,0), 6, null, null, null},
+				            {"FIFO-0073", 3, "GH100-10", "TR11", "8", "Consumido", "BOB-034", 6, 400, 20, "RT021", "LI032", "Operador 18", 2, #datetime(2026,10,20,14,26,41), #datetime(2026,10,20,15,49,41), #datetime(2026,10,20,15,49,41), "BOB01", null, null, null, 73, null, #datetime(2026,10,20,15,49,41), #datetime(2026,10,20,14,26,41), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100224", 124, #datetime(2026,10,20,22,44,58), 9, null, null, null},
+				            {"FIFO-0074", 3, "GH100-06", "TR10", "12", "Consumido", "BOB-011", 4, 750, 20, "RT062", "LI049", "Operador 14", 2, #datetime(2026,8,27,16,24,32), #datetime(2026,8,27,16,55,32), #datetime(2026,8,27,16,55,32), "BOB03", null, null, null, 74, null, #datetime(2026,8,27,16,55,32), #datetime(2026,8,27,16,24,32), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100154", 54, #datetime(2026,8,28,9,53,11), 8, null, null, null},
+				            {"FIFO-0075", 1, "GH195-08", "TR02", "8", "Consumido", "BOB-055", 12, 500, 16, "RT016", "LI018", "Operador 14", 3, #datetime(2026,9,18,23,43,29), #datetime(2026,9,19,0,47,29), #datetime(2026,9,19,0,47,29), "BOB02", null, null, null, 75, null, #datetime(2026,9,19,0,47,29), #datetime(2026,9,18,23,43,29), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100270", 170, #datetime(2026,9,19,14,38,41), 12, null, null, null},
+				            {"FIFO-0076", 3, "GH100-08", "TR08", "12", "Consumido", "BOB-039", 12, 1000, 20, "RT077", "LI029", "Operador 22", 2, #datetime(2026,9,8,20,0,51), #datetime(2026,9,8,20,53,51), #datetime(2026,9,8,20,53,51), "BOB03", null, null, null, 76, null, #datetime(2026,9,8,20,53,51), #datetime(2026,9,8,20,0,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100229", 129, #datetime(2026,9,9,6,56,45), 9, null, null, null},
+				            {"FIFO-0077", 2, "GH400-12", "TR09", "6", "Cancelado", "BOB-060", 12, 600, 32, "RT088", "LI080", "Operador 23", 1, #datetime(2026,10,8,12,1,8), #datetime(2026,10,8,12,57,8), #datetime(2026,10,8,12,57,8), "BOB04", null, null, null, 77, null, #datetime(2026,10,8,12,57,8), #datetime(2026,10,8,12,1,8), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Fio errado", "Operador 22", #datetime(2026,10,8,13,10,8)},
+				            {"FIFO-0078", 1, "GH195-10", "TR08", "4", "Consumido", "BOB-002", 4, 400, 16, "RT071", "LI081", "Operador 17", 2, #datetime(2026,8,5,20,2,0), #datetime(2026,8,5,20,26,0), #datetime(2026,8,5,20,26,0), "BOB01", null, null, null, 78, null, #datetime(2026,8,5,20,26,0), #datetime(2026,8,5,20,2,0), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100162", 62, #datetime(2026,8,7,0,23,30), 6, null, null, null},
+				            {"FIFO-0079", 3, "GH100-06", "TR10", "8", "Consumido", "BOB-018", 8, 600, 16, "RT062", "LI014", "Operador 06", 1, #datetime(2026,10,9,12,17,15), #datetime(2026,10,9,12,57,15), #datetime(2026,10,9,12,57,15), "BOB03", null, null, null, 79, null, #datetime(2026,10,9,12,57,15), #datetime(2026,10,9,12,17,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100187", 87, #datetime(2026,10,10,7,30,2), 11, null, null, null},
+				            {"FIFO-0080", 4, "GH100-06", "TR09", "4", "Consumido", "BOB-027", 8, 1000, 24, "RT099", "LI026", "Operador 01", 2, #datetime(2026,8,11,14,33,42), #datetime(2026,8,11,15,26,42), #datetime(2026,8,11,15,26,42), "BOB01", null, null, null, 80, null, #datetime(2026,8,11,15,26,42), #datetime(2026,8,11,14,33,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100277", 177, #datetime(2026,8,12,3,31,54), 11, null, null, null},
+				            {"FIFO-0081", 3, "GH195-10", "TR04", "4", "Consumido", "BOB-046", 12, 400, 24, "RT029", "LI040", "Operador 03", 3, #datetime(2026,9,22,23,47,22), #datetime(2026,9,23,0,40,22), #datetime(2026,9,23,0,40,22), "BOB04", null, null, null, 81, null, #datetime(2026,9,23,0,40,22), #datetime(2026,9,22,23,47,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100281", 181, #datetime(2026,9,23,13,52,26), 1, null, null, null},
+				            {"FIFO-0082", 2, "GH100-04", "TR04", "8", "Cancelado", "BOB-055", 12, 1500, 24, "RT072", "LI067", "Operador 08", 1, #datetime(2026,8,13,9,14,25), #datetime(2026,8,13,10,35,25), #datetime(2026,8,13,10,35,25), "BOB01", null, null, null, 82, null, #datetime(2026,8,13,10,35,25), #datetime(2026,8,13,9,14,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Troca de programação", "Operador 20", #datetime(2026,8,13,12,5,25)},
+				            {"FIFO-0083", 2, "GH250-06", "TR03", "4", "Consumido", "BOB-010", 8, 500, 32, "RT039", "LI046", "Operador 03", 3, #datetime(2026,9,9,23,10,4), #datetime(2026,9,10,0,11,4), #datetime(2026,9,10,0,11,4), "BOB02", null, null, null, 83, null, #datetime(2026,9,10,0,11,4), #datetime(2026,9,9,23,10,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100284", 184, #datetime(2026,9,10,16,27,44), 6, null, null, null},
+				            {"FIFO-0084", 1, "GH250-06", "TR10", "8", "Consumido", "BOB-016", 12, 300, 24, "RT083", "LI024", "Operador 13", 2, #datetime(2026,10,22,16,21,58), #datetime(2026,10,22,17,30,58), #datetime(2026,10,22,17,30,58), "BOB02", null, null, null, 84, null, #datetime(2026,10,22,17,30,58), #datetime(2026,10,22,16,21,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100391", 291, #datetime(2026,10,23,7,27,55), 12, null, null, null},
+				            {"FIFO-0085", 1, "GH250-12", "TR05", "8", "Consumido", "BOB-015", 4, 1000, 24, "RT061", "LI075", "Operador 11", 2, #datetime(2026,9,28,15,20,44), #datetime(2026,9,28,15,56,44), #datetime(2026,9,28,15,56,44), "BOB02", null, null, null, 85, null, #datetime(2026,9,28,15,56,44), #datetime(2026,9,28,15,20,44), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100125", 25, #datetime(2026,9,29,15,20,42), 10, null, null, null},
+				            {"FIFO-0086", 3, "GH195-04", "TR02", "4", "Consumido", "BOB-015", 4, 750, 20, "RT017", "LI010", "Operador 21", 2, #datetime(2026,10,7,22,18,17), #datetime(2026,10,7,22,46,17), #datetime(2026,10,7,22,46,17), "BOB03", null, null, null, 86, null, #datetime(2026,10,7,22,46,17), #datetime(2026,10,7,22,18,17), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100337", 237, #datetime(2026,10,8,11,26,2), 8, null, null, null},
+				            {"FIFO-0087", 3, "GH195-08", "TR04", "8", "Consumido", "BOB-017", 4, 750, 16, "RT094", "LI018", "Operador 23", 3, #datetime(2026,8,21,22,25,55), #datetime(2026,8,21,23,18,55), #datetime(2026,8,21,23,18,55), "BOB01", null, null, null, 87, null, #datetime(2026,8,21,23,18,55), #datetime(2026,8,21,22,25,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100174", 74, #datetime(2026,8,22,15,17,25), 3, null, null, null},
+				            {"FIFO-0088", 2, "GH195-10", "TR02", "8", "Consumido", "BOB-002", 4, 450, 16, "RT027", "LI010", "Operador 21", 3, #datetime(2026,9,4,1,55,31), #datetime(2026,9,4,3,23,31), #datetime(2026,9,4,3,23,31), "BOB04", null, null, null, 88, null, #datetime(2026,9,4,3,23,31), #datetime(2026,9,4,1,55,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100370", 270, #datetime(2026,9,4,15,31,21), 9, null, null, null},
+				            {"FIFO-0089", 2, "GH100-04", "TR04", "12", "Consumido", "BOB-025", 8, 1000, 24, "RT060", "LI076", "Operador 01", 2, #datetime(2026,10,9,20,9,58), #datetime(2026,10,9,20,32,58), #datetime(2026,10,9,20,32,58), "BOB02", null, null, null, 89, null, #datetime(2026,10,9,20,32,58), #datetime(2026,10,9,20,9,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100346", 246, #datetime(2026,10,10,19,35,47), 2, null, null, null},
+				            {"FIFO-0090", 2, "GH100-08", "TR07", "4", "Consumido", "BOB-018", 8, 1000, 32, "RT083", "LI024", "Operador 10", 3, #datetime(2026,9,2,23,1,25), #datetime(2026,9,3,0,9,25), #datetime(2026,9,3,0,9,25), "BOB01", null, null, null, 90, null, #datetime(2026,9,3,0,9,25), #datetime(2026,9,2,23,1,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100190", 90, #datetime(2026,9,3,18,6,58), 1, null, null, null},
+				            {"FIFO-0091", 3, "GH100-08", "TR07", "8", "Consumido", "BOB-018", 6, 400, 16, "RT087", "LI062", "Operador 11", 2, #datetime(2026,9,9,18,16,45), #datetime(2026,9,9,19,13,45), #datetime(2026,9,9,19,13,45), "BOB02", null, null, null, 91, null, #datetime(2026,9,9,19,13,45), #datetime(2026,9,9,18,16,45), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100204", 104, #datetime(2026,9,10,15,39,8), 5, null, null, null},
+				            {"FIFO-0092", 3, "GH195-08", "TR09", "4", "Consumido", "BOB-028", 6, 1000, 32, "RT037", "LI078", "Operador 01", 1, #datetime(2026,10,22,12,42,7), #datetime(2026,10,22,13,18,7), #datetime(2026,10,22,13,18,7), "BOB02", null, null, null, 92, null, #datetime(2026,10,22,13,18,7), #datetime(2026,10,22,12,42,7), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100160", 60, #datetime(2026,10,23,1,42,46), 11, null, null, null},
+				            {"FIFO-0093", 2, "GH195-06", "TR05", "8", "Consumido", "BOB-059", 12, 450, 16, "RT039", "LI091", "Operador 04", 2, #datetime(2026,9,16,15,10,34), #datetime(2026,9,16,15,36,34), #datetime(2026,9,16,15,36,34), "BOB04", null, null, null, 93, null, #datetime(2026,9,16,15,36,34), #datetime(2026,9,16,15,10,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100261", 161, #datetime(2026,9,17,3,20,22), 2, null, null, null},
+				            {"FIFO-0094", 2, "GH195-04", "TR06", "6", "Consumido", "BOB-049", 8, 450, 20, "RT064", "LI034", "Operador 21", 3, #datetime(2026,10,13,0,41,45), #datetime(2026,10,13,1,18,45), #datetime(2026,10,13,1,18,45), "BOB01", null, null, null, 94, null, #datetime(2026,10,13,1,18,45), #datetime(2026,10,13,0,41,45), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100347", 247, #datetime(2026,10,13,22,51,52), 9, null, null, null},
+				            {"FIFO-0095", 4, "GH250-06", "TR11", "8", "Consumido", "BOB-006", 4, 400, 16, "RT076", "LI028", "Operador 22", 2, #datetime(2026,10,21,16,49,16), #datetime(2026,10,21,17,24,16), #datetime(2026,10,21,17,24,16), "BOB03", null, null, null, 95, null, #datetime(2026,10,21,17,24,16), #datetime(2026,10,21,16,49,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100383", 283, #datetime(2026,10,22,13,29,21), 8, null, null, null},
+				            {"FIFO-0096", 3, "GH250-08", "TR10", "8", "Consumido", "BOB-059", 4, 600, 20, "RT061", "LI096", "Operador 07", 1, #datetime(2026,10,14,12,16,1), #datetime(2026,10,14,12,46,1), #datetime(2026,10,14,12,46,1), "BOB02", null, null, null, 96, null, #datetime(2026,10,14,12,46,1), #datetime(2026,10,14,12,16,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100357", 257, #datetime(2026,10,15,6,0,0), 5, null, null, null},
+				            {"FIFO-0097", 4, "GH195-04", "TR01", "12", "Consumido", "BOB-018", 4, 450, 24, "RT055", "LI056", "Operador 22", 1, #datetime(2026,10,26,8,7,22), #datetime(2026,10,26,9,25,22), #datetime(2026,10,26,9,25,22), "BOB01", null, null, null, 97, null, #datetime(2026,10,26,9,25,22), #datetime(2026,10,26,8,7,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100397", 297, #datetime(2026,10,27,3,40,25), 3, null, null, null},
+				            {"FIFO-0098", 1, "GH400-12", "TR09", "4", "Consumido", "BOB-051", 8, 600, 32, "RT095", "LI081", "Operador 07", 2, #datetime(2026,10,8,17,30,8), #datetime(2026,10,8,18,45,8), #datetime(2026,10,8,18,45,8), "BOB01", null, null, null, 98, null, #datetime(2026,10,8,18,45,8), #datetime(2026,10,8,17,30,8), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100339", 239, #datetime(2026,10,9,5,39,39), 11, null, null, null},
+				            {"FIFO-0099", 3, "GH100-08", "TR03", "4", "Consumido", "BOB-017", 12, 600, 20, "RT011", "LI013", "Operador 20", 2, #datetime(2026,8,24,14,39,22), #datetime(2026,8,24,15,38,22), #datetime(2026,8,24,15,38,22), "BOB01", null, null, null, 99, null, #datetime(2026,8,24,15,38,22), #datetime(2026,8,24,14,39,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100179", 79, #datetime(2026,8,25,0,59,17), 9, null, null, null},
+				            {"FIFO-0100", 2, "GH195-10", "TR05", "8", "Consumido", "BOB-047", 6, 800, 20, "RT030", "LI063", "Operador 22", 1, #datetime(2026,9,9,12,57,3), #datetime(2026,9,9,14,7,3), #datetime(2026,9,9,14,7,3), "BOB01", null, null, null, 100, null, #datetime(2026,9,9,14,7,3), #datetime(2026,9,9,12,57,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100234", 134, #datetime(2026,9,10,7,19,7), 9, null, null, null},
+				            {"FIFO-0101", 2, "GH100-06", "TR07", "12", "Consumido", "BOB-052", 6, 600, 16, "RT040", "LI095", "Operador 10", 1, #datetime(2026,10,1,8,1,50), #datetime(2026,10,1,8,52,50), #datetime(2026,10,1,8,52,50), "BOB01", null, null, null, 101, null, #datetime(2026,10,1,8,52,50), #datetime(2026,10,1,8,1,50), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100313", 213, #datetime(2026,10,2,1,39,29), 2, null, null, null},
+				            {"FIFO-0102", 2, "GH300-16", "TR02", "4", "Consumido", "BOB-035", 12, 400, 16, "RT064", "LI087", "Operador 16", 1, #datetime(2026,10,23,11,14,42), #datetime(2026,10,23,12,33,42), #datetime(2026,10,23,12,33,42), "BOB02", null, null, null, 102, null, #datetime(2026,10,23,12,33,42), #datetime(2026,10,23,11,14,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100396", 296, #datetime(2026,10,24,8,40,54), 1, null, null, null},
+				            {"FIFO-0103", 3, "GH195-06", "TR07", "12", "Consumido", "BOB-024", 12, 400, 32, "RT030", "LI055", "Operador 24", 2, #datetime(2026,10,21,20,6,5), #datetime(2026,10,21,21,10,5), #datetime(2026,10,21,21,10,5), "BOB02", null, null, null, 103, null, #datetime(2026,10,21,21,10,5), #datetime(2026,10,21,20,6,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100386", 286, #datetime(2026,10,22,14,12,39), 10, null, null, null},
+				            {"FIFO-0104", 4, "GH250-06", "TR11", "4", "Consumido", "BOB-029", 6, 1200, 16, "RT090", "LI045", "Operador 08", 1, #datetime(2026,9,25,10,40,37), #datetime(2026,9,25,11,24,37), #datetime(2026,9,25,11,24,37), "BOB01", null, null, null, 104, null, #datetime(2026,9,25,11,24,37), #datetime(2026,9,25,10,40,37), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100294", 194, #datetime(2026,9,25,22,15,0), 8, null, null, null},
+				            {"FIFO-0105", 3, "GH100-08", "TR04", "6", "Consumido", "BOB-036", 8, 450, 32, "RT031", "LI054", "Operador 12", 2, #datetime(2026,9,23,16,45,20), #datetime(2026,9,23,17,45,20), #datetime(2026,9,23,17,45,20), "BOB01", null, null, null, 105, null, #datetime(2026,9,23,17,45,20), #datetime(2026,9,23,16,45,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100286", 186, #datetime(2026,9,24,4,15,29), 1, null, null, null},
+				            {"FIFO-0106", 1, "GH195-06", "TR05", "4", "Consumido", "BOB-024", 8, 750, 20, "RT094", "LI088", "Operador 20", 1, #datetime(2026,10,20,6,24,3), #datetime(2026,10,20,7,43,3), #datetime(2026,10,20,7,43,3), "BOB03", null, null, null, 106, null, #datetime(2026,10,20,7,43,3), #datetime(2026,10,20,6,24,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100380", 280, #datetime(2026,10,21,1,53,31), 7, null, null, null},
+				            {"FIFO-0107", 2, "GH195-10", "TR07", "8", "Consumido", "BOB-015", 12, 450, 24, "RT022", "LI013", "Operador 10", 2, #datetime(2026,8,10,20,37,31), #datetime(2026,8,10,21,8,31), #datetime(2026,8,10,21,8,31), "BOB04", null, null, null, 107, null, #datetime(2026,8,10,21,8,31), #datetime(2026,8,10,20,37,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100165", 65, #datetime(2026,8,11,5,55,42), 10, null, null, null},
+				            {"FIFO-0108", 3, "GH100-08", "TR06", "4", "Consumido", "BOB-021", 6, 1000, 16, "RT080", "LI063", "Operador 09", 1, #datetime(2026,10,22,13,15,40), #datetime(2026,10,22,13,45,40), #datetime(2026,10,22,13,45,40), "BOB04", null, null, null, 108, null, #datetime(2026,10,22,13,45,40), #datetime(2026,10,22,13,15,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100387", 287, #datetime(2026,10,23,11,3,14), 4, null, null, null},
+				            {"FIFO-0109", 2, "GH195-10", "TR04", "12", "Consumido", "BOB-012", 12, 450, 32, "RT085", "LI088", "Operador 23", 2, #datetime(2026,9,24,14,22,7), #datetime(2026,9,24,15,48,7), #datetime(2026,9,24,15,48,7), "BOB02", null, null, null, 109, null, #datetime(2026,9,24,15,48,7), #datetime(2026,9,24,14,22,7), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100326", 226, #datetime(2026,9,25,6,38,56), 2, null, null, null},
+				            {"FIFO-0110", 1, "GH100-08", "TR06", "12", "Cancelado", "BOB-044", 8, 300, 24, "RT079", "LI019", "Operador 06", 2, #datetime(2026,8,27,15,44,11), #datetime(2026,8,27,16,41,11), #datetime(2026,8,27,16,41,11), "BOB03", null, null, null, 110, null, #datetime(2026,8,27,16,41,11), #datetime(2026,8,27,15,44,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, "Troca de programação", "Operador 01", #datetime(2026,8,27,17,19,11)},
+				            {"FIFO-0111", 4, "GH100-04", "TR04", "6", "Consumido", "BOB-055", 8, 1500, 16, "RT067", "LI012", "Operador 12", 2, #datetime(2026,8,13,15,5,40), #datetime(2026,8,13,16,12,40), #datetime(2026,8,13,16,12,40), "BOB01", null, null, null, 111, null, #datetime(2026,8,13,16,12,40), #datetime(2026,8,13,15,5,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100143", 43, #datetime(2026,8,14,7,26,3), 9, null, null, null},
+				            {"FIFO-0112", 4, "GH400-12", "TR04", "4", "Aguardando", "BOB-008", 8, 1200, 24, "RT019", "LI015", "Operador 03", 1, #datetime(2026,9,3,6,43,35), #datetime(2026,9,3,7,21,35), #datetime(2026,9,3,7,21,35), "BOB01", null, null, null, 112, null, #datetime(2026,9,3,7,21,35), #datetime(2026,9,3,6,43,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0113", 3, "GH100-04", "TR11", "4", "Consumido", "BOB-054", 12, 1500, 32, "RT028", "LI029", "Operador 19", 3, #datetime(2026,8,19,4,45,52), #datetime(2026,8,19,5,43,52), #datetime(2026,8,19,5,43,52), "BOB04", null, null, null, 113, null, #datetime(2026,8,19,5,43,52), #datetime(2026,8,19,4,45,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100159", 59, #datetime(2026,8,19,17,3,42), 5, null, null, null},
+				            {"FIFO-0114", 2, "GH100-08", "TR11", "8", "Consumido", "BOB-017", 8, 750, 32, "RT080", "LI085", "Operador 11", 2, #datetime(2026,10,19,18,14,56), #datetime(2026,10,19,19,3,56), #datetime(2026,10,19,19,3,56), "BOB01", null, null, null, 114, null, #datetime(2026,10,19,19,3,56), #datetime(2026,10,19,18,14,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100373", 273, #datetime(2026,10,20,20,19,59), 10, null, null, null},
+				            {"FIFO-0115", 2, "GH195-10", "TR04", "6", "Consumido", "BOB-053", 6, 1000, 20, "RT083", "LI081", "Operador 16", 2, #datetime(2026,9,2,13,43,1), #datetime(2026,9,2,14,7,1), #datetime(2026,9,2,14,7,1), "BOB01", null, null, null, 115, null, #datetime(2026,9,2,14,7,1), #datetime(2026,9,2,13,43,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100211", 111, #datetime(2026,9,3,6,50,0), 7, null, null, null},
+				            {"FIFO-0116", 2, "GH250-06", "TR06", "12", "Consumido", "BOB-045", 8, 1000, 20, "RT097", "LI040", "Operador 16", 2, #datetime(2026,9,22,21,19,6), #datetime(2026,9,22,22,2,6), #datetime(2026,9,22,22,2,6), "BOB02", null, null, null, 116, null, #datetime(2026,9,22,22,2,6), #datetime(2026,9,22,21,19,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100280", 180, #datetime(2026,9,23,3,35,8), 7, null, null, null},
+				            {"FIFO-0117", 4, "GH195-06", "TR02", "12", "Consumido", "BOB-039", 8, 300, 20, "RT087", "LI060", "Operador 06", 1, #datetime(2026,9,3,10,27,35), #datetime(2026,9,3,11,33,35), #datetime(2026,9,3,11,33,35), "BOB04", null, null, null, 117, null, #datetime(2026,9,3,11,33,35), #datetime(2026,9,3,10,27,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100217", 117, #datetime(2026,9,3,16,28,56), 4, null, null, null},
+				            {"FIFO-0118", 4, "GH100-06", "TR05", "8", "Consumido", "BOB-011", 12, 1000, 16, "RT027", "LI085", "Operador 08", 3, #datetime(2026,8,31,3,46,31), #datetime(2026,8,31,5,5,31), #datetime(2026,8,31,5,5,31), "BOB02", null, null, null, 118, null, #datetime(2026,8,31,5,5,31), #datetime(2026,8,31,3,46,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100201", 101, #datetime(2026,8,31,13,28,11), 7, null, null, null},
+				            {"FIFO-0119", 4, "GH195-08", "TR11", "4", "Consumido", "BOB-033", 4, 300, 24, "RT065", "LI026", "Operador 23", 2, #datetime(2026,10,6,20,26,10), #datetime(2026,10,6,21,44,10), #datetime(2026,10,6,21,44,10), "BOB04", null, null, null, 119, null, #datetime(2026,10,6,21,44,10), #datetime(2026,10,6,20,26,10), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100331", 231, #datetime(2026,10,7,22,31,10), 3, null, null, null},
+				            {"FIFO-0120", 4, "GH195-06", "TR09", "12", "Consumido", "BOB-009", 12, 1200, 20, "RT029", "LI061", "Operador 18", 2, #datetime(2026,10,22,19,57,20), #datetime(2026,10,22,21,10,20), #datetime(2026,10,22,21,10,20), "BOB03", null, null, null, 120, null, #datetime(2026,10,22,21,10,20), #datetime(2026,10,22,19,57,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100248", 148, #datetime(2026,10,23,17,34,28), 9, null, null, null},
+				            {"FIFO-0121", 2, "GH300-16", "TR07", "12", "Consumido", "BOB-006", 12, 1500, 24, "RT005", "LI013", "Operador 15", 1, #datetime(2026,9,1,8,59,5), #datetime(2026,9,1,9,26,5), #datetime(2026,9,1,9,26,5), "BOB01", null, null, null, 121, null, #datetime(2026,9,1,9,26,5), #datetime(2026,9,1,8,59,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100209", 109, #datetime(2026,9,2,6,45,15), 6, null, null, null},
+				            {"FIFO-0122", 2, "GH250-08", "TR07", "4", "Consumido", "BOB-051", 12, 1000, 16, "RT030", "LI018", "Operador 16", 2, #datetime(2026,9,16,22,1,51), #datetime(2026,9,16,23,23,51), #datetime(2026,9,16,23,23,51), "BOB02", null, null, null, 122, null, #datetime(2026,9,16,23,23,51), #datetime(2026,9,16,22,1,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100260", 160, #datetime(2026,9,17,10,4,19), 11, null, null, null},
+				            {"FIFO-0123", 3, "GH250-08", "TR10", "4", "Aguardando", "BOB-032", 8, 600, 20, "RT061", "LI024", "Operador 09", 2, #datetime(2026,10,14,13,48,21), #datetime(2026,10,14,14,8,21), #datetime(2026,10,14,14,8,21), "BOB02", null, null, null, 123, null, #datetime(2026,10,14,14,8,21), #datetime(2026,10,14,13,48,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"FIFO-0124", 4, "GH100-04", "TR01", "8", "Consumido", "BOB-021", 6, 1000, 16, "RT090", "LI096", "Operador 03", 1, #datetime(2026,9,9,10,23,58), #datetime(2026,9,9,11,9,58), #datetime(2026,9,9,11,9,58), "BOB03", null, null, null, 124, null, #datetime(2026,9,9,11,9,58), #datetime(2026,9,9,10,23,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100237", 137, #datetime(2026,9,9,23,56,12), 6, null, null, null},
+				            {"FIFO-0125", 4, "GH195-06", "TR05", "6", "Consumido", "BOB-037", 12, 300, 16, "RT012", "LI051", "Operador 18", 1, #datetime(2026,9,22,10,5,24), #datetime(2026,9,22,11,8,24), #datetime(2026,9,22,11,8,24), "BOB01", null, null, null, 125, null, #datetime(2026,9,22,11,8,24), #datetime(2026,9,22,10,5,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100279", 179, #datetime(2026,9,22,23,57,55), 8, null, null, null},
+				            {"FIFO-0126", 1, "GH100-08", "TR06", "8", "Consumido", "BOB-016", 6, 600, 16, "RT083", "LI021", "Operador 18", 3, #datetime(2026,8,14,22,22,9), #datetime(2026,8,14,23,33,9), #datetime(2026,8,14,23,33,9), "BOB03", null, null, null, 126, null, #datetime(2026,8,14,23,33,9), #datetime(2026,8,14,22,22,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100147", 47, #datetime(2026,8,15,11,6,35), 3, null, null, null},
+				            {"FIFO-0127", 2, "GH195-04", "TR02", "4", "Consumido", "BOB-044", 12, 300, 16, "RT065", "LI020", "Operador 04", 2, #datetime(2026,9,24,21,30,17), #datetime(2026,9,24,22,35,17), #datetime(2026,9,24,22,35,17), "BOB03", null, null, null, 127, null, #datetime(2026,9,24,22,35,17), #datetime(2026,9,24,21,30,17), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100305", 205, #datetime(2026,9,25,21,24,9), 2, null, null, null},
+				            {"FIFO-0128", 4, "GH100-06", "TR07", "4", "Consumido", "BOB-001", 4, 750, 20, "RT022", "LI075", "Operador 21", 2, #datetime(2026,10,13,19,14,55), #datetime(2026,10,13,19,44,55), #datetime(2026,10,13,19,44,55), "BOB04", null, null, null, 128, null, #datetime(2026,10,13,19,44,55), #datetime(2026,10,13,19,14,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100150", 50, #datetime(2026,10,14,23,12,32), 7, null, null, null},
+				            {"FIFO-0129", 2, "GH100-08", "TR06", "8", "Consumido", "BOB-055", 8, 600, 20, "RT095", "LI083", "Operador 10", 3, #datetime(2026,8,14,22,20,15), #datetime(2026,8,14,23,12,15), #datetime(2026,8,14,23,12,15), "BOB01", null, null, null, 129, null, #datetime(2026,8,14,23,12,15), #datetime(2026,8,14,22,20,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, "100147", 47, #datetime(2026,8,15,11,6,35), 2, null, null, null},
+				            {"FIFO-0130", 4, "GH195-06", "TR07", "4", "Aguardando", "BOB-024", 12, 1500, 32, "RT069", "LI047", "Operador 17", 3, #datetime(2026,8,13,2,22,2), #datetime(2026,8,13,2,54,2), #datetime(2026,8,13,2,54,2), "BOB03", null, null, null, 130, null, #datetime(2026,8,13,2,54,2), #datetime(2026,8,13,2,22,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

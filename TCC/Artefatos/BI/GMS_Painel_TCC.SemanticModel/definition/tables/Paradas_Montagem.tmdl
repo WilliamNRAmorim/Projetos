@@ -1,0 +1,254 @@
+table Paradas_Montagem
+	lineageTag: 4bfbfb56-32bd-45f8-abd1-2f56cf48b670
+
+	column Data
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 2c4aa2e9-95c9-4c61-b555-97569f146096
+		summarizeBy: none
+		sourceColumn: Data
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Turno
+		dataType: string
+		lineageTag: 74bb513c-dc8c-44ef-9020-ae6bff5dba82
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Celula
+		dataType: string
+		lineageTag: 2d8176c1-ea8e-4552-aab2-fd3629aed233
+		summarizeBy: none
+		sourceColumn: Celula
+
+		annotation SummarizationSetBy = Automatic
+
+	column RegistradoEm
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 58fa5d45-9f69-4c15-ac98-d61da77441ad
+		summarizeBy: none
+		sourceColumn: RegistradoEm
+
+		variation Variation
+			isDefault
+			relationship: 0b5ecfca-296c-4bb7-96de-527f2c1a9250
+			defaultHierarchy: LocalDateTable_17251797-051e-4515-af43-8473d50c1229.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Motivo
+		dataType: string
+		lineageTag: dc1ec3a0-0b3d-4ff9-8d92-eb7260aa99d6
+		summarizeBy: none
+		sourceColumn: Motivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column TempoParadoMin
+		dataType: double
+		lineageTag: 0cc48247-6914-46f8-ab44-c7deb322ea07
+		summarizeBy: sum
+		sourceColumn: TempoParadoMin
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Observacao
+		dataType: string
+		lineageTag: 3b7bfd25-4aea-4b4b-91c2-0deea9882240
+		summarizeBy: none
+		sourceColumn: Observacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column OPVinculada
+		dataType: string
+		lineageTag: 3e399341-4b1f-4405-bb3b-425de3ebb8b7
+		summarizeBy: none
+		sourceColumn: OPVinculada
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Turno sem o espaço à esquerda que chega da fonte.
+	column 'Turno BI' =
+			TRIM ( Paradas_Montagem[Turno] )
+		dataType: string
+		summarizeBy: none
+
+	partition Paradas_Montagem = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Data" = nullable datetime, #"Turno" = nullable text, #"Celula" = nullable text, #"RegistradoEm" = nullable datetime, #"Motivo" = nullable text, #"TempoParadoMin" = nullable number, #"Observacao" = nullable text, #"OPVinculada" = nullable text],
+				        {
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "FF2", #datetime(2026,8,3,16,6,0), "Troca de Carretel", 5, null, "9000004"},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "FF3", #datetime(2026,8,3,11,57,0), "AP - Alteracao de Planejamento", 60, null, null},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "FF3", #datetime(2026,8,3,17,40,0), "Falta de Mandril", 10, null, null},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "Bundle", #datetime(2026,8,3,16,35,0), "Falta de Mandril Soldado", 30, null, null},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,3,10,38,0), "Falta de operador", 30, null, null},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "Acessorios", #datetime(2026,8,3,19,56,0), "Falta de insulation", 60, null, "9000006"},
+				            {#datetime(2026,8,3,0,0,0), "1º Turno", "Conexão", #datetime(2026,8,3,7,42,0), "Quebra de fio", 10, null, "9000007"},
+				            {#datetime(2026,8,3,0,0,0), "2º Turno", "Conexão", #datetime(2026,8,3,14,5,0), "Ajuste da Máquina", 20, null, "9000008"},
+				            {#datetime(2026,8,4,0,0,0), "2º Turno", "HIGH", #datetime(2026,8,4,17,34,0), "Análise/Problema no tubo", 20, null, null},
+				            {#datetime(2026,8,4,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,4,13,41,0), "LI - 5S", 20, null, null},
+				            {#datetime(2026,8,5,0,0,0), "2º Turno", "FF3", #datetime(2026,8,5,14,22,0), "Troca de Carretel", 5, null, "9000017"},
+				            {#datetime(2026,8,5,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,5,6,14,0), "TE - Tempo Excedido", 5, null, null},
+				            {#datetime(2026,8,6,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,6,8,1,0), "Resto de fio", 45, null, null},
+				            {#datetime(2026,8,6,0,0,0), "1º Turno", "Bundle", #datetime(2026,8,6,13,47,0), "Resto de fio", 45, null, null},
+				            {#datetime(2026,8,7,0,0,0), "2º Turno", "FF1", #datetime(2026,8,7,16,38,0), "Sem apontamento", 20, null, null},
+				            {#datetime(2026,8,7,0,0,0), "2º Turno", "FF2", #datetime(2026,8,7,21,53,0), "Sem apontamento", 60, null, "9000029"},
+				            {#datetime(2026,8,10,0,0,0), "2º Turno", "Bundle", #datetime(2026,8,10,14,56,0), "Sem apontamento", 15, null, "9000038"},
+				            {#datetime(2026,8,10,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,10,6,42,0), "Falta de insulation", 10, null, null},
+				            {#datetime(2026,8,10,0,0,0), "1º Turno", "Conexão", #datetime(2026,8,10,12,1,0), "Falta de tubo", 5, null, null},
+				            {#datetime(2026,8,11,0,0,0), "1º Turno", "FF3", #datetime(2026,8,11,13,33,0), "Reunião", 5, null, null},
+				            {#datetime(2026,8,11,0,0,0), "2º Turno", "FF3", #datetime(2026,8,11,21,5,0), "Falta de Mandril", 30, null, "9000043"},
+				            {#datetime(2026,8,12,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,12,9,2,0), "Divergência do Tempo Padrão", 15, null, null},
+				            {#datetime(2026,8,12,0,0,0), "2º Turno", "FF2", #datetime(2026,8,12,19,39,0), "Falta de Mandril Soldado", 15, null, "9000046"},
+				            {#datetime(2026,8,13,0,0,0), "2º Turno", "HIGH", #datetime(2026,8,13,19,39,0), "Falta de tubo", 15, null, "9000051"},
+				            {#datetime(2026,8,13,0,0,0), "2º Turno", "Bundle", #datetime(2026,8,13,16,31,0), "Falta de Mangueira", 60, null, null},
+				            {#datetime(2026,8,14,0,0,0), "1º Turno", "FF1", #datetime(2026,8,14,13,56,0), "Troca de Carretel", 60, null, "9000057"},
+				            {#datetime(2026,8,14,0,0,0), "2º Turno", "Conexão", #datetime(2026,8,14,19,41,0), "Falta de tubo", 30, null, "9000058"},
+				            {#datetime(2026,8,17,0,0,0), "2º Turno", "Bundle", #datetime(2026,8,17,16,45,0), "Falta de programação", 5, null, "9000065"},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,18,6,8,0), "Falta de Demanda", 5, null, "9000066"},
+				            {#datetime(2026,8,18,0,0,0), "2º Turno", "FF1", #datetime(2026,8,18,20,51,0), "Divergência do Tempo Padrão", 15, null, null},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "FF2", #datetime(2026,8,18,12,23,0), "Falta de tubo", 15, null, null},
+				            {#datetime(2026,8,18,0,0,0), "1º Turno", "FF3", #datetime(2026,8,18,11,26,0), "IT - Aguardando Instrucao de Trabalho / liberacao Engenharia", 10, null, null},
+				            {#datetime(2026,8,19,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,19,11,44,0), "TU - Troca de Turno", 20, null, null},
+				            {#datetime(2026,8,20,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,20,9,22,0), "Falta de Lenon", 30, null, null},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "FF2", #datetime(2026,8,20,18,7,0), "Reunião", 30, null, null},
+				            {#datetime(2026,8,20,0,0,0), "1º Turno", "Bundle", #datetime(2026,8,20,10,41,0), "RF - Refeição", 20, null, "9000081"},
+				            {#datetime(2026,8,20,0,0,0), "2º Turno", "Conexão", #datetime(2026,8,20,14,26,0), "Falta de operador", 15, null, "9000084"},
+				            {#datetime(2026,8,21,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,21,10,45,0), "Falta de Demanda", 30, null, null},
+				            {#datetime(2026,8,21,0,0,0), "2º Turno", "Acessorios", #datetime(2026,8,21,20,25,0), "Divergência do Tempo Padrão", 10, null, null},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,24,11,41,0), "Falta de Demanda", 5, null, null},
+				            {#datetime(2026,8,24,0,0,0), "2º Turno", "FF3", #datetime(2026,8,24,17,33,0), "Motivo Não Declarado", 15, null, null},
+				            {#datetime(2026,8,24,0,0,0), "1º Turno", "Acessorios", #datetime(2026,8,24,9,55,0), "Resto de fio", 5, null, "9000091"},
+				            {#datetime(2026,8,25,0,0,0), "1º Turno", "FF1", #datetime(2026,8,25,11,44,0), "Troca de boneca", 5, null, "9000094"},
+				            {#datetime(2026,8,25,0,0,0), "1º Turno", "Bundle", #datetime(2026,8,25,8,58,0), "Falta de fio - Bobinadeira", 5, null, null},
+				            {#datetime(2026,8,25,0,0,0), "2º Turno", "Conexão", #datetime(2026,8,25,21,14,0), "Reunião", 30, null, null},
+				            {#datetime(2026,8,26,0,0,0), "2º Turno", "Acessorios", #datetime(2026,8,26,19,29,0), "TE - Tempo Excedido", 45, null, "9000105"},
+				            {#datetime(2026,8,27,0,0,0), "2º Turno", "HIGH", #datetime(2026,8,27,21,26,0), "Alimentação de fio", 10, null, "9000108"},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "FF3", #datetime(2026,8,27,11,49,0), "Falta de Demanda", 5, null, null},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "Bundle", #datetime(2026,8,27,11,29,0), "Divergência do Tempo Padrão", 15, null, null},
+				            {#datetime(2026,8,27,0,0,0), "1º Turno", "Conexão", #datetime(2026,8,27,7,39,0), "Falta de Mandril", 30, null, "9000112"},
+				            {#datetime(2026,8,28,0,0,0), "1º Turno", "FF2", #datetime(2026,8,28,6,35,0), "Falta de Lenon", 30, null, "9000113"},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "FF3", #datetime(2026,8,28,17,8,0), "Falta de Mangueira", 5, null, "9000114"},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "Bundle", #datetime(2026,8,28,16,2,0), "Falta de Carretel", 30, null, "9000115"},
+				            {#datetime(2026,8,28,0,0,0), "1º Turno", "Conexão", #datetime(2026,8,28,10,36,0), "Motivo Não Declarado", 5, null, null},
+				            {#datetime(2026,8,28,0,0,0), "2º Turno", "Conexão", #datetime(2026,8,28,17,0,0), "Falta de tubo", 10, null, null},
+				            {#datetime(2026,8,31,0,0,0), "1º Turno", "HIGH", #datetime(2026,8,31,11,7,0), "Falta de Mandril", 20, null, null},
+				            {#datetime(2026,9,1,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,1,10,44,0), "Falta de fio - Bobinadeira", 15, null, "9000129"},
+				            {#datetime(2026,9,2,0,0,0), "1º Turno", "Acessorios", #datetime(2026,9,2,11,35,0), "TE - Tempo Excedido", 60, null, null},
+				            {#datetime(2026,9,2,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,2,15,9,0), "VR - Velocidade Reduzida", 15, null, null},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "FF3", #datetime(2026,9,3,15,58,0), "Divergência do Tempo Padrão", 5, null, null},
+				            {#datetime(2026,9,3,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,3,18,11,0), "Falta de tubo", 20, null, "9000141"},
+				            {#datetime(2026,9,4,0,0,0), "1º Turno", "FF1", #datetime(2026,9,4,8,16,0), "Falta de operador", 15, null, null},
+				            {#datetime(2026,9,4,0,0,0), "2º Turno", "FF3", #datetime(2026,9,4,20,57,0), "Quebra de fio", 20, null, "9000142"},
+				            {#datetime(2026,9,4,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,4,16,44,0), "Falta de insulation", 45, null, null},
+				            {#datetime(2026,9,7,0,0,0), "2º Turno", "FF1", #datetime(2026,9,7,18,6,0), "Ajuste da Máquina", 60, null, null},
+				            {#datetime(2026,9,7,0,0,0), "2º Turno", "FF2", #datetime(2026,9,7,16,48,0), "Troca de Carretel", 5, null, null},
+				            {#datetime(2026,9,7,0,0,0), "1º Turno", "FF3", #datetime(2026,9,7,7,53,0), "Falta de fio - Bobinadeira", 20, null, null},
+				            {#datetime(2026,9,7,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,7,16,4,0), "Falta de Mangueira", 5, null, null},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "FF3", #datetime(2026,9,9,13,3,0), "Falta de operador", 5, null, "9000161"},
+				            {#datetime(2026,9,9,0,0,0), "1º Turno", "Bundle", #datetime(2026,9,9,11,44,0), "Falta de Mangueira", 15, null, null},
+				            {#datetime(2026,9,10,0,0,0), "2º Turno", "FF1", #datetime(2026,9,10,21,8,0), "Amostra", 30, null, null},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "FF1", #datetime(2026,9,11,13,35,0), "Troca de Carretel", 60, null, null},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "FF3", #datetime(2026,9,11,10,53,0), "Divergência do Tempo Padrão", 15, null, "9000174"},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "Bundle", #datetime(2026,9,11,13,18,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 20, null, null},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "Acessorios", #datetime(2026,9,11,6,3,0), "AP - Alteracao de Planejamento", 45, null, "9000177"},
+				            {#datetime(2026,9,11,0,0,0), "2º Turno", "Acessorios", #datetime(2026,9,11,20,6,0), "Falta de energia / ar", 15, null, null},
+				            {#datetime(2026,9,11,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,11,7,33,0), "Falta de Mandril Soldado", 5, null, "9000178"},
+				            {#datetime(2026,9,14,0,0,0), "1º Turno", "FF1", #datetime(2026,9,14,13,12,0), "Falta de Mangueira", 5, null, null},
+				            {#datetime(2026,9,14,0,0,0), "2º Turno", "FF1", #datetime(2026,9,14,14,53,0), "Manutenção Corretiva", 5, null, null},
+				            {#datetime(2026,9,14,0,0,0), "2º Turno", "FF2", #datetime(2026,9,14,17,16,0), "Falta de Carretel", 45, null, null},
+				            {#datetime(2026,9,14,0,0,0), "2º Turno", "FF3", #datetime(2026,9,14,17,6,0), "Emenda de Fita", 20, null, "9000181"},
+				            {#datetime(2026,9,14,0,0,0), "2º Turno", "Acessorios", #datetime(2026,9,14,14,32,0), "Falta de operador", 10, null, null},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "FF1", #datetime(2026,9,15,9,57,0), "TE - Tempo Excedido", 30, null, null},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "FF2", #datetime(2026,9,15,13,52,0), "Motivo Não Declarado", 15, null, "9000185"},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "Bundle", #datetime(2026,9,15,7,31,0), "Falta de tubo", 45, null, "9000187"},
+				            {#datetime(2026,9,15,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,15,6,25,0), "Falta de Carretel", 30, null, "9000189"},
+				            {#datetime(2026,9,16,0,0,0), "2º Turno", "HIGH", #datetime(2026,9,16,18,58,0), "FI - Falta de Embalagem / Termoencolhível", 20, null, "9000191"},
+				            {#datetime(2026,9,16,0,0,0), "1º Turno", "FF3", #datetime(2026,9,16,13,21,0), "Falta de fio - Bobinadeira", 5, null, null},
+				            {#datetime(2026,9,17,0,0,0), "1º Turno", "HIGH", #datetime(2026,9,17,10,37,0), "Ajuste da Máquina", 5, null, null},
+				            {#datetime(2026,9,17,0,0,0), "1º Turno", "Acessorios", #datetime(2026,9,17,9,58,0), "Alimentação de fio", 45, null, null},
+				            {#datetime(2026,9,17,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,17,6,18,0), "Falta de tubo", 45, null, null},
+				            {#datetime(2026,9,17,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,17,20,46,0), "Amostra", 20, null, null},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "FF1", #datetime(2026,9,18,12,34,0), "Falta de Carretel", 45, null, "9000200"},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "FF2", #datetime(2026,9,18,18,32,0), "Falta de Lenon", 15, null, null},
+				            {#datetime(2026,9,18,0,0,0), "1º Turno", "FF3", #datetime(2026,9,18,13,37,0), "Execução Check List Lean", 5, null, null},
+				            {#datetime(2026,9,18,0,0,0), "2º Turno", "FF3", #datetime(2026,9,18,21,40,0), "Falta de Mandril", 30, null, "9000202"},
+				            {#datetime(2026,9,21,0,0,0), "1º Turno", "Bundle", #datetime(2026,9,21,9,36,0), "Falta de tubo", 20, null, "9000209"},
+				            {#datetime(2026,9,21,0,0,0), "2º Turno", "Bundle", #datetime(2026,9,21,19,35,0), "AU - Auditoria (Qualidade / Seguranca)", 5, null, "9000210"},
+				            {#datetime(2026,9,21,0,0,0), "2º Turno", "Acessorios", #datetime(2026,9,21,21,47,0), "Alimentação de fio", 60, null, "9000212"},
+				            {#datetime(2026,9,22,0,0,0), "2º Turno", "FF1", #datetime(2026,9,22,20,56,0), "Falta de Carretel", 60, null, null},
+				            {#datetime(2026,9,22,0,0,0), "1º Turno", "FF2", #datetime(2026,9,22,10,2,0), "RF - Refeição", 5, null, "9000216"},
+				            {#datetime(2026,9,23,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,23,6,8,0), "Falta de Mangueira", 10, null, null},
+				            {#datetime(2026,9,24,0,0,0), "2º Turno", "HIGH", #datetime(2026,9,24,17,55,0), "Resto de fio", 45, null, "9000226"},
+				            {#datetime(2026,9,24,0,0,0), "1º Turno", "Acessorios", #datetime(2026,9,24,6,47,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 5, null, null},
+				            {#datetime(2026,9,24,0,0,0), "2º Turno", "Conexão", #datetime(2026,9,24,18,45,0), "FI - Falta de Embalagem / Termoencolhível", 5, null, null},
+				            {#datetime(2026,9,25,0,0,0), "2º Turno", "FF3", #datetime(2026,9,25,18,48,0), "Sem apontamento", 20, null, "9000234"},
+				            {#datetime(2026,9,25,0,0,0), "2º Turno", "Bundle", #datetime(2026,9,25,19,34,0), "Falta de operador", 15, null, null},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "FF1", #datetime(2026,9,28,7,56,0), "Motivo Não Declarado", 20, null, null},
+				            {#datetime(2026,9,28,0,0,0), "2º Turno", "Bundle", #datetime(2026,9,28,15,16,0), "Amostra", 10, null, null},
+				            {#datetime(2026,9,28,0,0,0), "1º Turno", "Conexão", #datetime(2026,9,28,11,24,0), "AP - Alteracao de Planejamento", 15, null, null},
+				            {#datetime(2026,9,30,0,0,0), "1º Turno", "FF2", #datetime(2026,9,30,11,47,0), "Falta de Carretel", 10, null, null},
+				            {#datetime(2026,10,1,0,0,0), "2º Turno", "FF3", #datetime(2026,10,1,16,10,0), "Troca de Carretel", 10, null, null},
+				            {#datetime(2026,10,1,0,0,0), "2º Turno", "Bundle", #datetime(2026,10,1,16,55,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 10, null, null},
+				            {#datetime(2026,10,2,0,0,0), "2º Turno", "FF2", #datetime(2026,10,2,19,33,0), "VR - Velocidade Reduzida", 5, null, "9000260"},
+				            {#datetime(2026,10,2,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,2,11,42,0), "Falta de Mandril", 10, null, null},
+				            {#datetime(2026,10,2,0,0,0), "2º Turno", "Conexão", #datetime(2026,10,2,16,52,0), "Falta de operador", 15, null, null},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "FF2", #datetime(2026,10,5,10,12,0), "Manut. Prod. Total (MPT)", 20, null, null},
+				            {#datetime(2026,10,5,0,0,0), "2º Turno", "FF2", #datetime(2026,10,5,18,16,0), "Amostra", 15, null, null},
+				            {#datetime(2026,10,5,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,5,6,20,0), "Troca de Lenon", 45, null, "9000269"},
+				            {#datetime(2026,10,5,0,0,0), "2º Turno", "Acessorios", #datetime(2026,10,5,21,45,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 45, null, null},
+				            {#datetime(2026,10,6,0,0,0), "2º Turno", "FF1", #datetime(2026,10,6,19,34,0), "Troca de Carretel", 5, null, null},
+				            {#datetime(2026,10,7,0,0,0), "1º Turno", "Conexão", #datetime(2026,10,7,10,56,0), "FI - Falta de Embalagem / Termoencolhível", 5, null, "9000278"},
+				            {#datetime(2026,10,8,0,0,0), "2º Turno", "FF1", #datetime(2026,10,8,21,0,0), "Falta de Mandril Soldado", 45, null, "9000282"},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "FF2", #datetime(2026,10,8,10,29,0), "Falta de Carretel", 60, null, null},
+				            {#datetime(2026,10,8,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,8,6,43,0), "Falta de Mangueira", 45, null, null},
+				            {#datetime(2026,10,9,0,0,0), "1º Turno", "FF1", #datetime(2026,10,9,12,35,0), "RT - Retrabalho", 10, null, "9000287"},
+				            {#datetime(2026,10,9,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,9,11,46,0), "Reunião", 60, null, null},
+				            {#datetime(2026,10,9,0,0,0), "2º Turno", "Bundle", #datetime(2026,10,9,15,0,0), "Sem apontamento", 20, null, null},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "FF1", #datetime(2026,10,12,21,14,0), "TU - Troca de Turno", 20, null, "9000294"},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "FF2", #datetime(2026,10,12,16,7,0), "Falta de Mandril", 5, null, null},
+				            {#datetime(2026,10,12,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,12,13,20,0), "Motivo Não Declarado", 20, null, null},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "Acessorios", #datetime(2026,10,12,17,25,0), "Execução Check List Lean", 20, null, null},
+				            {#datetime(2026,10,12,0,0,0), "1º Turno", "Conexão", #datetime(2026,10,12,8,49,0), "Falta de Mangueira", 5, null, "9000297"},
+				            {#datetime(2026,10,12,0,0,0), "2º Turno", "Conexão", #datetime(2026,10,12,17,19,0), "AU - Auditoria (Qualidade / Seguranca)", 15, null, null},
+				            {#datetime(2026,10,14,0,0,0), "2º Turno", "FF1", #datetime(2026,10,14,17,28,0), "Emenda de Fita", 30, null, "9000307"},
+				            {#datetime(2026,10,14,0,0,0), "1º Turno", "Acessorios", #datetime(2026,10,14,13,49,0), "AP - Alteracao de Planejamento", 30, null, "9000309"},
+				            {#datetime(2026,10,15,0,0,0), "1º Turno", "HIGH", #datetime(2026,10,15,11,58,0), "TE - Tempo Excedido", 45, null, "9000311"},
+				            {#datetime(2026,10,15,0,0,0), "2º Turno", "HIGH", #datetime(2026,10,15,16,40,0), "Falta de Mandril Soldado", 20, null, null},
+				            {#datetime(2026,10,15,0,0,0), "2º Turno", "FF1", #datetime(2026,10,15,17,3,0), "Falta de fio - Bobinadeira", 45, null, null},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "HIGH", #datetime(2026,10,16,10,43,0), "Falta de fio - Bobinadeira", 15, null, null},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "FF1", #datetime(2026,10,16,13,14,0), "AU - Auditoria (Qualidade / Seguranca)", 20, null, "9000317"},
+				            {#datetime(2026,10,16,0,0,0), "1º Turno", "FF2", #datetime(2026,10,16,9,5,0), "Troca de Carretel", 15, null, null},
+				            {#datetime(2026,10,19,0,0,0), "1º Turno", "FF1", #datetime(2026,10,19,10,7,0), "Falta de operador", 30, null, null},
+				            {#datetime(2026,10,21,0,0,0), "2º Turno", "Bundle", #datetime(2026,10,21,15,21,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 15, null, null},
+				            {#datetime(2026,10,23,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,23,11,3,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 45, null, null},
+				            {#datetime(2026,10,26,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,26,7,16,0), "Falta de Demanda", 5, null, "9000359"},
+				            {#datetime(2026,10,26,0,0,0), "2º Turno", "Bundle", #datetime(2026,10,26,21,38,0), "FC - Falta de Componentes (O-ring, sleeve, mola, adaptador...)", 15, null, "9000360"},
+				            {#datetime(2026,10,27,0,0,0), "2º Turno", "FF1", #datetime(2026,10,27,18,2,0), "Execução Check List Lean", 10, null, null},
+				            {#datetime(2026,10,27,0,0,0), "1º Turno", "Bundle", #datetime(2026,10,27,11,35,0), "Troca de Lenon", 45, null, "9000364"},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "Bundle", #datetime(2026,10,28,14,27,0), "FI - Falta de Embalagem / Termoencolhível", 60, null, null},
+				            {#datetime(2026,10,28,0,0,0), "2º Turno", "Conexão", #datetime(2026,10,28,17,49,0), "Falta de insulation", 45, null, "9000379"},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "HIGH", #datetime(2026,10,29,19,53,0), "Manutenção Preventiva", 60, null, "9000380"},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "FF2", #datetime(2026,10,29,17,3,0), "Falta de Demanda", 45, null, "9000382"},
+				            {#datetime(2026,10,29,0,0,0), "2º Turno", "Acessorios", #datetime(2026,10,29,19,59,0), "Falta de operador", 60, null, "9000384"}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

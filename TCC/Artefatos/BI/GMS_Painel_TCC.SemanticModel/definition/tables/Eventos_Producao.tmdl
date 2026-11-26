@@ -1,0 +1,525 @@
+table Eventos_Producao
+	lineageTag: a7b02fd1-60ea-4809-bf54-b9902f56c8e7
+
+	column Eventos
+		dataType: string
+		lineageTag: deedd5cc-c12f-40f4-be2d-4c2fc5024941
+		summarizeBy: none
+		sourceColumn: Eventos
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 4a8680ab-478b-4eda-9742-242da7942e69
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem_ID
+		dataType: double
+		lineageTag: 40876db6-8241-4847-ba17-b16fc9f65561
+		summarizeBy: count
+		sourceColumn: origem_ID
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column etapa
+		dataType: string
+		lineageTag: af048411-687d-4b34-a70c-fd33beb64055
+		summarizeBy: none
+		sourceColumn: etapa
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo
+		dataType: string
+		lineageTag: 85d301f6-aeb3-499e-b299-105cee2f9310
+		summarizeBy: none
+		sourceColumn: tipo
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 69081480-533a-4206-85c4-ae30d7ce9646
+		summarizeBy: none
+		sourceColumn: data_hora
+
+		variation Variation
+			isDefault
+			relationship: bd3bd05b-1f30-4013-bd03-2d6406383320
+			defaultHierarchy: LocalDateTable_339bf2dd-5616-43dd-aed0-e695db7c9b09.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_ref
+		dataType: dateTime
+		formatString: Long Date
+		lineageTag: 5433c8f2-82b7-415f-88cb-08a096524f88
+		summarizeBy: none
+		sourceColumn: data_ref
+
+		variation Variation
+			isDefault
+			relationship: c3137cd9-25d4-4484-99e0-a4e43126c69a
+			defaultHierarchy: LocalDateTable_52705749-cda3-4d1d-a69d-52d6489df3d7.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column turno
+		dataType: double
+		lineageTag: 2334f458-3118-4ad7-8ed6-32393a5ceba0
+		summarizeBy: sum
+		sourceColumn: turno
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column bitola
+		dataType: double
+		lineageTag: c6e81e19-b7e4-44cf-8ea7-204f25fd5aa1
+		summarizeBy: sum
+		sourceColumn: bitola
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column metros
+		dataType: double
+		lineageTag: 89f698c2-9d58-4030-b537-8eac7aff99f3
+		summarizeBy: sum
+		sourceColumn: metros
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column refugo
+		dataType: double
+		lineageTag: 65bfd460-42ac-4d10-8640-729ed68f9441
+		summarizeBy: sum
+		sourceColumn: refugo
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador
+		dataType: string
+		lineageTag: 99df4756-a8a2-4c55-a03d-e09e304cadc0
+		summarizeBy: none
+		sourceColumn: operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column recurso
+		dataType: string
+		lineageTag: 9fee046c-8328-4398-84fc-836f6258c3e3
+		summarizeBy: none
+		sourceColumn: recurso
+
+		annotation SummarizationSetBy = Automatic
+
+	column carretel
+		dataType: string
+		lineageTag: 4a1dee58-a3d6-47c9-aea2-2f08600412fb
+		summarizeBy: none
+		sourceColumn: carretel
+
+		annotation SummarizationSetBy = Automatic
+
+	column sobra
+		dataType: double
+		lineageTag: 5ec3b9c1-04df-440b-b1a2-4e289d431009
+		summarizeBy: sum
+		sourceColumn: sobra
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Eventos_Producao = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"Eventos" = nullable text, #"origem" = nullable text, #"origem_ID" = nullable number, #"etapa" = nullable text, #"tipo" = nullable text, #"data_hora" = nullable datetime, #"data_ref" = nullable datetime, #"turno" = nullable number, #"bitola" = nullable number, #"metros" = nullable number, #"refugo" = nullable number, #"operador" = nullable text, #"recurso" = nullable text, #"carretel" = nullable text, #"sobra" = nullable number],
+				        {
+				            {"EV-00001", "ficha_producao", 1, "Extrusora 1", "Fim", #datetime(2026,8,3,18,58,42), #datetime(2026,8,3,0,0,0), 2, 8, 500, 0, "Operador 01", "EX1", "CR-0425", 20},
+				            {"EV-00002", "ficha_producao", 1, "Trançadeira", "Fim", #datetime(2026,8,4,10,7,46), #datetime(2026,8,4,0,0,0), 1, 8, 500, 4, "Operador 20", "TR01", "CR-0107", 0},
+				            {"EV-00003", "ficha_producao", 1, "Extração", "Fim", #datetime(2026,8,6,11,58,50), #datetime(2026,8,6,0,0,0), 1, 8, 500, 2, "Operador 11", "Cabine 2", "CR-0093", 5},
+				            {"EV-00004", "ficha_producao", 5, "Extrusora 1", "Fim", #datetime(2026,8,3,14,38,42), #datetime(2026,8,3,0,0,0), 2, 6, 1500, 0, "Operador 21", "EX1", "CR-0126", 0},
+				            {"EV-00005", "ficha_producao", 5, "Trançadeira", "Fim", #datetime(2026,8,4,13,45,51), #datetime(2026,8,4,0,0,0), 2, 6, 1500, 4, "Operador 19", "TR08", "CR-0058", 5},
+				            {"EV-00006", "ficha_producao", 5, "Extração", "Fim", #datetime(2026,8,6,4,38,51), #datetime(2026,8,6,0,0,0), 3, 6, 1500, 0, "Operador 01", "Cabine 2", "CR-0245", 0},
+				            {"EV-00007", "ficha_producao", 6, "Extrusora 1", "Fim", #datetime(2026,8,4,22,8,27), #datetime(2026,8,4,0,0,0), 2, 8, 800, 0, "Operador 22", "EX1", "CR-0346", 20},
+				            {"EV-00008", "ficha_producao", 6, "Trançadeira", "Fim", #datetime(2026,8,5,19,44,22), #datetime(2026,8,5,0,0,0), 2, 8, 800, 1, "Operador 20", "TR09", "CR-0547", 0},
+				            {"EV-00009", "ficha_producao", 6, "Extração", "Fim", #datetime(2026,8,8,5,24,28), #datetime(2026,8,8,0,0,0), 1, 8, 800, 0, "Operador 21", "Cabine 2", "CR-0280", 0},
+				            {"EV-00010", "ficha_producao", 10, "Extrusora 1", "Fim", #datetime(2026,8,4,23,2,45), #datetime(2026,8,4,0,0,0), 3, 6, 1500, 1, "Operador 10", "EX1", "CR-0608", 10},
+				            {"EV-00011", "ficha_producao", 10, "Trançadeira", "Fim", #datetime(2026,8,5,6,52,45), #datetime(2026,8,5,0,0,0), 1, 6, 1500, 0, "Operador 20", "TR02", "CR-0016", 20},
+				            {"EV-00012", "ficha_producao", 10, "Extração", "Fim", #datetime(2026,8,7,11,14,58), #datetime(2026,8,7,0,0,0), 1, 6, 1500, 1, "Operador 10", "Cabine 2", "CR-0535", 20},
+				            {"EV-00013", "ficha_producao", 11, "Extrusora 1", "Fim", #datetime(2026,8,5,19,27,21), #datetime(2026,8,5,0,0,0), 2, 8, 1000, 0, "Operador 08", "EX1", "CR-0677", 0},
+				            {"EV-00014", "ficha_producao", 11, "Trançadeira", "Fim", #datetime(2026,8,6,11,1,41), #datetime(2026,8,6,0,0,0), 1, 8, 1000, 0, "Operador 07", "TR08", "CR-0675", 0},
+				            {"EV-00015", "ficha_producao", 11, "Extração", "Fim", #datetime(2026,8,8,9,5,36), #datetime(2026,8,8,0,0,0), 1, 8, 1000, 0, "Operador 03", "Cabine 2", "CR-0401", 5},
+				            {"EV-00016", "ficha_producao", 15, "Extrusora 1", "Fim", #datetime(2026,8,5,15,54,34), #datetime(2026,8,5,0,0,0), 2, 6, 300, 0, "Operador 23", "EX1", "CR-0781", 5},
+				            {"EV-00017", "ficha_producao", 15, "Trançadeira", "Fim", #datetime(2026,8,6,8,2,0), #datetime(2026,8,6,0,0,0), 1, 6, 300, 1, "Operador 18", "TR05", "CR-0603", 20},
+				            {"EV-00018", "ficha_producao", 15, "Extração", "Fim", #datetime(2026,8,8,3,49,28), #datetime(2026,8,8,0,0,0), 3, 6, 300, 4, "Operador 13", "Cabine 1", "CR-0611", 0},
+				            {"EV-00019", "ficha_producao", 16, "Extrusora 1", "Fim", #datetime(2026,8,6,21,16,4), #datetime(2026,8,6,0,0,0), 2, 6, 600, 0, "Operador 24", "EX1", "CR-0593", 5},
+				            {"EV-00020", "ficha_producao", 16, "Trançadeira", "Fim", #datetime(2026,8,7,14,17,11), #datetime(2026,8,7,0,0,0), 2, 6, 600, 2, "Operador 20", "TR03", "CR-0389", 0},
+				            {"EV-00021", "ficha_producao", 16, "Extração", "Fim", #datetime(2026,8,9,16,28,32), #datetime(2026,8,9,0,0,0), 2, 6, 600, 0, "Operador 17", "Cabine 1", "CR-0728", 20},
+				            {"EV-00022", "ficha_producao", 20, "Extrusora 1", "Fim", #datetime(2026,8,6,15,13,23), #datetime(2026,8,6,0,0,0), 2, 8, 450, 0, "Operador 18", "EX1", "CR-0272", 5},
+				            {"EV-00023", "ficha_producao", 20, "Trançadeira", "Fim", #datetime(2026,8,7,2,41,36), #datetime(2026,8,7,0,0,0), 3, 8, 450, 1, "Operador 15", "TR03", "CR-0036", 0},
+				            {"EV-00024", "ficha_producao", 20, "Extração", "Fim", #datetime(2026,8,9,5,2,54), #datetime(2026,8,9,0,0,0), 3, 8, 450, 4, "Operador 19", "Cabine 1", "CR-0591", 20},
+				            {"EV-00025", "ficha_producao", 21, "Extrusora 1", "Fim", #datetime(2026,8,7,22,37,52), #datetime(2026,8,7,0,0,0), 3, 10, 1000, 0, "Operador 02", "EX1", "CR-0354", 20},
+				            {"EV-00026", "ficha_producao", 21, "Trançadeira", "Fim", #datetime(2026,8,8,12,33,48), #datetime(2026,8,8,0,0,0), 1, 10, 1000, 2, "Operador 24", "TR05", "CR-0238", 20},
+				            {"EV-00027", "ficha_producao", 21, "Extração", "Fim", #datetime(2026,8,10,8,32,54), #datetime(2026,8,10,0,0,0), 1, 10, 1000, 2, "Operador 09", "Cabine 1", "CR-0330", 10},
+				            {"EV-00028", "ficha_producao", 25, "Extrusora 1", "Fim", #datetime(2026,9,28,20,11,5), #datetime(2026,9,28,0,0,0), 2, 12, 1000, 0, "Operador 12", "EX1", "CR-0652", 20},
+				            {"EV-00029", "ficha_producao", 25, "Trançadeira", "Fim", #datetime(2026,9,29,17,51,42), #datetime(2026,9,29,0,0,0), 2, 12, 1000, 2, "Operador 05", "TR05", "CR-0257", 5},
+				            {"EV-00030", "ficha_producao", 25, "Extração", "Fim", #datetime(2026,10,1,9,21,40), #datetime(2026,10,1,0,0,0), 1, 12, 1000, 2, "Operador 03", "Cabine 1", "CR-0371", 0},
+				            {"EV-00031", "ficha_producao", 26, "Extrusora 1", "Fim", #datetime(2026,8,11,0,32,17), #datetime(2026,8,11,0,0,0), 3, 8, 450, 0, "Operador 01", "EX1", "CR-0318", 5},
+				            {"EV-00032", "ficha_producao", 26, "Trançadeira", "Fim", #datetime(2026,8,11,17,56,29), #datetime(2026,8,11,0,0,0), 2, 8, 450, 0, "Operador 19", "TR07", "CR-0555", 5},
+				            {"EV-00033", "ficha_producao", 26, "Extração", "Fim", #datetime(2026,8,13,15,42,13), #datetime(2026,8,13,0,0,0), 2, 8, 450, 4, "Operador 08", "Cabine 2", "CR-0323", 5},
+				            {"EV-00034", "ficha_producao", 30, "Extrusora 1", "Fim", #datetime(2026,8,10,12,2,43), #datetime(2026,8,10,0,0,0), 1, 6, 800, 0, "Operador 07", "EX1", "CR-0069", 10},
+				            {"EV-00035", "ficha_producao", 30, "Trançadeira", "Fim", #datetime(2026,8,11,2,23,3), #datetime(2026,8,11,0,0,0), 3, 6, 800, 0, "Operador 19", "TR04", "CR-0755", 20},
+				            {"EV-00036", "ficha_producao", 30, "Extração", "Fim", #datetime(2026,8,13,0,27,25), #datetime(2026,8,13,0,0,0), 3, 6, 800, 0, "Operador 02", "Cabine 2", "CR-0442", 0},
+				            {"EV-00037", "ficha_producao", 31, "Extrusora 1", "Fim", #datetime(2026,9,29,5,57,43), #datetime(2026,9,29,0,0,0), 1, 10, 1500, 0, "Operador 11", "EX1", "CR-0497", 0},
+				            {"EV-00038", "ficha_producao", 31, "Trançadeira", "Fim", #datetime(2026,9,29,20,27,5), #datetime(2026,9,29,0,0,0), 2, 10, 1500, 0, "Operador 01", "TR07", "CR-0292", 5},
+				            {"EV-00039", "ficha_producao", 31, "Extração", "Fim", #datetime(2026,10,2,1,49,23), #datetime(2026,10,2,0,0,0), 3, 10, 1500, 1, "Operador 17", "Cabine 1", "CR-0772", 20},
+				            {"EV-00040", "ficha_producao", 35, "Extrusora 1", "Fim", #datetime(2026,8,10,16,46,35), #datetime(2026,8,10,0,0,0), 2, 8, 400, 0, "Operador 16", "EX1", "CR-0767", 10},
+				            {"EV-00041", "ficha_producao", 35, "Trançadeira", "Fim", #datetime(2026,8,11,7,41,32), #datetime(2026,8,11,0,0,0), 1, 8, 400, 0, "Operador 02", "TR08", "CR-0577", 0},
+				            {"EV-00042", "ficha_producao", 35, "Extração", "Fim", #datetime(2026,8,13,9,57,4), #datetime(2026,8,13,0,0,0), 1, 8, 400, 4, "Operador 16", "Cabine 1", "CR-0687", 20},
+				            {"EV-00043", "ficha_producao", 36, "Extrusora 1", "Fim", #datetime(2026,8,3,19,11,12), #datetime(2026,8,3,0,0,0), 2, 8, 400, 1, "Operador 04", "EX1", "CR-0346", 10},
+				            {"EV-00044", "ficha_producao", 36, "Trançadeira", "Fim", #datetime(2026,8,4,4,21,39), #datetime(2026,8,4,0,0,0), 3, 8, 400, 0, "Operador 02", "TR06", "CR-0110", 0},
+				            {"EV-00045", "ficha_producao", 36, "Extração", "Fim", #datetime(2026,8,6,6,45,50), #datetime(2026,8,6,0,0,0), 1, 8, 400, 4, "Operador 24", "Cabine 1", "CR-0234", 0},
+				            {"EV-00046", "ficha_producao", 40, "Extrusora 1", "Fim", #datetime(2026,8,12,17,58,23), #datetime(2026,8,12,0,0,0), 2, 16, 750, 0, "Operador 09", "EX1", "CR-0486", 5},
+				            {"EV-00047", "ficha_producao", 40, "Trançadeira", "Fim", #datetime(2026,8,13,4,49,58), #datetime(2026,8,13,0,0,0), 3, 16, 750, 2, "Operador 17", "TR09", "CR-0691", 0},
+				            {"EV-00048", "ficha_producao", 40, "Extração", "Fim", #datetime(2026,8,15,1,33,50), #datetime(2026,8,15,0,0,0), 3, 16, 750, 1, "Operador 05", "Cabine 1", "CR-0330", 10},
+				            {"EV-00049", "ficha_producao", 41, "Extrusora 1", "Fim", #datetime(2026,8,13,23,43,9), #datetime(2026,8,13,0,0,0), 3, 12, 500, 2, "Operador 10", "EX1", "CR-0774", 5},
+				            {"EV-00050", "ficha_producao", 41, "Trançadeira", "Fim", #datetime(2026,8,14,12,0,49), #datetime(2026,8,14,0,0,0), 1, 12, 500, 0, "Operador 15", "TR05", "CR-0464", 5},
+				            {"EV-00051", "ficha_producao", 41, "Extração", "Fim", #datetime(2026,8,16,7,17,17), #datetime(2026,8,16,0,0,0), 1, 12, 500, 4, "Operador 02", "Cabine 1", "CR-0093", 20},
+				            {"EV-00052", "ficha_producao", 45, "Extrusora 1", "Fim", #datetime(2026,10,16,2,36,20), #datetime(2026,10,16,0,0,0), 3, 6, 500, 0, "Operador 20", "EX1", "CR-0677", 0},
+				            {"EV-00053", "ficha_producao", 45, "Trançadeira", "Fim", #datetime(2026,10,16,19,53,26), #datetime(2026,10,16,0,0,0), 2, 6, 500, 0, "Operador 18", "TR09", "CR-0700", 20},
+				            {"EV-00054", "ficha_producao", 45, "Extração", "Fim", #datetime(2026,10,19,5,3,0), #datetime(2026,10,19,0,0,0), 3, 6, 500, 0, "Operador 11", "Cabine 1", "CR-0400", 20},
+				            {"EV-00055", "ficha_producao", 46, "Extrusora 1", "Fim", #datetime(2026,8,15,5,0,32), #datetime(2026,8,15,0,0,0), 3, 8, 1000, 0, "Operador 22", "EX1", "CR-0571", 20},
+				            {"EV-00056", "ficha_producao", 46, "Trançadeira", "Fim", #datetime(2026,8,16,4,21,43), #datetime(2026,8,16,0,0,0), 3, 8, 1000, 0, "Operador 16", "TR06", "CR-0737", 0},
+				            {"EV-00057", "ficha_producao", 46, "Extração", "Fim", #datetime(2026,8,18,2,42,28), #datetime(2026,8,18,0,0,0), 3, 8, 1000, 0, "Operador 13", "Cabine 1", "CR-0164", 0},
+				            {"EV-00058", "ficha_producao", 50, "Extrusora 1", "Fim", #datetime(2026,10,14,3,37,57), #datetime(2026,10,14,0,0,0), 3, 6, 750, 2, "Operador 15", "EX1", "CR-0772", 0},
+				            {"EV-00059", "ficha_producao", 50, "Trançadeira", "Fim", #datetime(2026,10,15,2,38,52), #datetime(2026,10,15,0,0,0), 3, 6, 750, 0, "Operador 23", "TR07", "CR-0464", 0},
+				            {"EV-00060", "ficha_producao", 50, "Extração", "Fim", #datetime(2026,10,16,20,17,59), #datetime(2026,10,16,0,0,0), 2, 6, 750, 2, "Operador 20", "Cabine 1", "CR-0711", 0},
+				            {"EV-00061", "ficha_producao", 51, "Extrusora 1", "Fim", #datetime(2026,10,22,15,1,8), #datetime(2026,10,22,0,0,0), 2, 6, 400, 2, "Operador 07", "EX1", "CR-0122", 0},
+				            {"EV-00062", "ficha_producao", 51, "Trançadeira", "Fim", #datetime(2026,10,23,4,29,50), #datetime(2026,10,23,0,0,0), 3, 6, 400, 1, "Operador 15", "TR05", "CR-0060", 5},
+				            {"EV-00063", "ficha_producao", 51, "Extração", "Fim", #datetime(2026,10,24,23,46,50), #datetime(2026,10,24,0,0,0), 3, 6, 400, 0, "Operador 17", "Cabine 2", "CR-0662", 20},
+				            {"EV-00064", "ficha_producao", 55, "Extrusora 1", "Fim", #datetime(2026,8,17,16,38,46), #datetime(2026,8,17,0,0,0), 2, 4, 400, 2, "Operador 22", "EX1", "CR-0564", 0},
+				            {"EV-00065", "ficha_producao", 55, "Trançadeira", "Fim", #datetime(2026,8,18,14,28,5), #datetime(2026,8,18,0,0,0), 2, 4, 400, 0, "Operador 05", "TR06", "CR-0656", 5},
+				            {"EV-00066", "ficha_producao", 55, "Extração", "Fim", #datetime(2026,8,20,12,16,1), #datetime(2026,8,20,0,0,0), 1, 4, 400, 0, "Operador 12", "Cabine 1", "CR-0128", 0},
+				            {"EV-00067", "ficha_producao", 56, "Extrusora 1", "Fim", #datetime(2026,8,18,23,46,54), #datetime(2026,8,18,0,0,0), 3, 12, 500, 0, "Operador 19", "EX1", "CR-0427", 5},
+				            {"EV-00068", "ficha_producao", 56, "Trançadeira", "Fim", #datetime(2026,8,19,6,31,59), #datetime(2026,8,19,0,0,0), 1, 12, 500, 2, "Operador 19", "TR05", "CR-0040", 20},
+				            {"EV-00069", "ficha_producao", 56, "Extração", "Fim", #datetime(2026,8,21,8,29,9), #datetime(2026,8,21,0,0,0), 1, 12, 500, 4, "Operador 11", "Cabine 1", "CR-0401", 20},
+				            {"EV-00070", "ficha_producao", 60, "Extrusora 1", "Fim", #datetime(2026,10,22,22,10,48), #datetime(2026,10,22,0,0,0), 2, 8, 1000, 0, "Operador 12", "EX1", "CR-0660", 0},
+				            {"EV-00071", "ficha_producao", 60, "Trançadeira", "Fim", #datetime(2026,10,23,6,55,27), #datetime(2026,10,23,0,0,0), 1, 8, 1000, 2, "Operador 10", "TR09", "CR-0589", 5},
+				            {"EV-00072", "ficha_producao", 60, "Extração", "Fim", #datetime(2026,10,25,6,17,48), #datetime(2026,10,25,0,0,0), 1, 8, 1000, 4, "Operador 06", "Cabine 2", "CR-0011", 5},
+				            {"EV-00073", "ficha_producao", 61, "Extrusora 1", "Fim", #datetime(2026,8,31,21,59,1), #datetime(2026,8,31,0,0,0), 2, 6, 300, 1, "Operador 08", "EX1", "CR-0382", 20},
+				            {"EV-00074", "ficha_producao", 61, "Trançadeira", "Fim", #datetime(2026,9,1,12,45,55), #datetime(2026,9,1,0,0,0), 1, 6, 300, 1, "Operador 04", "TR02", "CR-0187", 5},
+				            {"EV-00075", "ficha_producao", 61, "Extração", "Fim", #datetime(2026,9,3,4,37,33), #datetime(2026,9,3,0,0,0), 3, 6, 300, 2, "Operador 03", "Cabine 2", "CR-0294", 5},
+				            {"EV-00076", "ficha_producao", 65, "Extrusora 1", "Fim", #datetime(2026,8,11,1,32,10), #datetime(2026,8,11,0,0,0), 3, 10, 450, 4, "Operador 02", "EX1", "CR-0641", 0},
+				            {"EV-00077", "ficha_producao", 65, "Trançadeira", "Fim", #datetime(2026,8,11,11,36,27), #datetime(2026,8,11,0,0,0), 1, 10, 450, 4, "Operador 16", "TR07", "CR-0532", 20},
+				            {"EV-00078", "ficha_producao", 65, "Extração", "Fim", #datetime(2026,8,13,17,49,29), #datetime(2026,8,13,0,0,0), 2, 10, 450, 0, "Operador 22", "Cabine 1", "CR-0705", 0},
+				            {"EV-00079", "ficha_producao", 66, "Extrusora 1", "Fim", #datetime(2026,10,19,15,55,52), #datetime(2026,10,19,0,0,0), 2, 8, 600, 0, "Operador 21", "EX1", "CR-0539", 10},
+				            {"EV-00080", "ficha_producao", 66, "Trançadeira", "Fim", #datetime(2026,10,19,23,19,33), #datetime(2026,10,19,0,0,0), 3, 8, 600, 1, "Operador 06", "TR01", "CR-0304", 0},
+				            {"EV-00081", "ficha_producao", 66, "Extração", "Fim", #datetime(2026,10,21,18,36,49), #datetime(2026,10,21,0,0,0), 2, 8, 600, 2, "Operador 15", "Cabine 2", "CR-0030", 0},
+				            {"EV-00082", "ficha_producao", 70, "Extrusora 1", "Fim", #datetime(2026,8,22,8,9,6), #datetime(2026,8,22,0,0,0), 1, 8, 300, 4, "Operador 15", "EX1", "CR-0030", 0},
+				            {"EV-00083", "ficha_producao", 70, "Trançadeira", "Fim", #datetime(2026,8,23,5,8,29), #datetime(2026,8,23,0,0,0), 3, 8, 300, 0, "Operador 18", "TR03", "CR-0095", 5},
+				            {"EV-00084", "ficha_producao", 70, "Extração", "Fim", #datetime(2026,8,25,0,14,25), #datetime(2026,8,25,0,0,0), 3, 8, 300, 0, "Operador 12", "Cabine 2", "CR-0436", 10},
+				            {"EV-00085", "ficha_producao", 71, "Extrusora 1", "Fim", #datetime(2026,9,2,0,9,32), #datetime(2026,9,2,0,0,0), 3, 4, 800, 2, "Operador 20", "EX1", "CR-0060", 5},
+				            {"EV-00086", "ficha_producao", 71, "Trançadeira", "Fim", #datetime(2026,9,2,17,42,45), #datetime(2026,9,2,0,0,0), 2, 4, 800, 0, "Operador 23", "TR07", "CR-0429", 10},
+				            {"EV-00087", "ficha_producao", 71, "Extração", "Fim", #datetime(2026,9,5,0,48,25), #datetime(2026,9,5,0,0,0), 3, 4, 800, 0, "Operador 13", "Cabine 2", "CR-0765", 0},
+				            {"EV-00088", "ficha_producao", 75, "Extrusora 1", "Fim", #datetime(2026,8,24,15,29,38), #datetime(2026,8,24,0,0,0), 2, 8, 500, 2, "Operador 02", "EX1", "CR-0561", 0},
+				            {"EV-00089", "ficha_producao", 75, "Trançadeira", "Fim", #datetime(2026,8,24,23,56,53), #datetime(2026,8,24,0,0,0), 3, 8, 500, 2, "Operador 08", "TR07", "CR-0113", 0},
+				            {"EV-00090", "ficha_producao", 75, "Extração", "Fim", #datetime(2026,8,26,22,0,4), #datetime(2026,8,26,0,0,0), 2, 8, 500, 0, "Operador 01", "Cabine 2", "CR-0201", 10},
+				            {"EV-00091", "ficha_producao", 76, "Extrusora 1", "Fim", #datetime(2026,8,25,5,35,8), #datetime(2026,8,25,0,0,0), 1, 6, 600, 0, "Operador 16", "EX1", "CR-0446", 5},
+				            {"EV-00092", "ficha_producao", 76, "Trançadeira", "Fim", #datetime(2026,8,25,22,24,34), #datetime(2026,8,25,0,0,0), 3, 6, 600, 1, "Operador 19", "TR07", "CR-0396", 0},
+				            {"EV-00093", "ficha_producao", 76, "Extração", "Fim", #datetime(2026,8,27,16,47,46), #datetime(2026,8,27,0,0,0), 2, 6, 600, 2, "Operador 04", "Cabine 1", "CR-0293", 10},
+				            {"EV-00094", "ficha_producao", 80, "Extrusora 1", "Fim", #datetime(2026,8,25,14,49,34), #datetime(2026,8,25,0,0,0), 2, 10, 1500, 2, "Operador 21", "EX1", "CR-0266", 10},
+				            {"EV-00095", "ficha_producao", 80, "Trançadeira", "Fim", #datetime(2026,8,26,14,29,58), #datetime(2026,8,26,0,0,0), 2, 10, 1500, 4, "Operador 23", "TR05", "CR-0529", 20},
+				            {"EV-00096", "ficha_producao", 80, "Extração", "Fim", #datetime(2026,8,28,13,43,37), #datetime(2026,8,28,0,0,0), 2, 10, 1500, 4, "Operador 12", "Cabine 1", "CR-0347", 0},
+				            {"EV-00097", "ficha_producao", 81, "Extrusora 1", "Fim", #datetime(2026,8,26,0,23,23), #datetime(2026,8,26,0,0,0), 3, 8, 750, 0, "Operador 14", "EX1", "CR-0599", 20},
+				            {"EV-00098", "ficha_producao", 81, "Trançadeira", "Fim", #datetime(2026,8,26,13,34,12), #datetime(2026,8,26,0,0,0), 1, 8, 750, 0, "Operador 08", "TR07", "CR-0466", 20},
+				            {"EV-00099", "ficha_producao", 81, "Extração", "Fim", #datetime(2026,8,28,11,52,5), #datetime(2026,8,28,0,0,0), 1, 8, 750, 0, "Operador 07", "Cabine 1", "CR-0205", 20},
+				            {"EV-00100", "ficha_producao", 85, "Extrusora 1", "Fim", #datetime(2026,10,6,15,44,14), #datetime(2026,10,6,0,0,0), 2, 12, 300, 4, "Operador 24", "EX1", "CR-0121", 20},
+				            {"EV-00101", "ficha_producao", 85, "Trançadeira", "Fim", #datetime(2026,10,7,10,8,51), #datetime(2026,10,7,0,0,0), 1, 12, 300, 0, "Operador 20", "TR01", "CR-0338", 0},
+				            {"EV-00102", "ficha_producao", 85, "Extração", "Fim", #datetime(2026,10,9,9,27,4), #datetime(2026,10,9,0,0,0), 1, 12, 300, 1, "Operador 10", "Cabine 1", "CR-0136", 0},
+				            {"EV-00103", "ficha_producao", 86, "Extrusora 1", "Fim", #datetime(2026,8,26,14,0,23), #datetime(2026,8,26,0,0,0), 2, 8, 500, 0, "Operador 04", "EX1", "CR-0523", 0},
+				            {"EV-00104", "ficha_producao", 86, "Trançadeira", "Fim", #datetime(2026,8,27,5,55,35), #datetime(2026,8,27,0,0,0), 1, 8, 500, 4, "Operador 17", "TR03", "CR-0115", 20},
+				            {"EV-00105", "ficha_producao", 86, "Extração", "Fim", #datetime(2026,8,28,22,44,53), #datetime(2026,8,28,0,0,0), 3, 8, 500, 2, "Operador 13", "Cabine 1", "CR-0305", 0},
+				            {"EV-00106", "ficha_producao", 90, "Extrusora 1", "Fim", #datetime(2026,9,3,2,34,50), #datetime(2026,9,3,0,0,0), 3, 8, 1000, 2, "Operador 09", "EX1", "CR-0602", 10},
+				            {"EV-00107", "ficha_producao", 90, "Trançadeira", "Fim", #datetime(2026,9,3,22,0,56), #datetime(2026,9,3,0,0,0), 2, 8, 1000, 2, "Operador 15", "TR07", "CR-0334", 10},
+				            {"EV-00108", "ficha_producao", 90, "Extração", "Fim", #datetime(2026,9,6,1,20,15), #datetime(2026,9,6,0,0,0), 3, 8, 1000, 2, "Operador 14", "Cabine 2", "CR-0637", 5},
+				            {"EV-00109", "ficha_producao", 91, "Extrusora 1", "Fim", #datetime(2026,8,27,21,2,7), #datetime(2026,8,27,0,0,0), 2, 4, 300, 0, "Operador 11", "EX1", "CR-0767", 10},
+				            {"EV-00110", "ficha_producao", 91, "Trançadeira", "Fim", #datetime(2026,8,28,8,24,11), #datetime(2026,8,28,0,0,0), 1, 4, 300, 0, "Operador 04", "TR10", "CR-0470", 5},
+				            {"EV-00111", "ficha_producao", 91, "Extração", "Fim", #datetime(2026,8,30,9,25,31), #datetime(2026,8,30,0,0,0), 1, 4, 300, 0, "Operador 13", "Cabine 2", "CR-0146", 5},
+				            {"EV-00112", "ficha_producao", 95, "Extrusora 1", "Fim", #datetime(2026,8,28,20,19,33), #datetime(2026,8,28,0,0,0), 2, 6, 600, 0, "Operador 24", "EX1", "CR-0196", 0},
+				            {"EV-00113", "ficha_producao", 95, "Trançadeira", "Fim", #datetime(2026,8,29,9,21,26), #datetime(2026,8,29,0,0,0), 1, 6, 600, 0, "Operador 24", "TR09", "CR-0546", 5},
+				            {"EV-00114", "ficha_producao", 95, "Extração", "Fim", #datetime(2026,8,31,9,26,16), #datetime(2026,8,31,0,0,0), 1, 6, 600, 0, "Operador 14", "Cabine 1", "CR-0683", 10},
+				            {"EV-00115", "ficha_producao", 96, "Extrusora 1", "Fim", #datetime(2026,8,28,13,32,5), #datetime(2026,8,28,0,0,0), 1, 8, 1000, 1, "Operador 11", "EX1", "CR-0739", 10},
+				            {"EV-00116", "ficha_producao", 96, "Trançadeira", "Fim", #datetime(2026,8,29,9,58,39), #datetime(2026,8,29,0,0,0), 1, 8, 1000, 0, "Operador 09", "TR10", "CR-0088", 10},
+				            {"EV-00117", "ficha_producao", 96, "Extração", "Fim", #datetime(2026,8,31,2,16,3), #datetime(2026,8,31,0,0,0), 3, 8, 1000, 0, "Operador 11", "Cabine 1", "CR-0090", 0},
+				            {"EV-00118", "ficha_producao", 100, "Extrusora 1", "Fim", #datetime(2026,9,10,11,42,22), #datetime(2026,9,10,0,0,0), 1, 8, 750, 2, "Operador 06", "EX1", "CR-0261", 0},
+				            {"EV-00119", "ficha_producao", 100, "Trançadeira", "Fim", #datetime(2026,9,11,11,16,28), #datetime(2026,9,11,0,0,0), 1, 8, 750, 1, "Operador 03", "TR04", "CR-0037", 0},
+				            {"EV-00120", "ficha_producao", 100, "Extração", "Fim", #datetime(2026,9,13,6,50,16), #datetime(2026,9,13,0,0,0), 1, 8, 750, 0, "Operador 15", "Cabine 1", "CR-0110", 5},
+				            {"EV-00121", "ficha_producao", 101, "Extrusora 1", "Fim", #datetime(2026,8,31,10,15,24), #datetime(2026,8,31,0,0,0), 1, 6, 1000, 0, "Operador 15", "EX1", "CR-0251", 20},
+				            {"EV-00122", "ficha_producao", 101, "Trançadeira", "Fim", #datetime(2026,8,31,16,0,45), #datetime(2026,8,31,0,0,0), 2, 6, 1000, 0, "Operador 11", "TR05", "CR-0332", 5},
+				            {"EV-00123", "ficha_producao", 101, "Extração", "Fim", #datetime(2026,9,2,9,59,35), #datetime(2026,9,2,0,0,0), 1, 6, 1000, 2, "Operador 05", "Cabine 1", "CR-0610", 20},
+				            {"EV-00124", "ficha_producao", 105, "Extrusora 1", "Fim", #datetime(2026,9,29,22,41,14), #datetime(2026,9,29,0,0,0), 3, 12, 800, 0, "Operador 16", "EX1", "CR-0746", 20},
+				            {"EV-00125", "ficha_producao", 105, "Trançadeira", "Fim", #datetime(2026,9,30,16,35,17), #datetime(2026,9,30,0,0,0), 2, 12, 800, 2, "Operador 01", "TR03", "CR-0582", 0},
+				            {"EV-00126", "ficha_producao", 105, "Extração", "Fim", #datetime(2026,10,2,13,33,9), #datetime(2026,10,2,0,0,0), 1, 12, 800, 4, "Operador 24", "Cabine 2", "CR-0320", 10},
+				            {"EV-00127", "ficha_producao", 106, "Extrusora 1", "Fim", #datetime(2026,9,1,13,44,31), #datetime(2026,9,1,0,0,0), 2, 10, 1000, 0, "Operador 02", "EX1", "CR-0334", 0},
+				            {"EV-00128", "ficha_producao", 106, "Trançadeira", "Fim", #datetime(2026,9,1,19,58,24), #datetime(2026,9,1,0,0,0), 2, 10, 1000, 1, "Operador 12", "TR06", "CR-0791", 10},
+				            {"EV-00129", "ficha_producao", 106, "Extração", "Fim", #datetime(2026,9,3,7,28,26), #datetime(2026,9,3,0,0,0), 1, 10, 1000, 0, "Operador 09", "Cabine 2", "CR-0659", 0},
+				            {"EV-00130", "ficha_producao", 110, "Extrusora 1", "Fim", #datetime(2026,9,2,17,42,51), #datetime(2026,9,2,0,0,0), 2, 10, 400, 0, "Operador 10", "EX1", "CR-0066", 20},
+				            {"EV-00131", "ficha_producao", 110, "Trançadeira", "Fim", #datetime(2026,9,3,4,2,16), #datetime(2026,9,3,0,0,0), 3, 10, 400, 2, "Operador 14", "TR07", "CR-0195", 0},
+				            {"EV-00132", "ficha_producao", 110, "Extração", "Fim", #datetime(2026,9,5,18,56,48), #datetime(2026,9,5,0,0,0), 2, 10, 400, 4, "Operador 09", "Cabine 1", "CR-0598", 20},
+				            {"EV-00133", "ficha_producao", 111, "Extrusora 1", "Fim", #datetime(2026,9,2,22,10,18), #datetime(2026,9,2,0,0,0), 2, 10, 1000, 2, "Operador 15", "EX1", "CR-0098", 0},
+				            {"EV-00134", "ficha_producao", 111, "Trançadeira", "Fim", #datetime(2026,9,3,9,13,49), #datetime(2026,9,3,0,0,0), 1, 10, 1000, 1, "Operador 05", "TR04", "CR-0474", 0},
+				            {"EV-00135", "ficha_producao", 111, "Extração", "Fim", #datetime(2026,9,5,10,12,7), #datetime(2026,9,5,0,0,0), 1, 10, 1000, 1, "Operador 07", "Cabine 2", "CR-0231", 0},
+				            {"EV-00136", "ficha_producao", 115, "Extrusora 1", "Fim", #datetime(2026,9,3,15,28,25), #datetime(2026,9,3,0,0,0), 2, 12, 1200, 4, "Operador 01", "EX1", "CR-0704", 0},
+				            {"EV-00137", "ficha_producao", 115, "Trançadeira", "Fim", #datetime(2026,9,4,14,27,43), #datetime(2026,9,4,0,0,0), 2, 12, 1200, 0, "Operador 14", "TR04", "CR-0031", 5},
+				            {"EV-00138", "ficha_producao", 115, "Extração", "Fim", #datetime(2026,9,6,23,30,39), #datetime(2026,9,6,0,0,0), 3, 12, 1200, 4, "Operador 10", "Cabine 1", "CR-0240", 5},
+				            {"EV-00139", "ficha_producao", 116, "Extrusora 1", "Fim", #datetime(2026,9,3,15,30,35), #datetime(2026,9,3,0,0,0), 2, 8, 600, 0, "Operador 11", "EX1", "CR-0681", 0},
+				            {"EV-00140", "ficha_producao", 116, "Trançadeira", "Fim", #datetime(2026,9,4,12,44,21), #datetime(2026,9,4,0,0,0), 1, 8, 600, 0, "Operador 21", "TR01", "CR-0205", 10},
+				            {"EV-00141", "ficha_producao", 116, "Extração", "Fim", #datetime(2026,9,6,7,39,59), #datetime(2026,9,6,0,0,0), 1, 8, 600, 0, "Operador 19", "Cabine 2", "CR-0607", 0},
+				            {"EV-00142", "ficha_producao", 120, "Extrusora 1", "Fim", #datetime(2026,9,1,23,34,47), #datetime(2026,9,1,0,0,0), 3, 6, 800, 2, "Operador 24", "EX1", "CR-0189", 0},
+				            {"EV-00143", "ficha_producao", 120, "Trançadeira", "Fim", #datetime(2026,9,2,21,15,46), #datetime(2026,9,2,0,0,0), 2, 6, 800, 2, "Operador 09", "TR04", "CR-0034", 20},
+				            {"EV-00144", "ficha_producao", 120, "Extração", "Fim", #datetime(2026,9,5,6,9,33), #datetime(2026,9,5,0,0,0), 1, 6, 800, 2, "Operador 07", "Cabine 2", "CR-0683", 5},
+				            {"EV-00145", "ficha_producao", 121, "Extrusora 1", "Fim", #datetime(2026,9,5,8,54,27), #datetime(2026,9,5,0,0,0), 1, 10, 450, 4, "Operador 17", "EX1", "CR-0037", 0},
+				            {"EV-00146", "ficha_producao", 121, "Trançadeira", "Fim", #datetime(2026,9,5,22,46,45), #datetime(2026,9,5,0,0,0), 3, 10, 450, 0, "Operador 01", "TR08", "CR-0703", 0},
+				            {"EV-00147", "ficha_producao", 121, "Extração", "Fim", #datetime(2026,9,7,6,47,32), #datetime(2026,9,7,0,0,0), 1, 10, 450, 1, "Operador 01", "Cabine 1", "CR-0009", 10},
+				            {"EV-00148", "ficha_producao", 125, "Extrusora 1", "Fim", #datetime(2026,9,7,22,3,49), #datetime(2026,9,7,0,0,0), 2, 4, 800, 4, "Operador 15", "EX1", "CR-0728", 20},
+				            {"EV-00149", "ficha_producao", 125, "Trançadeira", "Fim", #datetime(2026,9,8,15,16,51), #datetime(2026,9,8,0,0,0), 2, 4, 800, 1, "Operador 21", "TR08", "CR-0042", 20},
+				            {"EV-00150", "ficha_producao", 125, "Extração", "Fim", #datetime(2026,9,10,16,4,8), #datetime(2026,9,10,0,0,0), 2, 4, 800, 1, "Operador 09", "Cabine 2", "CR-0680", 0},
+				            {"EV-00151", "ficha_producao", 126, "Extrusora 1", "Fim", #datetime(2026,9,7,13,41,12), #datetime(2026,9,7,0,0,0), 2, 4, 750, 0, "Operador 14", "EX1", "CR-0649", 0},
+				            {"EV-00152", "ficha_producao", 126, "Trançadeira", "Fim", #datetime(2026,9,8,10,12,57), #datetime(2026,9,8,0,0,0), 1, 4, 750, 4, "Operador 15", "TR11", "CR-0301", 0},
+				            {"EV-00153", "ficha_producao", 126, "Extração", "Fim", #datetime(2026,9,10,14,48,14), #datetime(2026,9,10,0,0,0), 2, 4, 750, 1, "Operador 11", "Cabine 1", "CR-0045", 20},
+				            {"EV-00154", "ficha_producao", 130, "Extrusora 1", "Fim", #datetime(2026,9,8,20,29,54), #datetime(2026,9,8,0,0,0), 2, 12, 300, 0, "Operador 04", "EX1", "CR-0265", 20},
+				            {"EV-00155", "ficha_producao", 130, "Trançadeira", "Fim", #datetime(2026,9,9,9,9,19), #datetime(2026,9,9,0,0,0), 1, 12, 300, 0, "Operador 18", "TR01", "CR-0763", 5},
+				            {"EV-00156", "ficha_producao", 130, "Extração", "Fim", #datetime(2026,9,11,3,26,19), #datetime(2026,9,11,0,0,0), 3, 12, 300, 2, "Operador 18", "Cabine 1", "CR-0386", 20},
+				            {"EV-00157", "ficha_producao", 131, "Extrusora 1", "Fim", #datetime(2026,9,8,19,37,47), #datetime(2026,9,8,0,0,0), 2, 4, 400, 1, "Operador 02", "EX1", "CR-0127", 0},
+				            {"EV-00158", "ficha_producao", 131, "Trançadeira", "Fim", #datetime(2026,9,9,10,43,24), #datetime(2026,9,9,0,0,0), 1, 4, 400, 4, "Operador 08", "TR03", "CR-0270", 5},
+				            {"EV-00159", "ficha_producao", 131, "Extração", "Fim", #datetime(2026,9,11,8,55,38), #datetime(2026,9,11,0,0,0), 1, 4, 400, 2, "Operador 05", "Cabine 2", "CR-0297", 0},
+				            {"EV-00160", "ficha_producao", 135, "Extrusora 1", "Fim", #datetime(2026,9,9,17,17,26), #datetime(2026,9,9,0,0,0), 2, 12, 1000, 4, "Operador 15", "EX1", "CR-0264", 20},
+				            {"EV-00161", "ficha_producao", 135, "Trançadeira", "Fim", #datetime(2026,9,10,7,43,39), #datetime(2026,9,10,0,0,0), 1, 12, 1000, 4, "Operador 21", "TR11", "CR-0230", 20},
+				            {"EV-00162", "ficha_producao", 135, "Extração", "Fim", #datetime(2026,9,11,20,51,45), #datetime(2026,9,11,0,0,0), 2, 12, 1000, 2, "Operador 06", "Cabine 1", "CR-0233", 0},
+				            {"EV-00163", "ficha_producao", 136, "Extrusora 1", "Fim", #datetime(2026,9,21,19,7,48), #datetime(2026,9,21,0,0,0), 2, 4, 500, 0, "Operador 06", "EX1", "CR-0349", 0},
+				            {"EV-00164", "ficha_producao", 136, "Trançadeira", "Fim", #datetime(2026,9,22,2,49,4), #datetime(2026,9,22,0,0,0), 3, 4, 500, 4, "Operador 22", "TR09", "CR-0032", 0},
+				            {"EV-00165", "ficha_producao", 136, "Extração", "Fim", #datetime(2026,9,23,22,32,41), #datetime(2026,9,23,0,0,0), 3, 4, 500, 0, "Operador 20", "Cabine 1", "CR-0221", 20},
+				            {"EV-00166", "ficha_producao", 140, "Extrusora 1", "Fim", #datetime(2026,9,10,9,16,29), #datetime(2026,9,10,0,0,0), 1, 8, 450, 2, "Operador 03", "EX1", "CR-0167", 0},
+				            {"EV-00167", "ficha_producao", 140, "Trançadeira", "Fim", #datetime(2026,9,10,16,7,14), #datetime(2026,9,10,0,0,0), 2, 8, 450, 4, "Operador 03", "TR05", "CR-0465", 0},
+				            {"EV-00168", "ficha_producao", 140, "Extração", "Fim", #datetime(2026,9,12,12,26,19), #datetime(2026,9,12,0,0,0), 1, 8, 450, 0, "Operador 01", "Cabine 2", "CR-0231", 20},
+				            {"EV-00169", "ficha_producao", 141, "Extrusora 1", "Fim", #datetime(2026,9,10,17,8,24), #datetime(2026,9,10,0,0,0), 2, 6, 500, 0, "Operador 12", "EX1", "CR-0097", 0},
+				            {"EV-00170", "ficha_producao", 141, "Trançadeira", "Fim", #datetime(2026,9,11,14,3,20), #datetime(2026,9,11,0,0,0), 2, 6, 500, 0, "Operador 12", "TR02", "CR-0358", 0},
+				            {"EV-00171", "ficha_producao", 141, "Extração", "Fim", #datetime(2026,9,13,19,45,48), #datetime(2026,9,13,0,0,0), 2, 6, 500, 0, "Operador 17", "Cabine 1", "CR-0308", 10},
+				            {"EV-00172", "ficha_producao", 145, "Extrusora 1", "Fim", #datetime(2026,10,27,2,41,12), #datetime(2026,10,27,0,0,0), 3, 6, 1200, 0, "Operador 16", "EX1", "CR-0549", 20},
+				            {"EV-00173", "ficha_producao", 145, "Trançadeira", "Fim", #datetime(2026,10,27,17,51,1), #datetime(2026,10,27,0,0,0), 2, 6, 1200, 0, "Operador 16", "TR11", "CR-0761", 0},
+				            {"EV-00174", "ficha_producao", 145, "Extração", "Fim", #datetime(2026,10,30,3,55,41), #datetime(2026,10,30,0,0,0), 3, 6, 1200, 4, "Operador 16", "Cabine 2", "CR-0119", 10},
+				            {"EV-00175", "ficha_producao", 146, "Extrusora 1", "Fim", #datetime(2026,9,12,6,3,5), #datetime(2026,9,12,0,0,0), 1, 4, 450, 0, "Operador 15", "EX1", "CR-0077", 0},
+				            {"EV-00176", "ficha_producao", 146, "Trançadeira", "Fim", #datetime(2026,9,12,14,0,0), #datetime(2026,9,12,0,0,0), 2, 4, 450, 2, "Operador 12", "TR07", "CR-0101", 0},
+				            {"EV-00177", "ficha_producao", 146, "Extração", "Fim", #datetime(2026,9,14,4,12,41), #datetime(2026,9,14,0,0,0), 3, 4, 450, 0, "Operador 14", "Cabine 1", "CR-0170", 5},
+				            {"EV-00178", "ficha_producao", 150, "Extrusora 1", "Fim", #datetime(2026,9,14,22,29,13), #datetime(2026,9,14,0,0,0), 3, 6, 800, 1, "Operador 11", "EX1", "CR-0737", 0},
+				            {"EV-00179", "ficha_producao", 150, "Trançadeira", "Fim", #datetime(2026,9,15,5,14,14), #datetime(2026,9,15,0,0,0), 3, 6, 800, 0, "Operador 21", "TR06", "CR-0625", 20},
+				            {"EV-00180", "ficha_producao", 150, "Extração", "Fim", #datetime(2026,9,17,11,9,43), #datetime(2026,9,17,0,0,0), 1, 6, 800, 0, "Operador 13", "Cabine 2", "CR-0387", 0},
+				            {"EV-00181", "ficha_producao", 151, "Extrusora 1", "Fim", #datetime(2026,9,24,22,18,0), #datetime(2026,9,24,0,0,0), 2, 6, 800, 0, "Operador 20", "EX1", "CR-0158", 0},
+				            {"EV-00182", "ficha_producao", 151, "Trançadeira", "Fim", #datetime(2026,9,25,20,27,13), #datetime(2026,9,25,0,0,0), 2, 6, 800, 4, "Operador 03", "TR08", "CR-0640", 10},
+				            {"EV-00183", "ficha_producao", 151, "Extração", "Fim", #datetime(2026,9,27,15,35,9), #datetime(2026,9,27,0,0,0), 2, 6, 800, 0, "Operador 09", "Cabine 1", "CR-0177", 20},
+				            {"EV-00184", "ficha_producao", 155, "Extrusora 1", "Fim", #datetime(2026,10,22,18,28,6), #datetime(2026,10,22,0,0,0), 2, 8, 1200, 1, "Operador 07", "EX1", "CR-0245", 5},
+				            {"EV-00185", "ficha_producao", 155, "Trançadeira", "Fim", #datetime(2026,10,23,14,13,45), #datetime(2026,10,23,0,0,0), 2, 8, 1200, 1, "Operador 16", "TR10", "CR-0091", 5},
+				            {"EV-00186", "ficha_producao", 155, "Extração", "Fim", #datetime(2026,10,25,14,37,40), #datetime(2026,10,25,0,0,0), 2, 8, 1200, 4, "Operador 21", "Cabine 1", "CR-0251", 0},
+				            {"EV-00187", "ficha_producao", 156, "Extrusora 1", "Fim", #datetime(2026,9,15,22,7,30), #datetime(2026,9,15,0,0,0), 2, 8, 1000, 0, "Operador 02", "EX1", "CR-0736", 10},
+				            {"EV-00188", "ficha_producao", 156, "Trançadeira", "Fim", #datetime(2026,9,16,12,49,21), #datetime(2026,9,16,0,0,0), 1, 8, 1000, 0, "Operador 17", "TR11", "CR-0438", 5},
+				            {"EV-00189", "ficha_producao", 156, "Extração", "Fim", #datetime(2026,9,18,16,0,10), #datetime(2026,9,18,0,0,0), 2, 8, 1000, 1, "Operador 07", "Cabine 2", "CR-0614", 0},
+				            {"EV-00190", "ficha_producao", 160, "Extrusora 1", "Fim", #datetime(2026,9,16,23,37,53), #datetime(2026,9,16,0,0,0), 3, 8, 1000, 2, "Operador 13", "EX1", "CR-0017", 0},
+				            {"EV-00191", "ficha_producao", 160, "Trançadeira", "Fim", #datetime(2026,9,17,12,39,23), #datetime(2026,9,17,0,0,0), 1, 8, 1000, 1, "Operador 04", "TR07", "CR-0024", 0},
+				            {"EV-00192", "ficha_producao", 160, "Extração", "Fim", #datetime(2026,9,19,17,19,20), #datetime(2026,9,19,0,0,0), 2, 8, 1000, 1, "Operador 21", "Cabine 1", "CR-0734", 0},
+				            {"EV-00193", "ficha_producao", 161, "Extrusora 1", "Fim", #datetime(2026,9,16,16,14,13), #datetime(2026,9,16,0,0,0), 2, 6, 450, 0, "Operador 18", "EX1", "CR-0348", 10},
+				            {"EV-00194", "ficha_producao", 161, "Trançadeira", "Fim", #datetime(2026,9,17,8,38,48), #datetime(2026,9,17,0,0,0), 1, 6, 450, 2, "Operador 03", "TR05", "CR-0165", 0},
+				            {"EV-00195", "ficha_producao", 161, "Extração", "Fim", #datetime(2026,9,19,13,41,28), #datetime(2026,9,19,0,0,0), 2, 6, 450, 4, "Operador 07", "Cabine 2", "CR-0788", 10},
+				            {"EV-00196", "ficha_producao", 165, "Extrusora 1", "Fim", #datetime(2026,9,18,4,52,25), #datetime(2026,9,18,0,0,0), 3, 8, 1200, 2, "Operador 16", "EX1", "CR-0201", 0},
+				            {"EV-00197", "ficha_producao", 165, "Trançadeira", "Fim", #datetime(2026,9,18,19,50,19), #datetime(2026,9,18,0,0,0), 2, 8, 1200, 4, "Operador 20", "TR10", "CR-0026", 20},
+				            {"EV-00198", "ficha_producao", 165, "Extração", "Fim", #datetime(2026,9,20,15,38,6), #datetime(2026,9,20,0,0,0), 2, 8, 1200, 0, "Operador 17", "Cabine 1", "CR-0027", 20},
+				            {"EV-00199", "ficha_producao", 166, "Extrusora 1", "Fim", #datetime(2026,9,17,20,11,46), #datetime(2026,9,17,0,0,0), 2, 8, 400, 0, "Operador 03", "EX1", "CR-0116", 5},
+				            {"EV-00200", "ficha_producao", 166, "Trançadeira", "Fim", #datetime(2026,9,18,10,45,34), #datetime(2026,9,18,0,0,0), 1, 8, 400, 1, "Operador 10", "TR08", "CR-0784", 5},
+				            {"EV-00201", "ficha_producao", 166, "Extração", "Fim", #datetime(2026,9,20,3,56,50), #datetime(2026,9,20,0,0,0), 3, 8, 400, 2, "Operador 20", "Cabine 1", "CR-0765", 5},
+				            {"EV-00202", "ficha_producao", 170, "Extrusora 1", "Fim", #datetime(2026,9,19,1,44,8), #datetime(2026,9,19,0,0,0), 3, 8, 500, 0, "Operador 10", "EX1", "CR-0457", 10},
+				            {"EV-00203", "ficha_producao", 170, "Trançadeira", "Fim", #datetime(2026,9,19,19,7,13), #datetime(2026,9,19,0,0,0), 2, 8, 500, 0, "Operador 18", "TR02", "CR-0164", 10},
+				            {"EV-00204", "ficha_producao", 170, "Extração", "Fim", #datetime(2026,9,21,22,16,5), #datetime(2026,9,21,0,0,0), 2, 8, 500, 0, "Operador 23", "Cabine 1", "CR-0268", 0},
+				            {"EV-00205", "ficha_producao", 171, "Extrusora 1", "Fim", #datetime(2026,9,18,15,53,14), #datetime(2026,9,18,0,0,0), 2, 8, 400, 0, "Operador 19", "EX1", "CR-0536", 20},
+				            {"EV-00206", "ficha_producao", 171, "Trançadeira", "Fim", #datetime(2026,9,19,11,38,5), #datetime(2026,9,19,0,0,0), 1, 8, 400, 4, "Operador 03", "TR10", "CR-0342", 5},
+				            {"EV-00207", "ficha_producao", 171, "Extração", "Fim", #datetime(2026,9,21,11,51,31), #datetime(2026,9,21,0,0,0), 1, 8, 400, 4, "Operador 20", "Cabine 1", "CR-0294", 5},
+				            {"EV-00208", "ficha_producao", 175, "Extrusora 1", "Fim", #datetime(2026,8,4,17,34,1), #datetime(2026,8,4,0,0,0), 2, 16, 750, 0, "Operador 22", "EX1", "CR-0353", 0},
+				            {"EV-00209", "ficha_producao", 175, "Trançadeira", "Fim", #datetime(2026,8,5,16,4,2), #datetime(2026,8,5,0,0,0), 2, 16, 750, 2, "Operador 13", "TR05", "CR-0238", 5},
+				            {"EV-00210", "ficha_producao", 175, "Extração", "Fim", #datetime(2026,8,7,23,11,25), #datetime(2026,8,7,0,0,0), 3, 16, 750, 0, "Operador 18", "Cabine 2", "CR-0521", 5},
+				            {"EV-00211", "ficha_producao", 176, "Extrusora 1", "Fim", #datetime(2026,9,21,22,22,57), #datetime(2026,9,21,0,0,0), 3, 10, 1000, 4, "Operador 04", "EX1", "CR-0129", 5},
+				            {"EV-00212", "ficha_producao", 176, "Trançadeira", "Fim", #datetime(2026,9,22,21,49,58), #datetime(2026,9,22,0,0,0), 2, 10, 1000, 1, "Operador 13", "TR07", "CR-0180", 0},
+				            {"EV-00213", "ficha_producao", 176, "Extração", "Fim", #datetime(2026,9,25,1,15,34), #datetime(2026,9,25,0,0,0), 3, 10, 1000, 4, "Operador 19", "Cabine 2", "CR-0538", 0},
+				            {"EV-00214", "ficha_producao", 180, "Extrusora 1", "Fim", #datetime(2026,9,22,22,28,2), #datetime(2026,9,22,0,0,0), 3, 6, 1000, 0, "Operador 02", "EX1", "CR-0062", 10},
+				            {"EV-00215", "ficha_producao", 180, "Trançadeira", "Fim", #datetime(2026,9,23,8,51,8), #datetime(2026,9,23,0,0,0), 1, 6, 1000, 0, "Operador 07", "TR06", "CR-0716", 10},
+				            {"EV-00216", "ficha_producao", 180, "Extração", "Fim", #datetime(2026,9,25,9,15,3), #datetime(2026,9,25,0,0,0), 1, 6, 1000, 0, "Operador 02", "Cabine 1", "CR-0673", 10},
+				            {"EV-00217", "ficha_producao", 181, "Extrusora 1", "Fim", #datetime(2026,9,23,3,0,27), #datetime(2026,9,23,0,0,0), 3, 10, 400, 4, "Operador 10", "EX1", "CR-0158", 0},
+				            {"EV-00218", "ficha_producao", 181, "Trançadeira", "Fim", #datetime(2026,9,23,18,21,34), #datetime(2026,9,23,0,0,0), 2, 10, 400, 4, "Operador 21", "TR04", "CR-0560", 20},
+				            {"EV-00219", "ficha_producao", 181, "Extração", "Fim", #datetime(2026,9,25,18,2,56), #datetime(2026,9,25,0,0,0), 2, 10, 400, 2, "Operador 12", "Cabine 1", "CR-0074", 0},
+				            {"EV-00220", "ficha_producao", 185, "Extrusora 1", "Fim", #datetime(2026,9,23,18,11,57), #datetime(2026,9,23,0,0,0), 2, 8, 1200, 1, "Operador 08", "EX1", "CR-0448", 5},
+				            {"EV-00221", "ficha_producao", 185, "Trançadeira", "Fim", #datetime(2026,9,24,13,10,37), #datetime(2026,9,24,0,0,0), 1, 8, 1200, 4, "Operador 05", "TR08", "CR-0187", 20},
+				            {"EV-00222", "ficha_producao", 185, "Extração", "Fim", #datetime(2026,9,26,23,52,48), #datetime(2026,9,26,0,0,0), 3, 8, 1200, 4, "Operador 23", "Cabine 1", "CR-0666", 20},
+				            {"EV-00223", "ficha_producao", 186, "Extrusora 1", "Fim", #datetime(2026,9,23,19,52,0), #datetime(2026,9,23,0,0,0), 2, 8, 450, 0, "Operador 09", "EX1", "CR-0201", 10},
+				            {"EV-00224", "ficha_producao", 186, "Trançadeira", "Fim", #datetime(2026,9,24,9,43,45), #datetime(2026,9,24,0,0,0), 1, 8, 450, 4, "Operador 19", "TR04", "CR-0141", 5},
+				            {"EV-00225", "ficha_producao", 186, "Extração", "Fim", #datetime(2026,9,26,2,10,43), #datetime(2026,9,26,0,0,0), 3, 8, 450, 0, "Operador 02", "Cabine 2", "CR-0258", 0},
+				            {"EV-00226", "ficha_producao", 190, "Extrusora 1", "Fim", #datetime(2026,9,24,21,41,39), #datetime(2026,9,24,0,0,0), 2, 4, 450, 0, "Operador 14", "EX1", "CR-0144", 5},
+				            {"EV-00227", "ficha_producao", 190, "Trançadeira", "Fim", #datetime(2026,9,25,17,30,20), #datetime(2026,9,25,0,0,0), 2, 4, 450, 0, "Operador 24", "TR06", "CR-0184", 20},
+				            {"EV-00228", "ficha_producao", 190, "Extração", "Fim", #datetime(2026,9,27,16,8,37), #datetime(2026,9,27,0,0,0), 2, 4, 450, 4, "Operador 17", "Cabine 1", "CR-0059", 10},
+				            {"EV-00229", "ficha_producao", 191, "Extrusora 1", "Fim", #datetime(2026,9,24,21,38,36), #datetime(2026,9,24,0,0,0), 2, 6, 500, 0, "Operador 21", "EX1", "CR-0050", 5},
+				            {"EV-00230", "ficha_producao", 191, "Trançadeira", "Fim", #datetime(2026,9,25,17,42,36), #datetime(2026,9,25,0,0,0), 2, 6, 500, 0, "Operador 13", "TR06", "CR-0453", 0},
+				            {"EV-00231", "ficha_producao", 191, "Extração", "Fim", #datetime(2026,9,27,20,22,55), #datetime(2026,9,27,0,0,0), 2, 6, 500, 4, "Operador 12", "Cabine 2", "CR-0438", 5},
+				            {"EV-00232", "ficha_producao", 195, "Extrusora 1", "Fim", #datetime(2026,9,26,8,8,27), #datetime(2026,9,26,0,0,0), 1, 12, 1000, 0, "Operador 23", "EX1", "CR-0272", 0},
+				            {"EV-00233", "ficha_producao", 195, "Trançadeira", "Fim", #datetime(2026,9,26,16,16,27), #datetime(2026,9,26,0,0,0), 2, 12, 1000, 0, "Operador 18", "TR05", "CR-0195", 10},
+				            {"EV-00234", "ficha_producao", 195, "Extração", "Fim", #datetime(2026,9,28,8,37,47), #datetime(2026,9,28,0,0,0), 1, 12, 1000, 0, "Operador 05", "Cabine 1", "CR-0575", 5},
+				            {"EV-00235", "ficha_producao", 196, "Extrusora 1", "Fim", #datetime(2026,9,5,5,39,7), #datetime(2026,9,5,0,0,0), 1, 16, 500, 0, "Operador 14", "EX1", "CR-0152", 0},
+				            {"EV-00236", "ficha_producao", 196, "Trançadeira", "Fim", #datetime(2026,9,6,3,49,10), #datetime(2026,9,6,0,0,0), 3, 16, 500, 2, "Operador 16", "TR03", "CR-0152", 20},
+				            {"EV-00237", "ficha_producao", 196, "Extração", "Fim", #datetime(2026,9,8,2,12,53), #datetime(2026,9,8,0,0,0), 3, 16, 500, 0, "Operador 01", "Cabine 2", "CR-0307", 20},
+				            {"EV-00238", "ficha_producao", 200, "Extrusora 1", "Fim", #datetime(2026,9,30,22,36,8), #datetime(2026,9,30,0,0,0), 3, 8, 1000, 2, "Operador 04", "EX1", "CR-0633", 10},
+				            {"EV-00239", "ficha_producao", 200, "Trançadeira", "Fim", #datetime(2026,10,1,13,22,9), #datetime(2026,10,1,0,0,0), 1, 8, 1000, 1, "Operador 17", "TR10", "CR-0368", 5},
+				            {"EV-00240", "ficha_producao", 200, "Extração", "Fim", #datetime(2026,10,3,17,41,25), #datetime(2026,10,3,0,0,0), 2, 8, 1000, 0, "Operador 02", "Cabine 2", "CR-0706", 0},
+				            {"EV-00241", "ficha_producao", 201, "Extrusora 1", "Fim", #datetime(2026,9,29,7,54,16), #datetime(2026,9,29,0,0,0), 1, 10, 500, 1, "Operador 07", "EX1", "CR-0470", 0},
+				            {"EV-00242", "ficha_producao", 201, "Trançadeira", "Fim", #datetime(2026,9,29,22,11,36), #datetime(2026,9,29,0,0,0), 2, 10, 500, 1, "Operador 21", "TR03", "CR-0213", 20},
+				            {"EV-00243", "ficha_producao", 201, "Extração", "Fim", #datetime(2026,10,1,21,31,51), #datetime(2026,10,1,0,0,0), 2, 10, 500, 0, "Operador 23", "Cabine 1", "CR-0062", 5},
+				            {"EV-00244", "ficha_producao", 205, "Extrusora 1", "Fim", #datetime(2026,9,25,6,15,57), #datetime(2026,9,25,0,0,0), 1, 4, 300, 0, "Operador 07", "EX1", "CR-0136", 20},
+				            {"EV-00245", "ficha_producao", 205, "Trançadeira", "Fim", #datetime(2026,9,26,0,7,5), #datetime(2026,9,26,0,0,0), 3, 4, 300, 0, "Operador 24", "TR02", "CR-0103", 0},
+				            {"EV-00246", "ficha_producao", 205, "Extração", "Fim", #datetime(2026,9,28,0,54,46), #datetime(2026,9,28,0,0,0), 3, 4, 300, 0, "Operador 07", "Cabine 2", "CR-0140", 10},
+				            {"EV-00247", "ficha_producao", 206, "Extrusora 1", "Fim", #datetime(2026,9,30,3,51,35), #datetime(2026,9,30,0,0,0), 3, 8, 300, 0, "Operador 11", "EX1", "CR-0266", 0},
+				            {"EV-00248", "ficha_producao", 206, "Trançadeira", "Fim", #datetime(2026,9,30,23,56,57), #datetime(2026,9,30,0,0,0), 3, 8, 300, 0, "Operador 14", "TR05", "CR-0161", 20},
+				            {"EV-00249", "ficha_producao", 206, "Extração", "Fim", #datetime(2026,10,2,20,51,54), #datetime(2026,10,2,0,0,0), 2, 8, 300, 4, "Operador 23", "Cabine 1", "CR-0307", 0},
+				            {"EV-00250", "ficha_producao", 210, "Extrusora 1", "Fim", #datetime(2026,9,30,16,54,24), #datetime(2026,9,30,0,0,0), 2, 8, 800, 0, "Operador 04", "EX1", "CR-0243", 5},
+				            {"EV-00251", "ficha_producao", 210, "Trançadeira", "Fim", #datetime(2026,10,1,15,10,9), #datetime(2026,10,1,0,0,0), 2, 8, 800, 0, "Operador 15", "TR04", "CR-0711", 0},
+				            {"EV-00252", "ficha_producao", 210, "Extração", "Fim", #datetime(2026,10,3,12,50,18), #datetime(2026,10,3,0,0,0), 1, 8, 800, 1, "Operador 01", "Cabine 1", "CR-0015", 10},
+				            {"EV-00253", "ficha_producao", 211, "Extrusora 1", "Fim", #datetime(2026,10,1,6,20,35), #datetime(2026,10,1,0,0,0), 1, 4, 1500, 1, "Operador 11", "EX1", "CR-0348", 20},
+				            {"EV-00254", "ficha_producao", 211, "Trançadeira", "Fim", #datetime(2026,10,1,17,36,32), #datetime(2026,10,1,0,0,0), 2, 4, 1500, 1, "Operador 23", "TR05", "CR-0733", 0},
+				            {"EV-00255", "ficha_producao", 211, "Extração", "Fim", #datetime(2026,10,3,22,22,34), #datetime(2026,10,3,0,0,0), 3, 4, 1500, 0, "Operador 17", "Cabine 2", "CR-0492", 20},
+				            {"EV-00256", "ficha_producao", 215, "Extrusora 1", "Fim", #datetime(2026,10,1,15,39,1), #datetime(2026,10,1,0,0,0), 2, 4, 300, 0, "Operador 20", "EX1", "CR-0218", 5},
+				            {"EV-00257", "ficha_producao", 215, "Trançadeira", "Fim", #datetime(2026,10,2,1,10,36), #datetime(2026,10,2,0,0,0), 3, 4, 300, 0, "Operador 12", "TR05", "CR-0470", 0},
+				            {"EV-00258", "ficha_producao", 215, "Extração", "Fim", #datetime(2026,10,3,11,57,48), #datetime(2026,10,3,0,0,0), 1, 4, 300, 2, "Operador 02", "Cabine 2", "CR-0324", 5},
+				            {"EV-00259", "ficha_producao", 216, "Extrusora 1", "Fim", #datetime(2026,10,1,18,56,34), #datetime(2026,10,1,0,0,0), 2, 10, 750, 0, "Operador 24", "EX1", "CR-0077", 0},
+				            {"EV-00260", "ficha_producao", 216, "Trançadeira", "Fim", #datetime(2026,10,2,4,59,12), #datetime(2026,10,2,0,0,0), 3, 10, 750, 0, "Operador 13", "TR08", "CR-0394", 0},
+				            {"EV-00261", "ficha_producao", 216, "Extração", "Fim", #datetime(2026,10,3,14,8,18), #datetime(2026,10,3,0,0,0), 2, 10, 750, 0, "Operador 05", "Cabine 1", "CR-0775", 0},
+				            {"EV-00262", "ficha_producao", 220, "Extrusora 1", "Fim", #datetime(2026,9,10,23,35,32), #datetime(2026,9,10,0,0,0), 3, 10, 500, 2, "Operador 05", "EX1", "CR-0264", 10},
+				            {"EV-00263", "ficha_producao", 220, "Trançadeira", "Fim", #datetime(2026,9,11,10,8,52), #datetime(2026,9,11,0,0,0), 1, 10, 500, 2, "Operador 22", "TR08", "CR-0717", 20},
+				            {"EV-00264", "ficha_producao", 220, "Extração", "Fim", #datetime(2026,9,13,3,36,47), #datetime(2026,9,13,0,0,0), 3, 10, 500, 0, "Operador 21", "Cabine 1", "CR-0401", 0},
+				            {"EV-00265", "ficha_producao", 221, "Extrusora 1", "Fim", #datetime(2026,10,3,6,2,53), #datetime(2026,10,3,0,0,0), 1, 4, 600, 0, "Operador 13", "EX1", "CR-0784", 0},
+				            {"EV-00266", "ficha_producao", 221, "Trançadeira", "Fim", #datetime(2026,10,3,22,12,56), #datetime(2026,10,3,0,0,0), 2, 4, 600, 0, "Operador 11", "TR09", "CR-0300", 10},
+				            {"EV-00267", "ficha_producao", 221, "Extração", "Fim", #datetime(2026,10,6,3,41,28), #datetime(2026,10,6,0,0,0), 3, 4, 600, 0, "Operador 11", "Cabine 1", "CR-0547", 0},
+				            {"EV-00268", "ficha_producao", 225, "Extrusora 1", "Fim", #datetime(2026,10,5,19,52,37), #datetime(2026,10,5,0,0,0), 2, 10, 450, 4, "Operador 02", "EX1", "CR-0660", 0},
+				            {"EV-00269", "ficha_producao", 225, "Trançadeira", "Fim", #datetime(2026,10,6,4,9,13), #datetime(2026,10,6,0,0,0), 3, 10, 450, 0, "Operador 06", "TR05", "CR-0602", 0},
+				            {"EV-00270", "ficha_producao", 225, "Extração", "Fim", #datetime(2026,10,8,2,45,1), #datetime(2026,10,8,0,0,0), 3, 10, 450, 0, "Operador 24", "Cabine 2", "CR-0601", 0},
+				            {"EV-00271", "ficha_producao", 226, "Extrusora 1", "Fim", #datetime(2026,9,24,23,32,15), #datetime(2026,9,24,0,0,0), 3, 10, 450, 2, "Operador 12", "EX1", "CR-0257", 5},
+				            {"EV-00272", "ficha_producao", 226, "Trançadeira", "Fim", #datetime(2026,9,25,12,11,50), #datetime(2026,9,25,0,0,0), 1, 10, 450, 0, "Operador 14", "TR04", "CR-0061", 10},
+				            {"EV-00273", "ficha_producao", 226, "Extração", "Fim", #datetime(2026,9,27,21,9,30), #datetime(2026,9,27,0,0,0), 2, 10, 450, 0, "Operador 20", "Cabine 2", "CR-0656", 5},
+				            {"EV-00274", "ficha_producao", 230, "Extrusora 1", "Fim", #datetime(2026,10,7,1,4,20), #datetime(2026,10,7,0,0,0), 3, 4, 1000, 0, "Operador 15", "EX1", "CR-0501", 0},
+				            {"EV-00275", "ficha_producao", 230, "Trançadeira", "Fim", #datetime(2026,10,7,17,31,40), #datetime(2026,10,7,0,0,0), 2, 4, 1000, 0, "Operador 07", "TR09", "CR-0170", 20},
+				            {"EV-00276", "ficha_producao", 230, "Extração", "Fim", #datetime(2026,10,9,23,13,31), #datetime(2026,10,9,0,0,0), 3, 4, 1000, 1, "Operador 02", "Cabine 2", "CR-0168", 0},
+				            {"EV-00277", "ficha_producao", 231, "Extrusora 1", "Fim", #datetime(2026,10,7,3,10,12), #datetime(2026,10,7,0,0,0), 3, 8, 300, 0, "Operador 14", "EX1", "CR-0599", 20},
+				            {"EV-00278", "ficha_producao", 231, "Trançadeira", "Fim", #datetime(2026,10,8,0,36,48), #datetime(2026,10,8,0,0,0), 3, 8, 300, 1, "Operador 15", "TR11", "CR-0041", 20},
+				            {"EV-00279", "ficha_producao", 231, "Extração", "Fim", #datetime(2026,10,9,12,29,50), #datetime(2026,10,9,0,0,0), 1, 8, 300, 0, "Operador 24", "Cabine 1", "CR-0698", 5},
+				            {"EV-00280", "ficha_producao", 235, "Extrusora 1", "Fim", #datetime(2026,10,7,20,51,38), #datetime(2026,10,7,0,0,0), 2, 8, 500, 0, "Operador 04", "EX1", "CR-0187", 0},
+				            {"EV-00281", "ficha_producao", 235, "Trançadeira", "Fim", #datetime(2026,10,8,16,36,45), #datetime(2026,10,8,0,0,0), 2, 8, 500, 2, "Operador 17", "TR11", "CR-0187", 0},
+				            {"EV-00282", "ficha_producao", 235, "Extração", "Fim", #datetime(2026,10,10,18,7,27), #datetime(2026,10,10,0,0,0), 2, 8, 500, 0, "Operador 12", "Cabine 2", "CR-0561", 0},
+				            {"EV-00283", "ficha_producao", 236, "Extrusora 1", "Fim", #datetime(2026,10,7,14,57,30), #datetime(2026,10,7,0,0,0), 2, 8, 1000, 0, "Operador 19", "EX1", "CR-0452", 10},
+				            {"EV-00284", "ficha_producao", 236, "Trançadeira", "Fim", #datetime(2026,10,8,10,0,21), #datetime(2026,10,8,0,0,0), 1, 8, 1000, 2, "Operador 03", "TR10", "CR-0427", 0},
+				            {"EV-00285", "ficha_producao", 236, "Extração", "Fim", #datetime(2026,10,10,10,9,14), #datetime(2026,10,10,0,0,0), 1, 8, 1000, 0, "Operador 15", "Cabine 1", "CR-0491", 0},
+				            {"EV-00286", "ficha_producao", 240, "Extrusora 1", "Fim", #datetime(2026,10,8,13,39,53), #datetime(2026,10,8,0,0,0), 1, 6, 800, 1, "Operador 17", "EX1", "CR-0439", 10},
+				            {"EV-00287", "ficha_producao", 240, "Trançadeira", "Fim", #datetime(2026,10,9,9,45,4), #datetime(2026,10,9,0,0,0), 1, 6, 800, 2, "Operador 09", "TR08", "CR-0263", 5},
+				            {"EV-00288", "ficha_producao", 240, "Extração", "Fim", #datetime(2026,10,11,11,33,40), #datetime(2026,10,11,0,0,0), 1, 6, 800, 2, "Operador 24", "Cabine 1", "CR-0171", 20},
+				            {"EV-00289", "ficha_producao", 241, "Extrusora 1", "Fim", #datetime(2026,10,8,15,59,15), #datetime(2026,10,8,0,0,0), 2, 8, 1200, 1, "Operador 12", "EX1", "CR-0128", 0},
+				            {"EV-00290", "ficha_producao", 241, "Trançadeira", "Fim", #datetime(2026,10,9,4,39,50), #datetime(2026,10,9,0,0,0), 3, 8, 1200, 0, "Operador 08", "TR08", "CR-0564", 5},
+				            {"EV-00291", "ficha_producao", 241, "Extração", "Fim", #datetime(2026,10,11,4,47,19), #datetime(2026,10,11,0,0,0), 3, 8, 1200, 0, "Operador 07", "Cabine 1", "CR-0718", 20},
+				            {"EV-00292", "ficha_producao", 245, "Extrusora 1", "Fim", #datetime(2026,8,5,0,28,10), #datetime(2026,8,5,0,0,0), 3, 6, 450, 0, "Operador 06", "EX1", "CR-0085", 0},
+				            {"EV-00293", "ficha_producao", 245, "Trançadeira", "Fim", #datetime(2026,8,6,0,31,55), #datetime(2026,8,6,0,0,0), 3, 6, 450, 4, "Operador 20", "TR06", "CR-0295", 20},
+				            {"EV-00294", "ficha_producao", 245, "Extração", "Fim", #datetime(2026,8,8,6,47,35), #datetime(2026,8,8,0,0,0), 1, 6, 450, 0, "Operador 01", "Cabine 1", "CR-0331", 10},
+				            {"EV-00295", "ficha_producao", 246, "Extrusora 1", "Fim", #datetime(2026,10,10,1,47,42), #datetime(2026,10,10,0,0,0), 3, 4, 1000, 0, "Operador 23", "EX1", "CR-0559", 20},
+				            {"EV-00296", "ficha_producao", 246, "Trançadeira", "Fim", #datetime(2026,10,10,22,30,12), #datetime(2026,10,10,0,0,0), 3, 4, 1000, 0, "Operador 06", "TR04", "CR-0534", 5},
+				            {"EV-00297", "ficha_producao", 246, "Extração", "Fim", #datetime(2026,10,12,14,22,36), #datetime(2026,10,12,0,0,0), 2, 4, 1000, 0, "Operador 07", "Cabine 2", "CR-0513", 0},
+				            {"EV-00298", "ficha_producao", 250, "Extrusora 1", "Fim", #datetime(2026,9,30,14,56,15), #datetime(2026,9,30,0,0,0), 2, 10, 800, 0, "Operador 09", "EX1", "CR-0299", 5},
+				            {"EV-00299", "ficha_producao", 250, "Trançadeira", "Fim", #datetime(2026,10,1,11,5,59), #datetime(2026,10,1,0,0,0), 1, 10, 800, 2, "Operador 07", "TR01", "CR-0072", 5},
+				            {"EV-00300", "ficha_producao", 250, "Extração", "Fim", #datetime(2026,10,3,20,55,34), #datetime(2026,10,3,0,0,0), 2, 10, 800, 2, "Operador 06", "Cabine 2", "CR-0116", 0},
+				            {"EV-00301", "ficha_producao", 251, "Extrusora 1", "Fim", #datetime(2026,10,13,6,2,23), #datetime(2026,10,13,0,0,0), 1, 8, 1500, 1, "Operador 09", "EX1", "CR-0185", 10},
+				            {"EV-00302", "ficha_producao", 251, "Trançadeira", "Fim", #datetime(2026,10,14,4,56,23), #datetime(2026,10,14,0,0,0), 3, 8, 1500, 2, "Operador 16", "TR08", "CR-0667", 0},
+				            {"EV-00303", "ficha_producao", 251, "Extração", "Fim", #datetime(2026,10,15,22,19,57), #datetime(2026,10,15,0,0,0), 2, 8, 1500, 0, "Operador 21", "Cabine 2", "CR-0351", 0},
+				            {"EV-00304", "ficha_producao", 255, "Extrusora 1", "Fim", #datetime(2026,10,7,20,0,48), #datetime(2026,10,7,0,0,0), 2, 6, 1500, 1, "Operador 24", "EX1", "CR-0212", 20},
+				            {"EV-00305", "ficha_producao", 255, "Trançadeira", "Fim", #datetime(2026,10,8,1,59,7), #datetime(2026,10,8,0,0,0), 3, 6, 1500, 0, "Operador 06", "TR11", "CR-0164", 10},
+				            {"EV-00306", "ficha_producao", 255, "Extração", "Fim", #datetime(2026,10,9,21,59,24), #datetime(2026,10,9,0,0,0), 2, 6, 1500, 2, "Operador 16", "Cabine 1", "CR-0197", 0},
+				            {"EV-00307", "ficha_producao", 256, "Extrusora 1", "Fim", #datetime(2026,8,21,17,34,52), #datetime(2026,8,21,0,0,0), 2, 4, 450, 0, "Operador 06", "EX1", "CR-0668", 5},
+				            {"EV-00308", "ficha_producao", 256, "Trançadeira", "Fim", #datetime(2026,8,22,14,6,4), #datetime(2026,8,22,0,0,0), 2, 4, 450, 0, "Operador 17", "TR05", "CR-0249", 0},
+				            {"EV-00309", "ficha_producao", 256, "Extração", "Fim", #datetime(2026,8,24,10,15,30), #datetime(2026,8,24,0,0,0), 1, 4, 450, 0, "Operador 07", "Cabine 2", "CR-0634", 5},
+				            {"EV-00310", "ficha_producao", 260, "Extrusora 1", "Fim", #datetime(2026,8,7,19,13,5), #datetime(2026,8,7,0,0,0), 2, 6, 400, 0, "Operador 15", "EX1", "CR-0544", 0},
+				            {"EV-00311", "ficha_producao", 260, "Trançadeira", "Fim", #datetime(2026,8,8,17,45,39), #datetime(2026,8,8,0,0,0), 2, 6, 400, 2, "Operador 06", "TR08", "CR-0375", 20},
+				            {"EV-00312", "ficha_producao", 260, "Extração", "Fim", #datetime(2026,8,10,20,50,6), #datetime(2026,8,10,0,0,0), 2, 6, 400, 4, "Operador 21", "Cabine 2", "CR-0230", 5},
+				            {"EV-00313", "ficha_producao", 261, "Extrusora 1", "Fim", #datetime(2026,10,14,21,23,36), #datetime(2026,10,14,0,0,0), 2, 12, 750, 1, "Operador 13", "EX1", "CR-0310", 0},
+				            {"EV-00314", "ficha_producao", 261, "Trançadeira", "Fim", #datetime(2026,10,15,11,47,11), #datetime(2026,10,15,0,0,0), 1, 12, 750, 0, "Operador 17", "TR07", "CR-0528", 20},
+				            {"EV-00315", "ficha_producao", 261, "Extração", "Fim", #datetime(2026,10,17,17,30,35), #datetime(2026,10,17,0,0,0), 2, 12, 750, 0, "Operador 17", "Cabine 2", "CR-0545", 0},
+				            {"EV-00316", "ficha_producao", 265, "Extrusora 1", "Fim", #datetime(2026,10,15,21,39,34), #datetime(2026,10,15,0,0,0), 2, 4, 1200, 0, "Operador 23", "EX1", "CR-0715", 10},
+				            {"EV-00317", "ficha_producao", 265, "Trançadeira", "Fim", #datetime(2026,10,16,12,10,6), #datetime(2026,10,16,0,0,0), 1, 4, 1200, 2, "Operador 03", "TR11", "CR-0381", 10},
+				            {"EV-00318", "ficha_producao", 265, "Extração", "Fim", #datetime(2026,10,18,6,56,43), #datetime(2026,10,18,0,0,0), 1, 4, 1200, 4, "Operador 12", "Cabine 2", "CR-0387", 5},
+				            {"EV-00319", "ficha_producao", 266, "Extrusora 1", "Fim", #datetime(2026,10,15,14,10,25), #datetime(2026,10,15,0,0,0), 2, 12, 1500, 4, "Operador 04", "EX1", "CR-0516", 0},
+				            {"EV-00320", "ficha_producao", 266, "Trançadeira", "Fim", #datetime(2026,10,16,0,58,53), #datetime(2026,10,16,0,0,0), 3, 12, 1500, 4, "Operador 01", "TR11", "CR-0430", 0},
+				            {"EV-00321", "ficha_producao", 266, "Extração", "Fim", #datetime(2026,10,18,9,14,37), #datetime(2026,10,18,0,0,0), 1, 12, 1500, 1, "Operador 18", "Cabine 2", "CR-0612", 0},
+				            {"EV-00322", "ficha_producao", 270, "Extrusora 1", "Fim", #datetime(2026,9,4,7,28,27), #datetime(2026,9,4,0,0,0), 1, 10, 450, 0, "Operador 01", "EX1", "CR-0050", 0},
+				            {"EV-00323", "ficha_producao", 270, "Trançadeira", "Fim", #datetime(2026,9,4,18,44,18), #datetime(2026,9,4,0,0,0), 2, 10, 450, 4, "Operador 01", "TR02", "CR-0066", 0},
+				            {"EV-00324", "ficha_producao", 270, "Extração", "Fim", #datetime(2026,9,6,12,47,27), #datetime(2026,9,6,0,0,0), 1, 10, 450, 0, "Operador 09", "Cabine 1", "CR-0660", 10},
+				            {"EV-00325", "ficha_producao", 271, "Extrusora 1", "Fim", #datetime(2026,9,15,17,39,30), #datetime(2026,9,15,0,0,0), 2, 8, 1200, 0, "Operador 05", "EX1", "CR-0406", 0},
+				            {"EV-00326", "ficha_producao", 271, "Trançadeira", "Fim", #datetime(2026,9,16,15,8,13), #datetime(2026,9,16,0,0,0), 2, 8, 1200, 1, "Operador 09", "TR02", "CR-0607", 0},
+				            {"EV-00327", "ficha_producao", 271, "Extração", "Fim", #datetime(2026,9,18,19,12,5), #datetime(2026,9,18,0,0,0), 2, 8, 1200, 0, "Operador 08", "Cabine 2", "CR-0496", 5},
+				            {"EV-00328", "ficha_producao", 275, "Extrusora 1", "Fim", #datetime(2026,10,19,17,37,40), #datetime(2026,10,19,0,0,0), 2, 6, 800, 4, "Operador 12", "EX1", "CR-0654", 10},
+				            {"EV-00329", "ficha_producao", 275, "Trançadeira", "Fim", #datetime(2026,10,20,11,43,7), #datetime(2026,10,20,0,0,0), 1, 6, 800, 1, "Operador 11", "TR03", "CR-0069", 10},
+				            {"EV-00330", "ficha_producao", 275, "Extração", "Fim", #datetime(2026,10,22,4,6,46), #datetime(2026,10,22,0,0,0), 3, 6, 800, 1, "Operador 24", "Cabine 2", "CR-0180", 0},
+				            {"EV-00331", "ficha_producao", 276, "Extrusora 1", "Fim", #datetime(2026,10,19,21,39,11), #datetime(2026,10,19,0,0,0), 2, 6, 450, 4, "Operador 09", "EX1", "CR-0050", 10},
+				            {"EV-00332", "ficha_producao", 276, "Trançadeira", "Fim", #datetime(2026,10,20,6,31,17), #datetime(2026,10,20,0,0,0), 1, 6, 450, 1, "Operador 22", "TR05", "CR-0299", 5},
+				            {"EV-00333", "ficha_producao", 276, "Extração", "Fim", #datetime(2026,10,22,3,59,39), #datetime(2026,10,22,0,0,0), 3, 6, 450, 1, "Operador 10", "Cabine 2", "CR-0336", 0},
+				            {"EV-00334", "ficha_producao", 280, "Extrusora 1", "Fim", #datetime(2026,10,20,15,20,33), #datetime(2026,10,20,0,0,0), 2, 6, 750, 1, "Operador 07", "EX1", "CR-0231", 5},
+				            {"EV-00335", "ficha_producao", 280, "Trançadeira", "Fim", #datetime(2026,10,21,7,47,31), #datetime(2026,10,21,0,0,0), 1, 6, 750, 0, "Operador 18", "TR05", "CR-0130", 20},
+				            {"EV-00336", "ficha_producao", 280, "Extração", "Fim", #datetime(2026,10,23,6,3,41), #datetime(2026,10,23,0,0,0), 1, 6, 750, 0, "Operador 16", "Cabine 2", "CR-0294", 0},
+				            {"EV-00337", "ficha_producao", 281, "Extrusora 1", "Fim", #datetime(2026,8,5,14,10,20), #datetime(2026,8,5,0,0,0), 2, 8, 600, 1, "Operador 01", "EX1", "CR-0093", 0},
+				            {"EV-00338", "ficha_producao", 281, "Trançadeira", "Fim", #datetime(2026,8,6,8,34,25), #datetime(2026,8,6,0,0,0), 1, 8, 600, 0, "Operador 05", "TR07", "CR-0556", 20},
+				            {"EV-00339", "ficha_producao", 281, "Extração", "Fim", #datetime(2026,8,8,4,21,7), #datetime(2026,8,8,0,0,0), 3, 8, 600, 0, "Operador 18", "Cabine 1", "CR-0325", 0},
+				            {"EV-00340", "ficha_producao", 285, "Extrusora 1", "Fim", #datetime(2026,10,21,21,37,16), #datetime(2026,10,21,0,0,0), 2, 12, 800, 4, "Operador 21", "EX1", "CR-0213", 5},
+				            {"EV-00341", "ficha_producao", 285, "Trançadeira", "Fim", #datetime(2026,10,22,22,25,47), #datetime(2026,10,22,0,0,0), 3, 12, 800, 2, "Operador 18", "TR03", "CR-0418", 0},
+				            {"EV-00342", "ficha_producao", 285, "Extração", "Fim", #datetime(2026,10,25,0,43,16), #datetime(2026,10,25,0,0,0), 3, 12, 800, 0, "Operador 14", "Cabine 2", "CR-0375", 20},
+				            {"EV-00343", "ficha_producao", 286, "Extrusora 1", "Fim", #datetime(2026,10,22,4,26,50), #datetime(2026,10,22,0,0,0), 3, 6, 400, 0, "Operador 11", "EX1", "CR-0095", 10},
+				            {"EV-00344", "ficha_producao", 286, "Trançadeira", "Fim", #datetime(2026,10,22,18,20,35), #datetime(2026,10,22,0,0,0), 2, 6, 400, 0, "Operador 09", "TR07", "CR-0307", 0},
+				            {"EV-00345", "ficha_producao", 286, "Extração", "Fim", #datetime(2026,10,24,19,26,9), #datetime(2026,10,24,0,0,0), 2, 6, 400, 2, "Operador 11", "Cabine 2", "CR-0410", 10},
+				            {"EV-00346", "ficha_producao", 290, "Extrusora 1", "Fim", #datetime(2026,8,26,22,11,28), #datetime(2026,8,26,0,0,0), 2, 8, 750, 4, "Operador 18", "EX1", "CR-0328", 0},
+				            {"EV-00347", "ficha_producao", 290, "Trançadeira", "Fim", #datetime(2026,8,27,3,41,7), #datetime(2026,8,27,0,0,0), 3, 8, 750, 0, "Operador 10", "TR10", "CR-0084", 20},
+				            {"EV-00348", "ficha_producao", 290, "Extração", "Fim", #datetime(2026,8,28,17,53,35), #datetime(2026,8,28,0,0,0), 2, 8, 750, 0, "Operador 17", "Cabine 1", "CR-0793", 5},
+				            {"EV-00349", "ficha_producao", 291, "Extrusora 1", "Fim", #datetime(2026,10,22,22,42,26), #datetime(2026,10,22,0,0,0), 3, 6, 300, 0, "Operador 02", "EX1", "CR-0421", 20},
+				            {"EV-00350", "ficha_producao", 291, "Trançadeira", "Fim", #datetime(2026,10,23,12,35,38), #datetime(2026,10,23,0,0,0), 1, 6, 300, 0, "Operador 23", "TR10", "CR-0074", 10},
+				            {"EV-00351", "ficha_producao", 291, "Extração", "Fim", #datetime(2026,10,25,12,7,53), #datetime(2026,10,25,0,0,0), 1, 6, 300, 0, "Operador 24", "Cabine 1", "CR-0740", 0},
+				            {"EV-00352", "ficha_producao", 295, "Extrusora 1", "Fim", #datetime(2026,10,23,18,51,4), #datetime(2026,10,23,0,0,0), 2, 10, 500, 0, "Operador 16", "EX1", "CR-0574", 0},
+				            {"EV-00353", "ficha_producao", 295, "Trançadeira", "Fim", #datetime(2026,10,24,10,37,29), #datetime(2026,10,24,0,0,0), 1, 10, 500, 0, "Operador 14", "TR10", "CR-0662", 0},
+				            {"EV-00354", "ficha_producao", 295, "Extração", "Fim", #datetime(2026,10,26,12,21,32), #datetime(2026,10,26,0,0,0), 1, 10, 500, 4, "Operador 03", "Cabine 2", "CR-0134", 0},
+				            {"EV-00355", "ficha_producao", 296, "Extrusora 1", "Fim", #datetime(2026,10,23,19,45,43), #datetime(2026,10,23,0,0,0), 2, 16, 400, 2, "Operador 17", "EX1", "CR-0700", 0},
+				            {"EV-00356", "ficha_producao", 296, "Trançadeira", "Fim", #datetime(2026,10,24,11,32,51), #datetime(2026,10,24,0,0,0), 1, 16, 400, 1, "Operador 03", "TR02", "CR-0039", 10},
+				            {"EV-00357", "ficha_producao", 296, "Extração", "Fim", #datetime(2026,10,26,9,23,52), #datetime(2026,10,26,0,0,0), 1, 16, 400, 0, "Operador 14", "Cabine 2", "CR-0113", 0},
+				            {"EV-00358", "ficha_producao", 300, "Extrusora 1", "Fim", #datetime(2026,10,26,17,59,44), #datetime(2026,10,26,0,0,0), 2, 6, 600, 4, "Operador 11", "EX1", "CR-0107", 5},
+				            {"EV-00359", "ficha_producao", 300, "Trançadeira", "Fim", #datetime(2026,10,27,2,56,44), #datetime(2026,10,27,0,0,0), 3, 6, 600, 0, "Operador 15", "TR04", "CR-0756", 20},
+				            {"EV-00360", "ficha_producao", 300, "Extração", "Fim", #datetime(2026,10,29,0,45,24), #datetime(2026,10,29,0,0,0), 3, 6, 600, 0, "Operador 13", "Cabine 1", "CR-0438", 0}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+

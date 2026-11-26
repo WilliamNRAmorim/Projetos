@@ -1,0 +1,580 @@
+table ControleExtrusora_estrutura
+	lineageTag: 491e514d-f15c-46c0-ae5c-0ed65d717da0
+
+	/// Quantidade extrudada de mandril (ControleExtrusora_estrutura). Data vem de data_hora_inicio via join virtual com dCalendario (INT do datetime), pois a tabela não tem coluna de data pura.
+	measure 'Qtd Extrusora Mandril' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(ControleExtrusora_estrutura, INT(ControleExtrusora_estrutura[data_hora_inicio]) IN datas), ControleExtrusora_estrutura[Quantidade]), SUM(ControleExtrusora_estrutura[Quantidade]))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 47ab092b-07fa-4051-8f97-71b0ec3020f2
+
+	/// Quantidade refugada na extrusora de mandril. Join virtual de data via INT(DataHoraRefugo).
+	measure 'Refugo Extrusora Mandril' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, SUMX(FILTER(RefugoExtrusora_Mandril, INT(RefugoExtrusora_Mandril[DataHoraRefugo]) IN datas), RefugoExtrusora_Mandril[Quantidade]), SUM(RefugoExtrusora_Mandril[Quantidade]))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 2439d72b-8e56-4360-bf6b-b02caa2c0ec7
+
+	/// % de refugo da extrusora de mandril = refugo / (produzido + refugo).
+	measure '% Refugo Extrusora' = DIVIDE([Refugo Extrusora Mandril], [Qtd Extrusora Mandril] + [Refugo Extrusora Mandril])
+		formatString: 0.0%
+		displayFolder: 11 Extrusora Mandril
+		lineageTag: 9b80124e-0313-4d5b-881c-dc7fcbbd32be
+
+	/// Dias distintos com extrusao no recorte (mesmo padrao de data virtual por INT(data_hora_inicio)).
+	measure 'Dias com Extrusao' = VAR dias = DISTINCT(SELECTCOLUMNS(ControleExtrusora_estrutura, "d", INT(ControleExtrusora_estrutura[data_hora_inicio]))) VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, COUNTROWS(FILTER(dias, [d] IN datas)), COUNTROWS(dias))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+
+	/// Quantidade de extrusoes (linhas) com data no recorte.
+	measure 'Extrusoes Mandril' = VAR temCal = ISCROSSFILTERED(dCalendario[Date]) VAR datas = VALUES(dCalendario[Date]) RETURN IF(temCal, COUNTROWS(FILTER(ControleExtrusora_estrutura, INT(ControleExtrusora_estrutura[data_hora_inicio]) IN datas)), COUNTROWS(ControleExtrusora_estrutura))
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+
+	/// Metros extrudados por dia com extrusao.
+	measure 'Metros por Dia Extrusora' = DIVIDE([Qtd Extrusora Mandril], [Dias com Extrusao])
+		formatString: #,##0
+		displayFolder: 11 Extrusora Mandril
+
+	/// kg de refugo por 1.000 m extrudados.
+	measure 'Refugo kg por 1000 m' = DIVIDE([Refugo Extrusora Mandril], [Qtd Extrusora Mandril]) * 1000
+		formatString: #,##0.0
+		displayFolder: 11 Extrusora Mandril
+
+	column OP_ID
+		dataType: string
+		lineageTag: cfabaef8-1b51-4667-93f6-fae5ec42d9ac
+		summarizeBy: none
+		sourceColumn: OP_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column OP
+		dataType: double
+		lineageTag: b48bf12e-ea07-4d77-a181-e5260150e540
+		summarizeBy: sum
+		sourceColumn: OP
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Bitola
+		dataType: double
+		lineageTag: 93626e58-3485-4f67-be5f-edb63a6f5f3e
+		summarizeBy: sum
+		sourceColumn: Bitola
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column cod_mandril
+		dataType: string
+		lineageTag: 97977ccf-5bd1-43ea-8890-8f9eecc393cf
+		summarizeBy: none
+		sourceColumn: cod_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column desmoldante
+		dataType: string
+		lineageTag: 350cbe9d-a272-4eae-a94e-226f5ed4a5e9
+		summarizeBy: none
+		sourceColumn: desmoldante
+
+		annotation SummarizationSetBy = Automatic
+
+	column quantidade
+		dataType: double
+		lineageTag: 91f7c306-1ea6-4635-9279-1725d1add840
+		summarizeBy: sum
+		sourceColumn: quantidade
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column operador
+		dataType: string
+		lineageTag: 197d3c45-2e39-48ff-81e5-32d9c5108cc3
+		summarizeBy: none
+		sourceColumn: operador
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote_mandril
+		dataType: string
+		lineageTag: 04786dad-f6de-4854-a1f1-83dbc7cc088b
+		summarizeBy: none
+		sourceColumn: lote_mandril
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_inicio
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 9061a5fd-76bd-4d39-8872-e21ae3181b08
+		summarizeBy: none
+		sourceColumn: data_hora_inicio
+
+		variation Variation
+			isDefault
+			relationship: 180e3ac1-23ad-498e-8d48-8d7c3c11100a
+			defaultHierarchy: LocalDateTable_d3d8f8fc-662e-4456-9507-d98a3b425705.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_hora_final
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: f80333ad-675c-45de-bb47-c738e0068c47
+		summarizeBy: none
+		sourceColumn: data_hora_final
+
+		variation Variation
+			isDefault
+			relationship: 68d90e74-7d8a-4290-ab6a-24d0b17eca25
+			defaultHierarchy: LocalDateTable_f4de1dc1-ea26-4c5b-ae47-9d89b92257d7.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Turno
+		dataType: string
+		lineageTag: adf33a9a-9bcd-43db-9378-12b9caeb1f8f
+		summarizeBy: none
+		sourceColumn: Turno
+
+		annotation SummarizationSetBy = Automatic
+
+	column Observacao
+		dataType: string
+		lineageTag: 2c01779a-a884-40fe-b750-a248e39d7b4e
+		summarizeBy: none
+		sourceColumn: Observacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Criado
+		dataType: string
+		lineageTag: aa1e70e0-9455-4990-9b1b-e43d3ffcc11a
+		summarizeBy: none
+		sourceColumn: Criado
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Color Tag'
+		dataType: string
+		lineageTag: 3537b93e-3107-49e2-b4e1-510c65139d48
+		summarizeBy: none
+		sourceColumn: Color Tag
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Compliance Asset Id'
+		dataType: string
+		lineageTag: c1454390-a301-4102-8dd7-0859c0dd335f
+		summarizeBy: none
+		sourceColumn: Compliance Asset Id
+
+		annotation SummarizationSetBy = Automatic
+
+	column ID
+		dataType: int64
+		formatString: 0
+		lineageTag: 093ac7c7-21b9-4621-8b39-2689908a1728
+		summarizeBy: count
+		sourceColumn: ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Content Type'
+		dataType: string
+		lineageTag: 41616919-8094-40bc-9631-ad0874cbd84a
+		summarizeBy: none
+		sourceColumn: Content Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column Modified
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 789b5fba-b358-4ce9-a1d7-8051e7ceec0f
+		summarizeBy: none
+		sourceColumn: Modified
+
+		variation Variation
+			isDefault
+			relationship: 804bf907-9732-43bf-91f2-b692a8adc0ab
+			defaultHierarchy: LocalDateTable_97450d99-d9b3-4267-ad89-a53bff143083.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Created
+		dataType: dateTime
+		formatString: General Date
+		lineageTag: 53159439-cdfc-42e9-a8da-af20fe04ca0a
+		summarizeBy: none
+		sourceColumn: Created
+
+		variation Variation
+			isDefault
+			relationship: c41697a4-2389-4867-9a38-5bb436ca7629
+			defaultHierarchy: LocalDateTable_d99a7a0e-4b9e-46ef-9b33-20b8fa496c59.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Created By'
+		dataType: string
+		lineageTag: 8d8b897c-8477-48f4-b4ef-21bdcde2d7ad
+		summarizeBy: none
+		sourceColumn: Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Modified By'
+		dataType: string
+		lineageTag: 8ca92cb9-a9a5-4172-bf1b-dfa37f7e3802
+		summarizeBy: none
+		sourceColumn: Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	column Version
+		dataType: string
+		lineageTag: 99747838-f0a3-4c13-aaa2-2fb95b96b5e8
+		summarizeBy: none
+		sourceColumn: Version
+
+		annotation SummarizationSetBy = Automatic
+
+	column Attachments
+		dataType: string
+		lineageTag: 9f259d06-01a5-4e41-81cb-9ccc1c820b32
+		summarizeBy: none
+		sourceColumn: Attachments
+
+		annotation SummarizationSetBy = Automatic
+
+	column Edit
+		dataType: string
+		lineageTag: 3d12c7d3-01b5-49b0-b2a1-978522810ff6
+		summarizeBy: none
+		sourceColumn: Edit
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: baf8c2f5-2c01-4753-8d6c-513af0295d7a
+		summarizeBy: none
+		sourceColumn: Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item Child Count'
+		dataType: string
+		lineageTag: 7b42224b-6a64-4dcc-b79c-946bcb3d59aa
+		summarizeBy: none
+		sourceColumn: Item Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Folder Child Count'
+		dataType: string
+		lineageTag: 8764a371-26c2-4b75-b919-d32a045789b9
+		summarizeBy: none
+		sourceColumn: Folder Child Count
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label setting'
+		dataType: string
+		lineageTag: a8a3fcce-94ea-4437-92ab-fe3c0056d413
+		summarizeBy: none
+		sourceColumn: Label setting
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label'
+		dataType: string
+		lineageTag: c255c118-51af-45b9-a4e4-78afca009b03
+		summarizeBy: none
+		sourceColumn: Retention label
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Retention label Applied'
+		dataType: string
+		lineageTag: 59a664df-62ac-46ff-a975-61e79243a3e7
+		summarizeBy: none
+		sourceColumn: Retention label Applied
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Label applied by'
+		dataType: string
+		lineageTag: 1267da68-9544-4a59-b418-4327e8dd05ce
+		summarizeBy: none
+		sourceColumn: Label applied by
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Item is a Record'
+		dataType: string
+		lineageTag: 2c8c6cae-b0b9-4137-9a74-4401b2c2dddb
+		summarizeBy: none
+		sourceColumn: Item is a Record
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Created By'
+		dataType: string
+		lineageTag: ac667a71-b5d6-435a-b692-068638696c1a
+		summarizeBy: none
+		sourceColumn: App Created By
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'App Modified By'
+		dataType: string
+		lineageTag: cd031417-3660-479e-acb8-5588f4ab41fa
+		summarizeBy: none
+		sourceColumn: App Modified By
+
+		annotation SummarizationSetBy = Automatic
+
+	partition ControleExtrusora_estrutura = m
+		mode: import
+		source =
+				let
+				    Source = #table(
+				        type table [#"OP_ID" = nullable text, #"OP" = nullable number, #"Bitola" = nullable number, #"cod_mandril" = nullable text, #"desmoldante" = nullable text, #"quantidade" = nullable number, #"operador" = nullable text, #"lote_mandril" = nullable text, #"data_hora_inicio" = nullable datetime, #"data_hora_final" = nullable datetime, #"Turno" = nullable text, #"Observacao" = nullable text, #"Criado" = nullable text, #"Color Tag" = nullable text, #"Compliance Asset Id" = nullable text, #"ID" = Int64.Type, #"Content Type" = nullable text, #"Modified" = nullable datetime, #"Created" = nullable datetime, #"Created By" = nullable text, #"Modified By" = nullable text, #"Version" = nullable text, #"Attachments" = nullable text, #"Edit" = nullable text, #"Type" = nullable text, #"Item Child Count" = nullable text, #"Folder Child Count" = nullable text, #"Label setting" = nullable text, #"Retention label" = nullable text, #"Retention label Applied" = nullable text, #"Label applied by" = nullable text, #"Item is a Record" = nullable text, #"App Created By" = nullable text, #"App Modified By" = nullable text],
+				        {
+				            {"100101", 100101, 8, "MND-012", "DM-B", 500, "Operador 12", "LM-2633", #datetime(2026,8,3,12,35,0), #datetime(2026,8,3,14,13,49), "Turno 2", null, "03/08/2026", null, null, 1, null, #datetime(2026,8,3,14,13,49), #datetime(2026,8,3,14,13,49), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100102", 100102, 6, "MND-045", "DM-A", 500, "Operador 01", "LM-2696", #datetime(2026,8,3,10,49,0), #datetime(2026,8,3,12,12,12), "Turno 1", null, "03/08/2026", null, null, 2, null, #datetime(2026,8,3,12,12,12), #datetime(2026,8,3,12,12,12), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100103", 100103, 6, "MND-058", "DM-A", 1200, "Operador 13", "LM-2641", #datetime(2026,8,3,6,7,0), #datetime(2026,8,3,7,59,28), "Turno 1", null, "03/08/2026", null, null, 3, null, #datetime(2026,8,3,7,59,28), #datetime(2026,8,3,7,59,28), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100104", 100104, 8, "MND-059", "DM-A", 500, "Operador 24", "LM-2618", #datetime(2026,8,3,17,4,0), #datetime(2026,8,3,18,17,24), "Turno 2", null, "03/08/2026", null, null, 4, null, #datetime(2026,8,3,18,17,24), #datetime(2026,8,3,18,17,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100105", 100105, 6, "MND-036", "DM-A", 1500, "Operador 18", "LM-2690", #datetime(2026,8,3,5,0,0), #datetime(2026,8,3,5,33,25), "Turno 1", null, "03/08/2026", null, null, 5, null, #datetime(2026,8,3,5,33,25), #datetime(2026,8,3,5,33,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100106", 100106, 8, "MND-042", "DM-A", 800, "Operador 05", "LM-2669", #datetime(2026,8,4,14,20,0), #datetime(2026,8,4,15,32,13), "Turno 2", null, "04/08/2026", null, null, 6, null, #datetime(2026,8,4,15,32,13), #datetime(2026,8,4,15,32,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100107", 100107, 4, "MND-011", "DM-A", 1200, "Operador 04", "LM-2673", #datetime(2026,8,4,12,57,0), #datetime(2026,8,4,14,13,20), "Turno 2", null, "04/08/2026", null, null, 7, null, #datetime(2026,8,4,14,13,20), #datetime(2026,8,4,14,13,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100108", 100108, 10, "MND-030", "DM-B", 750, "Operador 13", "LM-2627", #datetime(2026,8,4,16,13,0), #datetime(2026,8,4,18,1,53), "Turno 2", null, "04/08/2026", null, null, 8, null, #datetime(2026,8,4,18,1,53), #datetime(2026,8,4,18,1,53), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100109", 100109, 6, "MND-027", "DM-A", 1000, "Operador 01", "LM-2627", #datetime(2026,9,28,8,16,0), #datetime(2026,9,28,9,35,46), "Turno 1", null, "28/09/2026", null, null, 9, null, #datetime(2026,9,28,9,35,46), #datetime(2026,9,28,9,35,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100110", 100110, 6, "MND-048", "DM-A", 1500, "Operador 14", "LM-2620", #datetime(2026,8,4,16,55,0), #datetime(2026,8,4,18,6,55), "Turno 2", null, "04/08/2026", null, null, 10, null, #datetime(2026,8,4,18,6,55), #datetime(2026,8,4,18,6,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100111", 100111, 8, "MND-001", "DM-A", 1000, "Operador 07", "LM-2654", #datetime(2026,8,5,9,13,0), #datetime(2026,8,5,11,6,11), "Turno 1", null, "05/08/2026", null, null, 11, null, #datetime(2026,8,5,11,6,11), #datetime(2026,8,5,11,6,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100112", 100112, 6, "MND-004", "DM-B", 750, "Operador 12", "LM-2683", #datetime(2026,8,5,11,42,0), #datetime(2026,8,5,13,29,51), "Turno 1", null, "05/08/2026", null, null, 12, null, #datetime(2026,8,5,13,29,51), #datetime(2026,8,5,13,29,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100113", 100113, 4, "MND-023", "DM-A", 600, "Operador 20", "LM-2624", #datetime(2026,10,7,19,28,0), #datetime(2026,10,7,20,49,21), "Turno 2", null, "07/10/2026", null, null, 13, null, #datetime(2026,10,7,20,49,21), #datetime(2026,10,7,20,49,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100114", 100114, 4, "MND-023", "DM-A", 450, "Operador 21", "LM-2660", #datetime(2026,8,5,15,29,0), #datetime(2026,8,5,16,14,21), "Turno 2", null, "05/08/2026", null, null, 14, null, #datetime(2026,8,5,16,14,21), #datetime(2026,8,5,16,14,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100115", 100115, 6, "MND-051", "DM-A", 300, "Operador 10", "LM-2681", #datetime(2026,8,5,9,58,0), #datetime(2026,8,5,11,7,59), "Turno 1", null, "05/08/2026", null, null, 15, null, #datetime(2026,8,5,11,7,59), #datetime(2026,8,5,11,7,59), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100116", 100116, 6, "MND-020", "DM-B", 600, "Operador 07", "LM-2639", #datetime(2026,8,6,14,8,0), #datetime(2026,8,6,15,46,40), "Turno 2", null, "06/08/2026", null, null, 16, null, #datetime(2026,8,6,15,46,40), #datetime(2026,8,6,15,46,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100117", 100117, 6, "MND-012", "DM-A", 300, "Operador 18", "LM-2654", #datetime(2026,8,6,11,3,0), #datetime(2026,8,6,12,12,3), "Turno 1", null, "06/08/2026", null, null, 17, null, #datetime(2026,8,6,12,12,3), #datetime(2026,8,6,12,12,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100118", 100118, 8, "MND-018", "DM-A", 1000, "Operador 13", "LM-2618", #datetime(2026,10,20,9,43,0), #datetime(2026,10,20,10,30,4), "Turno 1", null, "20/10/2026", null, null, 18, null, #datetime(2026,10,20,10,30,4), #datetime(2026,10,20,10,30,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100119", 100119, 4, "MND-032", "DM-A", 600, "Operador 16", "LM-2622", #datetime(2026,8,6,10,10,0), #datetime(2026,8,6,11,7,40), "Turno 1", null, "06/08/2026", null, null, 19, null, #datetime(2026,8,6,11,7,40), #datetime(2026,8,6,11,7,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100120", 100120, 8, "MND-050", "DM-B", 450, "Operador 24", "LM-2637", #datetime(2026,8,6,5,47,0), #datetime(2026,8,6,7,1,17), "Turno 1", null, "06/08/2026", null, null, 20, null, #datetime(2026,8,6,7,1,17), #datetime(2026,8,6,7,1,17), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100121", 100121, 10, "MND-017", "DM-A", 1000, "Operador 18", "LM-2688", #datetime(2026,8,7,13,25,0), #datetime(2026,8,7,15,4,2), "Turno 2", null, "07/08/2026", null, null, 21, null, #datetime(2026,8,7,15,4,2), #datetime(2026,8,7,15,4,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100122", 100122, 10, "MND-008", "DM-B", 450, "Operador 23", "LM-2614", #datetime(2026,8,7,21,5,0), #datetime(2026,8,7,22,44,20), "Turno 3", null, "07/08/2026", null, null, 22, null, #datetime(2026,8,7,22,44,20), #datetime(2026,8,7,22,44,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100123", 100123, 6, "MND-022", "DM-A", 1000, "Operador 10", "LM-2652", #datetime(2026,8,13,12,49,0), #datetime(2026,8,13,14,15,1), "Turno 2", null, "13/08/2026", null, null, 23, null, #datetime(2026,8,13,14,15,1), #datetime(2026,8,13,14,15,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100124", 100124, 6, "MND-055", "DM-B", 800, "Operador 14", "LM-2614", #datetime(2026,9,18,9,29,0), #datetime(2026,9,18,10,18,24), "Turno 1", null, "18/09/2026", null, null, 24, null, #datetime(2026,9,18,10,18,24), #datetime(2026,9,18,10,18,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100125", 100125, 12, "MND-049", "DM-B", 1000, "Operador 16", "LM-2615", #datetime(2026,9,28,9,57,0), #datetime(2026,9,28,10,34,49), "Turno 1", null, "28/09/2026", null, null, 25, null, #datetime(2026,9,28,10,34,49), #datetime(2026,9,28,10,34,49), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100126", 100126, 8, "MND-059", "DM-B", 450, "Operador 02", "LM-2662", #datetime(2026,8,10,14,51,0), #datetime(2026,8,10,16,48,54), "Turno 2", null, "10/08/2026", null, null, 26, null, #datetime(2026,8,10,16,48,54), #datetime(2026,8,10,16,48,54), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100127", 100127, 10, "MND-005", "DM-A", 450, "Operador 10", "LM-2618", #datetime(2026,8,10,14,58,0), #datetime(2026,8,10,16,53,14), "Turno 2", null, "10/08/2026", null, null, 27, null, #datetime(2026,8,10,16,53,14), #datetime(2026,8,10,16,53,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100128", 100128, 6, "MND-002", "DM-A", 500, "Operador 07", "LM-2634", #datetime(2026,8,10,17,1,0), #datetime(2026,8,10,17,45,37), "Turno 2", null, "10/08/2026", null, null, 28, null, #datetime(2026,8,10,17,45,37), #datetime(2026,8,10,17,45,37), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100129", 100129, 8, "MND-035", "DM-B", 750, "Operador 08", "LM-2605", #datetime(2026,10,5,14,47,0), #datetime(2026,10,5,16,12,26), "Turno 2", null, "05/10/2026", null, null, 29, null, #datetime(2026,10,5,16,12,26), #datetime(2026,10,5,16,12,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100130", 100130, 6, "MND-056", "DM-A", 800, "Operador 05", "LM-2661", #datetime(2026,8,10,7,22,0), #datetime(2026,8,10,8,5,20), "Turno 1", null, "10/08/2026", null, null, 30, null, #datetime(2026,8,10,8,5,20), #datetime(2026,8,10,8,5,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100131", 100131, 10, "MND-003", "DM-B", 1500, "Operador 15", "LM-2612", #datetime(2026,9,28,19,49,0), #datetime(2026,9,28,21,40,43), "Turno 2", null, "28/09/2026", null, null, 31, null, #datetime(2026,9,28,21,40,43), #datetime(2026,9,28,21,40,43), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100132", 100132, 8, "MND-023", "DM-A", 1200, "Operador 11", "LM-2685", #datetime(2026,8,11,9,2,0), #datetime(2026,8,11,10,36,13), "Turno 1", null, "11/08/2026", null, null, 32, null, #datetime(2026,8,11,10,36,13), #datetime(2026,8,11,10,36,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100133", 100133, 6, "MND-035", "DM-B", 1200, "Operador 13", "LM-2658", #datetime(2026,9,28,10,7,0), #datetime(2026,9,28,11,26,25), "Turno 1", null, "28/09/2026", null, null, 33, null, #datetime(2026,9,28,11,26,25), #datetime(2026,9,28,11,26,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100134", 100134, 8, "MND-060", "DM-A", 1000, "Operador 16", "LM-2611", #datetime(2026,10,23,5,48,0), #datetime(2026,10,23,6,40,49), "Turno 1", null, "23/10/2026", null, null, 34, null, #datetime(2026,10,23,6,40,49), #datetime(2026,10,23,6,40,49), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100135", 100135, 8, "MND-013", "DM-A", 400, "Operador 08", "LM-2644", #datetime(2026,8,10,6,17,0), #datetime(2026,8,10,7,20,6), "Turno 1", null, "10/08/2026", null, null, 35, null, #datetime(2026,8,10,7,20,6), #datetime(2026,8,10,7,20,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100136", 100136, 8, "MND-034", "DM-A", 400, "Operador 22", "LM-2607", #datetime(2026,8,3,8,26,0), #datetime(2026,8,3,9,33,11), "Turno 1", null, "03/08/2026", null, null, 36, null, #datetime(2026,8,3,9,33,11), #datetime(2026,8,3,9,33,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100137", 100137, 8, "MND-057", "DM-A", 600, "Operador 07", "LM-2668", #datetime(2026,9,16,13,17,0), #datetime(2026,9,16,15,11,48), "Turno 2", null, "16/09/2026", null, null, 37, null, #datetime(2026,9,16,15,11,48), #datetime(2026,9,16,15,11,48), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100138", 100138, 8, "MND-016", "DM-B", 1200, "Operador 20", "LM-2699", #datetime(2026,8,13,10,17,0), #datetime(2026,8,13,11,12,21), "Turno 1", null, "13/08/2026", null, null, 38, null, #datetime(2026,8,13,11,12,21), #datetime(2026,8,13,11,12,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100139", 100139, 6, "MND-023", "DM-B", 1500, "Operador 13", "LM-2688", #datetime(2026,8,12,19,46,0), #datetime(2026,8,12,20,17,33), "Turno 2", null, "12/08/2026", null, null, 39, null, #datetime(2026,8,12,20,17,33), #datetime(2026,8,12,20,17,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100140", 100140, 16, "MND-027", "DM-A", 750, "Operador 20", "LM-2668", #datetime(2026,8,12,8,4,0), #datetime(2026,8,12,9,40,29), "Turno 1", null, "12/08/2026", null, null, 40, null, #datetime(2026,8,12,9,40,29), #datetime(2026,8,12,9,40,29), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100141", 100141, 12, "MND-020", "DM-B", 500, "Operador 03", "LM-2620", #datetime(2026,8,13,14,58,0), #datetime(2026,8,13,16,44,13), "Turno 2", null, "13/08/2026", null, null, 41, null, #datetime(2026,8,13,16,44,13), #datetime(2026,8,13,16,44,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100142", 100142, 6, "MND-007", "DM-B", 1200, "Operador 14", "LM-2603", #datetime(2026,9,9,5,41,0), #datetime(2026,9,9,7,37,33), "Turno 1", null, "09/09/2026", null, null, 42, null, #datetime(2026,9,9,7,37,33), #datetime(2026,9,9,7,37,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100143", 100143, 4, "MND-014", "DM-A", 1500, "Operador 22", "LM-2691", #datetime(2026,8,13,13,11,0), #datetime(2026,8,13,13,41,44), "Turno 2", null, "13/08/2026", null, null, 43, null, #datetime(2026,8,13,13,41,44), #datetime(2026,8,13,13,41,44), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100144", 100144, 6, "MND-053", "DM-A", 1200, "Operador 16", "LM-2674", #datetime(2026,8,13,17,53,0), #datetime(2026,8,13,19,14,6), "Turno 2", null, "13/08/2026", null, null, 44, null, #datetime(2026,8,13,19,14,6), #datetime(2026,8,13,19,14,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100145", 100145, 6, "MND-005", "DM-B", 500, "Operador 16", "LM-2652", #datetime(2026,10,15,16,22,0), #datetime(2026,10,15,18,10,24), "Turno 2", null, "15/10/2026", null, null, 45, null, #datetime(2026,10,15,18,10,24), #datetime(2026,10,15,18,10,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100146", 100146, 8, "MND-022", "DM-A", 1000, "Operador 22", "LM-2677", #datetime(2026,8,14,21,10,0), #datetime(2026,8,14,22,46,26), "Turno 3", null, "14/08/2026", null, null, 46, null, #datetime(2026,8,14,22,46,26), #datetime(2026,8,14,22,46,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100147", 100147, 8, "MND-053", "DM-A", 600, "Operador 21", "LM-2696", #datetime(2026,8,14,21,8,0), #datetime(2026,8,14,22,1,49), "Turno 2", null, "14/08/2026", null, null, 47, null, #datetime(2026,8,14,22,1,49), #datetime(2026,8,14,22,1,49), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100148", 100148, 10, "MND-053", "DM-B", 1200, "Operador 14", "LM-2631", #datetime(2026,8,3,12,6,0), #datetime(2026,8,3,14,3,5), "Turno 2", null, "03/08/2026", null, null, 48, null, #datetime(2026,8,3,14,3,5), #datetime(2026,8,3,14,3,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100149", 100149, 8, "MND-030", "DM-B", 400, "Operador 22", "LM-2613", #datetime(2026,8,14,19,24,0), #datetime(2026,8,14,21,3,2), "Turno 2", null, "14/08/2026", null, null, 49, null, #datetime(2026,8,14,21,3,2), #datetime(2026,8,14,21,3,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100150", 100150, 6, "MND-029", "DM-B", 750, "Operador 06", "LM-2680", #datetime(2026,10,13,16,1,0), #datetime(2026,10,13,17,52,34), "Turno 2", null, "13/10/2026", null, null, 50, null, #datetime(2026,10,13,17,52,34), #datetime(2026,10,13,17,52,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100151", 100151, 6, "MND-049", "DM-A", 400, "Operador 18", "LM-2648", #datetime(2026,10,22,7,31,0), #datetime(2026,10,22,8,56,56), "Turno 1", null, "22/10/2026", null, null, 51, null, #datetime(2026,10,22,8,56,56), #datetime(2026,10,22,8,56,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100152", 100152, 6, "MND-027", "DM-B", 1200, "Operador 02", "LM-2600", #datetime(2026,8,17,6,56,0), #datetime(2026,8,17,8,50,11), "Turno 1", null, "17/08/2026", null, null, 52, null, #datetime(2026,8,17,8,50,11), #datetime(2026,8,17,8,50,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100153", 100153, 8, "MND-043", "DM-B", 600, "Operador 21", "LM-2636", #datetime(2026,8,17,10,15,0), #datetime(2026,8,17,11,27,53), "Turno 1", null, "17/08/2026", null, null, 53, null, #datetime(2026,8,17,11,27,53), #datetime(2026,8,17,11,27,53), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100154", 100154, 6, "MND-049", "DM-B", 750, "Operador 17", "LM-2617", #datetime(2026,8,27,16,38,0), #datetime(2026,8,27,18,18,50), "Turno 2", null, "27/08/2026", null, null, 54, null, #datetime(2026,8,27,18,18,50), #datetime(2026,8,27,18,18,50), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100155", 100155, 4, "MND-006", "DM-B", 400, "Operador 08", "LM-2695", #datetime(2026,8,17,9,4,0), #datetime(2026,8,17,10,5,31), "Turno 1", null, "17/08/2026", null, null, 55, null, #datetime(2026,8,17,10,5,31), #datetime(2026,8,17,10,5,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100156", 100156, 12, "MND-041", "DM-B", 500, "Operador 12", "LM-2667", #datetime(2026,8,18,12,38,0), #datetime(2026,8,18,13,54,5), "Turno 2", null, "18/08/2026", null, null, 56, null, #datetime(2026,8,18,13,54,5), #datetime(2026,8,18,13,54,5), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100157", 100157, 6, "MND-010", "DM-B", 300, "Operador 20", "LM-2604", #datetime(2026,8,18,19,21,0), #datetime(2026,8,18,21,18,6), "Turno 2", null, "18/08/2026", null, null, 57, null, #datetime(2026,8,18,21,18,6), #datetime(2026,8,18,21,18,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100158", 100158, 8, "MND-021", "DM-A", 400, "Operador 07", "LM-2657", #datetime(2026,8,18,19,10,0), #datetime(2026,8,18,20,9,58), "Turno 2", null, "18/08/2026", null, null, 58, null, #datetime(2026,8,18,20,9,58), #datetime(2026,8,18,20,9,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100159", 100159, 4, "MND-034", "DM-A", 1500, "Operador 04", "LM-2651", #datetime(2026,8,18,21,45,0), #datetime(2026,8,18,22,43,37), "Turno 3", null, "18/08/2026", null, null, 59, null, #datetime(2026,8,18,22,43,37), #datetime(2026,8,18,22,43,37), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100160", 100160, 8, "MND-030", "DM-B", 1000, "Operador 09", "LM-2653", #datetime(2026,10,22,15,54,0), #datetime(2026,10,22,17,51,34), "Turno 2", null, "22/10/2026", null, null, 60, null, #datetime(2026,10,22,17,51,34), #datetime(2026,10,22,17,51,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100161", 100161, 6, "MND-029", "DM-A", 300, "Operador 19", "LM-2603", #datetime(2026,8,31,15,28,0), #datetime(2026,8,31,17,10,22), "Turno 2", null, "31/08/2026", null, null, 61, null, #datetime(2026,8,31,17,10,22), #datetime(2026,8,31,17,10,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100162", 100162, 10, "MND-056", "DM-B", 400, "Operador 17", "LM-2620", #datetime(2026,8,5,21,32,0), #datetime(2026,8,5,22,53,10), "Turno 3", null, "05/08/2026", null, null, 62, null, #datetime(2026,8,5,22,53,10), #datetime(2026,8,5,22,53,10), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100163", 100163, 6, "MND-004", "DM-A", 750, "Operador 08", "LM-2609", #datetime(2026,8,19,7,0,0), #datetime(2026,8,19,8,4,9), "Turno 1", null, "19/08/2026", null, null, 63, null, #datetime(2026,8,19,8,4,9), #datetime(2026,8,19,8,4,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100164", 100164, 8, "MND-052", "DM-B", 300, "Operador 11", "LM-2612", #datetime(2026,8,17,11,42,0), #datetime(2026,8,17,13,14,15), "Turno 1", null, "17/08/2026", null, null, 64, null, #datetime(2026,8,17,13,14,15), #datetime(2026,8,17,13,14,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100165", 100165, 10, "MND-033", "DM-A", 450, "Operador 22", "LM-2679", #datetime(2026,8,10,21,11,0), #datetime(2026,8,10,22,50,22), "Turno 3", null, "10/08/2026", null, null, 65, null, #datetime(2026,8,10,22,50,22), #datetime(2026,8,10,22,50,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100166", 100166, 8, "MND-045", "DM-B", 600, "Operador 10", "LM-2608", #datetime(2026,10,19,9,35,0), #datetime(2026,10,19,10,23,55), "Turno 1", null, "19/10/2026", null, null, 66, null, #datetime(2026,10,19,10,23,55), #datetime(2026,10,19,10,23,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100167", 100167, 4, "MND-047", "DM-B", 450, "Operador 22", "LM-2654", #datetime(2026,9,18,16,21,0), #datetime(2026,9,18,17,25,51), "Turno 2", null, "18/09/2026", null, null, 67, null, #datetime(2026,9,18,17,25,51), #datetime(2026,9,18,17,25,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100168", 100168, 6, "MND-019", "DM-A", 750, "Operador 19", "LM-2665", #datetime(2026,8,20,11,46,0), #datetime(2026,8,20,12,37,35), "Turno 1", null, "20/08/2026", null, null, 68, null, #datetime(2026,8,20,12,37,35), #datetime(2026,8,20,12,37,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100169", 100169, 6, "MND-046", "DM-A", 1000, "Operador 19", "LM-2643", #datetime(2026,8,20,11,49,0), #datetime(2026,8,20,12,47,2), "Turno 1", null, "20/08/2026", null, null, 69, null, #datetime(2026,8,20,12,47,2), #datetime(2026,8,20,12,47,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100170", 100170, 8, "MND-035", "DM-B", 300, "Operador 08", "LM-2683", #datetime(2026,8,21,21,53,0), #datetime(2026,8,21,23,9,43), "Turno 3", null, "21/08/2026", null, null, 70, null, #datetime(2026,8,21,23,9,43), #datetime(2026,8,21,23,9,43), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100171", 100171, 4, "MND-045", "DM-A", 800, "Operador 02", "LM-2636", #datetime(2026,9,1,16,4,0), #datetime(2026,9,1,16,51,58), "Turno 2", null, "01/09/2026", null, null, 71, null, #datetime(2026,9,1,16,51,58), #datetime(2026,9,1,16,51,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100172", 100172, 12, "MND-042", "DM-A", 800, "Operador 04", "LM-2678", #datetime(2026,8,21,7,36,0), #datetime(2026,8,21,9,13,48), "Turno 1", null, "21/08/2026", null, null, 72, null, #datetime(2026,8,21,9,13,48), #datetime(2026,8,21,9,13,48), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100173", 100173, 4, "MND-033", "DM-A", 400, "Operador 06", "LM-2620", #datetime(2026,8,21,17,56,0), #datetime(2026,8,21,18,57,16), "Turno 2", null, "21/08/2026", null, null, 73, null, #datetime(2026,8,21,18,57,16), #datetime(2026,8,21,18,57,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100174", 100174, 8, "MND-041", "DM-B", 750, "Operador 07", "LM-2655", #datetime(2026,8,21,14,9,0), #datetime(2026,8,21,16,7,11), "Turno 2", null, "21/08/2026", null, null, 74, null, #datetime(2026,8,21,16,7,11), #datetime(2026,8,21,16,7,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100175", 100175, 8, "MND-034", "DM-A", 500, "Operador 06", "LM-2659", #datetime(2026,8,24,7,1,0), #datetime(2026,8,24,7,54,34), "Turno 1", null, "24/08/2026", null, null, 75, null, #datetime(2026,8,24,7,54,34), #datetime(2026,8,24,7,54,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100176", 100176, 6, "MND-037", "DM-B", 600, "Operador 10", "LM-2649", #datetime(2026,8,24,19,23,0), #datetime(2026,8,24,20,45,33), "Turno 2", null, "24/08/2026", null, null, 76, null, #datetime(2026,8,24,20,45,33), #datetime(2026,8,24,20,45,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100177", 100177, 8, "MND-037", "DM-B", 800, "Operador 03", "LM-2675", #datetime(2026,8,24,10,30,0), #datetime(2026,8,24,11,53,43), "Turno 1", null, "24/08/2026", null, null, 77, null, #datetime(2026,8,24,11,53,43), #datetime(2026,8,24,11,53,43), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100178", 100178, 6, "MND-001", "DM-A", 400, "Operador 03", "LM-2665", #datetime(2026,8,24,12,1,0), #datetime(2026,8,24,13,35,46), "Turno 1", null, "24/08/2026", null, null, 78, null, #datetime(2026,8,24,13,35,46), #datetime(2026,8,24,13,35,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100179", 100179, 8, "MND-006", "DM-B", 600, "Operador 03", "LM-2677", #datetime(2026,8,24,12,5,0), #datetime(2026,8,24,13,33,55), "Turno 1", null, "24/08/2026", null, null, 79, null, #datetime(2026,8,24,13,33,55), #datetime(2026,8,24,13,33,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100180", 100180, 10, "MND-059", "DM-B", 1500, "Operador 13", "LM-2660", #datetime(2026,8,25,5,36,0), #datetime(2026,8,25,7,16,25), "Turno 1", null, "25/08/2026", null, null, 80, null, #datetime(2026,8,25,7,16,25), #datetime(2026,8,25,7,16,25), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100181", 100181, 8, "MND-020", "DM-A", 750, "Operador 10", "LM-2632", #datetime(2026,8,25,15,46,0), #datetime(2026,8,25,17,44,15), "Turno 2", null, "25/08/2026", null, null, 81, null, #datetime(2026,8,25,17,44,15), #datetime(2026,8,25,17,44,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100182", 100182, 8, "MND-054", "DM-B", 1000, "Operador 07", "LM-2649", #datetime(2026,8,25,21,14,0), #datetime(2026,8,25,21,50,48), "Turno 2", null, "25/08/2026", null, null, 82, null, #datetime(2026,8,25,21,50,48), #datetime(2026,8,25,21,50,48), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100183", 100183, 10, "MND-045", "DM-A", 1000, "Operador 19", "LM-2674", #datetime(2026,8,25,8,2,0), #datetime(2026,8,25,8,46,24), "Turno 1", null, "25/08/2026", null, null, 83, null, #datetime(2026,8,25,8,46,24), #datetime(2026,8,25,8,46,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100184", 100184, 8, "MND-042", "DM-B", 1000, "Operador 01", "LM-2613", #datetime(2026,8,25,6,29,0), #datetime(2026,8,25,8,16,2), "Turno 1", null, "25/08/2026", null, null, 84, null, #datetime(2026,8,25,8,16,2), #datetime(2026,8,25,8,16,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100185", 100185, 12, "MND-020", "DM-B", 300, "Operador 19", "LM-2684", #datetime(2026,10,6,7,3,0), #datetime(2026,10,6,8,29,35), "Turno 1", null, "06/10/2026", null, null, 85, null, #datetime(2026,10,6,8,29,35), #datetime(2026,10,6,8,29,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100186", 100186, 8, "MND-012", "DM-A", 500, "Operador 19", "LM-2605", #datetime(2026,8,26,10,45,0), #datetime(2026,8,26,11,26,50), "Turno 1", null, "26/08/2026", null, null, 86, null, #datetime(2026,8,26,11,26,50), #datetime(2026,8,26,11,26,50), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100187", 100187, 6, "MND-043", "DM-A", 600, "Operador 20", "LM-2681", #datetime(2026,10,9,10,47,0), #datetime(2026,10,9,11,57,7), "Turno 1", null, "09/10/2026", null, null, 87, null, #datetime(2026,10,9,11,57,7), #datetime(2026,10,9,11,57,7), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100188", 100188, 6, "MND-045", "DM-B", 450, "Operador 09", "LM-2662", #datetime(2026,8,26,8,45,0), #datetime(2026,8,26,9,41,4), "Turno 1", null, "26/08/2026", null, null, 88, null, #datetime(2026,8,26,9,41,4), #datetime(2026,8,26,9,41,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100189", 100189, 6, "MND-028", "DM-B", 800, "Operador 11", "LM-2610", #datetime(2026,8,26,19,8,0), #datetime(2026,8,26,20,22,13), "Turno 2", null, "26/08/2026", null, null, 89, null, #datetime(2026,8,26,20,22,13), #datetime(2026,8,26,20,22,13), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100190", 100190, 8, "MND-056", "DM-B", 1000, "Operador 24", "LM-2628", #datetime(2026,9,2,16,12,0), #datetime(2026,9,2,17,52,50), "Turno 2", null, "02/09/2026", null, null, 90, null, #datetime(2026,9,2,17,52,50), #datetime(2026,9,2,17,52,50), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100191", 100191, 4, "MND-014", "DM-A", 300, "Operador 12", "LM-2678", #datetime(2026,8,27,12,13,0), #datetime(2026,8,27,13,45,35), "Turno 2", null, "27/08/2026", null, null, 91, null, #datetime(2026,8,27,13,45,35), #datetime(2026,8,27,13,45,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100192", 100192, 8, "MND-028", "DM-A", 300, "Operador 10", "LM-2690", #datetime(2026,8,27,14,45,0), #datetime(2026,8,27,16,33,55), "Turno 2", null, "27/08/2026", null, null, 92, null, #datetime(2026,8,27,16,33,55), #datetime(2026,8,27,16,33,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100193", 100193, 8, "MND-016", "DM-B", 450, "Operador 09", "LM-2616", #datetime(2026,8,27,17,49,0), #datetime(2026,8,27,18,33,32), "Turno 2", null, "27/08/2026", null, null, 93, null, #datetime(2026,8,27,18,33,32), #datetime(2026,8,27,18,33,32), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100194", 100194, 8, "MND-044", "DM-B", 300, "Operador 17", "LM-2676", #datetime(2026,8,27,11,46,0), #datetime(2026,8,27,13,29,34), "Turno 1", null, "27/08/2026", null, null, 94, null, #datetime(2026,8,27,13,29,34), #datetime(2026,8,27,13,29,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100195", 100195, 6, "MND-031", "DM-A", 600, "Operador 12", "LM-2625", #datetime(2026,8,28,13,20,0), #datetime(2026,8,28,14,3,32), "Turno 2", null, "28/08/2026", null, null, 95, null, #datetime(2026,8,28,14,3,32), #datetime(2026,8,28,14,3,32), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100196", 100196, 8, "MND-046", "DM-A", 1000, "Operador 11", "LM-2639", #datetime(2026,8,28,8,39,0), #datetime(2026,8,28,10,11,27), "Turno 1", null, "28/08/2026", null, null, 96, null, #datetime(2026,8,28,10,11,27), #datetime(2026,8,28,10,11,27), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100197", 100197, 10, "MND-023", "DM-B", 450, "Operador 02", "LM-2683", #datetime(2026,10,23,5,11,0), #datetime(2026,10,23,7,7,20), "Turno 1", null, "23/10/2026", null, null, 97, null, #datetime(2026,10,23,7,7,20), #datetime(2026,10,23,7,7,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100198", 100198, 8, "MND-014", "DM-B", 800, "Operador 07", "LM-2675", #datetime(2026,8,28,8,4,0), #datetime(2026,8,28,9,16,6), "Turno 1", null, "28/08/2026", null, null, 98, null, #datetime(2026,8,28,9,16,6), #datetime(2026,8,28,9,16,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100199", 100199, 8, "MND-021", "DM-A", 750, "Operador 17", "LM-2633", #datetime(2026,8,28,17,52,0), #datetime(2026,8,28,19,30,26), "Turno 2", null, "28/08/2026", null, null, 99, null, #datetime(2026,8,28,19,30,26), #datetime(2026,8,28,19,30,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100200", 100200, 8, "MND-007", "DM-B", 750, "Operador 10", "LM-2689", #datetime(2026,9,10,5,1,0), #datetime(2026,9,10,6,2,56), "Turno 1", null, "10/09/2026", null, null, 100, null, #datetime(2026,9,10,6,2,56), #datetime(2026,9,10,6,2,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100201", 100201, 6, "MND-054", "DM-A", 1000, "Operador 08", "LM-2639", #datetime(2026,8,31,7,22,0), #datetime(2026,8,31,7,54,3), "Turno 1", null, "31/08/2026", null, null, 101, null, #datetime(2026,8,31,7,54,3), #datetime(2026,8,31,7,54,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100202", 100202, 12, "MND-016", "DM-B", 300, "Operador 07", "LM-2603", #datetime(2026,8,7,7,18,0), #datetime(2026,8,7,9,6,51), "Turno 1", null, "07/08/2026", null, null, 102, null, #datetime(2026,8,7,9,6,51), #datetime(2026,8,7,9,6,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100203", 100203, 8, "MND-015", "DM-B", 1500, "Operador 10", "LM-2673", #datetime(2026,8,31,21,14,0), #datetime(2026,8,31,21,59,11), "Turno 2", null, "31/08/2026", null, null, 103, null, #datetime(2026,8,31,21,59,11), #datetime(2026,8,31,21,59,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100204", 100204, 8, "MND-050", "DM-A", 400, "Operador 01", "LM-2641", #datetime(2026,9,9,14,7,0), #datetime(2026,9,9,16,3,26), "Turno 2", null, "09/09/2026", null, null, 104, null, #datetime(2026,9,9,16,3,26), #datetime(2026,9,9,16,3,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100205", 100205, 12, "MND-023", "DM-A", 800, "Operador 12", "LM-2660", #datetime(2026,9,29,13,44,0), #datetime(2026,9,29,15,21,46), "Turno 2", null, "29/09/2026", null, null, 105, null, #datetime(2026,9,29,15,21,46), #datetime(2026,9,29,15,21,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100206", 100206, 10, "MND-047", "DM-A", 1000, "Operador 10", "LM-2645", #datetime(2026,9,1,9,38,0), #datetime(2026,9,1,10,34,11), "Turno 1", null, "01/09/2026", null, null, 106, null, #datetime(2026,9,1,10,34,11), #datetime(2026,9,1,10,34,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100207", 100207, 6, "MND-040", "DM-A", 600, "Operador 05", "LM-2687", #datetime(2026,9,1,21,7,0), #datetime(2026,9,1,22,2,36), "Turno 2", null, "01/09/2026", null, null, 107, null, #datetime(2026,9,1,22,2,36), #datetime(2026,9,1,22,2,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100208", 100208, 6, "MND-051", "DM-A", 450, "Operador 02", "LM-2639", #datetime(2026,9,29,9,4,0), #datetime(2026,9,29,10,46,29), "Turno 1", null, "29/09/2026", null, null, 108, null, #datetime(2026,9,29,10,46,29), #datetime(2026,9,29,10,46,29), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100209", 100209, 16, "MND-045", "DM-A", 1500, "Operador 13", "LM-2645", #datetime(2026,9,1,8,1,0), #datetime(2026,9,1,9,45,28), "Turno 1", null, "01/09/2026", null, null, 109, null, #datetime(2026,9,1,9,45,28), #datetime(2026,9,1,9,45,28), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100210", 100210, 10, "MND-003", "DM-A", 400, "Operador 15", "LM-2674", #datetime(2026,9,2,7,35,0), #datetime(2026,9,2,9,9,12), "Turno 1", null, "02/09/2026", null, null, 110, null, #datetime(2026,9,2,9,9,12), #datetime(2026,9,2,9,9,12), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100211", 100211, 10, "MND-057", "DM-A", 1000, "Operador 12", "LM-2617", #datetime(2026,9,2,14,42,0), #datetime(2026,9,2,16,21,46), "Turno 2", null, "02/09/2026", null, null, 111, null, #datetime(2026,9,2,16,21,46), #datetime(2026,9,2,16,21,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100212", 100212, 8, "MND-048", "DM-B", 400, "Operador 08", "LM-2680", #datetime(2026,9,2,6,26,0), #datetime(2026,9,2,7,28,32), "Turno 1", null, "02/09/2026", null, null, 112, null, #datetime(2026,9,2,7,28,32), #datetime(2026,9,2,7,28,32), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100213", 100213, 6, "MND-048", "DM-A", 450, "Operador 20", "LM-2632", #datetime(2026,9,2,10,24,0), #datetime(2026,9,2,11,18,17), "Turno 1", null, "02/09/2026", null, null, 113, null, #datetime(2026,9,2,11,18,17), #datetime(2026,9,2,11,18,17), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100214", 100214, 10, "MND-037", "DM-B", 400, "Operador 05", "LM-2641", #datetime(2026,9,2,7,4,0), #datetime(2026,9,2,7,59,10), "Turno 1", null, "02/09/2026", null, null, 114, null, #datetime(2026,9,2,7,59,10), #datetime(2026,9,2,7,59,10), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100215", 100215, 12, "MND-028", "DM-A", 1200, "Operador 08", "LM-2678", #datetime(2026,9,3,7,26,0), #datetime(2026,9,3,9,8,6), "Turno 1", null, "03/09/2026", null, null, 115, null, #datetime(2026,9,3,9,8,6), #datetime(2026,9,3,9,8,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100216", 100216, 8, "MND-032", "DM-B", 600, "Operador 03", "LM-2618", #datetime(2026,9,3,7,50,0), #datetime(2026,9,3,8,41,58), "Turno 1", null, "03/09/2026", null, null, 116, null, #datetime(2026,9,3,8,41,58), #datetime(2026,9,3,8,41,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100217", 100217, 6, "MND-020", "DM-B", 300, "Operador 24", "LM-2621", #datetime(2026,9,3,5,29,0), #datetime(2026,9,3,7,15,9), "Turno 1", null, "03/09/2026", null, null, 117, null, #datetime(2026,9,3,7,15,9), #datetime(2026,9,3,7,15,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100218", 100218, 6, "MND-021", "DM-B", 300, "Operador 21", "LM-2670", #datetime(2026,9,3,13,56,0), #datetime(2026,9,3,15,16,1), "Turno 2", null, "03/09/2026", null, null, 118, null, #datetime(2026,9,3,15,16,1), #datetime(2026,9,3,15,16,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100219", 100219, 8, "MND-014", "DM-A", 1000, "Operador 21", "LM-2629", #datetime(2026,9,3,6,43,0), #datetime(2026,9,3,7,13,37), "Turno 1", null, "03/09/2026", null, null, 119, null, #datetime(2026,9,3,7,13,37), #datetime(2026,9,3,7,13,37), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100220", 100220, 6, "MND-044", "DM-B", 800, "Operador 24", "LM-2641", #datetime(2026,9,1,19,46,0), #datetime(2026,9,1,20,21,16), "Turno 2", null, "01/09/2026", null, null, 120, null, #datetime(2026,9,1,20,21,16), #datetime(2026,9,1,20,21,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100221", 100221, 10, "MND-034", "DM-B", 450, "Operador 19", "LM-2616", #datetime(2026,9,4,21,49,0), #datetime(2026,9,4,22,48,36), "Turno 3", null, "04/09/2026", null, null, 121, null, #datetime(2026,9,4,22,48,36), #datetime(2026,9,4,22,48,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100222", 100222, 12, "MND-024", "DM-B", 750, "Operador 07", "LM-2623", #datetime(2026,9,4,14,47,0), #datetime(2026,9,4,15,17,1), "Turno 2", null, "04/09/2026", null, null, 122, null, #datetime(2026,9,4,15,17,1), #datetime(2026,9,4,15,17,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100223", 100223, 4, "MND-002", "DM-B", 450, "Operador 13", "LM-2635", #datetime(2026,9,4,19,12,0), #datetime(2026,9,4,20,16,17), "Turno 2", null, "04/09/2026", null, null, 123, null, #datetime(2026,9,4,20,16,17), #datetime(2026,9,4,20,16,17), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100224", 100224, 10, "MND-017", "DM-B", 400, "Operador 08", "LM-2632", #datetime(2026,10,20,5,38,0), #datetime(2026,10,20,6,32,1), "Turno 1", null, "20/10/2026", null, null, 124, null, #datetime(2026,10,20,6,32,1), #datetime(2026,10,20,6,32,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100225", 100225, 4, "MND-009", "DM-B", 800, "Operador 17", "LM-2678", #datetime(2026,9,7,15,15,0), #datetime(2026,9,7,16,52,37), "Turno 2", null, "07/09/2026", null, null, 125, null, #datetime(2026,9,7,16,52,37), #datetime(2026,9,7,16,52,37), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100226", 100226, 4, "MND-015", "DM-B", 750, "Operador 01", "LM-2651", #datetime(2026,9,7,8,20,0), #datetime(2026,9,7,10,10,56), "Turno 1", null, "07/09/2026", null, null, 126, null, #datetime(2026,9,7,10,10,56), #datetime(2026,9,7,10,10,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100227", 100227, 4, "MND-029", "DM-B", 500, "Operador 11", "LM-2633", #datetime(2026,9,7,5,14,0), #datetime(2026,9,7,6,16,35), "Turno 1", null, "07/09/2026", null, null, 127, null, #datetime(2026,9,7,6,16,35), #datetime(2026,9,7,6,16,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100228", 100228, 8, "MND-054", "DM-B", 750, "Operador 04", "LM-2608", #datetime(2026,9,7,21,49,0), #datetime(2026,9,7,23,10,33), "Turno 3", null, "07/09/2026", null, null, 128, null, #datetime(2026,9,7,23,10,33), #datetime(2026,9,7,23,10,33), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100229", 100229, 8, "MND-017", "DM-A", 1000, "Operador 10", "LM-2658", #datetime(2026,9,8,17,18,0), #datetime(2026,9,8,18,31,29), "Turno 2", null, "08/09/2026", null, null, 129, null, #datetime(2026,9,8,18,31,29), #datetime(2026,9,8,18,31,29), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100230", 100230, 12, "MND-058", "DM-B", 300, "Operador 15", "LM-2612", #datetime(2026,9,8,9,16,0), #datetime(2026,9,8,11,3,30), "Turno 1", null, "08/09/2026", null, null, 130, null, #datetime(2026,9,8,11,3,30), #datetime(2026,9,8,11,3,30), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100231", 100231, 4, "MND-009", "DM-B", 400, "Operador 04", "LM-2606", #datetime(2026,9,8,10,13,0), #datetime(2026,9,8,10,56,45), "Turno 1", null, "08/09/2026", null, null, 131, null, #datetime(2026,9,8,10,56,45), #datetime(2026,9,8,10,56,45), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100232", 100232, 12, "MND-012", "DM-A", 500, "Operador 02", "LM-2628", #datetime(2026,9,8,19,46,0), #datetime(2026,9,8,20,31,4), "Turno 2", null, "08/09/2026", null, null, 132, null, #datetime(2026,9,8,20,31,4), #datetime(2026,9,8,20,31,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100233", 100233, 8, "MND-031", "DM-B", 800, "Operador 23", "LM-2676", #datetime(2026,8,12,15,39,0), #datetime(2026,8,12,16,49,41), "Turno 2", null, "12/08/2026", null, null, 133, null, #datetime(2026,8,12,16,49,41), #datetime(2026,8,12,16,49,41), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100234", 100234, 10, "MND-034", "DM-B", 800, "Operador 10", "LM-2638", #datetime(2026,9,9,13,43,0), #datetime(2026,9,9,14,44,9), "Turno 2", null, "09/09/2026", null, null, 134, null, #datetime(2026,9,9,14,44,9), #datetime(2026,9,9,14,44,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100235", 100235, 12, "MND-044", "DM-A", 1000, "Operador 10", "LM-2645", #datetime(2026,9,9,12,25,0), #datetime(2026,9,9,13,30,34), "Turno 1", null, "09/09/2026", null, null, 135, null, #datetime(2026,9,9,13,30,34), #datetime(2026,9,9,13,30,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100236", 100236, 4, "MND-029", "DM-A", 500, "Operador 19", "LM-2697", #datetime(2026,9,21,13,38,0), #datetime(2026,9,21,14,14,34), "Turno 2", null, "21/09/2026", null, null, 136, null, #datetime(2026,9,21,14,14,34), #datetime(2026,9,21,14,14,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100237", 100237, 4, "MND-003", "DM-B", 1000, "Operador 13", "LM-2632", #datetime(2026,9,9,12,32,0), #datetime(2026,9,9,13,9,24), "Turno 1", null, "09/09/2026", null, null, 137, null, #datetime(2026,9,9,13,9,24), #datetime(2026,9,9,13,9,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100238", 100238, 12, "MND-015", "DM-A", 1500, "Operador 19", "LM-2603", #datetime(2026,9,9,5,43,0), #datetime(2026,9,9,6,39,22), "Turno 1", null, "09/09/2026", null, null, 138, null, #datetime(2026,9,9,6,39,22), #datetime(2026,9,9,6,39,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100239", 100239, 6, "MND-004", "DM-B", 1200, "Operador 20", "LM-2668", #datetime(2026,9,10,6,2,0), #datetime(2026,9,10,7,8,51), "Turno 1", null, "10/09/2026", null, null, 139, null, #datetime(2026,9,10,7,8,51), #datetime(2026,9,10,7,8,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100240", 100240, 8, "MND-004", "DM-B", 450, "Operador 02", "LM-2658", #datetime(2026,9,10,6,19,0), #datetime(2026,9,10,6,59,20), "Turno 1", null, "10/09/2026", null, null, 140, null, #datetime(2026,9,10,6,59,20), #datetime(2026,9,10,6,59,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100241", 100241, 6, "MND-019", "DM-B", 500, "Operador 09", "LM-2644", #datetime(2026,9,10,7,44,0), #datetime(2026,9,10,8,20,47), "Turno 1", null, "10/09/2026", null, null, 141, null, #datetime(2026,9,10,8,20,47), #datetime(2026,9,10,8,20,47), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100242", 100242, 16, "MND-018", "DM-B", 300, "Operador 09", "LM-2624", #datetime(2026,9,8,12,27,0), #datetime(2026,9,8,13,4,20), "Turno 1", null, "08/09/2026", null, null, 142, null, #datetime(2026,9,8,13,4,20), #datetime(2026,9,8,13,4,20), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100243", 100243, 16, "MND-038", "DM-A", 750, "Operador 19", "LM-2615", #datetime(2026,9,25,8,4,0), #datetime(2026,9,25,9,9,45), "Turno 1", null, "25/09/2026", null, null, 143, null, #datetime(2026,9,25,9,9,45), #datetime(2026,9,25,9,9,45), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100244", 100244, 4, "MND-041", "DM-B", 1000, "Operador 24", "LM-2688", #datetime(2026,9,11,13,44,0), #datetime(2026,9,11,15,9,12), "Turno 2", null, "11/09/2026", null, null, 144, null, #datetime(2026,9,11,15,9,12), #datetime(2026,9,11,15,9,12), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100245", 100245, 6, "MND-037", "DM-A", 1200, "Operador 16", "LM-2675", #datetime(2026,10,26,17,16,0), #datetime(2026,10,26,19,6,40), "Turno 2", null, "26/10/2026", null, null, 145, null, #datetime(2026,10,26,19,6,40), #datetime(2026,10,26,19,6,40), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100246", 100246, 4, "MND-012", "DM-B", 450, "Operador 07", "LM-2651", #datetime(2026,9,11,19,1,0), #datetime(2026,9,11,20,9,27), "Turno 2", null, "11/09/2026", null, null, 146, null, #datetime(2026,9,11,20,9,27), #datetime(2026,9,11,20,9,27), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100247", 100247, 4, "MND-009", "DM-B", 1000, "Operador 10", "LM-2615", #datetime(2026,9,15,11,51,0), #datetime(2026,9,15,12,42,36), "Turno 1", null, "15/09/2026", null, null, 147, null, #datetime(2026,9,15,12,42,36), #datetime(2026,9,15,12,42,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100248", 100248, 6, "MND-050", "DM-B", 1200, "Operador 11", "LM-2671", #datetime(2026,10,22,21,35,0), #datetime(2026,10,22,22,19,10), "Turno 2", null, "22/10/2026", null, null, 148, null, #datetime(2026,10,22,22,19,10), #datetime(2026,10,22,22,19,10), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100249", 100249, 8, "MND-029", "DM-B", 600, "Operador 01", "LM-2685", #datetime(2026,8,5,19,7,0), #datetime(2026,8,5,20,20,1), "Turno 2", null, "05/08/2026", null, null, 149, null, #datetime(2026,8,5,20,20,1), #datetime(2026,8,5,20,20,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100250", 100250, 6, "MND-035", "DM-B", 800, "Operador 10", "LM-2675", #datetime(2026,9,14,13,59,0), #datetime(2026,9,14,14,37,9), "Turno 2", null, "14/09/2026", null, null, 150, null, #datetime(2026,9,14,14,37,9), #datetime(2026,9,14,14,37,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100251", 100251, 6, "MND-042", "DM-A", 800, "Operador 10", "LM-2645", #datetime(2026,9,24,13,29,0), #datetime(2026,9,24,14,35,23), "Turno 2", null, "24/09/2026", null, null, 151, null, #datetime(2026,9,24,14,35,23), #datetime(2026,9,24,14,35,23), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100252", 100252, 4, "MND-024", "DM-B", 400, "Operador 15", "LM-2602", #datetime(2026,9,14,6,39,0), #datetime(2026,9,14,7,52,16), "Turno 1", null, "14/09/2026", null, null, 152, null, #datetime(2026,9,14,7,52,16), #datetime(2026,9,14,7,52,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100253", 100253, 8, "MND-017", "DM-B", 800, "Operador 19", "LM-2697", #datetime(2026,9,14,14,58,0), #datetime(2026,9,14,16,25,50), "Turno 2", null, "14/09/2026", null, null, 153, null, #datetime(2026,9,14,16,25,50), #datetime(2026,9,14,16,25,50), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100254", 100254, 6, "MND-012", "DM-A", 750, "Operador 18", "LM-2665", #datetime(2026,8,12,17,3,0), #datetime(2026,8,12,18,12,2), "Turno 2", null, "12/08/2026", null, null, 154, null, #datetime(2026,8,12,18,12,2), #datetime(2026,8,12,18,12,2), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100255", 100255, 8, "MND-001", "DM-B", 1200, "Operador 14", "LM-2646", #datetime(2026,10,22,8,36,0), #datetime(2026,10,22,9,38,21), "Turno 1", null, "22/10/2026", null, null, 155, null, #datetime(2026,10,22,9,38,21), #datetime(2026,10,22,9,38,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100256", 100256, 8, "MND-045", "DM-B", 1000, "Operador 11", "LM-2655", #datetime(2026,9,15,15,55,0), #datetime(2026,9,15,17,48,38), "Turno 2", null, "15/09/2026", null, null, 156, null, #datetime(2026,9,15,17,48,38), #datetime(2026,9,15,17,48,38), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100257", 100257, 8, "MND-044", "DM-A", 1200, "Operador 11", "LM-2694", #datetime(2026,9,15,7,41,0), #datetime(2026,9,15,9,23,42), "Turno 1", null, "15/09/2026", null, null, 157, null, #datetime(2026,9,15,9,23,42), #datetime(2026,9,15,9,23,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100258", 100258, 6, "MND-049", "DM-A", 300, "Operador 20", "LM-2668", #datetime(2026,9,15,12,8,0), #datetime(2026,9,15,12,43,34), "Turno 1", null, "15/09/2026", null, null, 158, null, #datetime(2026,9,15,12,43,34), #datetime(2026,9,15,12,43,34), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100259", 100259, 8, "MND-050", "DM-A", 600, "Operador 20", "LM-2699", #datetime(2026,9,16,9,15,0), #datetime(2026,9,16,10,25,36), "Turno 1", null, "16/09/2026", null, null, 159, null, #datetime(2026,9,16,10,25,36), #datetime(2026,9,16,10,25,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100260", 100260, 8, "MND-026", "DM-A", 1000, "Operador 05", "LM-2631", #datetime(2026,9,16,16,4,0), #datetime(2026,9,16,16,59,12), "Turno 2", null, "16/09/2026", null, null, 160, null, #datetime(2026,9,16,16,59,12), #datetime(2026,9,16,16,59,12), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100261", 100261, 6, "MND-019", "DM-B", 450, "Operador 08", "LM-2665", #datetime(2026,9,16,8,36,0), #datetime(2026,9,16,9,23,6), "Turno 1", null, "16/09/2026", null, null, 161, null, #datetime(2026,9,16,9,23,6), #datetime(2026,9,16,9,23,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100262", 100262, 6, "MND-026", "DM-A", 750, "Operador 17", "LM-2638", #datetime(2026,10,23,13,2,0), #datetime(2026,10,23,14,43,3), "Turno 2", null, "23/10/2026", null, null, 162, null, #datetime(2026,10,23,14,43,3), #datetime(2026,10,23,14,43,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100263", 100263, 10, "MND-043", "DM-B", 450, "Operador 14", "LM-2637", #datetime(2026,9,16,13,49,0), #datetime(2026,9,16,14,42,21), "Turno 2", null, "16/09/2026", null, null, 163, null, #datetime(2026,9,16,14,42,21), #datetime(2026,9,16,14,42,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100264", 100264, 8, "MND-052", "DM-A", 600, "Operador 23", "LM-2644", #datetime(2026,9,17,13,40,0), #datetime(2026,9,17,15,31,55), "Turno 2", null, "17/09/2026", null, null, 164, null, #datetime(2026,9,17,15,31,55), #datetime(2026,9,17,15,31,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100265", 100265, 8, "MND-029", "DM-A", 1200, "Operador 16", "LM-2668", #datetime(2026,9,17,19,47,0), #datetime(2026,9,17,20,26,4), "Turno 2", null, "17/09/2026", null, null, 165, null, #datetime(2026,9,17,20,26,4), #datetime(2026,9,17,20,26,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100266", 100266, 8, "MND-048", "DM-B", 400, "Operador 10", "LM-2662", #datetime(2026,9,17,13,4,0), #datetime(2026,9,17,14,5,30), "Turno 2", null, "17/09/2026", null, null, 166, null, #datetime(2026,9,17,14,5,30), #datetime(2026,9,17,14,5,30), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100267", 100267, 8, "MND-012", "DM-B", 1500, "Operador 05", "LM-2624", #datetime(2026,9,17,10,58,0), #datetime(2026,9,17,12,8,12), "Turno 1", null, "17/09/2026", null, null, 167, null, #datetime(2026,9,17,12,8,12), #datetime(2026,9,17,12,8,12), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100268", 100268, 4, "MND-028", "DM-B", 600, "Operador 06", "LM-2614", #datetime(2026,9,17,12,31,0), #datetime(2026,9,17,13,10,48), "Turno 1", null, "17/09/2026", null, null, 168, null, #datetime(2026,9,17,13,10,48), #datetime(2026,9,17,13,10,48), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100269", 100269, 10, "MND-051", "DM-B", 800, "Operador 07", "LM-2610", #datetime(2026,9,18,11,13,0), #datetime(2026,9,18,13,8,46), "Turno 1", null, "18/09/2026", null, null, 169, null, #datetime(2026,9,18,13,8,46), #datetime(2026,9,18,13,8,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100270", 100270, 8, "MND-040", "DM-B", 500, "Operador 19", "LM-2655", #datetime(2026,9,18,15,3,0), #datetime(2026,9,18,16,20,58), "Turno 2", null, "18/09/2026", null, null, 170, null, #datetime(2026,9,18,16,20,58), #datetime(2026,9,18,16,20,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100271", 100271, 8, "MND-026", "DM-B", 400, "Operador 09", "LM-2663", #datetime(2026,9,18,9,7,0), #datetime(2026,9,18,10,58,4), "Turno 1", null, "18/09/2026", null, null, 171, null, #datetime(2026,9,18,10,58,4), #datetime(2026,9,18,10,58,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100272", 100272, 6, "MND-017", "DM-A", 400, "Operador 01", "LM-2644", #datetime(2026,9,18,9,8,0), #datetime(2026,9,18,10,46,28), "Turno 1", null, "18/09/2026", null, null, 172, null, #datetime(2026,9,18,10,46,28), #datetime(2026,9,18,10,46,28), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100273", 100273, 8, "MND-058", "DM-A", 1000, "Operador 10", "LM-2670", #datetime(2026,9,18,8,39,0), #datetime(2026,9,18,9,27,55), "Turno 1", null, "18/09/2026", null, null, 173, null, #datetime(2026,9,18,9,27,55), #datetime(2026,9,18,9,27,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100274", 100274, 6, "MND-025", "DM-B", 750, "Operador 23", "LM-2622", #datetime(2026,9,21,14,43,0), #datetime(2026,9,21,15,29,32), "Turno 2", null, "21/09/2026", null, null, 174, null, #datetime(2026,9,21,15,29,32), #datetime(2026,9,21,15,29,32), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100275", 100275, 16, "MND-053", "DM-A", 750, "Operador 08", "LM-2615", #datetime(2026,8,4,13,33,0), #datetime(2026,8,4,14,51,4), "Turno 2", null, "04/08/2026", null, null, 175, null, #datetime(2026,8,4,14,51,4), #datetime(2026,8,4,14,51,4), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100276", 100276, 10, "MND-041", "DM-B", 1000, "Operador 16", "LM-2612", #datetime(2026,9,21,12,49,0), #datetime(2026,9,21,14,19,35), "Turno 2", null, "21/09/2026", null, null, 176, null, #datetime(2026,9,21,14,19,35), #datetime(2026,9,21,14,19,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100277", 100277, 6, "MND-043", "DM-B", 1000, "Operador 03", "LM-2605", #datetime(2026,8,11,14,26,0), #datetime(2026,8,11,15,6,59), "Turno 2", null, "11/08/2026", null, null, 177, null, #datetime(2026,8,11,15,6,59), #datetime(2026,8,11,15,6,59), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100278", 100278, 6, "MND-015", "DM-B", 1000, "Operador 22", "LM-2669", #datetime(2026,10,12,17,37,0), #datetime(2026,10,12,18,37,58), "Turno 2", null, "12/10/2026", null, null, 178, null, #datetime(2026,10,12,18,37,58), #datetime(2026,10,12,18,37,58), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100279", 100279, 6, "MND-019", "DM-A", 300, "Operador 20", "LM-2664", #datetime(2026,9,22,10,4,0), #datetime(2026,9,22,10,56,7), "Turno 1", null, "22/09/2026", null, null, 179, null, #datetime(2026,9,22,10,56,7), #datetime(2026,9,22,10,56,7), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100280", 100280, 6, "MND-035", "DM-A", 1000, "Operador 06", "LM-2619", #datetime(2026,9,22,13,48,0), #datetime(2026,9,22,14,44,30), "Turno 2", null, "22/09/2026", null, null, 180, null, #datetime(2026,9,22,14,44,30), #datetime(2026,9,22,14,44,30), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100281", 100281, 10, "MND-017", "DM-A", 400, "Operador 20", "LM-2623", #datetime(2026,9,22,15,39,0), #datetime(2026,9,22,17,28,57), "Turno 2", null, "22/09/2026", null, null, 181, null, #datetime(2026,9,22,17,28,57), #datetime(2026,9,22,17,28,57), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100282", 100282, 6, "MND-032", "DM-B", 1000, "Operador 02", "LM-2642", #datetime(2026,8,3,7,10,0), #datetime(2026,8,3,8,18,53), "Turno 1", null, "03/08/2026", null, null, 182, null, #datetime(2026,8,3,8,18,53), #datetime(2026,8,3,8,18,53), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100283", 100283, 12, "MND-001", "DM-A", 500, "Operador 19", "LM-2697", #datetime(2026,8,21,13,49,0), #datetime(2026,8,21,14,31,51), "Turno 2", null, "21/08/2026", null, null, 183, null, #datetime(2026,8,21,14,31,51), #datetime(2026,8,21,14,31,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100284", 100284, 6, "MND-006", "DM-A", 500, "Operador 08", "LM-2605", #datetime(2026,9,9,21,4,0), #datetime(2026,9,9,21,45,0), "Turno 2", null, "09/09/2026", null, null, 184, null, #datetime(2026,9,9,21,45,0), #datetime(2026,9,9,21,45,0), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100285", 100285, 8, "MND-038", "DM-B", 1200, "Operador 22", "LM-2600", #datetime(2026,9,23,8,16,0), #datetime(2026,9,23,10,9,7), "Turno 1", null, "23/09/2026", null, null, 185, null, #datetime(2026,9,23,10,9,7), #datetime(2026,9,23,10,9,7), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100286", 100286, 8, "MND-027", "DM-A", 450, "Operador 17", "LM-2691", #datetime(2026,9,23,10,59,0), #datetime(2026,9,23,12,57,46), "Turno 1", null, "23/09/2026", null, null, 186, null, #datetime(2026,9,23,12,57,46), #datetime(2026,9,23,12,57,46), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100287", 100287, 4, "MND-053", "DM-A", 1500, "Operador 09", "LM-2661", #datetime(2026,9,23,16,56,0), #datetime(2026,9,23,18,2,51), "Turno 2", null, "23/09/2026", null, null, 187, null, #datetime(2026,9,23,18,2,51), #datetime(2026,9,23,18,2,51), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100288", 100288, 4, "MND-058", "DM-A", 800, "Operador 22", "LM-2609", #datetime(2026,10,9,13,7,0), #datetime(2026,10,9,14,18,36), "Turno 2", null, "09/10/2026", null, null, 188, null, #datetime(2026,10,9,14,18,36), #datetime(2026,10,9,14,18,36), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100289", 100289, 6, "MND-021", "DM-B", 450, "Operador 07", "LM-2628", #datetime(2026,9,25,5,48,0), #datetime(2026,9,25,7,44,55), "Turno 1", null, "25/09/2026", null, null, 189, null, #datetime(2026,9,25,7,44,55), #datetime(2026,9,25,7,44,55), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100290", 100290, 4, "MND-006", "DM-A", 450, "Operador 23", "LM-2695", #datetime(2026,9,24,13,16,0), #datetime(2026,9,24,14,35,6), "Turno 2", null, "24/09/2026", null, null, 190, null, #datetime(2026,9,24,14,35,6), #datetime(2026,9,24,14,35,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100291", 100291, 6, "MND-026", "DM-A", 500, "Operador 22", "LM-2658", #datetime(2026,9,24,12,6,0), #datetime(2026,9,24,13,18,15), "Turno 1", null, "24/09/2026", null, null, 191, null, #datetime(2026,9,24,13,18,15), #datetime(2026,9,24,13,18,15), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100292", 100292, 10, "MND-013", "DM-A", 800, "Operador 04", "LM-2626", #datetime(2026,9,24,14,49,0), #datetime(2026,9,24,15,47,18), "Turno 2", null, "24/09/2026", null, null, 192, null, #datetime(2026,9,24,15,47,18), #datetime(2026,9,24,15,47,18), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100293", 100293, 4, "MND-014", "DM-A", 750, "Operador 05", "LM-2655", #datetime(2026,9,25,10,40,0), #datetime(2026,9,25,12,29,1), "Turno 1", null, "25/09/2026", null, null, 193, null, #datetime(2026,9,25,12,29,1), #datetime(2026,9,25,12,29,1), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100294", 100294, 6, "MND-034", "DM-B", 1200, "Operador 23", "LM-2620", #datetime(2026,9,25,9,23,0), #datetime(2026,9,25,10,37,3), "Turno 1", null, "25/09/2026", null, null, 194, null, #datetime(2026,9,25,10,37,3), #datetime(2026,9,25,10,37,3), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100295", 100295, 12, "MND-047", "DM-A", 1000, "Operador 02", "LM-2623", #datetime(2026,9,25,21,56,0), #datetime(2026,9,25,23,5,52), "Turno 3", null, "25/09/2026", null, null, 195, null, #datetime(2026,9,25,23,5,52), #datetime(2026,9,25,23,5,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100296", 100296, 16, "MND-014", "DM-A", 500, "Operador 23", "LM-2602", #datetime(2026,9,4,19,50,0), #datetime(2026,9,4,21,8,52), "Turno 2", null, "04/09/2026", null, null, 196, null, #datetime(2026,9,4,21,8,52), #datetime(2026,9,4,21,8,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100297", 100297, 6, "MND-047", "DM-B", 800, "Operador 08", "LM-2699", #datetime(2026,9,28,10,3,0), #datetime(2026,9,28,11,39,53), "Turno 1", null, "28/09/2026", null, null, 197, null, #datetime(2026,9,28,11,39,53), #datetime(2026,9,28,11,39,53), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100298", 100298, 10, "MND-018", "DM-B", 500, "Operador 09", "LM-2601", #datetime(2026,9,28,19,33,0), #datetime(2026,9,28,20,33,52), "Turno 2", null, "28/09/2026", null, null, 198, null, #datetime(2026,9,28,20,33,52), #datetime(2026,9,28,20,33,52), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100299", 100299, 10, "MND-040", "DM-A", 1500, "Operador 03", "LM-2623", #datetime(2026,9,28,8,14,0), #datetime(2026,9,28,9,5,57), "Turno 1", null, "28/09/2026", null, null, 199, null, #datetime(2026,9,28,9,5,57), #datetime(2026,9,28,9,5,57), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100300", 100300, 8, "MND-045", "DM-B", 1000, "Operador 17", "LM-2645", #datetime(2026,9,30,13,26,0), #datetime(2026,9,30,15,18,16), "Turno 2", null, "30/09/2026", null, null, 200, null, #datetime(2026,9,30,15,18,16), #datetime(2026,9,30,15,18,16), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100301", 100301, 10, "MND-011", "DM-A", 500, "Operador 11", "LM-2673", #datetime(2026,9,28,21,23,0), #datetime(2026,9,28,23,14,10), "Turno 3", null, "28/09/2026", null, null, 201, null, #datetime(2026,9,28,23,14,10), #datetime(2026,9,28,23,14,10), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100302", 100302, 8, "MND-025", "DM-B", 1500, "Operador 22", "LM-2608", #datetime(2026,9,28,21,40,0), #datetime(2026,9,28,22,56,39), "Turno 3", null, "28/09/2026", null, null, 202, null, #datetime(2026,9,28,22,56,39), #datetime(2026,9,28,22,56,39), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100303", 100303, 12, "MND-023", "DM-B", 400, "Operador 05", "LM-2688", #datetime(2026,9,29,14,26,0), #datetime(2026,9,29,16,14,21), "Turno 2", null, "29/09/2026", null, null, 203, null, #datetime(2026,9,29,16,14,21), #datetime(2026,9,29,16,14,21), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100304", 100304, 6, "MND-022", "DM-A", 500, "Operador 14", "LM-2604", #datetime(2026,9,29,14,18,0), #datetime(2026,9,29,16,16,6), "Turno 2", null, "29/09/2026", null, null, 204, null, #datetime(2026,9,29,16,16,6), #datetime(2026,9,29,16,16,6), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100305", 100305, 4, "MND-043", "DM-B", 300, "Operador 01", "LM-2661", #datetime(2026,9,24,21,39,0), #datetime(2026,9,24,22,49,0), "Turno 3", null, "24/09/2026", null, null, 205, null, #datetime(2026,9,24,22,49,0), #datetime(2026,9,24,22,49,0), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100306", 100306, 8, "MND-048", "DM-B", 300, "Operador 03", "LM-2642", #datetime(2026,9,29,17,7,0), #datetime(2026,9,29,19,2,39), "Turno 2", null, "29/09/2026", null, null, 206, null, #datetime(2026,9,29,19,2,39), #datetime(2026,9,29,19,2,39), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100307", 100307, 6, "MND-023", "DM-B", 300, "Operador 24", "LM-2617", #datetime(2026,9,2,16,10,0), #datetime(2026,9,2,17,7,56), "Turno 2", null, "02/09/2026", null, null, 207, null, #datetime(2026,9,2,17,7,56), #datetime(2026,9,2,17,7,56), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100308", 100308, 6, "MND-014", "DM-B", 400, "Operador 02", "LM-2613", #datetime(2026,9,28,19,9,0), #datetime(2026,9,28,19,51,49), "Turno 2", null, "28/09/2026", null, null, 208, null, #datetime(2026,9,28,19,51,49), #datetime(2026,9,28,19,51,49), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100309", 100309, 8, "MND-005", "DM-B", 1000, "Operador 18", "LM-2617", #datetime(2026,9,30,6,0,0), #datetime(2026,9,30,7,54,26), "Turno 1", null, "30/09/2026", null, null, 209, null, #datetime(2026,9,30,7,54,26), #datetime(2026,9,30,7,54,26), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100310", 100310, 8, "MND-052", "DM-B", 800, "Operador 06", "LM-2677", #datetime(2026,9,30,9,47,0), #datetime(2026,9,30,10,45,35), "Turno 1", null, "30/09/2026", null, null, 210, null, #datetime(2026,9,30,10,45,35), #datetime(2026,9,30,10,45,35), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100311", 100311, 4, "MND-020", "DM-B", 1500, "Operador 23", "LM-2658", #datetime(2026,9,30,21,36,0), #datetime(2026,9,30,23,4,24), "Turno 3", null, "30/09/2026", null, null, 211, null, #datetime(2026,9,30,23,4,24), #datetime(2026,9,30,23,4,24), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100312", 100312, 6, "MND-059", "DM-B", 500, "Operador 19", "LM-2659", #datetime(2026,9,30,19,26,0), #datetime(2026,9,30,20,54,14), "Turno 2", null, "30/09/2026", null, null, 212, null, #datetime(2026,9,30,20,54,14), #datetime(2026,9,30,20,54,14), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100313", 100313, 6, "MND-017", "DM-B", 600, "Operador 22", "LM-2611", #datetime(2026,10,1,5,47,0), #datetime(2026,10,1,7,25,22), "Turno 1", null, "01/10/2026", null, null, 213, null, #datetime(2026,10,1,7,25,22), #datetime(2026,10,1,7,25,22), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100314", 100314, 6, "MND-014", "DM-B", 1000, "Operador 18", "LM-2695", #datetime(2026,10,1,13,59,0), #datetime(2026,10,1,14,33,47), "Turno 2", null, "01/10/2026", null, null, 214, null, #datetime(2026,10,1,14,33,47), #datetime(2026,10,1,14,33,47), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100315", 100315, 4, "MND-012", "DM-A", 300, "Operador 06", "LM-2626", #datetime(2026,10,1,9,24,0), #datetime(2026,10,1,10,59,0), "Turno 1", null, "01/10/2026", null, null, 215, null, #datetime(2026,10,1,10,59,0), #datetime(2026,10,1,10,59,0), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100316", 100316, 10, "MND-025", "DM-B", 750, "Operador 02", "LM-2632", #datetime(2026,10,1,11,10,0), #datetime(2026,10,1,11,48,11), "Turno 1", null, "01/10/2026", null, null, 216, null, #datetime(2026,10,1,11,48,11), #datetime(2026,10,1,11,48,11), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100317", 100317, 6, "MND-016", "DM-A", 800, "Operador 19", "LM-2673", #datetime(2026,10,1,19,13,0), #datetime(2026,10,1,19,51,31), "Turno 2", null, "01/10/2026", null, null, 217, null, #datetime(2026,10,1,19,51,31), #datetime(2026,10,1,19,51,31), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100318", 100318, 4, "MND-047", "DM-B", 600, "Operador 13", "LM-2665", #datetime(2026,10,2,7,0,0), #datetime(2026,10,2,8,51,42), "Turno 1", null, "02/10/2026", null, null, 218, null, #datetime(2026,10,2,8,51,42), #datetime(2026,10,2,8,51,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100319", 100319, 16, "MND-050", "DM-B", 1000, "Operador 23", "LM-2628", #datetime(2026,10,2,6,22,0), #datetime(2026,10,2,7,50,42), "Turno 1", null, "02/10/2026", null, null, 219, null, #datetime(2026,10,2,7,50,42), #datetime(2026,10,2,7,50,42), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null},
+				            {"100320", 100320, 10, "MND-045", "DM-B", 500, "Operador 08", "LM-2642", #datetime(2026,9,10,14,48,0), #datetime(2026,9,10,16,1,9), "Turno 2", null, "10/09/2026", null, null, 220, null, #datetime(2026,9,10,16,1,9), #datetime(2026,9,10,16,1,9), null, null, "1.0", null, null, null, null, null, null, null, null, null, null, null, null}
+				        }
+				    )
+				in
+				    Source
+
+	annotation PBI_NavigationStepName = Navegação
+
+	annotation PBI_ResultType = Table
+
