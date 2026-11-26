@@ -202,31 +202,35 @@ def tabela(ws, nome, cab, lin, larg, num=(), total=None, estilo="TableStyleMediu
     return fim + 1
 
 
-papel = {}
-for s in SEQ:
-    if "(papel)" in s[6]: papel[s[0]] = papel.get(s[0], 0) + 1
-wb = Workbook(); wb.remove(wb.active)
-ws = nova(wb, "1 Packlist repetido", "1 · OPs com o mesmo lance em mais de um packlist",
-          "Varredura dos 592 registros de pallet do GMS (06/10 a 26/11). Risco: transferir o mesmo metro duas vezes. Quem: Cabine e Logística.", "E2000F")
-lin = []
-for op, pn, gms, soma, regs, rel, d in OPS:
-    hoje = op == "30885514"
-    lin.append((op, pn, gms, soma, round(soma - gms, 1), papel.get(op, 0), regs, rel, d, SINAL.get(op, "Antes de 18/11: sem foto do saldo para conferir"),
-                ("HOJE, antes de transferir: separar os papéis desta OP. Vale o 590 (80,0) + o 591 (137,2) OU o 589 (217,2), nunca os três. "
-                 if hoje else "Perguntar à logística quais destes packlists foram transferidos. ") + "Recolher os repetidos e corrigir o registro no GMS"))
-r = tabela(ws, "Repetidos", ["OP", "Material", "Metros da OP (GMS)", "Soma dos packlists (m)", "A mais (m)", "Papéis possíveis", "Registros (id, nº, lances, m)",
-                             "Relação", "Desde", "Sinal no saldo", "Ação"], lin, [11, 11, 11, 12, 10, 9, 46, 26, 8, 40, 52], num=(2, 3, 4), total=(2, 3, 4))
-for t in ("Como acontece: a cabine imprime o pallet 1 com os lances da hora; depois usa Dividir pallet para os seguintes; aí o Imprimir (ou o Finalizar) regrava o pallet 1 com a OP inteira, por cima.",
-          "Papéis possíveis = versões que passaram pela tela de impressão (aba 2). O GMS não sabe se o operador imprimiu de fato: confirmar com a cabine.",
-          "Correção: a tela da Finalização v0.4.4 (Telas/_colar_Finalizacao_Pallets.md) faz o Imprimir abrir o Dividir e nunca sobrescreve pallet. Ainda não foi colada no Studio.",
-          "SAP: em todos estes casos cada lance entrou uma vez só no SAP (101). O risco é só na transferência da PROD-GR-HOSE."):
-    r += 1; ws.cell(r, 1, t).font = Font(size=10, color="6B6B69")
-ws = nova(wb, "2 Sequência", "2 · O que aconteceu em cada OP, minuto a minuto", "Cada linha é uma versão do registro de pallet no GMS (horário de Brasília).", "1F5FA8")
-tabela(ws, "Sequencia", ["OP", "Registro", "Pallet nº", "Quando", "Lances", "Metros", "O que foi"],
-       [(a, int(b), int(c), d, int(e), float(f.replace(".", "").replace(",", ".")), g) for a, b, c, d, e, f, g in SEQ], [11, 10, 9, 14, 8, 10, 40], num=(5,), estilo="TableStyleLight9")
-ws = nova(wb, "3 Lance apagado ou movido", "3 · Packlist com lance que não existe mais nessa OP",
-          "Se o papel foi transferido com esse lance, a transferência pegou metro que não é desta OP. Quem: Supervisão.", "6B4FA0")
-tabela(ws, "Outros", ["Registro", "OP", "Pallet nº", "Total do registro (m)", "Lances que existem na OP (m)", "Problema", "Origem"],
-       [(a, b, c, d, e, f, g) for a, b, c, d, e, f, g in OUTROS], [10, 11, 9, 12, 14, 70, 26], num=(3, 4), estilo="TableStyleMedium5")
-wb.save(SAIDA)
-print(SAIDA.name, len(OPS), "OPs,", sum(o[3] - o[2] for o in OPS), "m a mais;", len(SEQ), "eventos;", len(OUTROS), "registros com lance apagado/movido")
+def abas(wb, pre=""):
+  papel = {}
+  for s in SEQ:
+      if "(papel)" in s[6]: papel[s[0]] = papel.get(s[0], 0) + 1
+  ws = nova(wb, pre + "1 Packlist repetido", "1 · OPs com o mesmo lance em mais de um packlist",
+            "Varredura dos 592 registros de pallet do GMS (06/10 a 26/11). Risco: transferir o mesmo metro duas vezes. Quem: Cabine e Logística.", "E2000F")
+  lin = []
+  for op, pn, gms, soma, regs, rel, d in OPS:
+      hoje = op == "30885514"
+      lin.append((op, pn, gms, soma, round(soma - gms, 1), papel.get(op, 0), regs, rel, d, SINAL.get(op, "Antes de 18/11: sem foto do saldo para conferir"),
+                  ("HOJE, antes de transferir: separar os papéis desta OP. Vale o 590 (80,0) + o 591 (137,2) OU o 589 (217,2), nunca os três. "
+                   if hoje else "Perguntar à logística quais destes packlists foram transferidos. ") + "Recolher os repetidos e corrigir o registro no GMS"))
+  r = tabela(ws, "Repetidos", ["OP", "Material", "Metros da OP (GMS)", "Soma dos packlists (m)", "A mais (m)", "Papéis possíveis", "Registros (id, nº, lances, m)",
+                               "Relação", "Desde", "Sinal no saldo", "Ação"], lin, [11, 11, 11, 12, 10, 9, 46, 26, 8, 40, 52], num=(2, 3, 4), total=(2, 3, 4))
+  for t in ("Como acontece: a cabine imprime o pallet 1 com os lances da hora; depois usa Dividir pallet para os seguintes; aí o Imprimir (ou o Finalizar) regrava o pallet 1 com a OP inteira, por cima.",
+            "Papéis possíveis = versões que passaram pela tela de impressão (aba 2). O GMS não sabe se o operador imprimiu de fato: confirmar com a cabine.",
+            "Correção: a tela da Finalização v0.4.4 (Telas/_colar_Finalizacao_Pallets.md) faz o Imprimir abrir o Dividir e nunca sobrescreve pallet. Ainda não foi colada no Studio.",
+            "SAP: em todos estes casos cada lance entrou uma vez só no SAP (101). O risco é só na transferência da PROD-GR-HOSE."):
+      r += 1; ws.cell(r, 1, t).font = Font(size=10, color="6B6B69")
+  ws = nova(wb, pre + "2 Sequência", "2 · O que aconteceu em cada OP, minuto a minuto", "Cada linha é uma versão do registro de pallet no GMS (horário de Brasília).", "1F5FA8")
+  tabela(ws, "Sequencia", ["OP", "Registro", "Pallet nº", "Quando", "Lances", "Metros", "O que foi"],
+         [(a, int(b), int(c), d, int(e), float(f.replace(".", "").replace(",", ".")), g) for a, b, c, d, e, f, g in SEQ], [11, 10, 9, 14, 8, 10, 40], num=(5,), estilo="TableStyleLight9")
+  ws = nova(wb, pre + "3 Lance apagado ou movido", "3 · Packlist com lance que não existe mais nessa OP",
+            "Se o papel foi transferido com esse lance, a transferência pegou metro que não é desta OP. Quem: Supervisão.", "6B4FA0")
+  tabela(ws, "Outros", ["Registro", "OP", "Pallet nº", "Total do registro (m)", "Lances que existem na OP (m)", "Problema", "Origem"],
+         [(a, b, c, d, e, f, g) for a, b, c, d, e, f, g in OUTROS], [10, 11, 9, 12, 14, 70, 26], num=(3, 4), estilo="TableStyleMedium5")
+
+
+if __name__ == "__main__":
+    wb = Workbook(); wb.remove(wb.active); abas(wb)
+    wb.save(SAIDA)
+    print(SAIDA.name)

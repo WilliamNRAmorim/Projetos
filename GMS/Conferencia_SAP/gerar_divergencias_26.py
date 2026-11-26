@@ -10,7 +10,7 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 AQUI = Path(__file__).resolve().parent
 V3 = AQUI / "Divergencias_ProdHose_2026-11-18_v3.xlsx"
 EXP = AQUI.parent / "Analises" / "ProdHose_Teste" / "EXPORT_20261126_121810.xlsx"
-SAIDA = AQUI / "Divergencias_ProdHose_2026-11-26.xlsx"
+SAIDA = AQUI / "Relatorio_ProdHose_2026-11-26.xlsx"
 COR = {"imprimir": "1F5FA8", "refugo": "C27400", "sap": "E2000F", "parado": "6B4FA0", "trans": "6B6B69", "ok": "2E7D32"}
 
 it = list(openpyxl.load_workbook(EXP, data_only=True).worksheets[0].iter_rows(values_only=True)); ix = {}
@@ -142,7 +142,7 @@ tabela(ws, "Corrigir", ["OP", "Material", "Metros", "Item da lista", "Doc SAP", 
     ("30914999 / 30899877", "GH781-4", 189.9, "nova", "MB51 de 26/11", "SAP: 999,2 m na 30914999 e 992,9 na 30899877. GMS: 1.182,2 e 803,0. Juntas o SAP tem 6,9 m a mais. Parece lance trocado entre as OPs", "Conferir lance a lance; a conferência de 27/11 deve acusar")],
     [11, 12, 10, 13, 16, 58, 58], num=(2,), total=2, estilo="TableStyleMedium4")
 # ---- 6
-ws = nova(wb, "6 Confirmar pallet", "6 · Pallets para confirmar", "Em trânsito = produzido nas últimas 24 h e ainda no saldo às 08:18. Repetido = os mesmos lances em mais de um pallet no GMS. Quem: Cabine e Logística.", COR["ok"])
+ws = nova(wb, "6 Confirmar pallet", "6 · Pallets para confirmar", "Em trânsito = produzido nas últimas 24 h e ainda no saldo às 08:18. Packlist repetido: ver a aba 7. Quem: Cabine e Logística.", COR["ok"])
 tabela(ws, "Confirmar", ["OP", "Material", "Tipo", "Pallets (registro)", "Metros", "Situação", "Ação"], [
     ("30958869", "GH493-8", "Em trânsito", "580", 513.2, "No SAP 25/11 17:59; ainda no saldo às 08:18 de 26/11", "Transferir hoje. Amanhã no saldo = preso"),
     ("30885512 / 13 / 11", "GH493-16", "Em trânsito", "583, 584 e 585", 799.6, "Impressos 25/11 20:09 a 21:43; ainda no saldo", "Transferir hoje. Amanhã no saldo = preso"),
@@ -150,13 +150,6 @@ tabela(ws, "Confirmar", ["OP", "Material", "Tipo", "Pallets (registro)", "Metros
     ("30914999 / 30899877", "GH781-4", "Em trânsito", "586 e 587", 1992.1, "Impressos 26/11 01:49 e 04:34 (metros do SAP)", "Transferir hoje; ver também a aba 5"),
     ("30918742", "GH781-8", "Em trânsito", "sem pallet às 08:18", 379.3, "Lances de 07:44 a 08:07 já no SAP", "Imprimir o pallet e transferir"),
     ("30915070, 30915071 ou 30915068", "GH781-12", "Confirmar", "573, 577 ou 581", 400.0, "Sobram cerca de 400 m de GH781-12; pela conta, é um destes pallets de 25/11", "Achar qual pallet de GH781-12 ainda está na ProdHose e transferir"),
-    ("30885826", "GH781-4", "Repetido", "543, 544, 545 e 546", 818.7, "Três iguais; o 546 tem um lance apagado (1,0 m)", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30885827", "GH781-4", "Repetido", "561 e 562", 335.0, "Os 335,0 m do 562 já estão no 561", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30885821", "GH781-8", "Repetido", "564 e 566", 418.4, "Os 418,4 m do 566 já estão no 564", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30900101", "GH781-12", "Repetido", "519, 520, 521 e 522", 349.1, "O 520 e o 521 são partes do 519; o 522 tem um lance apagado", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30872771", "GH681-4", "Repetido", "497, 498 e 499", 688.8, "Os três têm os mesmos lances", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30915068", "GH781-12", "Repetido", "581 e 582", 185.8, "Os 185,8 m do 582 já estão no 581", "Ver quantos packlists saíram no papel e recolher os repetidos"),
-    ("30885514", "GH493-16", "Repetido", "589, 590 e 591", 217.2, "O 589 é o 590 + o 591", "Ver quantos packlists saíram no papel e recolher os repetidos"),
     ("30575954", "HC139-7_S-GX", "Não imprimir", "532", 145.5, "Registrado em 23/11 por engano: o metro já saiu por outra OP", "Não imprimir")],
     [11, 14, 13, 20, 10, 48, 58], num=(4,), estilo="TableStyleMedium7")
 # ---- Transicao
@@ -165,6 +158,10 @@ for x in SEM: sx[x[1]] = sx.get(x[1], 0) + x[3]
 ws = nova(wb, "Transição 06-14-10", v3["Transição 06-14-10"]["A1"].value, v3["Transição 06-14-10"]["A2"].value, COR["trans"])
 TRA = [(x[0].value, round(tot.get(x[0].value, 0), 2), round(sx.get(x[0].value, 0), 2), x[3].value, x[4].value, x[5].value) for x in v3["Transição 06-14-10"].iter_rows(min_row=5, max_row=15) if tot.get(x[0].value, 0) > 0.5]
 tabela(ws, "Transicao", ["Material", "Saldo ProdHose (m)", "Sem explicação (m)", "OPs", "Metros sem registro de pallet", "OPs (metros e data)"], TRA, [14, 12, 14, 6, 18.6, 109.7], num=(1, 2, 4), estilo="TableStyleLight1")
+import gerar_cacada_pallets as CP
+CP.abas(wb, "7-9 ")
+for nome in ("7-9 1 Packlist repetido", "7-9 2 Sequência", "7-9 3 Lance apagado ou movido"):
+    wb[nome].title = {"7-9 1 Packlist repetido": "7 Packlist repetido", "7-9 2 Sequência": "8 Sequência impressão", "7-9 3 Lance apagado ou movido": "9 Lance apagado"}[nome]
 wb.save(SAIDA)
 print(SAIDA.name, "| aba1", round(sum(x[4] for x in IMP), 1), "| aba2", round(sum(x[2] for x in RES), 1), "| aba4", round(sum(x[3] for x in SEM), 1), len(SEM), "| total", round(sum(tot.values()), 1))
 c1 = sum(min(exp1[m], livre(m)) for m in exp1); print("prova:", round(c1 + sum(x[2] for x in RES) + sum(x[3] for x in SEM) + sum(TRANS.values()), 1), "x", round(sum(tot.values()), 1))
