@@ -802,7 +802,7 @@ Screens:
                     =With(
                         {
                             _real: If(ThisItem.Status = "EmAndamento",
-                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(LookUp(colDescM, Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")").MinDesc, 0), varAgora),
+                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(Sum(Filter(colParadasM, OPVinculada = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")" && Motivo <> fx_MotivoTempoExcedido && RegistradoEm >= ThisItem.InicioEm), TempoParadoMin), 0), varAgora),
                                 Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
                             _meta: With(
                                 {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
@@ -823,9 +823,14 @@ Screens:
                         {
                             _desc: If(ThisItem.Status = "EmAndamento",
                                 Coalesce(
-                                    LookUp(colDescM,
-                                        Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
-                                    ).MinDesc,
+                                    Sum(
+                                        Filter(colParadasM,
+                                            OPVinculada = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")" &&
+                                            Motivo <> fx_MotivoTempoExcedido &&
+                                            RegistradoEm >= ThisItem.InicioEm
+                                        ),
+                                        TempoParadoMin
+                                    ),
                                     0
                                 ),
                                 Coalesce(ThisItem.DescontoMin, 0))
@@ -847,9 +852,14 @@ Screens:
                                 ThisItem.DuracaoMin),
                             _desc: If(ThisItem.Status = "EmAndamento",
                                 Coalesce(
-                                    LookUp(colDescM,
-                                        Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
-                                    ).MinDesc,
+                                    Sum(
+                                        Filter(colParadasM,
+                                            OPVinculada = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")" &&
+                                            Motivo <> fx_MotivoTempoExcedido &&
+                                            RegistradoEm >= ThisItem.InicioEm
+                                        ),
+                                        TempoParadoMin
+                                    ),
                                     0
                                 ),
                                 Coalesce(ThisItem.DescontoMin, 0))
@@ -870,7 +880,7 @@ Screens:
                     =With(
                         {
                             _real: If(ThisItem.Status = "EmAndamento",
-                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(LookUp(colDescM, Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")").MinDesc, 0), varAgora),
+                                fx_RealMontagemMin(ThisItem.InicioEm, Coalesce(Sum(Filter(colParadasM, OPVinculada = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")" && Motivo <> fx_MotivoTempoExcedido && RegistradoEm >= ThisItem.InicioEm), TempoParadoMin), 0), varAgora),
                                 Coalesce(ThisItem.DuracaoRealMin, ThisItem.DuracaoMin)),
                             _meta: With(
                                 {_t: LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc},
@@ -910,6 +920,7 @@ Screens:
                   HoverFill: =ColorFade(Self.Fill, -20%)
                   OnSelect: |-
                     =Set(varPNAtivo, ThisItem);
+                    Refresh(Paradas_Montagem);
                     ClearCollect(colParadasM,
                         Filter(Paradas_Montagem,
                             Celula = varCelulaMontagem &&
@@ -940,9 +951,14 @@ Screens:
                             _t: Coalesce(LookUp(Tempos, Material = Upper(Trim(ThisItem.PN))).TempoMinPc, 0),
                             _bruto: RoundDown(DateDiff(ThisItem.InicioEm, Now(), TimeUnit.Minutes), 0),
                             _desc: Coalesce(
-                                LookUp(colDescM,
-                                    Chave = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")"
-                                ).MinDesc,
+                                Sum(
+                                    Filter(colParadasM,
+                                        OPVinculada = ThisItem.PN & " (OT " & Text(ThisItem.OT, "[$-en-US]0") & ")" &&
+                                        Motivo <> fx_MotivoTempoExcedido &&
+                                        RegistradoEm >= ThisItem.InicioEm
+                                    ),
+                                    TempoParadoMin
+                                ),
                                 0
                             )
                         },
@@ -1748,9 +1764,15 @@ Screens:
               Set(varDuracaoFim, RoundDown(DateDiff(varPNAtivo.InicioEm, varFimM, TimeUnit.Minutes), 0));
               Set(varDescontoFim,
                   Coalesce(
-                      LookUp(colDescM,
-                          Chave = varPNAtivo.PN & " (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")"
-                      ).MinDesc,
+                      Sum(
+                          Filter(colParadasM,
+                              OPVinculada = varPNAtivo.PN & " (OT " & Text(varPNAtivo.OT, "[$-en-US]0") & ")" &&
+                              Motivo <> fx_MotivoTempoExcedido &&
+                              RegistradoEm >= varPNAtivo.InicioEm &&
+                              RegistradoEm <= varFimM
+                          ),
+                          TempoParadoMin
+                      ),
                       0
                   )
               );

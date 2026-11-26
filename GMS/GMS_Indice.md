@@ -73,7 +73,7 @@
 | Consulta OP | `scr_ConsultaOP_2` | v0.3.0 | — | — |
 | Volume Diário | `scr_VolumeDiario_2` | v1.0.0 | PATCH v1.0.1 SaidaDaCelula | — |
 | Ficha Técnica | `scr_FichaTecnica_1` | v1.2.1 | COLAR Menu_FichaTecnica | — |
-| Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.0 | COLAR v0.5.0 ColunasCarimbadas | — |
+| Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.1 | COLAR v0.5.0 ColunasCarimbadas + _colar_Montagem_DescontoParada.md (MEL-277) | — |
 | Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.2.0** (27/10, `Telas/`) — v0.1.0 (22/10) AO VIVO + histórico, galeria 4×3, + diagnóstico no rodapé (v0.1.1) + ficha de consulta ao tocar no card (`_patch_PainelMontagem_v0.2.0_ficha.md`); mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
 | Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
 | Bloqueio (kill switch Composto) | — | **v0.2.0** (17/11, `Telas/`, aguarda publish) — SEM tela de bloqueio e SEM navegação (decisão do William): bloqueado = tela não carrega, app só para. Lista `Composto` + `Flow_Composto` prontos; roteiro em `Telas/_colar_Composto.md` | — | Colar `OnStart`, `OnError`, `BackEnabled=true` e os blocos Gate+Timer das 23 telas; publicar |
