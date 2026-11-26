@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inspeção da Cabine</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1b1f24;--mut:#5b6573;--bd:#d9dee5;--ac:#1f4e78;--acs:#e6eef6;--hl:#fff6d6}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171b;--card:#1d2127;--tx:#e6e9ee;--mut:#9aa4b2;--bd:#323943;--ac:#6fa8dc;--acs:#22303d;--hl:#3a3420}}
+:root[data-theme="dark"]{--bg:#14171b;--card:#1d2127;--tx:#e6e9ee;--mut:#9aa4b2;--bd:#323943;--ac:#6fa8dc;--acs:#22303d;--hl:#3a3420}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 Segoe UI,system-ui,sans-serif}
+main{max-width:1300px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 4px}
+.mut{color:var(--mut);font-size:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px;margin-top:12px}
+.filtros{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+label{display:flex;flex-direction:column;font-size:12px;color:var(--mut);gap:3px}
+input,select,button{font:inherit;padding:6px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--card);color:var(--tx)}
+button{cursor:pointer;background:var(--ac);color:#fff;border:0}
+button.sec{background:var(--acs);color:var(--tx)}
+.kpis{display:flex;gap:12px;flex-wrap:wrap}
+.kpi{flex:1;min-width:150px;background:var(--acs);border-radius:8px;padding:10px}
+.kpi b{display:block;font-size:24px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--bd);text-align:left;white-space:nowrap}
+th{position:sticky;top:0;background:var(--card);cursor:pointer;user-select:none}
+td.n,th.n{text-align:right}
+tr.tot td{font-weight:700;background:var(--hl)}
+.lin{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<main>
+<h1>Inspeção / Teste — RegistrosInspeção</h1>
+<div class="mut">Lista inteira do SharePoint (sem limite de linhas), puxada em __GERADO__. Hora local. Dia produtivo começa 05:20 (madrugada do 3º turno conta no dia anterior).</div>
+
+<div class="card">
+ <div class="filtros">
+  <label>Dia produtivo de<input type="date" id="de"></label>
+  <label>até<input type="date" id="ate"></label>
+  <label>Cabine<select id="cab"></select></label>
+  <label>Turno<select id="tur"></select></label>
+  <label>Trançadeira<select id="tra"></select></label>
+  <label>Mangueira<input id="man" placeholder="ex.: 2556-8"></label>
+  <label>OP<input id="op" placeholder="ex.: 30783831"></label>
+  <label>Agrupar por<select id="grp">
+   <option value="4">Cabine</option><option value="3">Turno</option><option value="5">Trançadeira</option>
+   <option value="6">Mangueira</option><option value="7">OP</option><option value="2">Dia produtivo</option><option value="13">Inspetor</option>
+  </select></label>
+ </div>
+ <div class="lin" style="margin-top:10px">
+  <button id="bHoje">Hoje</button><button class="sec" id="bTudo">Tudo</button><button class="sec" id="bCsv">Baixar CSV do filtro</button>
+ </div>
+</div>
+
+<div class="card kpis">
+ <div class="kpi">Metros<b id="kM">0</b></div>
+ <div class="kpi">Lances<b id="kN">0</b></div>
+ <div class="kpi">Com defeito<b id="kD">0</b></div>
+ <div class="kpi">Linhas na lista<b id="kT">0</b></div>
+</div>
+
+<div class="card"><b id="tGrp">Resumo</b><div class="wrap"><table id="resumo"></table></div></div>
+
+<div class="card">
+ <div class="lin"><b>Lances</b><span class="mut" id="pg"></span>
+  <button class="sec" id="pAnt">◀</button><button class="sec" id="pPro">▶</button></div>
+ <div class="wrap"><table id="det"></table></div>
+</div>
+</main>
+<script>
+const D=__DADOS__;const DIA="__DIA__";
+const C=["ID","Data/hora","Dia prod.","Turno","Cabine","Trançadeira","Mangueira","OP","Metros","DI","DE","Conc.","Defeito","Inspetor"];
+const $=id=>document.getElementById(id);
+const fmt=v=>v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const uniq=i=>[...new Set(D.map(r=>r[i]))].filter(v=>v!==null&&v!=='').sort();
+function opts(el,i){el.innerHTML='<option value="">(todas)</option>'+uniq(i).map(v=>`<option>${v}</option>`).join('')}
+opts($('cab'),4);opts($('tur'),3);opts($('tra'),5);
+let F=[],pag=0,ord=1,asc=true;const PP=200;
+function filtra(){
+ const de=$('de').value,ate=$('ate').value,cab=$('cab').value,tur=$('tur').value,tra=$('tra').value,
+  man=$('man').value.trim().toLowerCase(),op=$('op').value.trim();
+ F=D.filter(r=>(!de||r[2]>=de)&&(!ate||r[2]<=ate)&&(!cab||r[4]==cab)&&(!tur||String(r[3])==tur)&&(!tra||r[5]==tra)
+  &&(!man||String(r[6]).toLowerCase().includes(man))&&(!op||String(r[7]).includes(op)));
+ F.sort((a,b)=>{const x=a[ord],y=b[ord];return (x>y?1:x<y?-1:0)*(asc?1:-1)});
+ pag=0;desenha();
+}
+function desenha(){
+ const m=F.reduce((s,r)=>s+(r[8]||0),0);
+ $('kM').textContent=fmt(m);$('kN').textContent=F.length.toLocaleString('pt-BR');
+ $('kD').textContent=F.filter(r=>r[12]).length;$('kT').textContent=D.length.toLocaleString('pt-BR');
+ const g=+$('grp').value,acc={};
+ F.forEach(r=>{const k=r[g]??'(vazio)';(acc[k]=acc[k]||[0,0]);acc[k][0]++;acc[k][1]+=r[8]||0});
+ $('tGrp').textContent='Resumo por '+$('grp').selectedOptions[0].text;
+ $('resumo').innerHTML='<tr><th>'+$('grp').selectedOptions[0].text+'</th><th class="n">Lances</th><th class="n">Metros</th></tr>'+
+  Object.keys(acc).sort().map(k=>`<tr><td>${k}</td><td class="n">${acc[k][0]}</td><td class="n">${fmt(acc[k][1])}</td></tr>`).join('')+
+  `<tr class="tot"><td>Total</td><td class="n">${F.length}</td><td class="n">${fmt(m)}</td></tr>`;
+ const np=Math.max(1,Math.ceil(F.length/PP));$('pg').textContent=`página ${pag+1} de ${np} (${PP} por página; o total acima soma todas)`;
+ $('det').innerHTML='<tr>'+C.map((c,i)=>`<th data-i="${i}" class="${i==8?'n':''}">${c}${i==ord?(asc?' ▲':' ▼'):''}</th>`).join('')+'</tr>'+
+  F.slice(pag*PP,(pag+1)*PP).map(r=>'<tr>'+r.map((v,i)=>`<td class="${i==8?'n':''}">${v==null?'':i==8?fmt(v):v}</td>`).join('')+'</tr>').join('');
+}
+$('det').addEventListener('click',e=>{const i=e.target.dataset.i;if(i===undefined)return;if(+i==ord)asc=!asc;else{ord=+i;asc=true}filtra()});
+['de','ate','cab','tur','tra','grp'].forEach(id=>$(id).addEventListener('change',filtra));
+['man','op'].forEach(id=>$(id).addEventListener('input',filtra));
+$('pAnt').onclick=()=>{if(pag>0){pag--;desenha()}};
+$('pPro').onclick=()=>{if((pag+1)*PP<F.length){pag++;desenha()}};
+$('bHoje').onclick=()=>{$('de').value=DIA;$('ate').value=DIA;filtra()};
+$('bTudo').onclick=()=>{['de','ate','man','op'].forEach(i=>$(i).value='');['cab','tur','tra'].forEach(i=>$(i).value='');filtra()};
+$('bCsv').onclick=()=>{const l=[C.join(';')].concat(F.map(r=>r.map((v,i)=>v==null?'':i==8?String(v).replace('.',','):String(v).replace(/;/g,',')).join(';')));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+l.join('\r\n')],{type:'text/csv'}));a.download='inspecao_filtro.csv';a.click()};
+$('de').value=DIA;$('ate').value=DIA;$('cab').value='CABINE_L1';filtra();
+</script>
+</body>
+</html>
