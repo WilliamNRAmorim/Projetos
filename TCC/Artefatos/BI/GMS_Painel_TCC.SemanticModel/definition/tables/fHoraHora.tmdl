@@ -62,19 +62,15 @@ table fHoraHora
 		sourceColumn: Status
 
 	/// Ordem da janela dentro do turno (minutos desde 00:00; madrugada do 3º turno soma 24h).
-	column HoraOrdem
+	column HoraOrdem =
+			VAR h = VALUE ( LEFT ( 'fHoraHora'[Hora], 2 ) ) * 60 + VALUE ( MID ( 'fHoraHora'[Hora], 4, 2 ) )
+			RETURN IF ( h < 5 * 60 + 20, h + 1440, h )
 		dataType: int64
 		isHidden
 		summarizeBy: none
-		expression =
-			VAR h = VALUE ( LEFT ( 'fHoraHora'[Hora], 2 ) ) * 60 + VALUE ( MID ( 'fHoraHora'[Hora], 4, 2 ) )
-			RETURN IF ( h < 5 * 60 + 20, h + 1440, h )
 
 	/// Igual à Hora-Hora[Motivo Padrão], mas texto vazio vira BLANK (a Hora-Hora só tem linhas com motivo).
-	column 'Motivo Padrão'
-		dataType: string
-		summarizeBy: none
-		expression =
+	column 'Motivo Padrão' =
 			VAR t = TRIM ( 'fHoraHora'[Motivo] )
 			VAR p = IFERROR ( SEARCH ( "-", t ), 0 )
 			VAR pre = IF ( p > 1, TRIM ( LEFT ( t, p - 1 ) ), "" )
@@ -87,11 +83,10 @@ table fHoraHora
 			            limpo = "Problema no tubo", "Análise/Problema no tubo",
 			            limpo )
 			    )
-
-	column 'Motivo 2 Padrão'
 		dataType: string
 		summarizeBy: none
-		expression =
+
+	column 'Motivo 2 Padrão' =
 			VAR t = TRIM ( 'fHoraHora'[Motivo 2] )
 			VAR p = IFERROR ( SEARCH ( "-", t ), 0 )
 			VAR pre = IF ( p > 1, TRIM ( LEFT ( t, p - 1 ) ), "" )
@@ -104,6 +99,8 @@ table fHoraHora
 			            limpo = "Problema no tubo", "Análise/Problema no tubo",
 			            limpo )
 			    )
+		dataType: string
+		summarizeBy: none
 
 	partition fHoraHora = m
 		mode: import
