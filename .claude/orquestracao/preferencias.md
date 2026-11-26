@@ -97,3 +97,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-11-25: aceitou a recomendação de ajustar o plano diário proporcional ao PL no modelo (lugar único), em vez de mexer nas medidas.
 2026-11-25 | TCC: aceitou a recomendada de mover o Word antigo como molde em vez de apagar
 2026-11-25 | TCC: aceitou a recomendada de guardar os 5 arquivos únicos (anotados, versão entregue, normas) ao limpar Downloads
+2026-11-26 | TCC: aceitou trocar as URLs reais do SharePoint e a coluna "Categoria Danfoss" por ficticios nos artefatos (nao deixar dado real/marca no que vai com o TCC)
