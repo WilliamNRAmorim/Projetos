@@ -1,4 +1,4 @@
-# Inventário de material em processo no modelo (GMS): script TMDL da página de inventário (MEL-278) - NÃO APLICADO (escrito em 27/11/2026, para colar no TMDL view do modelo vivo só com o "sim" do William)
+# Inventário de material em processo no modelo (GMS): script TMDL da página de inventário (MEL-278) - APLICADO no modelo vivo em 27/11/2026 (TMDL view, refresh 9:35) (escrito em 27/11/2026, para colar no TMDL view do modelo vivo só com o "sim" do William)
 
 Só BI. Cria a base do inventário de material em processo (WIP em metros e insumo em kg e m) para todas as fichas abertas da `ficha_producao`: situação pela etapa atual, metros da última etapa fechada, insumo = BOM por metro × metros. Regra e protótipo: `GMS/Analises/Inventario_Processo/gerar_inventario_processo.py` e `inventario_template.html`. As medidas SVG da página ficam fora deste script (vão no `reportExtensions.json` depois). **Depende** da lista SharePoint `GMS_BOM_Mangueira` (300 linhas, mesma origem da BOM do protótipo, `bom_mangueira_sap.csv`) e das tabelas `ficha_producao` e `RegistrosInspeção`.
 
@@ -147,7 +147,9 @@ createOrReplace
 				// Se a mesma Chave + PartNumber repetir, fica a primeira linha da lista (Table.Distinct). Camada fora de tubo/trama/cobertura/bandagem recebe ordem 99 e nunca entra no inventário.
 				Origem = SharePoint.Tables("https://danfoss.sharepoint.com/sites/OperationsGuaratingueta", [Implementation = "2.0", ViewMode = "All"]),
 				Lista = Origem{[Title = "GMS_BOM_Mangueira"]}[Items],
-				Colunas = Table.SelectColumns(Lista, {"Title", "Material", "Camada", "PartNumber", "Descricao", "BOM_por_metro", "Unidade", "Fonte"}, MissingField.UseNull),
+				// SharePoint.Tables 2.0 devolve o nome de exibição: na lista, Title aparece como Mangueira (correção ao aplicar, 27/11).
+				Renomeada = if Table.HasColumns(Lista, "Mangueira") then Table.RenameColumns(Lista, {{"Mangueira", "Title"}}) else Lista,
+				Colunas = Table.SelectColumns(Renomeada, {"Title", "Material", "Camada", "PartNumber", "Descricao", "BOM_por_metro", "Unidade", "Fonte"}, MissingField.UseNull),
 				Tipos = Table.TransformColumnTypes(Colunas, {{"Title", type text}, {"Material", type text}, {"Camada", type text}, {"PartNumber", type text}, {"Descricao", type text}, {"BOM_por_metro", type number}, {"Unidade", type text}, {"Fonte", type text}}),
 				Limpo = Table.TransformColumns(Tipos, {{"Title", each Text.Trim(_ ?? ""), type text}, {"Material", each Text.Trim(_ ?? ""), type text}, {"Camada", each Text.Lower(Text.Trim(_ ?? "")), type text}, {"PartNumber", each Text.Trim(_ ?? ""), type text}, {"Descricao", each Text.Trim(_ ?? ""), type text}, {"Unidade", each Text.Lower(Text.Trim(_ ?? "")), type text}, {"Fonte", each Text.Trim(_ ?? ""), type text}}),
 				SoLinhas = Table.SelectRows(Limpo, each [Title] <> "" and [PartNumber] <> "" and [BOM_por_metro] <> null),

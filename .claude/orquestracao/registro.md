@@ -351,3 +351,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-27 | GMS MEL-278: script TMDL do inventário (executor Sonnet) revisado pelo chefe; aguarda colagem | executor (Sonnet) + chefe (Opus 5.5) | custo não medido (uso.ps1 sem transcrições neste PC)
 2026-11-27 | Procurar no SharePoint o plano de preventiva de nov e dez (não localizado; só notas de preventiva no plano da trançadeira) | chefe (Sonnet 5.5), sem subagente | busca simples | custo não medido (uso.ps1 sem transcrições neste PC)
 2026-11-27 | GMS MEL-278: página SVG do inventário na cópia de teste do painel | executor (Sonnet) | custo não medido (uso.ps1 sem transcrições neste PC)
+2026-11-27 | GMS MEL-278: chefe aplicou o script TMDL no modelo vivo (TMDL view) e conferiu os números | chefe (Opus 5.5) | custo não medido (uso.ps1 sem transcrições neste PC)
