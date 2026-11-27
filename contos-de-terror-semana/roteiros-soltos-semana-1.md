@@ -102,3 +102,140 @@ Fiquei parado. Não respondi.
 O barulho foi se afastando. Esperei uma hora para abrir a porta.
 Na calçada, só uma cuia, virada de boca para cima, cheia de água.
 E pegadas molhadas, de pés descalços, que entravam na minha casa.
+
+# Bloco 2
+
+## 08 · Qui 3/12 19h · original
+Título: **Se a porteira bater sem vento, NÃO VÁ FECHAR**
+Arquivo: `08_porteira`
+
+A porteira bateu. E não havia vento nenhum.
+Eu cuidava do sítio sozinho. O capim estava parado, a chama da lamparina nem tremia.
+Pá. Bateu de novo.
+Dona Zefa, que cuidou do sítio antes de mim, deixou um aviso na cozinha: "Porteira que bate sozinha é alguém pedindo para você sair."
+Olhei pela fresta. A porteira abria e fechava devagar, no escuro.
+Se o gado fugisse, a culpa era minha. Calcei a bota e peguei a lanterna.
+No meio do terreiro, parei. O gado estava todo no curral, quieto, olhando para a casa.
+Não olhavam para a porteira. Olhavam para trás de mim.
+A porteira parou de bater.
+Atrás de mim, a porta da cozinha fechou. Ouvi a tranca correr por dentro.
+Eu estava do lado de fora.
+E, lá dentro, alguém acendeu a lamparina e perguntou, com a minha voz:
+— Quem está batendo a porteira?
+
+## 09 · Sex 4/12 12h · lenda (Caboclo d’Água, rio São Francisco)
+Título: **Se a canoa parar no meio do rio, NÃO OLHE PARA BAIXO**
+Arquivo: `09_caboclo_dagua`
+Fonte: criatura baixa, forte, cor de cobre, que vira e afunda canoas no São Francisco; fumo acalma; carranca na proa e faca no fundo da canoa afastam (InfoEscola, Portal São Francisco; estudos sobre carrancas).
+
+Se a canoa parar sozinha, olhe só para a frente.
+No rio São Francisco, os pescadores conhecem o Caboclo d’Água: baixo, forte, cor de cobre, e dono do fundo do rio.
+Quando ele não gosta de alguém, a canoa para. Depois, vira.
+Por isso os barqueiros levam uma carranca na proa e um pedaço de fumo no bolso.
+Seu Tião achava bobagem. Vendeu a carranca e saiu para pescar à noite.
+No meio do rio, a canoa travou. A correnteza passava, e a canoa não saía do lugar.
+Alguma coisa bateu no casco. Uma vez. Duas.
+Uma mão molhada segurou a borda.
+Ele não tinha fumo. Fechou os olhos e jogou na água o chapéu, o anzol e o peixe.
+A mão soltou.
+Na margem, Tião respirou aliviado. Amarrou a canoa e foi para casa.
+De manhã, a carranca estava de volta na proa. Encharcada. Sorrindo.
+
+## 10 · Sex 4/12 19h · original
+Título: **Nessa estrada, quem pede água NÃO PODE RECEBER**
+Arquivo: `10_pede_agua`
+
+Nunca dê água a quem pede nessa estrada.
+O frentista do último posto me avisou. Eu ri e segui viagem, ao meio-dia, com o asfalto tremendo de calor.
+No quilômetro cinquenta, vi um homem parado no acostamento, de paletó escuro, sem uma gota de suor.
+Ele levantou um copo vazio.
+— Um gole só, moço.
+Eu tinha uma garrafa cheia. Que mal faria?
+Abri o vidro. Ele bebeu devagar, sem tirar os olhos de mim. Bebeu a garrafa inteira.
+— Agradecido. Agora a sede é sua.
+O homem sumiu. Minha boca secou na hora. Bebi tudo o que encontrei no próximo posto. Nada adiantou.
+Meu lábio rachou. Minha pele virou poeira.
+O frentista me olhou com pena e não encheu o meu copo.
+Hoje estou no quilômetro cinquenta, de paletó escuro.
+Vem vindo um carro. Um gole só, moço.
+
+## 11 · Sáb 5/12 12h · lenda (Papa-figo, Recife)
+Título: **Se um velho de saco oferecer um doce, NÃO ACEITE**
+Arquivo: `11_papa_figo`
+Fonte: velho maltrapilho com saco nas costas, em Pernambuco; atrai com doces, brinquedos ou dinheiro; a lenda diz que procura fígado para curar uma doença; estudos ligam o mito ao medo da lepra (Toda Matéria, Portal São Francisco; artigo Fiocruz). Sem sangue e sem criança ferida na tela.
+
+Aquele velho conhecia o meu nome.
+No Recife, minha avó falava do Papa-figo: um velho curvado, de roupa rasgada, com um saco nas costas.
+Dizem que ele tem uma doença sem cura, e procura criança para fazer o remédio. O remédio é o fígado.
+Por isso ele anda com doce no bolso.
+Eu tinha oito anos quando ele parou no meu portão.
+— Quer um confeito?
+Eu queria. Estendi a mão pela grade. Os dedos dele eram frios e compridos.
+O saco nas costas se mexeu.
+Minha avó gritou lá de dentro. Puxei o braço e corri.
+Ele não correu atrás. Só sorriu, guardou o confeito e falou:
+— Eu espero.
+Hoje eu tenho setenta anos. Ontem alguém tocou no meu portão.
+Era o mesmo velho. Com a mesma idade.
+E o mesmo confeito na mão.
+
+## 12 · Sáb 5/12 19h · original
+Título: **Se o Papai Noel do shopping souber o seu endereço, NÃO SENTE NO COLO**
+Arquivo: `12_papai_noel`
+Sem violência; criança sempre ao lado do pai, sem tocar no personagem.
+
+O Papai Noel do shopping disse o meu endereço.
+Eu estava na fila com a minha filha, segurando a mão dela.
+Quando chegou a nossa vez, ele nem olhou para a menina. Olhou para mim, por cima dos óculos.
+— Rua das Acácias, quarenta e dois. A janela dos fundos está com o trinco quebrado.
+Estava mesmo.
+Ele bateu na perna, convidando.
+— Venha. Quem senta no colo me convida para a noite.
+Minha filha deu um passo. Puxei ela de volta e saímos quase correndo.
+Reclamei com a gerente. Ela ficou branca.
+— O nosso Papai Noel só começa amanhã.
+Em casa, troquei o trinco e tranquei tudo.
+À meia-noite, ouvi guizos no quintal.
+Entrei no quarto dela. A cama estava vazia. Ela estava na sala, de pijama, sorrindo.
+— Pai, não se preocupe. Eu não sentei no colo.
+Ela apontou para a poltrona.
+— Foi a mamãe.
+
+## 13 · Dom 6/12 12h · lenda (Alamoa, Fernando de Noronha)
+Título: **Se uma mulher loira dançar na praia antes da tempestade, NÃO VÁ ATRÁS**
+Arquivo: `13_alamoa`
+Fonte: mulher loira e bela que mora no Pico, aparece à noite antes de tempestade dançando na praia à luz dos relâmpagos, leva os apaixonados e vira caveira; história contada pelos presos do antigo presídio (Toda Matéria, Portal São Francisco). Vestido branco longo, sem nudez.
+
+Se ela dançar na praia, vire as costas.
+Em Fernando de Noronha, os presos do antigo presídio contavam da Alamoa: uma mulher alta, linda, de cabelos loiros.
+Ela aparece antes das grandes tempestades, dançando na areia, à luz dos relâmpagos.
+Quem olha, se apaixona. Quem se apaixona, segue.
+Um vigia chamado Bento viu a Alamoa perto da meia-noite. Ela acenou e começou a andar.
+Ele largou o lampião e foi atrás.
+Ela subiu o caminho do Morro do Pico, sem olhar o chão. Uma porta se abriu na pedra.
+Lá dentro, ela virou o rosto para ele.
+Um relâmpago caiu.
+Não havia mais cabelo loiro, nem pele. Só uma caveira, sorrindo, de braços abertos.
+A porta da pedra fechou.
+De manhã, acharam o lampião de Bento, ainda aceso.
+E, na areia, duas fileiras de pegadas dançando.
+
+## 14 · Dom 6/12 19h · original
+Título: **A terra devolveu a mala que o meu avô enterrou**
+Arquivo: `14_mala_do_avo`
+
+A chuva desenterrou a mala do meu avô.
+Ela apareceu no fundo do quintal, de couro preto, amarrada com arame.
+Minha mãe empalideceu.
+— Ele enterrou isso no dia em que eu nasci. Disse que nunca era para abrir.
+Esperei ela dormir. Cortei o arame na mesa da cozinha.
+Dentro havia roupas de criança, dobradas. Um sapatinho. Uma pilha de fotografias.
+Em todas, o meu avô ao lado de um menino sem sorriso.
+Atrás da última foto estava escrito: "Ele não é nosso. Enterrei o nome dele junto, para não achar o caminho."
+No fundo da mala havia uma plaquinha com um nome.
+Li em voz alta.
+A porta dos fundos abriu. Pegadas de barro entraram pela cozinha, pequenas, e pararam ao meu lado.
+Minha mãe gritou do quarto:
+— Filho, a mala está vazia? Diga que você não leu!
+Uma voz de criança respondeu por mim:
+— Está tudo bem, mamãe.
