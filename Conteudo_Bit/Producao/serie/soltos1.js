@@ -195,10 +195,19 @@
     forma(g, '#4A3426', q => { q.moveTo(230, 1310); q.quadraticCurveTo(260, 1030, 440, 990); q.lineTo(640, 990); q.quadraticCurveTo(820, 1030, 850, 1310); }); poly(g, [[480, 990], [600, 990], [540, 1090]], '#E4D6B4'); circ(g, 540, 1112, 18, '#8A6A3A');
     circ(g, 540, 560, 84, '#7A6A5A'); elipse(g, 540, 790, 196, 220, '#A8825E'); rect(g, 490, 960, 100, 50, '#A8825E');
     forma(g, '#8C7C6A', q => { q.moveTo(340, 810); q.quadraticCurveTo(320, 540, 540, 545); q.quadraticCurveTo(765, 540, 740, 815); q.quadraticCurveTo(700, 660, 560, 640); q.quadraticCurveTo(390, 650, 340, 810); });
-    g.globalAlpha = a; g.strokeStyle = '#2A1A10'; g.fillStyle = '#2A1A10'; g.lineCap = 'round';
-    for (const ex of [462, 618]) { elipse(g, ex, 790, 24, 16, '#2A1A10', a); circ(g, ex + 7, 784, 5, '#EFE0BC', a); g.globalAlpha = a; g.lineWidth = 7; g.beginPath(); g.moveTo(ex - 40, 748); g.quadraticCurveTo(ex, 730, ex + 40, 748); g.stroke(); g.lineWidth = 4; g.beginPath(); g.arc(ex, 792, 46, 0, TAU); g.stroke(); }
-    g.globalAlpha = a; g.lineWidth = 7; g.beginPath(); g.moveTo(540, 810); g.lineTo(522, 876); g.lineTo(552, 882); g.stroke(); g.beginPath(); g.moveTo(480, 925); g.quadraticCurveTo(540, 962, 600, 925); g.stroke(); g.lineWidth = 4; g.beginPath(); g.moveTo(508, 792); g.lineTo(572, 792); g.stroke(); g.globalAlpha = 1;
-    for (let i = 0; i < 46; i++) { const q = clamp(k * 1.6 - rnd(i + 8) * 0.6); if (q > 0) circ(g, 420 + rnd(i + 1) * 240, 730 + rnd(i + 90) * 230 - q * 60 * rnd(i + 4), 10 + q * 44 * rnd(i + 20), '#A8825E', q * 0.85); } // o rosto se desmancha
+    // traços grandes e contrastados (lidos em tela de celular); tudo com o mesmo alfa para sumir junto
+    const tinta = '#1E100A', traco = (c, lw, fn, al = 1) => { g.globalAlpha = a * al; g.strokeStyle = c; g.lineWidth = lw; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); fn(g); g.stroke(); g.globalAlpha = 1; };
+    for (const ex of [450, 630]) { const d = ex < 540 ? -1 : 1;
+      elipse(g, ex, 786, 40, 24, '#F4EBD6', a); circ(g, ex, 788, 19, '#3A2214', a); circ(g, ex, 788, 10, '#050302', a); circ(g, ex + 7, 781, 5, '#FFFFFF', a);
+      traco(tinta, 9, q => { q.moveTo(ex - 42, 786); q.quadraticCurveTo(ex, 748, ex + 42, 786); }); traco(tinta, 4, q => { q.moveTo(ex - 36, 796); q.quadraticCurveTo(ex, 820, ex + 36, 796); }); // pálpebras
+      traco('#4A3A2E', 15, q => { q.moveTo(ex - 50, 722 + (d < 0 ? 8 : 0)); q.quadraticCurveTo(ex, 698, ex + 50, 722 + (d > 0 ? 8 : 0)); }); // sobrancelha
+      traco(tinta, 10, q => q.arc(ex, 790, 70, 0, TAU)); traco(tinta, 8, q => { q.moveTo(ex + d * 70, 778); q.lineTo(ex + d * 150, 756); }); traco('#FFFFFF', 7, q => q.arc(ex, 790, 55, Math.PI * 1.1, Math.PI * 1.4), 0.55); // óculos, haste e reflexo
+      traco('#6A4630', 4, q => { q.moveTo(ex + d * 62, 866); q.quadraticCurveTo(ex + d * 20, 884, ex - d * 14, 872); }, 0.6); } // olheira
+    traco(tinta, 10, q => { q.moveTo(520, 778); q.quadraticCurveTo(540, 762, 560, 778); }); // ponte
+    traco(tinta, 8, q => { q.moveTo(548, 806); q.quadraticCurveTo(556, 850, 576, 882); q.quadraticCurveTo(560, 904, 540, 892); q.quadraticCurveTo(520, 904, 504, 886); }); // nariz
+    for (const d of [-1, 1]) traco('#6A4630', 5, q => { q.moveTo(540 + d * 56, 886); q.quadraticCurveTo(540 + d * 94, 920, 540 + d * 94, 958); }, 0.75); // vincos
+    forma(g, '#6E241C', q => { q.moveTo(462, 934); q.quadraticCurveTo(505, 914, 540, 927); q.quadraticCurveTo(575, 914, 618, 934); q.quadraticCurveTo(540, 990, 462, 934); }, a); traco(tinta, 7, q => { q.moveTo(456, 931); q.quadraticCurveTo(540, 958, 624, 931); }); // boca
+    for (let i = 0; i < 46; i++) { const q = clamp(k * 1.6 - rnd(i + 8) * 0.6); if (q > 0) circ(g, 390 + rnd(i + 1) * 300, 710 + rnd(i + 90) * 270 - q * 60 * rnd(i + 4), 10 + q * 44 * rnd(i + 20), '#A8825E', q * 0.85); } // o rosto se desmancha
     g.restore();
     rect(g, 300, 1380, 480, 110, '#8A6A3A'); rect(g, 314, 1394, 452, 82, '#D8C8A0');
     for (let i = 0; i < 9; i++) { const x = 346 + i * 44, q = clamp(1 - (k * 9 - i)); if (q <= 0) continue; g.globalAlpha = q; g.strokeStyle = '#3A2616'; g.lineWidth = 6; g.beginPath(); g.moveTo(x, 1450); g.bezierCurveTo(x + 8, 1410 + rnd(i) * 20, x + 30, 1420, x + 18, 1446); g.quadraticCurveTo(x + 26, 1462, x + 40, 1440); g.stroke(); g.globalAlpha = 1; } // nome em letra cursiva ilegível, apagando
