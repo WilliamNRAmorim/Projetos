@@ -164,5 +164,19 @@
       for (let s = t; s < T - 0.5; s += per) { const n = N(s, s + 0.7), lp = F('lowpass', 900), g = G(0); lp.frequency.setValueAtTime(600, s); lp.frequency.linearRampToValueAtTime(1100, s + 0.5); g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.7, s + 0.25); g.gain.linearRampToValueAtTime(0, s + 0.65); C(n, lp, g, out); const o = O('sine', 80, s + 0.7, s + 0.9), g2 = G(0); dec(g2.gain, s + 0.7, 0.004, 0.6, 0.12); C(o, g2, out); }
       bus(out, false); return { t: t, fim: T };
     };
+    // Matinta: assobio de passaro em quatro silabas (ma-ti-ta-pe-re): notas deslizando, a ultima longa e caindo; p.vezes repete
+    defs.matinta = function (t, p) {
+      const n = p.vezes || 1, per = p.intervalo || 1.25, out = G(0.38 * (p.vol == null ? 1 : p.vol));
+      const notas = [[0, 0.13, 1850, 2150], [0.19, 0.13, 2350, 2500], [0.38, 0.17, 2950, 3150], [0.62, 0.40, 2650, 1750]];
+      for (let k = 0; k < n; k++) notas.forEach(function (x) { const a = t + k * per + x[0], b = a + x[1], o = O('sine', x[2], a, b + 0.05), o2 = O('sine', x[2] * 2, a, b + 0.05), g = G(0), g2 = G(0.08);
+        glide(o.frequency, x[2], x[3], a, b); glide(o2.frequency, x[2] * 2, x[3] * 2, a, b); g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(0.8, a + 0.025); g.gain.setValueAtTime(0.8, b - 0.05); g.gain.linearRampToValueAtTime(0, b + 0.02); C(o, g, out); C(o2, g2, g); });
+      eco(out, out, 0.23, 0.35, 3500, 0.45); bus(out, false); return { t: t, fim: t + n * per + 0.8 };
+    };
+    // asas: batidas pesadas de asa (ruido grave em pulsos)
+    defs.asas = function (t, p) {
+      const dur = p.dur || 1.6, T = t + dur, out = G(0.5 * (p.vol == null ? 1 : p.vol));
+      for (let s = t; s < T - 0.15; s += p.ritmo || 0.27) { const n = N(s, s + 0.22, true), lp = F('lowpass', 800), g = G(0); lp.frequency.setValueAtTime(350, s); lp.frequency.linearRampToValueAtTime(1100, s + 0.12); g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(0.9, s + 0.06); g.gain.linearRampToValueAtTime(0, s + 0.2); C(n, lp, g, out); }
+      bus(out, false); return { t: t, fim: T };
+    };
   };
 })(typeof window !== 'undefined' ? window : globalThis);

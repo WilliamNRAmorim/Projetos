@@ -1,0 +1,33 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>capa</title>
+<script src="../brand.js"></script>
+<script>document.write(`<link rel="stylesheet" href="${BRAND.fontsCSS}">`)</script>
+<style>body{margin:0;background:#222}canvas{width:360px;display:block}</style></head><body>
+<script src="motor.js"></script>
+<script src="soltos1.js"></script>
+<script>
+// Capas 1080x1920 dos Shorts soltos (semana 1). ?id=m01 desenha; &salvar=1 grava o PNG em Semanal/soltos-semana-1/ (precisa do serve.ps1).
+const CAPAS = {
+  m01: { arquivo: '01_matinta_perera_capa.png', selo: 'MATINTA PERERA', linhas: ['O ASSOBIO', 'NA TELHA'],
+    arte(g) { const { vgrad, glow, circ, rnd, rect } = Motor.H_;
+      vgrad(g, 0, 1920, '#03050F', '#16224E'); for (let i = 0; i < 90; i++) circ(g, rnd(i + 1) * 1080, rnd(i + 57) * 1500, 1.5 + rnd(i + 9) * 2.5, '#E6E9F5', 0.2 + 0.6 * rnd(i + 3));
+      glow(g, 560, 1060, 1000, '#B9C6F0', 0.45); circ(g, 560, 1060, 455, '#E9ECF6'); circ(g, 300, 900, 70, '#C9CFE4', 0.7); circ(g, 840, 1220, 96, '#C9CFE4', 0.6); circ(g, 790, 800, 44, '#C9CFE4', 0.6);
+      Motor.MT.ave(g, 455, 2150, 3.05, 0.4, { asas: 0, vira: 0.15, cor: '#04050B' }); Motor.MT.ave(g, 455, 2150, 3.05, 0.4, { a: 0, vira: 0.15, olhos: 1 });
+      vgrad(g, 1500, 1920, 'rgba(3,4,10,0)', 'rgba(3,4,10,0.85)', 0, 1080); } },
+};
+(async () => {
+  try {
+    const q = new URLSearchParams(location.search), c = CAPAS[q.get('id') || 'm01'], W = 1080, H = 1920;
+    await loadBrandFonts();
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H; document.body.append(cv); const g = cv.getContext('2d');
+    c.arte(g);
+    const font = s => { g.font = `900 ${s}px Geist`; g.letterSpacing = `${-0.03 * s}px`; };
+    let sz = 220; font(sz); const larg = Math.max(...c.linhas.map(l => g.measureText(l).width)); sz = Math.floor(sz * 960 / larg); font(sz);
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineJoin = 'round';
+    c.linhas.forEach((l, i) => { const y = 400 + i * sz * 1.02; g.lineWidth = sz * 0.14; g.strokeStyle = '#03040A'; g.strokeText(l, W / 2, y); g.fillStyle = i === c.linhas.length - 1 ? '#FF3B1F' : '#F4F2EC'; g.fillText(l, W / 2, y); });
+    g.font = '700 38px "Geist Mono"'; g.letterSpacing = '6px'; const tw = g.measureText(c.selo).width + 70; g.fillStyle = '#FF3B1F'; g.fillRect((W - tw) / 2, 1590, tw, 76); g.fillStyle = '#0C0C0D'; g.textBaseline = 'middle'; g.fillText(c.selo, W / 2 + 3, 1630);
+    grain(g, W, H, 0.07);
+    if (q.has('salvar')) { const b = await new Promise(r => cv.toBlob(r, 'image/png')); const r = await fetch(`/save?dir=soltos-semana-1&name=${c.arquivo}`, { method: 'POST', body: b }); if (!r.ok) throw new Error('não salvou'); }
+    document.title = 'ready';
+  } catch (e) { document.title = 'erro: ' + e.message; document.body.append('ERRO ' + e.message); }
+})();
+</script></body></html>
