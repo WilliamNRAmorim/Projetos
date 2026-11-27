@@ -103,3 +103,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 - 2026-11-26: aprovou o piloto Matinta Perera, titulo recomendado ("NAO FIQUE CALADO") e semana 1 em sessao nova, em dois blocos.
 2026-11-27 | Inventário em processo: em vez de escolher Power BI ou app, pediu o protótipo primeiro, com SVG ou gráfico eficiente
 2026-11-27 | Inventário em processo: escolheu Bandada para a mangueira depois da Debandagem (Cabine)
+2026-11-27 | Inventário em processo: escolheu página no Power BI (GMS_Painel) em vez de tela no app
