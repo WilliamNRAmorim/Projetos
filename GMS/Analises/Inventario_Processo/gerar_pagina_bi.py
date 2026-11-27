@@ -1,5 +1,9 @@
-import json, os
-BASE = r"C:\Users\U445131\Downloads\Projetos\GMS\PowerBI\Painel_PBIP_teste\GMS_Painel.Report\definition"
+# gerar_pagina_bi.py: cria a página pg_inventario_processo e as medidas "IP · SVG ..." num relatório PBIP (MEL-278).
+# Uso: python -I gerar_pagina_bi.py [pasta definition do .Report]   (padrão: cópia de teste Painel_PBIP_teste)
+# Só acrescenta: página nova, a entrada dela no pages.json e as 5 medidas SVG no reportExtensions.json.
+import json, os, sys
+BASE = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "PowerBI", "Painel_PBIP_teste", "GMS_Painel.Report", "definition")
 FOLDER = "Inventário Processo (relatório)\\Visual"
 
 INK, SUB, LINE, CARD, CORE = "%2314130f", "%2355534d", "%23e1e0d9", "%23ffffff", "%23efeee9"
