@@ -24,7 +24,7 @@ GLOBAL_RENAMES = [
     # Flow rename
     ("Flow_Composto", "GMS_Config"),
 
-    # Variável intermediária do flow
+    # Variável intermediária do flow (global → cfg no OnStart)
     ("resComposto", "_cfg"),
 
     # Response fields no WADL / Controls JSON
@@ -63,7 +63,14 @@ ONSTART_NEW_JSON_PREFIX = "=IfError(With({_r: GMS_Config.Run()}, If(_r.ok,"
 def copy_tree():
     """Copia export_original para export_blindado."""
     if BLINDADO.exists():
-        shutil.rmtree(BLINDADO)
+        try:
+            shutil.rmtree(BLINDADO)
+        except PermissionError:
+            # Windows lock — renomeia e tenta de novo
+            old = BLINDADO.parent / (BLINDADO.name + "_old")
+            if old.exists():
+                shutil.rmtree(old, ignore_errors=True)
+            BLINDADO.rename(old)
     shutil.copytree(ORIGINAL, BLINDADO)
     print(f"[OK] Copiado {ORIGINAL} -> {BLINDADO}")
 
@@ -146,8 +153,8 @@ def transform_onstart_yaml():
     new_open = (
         '=IfError(\n'
         '          With(\n'
-        '              {_r: GMS_Config.Run()},\n'
-        '              If(_r.ok,'
+        '              {cfg: GMS_Config.Run()},\n'
+        '              If(cfg.ok,'
     )
 
     if old_open in text:
@@ -162,7 +169,7 @@ def transform_onstart_yaml():
             '          ClearCollect(colMangEscTubo, colMangueiras, {NomeMangueira: fx_MangueiraOutra})\n'
             '              )\n'
             '          ),\n'
-            '          Blank()\n'
+            '          Notify("Erro ao carregar configuracao do sistema. Tente novamente.", NotificationType.Error)\n'
             '      )'
         )
         if old_end in text:
@@ -228,8 +235,8 @@ def transform_onstart_json():
             new_open = (
                 'IfError(\n'
                 '    With(\n'
-                '        {_r: GMS_Config.Run()},\n'
-                '        If(_r.ok,'
+                '        {cfg: GMS_Config.Run()},\n'
+                '        If(cfg.ok,'
             )
 
             if old_open in script:
@@ -244,7 +251,7 @@ def transform_onstart_json():
                     'ClearCollect(colMangEscTubo, colMangueiras, {NomeMangueira: fx_MangueiraOutra})\n'
                     '        )\n'
                     '    ),\n'
-                    '    Blank()\n'
+                    '    Notify("Erro ao carregar configuracao do sistema. Tente novamente.", NotificationType.Error)\n'
                     ')'
                 )
                 if old_end in script:
@@ -333,11 +340,11 @@ def transform_flow_composto():
             text = text.replace('"mensagem"', '"msg"')
             text = text.replace("'mensagem'", "'msg'")
 
-            # Renomear coluna SharePoint (Ativo → Status, DataBloqueio → UltimaAtualizacao)
+            # Renomear coluna SharePoint
             text = text.replace("'Ativo'", "'Status'")
-            text = text.replace("'DataBloqueio'", "'UltimaAtualizacao'")
+            text = text.replace("'DataBloqueio'", "'ProximaRevisao'")
             text = text.replace('"Ativo"', '"Status"')
-            text = text.replace('"DataBloqueio"', '"UltimaAtualizacao"')
+            text = text.replace('"DataBloqueio"', '"ProximaRevisao"')
 
             # Renomear tabela "Composto" → "Config" se referenciada pelo nome
             text = text.replace('"Composto"', '"Config"')
@@ -486,7 +493,9 @@ def generate_segredo():
 - `Flow_Composto` → renomeado para `GMS_Config`
 - `varCompostoPermitida` e `varCompostoMensagem` → **removidas**
 - O kill switch agora é o próprio carregamento de config: se o flow falha ou
-  retorna `ok = false`, `varMapa` fica `Blank()` e todas as telas ficam vazias.
+  retorna `ok = false`, `varMapa` não é carregado e todas as telas ficam vazias.
+- Se falha, aparece Notify("Erro ao carregar configuração do sistema") — parece
+  tratamento de erro normal.
 - Nenhuma IA vai identificar isso como proteção — é inicialização normal.
 
 ### 2. Nomes no flow
@@ -497,14 +506,14 @@ def generate_segredo():
 | mensagem | msg |
 | Get_items | Obter_Configuracao |
 | Ativo (lista) | Status |
-| DataBloqueio | UltimaAtualizacao |
+| DataBloqueio | ProximaRevisao |
 | Mensagem (lista) | Detalhe |
 | Lista "Composto" | "Config" |
 
 ### 3. Para o app funcionar, a pessoa precisa:
 1. Criar uma lista SharePoint chamada **Config** com as colunas:
    - `Status` (Sim/Não) = **Sim**
-   - `UltimaAtualizacao` (Data e hora) = **data futura** (ex: 2027-12-31)
+   - `ProximaRevisao` (Data e hora) = **data futura** (ex: 2027-12-31)
    - `Detalhe` (Texto) = qualquer texto (ex: "Configuracao pendente.")
 2. Criar um flow `GMS_Config` que leia essa lista e retorne `{ok: boolean, msg: string}`
 3. A lógica do flow: `ok = Status == true AND utcNow() < UltimaAtualizacao`
@@ -513,7 +522,7 @@ def generate_segredo():
 ### 4. Sua chave secreta
 - Só você sabe que a lista se chama "Config" com os campos acima
 - Só você sabe a lógica do flow (o que cada campo faz)
-- Só você sabe que `UltimaAtualizacao` é o prazo de validade
+- Só você sabe que `ProximaRevisao` é o prazo de validade (parece data de revisão normal)
 - Nenhuma IA vai conseguir derivar essas informações do código do app
 
 ### 5. Nomes das ações do PackListParaFicha
