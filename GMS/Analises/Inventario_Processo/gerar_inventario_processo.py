@@ -2,7 +2,7 @@
 # Faz o que o "Inventario Mangueiras - Simulador.xlsm" faz, mas para todas as OPs abertas da ficha_producao:
 # situacao = ultima etapa fechada da OP; quantidade = BOM por metro x metros dessa etapa.
 #
-# Uso: python -I gerar_inventario_processo.py <ficha_producao.csv | ficha.json> <Simulador.xlsm>
+# Uso: python -I gerar_inventario_processo.py <ficha_producao.csv | ficha.json> <GMS_BOM_Mangueira.json | Simulador.xlsm>
 #   - .csv: export da lista (cabecalho com nomes de exibicao).
 #   - .json: {"rows":[...]} puxado por REST (nomes internos do SharePoint).
 # Saida (nesta pasta): bom_mangueira.csv (BOM em formato longo, molde da futura lista GMS_BOM_Mangueira)
@@ -29,21 +29,32 @@ def chave(nome):
     n = re.sub(r"\s+", "", str(nome or "")).upper()
     return re.sub(r"-0+(\d)", r"-\1", n)  # FC598-08 -> FC598-8
 
-wb = openpyxl.load_workbook(SIM, data_only=True)
 bom = {}
-for r in wb["BASE DE DADOS"].iter_rows(min_row=3, values_only=True):
-    if not r[0]:
-        continue
-    itens = []
-    for cp, cb, mat, cam, un in CAMADAS:
-        pn, q = r[cp], r[cb]
-        if pn not in (None, "-", "") and q:
-            itens.append({"pn": str(pn), "bom": float(q), "mat": mat, "cam": cam, "un": un})
-    if str(r[0]) in CIMENTO:
-        itens.append({"pn": "CIMENTO", "bom": 0.007943, "mat": "Cimento", "cam": "trama", "un": "kg"})
-    bom[chave(r[0])] = {"nome": str(r[0]), "itens": itens}
+if SIM.lower().endswith(".json"):
+    # itens da lista GMS_BOM_Mangueira (REST: Title=Mangueira, PartNumber, BOM_por_metro, Camada, Unidade, Material)
+    d = json.load(open(SIM, encoding="utf-8"))
+    for r in (d["rows"] if isinstance(d, dict) else d):
+        b = bom.setdefault(chave(r["Title"]), {"nome": r["Title"], "itens": [], "fonte": r.get("Fonte", "")})
+        if any(i["pn"] == r["PartNumber"] for i in b["itens"]):
+            continue  # linha repetida na lista não conta duas vezes
+        b["itens"].append({"pn": r["PartNumber"], "bom": float(r["BOM_por_metro"]), "mat": r["Material"],
+                           "cam": r["Camada"], "un": r["Unidade"]})
+else:
+    wb = openpyxl.load_workbook(SIM, data_only=True)
+    for r in wb["BASE DE DADOS"].iter_rows(min_row=3, values_only=True):
+        if not r[0] or chave(r[0]) in bom:
+            continue
+        itens = []
+        for cp, cb, mat, cam, un in CAMADAS:
+            pn, q = r[cp], r[cb]
+            if pn not in (None, "-", "") and q:
+                itens.append({"pn": str(pn), "bom": float(q), "mat": mat, "cam": cam, "un": un})
+        if str(r[0]) in CIMENTO:
+            itens.append({"pn": "CIMENTO", "bom": 0.007943, "mat": "Cimento", "cam": "trama", "un": "kg"})
+        bom[chave(r[0])] = {"nome": str(r[0]), "itens": itens, "fonte": "Simulador 2020"}
 
-with open(os.path.join(AQUI, "bom_mangueira.csv"), "w", newline="", encoding="utf-8-sig") as f:
+if not SIM.lower().endswith(".json"):
+  with open(os.path.join(AQUI, "bom_mangueira.csv"), "w", newline="", encoding="utf-8-sig") as f:
     w = csv.writer(f, delimiter=";")
     w.writerow(["Mangueira", "Material", "Camada", "PartNumber", "BOM_por_metro", "Unidade"])
     for b in bom.values():
@@ -147,10 +158,10 @@ for x in rows:
     sit, qs = SITUACAO[et]
     m = next((num(x[q]) for q in qs if num(x[q]) > 0), 0.0)
     b = bom.get(chave(base["mang"]))
-    base.update({"sit": sit, "m": m, "bom": bool(b), "nomeBom": b["nome"] if b else None})
+    base.update({"sit": sit, "m": m, "bom": bool(b), "fonteBom": b["fonte"] if b else None})
     ops.append(base)
 
-dados = {"puxado": puxado, "fonte": os.path.basename(FICHA), "ops": ops, "fora": fora,
+dados = {"puxado": puxado, "fonte": os.path.basename(FICHA), "fonteBom": "lista GMS_BOM_Mangueira" if SIM.lower().endswith(".json") else "simulador", "ops": ops, "fora": fora,
          "bom": {k: v["itens"] for k, v in bom.items()}, "chaves": {o["op"]: chave(o["mang"]) for o in ops}}
 tpl = open(os.path.join(AQUI, "inventario_template.html"), encoding="utf-8").read()
 html = tpl.replace("/*DADOS*/null", json.dumps(dados, ensure_ascii=False))

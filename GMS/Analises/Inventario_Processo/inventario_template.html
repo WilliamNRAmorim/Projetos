@@ -117,8 +117,8 @@ tr.off td{color:var(--muted)}
       <div class="bars" id="barsKg"></div>
     </section>
     <section class="card">
-      <h2>Fita e filme, em metros</h2>
-      <p class="hint">Só entram na situação Bandada.</p>
+      <h2>Insumo em metros</h2>
+      <p class="hint">Leno/tecido entra com a trama; fita de identificação e filme, só na Bandada.</p>
       <div class="bars" id="barsM"></div>
       <h2 style="margin-top:18px">Mangueiras sem BOM</h2>
       <p class="hint">Metros que ficam fora da conta até a mangueira entrar na BOM.</p>
@@ -195,7 +195,7 @@ function render(){
   const semBom = ops.filter(o=>!o.bom && !o.parada), mSem = semBom.reduce((a,o)=>a+o.m,0);
   const paradas = ops.filter(o=>o.parada);
   document.getElementById("sub").textContent =
-    `Ficha de produção de ${new Date(D.puxado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · BOM do simulador`;
+    `Ficha de produção de ${new Date(D.puxado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · BOM da ${D.fonteBom||"lista GMS_BOM_Mangueira"}`;
 
   document.getElementById("kpis").innerHTML = `
     <div class="kpi"><div class="v">${fmt(ok.length)}</div><div class="l">OPs na conta</div></div>
@@ -257,7 +257,7 @@ function render(){
     rows.map(o=>`<tr class="${o.conta?"":"off"}"><td>${o.op}</td><td>${o.mang}</td><td>${o.etapa}</td><td>${o.status}</td>
       <td><span class="dot" style="background:${col(camsDe(o.s).at(-1))}"></span>${SIT.find(x=>x.k===o.s).nome}</td>
       <td class="n">${fmt(o.m)}</td><td class="n">${fmt(o.dias,1)}</td><td class="n">${o.bom?fmt(o.kg,1):"–"}</td>
-      <td>${o.parada?'<span class="tag c">parada</span> ':""}${o.bom?"":'<span class="tag w">sem BOM</span>'}</td></tr>`).join("")+`</tbody>`;
+      <td>${o.parada?'<span class="tag c">parada</span> ':""}${o.bom?"":'<span class="tag w">sem BOM</span>'}${o.fonteBom&&o.fonteBom.startsWith("Simulador")?'<span class="tag">BOM 2020</span>':""}</td></tr>`).join("")+`</tbody>`;
   document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(!k||k==="obs")return;
     sortDir = sortK===k ? -sortDir : 1; sortK=k; render(); });
   window._ops = ops;
