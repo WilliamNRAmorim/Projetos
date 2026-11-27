@@ -162,7 +162,9 @@ def bar(name, x, w, title, measure, z, unid):
                   "legend": [{"properties": {"show": lit("false")}}],
                   "categoryAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569")}}],
                   "valueAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569"), "gridlineColor": hexc("#E5E7EB")}}],
-                  "labels": [{"properties": {"show": lit("true"), "fontSize": lit("9D"), "color": hexc("#1F2937")}}],
+                  # barra empilhada só põe rótulo dentro (some se a barra é curta); o total fica sempre na ponta
+                  "labels": [{"properties": {"show": lit("false")}}],
+                  "totals": [{"properties": {"show": lit("true"), "fontSize": lit("9D")}}],
                   "dataPoint": [{"properties": {"fill": hexc(c)}, "selector": {"data": [{"scopeId": {"Comparison": {"ComparisonKind": 0, "Left": col("fInventarioInsumo", "Camada"), "Right": {"Literal": {"Value": "'%s'" % k}}}}}]}}
                                 for k, c in [("tubo", "#2a78d6"), ("trama", "#eb6834"), ("cobertura", "#1baf7a"), ("bandagem", "#eda100")]]},
               "drillFilterOtherVisuals": True}
