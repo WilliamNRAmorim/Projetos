@@ -95,9 +95,7 @@ tr.off td{color:var(--muted)}
       <div class="sub" id="sub"></div>
     </div>
     <div class="ctrl">
-      <span>Na Cabine conta como</span>
-      <span class="seg" id="segPos"><button data-v="coberta" class="on">Coberta</button><button data-v="bandada">Bandada</button></span>
-      <span>· tira OP parada há mais de</span><input type="number" id="lim" min="1" value="15"><span>dias</span>
+      <span>Tira da conta OP parada há mais de</span><input type="number" id="lim" min="1" value="15"><span>dias</span>
       <button class="btn" id="csv">Baixar contagem (CSV)</button>
     </div>
   </header>
@@ -148,14 +146,14 @@ const SIT = [
   {k:"tubo", nome:"Tubo interno", onde:"na fila ou na Trançagem", cams:["tubo"]},
   {k:"trancada", nome:"Trançada / Espiralada", onde:"na Cobertura", cams:["tubo","trama"]},
   {k:"coberta", nome:"Coberta", onde:"na Bandagem", cams:["tubo","trama","cobertura"]},
-  {k:"bandada", nome:"Bandada", onde:"na Vulcanização e Debandagem", cams:["tubo","trama","cobertura","bandagem"]},
+  {k:"bandada", nome:"Bandada", onde:"na Vulcanização, Debandagem e Cabine", cams:["tubo","trama","cobertura","bandagem"]},
 ];
-let pos = "coberta", lim = 15, sortK = "etapaOrd", sortDir = 1;
+let lim = 15, sortK = "etapaOrd", sortDir = 1;
 const ORD = {"Trançagem":1,"Cobertura":2,"Bandagem":3,"Vulcanização":4,"Debandagem":5,"Extração/Teste":6};
 const fmt = (v,d=0)=> v==null? "–" : v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
 const col = k => `var(--c-${k})`;
 
-function sitDe(o){ return o.sit==="pos" ? pos : o.sit; }
+function sitDe(o){ return o.sit; }
 function camsDe(s){ return SIT.find(x=>x.k===s).cams; }
 
 function calc(){
@@ -208,9 +206,8 @@ function render(){
   // fluxo
   document.getElementById("flow").innerHTML = SIT.map(s=>{
     const g = ok.filter(o=>o.s===s.k), m=g.reduce((a,o)=>a+o.m,0), q=g.reduce((a,o)=>a+o.kg,0);
-    const onde = s.k===pos && pos!=="tubo" ? s.onde+" + Cabine" : s.onde;
     return `<div class="st" data-s="${s.k}">${corte(s.cams, g.length>0)}
-      <div class="nm">${s.nome}</div><div class="wh">${onde}</div>
+      <div class="nm">${s.nome}</div><div class="wh">${s.onde}</div>
       <div class="big">${fmt(m)} m</div><div class="sm">${g.length} OPs · ${fmt(q)} kg</div></div>`;
   }).join("");
   document.querySelectorAll(".st").forEach(el=>{
@@ -266,8 +263,6 @@ function render(){
   window._ops = ops;
 }
 
-document.querySelectorAll("#segPos button").forEach(b=>b.onclick=()=>{
-  pos=b.dataset.v; document.querySelectorAll("#segPos button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
 document.getElementById("lim").oninput=e=>{ lim=Math.max(1,+e.target.value||15); render(); };
 document.getElementById("csv").onclick=()=>{
   const dia = new Date(D.puxado).toLocaleDateString("pt-BR");

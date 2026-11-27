@@ -124,7 +124,8 @@ SITUACAO = {
     "Bandagem": ("coberta", ["quantidade_cobertura", "quantidade_trancagem", "quantidade_tubo"]),
     "Vulcanização": ("bandada", ["quantidade_bandagem", "quantidade_cobertura"]),
     "Debandagem": ("bandada", ["quantidade_vulcanizacao", "quantidade_bandagem", "quantidade_cobertura"]),
-    "Extração/Teste": ("pos", ["quantidade_debandagem", "quantidade_vulcanizacao", "quantidade_bandagem"]),
+    # decisao do William (27/11): depois da Debandagem a mangueira ainda conta como Bandada
+    "Extração/Teste": ("bandada", ["quantidade_debandagem", "quantidade_vulcanizacao", "quantidade_bandagem"]),
 }
 FINAIS = [k for k in CAMPOS if k.startswith("data_hora_final_")]
 
