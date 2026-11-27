@@ -979,6 +979,133 @@
               }
             ]
           }
+        },
+        {
+          "name": "IP · SVG KPIs",
+          "dataType": "Text",
+          "expression": "-- Faixa de 4 cartões KPI: OPs na conta, metros em processo, kg de insumo, metros sem BOM (com OPs sem BOM e OPs paradas fora). Cartão 4 com borda amarela se há metros sem BOM. · MEL-278\nVAR __Ops = COALESCE ( [IP OPs na Conta], 0 )\nVAR __Met = COALESCE ( [IP Metros], 0 )\nVAR __Kg = COALESCE ( [IP Insumo kg], 0 )\nVAR __MSem = COALESCE ( [IP Metros sem BOM], 0 )\nVAR __OSem = COALESCE ( [IP OPs sem BOM], 0 )\nVAR __OPar = COALESCE ( [IP OPs Paradas], 0 )\nVAR __C1 =\n    \"<rect x='0.5' y='0.5' width='299' height='83' rx='12' fill='%23ffffff' stroke='%23e1e0d9'/>\"\n        & \"<text x='16' y='44' font-size='26' font-weight='700' fill='%2314130f'>\" & FORMAT ( __Ops, \"#,0\", \"pt-BR\" ) & \"</text>\"\n        & \"<text x='16' y='66' font-size='12' fill='%2355534d'>OPs na conta</text>\"\nVAR __C2 =\n    \"<rect x='316.5' y='0.5' width='299' height='83' rx='12' fill='%23ffffff' stroke='%23e1e0d9'/>\"\n        & \"<text x='332' y='44' fill='%2314130f'><tspan font-size='26' font-weight='700'>\" & FORMAT ( __Met, \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='14' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='332' y='66' font-size='12' fill='%2355534d'>de mangueira em processo</text>\"\nVAR __C3 =\n    \"<rect x='632.5' y='0.5' width='299' height='83' rx='12' fill='%23ffffff' stroke='%23e1e0d9'/>\"\n        & \"<text x='648' y='44' fill='%2314130f'><tspan font-size='26' font-weight='700'>\" & FORMAT ( __Kg, \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='14' fill='%2355534d'> kg</tspan></text>\"\n        & \"<text x='648' y='66' font-size='12' fill='%2355534d'>de insumo em processo</text>\"\nVAR __C4 =\n    \"<rect x='948.5' y='0.5' width='299' height='83' rx='12' fill='%23ffffff' stroke='\" & IF ( __MSem > 0, \"%23fab219\", \"%23e1e0d9\" ) & \"' stroke-width='\" & IF ( __MSem > 0, \"1.5\", \"1\" ) & \"'/>\"\n        & \"<text x='964' y='44' fill='%2314130f'><tspan font-size='26' font-weight='700'>\" & FORMAT ( __MSem, \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='14' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='964' y='66' font-size='11.5' fill='%2355534d'>sem BOM (\" & FORMAT ( __OSem, \"0\", \"pt-BR\" ) & \" OPs) · \" & FORMAT ( __OPar, \"0\", \"pt-BR\" ) & \" OPs paradas fora</text>\"\nRETURN\n    \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1248' height='84' viewBox='0 0 1248 84' font-family='Segoe UI, sans-serif'>\"\n        & __C1 & __C2 & __C3 & __C4 & \"</svg>\"",
+          "dataCategory": "ImageUrl",
+          "displayFolder": "Inventário Processo (relatório)\\Visual",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP OPs na Conta"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Metros"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Insumo kg"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Metros sem BOM"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs sem BOM"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs Paradas"
+              }
+            ]
+          }
+        },
+        {
+          "name": "IP · SVG Corte Tubo interno",
+          "dataType": "Text",
+          "expression": "-- Cartão \"Onde está a mangueira\": corte da mangueira (1 camada(s)), onde está, metros, OPs e kg da situação \"Tubo interno\". Camadas ausentes em cinza claro. · MEL-278\nVAR __Sit = \"Tubo interno\"\nVAR __Met = CALCULATE ( [IP Metros], fInventarioOP[Situação] = __Sit )\nVAR __Ops = CALCULATE ( [IP OPs na Conta], fInventarioOP[Situação] = __Sit )\nVAR __Kg = CALCULATE ( [IP Insumo kg], fInventarioOP[Situação] = __Sit )\nVAR __Op = IF ( __Ops > 0, \"1\", \"0.35\" )\nVAR __Aneis = \"<circle r='58' fill='none' stroke='%23e1e0d9' stroke-dasharray='2 4'/><circle r='18' fill='%23efeee9'/><circle r='24' fill='none' stroke='%232a78d6' stroke-width='8' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23e1e0d9' stroke-width='5' opacity='0.5'/><circle r='44' fill='none' stroke='%23e1e0d9' stroke-width='6' opacity='0.5'/><circle r='52.5' fill='none' stroke='%23e1e0d9' stroke-width='3' opacity='0.5'/>\"\nVAR __Texto =\n    \"<text x='136' y='52' font-size='15' font-weight='700' fill='%2314130f'>Tubo interno</text>\"\n        & \"<text x='136' y='70' font-size='10.5' fill='%2355534d'>na fila ou na Trançagem</text>\"\n        & \"<text x='136' y='110' fill='%2314130f'><tspan font-size='24' font-weight='700'>\" & FORMAT ( COALESCE ( __Met, 0 ), \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='12' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='136' y='134' font-size='12' fill='%2355534d'>\" & FORMAT ( COALESCE ( __Ops, 0 ), \"0\", \"pt-BR\" ) & \" OPs · \" & FORMAT ( COALESCE ( __Kg, 0 ), \"#,0\", \"pt-BR\" ) & \" kg</text>\"\nRETURN\n    \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='303' height='176' viewBox='0 0 303 176' font-family='Segoe UI, sans-serif'>\"\n        & \"<rect x='0.5' y='0.5' width='302' height='175' rx='12' fill='%23ffffff' stroke='%23e1e0d9' stroke-width='1'/>\"\n        & \"<g transform='translate(66 88)'>\" & __Aneis & \"</g>\" & __Texto & \"</svg>\"",
+          "dataCategory": "ImageUrl",
+          "displayFolder": "Inventário Processo (relatório)\\Visual",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Metros"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs na Conta"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Insumo kg"
+              }
+            ]
+          }
+        },
+        {
+          "name": "IP · SVG Corte Trançada",
+          "dataType": "Text",
+          "expression": "-- Cartão \"Onde está a mangueira\": corte da mangueira (2 camada(s)), onde está, metros, OPs e kg da situação \"Trançada / Espiralada\". Camadas ausentes em cinza claro. · MEL-278\nVAR __Sit = \"Trançada / Espiralada\"\nVAR __Met = CALCULATE ( [IP Metros], fInventarioOP[Situação] = __Sit )\nVAR __Ops = CALCULATE ( [IP OPs na Conta], fInventarioOP[Situação] = __Sit )\nVAR __Kg = CALCULATE ( [IP Insumo kg], fInventarioOP[Situação] = __Sit )\nVAR __Op = IF ( __Ops > 0, \"1\", \"0.35\" )\nVAR __Aneis = \"<circle r='58' fill='none' stroke='%23e1e0d9' stroke-dasharray='2 4'/><circle r='18' fill='%23efeee9'/><circle r='24' fill='none' stroke='%232a78d6' stroke-width='8' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23eb6834' stroke-width='5' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23ffffff' stroke-width='5' stroke-dasharray='1.6 3.2' opacity='0.55'/><circle r='44' fill='none' stroke='%23e1e0d9' stroke-width='6' opacity='0.5'/><circle r='52.5' fill='none' stroke='%23e1e0d9' stroke-width='3' opacity='0.5'/>\"\nVAR __Texto =\n    \"<text x='136' y='52' font-size='15' font-weight='700' fill='%2314130f'>Trançada / Espiralada</text>\"\n        & \"<text x='136' y='70' font-size='10.5' fill='%2355534d'>na Cobertura</text>\"\n        & \"<text x='136' y='110' fill='%2314130f'><tspan font-size='24' font-weight='700'>\" & FORMAT ( COALESCE ( __Met, 0 ), \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='12' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='136' y='134' font-size='12' fill='%2355534d'>\" & FORMAT ( COALESCE ( __Ops, 0 ), \"0\", \"pt-BR\" ) & \" OPs · \" & FORMAT ( COALESCE ( __Kg, 0 ), \"#,0\", \"pt-BR\" ) & \" kg</text>\"\nRETURN\n    \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='303' height='176' viewBox='0 0 303 176' font-family='Segoe UI, sans-serif'>\"\n        & \"<rect x='0.5' y='0.5' width='302' height='175' rx='12' fill='%23ffffff' stroke='%23e1e0d9' stroke-width='1'/>\"\n        & \"<g transform='translate(66 88)'>\" & __Aneis & \"</g>\" & __Texto & \"</svg>\"",
+          "dataCategory": "ImageUrl",
+          "displayFolder": "Inventário Processo (relatório)\\Visual",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Metros"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs na Conta"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Insumo kg"
+              }
+            ]
+          }
+        },
+        {
+          "name": "IP · SVG Corte Coberta",
+          "dataType": "Text",
+          "expression": "-- Cartão \"Onde está a mangueira\": corte da mangueira (3 camada(s)), onde está, metros, OPs e kg da situação \"Coberta\". Camadas ausentes em cinza claro. · MEL-278\nVAR __Sit = \"Coberta\"\nVAR __Met = CALCULATE ( [IP Metros], fInventarioOP[Situação] = __Sit )\nVAR __Ops = CALCULATE ( [IP OPs na Conta], fInventarioOP[Situação] = __Sit )\nVAR __Kg = CALCULATE ( [IP Insumo kg], fInventarioOP[Situação] = __Sit )\nVAR __Op = IF ( __Ops > 0, \"1\", \"0.35\" )\nVAR __Aneis = \"<circle r='58' fill='none' stroke='%23e1e0d9' stroke-dasharray='2 4'/><circle r='18' fill='%23efeee9'/><circle r='24' fill='none' stroke='%232a78d6' stroke-width='8' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23eb6834' stroke-width='5' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23ffffff' stroke-width='5' stroke-dasharray='1.6 3.2' opacity='0.55'/><circle r='44' fill='none' stroke='%231baf7a' stroke-width='6' opacity='\" & __Op & \"'/><circle r='52.5' fill='none' stroke='%23e1e0d9' stroke-width='3' opacity='0.5'/>\"\nVAR __Texto =\n    \"<text x='136' y='52' font-size='15' font-weight='700' fill='%2314130f'>Coberta</text>\"\n        & \"<text x='136' y='70' font-size='10.5' fill='%2355534d'>na Bandagem</text>\"\n        & \"<text x='136' y='110' fill='%2314130f'><tspan font-size='24' font-weight='700'>\" & FORMAT ( COALESCE ( __Met, 0 ), \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='12' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='136' y='134' font-size='12' fill='%2355534d'>\" & FORMAT ( COALESCE ( __Ops, 0 ), \"0\", \"pt-BR\" ) & \" OPs · \" & FORMAT ( COALESCE ( __Kg, 0 ), \"#,0\", \"pt-BR\" ) & \" kg</text>\"\nRETURN\n    \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='303' height='176' viewBox='0 0 303 176' font-family='Segoe UI, sans-serif'>\"\n        & \"<rect x='0.5' y='0.5' width='302' height='175' rx='12' fill='%23ffffff' stroke='%23e1e0d9' stroke-width='1'/>\"\n        & \"<g transform='translate(66 88)'>\" & __Aneis & \"</g>\" & __Texto & \"</svg>\"",
+          "dataCategory": "ImageUrl",
+          "displayFolder": "Inventário Processo (relatório)\\Visual",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Metros"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs na Conta"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Insumo kg"
+              }
+            ]
+          }
+        },
+        {
+          "name": "IP · SVG Corte Bandada",
+          "dataType": "Text",
+          "expression": "-- Cartão \"Onde está a mangueira\": corte da mangueira (4 camada(s)), onde está, metros, OPs e kg da situação \"Bandada\". Camadas ausentes em cinza claro. · MEL-278\nVAR __Sit = \"Bandada\"\nVAR __Met = CALCULATE ( [IP Metros], fInventarioOP[Situação] = __Sit )\nVAR __Ops = CALCULATE ( [IP OPs na Conta], fInventarioOP[Situação] = __Sit )\nVAR __Kg = CALCULATE ( [IP Insumo kg], fInventarioOP[Situação] = __Sit )\nVAR __Op = IF ( __Ops > 0, \"1\", \"0.35\" )\nVAR __Aneis = \"<circle r='58' fill='none' stroke='%23e1e0d9' stroke-dasharray='2 4'/><circle r='18' fill='%23efeee9'/><circle r='24' fill='none' stroke='%232a78d6' stroke-width='8' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23eb6834' stroke-width='5' opacity='\" & __Op & \"'/><circle r='34.5' fill='none' stroke='%23ffffff' stroke-width='5' stroke-dasharray='1.6 3.2' opacity='0.55'/><circle r='44' fill='none' stroke='%231baf7a' stroke-width='6' opacity='\" & __Op & \"'/><circle r='52.5' fill='none' stroke='%23eda100' stroke-width='3' opacity='\" & __Op & \"'/><circle r='52.5' fill='none' stroke='%23ffffff' stroke-width='1' opacity='0.7'/>\"\nVAR __Texto =\n    \"<text x='136' y='52' font-size='15' font-weight='700' fill='%2314130f'>Bandada</text>\"\n        & \"<text x='136' y='70' font-size='10.5' fill='%2355534d'>Vulcanização, Debandagem e Cabine</text>\"\n        & \"<text x='136' y='110' fill='%2314130f'><tspan font-size='24' font-weight='700'>\" & FORMAT ( COALESCE ( __Met, 0 ), \"#,0\", \"pt-BR\" ) & \"</tspan><tspan font-size='12' fill='%2355534d'> m</tspan></text>\"\n        & \"<text x='136' y='134' font-size='12' fill='%2355534d'>\" & FORMAT ( COALESCE ( __Ops, 0 ), \"0\", \"pt-BR\" ) & \" OPs · \" & FORMAT ( COALESCE ( __Kg, 0 ), \"#,0\", \"pt-BR\" ) & \" kg</text>\"\nRETURN\n    \"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='303' height='176' viewBox='0 0 303 176' font-family='Segoe UI, sans-serif'>\"\n        & \"<rect x='0.5' y='0.5' width='302' height='175' rx='12' fill='%23ffffff' stroke='%23e1e0d9' stroke-width='1'/>\"\n        & \"<g transform='translate(66 88)'>\" & __Aneis & \"</g>\" & __Texto & \"</svg>\"",
+          "dataCategory": "ImageUrl",
+          "displayFolder": "Inventário Processo (relatório)\\Visual",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Metros"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP OPs na Conta"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Insumo kg"
+              }
+            ]
+          }
         }
       ]
     }
