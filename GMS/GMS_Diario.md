@@ -1586,3 +1586,4 @@ Leia o **Mestre inteiro** + as **últimas ~40 linhas** deste arquivo + o resulta
 2026-11-27 | LIÇÃO | pg_inventario_processo | — | MEL-278 | Ao copiar um seletor de outra página, tirar o syncGroup do molde: com fieldChanges ele troca o campo do seletor novo pelo do grupo e liga a seleção às outras páginas #F1
 2026-11-27 | FEITO | GMS_Painel/pg_inventario_processo | — | MEL-278 | Gráficos kg e m: rótulo de segmento (só dentro da barra empilhada, sumia em barra curta) trocado por rótulo de total, sempre na ponta.
 2026-11-27 | FEITO | GMS_Painel/pg_inventario_processo | — | MEL-278 | Clique numa OP da tabela filtra as barras kg e m (visualInteractions DataFilter), em vez de só destacar.
+2026-11-27 | FEITO | GMS_Painel/pg_inventario_processo | — | MEL-278 | Barras kg e m: fim do eixo por medida (IP · Eixo kg/m = maior part-number filtrado × 1,35), o rótulo de total não some quando a barra encosta na borda.

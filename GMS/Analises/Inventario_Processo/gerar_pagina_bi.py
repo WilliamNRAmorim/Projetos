@@ -92,6 +92,13 @@ for name, expr, refs in MEAS:
     ms.append({"name": name, "dataType": "Text", "expression": expr, "dataCategory": "ImageUrl",
                "displayFolder": FOLDER,
                "references": {"measures": [{"entity": "Medidas", "name": r} for r in refs]}})
+# fim do eixo das barras: maior part-number filtrado + 35% de folga, para o rótulo de total caber na ponta
+ms[:] = [m for m in ms if not m["name"].startswith("IP · Eixo")]
+for un in ("kg", "m"):
+    ms.append({"name": f"IP · Eixo {un}", "dataType": "Double", "displayFolder": FOLDER,
+               "expression": f"-- Fim do eixo das barras de insumo ({un}): maior part-number filtrado + 35% de folga, para o rótulo de total caber na ponta. · MEL-278\n"
+                             f"MAXX ( VALUES ( fInventarioInsumo[PartNumber] ), [IP Insumo {un}] ) * 1.35",
+               "references": {"measures": [{"entity": "Medidas", "name": f"IP Insumo {un}"}]}})
 open(p, "w", encoding="utf-8", newline="").write(json.dumps(d, indent=2, ensure_ascii=False))
 
 
@@ -161,7 +168,8 @@ def bar(name, x, w, title, measure, z, unid):
               "objects": {
                   "legend": [{"properties": {"show": lit("false")}}],
                   "categoryAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569")}}],
-                  "valueAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569"), "gridlineColor": hexc("#E5E7EB")}}],
+                  "valueAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569"), "gridlineColor": hexc("#E5E7EB"),
+                                                "start": lit("0D"), "end": {"expr": meas("IP · Eixo " + measure.split()[-1], ext=True)}}}],
                   # barra empilhada só põe rótulo dentro (some se a barra é curta); o total fica sempre na ponta
                   "labels": [{"properties": {"show": lit("false")}}],
                   "totals": [{"properties": {"show": lit("true"), "fontSize": lit("9D")}}],
