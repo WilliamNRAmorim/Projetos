@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventário em Processo</title>
+<style>
+:root{
+  --page:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --line:#e8e7e1;
+  --c-tubo:#2a78d6; --c-trama:#eb6834; --c-cobertura:#1baf7a; --c-bandagem:#eda100;
+  --warn:#fab219; --crit:#d03b3b; --ring:#fcfcfb; --core:#efeee9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --line:#2c2c2a;
+    --c-tubo:#3987e5; --c-trama:#d95926; --c-cobertura:#199e70; --c-bandagem:#c98500;
+    --ring:#1a1a19; --core:#262624;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0d0d0d; --surface:#1a1a19; --ink:#f0efec; --ink2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --line:#2c2c2a;
+  --c-tubo:#3987e5; --c-trama:#d95926; --c-cobertura:#199e70; --c-bandagem:#c98500;
+  --ring:#1a1a19; --core:#262624;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 40px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+h1{font-size:22px;margin:0;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13px}
+.ctrl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:13px;color:var(--ink2)}
+.seg{display:inline-flex;border:1px solid var(--axis);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--ink2);padding:5px 10px;font:inherit;cursor:pointer}
+.seg button.on{background:var(--ink);color:var(--surface)}
+input[type=number]{width:56px;font:inherit;padding:4px 6px;border:1px solid var(--axis);border-radius:6px;background:var(--surface);color:var(--ink)}
+.btn{border:1px solid var(--axis);background:var(--surface);color:var(--ink);border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.btn:hover{border-color:var(--ink2)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px}
+.card h2{font-size:15px;margin:0 0 2px;font-weight:620}
+.card .hint{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.kpi .v{font-size:28px;font-weight:650;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.kpi .v small{font-size:14px;font-weight:500;color:var(--ink2);margin-left:3px}
+.kpi .l{color:var(--ink2);font-size:12.5px}
+.kpi.alert .v{color:var(--ink)} .kpi.alert{border-color:var(--warn)}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;position:relative}
+.st{text-align:center;padding:6px 4px 4px;border-radius:12px;position:relative}
+.st svg{width:100%;max-width:128px;height:auto}
+.st .nm{font-weight:620;font-size:14px}
+.st .wh{color:var(--muted);font-size:12px;min-height:18px}
+.st .big{font-size:22px;font-weight:650;font-variant-numeric:tabular-nums}
+.st .sm{color:var(--ink2);font-size:12.5px;font-variant-numeric:tabular-nums}
+.st:not(:last-child)::after{content:"";position:absolute;right:-9px;top:76px;width:10px;height:10px;border-top:2px solid var(--axis);border-right:2px solid var(--axis);transform:rotate(45deg)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--ink2);margin-top:10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.bars .row{display:grid;grid-template-columns:120px 1fr 92px;gap:10px;align-items:center;height:26px;cursor:default}
+.bars .row:hover{background:color-mix(in srgb,var(--grid) 45%,transparent);border-radius:6px}
+.bars .pn{font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars .val{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}
+.bars svg{display:block;width:100%;height:14px;overflow:visible}
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th{text-align:left;color:var(--muted);font-weight:560;border-bottom:1px solid var(--axis);padding:6px 8px;white-space:nowrap;cursor:pointer;user-select:none}
+td{border-bottom:1px solid var(--grid);padding:6px 8px;white-space:nowrap}
+td.n,th.n{text-align:right}
+tr.off td{color:var(--muted)}
+.tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--axis);color:var(--ink2)}
+.tag.w{border-color:var(--warn)}
+.tag.c{border-color:var(--crit)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.tblwrap{overflow-x:auto}
+#tip{position:fixed;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--axis);border-radius:10px;padding:9px 11px;font-size:12.5px;box-shadow:0 6px 24px rgba(0,0,0,.14);opacity:0;transition:opacity .08s;max-width:300px;z-index:9}
+#tip b{font-weight:620} #tip .r{display:flex;justify-content:space-between;gap:16px;font-variant-numeric:tabular-nums}
+#tip .r span:first-child{color:var(--ink2)}
+.fora{color:var(--ink2);font-size:12.5px;margin-top:10px}
+@media (max-width:820px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .flow{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:18px}
+  .kpi .v{font-size:22px} .st .big{font-size:18px}
+  .st::after{display:none}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .bars .row{grid-template-columns:96px 1fr 80px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Inventário de material em processo</h1>
+      <div class="sub" id="sub"></div>
+    </div>
+    <div class="ctrl">
+      <span>Na Cabine conta como</span>
+      <span class="seg" id="segPos"><button data-v="coberta" class="on">Coberta</button><button data-v="bandada">Bandada</button></span>
+      <span>· tira OP parada há mais de</span><input type="number" id="lim" min="1" value="15"><span>dias</span>
+      <button class="btn" id="csv">Baixar contagem (CSV)</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="card">
+    <h2>Onde está a mangueira</h2>
+    <p class="hint">Situação de cada OP pela última etapa fechada, como no simulador. Cada anel é uma camada que já entrou na conta.</p>
+    <div class="flow" id="flow"></div>
+    <div class="legend" id="leg"></div>
+    <div class="fora" id="fora"></div>
+  </section>
+
+  <div class="two">
+    <section class="card">
+      <h2>Insumo em processo, em kg</h2>
+      <p class="hint">Por part-number, cor pela camada. Passe o mouse para ver em que situação está.</p>
+      <div class="bars" id="barsKg"></div>
+    </section>
+    <section class="card">
+      <h2>Fita e filme, em metros</h2>
+      <p class="hint">Só entram na situação Bandada.</p>
+      <div class="bars" id="barsM"></div>
+      <h2 style="margin-top:18px">Mangueiras sem BOM</h2>
+      <p class="hint">Metros que ficam fora da conta até a mangueira entrar na BOM.</p>
+      <div id="semBom"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>OPs em processo</h2>
+    <p class="hint">Clique no cabeçalho para ordenar. Em cinza: parada além do limite ou sem BOM (fora dos totais).</p>
+    <div class="tblwrap"><table id="tbl"></table></div>
+  </section>
+</div>
+<div id="tip"></div>
+
+<script>
+const D = {"puxado": "2026-11-27T08:10", "fonte": "ficha_aberta_2026-11-27.json", "ops": [{"op": "30766826", "mang": "HC101-8", "etapa": "Extração/Teste", "status": "Em processo", "dias": 1.0, "sit": "pos", "m": 520.0, "bom": true, "nomeBom": "HC101-8"}, {"op": "30798703", "mang": "HC139-7", "etapa": "Cobertura", "status": "Aguardando", "dias": 11.1, "sit": "trancada", "m": 680.0, "bom": true, "nomeBom": "HC139-7"}, {"op": "30830675", "mang": "2556-12", "etapa": "Cobertura", "status": "Aguardando", "dias": 10.1, "sit": "trancada", "m": 400.0, "bom": true, "nomeBom": "2556-12"}, {"op": "30887324", "mang": "12102159", "etapa": "Trançagem", "status": "Aguardando", "dias": 10.6, "sit": "tubo", "m": 800.0, "bom": false, "nomeBom": null}, {"op": "30860263", "mang": "FC735-10", "etapa": "Debandagem", "status": "Em processo", "dias": 0.1, "sit": "bandada", "m": 450.0, "bom": true, "nomeBom": "FC735-10"}, {"op": "30871570", "mang": "HC139-7", "etapa": "Cobertura", "status": "Aguardando", "dias": 3.0, "sit": "trancada", "m": 680.0, "bom": true, "nomeBom": "HC139-7"}, {"op": "30934481", "mang": "2556-16", "etapa": "Trançagem", "status": "Aguardando", "dias": 1.6, "sit": "tubo", "m": 250.0, "bom": true, "nomeBom": "2556-16"}, {"op": "30900465", "mang": "2556-6", "etapa": "Trançagem", "status": "Em processo", "dias": 3.8, "sit": "tubo", "m": 520.0, "bom": true, "nomeBom": "2556-6"}, {"op": "30842509", "mang": "FC735-06", "etapa": "Bandagem", "status": "Aguardando", "dias": 0.9, "sit": "coberta", "m": 1080.0, "bom": false, "nomeBom": null}, {"op": "30899867", "mang": "GH493-12", "etapa": "Vulcanização", "status": "Em processo", "dias": 0.4, "sit": "bandada", "m": 310.0, "bom": true, "nomeBom": "GH493-12"}, {"op": "30899870", "mang": "GH493-12", "etapa": "Extração/Teste", "status": "Aguardando", "dias": 0.1, "sit": "pos", "m": 325.0, "bom": true, "nomeBom": "GH493-12"}, {"op": "30899869", "mang": "GH493-12", "etapa": "Vulcanização", "status": "Em processo", "dias": 0.5, "sit": "bandada", "m": 310.0, "bom": true, "nomeBom": "GH493-12"}, {"op": "30797451", "mang": "2556-8", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.8, "sit": "trancada", "m": 520.0, "bom": true, "nomeBom": "2556-8"}, {"op": "30975713", "mang": "GH781-4", "etapa": "Vulcanização", "status": "Em processo", "dias": 0.1, "sit": "bandada", "m": 800.0, "bom": true, "nomeBom": "GH781-4"}, {"op": "30915507", "mang": "2556-6", "etapa": "Cobertura", "status": "Aguardando", "dias": 2.5, "sit": "trancada", "m": 680.0, "bom": true, "nomeBom": "2556-6"}, {"op": "30933873", "mang": "FC735-06", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.3, "sit": "trancada", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "30933874", "mang": "FC735-06", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.5, "sit": "trancada", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "30885519", "mang": "GH781-12", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.0, "sit": "trancada", "m": 400.0, "bom": true, "nomeBom": "GH781-12"}, {"op": "30817480", "mang": "HC139-7_S-GX", "etapa": "Trançagem", "status": "Aguardando", "dias": 1.7, "sit": "tubo", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "30974903", "mang": "FC735-12", "etapa": "Extração/Teste", "status": "Em processo", "dias": 0.1, "sit": "pos", "m": 400.0, "bom": true, "nomeBom": "FC735-12"}, {"op": "30959049", "mang": "12102164", "etapa": "Trançagem", "status": "Aguardando", "dias": 1.5, "sit": "tubo", "m": 125.0, "bom": false, "nomeBom": null}, {"op": "30974907", "mang": "GH781-12", "etapa": "Cobertura", "status": "Aguardando", "dias": 1.0, "sit": "trancada", "m": 400.0, "bom": true, "nomeBom": "GH781-12"}, {"op": "30933872", "mang": "GH781-8", "etapa": "Vulcanização", "status": "Em processo", "dias": 0.4, "sit": "bandada", "m": 550.0, "bom": true, "nomeBom": "GH781-8"}, {"op": "30993734", "mang": "EC215-12LRL", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.9, "sit": "trancada", "m": 400.0, "bom": false, "nomeBom": null}, {"op": "30975715", "mang": "12102164", "etapa": "Trançagem", "status": "Aguardando", "dias": 1.5, "sit": "tubo", "m": 100.0, "bom": false, "nomeBom": null}, {"op": "30975714", "mang": "GH781-4", "etapa": "Vulcanização", "status": "Em processo", "dias": 0.0, "sit": "bandada", "m": 400.0, "bom": true, "nomeBom": "GH781-4"}, {"op": "30933870", "mang": "GH781-8", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.1, "sit": "trancada", "m": 520.0, "bom": true, "nomeBom": "GH781-8"}, {"op": "30933871", "mang": "GH781-8", "etapa": "Trançagem", "status": "Em processo", "dias": 0.9, "sit": "tubo", "m": 520.0, "bom": true, "nomeBom": "GH781-8"}, {"op": "31003282", "mang": "GH493-16", "etapa": "Cobertura", "status": "Em processo", "dias": 0.0, "sit": "trancada", "m": 500.0, "bom": true, "nomeBom": "GH493-16"}, {"op": "31003339", "mang": "GH493-16", "etapa": "Vulcanização", "status": "Aguardando", "dias": 0.0, "sit": "bandada", "m": 255.0, "bom": true, "nomeBom": "GH493-16"}, {"op": "30900461", "mang": "HC139-7_S-GX", "etapa": "Trançagem", "status": "Aguardando", "dias": 0.6, "sit": "tubo", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "31003404", "mang": "GH493-16", "etapa": "Vulcanização", "status": "Aguardando", "dias": 0.0, "sit": "bandada", "m": 260.0, "bom": true, "nomeBom": "GH493-16"}, {"op": "31003402", "mang": "GH493-16", "etapa": "Bandagem", "status": "Em processo", "dias": 0.0, "sit": "coberta", "m": 260.0, "bom": true, "nomeBom": "GH493-16"}, {"op": "31003340", "mang": "GH493-16", "etapa": "Bandagem", "status": "Aguardando", "dias": 0.0, "sit": "coberta", "m": 250.0, "bom": true, "nomeBom": "GH493-16"}, {"op": "30993735", "mang": "EC215-12LRL", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.3, "sit": "trancada", "m": 400.0, "bom": false, "nomeBom": null}, {"op": "30975707", "mang": "EC215-06LRL", "etapa": "Trançagem", "status": "Aguardando", "dias": 0.0, "sit": "tubo", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "30993736", "mang": "EC215-12LRL", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.3, "sit": "trancada", "m": 400.0, "bom": false, "nomeBom": null}, {"op": "30975706", "mang": "EC215-06LRL", "etapa": "Trançagem", "status": "Aguardando", "dias": 0.1, "sit": "tubo", "m": 680.0, "bom": false, "nomeBom": null}, {"op": "30993738", "mang": "EC215-12LRL", "etapa": "Cobertura", "status": "Aguardando", "dias": 0.0, "sit": "trancada", "m": 400.0, "bom": false, "nomeBom": null}], "fora": [{"op": "(sem OP)", "mang": "vazio (inválida)", "etapa": "Tubo", "status": "Aguardando", "dias": 0.7}, {"op": "(sem OP)", "mang": "EC215-06L", "etapa": "Tubo", "status": "Em processo", "dias": 0.6}, {"op": "(sem OP)", "mang": "EC215-12LRL", "etapa": "Tubo", "status": "Em processo", "dias": 0.0}, {"op": "(sem OP)", "mang": "vazio (inválida)", "etapa": "Mandril", "status": "Em processo", "dias": null}], "bom": {"2556-10": [{"pn": "640-99", "bom": 0.114146, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.034659, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.150932, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-12": [{"pn": "640-99", "bom": 0.159009, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15254-041", "bom": 0.053936, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.18086, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-16": [{"pn": "640-99", "bom": 0.221465, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15252-021", "bom": 0.071166, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.419787, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-3": [{"pn": "640-99", "bom": 0.039042, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.007987, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.049215, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-4": [{"pn": "640-99", "bom": 0.044545, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.016092, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.077775, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-5": [{"pn": "640-99", "bom": 0.063887, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.025302, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.061475, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-6": [{"pn": "640-99", "bom": 0.081936, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.025289, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.081391, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2556-8": [{"pn": "640-99", "bom": 0.109319, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.033687, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.09947, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "2807-8": [{"pn": "2807-8T", "bom": 1.0, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W32", "bom": 0.120403, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}], "2807-10": [{"pn": "2807-10T", "bom": 1.0, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W32", "bom": 0.174831, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}], "2807-12": [{"pn": "2807-12T", "bom": 1.0, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W32", "bom": 0.218642, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}], "FC310-4": [{"pn": "640-99", "bom": 0.058845, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.185108, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.061166, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC310-6": [{"pn": "640-99", "bom": 0.095592, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.227174, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.075622, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC310-8": [{"pn": "640-99", "bom": 0.108543, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.272403, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.097658, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC310-10": [{"pn": "640-99", "bom": 0.135158, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.374102, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.115303, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC310-12": [{"pn": "640-99", "bom": 0.196703, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.356898, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.129192, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC310-16": [{"pn": "640-99", "bom": 0.247724, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.49122, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.201878, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC598-8": [{"pn": "2023", "bom": 0.106217, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15221-031", "bom": 0.035922, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "2105", "bom": 0.149524, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC598-12": [{"pn": "2023", "bom": 0.154498, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.062529, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "2105", "bom": 0.181414, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "FC735-4": [{"pn": "640-99", "bom": 0.053521, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.185126, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-30", "bom": 0.025736, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "1760", "bom": 0.048246, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00996", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "T00023", "bom": 1.0, "mat": "Filme", "cam": "bandagem", "un": "m"}], "FC735-10": [{"pn": "640-99", "bom": 0.151289, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.421309, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-30", "bom": 0.028309, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "1760", "bom": 0.108543, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00999", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "T00017", "bom": 1.0, "mat": "Filme", "cam": "bandagem", "un": "m"}], "FC735-12": [{"pn": "640-99", "bom": 0.217328, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.469988, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-30", "bom": 0.033456, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "1760", "bom": 0.115133, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00100", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "T00018", "bom": 1.0, "mat": "Filme", "cam": "bandagem", "un": "m"}], "FC839B-4": [{"pn": "640-99", "bom": 0.048339, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.121846, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "1760", "bom": 0.044342, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T01003", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "T00014", "bom": 1.0, "mat": "Filme", "cam": "bandagem", "un": "m"}], "FC839B-6": [{"pn": "640-99", "bom": 0.089425, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.171376, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "1760", "bom": 0.057701, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T01004", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "T00015", "bom": 1.0, "mat": "Filme", "cam": "bandagem", "un": "m"}], "GH493-16": [{"pn": "640-33", "bom": 0.296856, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W00018", "bom": 1.15166, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035", "bom": 0.177238, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "F00051", "bom": 0.019945, "mat": "Leno", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.173633, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00751", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH493-12": [{"pn": "640-33", "bom": 0.1962888, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W00018", "bom": 0.8269868, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035", "bom": 0.1370599, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "F00051", "bom": 0.0153627, "mat": "Leno", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.1672696, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00750", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH493-10": [{"pn": "640-33", "bom": 0.145542, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W00016", "bom": 0.5972002, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "31416", "bom": 0.1171185, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "F00050", "bom": 0.012649, "mat": "Leno", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.17099, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00749", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH493-8": [{"pn": "640-33", "bom": 0.1134579, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W00016", "bom": 0.4882601, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035", "bom": 0.102184, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "F00050", "bom": 0.0106562, "mat": "Leno", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.1413902, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00748", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH493-6": [{"pn": "640-33", "bom": 0.0866314, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "W00016", "bom": 0.4064176, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "31416", "bom": 0.0872064, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "F00050", "bom": 0.009078, "mat": "Leno", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.107743, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "T00747", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-10": [{"pn": "640-99", "bom": 0.190172, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.233966, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.115709, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-10", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-12": [{"pn": "640-99", "bom": 0.190172, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.233966, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.115709, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-12", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-16": [{"pn": "640-99", "bom": 0.418552, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.314096, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.166798, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-16", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-4": [{"pn": "640-99", "bom": 0.058845, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.121876, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.061434, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-4", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-6": [{"pn": "640-99", "bom": 0.111182, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.140948, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.080738, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-6", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH663-8": [{"pn": "640-99", "bom": 0.136364, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.187852, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.09626, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK001-8", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-4": [{"pn": "640-99", "bom": 0.058845, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.184893, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.02246, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.061045, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-4", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-6": [{"pn": "640-99", "bom": 0.053665, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.254824, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.026204, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.086508, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-6", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-8": [{"pn": "640-99", "bom": 0.107561, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.375381, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.026671, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.078465, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-8", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-10": [{"pn": "640-99", "bom": 0.135158, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.424906, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.041177, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.128988, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-10", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-12": [{"pn": "640-99", "bom": 0.196703, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.520179, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.046792, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.128807, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-12", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "GH781-16": [{"pn": "640-99", "bom": 0.280037, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.612306, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "H035-40", "bom": 0.059894, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.184509, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK003-16", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}], "HC101-4": [{"pn": "640-99", "bom": 0.075132, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.034476, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.145335, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC101-6": [{"pn": "640-99", "bom": 0.09924, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.036551, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.178319, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC101-8": [{"pn": "640-99", "bom": 0.126305, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.035654, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.226293, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC101-10": [{"pn": "640-99", "bom": 0.188823, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.050179, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "988-50", "bom": 0.334627, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC139-7": [{"pn": "H028", "bom": 0.090377, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.036696, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "CIMENTO", "bom": 0.007943, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "H029", "bom": 0.105748, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "IK004-7", "bom": 1.0, "mat": "Fita match-mate", "cam": "bandagem", "un": "m"}, {"pn": "CIMENTO", "bom": 0.007943, "mat": "Cimento", "cam": "trama", "un": "kg"}], "HC139-7(S/G)": [{"pn": "H028", "bom": 0.090377, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT15210-041", "bom": 0.036696, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "CIMENTO", "bom": 0.007943, "mat": "Insulation", "cam": "trama", "un": "kg"}, {"pn": "H029", "bom": 0.105748, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}, {"pn": "CIMENTO", "bom": 0.007943, "mat": "Cimento", "cam": "trama", "un": "kg"}], "HC3000-4": [{"pn": "640-99", "bom": 0.048339, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.126912, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.0558919, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC3000-6": [{"pn": "640-99", "bom": 0.0955067, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16406-012", "bom": 0.1624098, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.0753162, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}], "HC3000-8": [{"pn": "640-99", "bom": 0.127207, "mat": "Composto / Tubo", "cam": "tubo", "un": "kg"}, {"pn": "RT16410-010", "bom": 0.232963, "mat": "Fio (arame / textil)", "cam": "trama", "un": "kg"}, {"pn": "500-01", "bom": 0.115088, "mat": "Composto / Cobertura", "cam": "cobertura", "un": "kg"}]}, "chaves": {"30766826": "HC101-8", "30798703": "HC139-7", "30830675": "2556-12", "30887324": "12102159", "30860263": "FC735-10", "30871570": "HC139-7", "30934481": "2556-16", "30900465": "2556-6", "30842509": "FC735-6", "30899867": "GH493-12", "30899870": "GH493-12", "30899869": "GH493-12", "30797451": "2556-8", "30975713": "GH781-4", "30915507": "2556-6", "30933873": "FC735-6", "30933874": "FC735-6", "30885519": "GH781-12", "30817480": "HC139-7_S-GX", "30974903": "FC735-12", "30959049": "12102164", "30974907": "GH781-12", "30933872": "GH781-8", "30993734": "EC215-12LRL", "30975715": "12102164", "30975714": "GH781-4", "30933870": "GH781-8", "30933871": "GH781-8", "31003282": "GH493-16", "31003339": "GH493-16", "30900461": "HC139-7_S-GX", "31003404": "GH493-16", "31003402": "GH493-16", "31003340": "GH493-16", "30993735": "EC215-12LRL", "30975707": "EC215-6LRL", "30993736": "EC215-12LRL", "30975706": "EC215-6LRL", "30993738": "EC215-12LRL"}};
+const CAM = [
+  {k:"tubo", nome:"Tubo interno (composto)"},
+  {k:"trama", nome:"Trama (fio, insulation, leno, cimento)"},
+  {k:"cobertura", nome:"Cobertura (composto)"},
+  {k:"bandagem", nome:"Bandagem (match-mate, filme)"},
+];
+const SIT = [
+  {k:"tubo", nome:"Tubo interno", onde:"na fila ou na Trançagem", cams:["tubo"]},
+  {k:"trancada", nome:"Trançada / Espiralada", onde:"na Cobertura", cams:["tubo","trama"]},
+  {k:"coberta", nome:"Coberta", onde:"na Bandagem", cams:["tubo","trama","cobertura"]},
+  {k:"bandada", nome:"Bandada", onde:"na Vulcanização e Debandagem", cams:["tubo","trama","cobertura","bandagem"]},
+];
+let pos = "coberta", lim = 15, sortK = "etapaOrd", sortDir = 1;
+const ORD = {"Trançagem":1,"Cobertura":2,"Bandagem":3,"Vulcanização":4,"Debandagem":5,"Extração/Teste":6};
+const fmt = (v,d=0)=> v==null? "–" : v.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const col = k => `var(--c-${k})`;
+
+function sitDe(o){ return o.sit==="pos" ? pos : o.sit; }
+function camsDe(s){ return SIT.find(x=>x.k===s).cams; }
+
+function calc(){
+  const ops = D.ops.map(o=>{
+    const s = sitDe(o), cams = camsDe(s);
+    const parada = o.dias!=null && o.dias>lim;
+    const itens = o.bom ? D.bom[D.chaves[o.op]].filter(i=>cams.includes(i.cam)).map(i=>({...i,q:i.bom*o.m})) : [];
+    const kg = itens.filter(i=>i.un==="kg").reduce((a,i)=>a+i.q,0);
+    return {...o, s, parada, conta: !parada && o.bom, itens, kg, etapaOrd: ORD[o.etapa]||9};
+  });
+  return ops;
+}
+
+function tip(e, html){ const t=document.getElementById("tip"); t.innerHTML=html; t.style.opacity=1;
+  const w=t.offsetWidth, h=t.offsetHeight; let x=e.clientX+14, y=e.clientY+14;
+  if(x+w>innerWidth-8) x=e.clientX-w-14; if(y+h>innerHeight-8) y=e.clientY-h-14;
+  t.style.left=x+"px"; t.style.top=y+"px"; }
+function untip(){ document.getElementById("tip").style.opacity=0; }
+
+// corte transversal da mangueira: aneis de dentro para fora
+function corte(cams, temOps){
+  const R = {tubo:[18,30], trama:[30,39], cobertura:[39,49], bandagem:[49,56]};
+  let s = `<svg viewBox="-62 -62 124 124" width="128" height="128" role="img" aria-label="Camadas: ${cams.join(", ")}">`;
+  s += `<circle r="58" fill="none" stroke="var(--grid)" stroke-dasharray="2 4"/>`;
+  s += `<circle r="18" fill="var(--core)"/>`;
+  for(const c of ["tubo","trama","cobertura","bandagem"]){
+    const [a,b]=R[c], r=(a+b)/2, w=b-a-2, on=cams.includes(c);
+    if(!on){ s+=`<circle r="${r}" fill="none" stroke="var(--grid)" stroke-width="${w}" opacity=".5"/>`; continue; }
+    s+=`<circle r="${r}" fill="none" stroke="${col(c)}" stroke-width="${w}" opacity="${temOps?1:.35}"/>`;
+    if(c==="trama") s+=`<circle r="${r}" fill="none" stroke="var(--ring)" stroke-width="${w}" stroke-dasharray="1.6 3.2" opacity=".55"/>`;
+    if(c==="bandagem") s+=`<circle r="${r}" fill="none" stroke="var(--ring)" stroke-width="1" opacity=".7"/>`;
+  }
+  return s+`</svg>`;
+}
+
+function render(){
+  const ops = calc(), ok = ops.filter(o=>o.conta);
+  const metros = ok.reduce((a,o)=>a+o.m,0), kg = ok.reduce((a,o)=>a+o.kg,0);
+  const semBom = ops.filter(o=>!o.bom && !o.parada), mSem = semBom.reduce((a,o)=>a+o.m,0);
+  const paradas = ops.filter(o=>o.parada);
+  document.getElementById("sub").textContent =
+    `Ficha de produção de ${new Date(D.puxado).toLocaleString("pt-BR",{dateStyle:"short",timeStyle:"short"})} · BOM do simulador`;
+
+  document.getElementById("kpis").innerHTML = `
+    <div class="kpi"><div class="v">${fmt(ok.length)}</div><div class="l">OPs na conta</div></div>
+    <div class="kpi"><div class="v">${fmt(metros)}<small>m</small></div><div class="l">de mangueira em processo</div></div>
+    <div class="kpi"><div class="v">${fmt(kg)}<small>kg</small></div><div class="l">de insumo em processo</div></div>
+    <div class="kpi ${mSem>0?"alert":""}"><div class="v">${fmt(mSem)}<small>m</small></div><div class="l">sem BOM (${semBom.length} OPs) · ${paradas.length} OPs paradas fora</div></div>`;
+
+  // fluxo
+  document.getElementById("flow").innerHTML = SIT.map(s=>{
+    const g = ok.filter(o=>o.s===s.k), m=g.reduce((a,o)=>a+o.m,0), q=g.reduce((a,o)=>a+o.kg,0);
+    const onde = s.k===pos && pos!=="tubo" ? s.onde+" + Cabine" : s.onde;
+    return `<div class="st" data-s="${s.k}">${corte(s.cams, g.length>0)}
+      <div class="nm">${s.nome}</div><div class="wh">${onde}</div>
+      <div class="big">${fmt(m)} m</div><div class="sm">${g.length} OPs · ${fmt(q)} kg</div></div>`;
+  }).join("");
+  document.querySelectorAll(".st").forEach(el=>{
+    el.onmousemove=e=>{ const g=ok.filter(o=>o.s===el.dataset.s);
+      const por={}; g.forEach(o=>por[o.mang]=(por[o.mang]||0)+o.m);
+      const top=Object.entries(por).sort((a,b)=>b[1]-a[1]).slice(0,6);
+      tip(e, `<b>${SIT.find(x=>x.k===el.dataset.s).nome}</b>`+(top.length? top.map(([k,v])=>`<div class="r"><span>${k}</span><span>${fmt(v)} m</span></div>`).join("") : "<div>nenhuma OP</div>")); };
+    el.onmouseleave=untip; });
+  document.getElementById("leg").innerHTML = CAM.map(c=>`<span><i style="background:${col(c.k)}"></i>${c.nome}</span>`).join("");
+  const f = D.fora;
+  document.getElementById("fora").textContent = f.length ?
+    `Fora da conta: ${f.length} ${f.length>1?"fichas":"ficha"} ainda no Mandril ou no Tubo (sem mangueira formada).` : "";
+
+  // barras por part-number
+  const agg = {};
+  ok.forEach(o=>o.itens.forEach(i=>{
+    const a = agg[i.pn] ||= {pn:i.pn, un:i.un, cam:i.cam, mat:i.mat, q:0, sit:{}, mang:{}};
+    a.q+=i.q; a.sit[o.s]=(a.sit[o.s]||0)+i.q; a.mang[o.mang]=(a.mang[o.mang]||0)+i.q; }));
+  const barras = (el, un) => {
+    const L = Object.values(agg).filter(a=>a.un===un).sort((a,b)=>b.q-a.q);
+    const mx = Math.max(1,...L.map(a=>a.q));
+    el.innerHTML = L.length ? L.map(a=>`<div class="row" data-pn="${a.pn}">
+      <div class="pn">${a.pn}</div>
+      <svg viewBox="0 0 100 14" preserveAspectRatio="none"><rect x="0" y="2" width="${Math.max(.6,a.q/mx*100)}" height="10" rx="2" fill="${col(a.cam)}"/></svg>
+      <div class="val">${fmt(a.q, a.q<10?2:0)} ${un}</div></div>`).join("") : `<div class="hint">Nada nesta situação.</div>`;
+    el.querySelectorAll(".row").forEach(r=>{ const a=agg[r.dataset.pn];
+      r.onmousemove=e=>tip(e, `<b>${a.pn}</b> · ${a.mat}`+
+        SIT.filter(s=>a.sit[s.k]).map(s=>`<div class="r"><span>${s.nome}</span><span>${fmt(a.sit[s.k],1)} ${un}</span></div>`).join("")+
+        `<div style="margin-top:6px;color:var(--muted)">Mangueiras</div>`+
+        Object.entries(a.mang).sort((x,y)=>y[1]-x[1]).slice(0,5).map(([k,v])=>`<div class="r"><span>${k}</span><span>${fmt(v,1)} ${un}</span></div>`).join(""));
+      r.onmouseleave=untip; });
+  };
+  barras(document.getElementById("barsKg"), "kg");
+  barras(document.getElementById("barsM"), "m");
+
+  const sb = {}; semBom.forEach(o=>{ (sb[o.mang] ||= {m:0,n:0}); sb[o.mang].m+=o.m; sb[o.mang].n++; });
+  document.getElementById("semBom").innerHTML = Object.keys(sb).length ?
+    `<table><tr><th>Mangueira</th><th class="n">OPs</th><th class="n">Metros</th></tr>`+
+    Object.entries(sb).sort((a,b)=>b[1].m-a[1].m).map(([k,v])=>`<tr><td>${k}</td><td class="n">${v.n}</td><td class="n">${fmt(v.m)}</td></tr>`).join("")+`</table>`
+    : `<div class="hint">Todas as mangueiras em processo têm BOM.</div>`;
+
+  // tabela de OPs
+  const C = [["op","OP"],["mang","Mangueira"],["etapaOrd","Etapa"],["status","Status"],["s","Situação"],["m","Metros",1],["dias","Dias parada",1],["kg","Insumo (kg)",1],["obs","",0]];
+  const rows = [...ops].sort((a,b)=>{ const x=a[sortK], y=b[sortK]; return (x>y?1:x<y?-1:0)*sortDir || a.dias-b.dias; });
+  document.getElementById("tbl").innerHTML =
+    `<thead><tr>${C.map(([k,n,num])=>`<th data-k="${k}" class="${num?"n":""}">${n}${sortK===k?(sortDir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`+
+    rows.map(o=>`<tr class="${o.conta?"":"off"}"><td>${o.op}</td><td>${o.mang}</td><td>${o.etapa}</td><td>${o.status}</td>
+      <td><span class="dot" style="background:${col(camsDe(o.s).at(-1))}"></span>${SIT.find(x=>x.k===o.s).nome}</td>
+      <td class="n">${fmt(o.m)}</td><td class="n">${fmt(o.dias,1)}</td><td class="n">${o.bom?fmt(o.kg,1):"–"}</td>
+      <td>${o.parada?'<span class="tag c">parada</span> ':""}${o.bom?"":'<span class="tag w">sem BOM</span>'}</td></tr>`).join("")+`</tbody>`;
+  document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(!k||k==="obs")return;
+    sortDir = sortK===k ? -sortDir : 1; sortK=k; render(); });
+  window._ops = ops;
+}
+
+document.querySelectorAll("#segPos button").forEach(b=>b.onclick=()=>{
+  pos=b.dataset.v; document.querySelectorAll("#segPos button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
+document.getElementById("lim").oninput=e=>{ lim=Math.max(1,+e.target.value||15); render(); };
+document.getElementById("csv").onclick=()=>{
+  const dia = new Date(D.puxado).toLocaleDateString("pt-BR");
+  const L = [["Dia","OP","Mangueira","Etapa","Situacao","Metragem","Part-number","Material","BOM","Quantidade","Unidade"]];
+  window._ops.filter(o=>o.conta).forEach(o=>o.itens.forEach(i=>L.push([dia,o.op,o.mang,o.etapa,SIT.find(x=>x.k===o.s).nome,o.m,i.pn,i.mat,i.bom,+i.q.toFixed(4),i.un])));
+  const txt = "﻿"+L.map(r=>r.map(v=>typeof v==="number"?String(v).replace(".",","):`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\r\n");
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv"}));
+  a.download=`contagem_processo_${D.puxado.slice(0,10)}.csv`; a.click(); };
+render();
+</script>
+</body>
+</html>
