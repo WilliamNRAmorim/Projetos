@@ -76,20 +76,31 @@
 | Montagem Hora-Hora | `scr_Montagem_HoraHora` | v0.5.1 | COLAR v0.5.0 ColunasCarimbadas + _colar_Montagem_DescontoParada.md (MEL-277) | — |
 | Painel da Montagem (TV) | `scr_PainelMontagem_1` | **v0.2.0** (27/10, `Telas/`) — v0.1.0 (22/10) AO VIVO + histórico, galeria 4×3, + diagnóstico no rodapé (v0.1.1) + ficha de consulta ao tocar no card (`_patch_PainelMontagem_v0.2.0_ficha.md`); mockup `Mockups/painel_montagem_layout.html` | — | Colar Formulas v3.0.13, a tela e o botão "Painel de TV" no menu; confirmar nomes internos das listas da Montagem |
 | Menu da Montagem | `scr_selecaosetor_Montagem` | + botão `btn_PainelTVSelM` (22/10, X=680) | — | — |
-| Bloqueio (kill switch Composto) | — | **v0.2.0** (17/11, `Telas/`, aguarda publish) — SEM tela de bloqueio e SEM navegação (decisão do William): bloqueado = tela não carrega, app só para. Lista `Composto` + `Flow_Composto` prontos; roteiro em `Telas/_colar_Composto.md` | — | Colar `OnStart`, `OnError`, `BackEnabled=true` e os blocos Gate+Timer das 23 telas; publicar |
+| Bloqueio (kill switch Composto) | — | **DESCARTADO em 27/11/2026** — só o gate do `App.OnStart` tinha sido publicado de fato (achado ao abrir o export de 27/11; `OnError`/Gate+Timer das 23 telas nunca foram colados). Removido do `OnStart.txt` e do export entregue ao sucessor. | — | William apagar `Flow_Composto` e a lista SharePoint `Composto` no ambiente (órfãos, inofensivos, fora do zip) |
 
 Pergunta aberta desde 03/09: **quais telas `_1` legadas ainda estão publicadas?** A resposta fecha a coluna "Nome da tela".
 
-## Kill switch "Composto" (17/11/2026, aguarda publish)
+## Kill switch "Composto" — DESCARTADO em 27/11/2026
 
-Plano aprovado: `Plano_KillSwitch.md`. Corte em 06/01/2027 13:59 (Brasília). No `Telas/` (tudo **aguarda publish**; William publica no Studio e no Power Automate):
+Plano era `Plano_KillSwitch.md` (corte 06/01/2027 13:59 Brasília, aprovado pelo revisor). William vai deixar o GMS
+(outra pessoa assume) e pediu para tirar o kill switch e tudo que bloqueia do export antes de entregar.
 
-- `OnStart.txt` — validação `Flow_Composto.Run()` com `IfError` (falha = bloqueia) antes dos `Set` e do `Concurrent`; o resto só roda se `varCompostoPermitida`.
-- `BackEnabled.txt` — **`true`** (voltou ao original; não há mais tela de bloqueio).
-- `OnError.txt` — silencia todos os erros (só `Trace` para o Monitor, nenhum `Notify`). `scr_Composto` REMOVIDA.
-- 23 telas com Gate no `OnVisible` (`If(varCompostoPermitida, <original>)`, SEM Navigate) + `Timer` oculto `tmr_Composto_<Tela>` de 30 min: `scrHoraHora_Mandril`, `scrHoraHora_Tubo`, `scr_AMDM02_Trancagem_1`, `scr_Bandagem_1`, `scr_Bobinadeira_1`, `scr_Catenaria_1`, `scr_Cobertura_2`, `scr_ConferenciaSAP`, `scr_Debandagem_2`, `scr_ExtrusoraMandril_1`, `scr_Finalização_1` (timer `tmr_Composto_scr_Finalizacao_1`, sem acento), `scr_HoraHora_Cobertura_1`, `scr_HoraHora_Trancagem_2`, `scr_mandril_1`, `scr_Montagem_HoraHora`, `scr_RefugoBobinadeira_1`, `scr_Trancagem_4`, `scr_tubo_1`, `scr_Vulcanizacao_1`, `TelaImpressao`, `Menu_1`, `scr_selecaosetor_1`, `scr_selecaosetor_Montagem`.
-- Fora por decisão: painéis de TV e as 6 telas de leitura. Pendente: `scr_HoraHora_Mandril_2`, `scr_HoraHora_Tubo_2` (Moldes/) e `scr_Trancagem_3` (confirmar se estão publicadas).
-- Variáveis: `varCompostoPermitida`, `varCompostoMensagem`. Colar por blocos (layout ajustado à mão: nunca reimport).
+**Achado ao abrir o export de 27/11/2026** (`GMS_20261127165555.zip`, do app publicado de fato): só o gate do
+`App.OnStart` (`IfError(With({resComposto: Flow_Composto.Run()}, ...))`) estava realmente publicado. O
+`OnError.txt` silencioso, a tela `scr_Composto` e o Gate+Timer das 23 telas do plano original **nunca foram
+colados no Studio** — ficaram só em `Telas/` como "aguarda publish" (ver histórico abaixo) e esta linha do
+índice estava desatualizada.
+
+**Removido:**
+- `Telas/OnStart.txt` — voltou à versão sem `Flow_Composto`/`varCompostoPermitida`/`varCompostoMensagem`.
+- No export entregue ao sucessor (`App.pa.yaml` + `Controls/1.json` dentro do `.msapp`): mesmo gate removido,
+  mais comentários `//` tirados do código (pedido do William) em `Formulas`, `OnStart`, `OnSelect`/`HtmlText`
+  de `Menu_1`, `scrHoraHora_Mandril` e `scrHoraHora_Tubo`.
+- `Flow_Composto` e a lista SharePoint `Composto` **não foram tocados no pacote** (grafo de dependência do
+  manifesto é arriscado editar à mão) — ficam órfãos, sem nada chamando-os, portanto inofensivos. Pendência:
+  William apagar os dois no ambiente (Power Automate + SharePoint) antes de sair.
+- Live/produção na Danfoss: **não foi tocado** — só o arquivo exportado que foi entregue. Se o app publicado
+  no tenant ainda tiver o gate, ele continua bloqueando até alguém remover isso no Studio também.
 
 ## Conceito, gestão e apresentação
 
