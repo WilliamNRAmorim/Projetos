@@ -20,3 +20,22 @@ Referência: o episódio final do Plantão Noturno (Short) tem 1.355; a série f
 - **Pista a testar, não conclusão:** os três piores literários têm títulos descritivos em vez do formato "Se X, NÃO Y" (ex.: "Eu fui pago para cuidar dele. Acabei matando."). Pode ser o tema ou o título; só dá para separar testando os dois.
 - **Limites:** só uma semana, um canal, sem retenção, sem horário por vídeo e sem TikTok; os vídeos mais novos tiveram menos tempo para acumular visualizações (a Máscara saiu no dia da leitura).
 - **Para a saga:** todos os episódios de Porto Sereno já usam o formato "Se X, NÃO Y" ou frase de gancho, e histórias originais são o que mais rendeu.
+
+---
+
+# Saga Porto Sereno x semana 1 (lido em 26/11/2026, YouTube Studio e TikTok Studio)
+
+| Plataforma | Bloco | Vídeos | Média de views | Mediana | Curtidas/views |
+|---|---|---|---|---|---|
+| YouTube | Semana 1, contos soltos (lido em 07/11) | 25 | 1.158 | ~1.320 | não lido |
+| YouTube | Porto Sereno, 08 a 14/11 | 28 | 255 | ~146 | não lido |
+| TikTok | Plantão Noturno, 25 a 31/10 | 7 | 196 | 193 | 5,0% |
+| TikTok | Semana 1, 01 a 07/11 | 28 | 191 | ~185 | 3,3% |
+| TikTok | Porto Sereno, 08 a 14/11 | 28 | 173 | 175 | 2,9% |
+
+YouTube, Porto Sereno por episódio (1 a 28): 284, 908, 75, 329, 35, 201, 59, 246, 80, 205, 11, 130, 13, 22, 70, 161, 18, 1006, 883, 1327, 68, 186, 226, 306, 39, 44, 46, 164.
+
+- A queda é clara no YouTube; no TikTok os três blocos ficam perto de 170 a 200 views.
+- A leitura da semana 1 é mais antiga (vídeos mais novos na época), então a diferença não vem do tempo no ar.
+- Hipótese a testar: série numerada depende de ver os anteriores. Sem retenção e sem benchmark externo, não é conclusão.
+- Nas listas de Shorts (YouTube) e do TikTok Studio não há vídeo depois de 14/11.
