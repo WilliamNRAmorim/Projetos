@@ -1106,6 +1106,46 @@
               }
             ]
           }
+        },
+        {
+          "name": "IP · Tab Metros",
+          "dataType": "Double",
+          "expression": "-- Metros da tabela OPs em processo, sem casa decimal (o cartão também mostra inteiro). · MEL-278\nSUM ( fInventarioOP[Metros] )",
+          "formatString": "#,0",
+          "displayFolder": "Inventário Processo (relatório)\\Tabela"
+        },
+        {
+          "name": "IP · Tab Dias Parada",
+          "dataType": "Double",
+          "expression": "-- Dias parada só na linha da OP; vazio no total (máximo de dias não é total). · MEL-278\nIF ( ISINSCOPE ( fInventarioOP[OP] ), [IP Dias Parada] )",
+          "formatString": "0.0",
+          "displayFolder": "Inventário Processo (relatório)\\Tabela",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Dias Parada"
+              }
+            ]
+          }
+        },
+        {
+          "name": "IP · Tab Aviso",
+          "dataType": "Text",
+          "expression": "-- Aviso da linha da OP: motivo de estar fora da conta e alerta de metros numa coluna só; vazio no total. · MEL-278\nVAR __Fora = [IP Motivo Fora]\nVAR __Alerta = [IP Alerta Metros]\nVAR __Txt = __Fora & IF ( NOT ISBLANK ( __Fora ) && NOT ISBLANK ( __Alerta ), \" · \" ) & __Alerta\nRETURN\nIF ( ISINSCOPE ( fInventarioOP[OP] ) && __Txt <> \"\", __Txt )",
+          "displayFolder": "Inventário Processo (relatório)\\Tabela",
+          "references": {
+            "measures": [
+              {
+                "entity": "Medidas",
+                "name": "IP Motivo Fora"
+              },
+              {
+                "entity": "Medidas",
+                "name": "IP Alerta Metros"
+              }
+            ]
+          }
         }
       ]
     }
