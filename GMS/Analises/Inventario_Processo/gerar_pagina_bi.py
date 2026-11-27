@@ -169,7 +169,7 @@ def bar(name, x, w, title, measure, z, unid):
                   "legend": [{"properties": {"show": lit("false")}}],
                   "categoryAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569")}}],
                   "valueAxis": [{"properties": {"fontSize": lit("9D"), "labelColor": hexc("#475569"), "gridlineColor": hexc("#E5E7EB"),
-                                                "start": lit("0D"), "end": {"expr": meas("IP · Eixo " + measure.split()[-1], ext=True)}}}],
+                                                "showAxisTitle": lit("false"), "start": lit("0D"), "end": {"expr": meas("IP · Eixo " + measure.split()[-1], ext=True)}}}],
                   # barra empilhada só põe rótulo dentro (some se a barra é curta); o total fica sempre na ponta
                   "labels": [{"properties": {"show": lit("false")}}],
                   "totals": [{"properties": {"show": lit("true"), "fontSize": lit("9D")}}],
@@ -179,8 +179,8 @@ def bar(name, x, w, title, measure, z, unid):
     put(name, x, 362, w, 150, z, visual, alt(card_box(title), "Insumo em %s por part-number, cor pela camada." % unid))
 
 
-bar("g_kg", 16, 440, "Insumo em processo (kg) por part-number", "IP Insumo kg", 8000, "kg")
-bar("g_m", 464, 380, "Insumo em processo (m) por part-number", "IP Insumo m", 8100, "metros")
+bar("g_kg", 16, 620, "Insumo em processo (kg) por part-number", "IP Insumo kg", 8000, "kg")
+bar("g_m", 644, 620, "Insumo em processo (m) por part-number", "IP Insumo m", 8100, "metros")
 
 flt = {"filterConfig": {"filters": [{"name": "f_sembom", "field": meas("IP OPs sem BOM"), "type": "Advanced",
                                      "filter": {"Version": 2, "From": [{"Name": "m", "Entity": "Medidas", "Type": 0}],
@@ -202,7 +202,8 @@ sb = {"visualType": "tableEx",
           proj(meas("IP Metros sem BOM"), "Medidas", "IP Metros sem BOM", "Metros")]}},
           "sortDefinition": {"sort": [{"field": meas("IP Metros sem BOM"), "direction": "Descending"}]}},
       "objects": tbl_objs(), "drillFilterOtherVisuals": True}
-put("t_sem_bom", 856, 362, 408, 150, 8200, sb, alt(card_box("Mangueiras sem BOM (metros ficam fora da conta)"), "Mangueiras sem BOM, com OPs e metros."), flt)
+# quadro "sem BOM" saiu em 27/11 (William): a OP sem BOM já aparece no Aviso da tabela de OPs
+del sb, flt
 
 
 def colp(prop, disp, agg=None):
