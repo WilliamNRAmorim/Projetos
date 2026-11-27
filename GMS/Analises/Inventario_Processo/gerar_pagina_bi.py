@@ -31,9 +31,9 @@ def corte(ncam):
 def svg_corte(sit, onde, ncam):
     return f'''-- Cartão "Onde está a mangueira": corte da mangueira ({ncam} camada(s)), onde está, metros, OPs e kg da situação "{sit}". Camadas ausentes em cinza claro. · MEL-278
 VAR __Sit = "{sit}"
-VAR __Met = CALCULATE ( [IP Metros], fInventarioOP[Situação] = __Sit )
-VAR __Ops = CALCULATE ( [IP OPs na Conta], fInventarioOP[Situação] = __Sit )
-VAR __Kg = CALCULATE ( [IP Insumo kg], fInventarioOP[Situação] = __Sit )
+VAR __Met = CALCULATE ( [IP Metros], KEEPFILTERS ( fInventarioOP[Situação] = __Sit ) )
+VAR __Ops = CALCULATE ( [IP OPs na Conta], KEEPFILTERS ( fInventarioOP[Situação] = __Sit ) )
+VAR __Kg = CALCULATE ( [IP Insumo kg], KEEPFILTERS ( fInventarioOP[Situação] = __Sit ) )
 VAR __Op = IF ( __Ops > 0, "1", "0.35" )
 VAR __Aneis = "{corte(ncam)}"
 VAR __Texto =
@@ -80,7 +80,7 @@ MEAS = [
     ("IP · SVG Corte Tubo interno", svg_corte("Tubo interno", "na fila ou na Trançagem", 1), CR),
     ("IP · SVG Corte Trançada", svg_corte("Trançada / Espiralada", "na Cobertura", 2), CR),
     ("IP · SVG Corte Coberta", svg_corte("Coberta", "na Bandagem", 3), CR),
-    ("IP · SVG Corte Bandada", svg_corte("Bandada", "Vulcanização, Debandagem e Cabine", 4), CR),
+    ("IP · SVG Corte Bandada", svg_corte("Bandada", "da Vulcanização à Cabine", 4), CR),
 ]
 
 # ---- reportExtensions
