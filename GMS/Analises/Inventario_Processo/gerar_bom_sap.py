@@ -71,6 +71,13 @@ for mang in sorted(razoes):
         linhas.append({"Mangueira": mang, "Material": mat, "Camada": cam, "PartNumber": pn, "Descricao": desc,
                        "BOM_por_metro": round(st.median(v), 6), "Unidade": un, "OPs": len(v), "Dispersao": round(disp, 3)})
 
+# LRL = L (William, 27/11/2026): mangueira LRL da ficha sem BOM própria usa a BOM da mesma mangueira com final L
+if FICHA:
+    tem = {l["Mangueira"] for l in linhas}
+    for n in sorted({str(v[0]).strip() for v in json.load(open(FICHA, encoding="utf-8")).values() if v[0]}):
+        if n.upper().endswith("LRL") and n not in tem and n[:-2] in tem:
+            linhas += [{**l, "Mangueira": n} for l in linhas if l["Mangueira"] == n[:-2]]
+
 with open(os.path.join(AQUI, "bom_mangueira_sap.csv"), "w", newline="", encoding="utf-8-sig") as f:
     w = csv.DictWriter(f, fieldnames=list(linhas[0]), delimiter=";")
     w.writeheader()
