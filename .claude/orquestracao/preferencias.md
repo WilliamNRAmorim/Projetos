@@ -100,3 +100,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-26 | TCC: aceitou trocar as URLs reais do SharePoint e a coluna "Categoria Danfoss" por ficticios nos artefatos (nao deixar dado real/marca no que vai com o TCC)
 - 2026-11-26: para ler métricas do canal, usar o Chrome logado dele (aceitou a recomendada).
 - 2026-11-26: aprovou o plano de 3 semanas de videos soltos (2 por dia, 12h e 19h), com piloto antes dos lotes.
+- 2026-11-26: aprovou o piloto Matinta Perera, titulo recomendado ("NAO FIQUE CALADO") e semana 1 em sessao nova, em dois blocos.
