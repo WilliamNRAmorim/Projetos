@@ -358,3 +358,4 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 
 2026-11-27 | Blindagem do export GMS: script Python que renomeia kill switch (Flow_Composto->GMS_Config), funde proteção na inicialização e ofusca flows para entrega do projeto | chefe sozinho (Opus 4.6), sem subagente | urgente e sensível, contexto já na sessão, sem regra de negócio (dispensado revisor) | ~US$ 8-12 (Opus 4.6, sessão compactada)
 2026-11-27 | Rótulo das barras do inventário em processo sempre visível | chefe (Opus) sozinho | ajuste de 2 visual.json, sem subagente | baixo
+2026-11-27 | Clique na OP filtra as barras do inventário em processo | chefe (Opus) sozinho | 1 page.json + gerador | baixo

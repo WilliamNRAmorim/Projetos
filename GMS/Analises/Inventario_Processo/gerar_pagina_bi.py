@@ -241,6 +241,8 @@ os.makedirs(pg, exist_ok=True)
 src = json.load(open(os.path.join(BASE, "pages", "pg_fluxo_1", "page.json"), encoding="utf-8"))
 src["name"] = "pg_inventario_processo"
 src["displayName"] = "Inventário em processo"
+# clicar numa OP da tabela filtra as barras (em vez de só destacar)
+src["visualInteractions"] = [{"source": "t_ops", "target": t, "type": "DataFilter"} for t in ("g_kg", "g_m")]
 open(os.path.join(pg, "page.json"), "w", encoding="utf-8", newline="").write(json.dumps(src, indent=2, ensure_ascii=False))
 for n, v in visuals.items():
     dd = os.path.join(pg, "visuals", n)
