@@ -172,6 +172,14 @@
         glide(o.frequency, x[2], x[3], a, b); glide(o2.frequency, x[2] * 2, x[3] * 2, a, b); g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(0.8, a + 0.025); g.gain.setValueAtTime(0.8, b - 0.05); g.gain.linearRampToValueAtTime(0, b + 0.02); C(o, g, out); C(o2, g2, g); });
       eco(out, out, 0.23, 0.35, 3500, 0.45); bus(out, false); return { t: t, fim: t + n * per + 0.8 };
     };
+    // assobioDuas: assobio de gente em duas notas (sobe, pausa, desce) com sopro. p.tom multiplica a altura, p.abafa = corte do passa-baixa (parede), p.notas 1 ou 2, p.eco 0..1
+    defs.assobioDuas = function (t, p) {
+      const k = p.tom || 1, out = G(0.32 * (p.vol == null ? 1 : p.vol)), lp = F('lowpass', p.abafa || 6000, 0.5), notas = [[0, 0.3, 1450, 1950], [0.44, 0.5, 2150, 1500]].slice(0, p.notas || 2); let fim = t;
+      notas.forEach(function (x) { const a = t + x[0], b = a + x[1], o = O('sine', x[2] * k, a, b + 0.05), g = G(0), lf = O('sine', 6.5, a, b + 0.05), lg = G(14); C(lf, lg); lg.connect(o.frequency);
+        glide(o.frequency, x[2] * k, x[3] * k, a, b); g.gain.setValueAtTime(0, a); g.gain.linearRampToValueAtTime(0.8, a + 0.05); g.gain.setValueAtTime(0.8, b - 0.09); g.gain.linearRampToValueAtTime(0, b); C(o, g, lp);
+        const n = N(a, b), bp = F('bandpass', (x[2] + x[3]) / 2 * k, 5), gn = G(0); gn.gain.setValueAtTime(0, a); gn.gain.linearRampToValueAtTime(0.35, a + 0.05); gn.gain.linearRampToValueAtTime(0, b); C(n, bp, gn, lp); fim = b; });
+      lp.connect(out); eco(lp, out, 0.17, 0.3, 2800, p.eco == null ? 0.3 : p.eco); bus(out, false); return { t: t, fim: fim + 0.7 };
+    };
     // asas: batidas pesadas de asa (ruido grave em pulsos)
     defs.asas = function (t, p) {
       const dur = p.dur || 1.6, T = t + dur, out = G(0.5 * (p.vol == null ? 1 : p.vol));
