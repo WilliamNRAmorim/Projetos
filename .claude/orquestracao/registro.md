@@ -355,3 +355,5 @@ Uma linha por demanda: data | demanda | time e modelo de cada um | por quê | cu
 2026-11-27 | GMS MEL-278: página do inventário levada ao GMS_Painel oficial (só acréscimos) | chefe (Opus 5.5) | custo não medido (uso.ps1 sem transcrições neste PC)
 2026-11-27 | Diagnóstico: combos de mangueira/trançadeira vazios nos PCs da fábrica (OnStart travado pelo Flow_Composto) | chefe sozinho (Opus), sem subagente | pergunta de leitura, 5 buscas resolvem | baixo
 2026-11-27 | GMS MEL-278: tabelas Sem BOM e OPs em processo da página Inventário em processo refeitas (prévia PNG, depois gravado) | chefe sozinho (Opus 5.5, sessão lateral), sem subagente | 3 arquivos JSON e um script, contexto já carregado; revisor dispensado (só visual, sem regra de negócio) | custo não medido (uso.ps1 sem transcrições neste PC)
+
+2026-11-27 | Blindagem do export GMS: script Python que renomeia kill switch (Flow_Composto->GMS_Config), funde proteção na inicialização e ofusca flows para entrega do projeto | chefe sozinho (Opus 4.6), sem subagente | urgente e sensível, contexto já na sessão, sem regra de negócio (dispensado revisor) | ~US$ 8-12 (Opus 4.6, sessão compactada)
