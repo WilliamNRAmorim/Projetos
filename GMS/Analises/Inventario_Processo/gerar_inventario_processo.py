@@ -2,7 +2,7 @@
 # Faz o que o "Inventario Mangueiras - Simulador.xlsm" faz, mas para todas as OPs abertas da ficha_producao:
 # situacao = ultima etapa fechada da OP; quantidade = BOM por metro x metros dessa etapa.
 #
-# Uso: python -I gerar_inventario_processo.py <ficha_producao.csv | ficha.json> <GMS_BOM_Mangueira.json | Simulador.xlsm>
+# Uso: python -I gerar_inventario_processo.py <ficha_producao.csv | ficha.json> <GMS_BOM_Mangueira.json | Simulador.xlsm> [inspecao_cabine.json]
 #   - .csv: export da lista (cabecalho com nomes de exibicao).
 #   - .json: {"rows":[...]} puxado por REST (nomes internos do SharePoint).
 # Saida (nesta pasta): bom_mangueira.csv (BOM em formato longo, molde da futura lista GMS_BOM_Mangueira)
@@ -11,6 +11,7 @@ import csv, json, os, re, sys, datetime as dt
 import openpyxl
 
 FICHA, SIM = sys.argv[1], sys.argv[2]
+INSP = json.load(open(sys.argv[3], encoding="utf-8")) if len(sys.argv) > 3 else {}  # {OP: metros já inspecionados na Cabine}
 AQUI = os.path.dirname(os.path.abspath(__file__))
 
 # ---------- BOM do simulador ----------
@@ -157,6 +158,10 @@ for x in rows:
         continue
     sit, qs = SITUACAO[et]
     m = next((num(x[q]) for q in qs if num(x[q]) > 0), 0.0)
+    # revisão 27/11: na Cabine em processo, lances já testados saíram do processo (quantidade_extracao só enche no fim)
+    if et == "Extração/Teste" and base["status"] == "Em processo":
+        m = max(0.0, m - float(INSP.get(base["op"], 0)))
+    base["suspeito"] = num(x["quantidade_tubo"]) > 0 and m > 1.5 * num(x["quantidade_tubo"])
     b = bom.get(chave(base["mang"]))
     base.update({"sit": sit, "m": m, "bom": bool(b), "fonteBom": b["fonte"] if b else None})
     ops.append(base)

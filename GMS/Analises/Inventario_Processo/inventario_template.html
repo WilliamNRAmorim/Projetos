@@ -257,7 +257,7 @@ function render(){
     rows.map(o=>`<tr class="${o.conta?"":"off"}"><td>${o.op}</td><td>${o.mang}</td><td>${o.etapa}</td><td>${o.status}</td>
       <td><span class="dot" style="background:${col(camsDe(o.s).at(-1))}"></span>${SIT.find(x=>x.k===o.s).nome}</td>
       <td class="n">${fmt(o.m)}</td><td class="n">${fmt(o.dias,1)}</td><td class="n">${o.bom?fmt(o.kg,1):"–"}</td>
-      <td>${o.parada?'<span class="tag c">parada</span> ':""}${o.bom?"":'<span class="tag w">sem BOM</span>'}${o.fonteBom&&o.fonteBom.startsWith("Simulador")?'<span class="tag">BOM 2020</span>':""}</td></tr>`).join("")+`</tbody>`;
+      <td>${o.parada?'<span class="tag c">parada</span> ':""}${o.bom?"":'<span class="tag w">sem BOM</span>'}${o.fonteBom&&o.fonteBom.startsWith("Simulador")?'<span class="tag">BOM 2020</span>':""}${o.suspeito?'<span class="tag w">metros &gt; 1,5× tubo</span>':""}</td></tr>`).join("")+`</tbody>`;
   document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{ const k=th.dataset.k; if(!k||k==="obs")return;
     sortDir = sortK===k ? -sortDir : 1; sortK=k; render(); });
   window._ops = ops;

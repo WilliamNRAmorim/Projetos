@@ -104,3 +104,4 @@ O chefe lê ao começar e acrescenta quando o William aceita ou recusa uma recom
 2026-11-27 | Inventário em processo: em vez de escolher Power BI ou app, pediu o protótipo primeiro, com SVG ou gráfico eficiente
 2026-11-27 | Inventário em processo: escolheu Bandada para a mangueira depois da Debandagem (Cabine)
 2026-11-27 | Inventário em processo: escolheu página no Power BI (GMS_Painel) em vez de tela no app
+2026-11-27 | Revisor indisponível na sessão: escolheu o chefe revisar a regra do inventário aqui em vez de abrir sessão nova
